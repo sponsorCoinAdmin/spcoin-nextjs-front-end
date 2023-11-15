@@ -1,0 +1,9 @@
+{
+    "tasks" : [
+        {
+            "type" : "shell",
+            "label" : "Robins Test Task",
+            "command" : "echo hello"
+        }
+    ]
+}
