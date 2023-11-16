@@ -1,4 +1,4 @@
-import "../../styles/App.module.css";
+import "./styles/App.module.css";
 import type { AppProps } from "next/app";
 import { WagmiConfig, createConfig } from "wagmi";
 import {

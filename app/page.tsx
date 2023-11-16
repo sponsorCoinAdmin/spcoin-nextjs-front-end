@@ -1,11 +1,11 @@
 // 'use client'
-import styles from "../styles/App.module.css";
-import Header from "./header"
+import styles from "./styles/App.module.css";
+import Header from "./components/layout/header"
 
-import Agents from "./components/Agents";
-import Recipients from "./components/Recipients";
-import Swap from "./components/Swap";
-import Tokens from "./components/Tokens";
+import Agents from "./components/menuTabs/Agents";
+import Recipients from "./components/menuTabs/Recipients";
+import Swap from "./components/menuTabs/Swap";
+import Tokens from "./components/menuTabs/Tokens";
 
 import { useConnect, useAccount } from "wagmi";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
@@ -19,8 +19,6 @@ function App() {
   return (
 
     <div className="styles.App">
-      <Header />
-      {/* <Header connect={connect} isConnected={isConnected} address={address} /> */}
       <div className="styles.mainWindow">
         {/* <Routes>
           <Route path="/" element={<Swap isConnected={isConnected} address={address} />} />
