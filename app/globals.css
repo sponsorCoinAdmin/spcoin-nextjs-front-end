@@ -23,7 +23,7 @@ body {
 }
 
 header {
-  height: 65px;
+  height: 60px;
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -34,8 +34,21 @@ header {
 
 }
 
+titleName {
+  height: 50px;
+  width: 100%;
+  padding-top: 10px;
+  padding-left: 50px;
+  padding-right: 50px;
+  position: fixed;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  background: rgb(102, 14, 116);
+}
+
 mainApp {
-  margin-top: 25px;
+  margin-top: 100px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -48,10 +61,10 @@ footer {
   padding-left: 50px;
   padding-right: 50px;
   position: fixed;
-  left: 0;
   bottom: 0;
   width: 100%;
   text-align: center;
+  align-items: center;
   background: rgb(119, 126, 142);
 }
 
