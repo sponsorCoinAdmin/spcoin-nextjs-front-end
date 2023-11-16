@@ -1,11 +1,9 @@
 import React from 'react'
 
-function agents() {
+function Agents() {
   return (
-    <div>
-      <h1>Agents Page</h1>
-    </div>
+    <mainApp><h1>Agents Page</h1></mainApp>
   )
 }
 
-export default agents
+export default Agents

@@ -1,11 +1,9 @@
 import React from 'react'
 
-function recipients() {
+function Recipients() {
   return (
-    <div>
-      <h1>Recipients Page</h1>
-    </div>
+    <mainApp>Recipients</mainApp>
   )
 }
 
-export default recipients
+export default Recipients
