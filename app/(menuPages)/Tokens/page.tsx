@@ -2,7 +2,7 @@ import React from 'react'
 
 function Tokens() {
   return (
-    <mainApp><h1>Tokens Page</h1></mainApp>
+    <div className="mainApp"><h1>Tokens Page</h1></div>
   )
 }
 

@@ -2,7 +2,7 @@ import React from 'react'
 
 function Agents() {
   return (
-    <mainApp><h1>Agents Page</h1></mainApp>
+    <div className="mainApp"><h1>Agents Page</h1></div>
   )
 }
 
