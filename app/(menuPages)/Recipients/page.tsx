@@ -2,7 +2,7 @@ import React from 'react'
 
 function Recipients() {
   return (
-    <mainApp>Recipients</mainApp>
+    <div className="mainApp">Recipients Page</div>
   )
 }
 

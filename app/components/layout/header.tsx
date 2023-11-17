@@ -1,3 +1,5 @@
+'use server'
+
 import React from "react";
 import styles from "../../styles/App.module.css";
 
@@ -5,11 +7,7 @@ import spCoin_png from '../images/spCoin.png'
 import eth_png from '../images/eth.png'
 import Image from 'next/image'
 
-// import Eth from "./eth.svg";
-import Agents from "../menuTabs/Agents";
-import Recipients from "../menuTabs/Recipients";
-import Swap from "../menuTabs/Swap";
-import Tokens from "../menuTabs/Tokens";
+import Link from 'next/link'
 
 function Header(props: { address: any; isConnected: any; connect: any; }) {
   const {address, isConnected, connect} = props;
@@ -18,10 +16,10 @@ function Header(props: { address: any; isConnected: any; connect: any; }) {
     <header>
       <div className={styles.leftH}>
         <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
-        <div className={styles.headerItem}><Swap /></div>
-        <div className={styles.headerItem}><Recipients /></div>
-        <div className={styles.headerItem}><Agents /></div>
-        <div className={styles.headerItem}><Tokens /></div>
+        <div className={styles.headerItem}><Link href="/Swap">Swap</Link></div>
+        <div className={styles.headerItem}><Link href="/Recipients">Recipients</Link></div>
+        <div className={styles.headerItem}><Link href="/Agents">Agents</Link></div>
+        <div className={styles.headerItem}><Link href="/Tokens">Tokens</Link></div>
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
