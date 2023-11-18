@@ -1,6 +1,3 @@
-'use client'
-import styles from '../../styles/App.module.css'
-
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import {
@@ -8,33 +5,28 @@ import {
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import tokenEthList from "../../components/data/tokenEthList.json";
-import tokenPolyList from "../../components/data/tokenPolyList.json";
+import tokenList from "../tokenList.json";
 import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 
+
 function Swap(props) {
-  let tokenList = tokenEthList;
-  // let { tokenList, setTokenList } = useState(tokenEthList);
-  // let { address, isConnected } = props;
-  // alert(JSON.stringify(tokenList,null,2))
-  let { address, isConnected } = props;
-  let [messageApi, contextHolder] = message.useMessage();
-  let [slippage, setSlippage] = useState(2.5);
-  let [tokenOneAmount, setTokenOneAmount] = useState(null);
-  let [tokenTwoAmount, setTokenTwoAmount] = useState(null);
-  let [tokenOne, setTokenOne] = useState(tokenList[0]);
-  let [tokenTwo, setTokenTwo] = useState(tokenList[1]);
-  let [isOpen, setIsOpen] = useState(false);
-  let [changeToken, setChangeToken] = useState(1);
-  let [prices, setPrices] = useState(null);
-  let [txDetails, setTxDetails] = useState({
-    to: null,
+  const { address, isConnected } = props;
+  const [messageApi, contextHolder] = message.useMessage();
+  const [slippage, setSlippage] = useState(2.5);
+  const [tokenOneAmount, setTokenOneAmount] = useState(null);
+  const [tokenTwoAmount, setTokenTwoAmount] = useState(null);
+  const [tokenOne, setTokenOne] = useState(tokenList[0]);
+  const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [changeToken, setChangeToken] = useState(1);
+  const [prices, setPrices] = useState(null);
+  const [txDetails, setTxDetails] = useState({
+    to:null,
     data: null,
     value: null,
   }); 
 
-  /*
   const {data, sendTransaction} = useSendTransaction({
     request: {
       from: address,
@@ -48,11 +40,6 @@ function Swap(props) {
     hash: data?.hash,
   })
 
-  function changeNetwork(e) {
-    // setTokenList(e.target.value);
-  }
-
-*/
   function handleSlippageChange(e) {
     setSlippage(e.target.value);
   }
@@ -66,7 +53,6 @@ function Swap(props) {
     }
   }
 
-  
   function switchTokens() {
     setPrices(null);
     setTokenOneAmount(null);
@@ -78,14 +64,12 @@ function Swap(props) {
     fetchPrices(two.address, one.address);
   }
 
-/*
   function openModal(asset) {
     setChangeToken(asset);
     setIsOpen(true);
   }
 
   function modifyToken(i){
-    // console.log(`modifyToken(${i})`)
     setPrices(null);
     setTokenOneAmount(null);
     setTokenTwoAmount(null);
@@ -101,30 +85,19 @@ function Swap(props) {
 
   async function fetchPrices(one, two){
 
-    let status
-    await axios.get(`http://localhost:3001/tokenPrice`, {
+      const res = await axios.get(`http://localhost:3001/tokenPrice`, {
         params: {addressOne: one, addressTwo: two}
-      }).then((res) => {
-        let data = res.data;
-        if (data.tokenOneStatus === 200 && data.tokenTwoStatus == 200) { 
-            setPrices(data)
-          }
-          else {
-            alert(`{ ERROR:\n, ${JSON.stringify(data, null, 2)} }`)
-          }
-        }).catch((err) => {
-          let msg = `{ ERROR: ${JSON.stringify(err, null, 2)} }`
-          alert(msg)
-          console.log(msg);
-          throw err
       })
+
+      
+      setPrices(res.data)
   }
-*/
+
   async function fetchDexSwap(){
 
     const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.address}&walletAddress=${address}`)
   
-    if(allowance.data.allowance === "0") {
+    if(allowance.data.allowance === "0"){
 
       const approve = await axios.get(`https://api.1inch.io/v5.0/1/approve/transaction?tokenAddress=${tokenOne.address}`)
 
@@ -144,7 +117,7 @@ function Swap(props) {
     setTxDetails(tx.data.tx);
   
   }
-/*
+
 
   useEffect(()=>{
 
@@ -188,8 +161,10 @@ function Swap(props) {
         duration: 1.50,
       })
     }
+
+
   },[isSuccess])
-*/
+
 
   const settings = (
     <>
@@ -213,37 +188,37 @@ function Swap(props) {
         onCancel={() => setIsOpen(false)}
         title="Select a token"
       >
-        <div className={styles.modalContent}>
+        <div className="modalContent">
           {tokenList?.map((e, i) => {
             return (
               <div
-                className={styles.tokenChoice}
+                className="tokenChoice"
                 key={i}
                 onClick={() => modifyToken(i)}
               >
-                <img src={e.img} alt={e.ticker} className={styles.tokenLogo} />
-                <div className={styles.tokenChoiceNames}>
-                  <div className={styles.tokenName}>{e.name}</div>
-                  <div className={styles.tokenTicker}>{e.ticker}</div>
+                <img src={e.img} alt={e.ticker} className="tokenLogo" />
+                <div className="tokenChoiceNames">
+                  <div className="tokenName">{e.name}</div>
+                  <div className="tokenTicker">{e.ticker}</div>
                 </div>
               </div>
             );
           })}
         </div>
       </Modal>
-      <div className={styles.tradeBox}>
-        <div className={styles.tradeBoxHeader}>
-          <h4 className={styles.center}>Sponsor Coin Exchange</h4>
+      <div className="tradeBox">
+        <div className="tradeBoxHeader">
+          <h4>Swap</h4>
           <Popover
             content={settings}
             title="Settings"
             trigger="click"
             placement="bottomRight"
           >
-            <SettingOutlined className={styles.cog} />
+            <SettingOutlined className="cog" />
           </Popover>
         </div>
-        <div className={styles.inputs}>
+        <div className="inputs">
           <Input
             placeholder="0"
             value={tokenOneAmount}
@@ -251,15 +226,15 @@ function Swap(props) {
             disabled={!prices}
           />
           <Input placeholder="0" value={tokenTwoAmount} disabled={true} />
-          <div className={styles.switchButton} onClick={switchTokens}>
-            <ArrowDownOutlined className={styles.switchArrow} />
+          <div className="switchButton" onClick={switchTokens}>
+            <ArrowDownOutlined className="switchArrow" />
           </div>
-          <div className={styles.assetOne} onClick={() => openModal(1)}>
+          <div className="assetOne" onClick={() => openModal(1)}>
             <img src={tokenOne.img} alt="assetOneLogo" className="assetLogo" />
             {tokenOne.ticker}
             <DownOutlined />
           </div>
-          <div className={styles.assetTwo} onClick={() => openModal(2)}>
+          <div className="assetTwo" onClick={() => openModal(2)}>
             <img src={tokenTwo.img} alt="assetOneLogo" className="assetLogo" />
             {tokenTwo.ticker}
             <DownOutlined />

@@ -1,17 +1,17 @@
-'useClient'
-
 import React from "react";
 import styles from "../../styles/App.module.css";
 
-import spCoin_png from '../../components/images/spCoin.png'
-import eth_png from '../../components/images/eth.png'
+import spCoin_png from '../images/spCoin.png'
+import eth_png from '../images/eth.png'
 import Image from 'next/image'
 
-import Agents from "../../components/menuTabs/Agents";
-import Recipients from "../../components/menuTabs/Recipients";
-import Tokens from "../../components/menuTabs/Tokens";
+import Agents from "../menuTabs/Agents";
+import Moralis from "../menuTabs/Moralis";
+import Recipients from "../menuTabs/Recipients";
+import Swap from "../menuTabs/Swap";
+import Tokens from "../menuTabs/Tokens";
 
-function Swap(props: { address: any; isConnected: any; connect: any; }) {
+function Header(props: { address: any; isConnected: any; connect: any; }) {
   const {address, isConnected, connect} = props;
 
   return (
@@ -21,10 +21,12 @@ function Swap(props: { address: any; isConnected: any; connect: any; }) {
         <div className={styles.headerItem}><Recipients /></div>
         <div className={styles.headerItem}><Agents /></div>
         <div className={styles.headerItem}><Tokens /></div>
+        <div className={styles.headerItem}><Swap /></div>
+        <div className={styles.headerItem}><Moralis /></div>
      </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-        <Image src={eth_png} width={25} height={25} alt="Sponsor Coin Logo" />
+        <Image src={eth_png} width={25} height={25} alt="Ethereum Logo" />
         &nbsp;&nbsp;Ethereum
         </div>
         <div className={styles.connectButton} onClick={connect}>
@@ -35,4 +37,4 @@ function Swap(props: { address: any; isConnected: any; connect: any; }) {
   );
 }
 
-export default Swap;
+export default Header;

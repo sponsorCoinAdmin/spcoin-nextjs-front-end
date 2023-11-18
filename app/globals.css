@@ -66,19 +66,33 @@ footer {
   background: rgb(119, 126, 142);
 }
 
-footerOld {
-  height: 75px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-left: 50px;
-  padding-right: 50px;
-  position: fixed;
-  bottom: 0;
-}
-
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+.tokenLogo {
+  height: 40px;
+  width: 40px;
+}
+
+.center {
+  /* Center horizontally*/
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tradeBox {
+  width: 400px;
+  background-color: #0E111B;
+  border: 2px solid #21273a;
+  min-height: 300px;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin: auto;
 }

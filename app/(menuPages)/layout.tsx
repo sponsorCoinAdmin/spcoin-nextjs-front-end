@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-// import './globals.css'
-import Title from "../components/layout/title"
+import Title from "../components/panes/title"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -11,14 +10,14 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-        <Title />
-        {children}
-    </div>
-  )
+    children,
+    }: {
+        children: React.ReactNode
+    }) {
+    return (
+        <div>
+            <Title />
+            {children}
+        </div>
+    )
 }

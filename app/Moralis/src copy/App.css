@@ -2,7 +2,6 @@
   text-align: center;
 }
 
-/* 
 header {
   height: 100px;
   display: flex;
@@ -11,7 +10,6 @@ header {
   padding-left: 50px;
   padding-right: 50px;
 }
- */
 
 .logo{
   width: 40px;
@@ -23,6 +21,7 @@ header {
   width: 20px;
   height: 20px;
   padding-right: 10px;
+
 }
 
 .leftH {
@@ -74,8 +73,6 @@ header {
   margin-top: 40px;
   display: flex;
   justify-content: center;
-  align-items: center;
-
 }
 
 .link {
@@ -95,8 +92,8 @@ header {
   align-items: flex-start;
   padding-left: 30px;
   padding-right: 30px;
-  margin: auto;
 }
+
 
 .tradeBoxHeader {
   display: flex;
@@ -268,12 +265,4 @@ header {
   font-size: 13px;
   font-weight: 300;
   color: #51596f;
-}
-
-/* New Code Entries */
-
-.center {
-  /* Center horizontally*/
-  text-align: center;
-  vertical-align: middle;
 }

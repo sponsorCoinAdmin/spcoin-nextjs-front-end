@@ -18,8 +18,8 @@ function App() {
 
   return (
 
-    <div className="styles.App">
-      <div className="styles.mainWindow">
+    <div className={styles.App}>
+      <div className={styles.mainWindow}">
         {/* <Routes>
           <Route path="/" element={<Swap isConnected={isConnected} address={address} />} />
           <Route path="/Agents" element={<Agents />} />

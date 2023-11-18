@@ -1,6 +1,3 @@
-'use client'
-import styles from '../../styles/App.module.css'
-
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import {
@@ -34,7 +31,6 @@ function Swap(props) {
     value: null,
   }); 
 
-  /*
   const {data, sendTransaction} = useSendTransaction({
     request: {
       from: address,
@@ -52,7 +48,6 @@ function Swap(props) {
     // setTokenList(e.target.value);
   }
 
-*/
   function handleSlippageChange(e) {
     setSlippage(e.target.value);
   }
@@ -66,7 +61,6 @@ function Swap(props) {
     }
   }
 
-  
   function switchTokens() {
     setPrices(null);
     setTokenOneAmount(null);
@@ -78,7 +72,6 @@ function Swap(props) {
     fetchPrices(two.address, one.address);
   }
 
-/*
   function openModal(asset) {
     setChangeToken(asset);
     setIsOpen(true);
@@ -119,7 +112,7 @@ function Swap(props) {
           throw err
       })
   }
-*/
+
   async function fetchDexSwap(){
 
     const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.address}&walletAddress=${address}`)
@@ -144,7 +137,7 @@ function Swap(props) {
     setTxDetails(tx.data.tx);
   
   }
-/*
+
 
   useEffect(()=>{
 
@@ -189,7 +182,7 @@ function Swap(props) {
       })
     }
   },[isSuccess])
-*/
+
 
   const settings = (
     <>
@@ -213,37 +206,37 @@ function Swap(props) {
         onCancel={() => setIsOpen(false)}
         title="Select a token"
       >
-        <div className={styles.modalContent}>
+        <div className="modalContent">
           {tokenList?.map((e, i) => {
             return (
               <div
-                className={styles.tokenChoice}
+                className="tokenChoice"
                 key={i}
                 onClick={() => modifyToken(i)}
               >
-                <img src={e.img} alt={e.ticker} className={styles.tokenLogo} />
-                <div className={styles.tokenChoiceNames}>
-                  <div className={styles.tokenName}>{e.name}</div>
-                  <div className={styles.tokenTicker}>{e.ticker}</div>
+                <img src={e.img} alt={e.ticker} className="tokenLogo" />
+                <div className="tokenChoiceNames">
+                  <div className="tokenName">{e.name}</div>
+                  <div className="tokenTicker">{e.ticker}</div>
                 </div>
               </div>
             );
           })}
         </div>
       </Modal>
-      <div className={styles.tradeBox}>
-        <div className={styles.tradeBoxHeader}>
-          <h4 className={styles.center}>Sponsor Coin Exchange</h4>
+      <div className="tradeBox">
+        <div className="tradeBoxHeader">
+          <h4 className="center">Sponsor Coin Exchange</h4>
           <Popover
             content={settings}
             title="Settings"
             trigger="click"
             placement="bottomRight"
           >
-            <SettingOutlined className={styles.cog} />
+            <SettingOutlined className="cog" />
           </Popover>
         </div>
-        <div className={styles.inputs}>
+        <div className="inputs">
           <Input
             placeholder="0"
             value={tokenOneAmount}
@@ -251,15 +244,15 @@ function Swap(props) {
             disabled={!prices}
           />
           <Input placeholder="0" value={tokenTwoAmount} disabled={true} />
-          <div className={styles.switchButton} onClick={switchTokens}>
-            <ArrowDownOutlined className={styles.switchArrow} />
+          <div className="switchButton" onClick={switchTokens}>
+            <ArrowDownOutlined className="switchArrow" />
           </div>
-          <div className={styles.assetOne} onClick={() => openModal(1)}>
+          <div className="assetOne" onClick={() => openModal(1)}>
             <img src={tokenOne.img} alt="assetOneLogo" className="assetLogo" />
             {tokenOne.ticker}
             <DownOutlined />
           </div>
-          <div className={styles.assetTwo} onClick={() => openModal(2)}>
+          <div className="assetTwo" onClick={() => openModal(2)}>
             <img src={tokenTwo.img} alt="assetOneLogo" className="assetLogo" />
             {tokenTwo.ticker}
             <DownOutlined />
