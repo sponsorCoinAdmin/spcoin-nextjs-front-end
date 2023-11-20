@@ -10,6 +10,10 @@ import {
 } from "@ant-design/icons";
 import tokenEthList from "../../components/data/tokenEthList.json";
 import tokenPolyList from "../../components/data/tokenPolyList.json";
+
+// ToDo Fix this
+import Image from 'next/image'
+
 import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 
@@ -244,28 +248,23 @@ function Swap(props) {
           </Popover>
         </div>
         <div className={styles.inputs}>
-          <Input
-            placeholder="0"
-            value={tokenOneAmount}
-            onChange={changeAmount}
-            disabled={!prices}
-          />
-          <Input placeholder="0" value={tokenTwoAmount} disabled={true} />
+          <Input className={styles.antInput} placeholder="0" value={tokenOneAmount} onChange={changeAmount} disabled={!prices} />
+          <Input className={styles.antInput} placeholder="0" value={tokenTwoAmount} disabled={true} />
           <div className={styles.switchButton} onClick={switchTokens}>
             <ArrowDownOutlined className={styles.switchArrow} />
           </div>
           <div className={styles.assetOne} onClick={() => openModal(1)}>
-            <img src={tokenOne.img} alt="assetOneLogo" className="assetLogo" />
+            <img src={tokenOne.img} alt="assetOneLogo" className={styles.assetLogo} />
             {tokenOne.ticker}
             <DownOutlined />
           </div>
           <div className={styles.assetTwo} onClick={() => openModal(2)}>
-            <img src={tokenTwo.img} alt="assetOneLogo" className="assetLogo" />
+            <img src={tokenTwo.img} alt="assetOneLogo" className={styles.assetLogo} />
             {tokenTwo.ticker}
             <DownOutlined />
           </div>
         </div>
-        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
+        <div className={styles.swapButton} disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
       </div>
     </>
   );
