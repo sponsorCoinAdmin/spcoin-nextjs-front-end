@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Title from "./Moralis/components/panes/title"
+import Title from "./components/panes/title"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,7 +16,7 @@ export default function RootLayout({
     }) {
     return (
         <div>
-            {/* <Title />npm run dev */}
+            <Title />
             {children}
         </div>
     )

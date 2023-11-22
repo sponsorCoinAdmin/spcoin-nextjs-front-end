@@ -6,7 +6,7 @@ function Title() {
 
   return (
     <div className ={titleName}>
-      <h1>Title</h1>
+      <h1>Sponsor Coin Exchange</h1>
     </div>
   );
 }

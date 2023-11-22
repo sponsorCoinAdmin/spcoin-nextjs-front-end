@@ -1,6 +1,7 @@
 'use client'
 import styles from '../../styles/App.module.css'
 
+
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import {
@@ -10,16 +11,6 @@ import {
 } from "@ant-design/icons";
 import tokenEthList from "../../components/data/tokenEthList.json";
 import tokenPolyList from "../../components/data/tokenPolyList.json";
-
-
-
-
-
-import Modal2 from "../../components/Modal";
-
-
-
-
 
 // ToDo Fix this
 import Image from 'next/image'
@@ -256,36 +247,13 @@ function Swap(props) {
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
-{/* 
-          <div>
-            <button onClick={() => setShowModal(true)}>Open Modal2</button>
-            {showModal &&
-              <Modal onClose={() => setShowModal(false)}>
-                Hello from the modal!
-              </Modal>
-           }
-          </div>
- */}
-
           <Popover
             content={settings}
             title="Settings"
             trigger="click"
             placement="bottomLeft"
-
-            // background-color="rgb(255, 0, 0)"
-            // contentBg={"243056"}
-
-            style={{ background: 'orange'}}
-            // className={styles.antPopoverInner}
-    
-            // className={styles.antPopoverInner}
           >
-
-
-
-
-            <SettingOutlined className={styles.cog} />
+          <SettingOutlined className={styles.cog} />
           </Popover>
         </div>
         <div className={styles.inputs}>
