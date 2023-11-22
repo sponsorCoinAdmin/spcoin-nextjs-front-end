@@ -1,5 +1,4 @@
 // 'use client'
-import Header from "./components/layout/header"
 
 import Agents from "./components/menuTabs/Agents";
 import Recipients from "./components/menuTabs/Recipients";
