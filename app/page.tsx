@@ -1,5 +1,4 @@
 // 'use client'
-import styles from "./styles/App.module.css";
 import Header from "./components/layout/header"
 
 import Agents from "./components/menuTabs/Agents";
@@ -18,8 +17,8 @@ function App() {
 
   return (
 
-    <div className={styles.App}>
-      <div className={styles.mainWindow}>
+    <div>
+      <div>
         {/* <Routes>
           <Route path="/" element={<Swap isConnected={isConnected} address={address} />} />
           <Route path="/Agents" element={<Agents />} />

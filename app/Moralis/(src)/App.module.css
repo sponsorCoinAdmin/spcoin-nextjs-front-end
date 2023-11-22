@@ -75,6 +75,7 @@ header {
   display: flex;
   justify-content: center;
   align-items: center;
+
 }
 
 .link {
@@ -83,21 +84,33 @@ header {
 }
 
 .tradeBox {
-  width: 400px;
+
+  /* position: absolute;  */
+  /* top: 50%; */
+  transform: translate(0, 10px);
+  /* padding: 10px; */
+  /* justify-content: center; */
+
+  font-weight: bold;
+  width: 450px;
   background-color: #0E111B;
   border: 2px solid #21273a;
   min-height: 300px;
   border-radius: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* justify-content: flex-start; */
+  /* align-items: flex-start; */
+  /* padding-top: 30px; */
   padding-left: 30px;
   padding-right: 30px;
   margin: auto;
 }
 
 .tradeBoxHeader {
+  /* color: #20c974;  
+  background-color: #8f591c; */
+  height: 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -124,7 +137,7 @@ header {
   display: flex;
   border-radius: 8px;
   position: absolute;
-  top: 86px;
+  top: 60px;
   left: 180px;
   color: #5F6783;
   border: 3px solid #0E111B;
@@ -151,10 +164,11 @@ header {
 
 .assetOne {
   position: absolute;
-  min-width: 50px;
-  height: 30px;
-  background-color: #3a4157;
-  top: 36px;
+  min-width: 20px;
+  height: 25px;
+
+  background-color: #111c7d;
+  top: 21px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -169,9 +183,8 @@ header {
 .assetTwo {
   position: absolute;
   min-width: 50px;
-  height: 30px;
-  background-color: #3a4157;
-  top: 135px;
+  background-color: #111c7d;
+  top: 97px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -183,17 +196,18 @@ header {
   padding-right: 8px;
 }
 
+.assetLogo {
+  height: 22px;
+  margin-left: 5px;
+  object-fit: contain;
+}
+
 .assetOne:hover{
   cursor: pointer;
 }
 
 .assetTwo:hover{
   cursor: pointer;
-}
-
-.assetLogo {
-  height: 22px;
-  margin-left: 5px;
 }
 
 .swapButton {
@@ -275,4 +289,103 @@ header {
   /* Center horizontally*/
   text-align: center;
   vertical-align: middle;
+}
+
+
+
+
+
+
+.antInput {
+  background-color: #1f2639 !important;
+  color: white !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 35px;
+  border-radius: 12px !important;
+}
+
+.antPopoverInner {
+  min-width: 260px !important;
+  min-height: 140px !important;
+  border: 1px solid #3a2d21;
+  background-color: #5a0c35 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+.ant-input::placeholder {
+  color: #5f6783 !important;
+}
+
+.ant-popover-arrow {
+  visibility: hidden;
+}
+
+.ant-popover-title {
+  color: white !important;
+}
+
+.ant-popover-inner-content {
+  color: white !important;
+}
+
+.ant-radio-group {
+  margin-top: 10px;
+}
+
+.ant-radio-button-wrapper {
+  background-color: #1f2639 !important;
+  color: white !important;
+  font-weight: 500;
+  border-color: white !important;
+}
+
+.ant-radio-button-wrapper-checked {
+  border-color: white !important;
+  background-color: #363e54 !important;
+}
+
+.ant-radio-button-wrapper-checked::before {
+  background-color: white !important;
+}
+
+.ant-modal-content {
+  background-color: #0e111b !important;
+  color: white !important;
+  padding: 0px !important;
+}
+
+.ant-modal {
+  border: 1px solid #363e54;
+  width: 400px !important;
+  border-radius: 10px;
+}
+
+.ant-modal-header {
+  background-color: #0e111b !important;
+}
+
+.ant-modal-title {
+  color: white !important;
+  padding-top: 17px !important;
+  margin-left: 20px !important;
+}
+
+.ant-modal-close-icon {
+  color: #363e54 !important;
+  transition: 0.3s;
+}
+
+.ant-modal-close-icon:hover {
+  color: white !important;
 }

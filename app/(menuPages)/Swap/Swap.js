@@ -11,6 +11,16 @@ import {
 import tokenEthList from "../../components/data/tokenEthList.json";
 import tokenPolyList from "../../components/data/tokenPolyList.json";
 
+
+
+
+
+import Modal2 from "../../components/Modal";
+
+
+
+
+
 // ToDo Fix this
 import Image from 'next/image'
 
@@ -37,6 +47,13 @@ function Swap(props) {
     data: null,
     value: null,
   }); 
+
+
+
+
+
+  let [showModal, setShowModal] = useState(false);
+
 
   /*
   const {data, sendTransaction} = useSendTransaction({
@@ -65,12 +82,11 @@ function Swap(props) {
     setTokenOneAmount(e.target.value);
     if(e.target.value && prices){
       setTokenTwoAmount((e.target.value * prices.ratio).toFixed(2))
-    }else{
+    } else {
       setTokenTwoAmount(null);
     }
   }
 
-  
   function switchTokens() {
     setPrices(null);
     setTokenOneAmount(null);
@@ -82,12 +98,12 @@ function Swap(props) {
     fetchPrices(two.address, one.address);
   }
 
-/*
   function openModal(asset) {
     setChangeToken(asset);
     setIsOpen(true);
   }
 
+/*
   function modifyToken(i){
     // console.log(`modifyToken(${i})`)
     setPrices(null);
@@ -129,9 +145,7 @@ function Swap(props) {
     const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.address}&walletAddress=${address}`)
   
     if(allowance.data.allowance === "0") {
-
       const approve = await axios.get(`https://api.1inch.io/v5.0/1/approve/transaction?tokenAddress=${tokenOne.address}`)
-
       setTxDetails(approve.data);
       console.log("not approved")
       return
@@ -196,16 +210,16 @@ function Swap(props) {
 */
 
   const settings = (
-    <>
-      <div>Slippage Tolerance</div>
-      <div>
+    <div>
+      <div >Slippage Tolerance</div>
+      <div >
         <Radio.Group value={slippage} onChange={handleSlippageChange}>
           <Radio.Button value={0.5}>0.5%</Radio.Button>
           <Radio.Button value={2.5}>2.5%</Radio.Button>
           <Radio.Button value={5}>5.0%</Radio.Button>
         </Radio.Group>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -216,8 +230,12 @@ function Swap(props) {
         footer={null}
         onCancel={() => setIsOpen(false)}
         title="Select a token"
+        contentBg={"243056"}
+
+        style={{ background: 'orange'}}
+        className={styles.antPopoverInner}
       >
-        <div className={styles.modalContent}>
+        <div className={styles.modalContent}>  // for token list popover
           {tokenList?.map((e, i) => {
             return (
               <div
@@ -238,12 +256,35 @@ function Swap(props) {
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
+{/* 
+          <div>
+            <button onClick={() => setShowModal(true)}>Open Modal2</button>
+            {showModal &&
+              <Modal onClose={() => setShowModal(false)}>
+                Hello from the modal!
+              </Modal>
+           }
+          </div>
+ */}
+
           <Popover
             content={settings}
             title="Settings"
             trigger="click"
-            placement="bottomRight"
+            placement="bottomLeft"
+
+            // background-color="rgb(255, 0, 0)"
+            // contentBg={"243056"}
+
+            style={{ background: 'orange'}}
+            // className={styles.antPopoverInner}
+    
+            // className={styles.antPopoverInner}
           >
+
+
+
+
             <SettingOutlined className={styles.cog} />
           </Popover>
         </div>

@@ -11,7 +11,7 @@ header {
   padding-left: 50px;
   padding-right: 50px;
 }
- */
+*/
 
 .logo{
   width: 40px;
@@ -249,6 +249,7 @@ header {
 
 .modalContent {
   border-top: 1px solid #363e54;
+  /* background-color: #3b4874; */
   /* padding-top: 20px; */
   margin-top: 20px;
   display: flex;
@@ -298,13 +299,30 @@ header {
 
 .antInput {
   background-color: #1f2639 !important;
-  color: white !important;
+  color: orange !important;
   border-width: 0px !important;
   height: 70px !important;
   margin-bottom: 5px;
   font-size: 35px;
   border-radius: 12px !important;
 }
+
+.antPopoverInner {
+  min-width: 260px !important;
+  min-height: 140px !important;
+  border: 1px solid #3a2d21;
+  background-color: #5a0c35 !important;
+}
+
+
+
+
+
+
+
+
+
+
 
 .ant-input::placeholder {
   color: #5f6783 !important;
@@ -320,13 +338,6 @@ header {
 
 .ant-popover-inner-content {
   color: white !important;
-}
-
-.ant-popover-inner {
-  min-width: 260px !important;
-  min-height: 140px !important;
-  border: 1px solid #21273a;
-  background-color: #0e111b !important;
 }
 
 .ant-radio-group {
