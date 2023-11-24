@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Title from "./Moralis/components/panes/titleBAK"
+import Header from "../components/panes/header"
+
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,9 +16,12 @@ export default function RootLayout({
         children: React.ReactNode
     }) {
     return (
-        <div>
-            {/* <Title />npm run dev */}
-            {children}
-        </div>
+        <>
+        <header>
+            <Header address={undefined} isConnected={undefined} connect={undefined} headerType={""} />
+        </header>
+        {children}
+        </>
+
     )
 }

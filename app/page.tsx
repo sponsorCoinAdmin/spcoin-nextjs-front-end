@@ -18,10 +18,8 @@ function App() {
 
   return (
 
-    <div>
       <div>
-        {/* <Header connect={connect} isConnected={isConnected} address={address} /> */}
-        <Header />
+        <Header address={undefined} isConnected={undefined} connect={undefined} headerType={""} />
         {/* <Routes>
           <Route path="/" element={<Swap isConnected={isConnected} address={address} />} />
           <Route path="/Agents" element={<Agents />} />
@@ -29,8 +27,6 @@ function App() {
           <Route path="/Recipients" element={<Recipients />} />
         </Routes> */}
       </div>
-
-    </div>
   )
 }
 

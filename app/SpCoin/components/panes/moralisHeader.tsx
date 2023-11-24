@@ -1,10 +1,13 @@
 import React from "react";
 // import styles from "../../styles/App.module.css";
-import styles from "../../styles/Header.module.css";
+import styles from "../../../styles/Header.module.css";
 
 import spCoin_png from '../images/spCoin.png'
+
 import eth_png from '../images/eth.png'
 import Image from 'next/image'
+
+
 import Link from 'next/link'
 
 function MoralisHeader(address: string, isConnected: any, connect: React.MouseEventHandler<HTMLDivElement> | undefined) {
@@ -12,7 +15,6 @@ function MoralisHeader(address: string, isConnected: any, connect: React.MouseEv
     <>
       <div className={styles.leftH}>
         <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
-
         <div className={styles.headerItem}><Link href="/Recipients">Recipients</Link></div>
         <div className={styles.headerItem}><Link href="/Agents">Agents</Link></div>
         <div className={styles.headerItem}><Link href="/Tokens">Tokens</Link></div>

@@ -1,8 +1,6 @@
 import React from "react";
-// import styles from "../../styles/App.module.css";
 import styles from "../../styles/Header.module.css";
-
-import spCoin_png from '../images/spCoin.png'
+import moralis_png from '../images/moralis.png'
 import eth_png from '../images/eth.png'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -11,14 +9,13 @@ function MoralisHeader(address: string, isConnected: any, connect: React.MouseEv
   return (
     <>
       <div className={styles.leftH}>
-        <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
-
+        <Image src={moralis_png} width={25} height={25} alt="Sponsor Coin Logo" />
         <div className={styles.headerItem}><Link href="/Recipients">Recipients</Link></div>
         <div className={styles.headerItem}><Link href="/Agents">Agents</Link></div>
         <div className={styles.headerItem}><Link href="/Tokens">Tokens</Link></div>
         <div className={styles.headerItem}><Link href="/SpCoin">SpCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Moralis">Moralis</Link></div>
-     </div>
+      </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
         <Image src={eth_png} width={25} height={25} alt="Ethereum Logo" />

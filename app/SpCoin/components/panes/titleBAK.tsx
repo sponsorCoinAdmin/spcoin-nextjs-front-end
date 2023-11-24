@@ -5,8 +5,8 @@ function Title() {
   let titleName = "title"
 
   return (
-    <div>
-      <h1>Agents Admin Page</h1>
+    <div className ={titleName}>
+      <h1>Moralis Exchange Example</h1>
     </div>
   );
 }
