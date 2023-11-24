@@ -7,6 +7,8 @@ import Tokens from "./components/menuTabs/Tokens";
 
 import { useConnect, useAccount } from "wagmi";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
+import Header from "./components/panes/header"
+
 
 function App() {
   // const { address, isConnected } = useAccount();
@@ -18,6 +20,8 @@ function App() {
 
     <div>
       <div>
+        {/* <Header connect={connect} isConnected={isConnected} address={address} /> */}
+        <Header />
         {/* <Routes>
           <Route path="/" element={<Swap isConnected={isConnected} address={address} />} />
           <Route path="/Agents" element={<Agents />} />

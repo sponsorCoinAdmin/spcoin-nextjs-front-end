@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Title from "./Moralis/components/panes/title"
+import Title from "./Moralis/components/panes/titleBAK"
 
 const inter = Inter({ subsets: ['latin'] })
 

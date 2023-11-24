@@ -1,14 +1,18 @@
-import React from "react";
+import React from 'react'
+import MoralisHeader from './moralisHeader';
+import TestHeader from '../testModal/testHeader';
+import styles from "../../styles/App.module.css";
 
-function Title() {
-
-  let titleName = "title"
+function Header(props: { address: any; isConnected: any; connect: any; headerType: string}) {
+  const {address, isConnected, connect, headerType} = props;
+  let header = MoralisHeader(address, isConnected, connect);
+  // let header = TestHeader(address, isConnected, connect);
 
   return (
-    <div className ={titleName}>
-      <h1>Moralis Exchange Example</h1>
-    </div>
+    <header>
+      {header}
+    </header>
   );
 }
 
-export default Title;
+export default Header;

@@ -1,6 +1,6 @@
 'use client'
-import styles from '../../styles/App.module.css'
-
+import styles from '../../styles/Exchange.module.css'
+import spCoin_png from '../../components/images/spCoin.png'
 
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
@@ -246,6 +246,7 @@ function Swap(props) {
       </Modal>
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
+          <Image src={spCoin_png} width={25} height={25} alt="Moralis Logo" />
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover
             content={settings}

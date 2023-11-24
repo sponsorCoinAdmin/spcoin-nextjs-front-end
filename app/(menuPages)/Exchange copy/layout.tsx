@@ -16,7 +16,7 @@ export default function RootLayout({
     }) {
     return (
         <div>
-            <Title address={undefined} isConnected={undefined} connect={undefined} headerType={''} />
+            <Title />
             {children}
         </div>
     )

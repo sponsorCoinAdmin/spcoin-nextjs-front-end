@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         {/* <Header connect={connect} isConnected={isConnected} address={address} /> */}
-        <Header />
+        {/* <Header /> */}
         {children}
         <Footer />
       </body>

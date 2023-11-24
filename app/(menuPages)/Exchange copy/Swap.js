@@ -1,7 +1,5 @@
 'use client'
-import styles from './styles/App.module.css'
-import moralis_png from './images/moralis.png'
-
+import styles from '../../styles/App.module.css'
 
 
 import React, { useState, useEffect } from "react";
@@ -142,6 +140,7 @@ function Swap(props) {
       setTxDetails(approve.data);
       console.log("not approved")
       return
+
     }
 
     const tx = await axios.get(
@@ -247,8 +246,7 @@ function Swap(props) {
       </Modal>
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
-        <Image src={moralis_png} width={25} height={25} alt="Moralis Logo" />
-          <h4 className={styles.center}>Moralis Exchange</h4>
+          <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover
             content={settings}
             title="Settings"

@@ -1,9 +1,3 @@
-'use client'
-import styles from './styles/App.module.css'
-import moralis_png from './images/moralis.png'
-
-
-
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import {
@@ -13,10 +7,6 @@ import {
 } from "@ant-design/icons";
 import tokenEthList from "../../components/data/tokenEthList.json";
 import tokenPolyList from "../../components/data/tokenPolyList.json";
-
-// ToDo Fix this
-import Image from 'next/image'
-
 import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 
@@ -41,14 +31,6 @@ function Swap(props) {
     value: null,
   }); 
 
-
-
-
-
-  let [showModal, setShowModal] = useState(false);
-
-
-  /*
   const {data, sendTransaction} = useSendTransaction({
     request: {
       from: address,
@@ -66,7 +48,6 @@ function Swap(props) {
     // setTokenList(e.target.value);
   }
 
-*/
   function handleSlippageChange(e) {
     setSlippage(e.target.value);
   }
@@ -75,7 +56,7 @@ function Swap(props) {
     setTokenOneAmount(e.target.value);
     if(e.target.value && prices){
       setTokenTwoAmount((e.target.value * prices.ratio).toFixed(2))
-    } else {
+    }else{
       setTokenTwoAmount(null);
     }
   }
@@ -96,7 +77,6 @@ function Swap(props) {
     setIsOpen(true);
   }
 
-/*
   function modifyToken(i){
     // console.log(`modifyToken(${i})`)
     setPrices(null);
@@ -132,16 +112,19 @@ function Swap(props) {
           throw err
       })
   }
-*/
+
   async function fetchDexSwap(){
 
     const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.address}&walletAddress=${address}`)
   
     if(allowance.data.allowance === "0") {
+
       const approve = await axios.get(`https://api.1inch.io/v5.0/1/approve/transaction?tokenAddress=${tokenOne.address}`)
+
       setTxDetails(approve.data);
       console.log("not approved")
       return
+
     }
 
     const tx = await axios.get(
@@ -154,7 +137,7 @@ function Swap(props) {
     setTxDetails(tx.data.tx);
   
   }
-/*
+
 
   useEffect(()=>{
 
@@ -199,19 +182,19 @@ function Swap(props) {
       })
     }
   },[isSuccess])
-*/
+
 
   const settings = (
-    <div>
-      <div >Slippage Tolerance</div>
-      <div >
+    <>
+      <div>Slippage Tolerance</div>
+      <div>
         <Radio.Group value={slippage} onChange={handleSlippageChange}>
           <Radio.Button value={0.5}>0.5%</Radio.Button>
           <Radio.Button value={2.5}>2.5%</Radio.Button>
           <Radio.Button value={5}>5.0%</Radio.Button>
         </Radio.Group>
       </div>
-    </div>
+    </>
   );
 
   return (
@@ -222,60 +205,60 @@ function Swap(props) {
         footer={null}
         onCancel={() => setIsOpen(false)}
         title="Select a token"
-        contentBg={"243056"}
-
-        style={{ background: 'orange'}}
-        className={styles.antPopoverInner}
       >
-        <div className={styles.modalContent}>  // for token list popover
+        <div className="modalContent">
           {tokenList?.map((e, i) => {
             return (
               <div
-                className={styles.tokenChoice}
+                className="tokenChoice"
                 key={i}
                 onClick={() => modifyToken(i)}
               >
-                <img src={e.img} alt={e.ticker} className={styles.tokenLogo} />
-                <div className={styles.tokenChoiceNames}>
-                  <div className={styles.tokenName}>{e.name}</div>
-                  <div className={styles.tokenTicker}>{e.ticker}</div>
+                <img src={e.img} alt={e.ticker} className="tokenLogo" />
+                <div className="tokenChoiceNames">
+                  <div className="tokenName">{e.name}</div>
+                  <div className="tokenTicker">{e.ticker}</div>
                 </div>
               </div>
             );
           })}
         </div>
       </Modal>
-      <div className={styles.tradeBox}>
-        <div className={styles.tradeBoxHeader}>
-        <Image src={moralis_png} width={25} height={25} alt="Moralis Logo" />
-          <h4 className={styles.center}>Moralis Exchange</h4>
+      <div className="tradeBox">
+        <div className="tradeBoxHeader">
+          <h4 className="center">Sponsor Coin Exchange</h4>
           <Popover
             content={settings}
             title="Settings"
             trigger="click"
-            placement="bottomLeft"
+            placement="bottomRight"
           >
-          <SettingOutlined className={styles.cog} />
+            <SettingOutlined className="cog" />
           </Popover>
         </div>
-        <div className={styles.inputs}>
-          <Input className={styles.antInput} placeholder="0" value={tokenOneAmount} onChange={changeAmount} disabled={!prices} />
-          <Input className={styles.antInput} placeholder="0" value={tokenTwoAmount} disabled={true} />
-          <div className={styles.switchButton} onClick={switchTokens}>
-            <ArrowDownOutlined className={styles.switchArrow} />
+        <div className="inputs">
+          <Input
+            placeholder="0"
+            value={tokenOneAmount}
+            onChange={changeAmount}
+            disabled={!prices}
+          />
+          <Input placeholder="0" value={tokenTwoAmount} disabled={true} />
+          <div className="switchButton" onClick={switchTokens}>
+            <ArrowDownOutlined className="switchArrow" />
           </div>
-          <div className={styles.assetOne} onClick={() => openModal(1)}>
-            <img src={tokenOne.img} alt="assetOneLogo" className={styles.assetLogo} />
+          <div className="assetOne" onClick={() => openModal(1)}>
+            <img src={tokenOne.img} alt="assetOneLogo" className="assetLogo" />
             {tokenOne.ticker}
             <DownOutlined />
           </div>
-          <div className={styles.assetTwo} onClick={() => openModal(2)}>
-            <img src={tokenTwo.img} alt="assetOneLogo" className={styles.assetLogo} />
+          <div className="assetTwo" onClick={() => openModal(2)}>
+            <img src={tokenTwo.img} alt="assetOneLogo" className="assetLogo" />
             {tokenTwo.ticker}
             <DownOutlined />
           </div>
         </div>
-        <div className={styles.swapButton} disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
+        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
       </div>
     </>
   );

@@ -1,20 +1,21 @@
 import React from "react";
-import styles from "../../styles/App.module.css";
+// import styles from "../../styles/App.module.css";
+import styles from "../../styles/Header.module.css";
 
 import spCoin_png from '../images/spCoin.png'
 import eth_png from '../images/eth.png'
 import Image from 'next/image'
 
-import Agents from "../menuTabs/Agents";
-import Moralis from "../menuTabs/Moralis";
-import Recipients from "../menuTabs/Recipients";
-import Swap from "../menuTabs/Swap";
-import Tokens from "../menuTabs/Tokens";
+// import Agents from "../menuTabs/Agents";
+// import Moralis from "../menuTabs/Moralis";
+// import Recipients from "../menuTabs/Recipients";
+// import Swap from "../menuTabs/Swap";
+// import Tokens from "../menuTabs/Tokens";
 import Link from 'next/link'
 
 function MoralisHeader(address: string, isConnected: any, connect: React.MouseEventHandler<HTMLDivElement> | undefined) {
   return (
-    <header>
+    <>
       <div className={styles.leftH}>
         <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
 
@@ -39,7 +40,7 @@ function MoralisHeader(address: string, isConnected: any, connect: React.MouseEv
           {isConnected ? (address.slice(0,4) +"..." +address.slice(38)) : "Connect"}
         </div>
       </div>
-    </header>
+    </>
   );
 }
 
