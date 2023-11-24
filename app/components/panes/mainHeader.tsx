@@ -19,7 +19,7 @@ function MoralisHeader(address: string, isConnected: any, connect: React.MouseEv
         <div className={styles.headerItem}><Link href="/SpCoin">SpCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Moralis">Moralis</Link></div>
      </div>
-      <div className={styles.rightH}>
+      {/* <div className={styles.rightH}>
         <div className={styles.headerItem}>
         <Image src={eth_png} width={25} height={25} alt="Ethereum Logo" />
         &nbsp;&nbsp;Ethereum
@@ -27,7 +27,7 @@ function MoralisHeader(address: string, isConnected: any, connect: React.MouseEv
         <div className={styles.connectButton} onClick={connect}>
           {isConnected ? (address.slice(0,4) +"..." +address.slice(38)) : "Connect"}
         </div>
-      </div>
+      </div> */}
     </>
   );
 }
