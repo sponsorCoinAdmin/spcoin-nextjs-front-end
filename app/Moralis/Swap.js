@@ -59,12 +59,12 @@ function Swap(props) {
   const { isLoading, isSuccess } = useWaitForTransaction({
     hash: data?.hash,
   })
+  /**/ 
 
   function changeNetwork(e) {
     // setTokenList(e.target.value);
   }
 
-*/
   function handleSlippageChange(e) {
     setSlippage(e.target.value);
   }
@@ -94,7 +94,7 @@ function Swap(props) {
     setIsOpen(true);
   }
 
-/*
+/**/
   function modifyToken(i){
     // console.log(`modifyToken(${i})`)
     setPrices(null);
@@ -130,8 +130,8 @@ function Swap(props) {
           throw err
       })
   }
-*/
-  async function fetchDexSwap(){
+/**/
+async function fetchDexSwap(){
 
     const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.address}&walletAddress=${address}`)
   
@@ -152,14 +152,15 @@ function Swap(props) {
     setTxDetails(tx.data.tx);
   
   }
-/*
 
   useEffect(()=>{
 
     fetchPrices(tokenList[0].address, tokenList[1].address)
 
   }, [])
+/**/
 
+/*
   useEffect(()=>{
 
       if(txDetails.to && isConnected){
@@ -197,7 +198,7 @@ function Swap(props) {
       })
     }
   },[isSuccess])
-*/
+/**/
 
   const settings = (
     <div>

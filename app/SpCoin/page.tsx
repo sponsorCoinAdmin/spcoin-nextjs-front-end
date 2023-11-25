@@ -1,9 +1,9 @@
 import React from 'react'
-import Swap from './Swap'
+import Exchange from './Exchange'
 
 function swap() {
   return (
-    <Swap />
+    <Exchange />
     // <div className="mainApp"><h1>Swap Page</h1></div>
   )
 }
