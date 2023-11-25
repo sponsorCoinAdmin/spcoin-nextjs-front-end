@@ -37,11 +37,7 @@ function Swap(props) {
     to: null,
     data: null,
     value: null,
-  }); 
-
-
-
-
+  });
 
   let [showModal, setShowModal] = useState(false);
 
@@ -121,11 +117,11 @@ function Swap(props) {
             setPrices(data)
           }
           else {
-            // alert(`{ ERROR:\n, ${JSON.stringify(data, null, 2)} }`)
+            alert(`{ ERROR:\n, ${JSON.stringify(data, null, 2)} }`)
           }
         }).catch((err) => {
           let msg = `{ ERROR: ${JSON.stringify(err, null, 2)} }`
-          // alert(msg)
+          alert(msg)
           console.log(msg);
           throw err
       })
