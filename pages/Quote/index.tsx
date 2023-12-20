@@ -21,18 +21,18 @@ export default function QuoteView({
   price,
   quote,
   setQuote,
-  takerAddress,
+  connectedWalletAddr,
 }: {
   price: PriceResponse;
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
-  takerAddress: Address | undefined;
+  connectedWalletAddr: Address | undefined;
 }) {
   const sellTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+    POLYGON_TOKENS_BY_ADDRESS[price.tokenToSellAddr.toLowerCase()];
 
   const buyTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
+    POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()];
 
   // fetch quote here
   const { address } = useAccount();
@@ -41,11 +41,11 @@ export default function QuoteView({
     [
       "/api/quote",
       {
-        sellToken: price.sellTokenAddress,
-        buyToken: price.buyTokenAddress,
+        sellToken: price.tokenToSellAddr,
+        buyToken: price.tokenToBuyAddr,
         sellAmount: price.sellAmount,
         // buyAmount: TODO if we want to support buys,
-        takerAddress,
+        connectedWalletAddr,
         feeRecipient: FEE_RECIPIENT,
         buyTokenPercentageFee: AFFILIATE_FEE,
       },
@@ -95,12 +95,12 @@ export default function QuoteView({
           <div className="flex items-center text-lg sm:text-3xl text-white">
             <img
               alt={
-                POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()]
+                POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()]
                   .symbol
               }
               className="h-9 w-9 mr-2 rounded-md"
               src={
-                POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()]
+                POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()]
                   .logoURI
               }
             />

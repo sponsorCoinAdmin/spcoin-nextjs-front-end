@@ -25,7 +25,7 @@ interface PriceRequestParams {
   buyToken: string;
   buyAmount?: string;
   sellAmount?: string;
-  takerAddress?: string;
+  connectedWalletAddr?: string;
 }
 
 const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
@@ -43,12 +43,12 @@ export default function PriceView({
   price,
   setPrice,
   setFinalize,
-  takerAddress,
+  connectedWalletAddr,
 }: {
   price: any;
   setPrice: (price: any) => void;
   setFinalize: (finalize: boolean) => void;
-  takerAddress: Address | undefined;
+  connectedWalletAddr: Address | undefined;
 }) {
   // fetch price here
   const [sellAmount, setSellAmount] = useState("");
@@ -88,7 +88,7 @@ export default function PriceView({
         buyToken: POLYGON_TOKENS_BY_SYMBOL[buyToken].address,
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
-        takerAddress,
+        connectedWalletAddr,
         feeRecipient: FEE_RECIPIENT,
         buyTokenPercentageFee: AFFILIATE_FEE,
       },
@@ -108,7 +108,7 @@ export default function PriceView({
   );
 
   const { data, isError, isLoading } = useBalance({
-    address: takerAddress,
+    address: connectedWalletAddr,
     token: POLYGON_TOKENS_BY_SYMBOL[sellToken].address,
   });
 
@@ -143,7 +143,7 @@ export default function PriceView({
               value={sellToken}
               name="sell-token-select"
               id="sell-token-select"
-              className="mr-2 w-50 sm:w-full h-9 rounded-md"
+              className="mr-2 w-50 sm:w-full h-19 rounded-md"
               onChange={handleSellTokenChange}
             >
               {/* <option value="">--Choose a token--</option> */}
@@ -223,10 +223,10 @@ export default function PriceView({
         </div>
       </div>
 
-      {takerAddress ? (
+      {connectedWalletAddr ? (
         <ApproveOrReviewButton
-          sellTokenAddress={POLYGON_TOKENS_BY_SYMBOL[sellToken].address}
-          takerAddress={takerAddress}
+          tokenToSellAddr={POLYGON_TOKENS_BY_SYMBOL[sellToken].address}
+          connectedWalletAddr={connectedWalletAddr}
           onClick={() => {
             setFinalize(true);
           }}
@@ -264,27 +264,27 @@ export default function PriceView({
 }
 
 function ApproveOrReviewButton({
-  takerAddress,
+  connectedWalletAddr,
   onClick,
-  sellTokenAddress,
+  tokenToSellAddr,
   disabled,
 }: {
-  takerAddress: Address;
+  connectedWalletAddr: Address;
   onClick: () => void;
-  sellTokenAddress: Address;
+  tokenToSellAddr: Address;
   disabled?: boolean;
 }) {
   // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
   const { data: allowance, refetch } = useContractRead({
-    address: sellTokenAddress,
+    address: tokenToSellAddr,
     abi: erc20ABI,
     functionName: "allowance",
-    args: [takerAddress, exchangeProxy],
+    args: [connectedWalletAddr, exchangeProxy],
   });
 
   // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
   const { config } = usePrepareContractWrite({
-    address: sellTokenAddress,
+    address: tokenToSellAddr,
     abi: erc20ABI,
     functionName: "approve",
     args: [exchangeProxy, MAX_ALLOWANCE],

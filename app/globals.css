@@ -33,17 +33,15 @@ header {
   background: rgb(119, 126, 142);
 }
 
-.title {
-  display: flex;
+/* 
+Modal {
+  background: white;
+  height:100%;
+  width:100%;
+  border-radius: 15px;
+  padding: 15px;
+} */
 
-}
-
-.mainApp {
-  margin-top: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 footer {
   height: 50px;
@@ -57,67 +55,6 @@ footer {
   text-align: center;
   align-items: center;
   background: rgb(119, 126, 142);
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
-
-.tokenLogo {
-  height: 40px;
-  width: 40px;
-}
-
-.center {
-  /* Center horizontally*/
-  text-align: center;
-  vertical-align: middle;
-}
-
-.tradeBox {
-  width: 400px;
-  background-color: #0E111B;
-  border: 2px solid #21273a;
-  min-height: 300px;
-  border-radius: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding-left: 30px;
-  padding-right: 30px;
-  margin: auto;
-}
-
-Modal {
-  background: white;
-  height:100%;
-  width:100%;
-  border-radius: 15px;
-  padding: 15px;
-}
-
-
-
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  height: 100vh;
-  width: 100vw;
-  background-color: rgb(25, 33, 52) !important;
-  background: rgb(25, 33, 52);
-  background: linear-gradient(
-    180deg,
-    rgba(25, 33, 52, 1) 28%,
-    rgba(7, 8, 21, 1) 75%
-  );
-  color: white;
 }
 
 code {
@@ -151,7 +88,14 @@ code {
   color: white !important;
 }
 
-.ant-popover-inner {
+/* .ant-popover-inner {
+  min-width: 260px !important;
+  min-height: 140px !important;
+  border: 1px solid #21273a;
+  background-color: #0e111b !important;
+} */
+
+.popover-inner {
   min-width: 260px !important;
   min-height: 140px !important;
   border: 1px solid #21273a;
@@ -209,40 +153,3 @@ code {
   color: white !important;
 }
 
-
-
-
-.modal-wrapper {
-  width: 500px;
-  height: 600px;
-}
-
-.modal {
-  background: white;
-  height:100%;
-  width:100%;
-  border-radius: 15px;
-  padding: 15px;
-}
-
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-body {
-  padding-top: 10px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 25px;
-}

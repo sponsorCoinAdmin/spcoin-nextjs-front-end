@@ -1,12 +1,14 @@
 {
     "cSpell.words": [
         "antd",
-        "approuter",
+        "connectbutton",
         "connectkit",
         "moralis",
         "nextjs",
         "svgr",
         "tailwindcss",
-        "wagmi"
+        "viem",
+        "wagmi",
+        "WMATIC"
     ]
 }

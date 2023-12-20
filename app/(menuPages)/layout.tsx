@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Header from "../components/panes/header"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,7 +15,6 @@ export default function RootLayout({
     }) {
     return (
     <>
-        <Header address={undefined} isConnected={undefined} connect={undefined} headerType={""} />
         {children}
     </>
     )

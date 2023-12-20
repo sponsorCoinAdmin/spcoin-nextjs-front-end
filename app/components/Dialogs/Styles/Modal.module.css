@@ -1,0 +1,57 @@
+.tokenLogo {
+  height: 40px;
+  width: 40px;
+}
+
+.infoLogo {
+  height: 20px;
+  width: 20px;
+}
+
+.tokenName {
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.tokenTicker {
+  margin-left: 10px;
+  font-size: 13px;
+  font-weight: 300;
+  color: #51596f;
+}
+
+.modalInputSelect {
+  background-color: #243056; 
+  color: #5981F3;
+  border-width: 0px !important;
+  height: 40px !important;
+  width: 100%;
+  margin-bottom: 5px;
+  border-radius: 22px !important;
+}
+
+.leftH {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 50px;
+  padding-right: 50px;
+  background: rgb(119, 126, 142);
+}
+
+.searchImage {
+  border-radius: 4px;
+  margin-bottom: 6px;
+  margin-left: 10px;
+  width: 23px;
+  height:25px;
+}
