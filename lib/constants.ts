@@ -10,11 +10,11 @@ export const exchangeProxy = "0xDef1C0ded9bec7F1a1670819833240f027b25EfF";
 }; */
 
 interface Token {
+  chainId: number;
   name: string;
-  address: any;
   symbol: string;
   decimals: number;
-  chainId: number;
+  address: any;
   logoURI: string;
 }
 

@@ -10,7 +10,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
-  console.log("Using Page Price")
+  console.log("Using SpCoin Price")
 
   const query = qs.stringify(req.query);
   const response = await fetch(

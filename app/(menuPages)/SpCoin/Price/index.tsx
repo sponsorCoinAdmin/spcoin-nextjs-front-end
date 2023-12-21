@@ -62,8 +62,6 @@ interface PriceRequestParams {
 }
 
 
-
-
 const selectElement ='Search agent name or paste address';
 
 const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
@@ -71,6 +69,7 @@ const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH a
 
 
 export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
+  console.log("fetcher params = + " + JSON.stringify(params, null, 2))
   const { sellAmount, buyAmount } = params;
   if (!sellAmount && !buyAmount) return;
   const query = qs.stringify(params);
@@ -92,6 +91,14 @@ export default function PriceView({
   setFinalize: (finalize: boolean) => void;
   connectedWalletAddr: Address | undefined;
 }) {
+
+  console.log("EXECUTING Price({")
+  console.log("  price: " + JSON.stringify(price))
+  console.log("  setPrice: " + JSON.stringify(setPrice))
+  console.log("  setFinalize: " + JSON.stringify(setFinalize))
+  console.log("  connectedWalletAddr: " + connectedWalletAddr)
+  console.log("})")
+
   // fetch price here
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
@@ -104,6 +111,8 @@ export default function PriceView({
     sellAmount && tradeDirection === "sell"
       ? parseUnits(sellAmount, sellListElement.decimals).toString()
       : undefined;
+
+  console.log("sellAmount = " + sellAmount)
 
   const parsedBuyAmount =
     buyAmount && tradeDirection === "buy"
@@ -134,6 +143,9 @@ export default function PriceView({
           setSellAmount(formatUnits(data.sellAmount, sellListElement.decimals));
         }
       },
+      onError: ( error ) => {
+        console.log("useSWR fetcher ERROR error = " + error)
+      },
     }
   );
 
@@ -142,8 +154,7 @@ export default function PriceView({
     token: sellListElement.address,
   });
 
-  // console.log(sellAmount);
-
+  
   const disabled =
     data && sellAmount
       ? parseUnits(sellAmount, sellListElement.decimals) > data.value
@@ -220,7 +231,7 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} 
             onChange={(e) => {
-                setTradeDirection("sell");
+                // setTradeDirection("sell");
                 setSellAmount(e.target.value);
             }}
           />

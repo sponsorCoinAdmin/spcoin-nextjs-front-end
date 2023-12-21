@@ -1,4 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+'use server'
 import qs from "qs";
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -10,6 +11,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) {
+  console.log("Using SpCoin Price")
+
   const query = qs.stringify(req.query);
   const response = await fetch(
     `https://polygon.api.0x.org/swap/v1/price?${query}`,

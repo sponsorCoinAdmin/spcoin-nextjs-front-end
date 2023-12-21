@@ -1,7 +1,6 @@
 import useSWR from "swr";
 import Image from "next/image";
 import {
-  POLYGON_TOKENS_BY_SYMBOL,
   POLYGON_TOKENS_BY_ADDRESS,
 } from "../lib/constants";
 import { fetcher } from "../Price";
