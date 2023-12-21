@@ -1,6 +1,6 @@
 'use client'
 
-import ConnectedPage from "../../components/ConnectWrapper";
+import ConnectWrapper from "../../components/ConnectWrapper";
 import Component from './index'
 
 import React from 'react'
@@ -8,7 +8,7 @@ import React from 'react'
 function connectedPage() {
   return (
     <>
-       <ConnectedPage Component={Component} />
+       <ConnectWrapper Component={Component} />
     </>
   )
 }
