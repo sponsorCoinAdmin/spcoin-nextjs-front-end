@@ -81,22 +81,22 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
 };
 
 export default function PriceView({
+  connectedWalletAddr,
   price,
   setPrice,
   setFinalize,
-  connectedWalletAddr,
 }: {
+  connectedWalletAddr: Address | undefined;
   price: any;
   setPrice: (price: any) => void;
   setFinalize: (finalize: boolean) => void;
-  connectedWalletAddr: Address | undefined;
 }) {
 
   console.log("EXECUTING Price({")
+  console.log("  connectedWalletAddr: " + connectedWalletAddr)
   console.log("  price: " + JSON.stringify(price))
   console.log("  setPrice: " + JSON.stringify(setPrice))
   console.log("  setFinalize: " + JSON.stringify(setFinalize))
-  console.log("  connectedWalletAddr: " + connectedWalletAddr)
   console.log("})")
 
   // fetch price here
@@ -149,18 +149,21 @@ export default function PriceView({
     }
   );
 
-  const { data, isError, isLoading } = useBalance({
+  // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
+
+
+  const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellListElement.address,
   });
 
-  
-  const disabled =
-    data && sellAmount
+  function isDisabled() {
+    return data && sellAmount
       ? parseUnits(sellAmount, sellListElement.decimals) > data.value
       : true;
-
-  // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
+  }
+  
+   // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
 
   // ------------------------------ START MORALIS SCRIPT CODE
 
@@ -243,7 +246,7 @@ export default function PriceView({
               onClick={() => {
                 setFinalize(true);
               }}
-              disabled={disabled}
+              disabled={isDisabled()}
             />
             ) : (
             <CustomConnectButton />)}

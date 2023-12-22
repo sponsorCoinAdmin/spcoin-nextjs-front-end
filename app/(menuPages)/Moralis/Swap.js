@@ -20,12 +20,6 @@ import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 
 function Swap(props) {
-  let tokenList = tokenEthList;
-  // let { tokenList, setTokenList } = useState(tokenEthList);
-  // let { address, isConnected } = props;
-  // alert(JSON.stringify(tokenList,null,2))
-  let { address, isConnected } = props;
-  let [messageApi, contextHolder] = message.useMessage();
   let [slippage, setSlippage] = useState(2.5);
   let [tokenOneAmount, setTokenOneAmount] = useState(null);
   let [tokenTwoAmount, setTokenTwoAmount] = useState(null);
@@ -34,37 +28,10 @@ function Swap(props) {
   let [isOpen, setIsOpen] = useState(false);
   let [changeToken, setChangeToken] = useState(1);
   let [prices, setPrices] = useState(null);
-  let [txDetails, setTxDetails] = useState({
-    to: null,
-    data: null,
-    value: null,
-  }); 
-
-
 
 
 
   let [showModal, setShowModal] = useState(false);
-
-
-  /*
-  const {data, sendTransaction} = useSendTransaction({
-    request: {
-      from: address,
-      to: String(txDetails.to),
-      data: String(txDetails.data),
-      value: String(txDetails.value),
-    }
-  })
-
-  const { isLoading, isSuccess } = useWaitForTransaction({
-    hash: data?.hash,
-  })
-  /**/ 
-
-  function changeNetwork(e) {
-    // setTokenList(e.target.value);
-  }
 
   function handleSlippageChange(e) {
     setSlippage(e.target.value);
@@ -112,8 +79,6 @@ function Swap(props) {
   }
 
   async function fetchPrices(one, two){
-
-    let status
     await axios.get(`http://localhost:3001/tokenPrice`, {
         params: {addressOne: one, addressTwo: two}
       }).then((res) => {
@@ -131,75 +96,6 @@ function Swap(props) {
           throw err
       })
   }
-/**/
-async function fetchDexSwap(){
-
-    const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.address}&walletAddress=${address}`)
-  
-    if(allowance.data.allowance === "0") {
-      const approve = await axios.get(`https://api.1inch.io/v5.0/1/approve/transaction?tokenAddress=${tokenOne.address}`)
-      setTxDetails(approve.data);
-      console.log("not approved")
-      return
-    }
-
-    const tx = await axios.get(
-      `https://api.1inch.io/v5.0/1/swap?fromTokenAddress=${tokenOne.address}&toTokenAddress=${tokenTwo.address}&amount=${tokenOneAmount.padEnd(tokenOne.decimals+tokenOneAmount.length, '0')}&fromAddress=${address}&slippage=${slippage}`
-    )
-
-    let decimals = Number(`1E${tokenTwo.decimals}`)
-    setTokenTwoAmount((Number(tx.data.toTokenAmount)/decimals).toFixed(2));
-
-    setTxDetails(tx.data.tx);
-  
-  }
-
-  useEffect(()=>{
-
-    fetchPrices(tokenList[0].address, tokenList[1].address)
-
-  }, [])
-/**/
-
-/*
-  useEffect(()=>{
-
-      if(txDetails.to && isConnected){
-        sendTransaction();
-      }
-  }, [txDetails])
-
-  useEffect(()=>{
-
-    messageApi.destroy();
-
-    if(isLoading){
-      messageApi.open({
-        type: 'loading',
-        content: 'Transaction is Pending...',
-        duration: 0,
-      })
-    }    
-
-  },[isLoading])
-
-  useEffect(()=>{
-    messageApi.destroy();
-    if(isSuccess){
-      messageApi.open({
-        type: 'success',
-        content: 'Transaction Successful',
-        duration: 1.5,
-      })
-    }else if(txDetails.to){
-      messageApi.open({
-        type: 'error',
-        content: 'Transaction Failed',
-        duration: 1.50,
-      })
-    }
-  },[isSuccess])
-/**/
 
   const settings = (
     <div>
@@ -216,7 +112,6 @@ async function fetchDexSwap(){
 
   return (
     <>
-      {contextHolder}
       <Modal
         open={isOpen}
         footer={null}
@@ -275,7 +170,7 @@ async function fetchDexSwap(){
             <DownOutlined />
           </div>
         </div>
-        <div className={styles.swapButton} disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
+        {/* <div className={styles.swapButton} disabled={!tokenOneAmount || !isConnected} onClick={alert("ToDo")}>Swap</div> */}
       </div>
     </>
   );
