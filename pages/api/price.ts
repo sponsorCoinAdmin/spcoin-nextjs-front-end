@@ -13,8 +13,11 @@ export default async function handler(
   console.log("Using Page Price")
 
   const query = qs.stringify(req.query);
+  const apiQuery = `https://polygon.api.0x.org/swap/v1/price?${query}`;
+  console.log("Executing apiQuery Price: " + apiQuery)
+
   const response = await fetch(
-    `https://polygon.api.0x.org/swap/v1/price?${query}`,
+    apiQuery,
     {
       headers: {
         "0x-api-key": "c9f13c84-9fcb-4f42-aa30-a11b0d016aa5", // process.env.NEXT_PUBLIC_0X_API_KEY,
