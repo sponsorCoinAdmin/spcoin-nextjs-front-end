@@ -3,8 +3,8 @@ import './Styles/modal.css';
 import { useRef } from 'react'
 import DataList from './DataList'
 
-// import dataList from '../Resources/data/tokenEthList.json';
-import dataList from '../Dialogs/Resources/data/tokenEthList.json';
+//import dataList from '../Dialogs/Resources/data/tokenEthList.json';
+import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
 import InputSelect from './InputSelect'
 
 const titleName ='Select an agent';

@@ -30,6 +30,15 @@ const defaultSellToken: ListElement = {
   decimals: 8
  };
 
+ const defaultSellToken2: ListElement = { 
+  chainId: 137,
+  ticker: "WETH",
+  img: "https://cdn.moralis.io/eth/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png",
+  name: "Wrapped Ethereum",
+  address: "0xAe740d42E4ff0C5086b2b5b5d149eB2F9e1A754F",
+  decimals: 18
+ };
+
  const defaultBuyToken: ListElement = { 
   chainId: 137,
   ticker: "USDT",
@@ -98,7 +107,6 @@ export default function PriceView({
   console.log("  setPrice: " + JSON.stringify(setPrice))
   console.log("  setFinalize: " + JSON.stringify(setFinalize))
   console.log("})")
-
   // fetch price here
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
@@ -106,6 +114,8 @@ export default function PriceView({
 
   const [sellListElement, setSellListElement] = useState<ListElement>(defaultSellToken);
   const [buyListElement, setBuyListElement] = useState<ListElement>(defaultBuyToken);
+  console.log("sellListElement.ticker = " + sellListElement.ticker);
+  console.log("buyListElement.ticker  = " + buyListElement.ticker);
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
@@ -151,8 +161,7 @@ export default function PriceView({
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
 
-
-  const  { data, isError, isLoading } = useBalance({
+  let  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellListElement.address,
   });
@@ -275,9 +284,6 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-
-{/* OX Code */}
-
         <div className="text-slate-400">
           {price && price.grossBuyAmount
             ? "Affiliate Fee: " +

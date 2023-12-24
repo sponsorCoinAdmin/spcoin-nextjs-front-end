@@ -12,9 +12,9 @@ export default async function handler(
 ) {
   console.log("Using Page Price")
 
-  const query = qs.stringify(req.query);
-  const apiQuery = `https://polygon.api.0x.org/swap/v1/price?${query}`;
-  console.log("Executing apiQuery Price: " + apiQuery)
+  let query = qs.stringify(req.query);
+  let apiQuery = `https://polygon.api.0x.org/swap/v1/price?${query}`;
+  console.log("Executing Price Request: " + apiQuery)
 
   const response = await fetch(
     apiQuery,
@@ -26,6 +26,6 @@ export default async function handler(
   );
 
   const data = await response.json();
-
   res.status(200).json(data);
+  console.log("Executing Price Response : " + JSON.stringify(data,null,2))
 }
