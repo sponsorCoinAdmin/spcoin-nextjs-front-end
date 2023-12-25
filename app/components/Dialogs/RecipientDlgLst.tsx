@@ -8,7 +8,7 @@ import { type Address } from "wagmi";
 
 type ListElement = {
     chainId: number;
-    ticker: string; 
+    symbol: string; 
     img: string; 
     name: string; 
     address: any; 

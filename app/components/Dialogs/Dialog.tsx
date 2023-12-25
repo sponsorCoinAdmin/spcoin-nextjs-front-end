@@ -2,16 +2,17 @@
 import './Styles/modal.css';
 import { useRef } from 'react'
 import DataList from './DataList'
+// let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
 
 //import dataList from '../Dialogs/Resources/data/tokenEthList.json';
-import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
+import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
 import InputSelect from './InputSelect'
 
 const titleName ='Select an agent';
 
 type ListElement = {
     chainId: number;
-    ticker: string; 
+    symbol: string; 
     img: string; 
     name: string; 
     address: any; 
@@ -20,8 +21,26 @@ type ListElement = {
 
 type Props = {
     selectElement: string,
-    getDlgLstElement: (listElement: ListElement) => void,
+    getDlgLstElement: (listElement: ListElement) => boolean,
 }
+
+const fetchTokenList = async() => {
+    const response = await fetch('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
+    const jsonResp = await response.json();
+    alert(response);
+    return "WORKS";
+  }
+
+// await fetchTokenList()
+  
+// async function fetchTokenList() {
+//     const response = await fetch("https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json");
+//     const jsonResp = await response.json();
+//     // const tList = JSON.stringify(jsonResp, null, 2);
+//     // const tList = JSON.stringify(await response.json(),null,2);
+//     // alert(tList);
+//   }
+  
 
 export default function Dialog({ selectElement, getDlgLstElement}: Props) {
 // alert("PARSED dataList: ListElement[] = " + JSON.stringify(dataList, null, 2))
@@ -29,9 +48,9 @@ export default function Dialog({ selectElement, getDlgLstElement}: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: ListElement) => {
-        getDlgLstElement(listElement);
-        closeDialog()
-      }
+        if(getDlgLstElement(listElement))
+            closeDialog()
+    }
 
     const closeDialog = () => {
         dialogRef.current?.close()

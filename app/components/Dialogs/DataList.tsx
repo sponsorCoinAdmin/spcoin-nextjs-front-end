@@ -5,7 +5,7 @@ import Image from 'next/image'
 
 type ListElement = {
     chainId: number;
-    ticker: string; 
+    symbol: string; 
     img: string; 
     name: string; 
     address: string; 
@@ -28,10 +28,10 @@ function DataList({dataList, selectElement, getSelectedListElement} : Props) {
     const tList = dataList?.map((e: ListElement, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >
-                <img src={e.img} alt={e.ticker} className={styles.tokenLogo} />
+                <img src={e.img} alt={e.symbol} className={styles.tokenLogo} />
                 <div>
                     <div className={styles.tokenName}>{e.name}</div>
-                    <div className={styles.tokenTicker}>{e.ticker}</div> 
+                    <div className={styles.tokenSymbol}>{e.symbol}</div> 
                 </div>
             </div>
             <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(dataList[i])}>

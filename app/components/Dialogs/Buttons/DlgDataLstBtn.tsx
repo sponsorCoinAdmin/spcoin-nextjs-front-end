@@ -6,7 +6,7 @@ import Dialog from '../Dialog';
 
 type ListElement = {
   chainId: number;
-  ticker: string;
+  symbol: string;
   img: string;
   name: string;
   address: string;

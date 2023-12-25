@@ -14,7 +14,7 @@ import {
 
 type ListElement = {
   chainId: number;
-  ticker: string;
+  symbol: string;
   img: string;
   name: string;
   address: any;
@@ -23,7 +23,7 @@ type ListElement = {
 
 const defaultSellToken: ListElement = { 
   chainId: 137,
-  ticker: "WBTC",
+  symbol: "WBTC",
   img: "https://cdn.moralis.io/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
   name: "Wrapped Bitcoin",
   address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
@@ -32,7 +32,7 @@ const defaultSellToken: ListElement = {
 
  const defaultSellToken2: ListElement = { 
   chainId: 137,
-  ticker: "WETH",
+  symbol: "WETH",
   img: "https://cdn.moralis.io/eth/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png",
   name: "Wrapped Ethereum",
   address: "0xAe740d42E4ff0C5086b2b5b5d149eB2F9e1A754F",
@@ -41,7 +41,7 @@ const defaultSellToken: ListElement = {
 
  const defaultBuyToken: ListElement = { 
   chainId: 137,
-  ticker: "USDT",
+  symbol: "USDT",
   img: "https://cdn.moralis.io/eth/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
   name: "Tether USD",
   address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
@@ -69,7 +69,6 @@ interface PriceRequestParams {
   sellAmount?: string;
   connectedWalletAddr?: string;
 }
-
 
 const selectElement ='Search agent name or paste address';
 
@@ -114,15 +113,13 @@ export default function PriceView({
 
   const [sellListElement, setSellListElement] = useState<ListElement>(defaultSellToken);
   const [buyListElement, setBuyListElement] = useState<ListElement>(defaultBuyToken);
-  console.log("sellListElement.ticker = " + sellListElement.ticker);
-  console.log("buyListElement.ticker  = " + buyListElement.ticker);
+  console.log("sellListElement.symbol = " + sellListElement.symbol);
+  console.log("buyListElement.symbol  = " + buyListElement.symbol);
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
       ? parseUnits(sellAmount, sellListElement.decimals).toString()
       : undefined;
-
-  console.log("sellAmount = " + sellAmount)
 
   const parsedBuyAmount =
     buyAmount && tradeDirection === "buy"
@@ -161,16 +158,21 @@ export default function PriceView({
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
 
-  let  { data, isError, isLoading } = useBalance({
+  const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellListElement.address,
   });
 
-  function isDisabled() {
-    return data && sellAmount
+  // function isDisabled() {
+  //   return data && sellAmount
+  //     ? parseUnits(sellAmount, sellListElement.decimals) > data.value
+  //     : true;
+  // }
+
+  const disabled =
+    data && sellAmount
       ? parseUnits(sellAmount, sellListElement.decimals) > data.value
       : true;
-  }
   
    // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
 
@@ -210,8 +212,23 @@ export default function PriceView({
   }
 
   const getDlgLstElement = (_listElement: ListElement) => {
-    BUY_SELL_ACTION === SET_SELL_TOKEN ? setSellListElement(_listElement) : setBuyListElement(_listElement);
+    if ((BUY_SELL_ACTION === SET_SELL_TOKEN && _listElement.address === buyListElement.address) ||
+        (BUY_SELL_ACTION === SET_BUY_TOKEN && _listElement.address === sellListElement.address)) {
+          if (BUY_SELL_ACTION === SET_SELL_TOKEN) {
+            alert("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")")
+            console.log("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")");
+          }
+          else {
+            alert("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")")
+            console.log("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")");
+          }
+          return false;
+    }
+    else {
+      BUY_SELL_ACTION === SET_SELL_TOKEN ? setSellListElement(_listElement) : setBuyListElement(_listElement);
+    }
     console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_listElement,null,2));
+    return true;
   }
 
   function switchTokens() {
@@ -255,7 +272,7 @@ export default function PriceView({
               onClick={() => {
                 setFinalize(true);
               }}
-              disabled={isDisabled()}
+              disabled={disabled}
             />
             ) : (
             <CustomConnectButton />)}
@@ -270,7 +287,7 @@ export default function PriceView({
               className="h-9 w-9 mr-2 rounded-md"
               src={sellListElement.img}
             />
-            {sellListElement.ticker}
+            {sellListElement.symbol}
             <DownOutlined />
           </div>
 
@@ -280,7 +297,7 @@ export default function PriceView({
               className="h-9 w-9 mr-2 rounded-md"
               src={buyListElement.img}
             />
-            {buyListElement.ticker}
+            {buyListElement.symbol}
             <DownOutlined />
           </div>
         </div>
@@ -295,7 +312,7 @@ export default function PriceView({
               ) *
                 AFFILIATE_FEE +
               " " +
-              buyListElement.ticker
+              buyListElement.symbol
             : null}
         </div>
       </div>

@@ -7,7 +7,7 @@ export default function Products() {
 
     type ListElement = {
         chainId: number;
-        ticker: string;
+        symbol: string;
         img: string;
         name: string;
         address: string;

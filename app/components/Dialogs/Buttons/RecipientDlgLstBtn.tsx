@@ -5,7 +5,7 @@ import dataList from '../Resources/data/tokenEthList.json';
 import Dialog from '../RecipientDlgLst';
 
 type ListElement = {
-  ticker: string;
+  symbol: string;
   img: string;
   name: string;
   address: string;

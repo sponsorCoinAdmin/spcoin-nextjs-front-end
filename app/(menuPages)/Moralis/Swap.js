@@ -130,10 +130,10 @@ function Swap(props) {
                 key={i}
                 onClick={() => modifyToken(i)}
               >
-                <img src={e.img} alt={e.ticker} className={styles.tokenLogo} />
+                <img src={e.img} alt={e.symbol} className={styles.tokenLogo} />
                 <div className={styles.tokenChoiceNames}>
                   <div className={styles.tokenName}>{e.name}</div>
-                  <div className={styles.tokenTicker}>{e.ticker}</div>
+                  <div className={styles.tokensymbol}>{e.symbol}</div>
                 </div>
               </div>
             );
@@ -161,12 +161,12 @@ function Swap(props) {
           </div>
           <div className={styles.assetOne} onClick={() => openModal(1)}>
             <img src={tokenOne.img} alt="assetOneLogo" className={styles.assetLogo} />
-            {tokenOne.ticker}
+            {tokenOne.symbol}
             <DownOutlined />
           </div>
           <div className={styles.assetTwo} onClick={() => openModal(2)}>
             <img src={tokenTwo.img} alt="assetOneLogo" className={styles.assetLogo} />
-            {tokenTwo.ticker}
+            {tokenTwo.symbol}
             <DownOutlined />
           </div>
         </div>
