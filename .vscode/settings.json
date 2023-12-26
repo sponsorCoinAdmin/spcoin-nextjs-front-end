@@ -6,6 +6,8 @@
         "connectkit",
         "moralis",
         "nextjs",
+        "pino",
+        "sponsorcoin",
         "svgr",
         "tailwindcss",
         "viem",

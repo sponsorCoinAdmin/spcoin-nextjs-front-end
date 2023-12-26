@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sponsorcoin/spcoin-prod": "^1.0.1",
     "@svgr/webpack": "^8.1.0",
     "antd": "^5.12.1",
     "autoprefixer": "10.4.14",
