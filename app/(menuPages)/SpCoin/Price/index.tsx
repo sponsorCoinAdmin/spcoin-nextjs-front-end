@@ -74,12 +74,20 @@ const selectElement ='Search agent name or paste address';
 
 const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
 const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
-
+const NO_SELL_AMOUNT = 100;
+const NO_BUY_AMOUNT = 100;
 
 export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
   const { sellAmount, buyAmount } = params;
   if (!sellAmount && !buyAmount) return;
+  if (!buyAmount && sellAmount === "0") {
+    throw {ErrCode: NO_SELL_AMOUNT, ErrMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
+  }
+  if (!sellAmount && buyAmount === "0") {
+    throw {ErrCode: NO_BUY_AMOUNT, ErrMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
+  }
+ 
   const query = qs.stringify(params);
 
   // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
@@ -100,12 +108,13 @@ export default function PriceView({
   setFinalize: (finalize: boolean) => void;
 }) {
 
-  console.log("EXECUTING Price({")
-  console.log("  connectedWalletAddr: " + connectedWalletAddr)
-  console.log("  price: " + JSON.stringify(price))
-  console.log("  setPrice: " + JSON.stringify(setPrice))
-  console.log("  setFinalize: " + JSON.stringify(setFinalize))
-  console.log("})")
+  // console.log("EXECUTING Price({")
+  // console.log("  connectedWalletAddr: " + connectedWalletAddr)
+  // console.log("  price: " + JSON.stringify(price))
+  // console.log("  setPrice: " + JSON.stringify(setPrice))
+  // console.log("  setFinalize: " + JSON.stringify(setFinalize))
+  // console.log("})")
+  
   // fetch price here
   const [sellAmount, setSellAmount] = useState("");
   const [buyAmount, setBuyAmount] = useState("");
@@ -113,8 +122,8 @@ export default function PriceView({
 
   const [sellListElement, setSellListElement] = useState<ListElement>(defaultSellToken);
   const [buyListElement, setBuyListElement] = useState<ListElement>(defaultBuyToken);
-  console.log("sellListElement.symbol = " + sellListElement.symbol);
-  console.log("buyListElement.symbol  = " + buyListElement.symbol);
+  // console.log("sellListElement.symbol = " + sellListElement.symbol);
+  // console.log("buyListElement.symbol  = " + buyListElement.symbol);
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
@@ -151,7 +160,8 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("useSWR fetcher ERROR error = " + error)
+        console.log("useSWR fetcher ERROR error = " + JSON.stringify(error,null,2))
+        setBuyAmount("0");
       },
     }
   );
@@ -212,23 +222,38 @@ export default function PriceView({
   }
 
   const getDlgLstElement = (_listElement: ListElement) => {
-    if ((BUY_SELL_ACTION === SET_SELL_TOKEN && _listElement.address === buyListElement.address) ||
-        (BUY_SELL_ACTION === SET_BUY_TOKEN && _listElement.address === sellListElement.address)) {
-          if (BUY_SELL_ACTION === SET_SELL_TOKEN) {
-            alert("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")")
-            console.log("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")");
-          }
-          else {
-            alert("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")")
-            console.log("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")");
-          }
-          return false;
+    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_listElement,null,2));
+    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellListElement(_listElement) : setValidBuyListElement(_listElement);
+  }
+
+  function setValidSellListElement(_listElement: ListElement) {
+    let msg = "setValidSellListElement "+_listElement.symbol;
+    console.log(msg);
+    alert(msg);
+    if (_listElement.address === buyListElement.address) {
+      alert("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")")
+      console.log("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")");
+      return false;
     }
     else {
-      BUY_SELL_ACTION === SET_SELL_TOKEN ? setSellListElement(_listElement) : setBuyListElement(_listElement);
+      setSellListElement(_listElement)
+      return true;
     }
-    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_listElement,null,2));
-    return true;
+  }
+
+  function setValidBuyListElement(_listElement: ListElement) {
+    let msg = "setValidBuyListElement "+_listElement.symbol;
+    console.log(msg);
+    alert(msg);
+    if (_listElement.address === sellListElement.address) {
+      alert("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")")
+      console.log("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")");
+      return false;
+    }
+    else {
+      setBuyListElement(_listElement)
+      return true;
+    }
   }
 
   function switchTokens() {
