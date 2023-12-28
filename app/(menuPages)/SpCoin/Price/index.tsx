@@ -71,29 +71,45 @@ interface PriceRequestParams {
 }
 
 const selectElement ='Search agent name or paste address';
-
 const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
 const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
-const NO_SELL_AMOUNT = 100;
-const NO_BUY_AMOUNT = 100;
+const SELL_AMOUNT_UNDEFINED = 100;
+const BUY_AMOUNT_UNDEFINED = 200;
+const SELL_AMOUNT_ZERO = 300;
+const BUY_AMOUNT_ZERO = 400;
+const ERROR_0X_RESPONSE = 500;
 
 export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
   const { sellAmount, buyAmount } = params;
+
   if (!sellAmount && !buyAmount) return;
-  if (!buyAmount && sellAmount === "0") {
-    throw {ErrCode: NO_SELL_AMOUNT, ErrMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
+  if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
+    throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
   if (!sellAmount && buyAmount === "0") {
-    throw {ErrCode: NO_BUY_AMOUNT, ErrMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
+    throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
+
+  // if (!sellAmount || sellAmount == null || sellAmount == undefined) {
+  //   throw {errCode: SELL_AMOUNT_UNDEFINED, errMsg: 'Sell Amount Field is Empty'}
+  // }
+
+  // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
+  //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
+  // }
  
-  const query = qs.stringify(params);
 
   // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
-  console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
+  try {
+    console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
+    const query = qs.stringify(params);
+    return fetch(`${endpoint}?${query}`).then((res) => res.json());
+  }
+  catch (e) {
+    throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
+  }
 
-  return fetch(`${endpoint}?${query}`).then((res) => res.json());
 };
 
 export default function PriceView({
@@ -116,8 +132,8 @@ export default function PriceView({
   // console.log("})")
   
   // fetch price here
-  const [sellAmount, setSellAmount] = useState("");
-  const [buyAmount, setBuyAmount] = useState("");
+  const [sellAmount, setSellAmount] = useState("0");
+  const [buyAmount, setBuyAmount] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
   const [sellListElement, setSellListElement] = useState<ListElement>(defaultSellToken);
@@ -160,8 +176,48 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("useSWR fetcher ERROR error = " + JSON.stringify(error,null,2))
-        setBuyAmount("0");
+        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        let errCode: number = error.errCode;
+        let errMsg: string = error.errMsg;
+        if (errCode != undefined) {
+           switch (errCode) {
+            case SELL_AMOUNT_ZERO: setBuyAmount("0");
+              // alert('Sell Amount is 0');
+            break;
+            case BUY_AMOUNT_ZERO: setSellAmount("0");
+            // alert('Buy Amount is 0');
+            break;
+            case ERROR_0X_RESPONSE:
+              console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
+              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+            break;
+            case SELL_AMOUNT_UNDEFINED:
+              console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+              setSellAmount("0");
+            break;
+            case BUY_AMOUNT_UNDEFINED:
+              console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+              setBuyAmount("0");
+            break;
+            default: {
+              console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+            }
+          }
+        }
+        else {
+          if (error === null || error === undefined) {
+            alert ("error = undefined");
+            alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
+            console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
+          }
+          else {
+            // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+            console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+          }
+        }
       },
     }
   );
@@ -227,9 +283,11 @@ export default function PriceView({
   }
 
   function setValidSellListElement(_listElement: ListElement) {
+    /*
     let msg = "setValidSellListElement "+_listElement.symbol;
     console.log(msg);
     alert(msg);
+    */
     if (_listElement.address === buyListElement.address) {
       alert("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")")
       console.log("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")");
@@ -242,9 +300,11 @@ export default function PriceView({
   }
 
   function setValidBuyListElement(_listElement: ListElement) {
+    /*
     let msg = "setValidBuyListElement "+_listElement.symbol;
     console.log(msg);
     alert(msg);
+    */
     if (_listElement.address === sellListElement.address) {
       alert("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")")
       console.log("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")");

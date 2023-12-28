@@ -4,8 +4,9 @@ import { useRef } from 'react'
 import DataList from './DataList'
 // let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
 
-//import dataList from '../Dialogs/Resources/data/tokenEthList.json';
-import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
+import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
+// import dataList from '../Dialogs/Resources/data/tokenEthList.json';
+// import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
 import InputSelect from './InputSelect'
 
 const titleName ='Select an agent';
