@@ -131,7 +131,6 @@
   position: absolute;
   min-width: 20px;
   height: 25px;
-
   background-color: #111c7d;
   top: 21px;
   right: 20px;
@@ -148,8 +147,43 @@
 .assetTwo {
   position: absolute;
   min-width: 50px;
+  height: 25px;
   background-color: #111c7d;
   top: 97px;
+  right: 20px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+}
+
+.recipientBtn {
+  position: absolute;
+  min-width: 20px;
+  height: 25px;
+  background-color: #b09e18;
+  top: 233px;
+  right: 20px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+}
+
+.agentBtn {
+  position: absolute;
+  min-width: 20px;
+  height: 25px;
+  background-color: #c65e0a;
+  top: 307px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -187,8 +221,8 @@
   color: #5981F3;
   font-weight: bold;
   transition: 0.3s;
-  margin-bottom: 30px;
-  margin-top: 8px;
+  margin-bottom: 5px;
+  margin-top: 0px;
 }
 
 .swapButton[disabled] {

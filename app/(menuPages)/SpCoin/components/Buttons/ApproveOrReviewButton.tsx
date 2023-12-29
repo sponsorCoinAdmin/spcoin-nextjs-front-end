@@ -8,12 +8,12 @@ import {
     useContractWrite,
     useWaitForTransaction,
     type Address,
-  } from "wagmi";
+} from "wagmi";
 
-  import {
-    MAX_ALLOWANCE,
-    exchangeProxy,
-  } from "../../lib/constants";
+import {
+  MAX_ALLOWANCE,
+  exchangeProxy,
+} from "../../lib/constants";
 
 function ApproveOrReviewButton({
     connectedWalletAddr,
