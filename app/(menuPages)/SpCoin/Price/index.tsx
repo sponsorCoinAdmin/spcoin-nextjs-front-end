@@ -172,7 +172,7 @@ export default function PriceView({
           console.log(formatUnits(data.buyAmount, buyListElement.decimals), data);
           setBuyAmount(formatUnits(data.buyAmount, buyListElement.decimals));
         } else {
-          setSellAmount(formatUnits(data.sellAmount, sellListElement.decimals));
+          setNumSellAmount(formatUnits(data.sellAmount, sellListElement.decimals));
         }
       },
       onError: ( error ) => {
@@ -184,7 +184,7 @@ export default function PriceView({
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
               // alert('Sell Amount is 0');
             break;
-            case BUY_AMOUNT_ZERO: setSellAmount("0");
+            case BUY_AMOUNT_ZERO: setNumSellAmount("0");
             // alert('Buy Amount is 0');
             break;
             case ERROR_0X_RESPONSE:
@@ -194,7 +194,7 @@ export default function PriceView({
             case SELL_AMOUNT_UNDEFINED:
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
-              setSellAmount("0");
+              setNumSellAmount("0");
             break;
             case BUY_AMOUNT_UNDEFINED:
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
@@ -321,6 +321,23 @@ export default function PriceView({
     setSellListElement(buyListElement);
     setBuyListElement(tmpElement);
   }
+
+  function setNumSellAmount(txt: string){
+    const re = /^-?\d+(?:[.,]\d*?)?$/;
+    if (txt === '' || re.test(txt)) {
+      txt = validateDecimals(txt, sellListElement.decimals);
+      setSellAmount(txt)
+    }
+  }
+
+  function validateDecimals(txt:string, decimals:number) {
+    let splitText = txt.split(".");
+    if(splitText[1] != undefined) {
+      txt = splitText[0] + "." + splitText[1]?.substring(0, decimals);
+    }
+    return txt;
+  }
+
 // --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
 
   return (
@@ -343,10 +360,9 @@ export default function PriceView({
           </Popover>
         </div>
         <div className={styles.inputs}>
-          <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} 
+          <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => {
-                // setTradeDirection("sell");
-                setSellAmount(e.target.value);
+              setNumSellAmount(e.target.value);
             }}
           />
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
