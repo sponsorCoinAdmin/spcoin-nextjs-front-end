@@ -374,11 +374,12 @@ export default function PriceView({
           </div>
         </div>
 
-        {connectedWalletAddr ? (
-          <ApproveOrReviewButton tokenToSellAddr={sellListElement.address} connectedWalletAddr={connectedWalletAddr}
-            onClick={() => { setFinalize(true); }} disabled={disabled} />
-          ) : (
-          <CustomConnectButton />)}
+        { connectedWalletAddr ? 
+            ( <ApproveOrReviewButton tokenToSellAddr={sellListElement.address} connectedWalletAddr={connectedWalletAddr}
+              onClick={() => { setFinalize(true); }} disabled={disabled} /> ) 
+          : 
+            ( <CustomConnectButton /> )
+        }
 
         <div className={styles.inputs}>
           <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={false}
