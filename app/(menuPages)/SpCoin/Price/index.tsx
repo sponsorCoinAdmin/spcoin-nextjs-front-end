@@ -354,58 +354,54 @@ export default function PriceView({
             <SettingOutlined className={styles.cog} />
           </Popover>
         </div>
+
         <div className={styles.inputs}>
-          <div>
-            <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
-              onChange={(e) => { setNumSellAmount(e.target.value); }}
-            />
-            <div className={styles.assetOne} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
-              <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
-              {sellListElement.symbol}
-              <DownOutlined />
-            </div>
+          <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
+            onChange={(e) => { setNumSellAmount(e.target.value); }} />
+          <div className={styles.assetOne} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
+            <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
+            {sellListElement.symbol}
+            <DownOutlined />
           </div>
+        </div>
 
-          <div>
-            <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-            <div className={styles.assetTwo} onClick={() => openTokenModal(SET_BUY_TOKEN)}>
-              <img alt={buyListElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyListElement.img} />
-              {buyListElement.symbol}
-              <DownOutlined />
-            </div>
+        <div className={styles.inputs}>
+          <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
+          <div className={styles.assetTwo} onClick={() => openTokenModal(SET_BUY_TOKEN)}>
+            <img alt={buyListElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyListElement.img} />
+            {buyListElement.symbol}
+            <DownOutlined />
           </div>
+        </div>
 
-          {connectedWalletAddr ? (
-            <ApproveOrReviewButton tokenToSellAddr={sellListElement.address} connectedWalletAddr={connectedWalletAddr}
-              onClick={() => { setFinalize(true); }} disabled={disabled} />
-            ) : (
-            <CustomConnectButton />)}
+        {connectedWalletAddr ? (
+          <ApproveOrReviewButton tokenToSellAddr={sellListElement.address} connectedWalletAddr={connectedWalletAddr}
+            onClick={() => { setFinalize(true); }} disabled={disabled} />
+          ) : (
+          <CustomConnectButton />)}
 
-          <div>
-            <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={false}
-              onChange={(e) => { setNumSellAmount(e.target.value); }} />
+        <div className={styles.inputs}>
+          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={false}
+            onChange={(e) => { setNumSellAmount(e.target.value); }} />
+          <div className={styles.recipientBtn} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
+            <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
+            {sellListElement.symbol}
+            <DownOutlined />
           </div>
+        </div>
 
-          <div>
-            <Input id="recipient-id" className={styles.priceInput} placeholder="Agent" disabled={false}
-              onChange={(e) => { setNumSellAmount(e.target.value); }} />
-            <div className={styles.recipientBtn} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
-              <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
-              {sellListElement.symbol}
-              <DownOutlined />
-            </div>
-          </div>
-         
-          <div className={styles.switchButton} onClick={switchTokens}>
-              <ArrowDownOutlined className={styles.switchArrow} />
-          </div>
- 
-
+        <div className={styles.inputs}>
+          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={false}
+            onChange={(e) => { setNumSellAmount(e.target.value); }} />
           <div className={styles.agentBtn} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
             <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
             {sellListElement.symbol}
             <DownOutlined />
           </div>
+        </div>
+        
+        <div className={styles.switchButton} onClick={switchTokens}>
+            <ArrowDownOutlined className={styles.switchArrow} />
         </div>
 
         <div className="text-slate-400">

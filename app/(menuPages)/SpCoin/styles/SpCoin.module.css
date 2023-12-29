@@ -127,9 +127,19 @@
   position: relative;
 }
 
+.priceInput {
+  background-color: #1f2639 !important;
+  color: #94a3b8 !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 25px;
+  border-radius: 12px !important;
+}
+
 .assetOne {
   position: absolute;
-  min-width: 20px;
+  min-width: 50px;
   height: 25px;
   background-color: #111c7d;
   top: 21px;
@@ -149,7 +159,7 @@
   min-width: 50px;
   height: 25px;
   background-color: #111c7d;
-  top: 97px;
+  top: 21px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -166,7 +176,7 @@
   min-width: 20px;
   height: 25px;
   background-color: #b09e18;
-  top: 233px;
+  top: 21px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -183,7 +193,7 @@
   min-width: 20px;
   height: 25px;
   background-color: #c65e0a;
-  top: 307px;
+  top: 21px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -302,16 +312,6 @@
 
 
 
-
-.priceInput {
-  background-color: #1f2639 !important;
-  color: #94a3b8 !important;
-  border-width: 0px !important;
-  height: 70px !important;
-  margin-bottom: 5px;
-  font-size: 25px;
-  border-radius: 12px !important;
-}
 
 .antPopoverInner {
   min-width: 260px !important;
