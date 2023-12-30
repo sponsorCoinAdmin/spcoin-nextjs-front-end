@@ -1,0 +1,31 @@
+import React from 'react'
+import Dialog from './TokenDialogList';
+import { useRef } from 'react'
+import dataList from './Resources/data/tokens/tokenPolyList.json';
+
+const dialogRef = useRef<null | HTMLDialogElement>(null)
+
+type TokenElement = {
+    chainId: number;
+    symbol: string; 
+    img: string; 
+    name: string; 
+    address: any; 
+    decimals: number;
+}
+
+type Props = {
+    selectElement: string,
+    getDlgLstElement: (listElement: TokenElement) => boolean,
+}
+
+function TokenDialogList({ selectElement, getDlgLstElement}: Props) {
+  return (
+    <dialog id="tokenList" ref={dialogRef} className="modalContainer">
+      <Dialog dataList={dataList} selectElement={selectElement} getDlgLstElement={getDlgLstElement}/>
+    </dialog>
+    
+  )
+}
+
+export default TokenDialogList

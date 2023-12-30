@@ -1,17 +1,17 @@
 "use client"
 import './Styles/modal.css';
 import { useRef } from 'react'
-import DataList from './TokenList'
+import DataList from './DataLists/TokenDataList'
 // let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
 
-import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
-// import dataList from '../Dialogs/Resources/data/tokenEthList.json';
-// import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
+// import dataList from './Resources/data/tokenPolyList.json';
+// import dataList from './Resources/data/tokenEthList.json';
+// import dataList from './Resources/data/maticNetworkList.json';
 import InputSelect from './InputSelect'
 
-const titleName ='Select an agent';
+const titleName ='Select a Token';
 
-type ListElement = {
+type TokenElement = {
     chainId: number;
     symbol: string; 
     img: string; 
@@ -22,7 +22,8 @@ type ListElement = {
 
 type Props = {
     selectElement: string,
-    getDlgLstElement: (listElement: ListElement) => boolean,
+    dataList: TokenElement[],
+    getDlgLstElement: (listElement: TokenElement) => boolean,
 }
 
 const fetchTokenList = async() => {
@@ -43,12 +44,12 @@ const fetchTokenList = async() => {
 //   }
   
 
-export default function Dialog({ selectElement, getDlgLstElement}: Props) {
-// alert("PARSED dataList: ListElement[] = " + JSON.stringify(dataList, null, 2))
+export default function Dialog({ dataList, selectElement, getDlgLstElement}: Props) {
+// alert("PARSED dataList: TokenElement[] = " + JSON.stringify(dataList, null, 2))
 
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
-    const getSelectedListElement = (listElement: ListElement) => {
+    const getSelectedListElement = (listElement: TokenElement) => {
         if(getDlgLstElement(listElement))
             closeDialog()
     }
@@ -58,7 +59,7 @@ export default function Dialog({ selectElement, getDlgLstElement}: Props) {
     }
 
     const dialog = (
-        <dialog id="dialogList" ref={dialogRef} className="modalContainer">
+        <dialog id="agentList" ref={dialogRef} className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{titleName}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"

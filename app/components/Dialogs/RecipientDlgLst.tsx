@@ -1,7 +1,7 @@
 "use client"
 import { useSearchParams } from 'next/navigation'
 import { useRef, useEffect, useState, ReactNode } from 'react'
-import DataList from './DataList'
+import DataList from './TokenList'
 import InputSelect from './InputSelect'
 import { type Address } from "wagmi";
 

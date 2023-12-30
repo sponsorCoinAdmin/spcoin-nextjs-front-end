@@ -1,0 +1,156 @@
+.tokenList-modal-button {
+  position: fixed;
+  top: 50px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 1px;
+  cursor: pointer;
+  font-weight: 500px;
+  padding: 8px;
+  border-radius: 1px;
+  background-color: var(--gh-green-2);
+}
+
+.ModalButton {
+  display: flex;
+  justify-content: center;
+}
+
+.modalContent {
+  border-top: 1px solid #363e54;
+  /* background-color: #3b4874; */
+  /* padding-top: 20px; */
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px
+}
+
+
+/* 
+top-50
+left-50
+-translate-x-50
+-translate-y-50 z-10
+rounded-xl
+*/
+
+.modal-inner { @apply
+  fixed
+  rounded-xl
+  top-40
+  left-52
+  -translate-x-52
+  -translate-y-52
+  z-10
+ backdrop:bg-gray-800/50
+}
+
+.bluBtn { @apply 
+  rounded-full
+  py-2 px-3
+  uppercase
+  text-xs font-bold 
+  cursor-pointer
+  tracking-wider
+  bg-blue-300
+}
+
+.priceInput {
+  background-color: #1f2639 !important;
+  color: rgb(26, 55, 88) !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 35px;
+  border-radius: 12px !important;
+}
+
+.modal-inner-REQUIRED {
+  min-width: 260px !important;
+  min-height: 140px !important;
+  border: 1px solid #21273a;
+  background-color: #1f2639 !important;
+}
+
+.modalInputSelect {
+  background-color: #243056; 
+  color: #5981F3;
+  border-width: 0px !important;
+  height: 40px !important;
+  width: 100%;
+  margin-bottom: 5px;
+  border-radius: 22px !important;
+}
+
+.modalContainer{
+  width: 455px;
+  background-color: #0E111B;
+  border: solid #21273a;
+  min-height: 50px;
+  border-radius: 15px;
+  margin: auto;
+}
+
+.modalBox {
+  font-weight: bold;
+  width: 450px;
+  background-color: #0E111B;
+  /* border: solid #21273a; */
+  /* min-height: 300px; */
+  border-radius: 15px;
+  padding-left: 30px;
+  padding-right: 30px;
+  /* margin: auto; */
+}
+
+.leftH {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rightH {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+
+.header {
+  height: 60px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 50px;
+  padding-right: 50px;
+  background: rgb(119, 126, 142);
+}
+
+
+
+
+
+.searchImage {
+  border-radius: 4px;
+  margin-top: 10px;
+  margin-left: 10px;
+  width: 20px;
+  height:20px;
+}
+
+.inputField { 
+  width: 100%;
+  height: 100%;
+  margin-top: 10px;
+
+  background-color: #243056 !important;
+  color: #5981F3;
+  border-width: 0px !important;
+  /* height: 70px !important;
+  margin-bottom: 5px;
+  border-radius: 12px !important; */
+}

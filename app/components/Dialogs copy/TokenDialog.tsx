@@ -1,17 +1,17 @@
 "use client"
 import './Styles/modal.css';
 import { useRef } from 'react'
-import DataList from './TokenList'
+import DataList from './DataList'
 // let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
 
-import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
+import dataList from './Resources/data/tokens/tokenPolyList.json';
 // import dataList from '../Dialogs/Resources/data/tokenEthList.json';
 // import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
 import InputSelect from './InputSelect'
 
 const titleName ='Select an agent';
 
-type ListElement = {
+type TokenElement = {
     chainId: number;
     symbol: string; 
     img: string; 
@@ -22,7 +22,7 @@ type ListElement = {
 
 type Props = {
     selectElement: string,
-    getDlgLstElement: (listElement: ListElement) => boolean,
+    getDlgLstElement: (listElement: TokenElement) => boolean,
 }
 
 const fetchTokenList = async() => {
@@ -43,12 +43,12 @@ const fetchTokenList = async() => {
 //   }
   
 
-export default function Dialog({ selectElement, getDlgLstElement}: Props) {
-// alert("PARSED dataList: ListElement[] = " + JSON.stringify(dataList, null, 2))
+export default function TokenDialog({ selectElement, getDlgLstElement}: Props) {
+// alert("PARSED dataList: TokenElement[] = " + JSON.stringify(dataList, null, 2))
 
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
-    const getSelectedListElement = (listElement: ListElement) => {
+    const getSelectedTokenElement = (listElement: TokenElement) => {
         if(getDlgLstElement(listElement))
             closeDialog()
     }
@@ -71,10 +71,10 @@ export default function Dialog({ selectElement, getDlgLstElement}: Props) {
                     <InputSelect selectElement={selectElement}/>
                 </div>
                 <div className="modalScrollBar">
-                    <DataList dataList={dataList} selectElement={selectElement} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataList={dataList} selectElement={selectElement} getSelectedTokenElement={getSelectedTokenElement}/>
                 </div>
             </div>
         </dialog>
     )
-    return dialog
+    return TokenDialog
 }
