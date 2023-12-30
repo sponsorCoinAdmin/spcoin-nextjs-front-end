@@ -323,18 +323,26 @@ export default function PriceView({
   }
 
   function setNumSellAmount(txt: string){
+    // Allow only numbers and '.'
     const re = /^-?\d+(?:[.,]\d*?)?$/;
     if (txt === '' || re.test(txt)) {
-      txt = validateDecimals(txt, sellListElement.decimals);
+      txt = validatePrice(txt, sellListElement.decimals);
       setSellAmount(txt)
     }
   }
 
-  function validateDecimals(txt:string, decimals:number) {
+  function validatePrice(txt:string, decimals:number) {
     let splitText = txt.split(".");
-    if(splitText[1] != undefined) {
-      txt = splitText[0] + "." + splitText[1]?.substring(0, decimals);
+      // Validate Max allowed decimal size
+      // Remove leading zeros
+      txt = splitText[0].replace(/^0+/, "");
+      if (txt === "" )
+        txt = "0";
+      if(splitText[1] != undefined) {
+      txt += '.' + splitText[1]?.substring(0, decimals);
     }
+
+    console.log("PARSED TEXTED = " + txt);
     return txt;
   }
 
