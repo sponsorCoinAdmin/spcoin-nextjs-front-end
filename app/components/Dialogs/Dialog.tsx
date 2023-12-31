@@ -9,7 +9,7 @@ import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
 // import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
 import InputSelect from './InputSelect'
 
-const titleName ='Select an agent';
+const titleName ='Select a token';
 
 type ListElement = {
     chainId: number;
