@@ -137,7 +137,7 @@
   border-radius: 12px !important;
 }
 
-.assetOne {
+.assetSelect {
   position: absolute;
   min-width: 50px;
   height: 25px;
@@ -154,55 +154,12 @@
   padding-right: 8px;
 }
 
-.assetTwo {
-  position: absolute;
-  min-width: 50px;
-  height: 25px;
-  background-color: #111c7d;
-  top: 21px;
-  right: 20px;
-  border-radius: 100px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-weight: bold;
-  font-size: 17px;
-  padding-right: 8px;
-}
-
-.recipientBtn {
-  position: absolute;
-  min-width: 20px;
-  height: 25px;
+.recipientSelect {
   background-color: #b09e18;
-  top: 21px;
-  right: 20px;
-  border-radius: 100px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-weight: bold;
-  font-size: 17px;
-  padding-right: 8px;
 }
 
-.agentBtn {
-  position: absolute;
-  min-width: 20px;
-  height: 25px;
+.agentSelect {
   background-color: #c65e0a;
-  top: 21px;
-  right: 20px;
-  border-radius: 100px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-weight: bold;
-  font-size: 17px;
-  padding-right: 8px;
 }
 
 .assetLogo {
@@ -211,11 +168,7 @@
   object-fit: contain;
 }
 
-.assetOne:hover{
-  cursor: pointer;
-}
-
-.assetTwo:hover{
+.assetSelect:hover {
   cursor: pointer;
 }
 
@@ -301,29 +254,12 @@
   vertical-align: middle;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 .antPopoverInner {
   min-width: 260px !important;
   min-height: 140px !important;
   border: 1px solid #3a2d21;
   background-color: #5a0c35 !important;
 }
-
-
-
-
-
 
 .leftH {
   display: flex;
@@ -344,18 +280,6 @@
   justify-content: flex-end;
   gap: 20px;
 }
-
-.titleFlex {
-  display: flex;
-  justify-content: space-between;
-
-}
-
-
-
-
-
-
 
 .modal {
   position: fixed;

@@ -12,7 +12,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 
-type ListElement = {
+type TokenElement = {
   chainId: number;
   symbol: string;
   img: string;
@@ -21,7 +21,7 @@ type ListElement = {
   decimals: number;
 }  
 
-const defaultSellToken: ListElement = { 
+const defaultSellToken: TokenElement = { 
   chainId: 137,
   symbol: "WBTC",
   img: "https://cdn.moralis.io/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
@@ -30,7 +30,7 @@ const defaultSellToken: ListElement = {
   decimals: 8
  };
 
- const defaultSellToken2: ListElement = { 
+ const defaultSellToken2: TokenElement = { 
   chainId: 137,
   symbol: "WETH",
   img: "https://cdn.moralis.io/eth/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png",
@@ -39,7 +39,7 @@ const defaultSellToken: ListElement = {
   decimals: 18
  };
 
- const defaultBuyToken: ListElement = { 
+ const defaultBuyToken: TokenElement = { 
   chainId: 137,
   symbol: "USDT",
   img: "https://cdn.moralis.io/eth/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
@@ -136,27 +136,27 @@ export default function PriceView({
   const [buyAmount, setBuyAmount] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
-  const [sellListElement, setSellListElement] = useState<ListElement>(defaultSellToken);
-  const [buyListElement, setBuyListElement] = useState<ListElement>(defaultBuyToken);
-  // console.log("sellListElement.symbol = " + sellListElement.symbol);
-  // console.log("buyListElement.symbol  = " + buyListElement.symbol);
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
+  // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
+  // console.log("buyTokenElement.symbol  = " + buyTokenElement.symbol);
 
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
-      ? parseUnits(sellAmount, sellListElement.decimals).toString()
+      ? parseUnits(sellAmount, sellTokenElement.decimals).toString()
       : undefined;
 
   const parsedBuyAmount =
     buyAmount && tradeDirection === "buy"
-      ? parseUnits(buyAmount, buyListElement.decimals).toString()
+      ? parseUnits(buyAmount, buyTokenElement.decimals).toString()
       : undefined;
 
   const { isLoading: isLoadingPrice } = useSWR(
     [
       "/api/price",
       {
-        sellToken: sellListElement.address,
-        buyToken: buyListElement.address,
+        sellToken: sellTokenElement.address,
+        buyToken: buyTokenElement.address,
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
@@ -169,10 +169,10 @@ export default function PriceView({
       onSuccess: (data) => {
         setPrice(data);
         if (tradeDirection === "sell") {
-          console.log(formatUnits(data.buyAmount, buyListElement.decimals), data);
-          setBuyAmount(formatUnits(data.buyAmount, buyListElement.decimals));
+          console.log(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
+          setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
         } else {
-          setNumSellAmount(formatUnits(data.sellAmount, sellListElement.decimals));
+          setNumSellAmount(formatUnits(data.sellAmount, sellTokenElement.decimals));
         }
       },
       onError: ( error ) => {
@@ -226,18 +226,18 @@ export default function PriceView({
 
   const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
-    token: sellListElement.address,
+    token: sellTokenElement.address,
   });
 
   // function isDisabled() {
   //   return data && sellAmount
-  //     ? parseUnits(sellAmount, sellListElement.decimals) > data.value
+  //     ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
   //     : true;
   // }
 
   const disabled =
     data && sellAmount
-      ? parseUnits(sellAmount, sellListElement.decimals) > data.value
+      ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
   
    // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
@@ -277,72 +277,70 @@ export default function PriceView({
     dialog?.showModal();
   }
 
-  const getDlgLstElement = (_listElement: ListElement) => {
-    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_listElement,null,2));
-    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellListElement(_listElement) : setValidBuyListElement(_listElement);
+  const getDlgLstElement = (_tokenElement: TokenElement) => {
+    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
+    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
   }
 
-  function setValidSellListElement(_listElement: ListElement) {
+  function setValidSellTokenElement(_tokenElement: TokenElement) {
     /*
-    let msg = "setValidSellListElement "+_listElement.symbol;
+    let msg = "setValidSellTokenElement "+_tokenElement.symbol;
     console.log(msg);
     alert(msg);
     */
-    if (_listElement.address === buyListElement.address) {
-      alert("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")")
-      console.log("Sell Token cannot be the same as Buy Token("+buyListElement.symbol+")");
+    if (_tokenElement.address === buyTokenElement.address) {
+      alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
+      console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
       return false;
     }
     else {
-      setSellListElement(_listElement)
+      setSellTokenElement(_tokenElement)
       return true;
     }
   }
 
-  function setValidBuyListElement(_listElement: ListElement) {
+  function setValidBuyTokenElement(_tokenElement: TokenElement) {
     /*
-    let msg = "setValidBuyListElement "+_listElement.symbol;
+    let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
     console.log(msg);
     alert(msg);
     */
-    if (_listElement.address === sellListElement.address) {
-      alert("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")")
-      console.log("Buy Token cannot be the same as Sell Token("+sellListElement.symbol+")");
+    if (_tokenElement.address === sellTokenElement.address) {
+      alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
+      console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
       return false;
     }
     else {
-      setBuyListElement(_listElement)
+      setBuyTokenElement(_tokenElement)
       return true;
     }
   }
 
   function switchTokens() {
-    let tmpElement: ListElement = sellListElement;
-    setSellListElement(buyListElement);
-    setBuyListElement(tmpElement);
+    let tmpElement: TokenElement = sellTokenElement;
+    setSellTokenElement(buyTokenElement);
+    setBuyTokenElement(tmpElement);
   }
 
   function setNumSellAmount(txt: string){
     // Allow only numbers and '.'
     const re = /^-?\d+(?:[.,]\d*?)?$/;
     if (txt === '' || re.test(txt)) {
-      txt = validatePrice(txt, sellListElement.decimals);
+      txt = validatePrice(txt, sellTokenElement.decimals);
       setSellAmount(txt)
     }
   }
 
   function validatePrice(txt:string, decimals:number) {
     let splitText = txt.split(".");
+    // Remove leading zeros
+    txt = splitText[0].replace(/^0+/, "");
+    if (txt === "" )
+      txt = "0";
+    if(splitText[1] != undefined) {
       // Validate Max allowed decimal size
-      // Remove leading zeros
-      txt = splitText[0].replace(/^0+/, "");
-      if (txt === "" )
-        txt = "0";
-      if(splitText[1] != undefined) {
       txt += '.' + splitText[1]?.substring(0, decimals);
     }
-
-    console.log("PARSED TEXTED = " + txt);
     return txt;
   }
 
@@ -351,8 +349,6 @@ export default function PriceView({
   return (
     <form>
       <Dialog selectElement={selectElement} getDlgLstElement={getDlgLstElement}/>
-
-      {/* <SpCoinExchange /> */}
 
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
@@ -366,45 +362,45 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
-          <div className={styles.assetOne} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
-            <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
-            {sellListElement.symbol}
+          <div className={styles["assetSelect"]} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
+            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
+            {sellTokenElement.symbol}
             <DownOutlined />
           </div>
         </div>
 
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-          <div className={styles.assetTwo} onClick={() => openTokenModal(SET_BUY_TOKEN)}>
-            <img alt={buyListElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyListElement.img} />
-            {buyListElement.symbol}
+          <div className={styles["assetSelect"]} onClick={() => openTokenModal(SET_BUY_TOKEN)}>
+            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
+            {buyTokenElement.symbol}
             <DownOutlined />
           </div>
         </div>
 
         { connectedWalletAddr ? 
-            ( <ApproveOrReviewButton tokenToSellAddr={sellListElement.address} connectedWalletAddr={connectedWalletAddr}
+            ( <ApproveOrReviewButton tokenToSellAddr={sellTokenElement.address} connectedWalletAddr={connectedWalletAddr}
               onClick={() => { setFinalize(true); }} disabled={disabled} /> ) 
           : 
             ( <CustomConnectButton /> )
         }
 
         <div className={styles.inputs}>
-          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={false}
+          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
-          <div className={styles.recipientBtn} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
-            <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
-            {sellListElement.symbol}
+          <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
+            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
+            {sellTokenElement.symbol}
             <DownOutlined />
           </div>
         </div>
 
         <div className={styles.inputs}>
-          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={false}
+          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
-          <div className={styles.agentBtn} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
-            <img alt={sellListElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellListElement.img} />
-            {sellListElement.symbol}
+          <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openTokenModal(SET_SELL_TOKEN)}>
+            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
+            {sellTokenElement.symbol}
             <DownOutlined />
           </div>
         </div>
@@ -416,8 +412,8 @@ export default function PriceView({
         <div className="text-slate-400">
           {price && price.grossBuyAmount
             ? "Affiliate Fee: " +
-                Number( formatUnits( BigInt(price.grossBuyAmount), buyListElement.decimals )) *
-                AFFILIATE_FEE + " " + buyListElement.symbol
+                Number( formatUnits( BigInt(price.grossBuyAmount), buyTokenElement.decimals )) *
+                AFFILIATE_FEE + " " + buyTokenElement.symbol
             : null}
         </div>
       </div>
