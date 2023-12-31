@@ -2,10 +2,10 @@
 import './Styles/modal.css';
 import { useRef } from 'react'
 import DataList from './DataLists/TokenDataList'
-// let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
+// let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
 
-// import dataList from './Resources/data/tokenPolyList.json';
-// import dataList from './Resources/data/tokenEthList.json';
+// import dataList from './Resources/data/polygonTokenList.json';
+// import dataList from './Resources/data/mainNetTokenList.json';
 // import dataList from './Resources/data/maticNetworkList.json';
 import InputSelect from './InputSelect'
 
@@ -27,7 +27,7 @@ type Props = {
 }
 
 const fetchTokenList = async() => {
-    const response = await fetch('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
+    const response = await fetch('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
     const jsonResp = await response.json();
     alert(response);
     return "WORKS";
@@ -36,7 +36,7 @@ const fetchTokenList = async() => {
 // await fetchTokenList()
   
 // async function fetchTokenList() {
-//     const response = await fetch("https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json");
+//     const response = await fetch("https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json");
 //     const jsonResp = await response.json();
 //     // const tList = JSON.stringify(jsonResp, null, 2);
 //     // const tList = JSON.stringify(await response.json(),null,2);

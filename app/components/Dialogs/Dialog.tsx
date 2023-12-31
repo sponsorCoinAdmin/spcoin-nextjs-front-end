@@ -1,15 +1,14 @@
 "use client"
 import './Styles/modal.css';
 import { useRef } from 'react'
-import DataList from './TokenList'
-// let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
+import DataList from './Resources/DataList'
 
-import dataList from '../Dialogs/Resources/data/tokenPolyList.json';
-// import dataList from '../Dialogs/Resources/data/tokenEthList.json';
-// import dataList from '../Dialogs/Resources/data/maticNetworkList.json';
+// let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
+
 import InputSelect from './InputSelect'
 
 const titleName ='Select a token';
+const PLACE_HOLDER ='Search agent name or paste address';
 
 type ListElement = {
     chainId: number;
@@ -21,31 +20,12 @@ type ListElement = {
 }
 
 type Props = {
-    selectElement: string,
+    dataFeedType: string,
     getDlgLstElement: (listElement: ListElement) => boolean,
 }
 
-const fetchTokenList = async() => {
-    const response = await fetch('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json');
-    const jsonResp = await response.json();
-    alert(response);
-    return "WORKS";
-  }
 
-// await fetchTokenList()
-  
-// async function fetchTokenList() {
-//     const response = await fetch("https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/tokenPolyList.json");
-//     const jsonResp = await response.json();
-//     // const tList = JSON.stringify(jsonResp, null, 2);
-//     // const tList = JSON.stringify(await response.json(),null,2);
-//     // alert(tList);
-//   }
-  
-
-export default function Dialog({ selectElement, getDlgLstElement}: Props) {
-// alert("PARSED dataList: ListElement[] = " + JSON.stringify(dataList, null, 2))
-
+export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: ListElement) => {
@@ -68,10 +48,10 @@ export default function Dialog({ selectElement, getDlgLstElement}: Props) {
 
             <div className="modalBox">
                 <div className="modalInputSelect">
-                    <InputSelect selectElement={selectElement}/>
+                    <InputSelect dataFeedType={dataFeedType} selectElement={PLACE_HOLDER}/>
                 </div>
                 <div className="modalScrollBar">
-                    <DataList dataList={dataList} selectElement={selectElement} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={dataFeedType} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

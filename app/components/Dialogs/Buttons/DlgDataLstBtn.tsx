@@ -1,7 +1,7 @@
 'use client'
 import  React, { ReactNode, useRef, useEffect, useState} from 'react'
 import '../Styles/modal.css';
-import dataList from '../Resources/data/tokenEthList.json';
+import dataList from '../Resources/data/mainNetTokenList.json';
 import Dialog from '../Dialog';
 
 type ListElement = {

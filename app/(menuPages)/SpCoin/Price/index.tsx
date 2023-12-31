@@ -4,8 +4,18 @@ import '../styles/SpCoin.module.css'
 import Image from 'next/image'
 import spCoin_png from '../components/images/spCoin.png'
 import Dialog from '../../../components/Dialogs/Dialog';
-
 import { Input, Popover, Radio, Modal, message } from "antd";
+import ApproveOrReviewButton from '../components/Buttons/ApproveOrReviewButton';
+import CustomConnectButton from '../components/Buttons/CustomConnectButton';
+import FEED  from '../../../components/Dialogs/Resources/data/feeds/feedTypes';
+import qs from "qs";
+import useSWR from "swr";
+import { useState, ChangeEvent, SetStateAction } from "react";
+import { formatUnits, parseUnits } from "ethers";
+import {
+  useBalance,
+  type Address,
+} from "wagmi";
 import {
   ArrowDownOutlined,
   DownOutlined,
@@ -50,18 +60,6 @@ const defaultSellToken: TokenElement = {
 
 //-------------- Finish Moralis Requirements ----------------------------------
 
-import ApproveOrReviewButton from '../components/Buttons/ApproveOrReviewButton';
-import CustomConnectButton from '../components/Buttons/CustomConnectButton';
-
-import qs from "qs";
-import useSWR from "swr";
-import { useState, ChangeEvent, SetStateAction } from "react";
-import { formatUnits, parseUnits } from "ethers";
-import {
-  useBalance,
-  type Address,
-} from "wagmi";
-
 interface PriceRequestParams {
   sellToken: string;
   buyToken: string;
@@ -70,7 +68,6 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-const selectElement ='Search agent name or paste address';
 const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
 const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
@@ -98,7 +95,6 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
   //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
   // }
- 
 
   // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
   try {
@@ -109,7 +105,6 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   catch (e) {
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
-
 };
 
 export default function PriceView({
@@ -348,7 +343,7 @@ export default function PriceView({
 
   return (
     <form>
-      <Dialog selectElement={selectElement} getDlgLstElement={getDlgLstElement}/>
+      <Dialog dataFeedType={FEED.POLYGON_TOKENS} getDlgLstElement={getDlgLstElement}/>
 
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>

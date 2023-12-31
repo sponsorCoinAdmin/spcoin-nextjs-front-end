@@ -10,8 +10,8 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 
-import tokenEthList from "../../components/data/tokenEthList.json";
-import tokenPolyList from "../../components/data/tokenPolyList.json";
+import mainNetTokenList from "../../components/data/mainNetTokenList.json";
+import polygonTokenList from "../../components/data/polygonTokenList.json";
 
 // ToDo Fix this
 import Image from 'next/image'

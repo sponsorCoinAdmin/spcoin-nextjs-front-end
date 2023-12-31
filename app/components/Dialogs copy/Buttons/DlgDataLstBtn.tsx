@@ -1,7 +1,7 @@
 'use client'
 import  React, { ReactNode, useRef, useEffect, useState} from 'react'
 import '../Styles/modal.css';
-import dataList from '../Resources/data/tokens/tokenEthList.json';
+import dataList from '../Resources/data/tokens/mainNetTokenList.json';
 import Dialog from '../TokenDialog';
 
 type TokenElement = {

@@ -1,6 +1,6 @@
 import React from 'react'
 import Dialog from './TokenDialogList';
-import dataList from './Resources/data/tokens/tokenPolyList.json';
+import dataList from './Resources/data/tokens/polygonTokenList.json';
 
 type TokenElement = {
     chainId: number;

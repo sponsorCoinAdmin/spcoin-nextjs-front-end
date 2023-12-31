@@ -1,6 +1,6 @@
 'use client'
 import '../Styles/modal.css';
-import dataList from '../Resources/data/tokens/tokenEthList.json';
+import dataList from '../Resources/data/tokens/mainNetTokenList.json';
 import Dialog from '../AgentDlgLst';
 
 type TokenElement = {
