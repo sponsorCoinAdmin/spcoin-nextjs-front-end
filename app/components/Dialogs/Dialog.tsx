@@ -2,13 +2,11 @@
 import './Styles/modal.css';
 import { useRef } from 'react'
 import DataList from './Resources/DataList'
+import FEED  from './Resources/data/feeds/feedTypes';
 
 // let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
 
 import InputSelect from './InputSelect'
-
-const titleName ='Select a token';
-const PLACE_HOLDER ='Search agent name or paste address';
 
 type ListElement = {
     chainId: number;
@@ -24,8 +22,48 @@ type Props = {
     getDlgLstElement: (listElement: ListElement) => boolean,
 }
 
+let titleName:string;
+let PLACE_HOLDER:string;
+function setDialog(feedType: any) {
+    let feed;
+    const dialog = document.querySelector("#dialogList")
+    switch (feedType) {
+        case FEED.AGENT_WALLETS:
+            console.log("setDialog(feedType: "+feedType)
+            if (dialog != null) {dialog.id = "agentDialog"; }
+            titleName = "Select a recipient's agent";
+            PLACE_HOLDER ='Search agent name or paste address';
+        break;
+        case FEED.MAINNET_TOKENS:
+            console.log("setDialog(feedType: "+feedType)
+            if (dialog != null) {dialog.id = "mainnetDialog"; }
+            titleName = 'Select a token from mainnet';
+            PLACE_HOLDER = 'Search mainnet token name or paste address';
+        break;
+        case FEED.POLYGON_TOKENS:
+            console.log("setDialog(feedType: "+feedType)
+            if (dialog != null) {dialog.id = "polygonDialog"; }
+            titleName ='Select a token from polygon';
+            PLACE_HOLDER = 'Search polygon token name or paste address';
+        break;
+        case FEED.RECIPIENT_WALLETS:
+            console.log("setDialog(feedType: "+feedType)
+            if (dialog != null) {dialog.id = "recipientDialog"; }
+            titleName = 'Select a recipient to sponsor';
+            PLACE_HOLDER = 'Search recipient name or paste address';
+        break;
+        default:
+        break;
+    }
+    // if (dialog != null) {
+    //     alert( "ZZZZZZZZZZZZ reset dialog to " + dialog.id )
+    // }
+    // else alert("dialog = "+ dialog)
+    return feed
+}
 
 export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
+    setDialog(dataFeedType);
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: ListElement) => {

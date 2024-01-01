@@ -22,8 +22,8 @@ type Props = {
     getDlgLstElement: (listElement: ListElement) => boolean,
 }
 
-let titleName:string = "Select a token";
-let PLACE_HOLDER:string = 'Search token or paste address';;
+let titleName:string = "Select an agent";
+let PLACE_HOLDER:string = 'Search agent name or paste address';;
 
 export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
@@ -38,7 +38,7 @@ export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
     }
 
     const dialog = (
-        <dialog id="tokenDialog" ref={dialogRef} className="modalContainer">
+        <dialog id="agentDialog" ref={dialogRef} className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{titleName}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"

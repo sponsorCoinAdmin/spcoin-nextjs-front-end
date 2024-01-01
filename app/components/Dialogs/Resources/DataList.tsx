@@ -21,13 +21,13 @@ const fetchTokenList = async() => {
     return "WORKS";
   }
 
-function getFeed(feedType: any) {
+function setFeed(feedType: any) {
     let feed;
     switch (feedType) {
         case FEED.AGENT_WALLETS:
             feed = agentWalletList;
         break;
-        case FEED.MAIN_TOKENS:
+        case FEED.MAINNET_TOKENS:
             feed = mainNetTokenList;
         break;
         case FEED.POLYGON_TOKENS:
@@ -47,7 +47,7 @@ function displayElementDetail (le: any) {
 }
 
 function DataList({dataFeedType, getSelectedListElement} : Props) {
-    let dataList = getFeed(dataFeedType);
+    let dataList = setFeed(dataFeedType);
     const tList = dataList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >
