@@ -3,10 +3,10 @@ import styles from '../styles/SpCoin.module.css'
 import '../styles/SpCoin.module.css'
 import Image from 'next/image'
 import spCoin_png from '../components/images/spCoin.png'
-import Dialog from '../../../components/Dialogs/Dialog';
-import AgentDialog from '../../../components/Dialogs/AgentDialog';
-import RecipientDialog from '../../../components/Dialogs/RecipientDialog';
-import TokenDialog from '../../../components/Dialogs/TokenDialog';
+
+import { AgentDialog, 
+         RecipientDialog, 
+         TokenDialog } from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '../components/Buttons/CustomConnectButton';
@@ -266,22 +266,23 @@ export default function PriceView({
   
   const SET_BUY_TOKEN = true;
   const SET_SELL_TOKEN = false;
-  let BUY_SELL_ACTION = SET_SELL_TOKEN; 
+  let BUY_SELL_ACTION = SET_SELL_TOKEN;
+
 
   function openFeedModal(_action:boolean, feedType:any) {
     let dialog:any;
-      switch(feedType) {
+    switch(feedType) {
       case FEED.AGENT_WALLETS:
         dialog = document.querySelector("#agentDialog")
         break;
       case FEED.POLYGON_TOKENS:
         dialog = document.querySelector("#tokenDialog")
-        break;
+      break;
       case FEED.MAINNET_TOKENS:
-      dialog = document.querySelector("#tokenDialog")
+        dialog = document.querySelector("#tokenDialog")
       break;
       case FEED.RECIPIENT_WALLETS:
-      dialog = document.querySelector("#recipientDialog")
+        dialog = document.querySelector("#recipientDialog")
       break;
       default:
       break;
@@ -293,9 +294,28 @@ export default function PriceView({
     dialog.showModal();
   } 
   
-  const getDlgLstElement = (_tokenElement: TokenElement) => {
-    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
-    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
+  function openPolygonModal(_action: boolean) {
+    BUY_SELL_ACTION = _action;
+    // const dialog = document.querySelector("#dialogList")
+    const dialog:any = document.querySelector("#tokenDialog")
+
+    dialog?.showModal();
+  } 
+
+  function openAgentModal(_action: boolean) {
+    BUY_SELL_ACTION = _action;
+    // const dialog = document.querySelector("#dialogList")
+    const dialog:any = document.querySelector("#agentDialog")
+
+    dialog?.showModal();
+  }
+
+  function openRecipientModal(_action: boolean) {
+    BUY_SELL_ACTION = _action;
+    // const dialog = document.querySelector("#dialogList")
+    const dialog:any = document.querySelector("#recipientDialog")
+
+    dialog?.showModal();
   }
 
   function setValidSellTokenElement(_tokenElement: TokenElement) {
@@ -360,11 +380,18 @@ export default function PriceView({
     return txt;
   }
 
+  const getDlgLstElement = (_tokenElement: TokenElement) => {
+    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
+    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
+  }
+
+  const dialogMethods = { getDlgLstElement};
+
 // --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
 
   return (
     <form>
-      <AgentDialog dataFeedType={FEED.AGENT_WALLETS} getDlgLstElement={getDlgLstElement}/>
+      <AgentDialog dataFeedType={FEED.AGENT_WALLETS} dialogMethods={dialogMethods}/>
       <TokenDialog dataFeedType={FEED.POLYGON_TOKENS} getDlgLstElement={getDlgLstElement}/>
       <TokenDialog dataFeedType={FEED.MAINNET_TOKENS} getDlgLstElement={getDlgLstElement}/>
       <RecipientDialog dataFeedType={FEED.RECIPIENT_WALLETS} getDlgLstElement={getDlgLstElement}/>
