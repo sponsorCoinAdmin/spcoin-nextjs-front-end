@@ -1,12 +1,12 @@
 "use client"
-import './Styles/modal.css';
+import './Resources/Styles/modal.css';
 import { useRef } from 'react'
 import DataList from './Resources/DataList'
 import FEED  from './Resources/data/feeds/feedTypes';
 
 // let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
 
-import InputSelect from './InputSelect'
+import InputSelect from './Resources/InputSelect'
 
 type ListElement = {
     chainId: number;
@@ -19,22 +19,22 @@ type ListElement = {
 
 type Props = {
     dataFeedType: string,
-    getDlgLstElement: (listElement: ListElement) => boolean,
+    dialogMethods: {getDlgLstElement: (listElement: ListElement) => boolean},
 }
 
 let titleName:string = "Select an agent";
 let PLACE_HOLDER:string = 'Search agent name or paste address';;
 
-export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
+export default function Dialog({ dataFeedType, dialogMethods}: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: ListElement) => {
-        if(getDlgLstElement(listElement))
+        if(dialogMethods.getDlgLstElement(listElement))
             closeDialog()
     }
 
     const closeDialog = () => {
-        dialogRef.current?.close()
+        dialogRef.current?.close();
     }
 
     const dialog = (

@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import styles from './Styles/Modal.module.css';
+import styles from './styles/Modal.module.css';
 // import searchMagGlassBlack_png from './Resources/images/searchMagGlassBlack.png'
 // import searchMagGlassWhite_png from './Resources/images/searchMagGlassWhite.png'
-import searchMagGlassGrey_png from './Resources/images/searchMagGlassGrey.png'
+import searchMagGlassGrey_png from './images/searchMagGlassGrey.png'
 import Image from 'next/image'
 // import ConnectButton from "./ConnectButton";
 

@@ -1,12 +1,12 @@
 "use client"
-import './Styles/modal.css';
+import './Resources/Styles/modal.css';
 import { useRef } from 'react'
 import DataList from './Resources/DataList'
 import FEED  from './Resources/data/feeds/feedTypes';
 
 // let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
 
-import InputSelect from './InputSelect'
+import InputSelect from './Resources/InputSelect'
 
 type ListElement = {
     chainId: number;
