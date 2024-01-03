@@ -1,5 +1,11 @@
 import AgentDialog from './AgentDialog';
 import RecipientDialog from './RecipientDialog';
-import TokenDialog from './TokenDialog';
+import SellTokenDialog from './SellTokenDialog';
+import BuyTokenDialog from './BuyTokenDialog';
 
-export { AgentDialog, RecipientDialog,  TokenDialog }
+export { 
+    AgentDialog,
+    RecipientDialog, 
+    SellTokenDialog,
+    BuyTokenDialog
+}

@@ -19,7 +19,7 @@ type ListElement = {
 
 type Props = {
     dataFeedType: string,
-    getDlgLstElement: (listElement: ListElement) => boolean,
+    setDlgLstElement: (listElement: ListElement) => boolean,
 }
 
 let titleName:string;
@@ -62,12 +62,12 @@ function setDialog(feedType: any) {
     return feed
 }
 
-export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
-    setDialog(dataFeedType);
+export default function Dialog({ dialogMethods}: any) {
+    setDialog(dialogMethods.dataFeedType);
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: ListElement) => {
-        if(getDlgLstElement(listElement))
+        if(dialogMethods.setDlgLstElement(listElement))
             closeDialog()
     }
 
@@ -75,7 +75,7 @@ export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
         dialogRef.current?.close()
     }
 
-    const dialog = (
+    const Dialog = (
         <dialog id="dialogList" ref={dialogRef} className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{titleName}</h1>
@@ -86,13 +86,13 @@ export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
 
             <div className="modalBox">
                 <div className="modalInputSelect">
-                    <InputSelect dataFeedType={dataFeedType} selectElement={PLACE_HOLDER}/>
+                    <InputSelect dataFeedType={dialogMethods.dataFeedType} selectElement={PLACE_HOLDER}/>
                 </div>
                 <div className="modalScrollBar">
-                    <DataList dataFeedType={dataFeedType} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={dialogMethods.dataFeedType} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>
     )
-    return dialog
+    return Dialog
 }

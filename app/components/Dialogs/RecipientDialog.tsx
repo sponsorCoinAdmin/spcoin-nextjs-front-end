@@ -1,35 +1,16 @@
 "use client"
 import './Resources/Styles/modal.css';
 import { useRef } from 'react'
-import DataList from './Resources/DataList'
-import FEED  from './Resources/data/feeds/feedTypes';
-
-// let data = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
-
 import InputSelect from './Resources/InputSelect'
+import DataList from './Resources/DataList'
+// ToDo Read in data List remotely
+// Example: let DataList = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
 
-type ListElement = {
-    chainId: number;
-    symbol: string; 
-    img: string; 
-    name: string; 
-    address: any; 
-    decimals: number;
-}
-
-type Props = {
-    dataFeedType: string,
-    getDlgLstElement: (listElement: ListElement) => boolean,
-}
-
-let titleName:string = "Select a recipient";
-let PLACE_HOLDER:string = 'Search recipient name or paste address';;
-
-export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
+export default function Dialog({ dialogMethods}: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
-    const getSelectedListElement = (listElement: ListElement) => {
-        if(getDlgLstElement(listElement))
+    const getSelectedListElement = (listElement: any) => {
+        if(dialogMethods.setDlgLstElement(listElement))
             closeDialog()
     }
 
@@ -37,10 +18,10 @@ export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
         dialogRef.current?.close()
     }
 
-    const dialog = (
+    const Dialog = (
         <dialog id="recipientDialog" ref={dialogRef} className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-                <h1 className="text-sm indent-9 mt-1">{titleName}</h1>
+            <h1 className="text-sm indent-9 mt-1">{dialogMethods.titleName}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
                     onClick={closeDialog}
                 >X</div>
@@ -48,13 +29,13 @@ export default function Dialog({ dataFeedType, getDlgLstElement}: Props) {
 
             <div className="modalBox">
                 <div className="modalInputSelect">
-                    <InputSelect dataFeedType={dataFeedType} selectElement={PLACE_HOLDER}/>
+                    <InputSelect dataFeedType={dialogMethods.dataFeedType} selectElement={dialogMethods.placeHolder}/>
                 </div>
                 <div className="modalScrollBar">
-                    <DataList dataFeedType={dataFeedType} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={dialogMethods.dataFeedType} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>
     )
-    return dialog
+    return Dialog
 }

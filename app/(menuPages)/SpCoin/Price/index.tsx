@@ -4,9 +4,12 @@ import '../styles/SpCoin.module.css'
 import Image from 'next/image'
 import spCoin_png from '../components/images/spCoin.png'
 
-import { AgentDialog, 
-         RecipientDialog, 
-         TokenDialog } from '../../../components/Dialogs/Dialogs';
+import { 
+  AgentDialog,
+  RecipientDialog,
+  SellTokenDialog,
+  BuyTokenDialog
+} from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '../components/Buttons/CustomConnectButton';
@@ -41,15 +44,6 @@ const defaultSellToken: TokenElement = {
   name: "Wrapped Bitcoin",
   address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
   decimals: 8
- };
-
- const defaultSellToken2: TokenElement = { 
-  chainId: 137,
-  symbol: "WETH",
-  img: "https://cdn.moralis.io/eth/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png",
-  name: "Wrapped Ethereum",
-  address: "0xAe740d42E4ff0C5086b2b5b5d149eB2F9e1A754F",
-  decimals: 18
  };
 
  const defaultBuyToken: TokenElement = { 
@@ -268,62 +262,17 @@ export default function PriceView({
   const SET_SELL_TOKEN = false;
   let BUY_SELL_ACTION = SET_SELL_TOKEN;
 
-
-  function openFeedModal(_action:boolean, feedType:any) {
-    let dialog:any;
-    switch(feedType) {
-      case FEED.AGENT_WALLETS:
-        dialog = document.querySelector("#agentDialog")
-        break;
-      case FEED.POLYGON_TOKENS:
-        dialog = document.querySelector("#tokenDialog")
-      break;
-      case FEED.MAINNET_TOKENS:
-        dialog = document.querySelector("#tokenDialog")
-      break;
-      case FEED.RECIPIENT_WALLETS:
-        dialog = document.querySelector("#recipientDialog")
-      break;
-      default:
-      break;
-
-    }
-    BUY_SELL_ACTION = _action;
-    // const dialog = document.querySelector("#dialogList")
-
-    dialog.showModal();
-  } 
-  
-  function openPolygonModal(_action: boolean) {
-    BUY_SELL_ACTION = _action;
-    // const dialog = document.querySelector("#dialogList")
-    const dialog:any = document.querySelector("#tokenDialog")
-
-    dialog?.showModal();
-  } 
-
-  function openAgentModal(_action: boolean) {
-    BUY_SELL_ACTION = _action;
-    // const dialog = document.querySelector("#dialogList")
-    const dialog:any = document.querySelector("#agentDialog")
-
-    dialog?.showModal();
-  }
-
-  function openRecipientModal(_action: boolean) {
-    BUY_SELL_ACTION = _action;
-    // const dialog = document.querySelector("#dialogList")
-    const dialog:any = document.querySelector("#recipientDialog")
-
-    dialog?.showModal();
+  const setDlgLstElement = (_tokenElement: TokenElement) => {
+    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
+    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
   }
 
   function setValidSellTokenElement(_tokenElement: TokenElement) {
-    /*
+    /**/
     let msg = "setValidSellTokenElement "+_tokenElement.symbol;
     console.log(msg);
     alert(msg);
-    */
+    /**/
     if (_tokenElement.address === buyTokenElement.address) {
       alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
       console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
@@ -336,11 +285,11 @@ export default function PriceView({
   }
 
   function setValidBuyTokenElement(_tokenElement: TokenElement) {
-    /*
+    /**/
     let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
     console.log(msg);
     alert(msg);
-    */
+    /**/
     if (_tokenElement.address === sellTokenElement.address) {
       alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
       console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
@@ -380,21 +329,54 @@ export default function PriceView({
     return txt;
   }
 
-  const getDlgLstElement = (_tokenElement: TokenElement) => {
-    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
-    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
+  const getAgentMembers = () => {
+    const methods:any = {};
+    methods.titleName = "Select an agent";
+    methods.placeHolder = 'Agent name or paste address';;
+    methods.setDlgLstElement = setDlgLstElement;
+    methods.dataFeedType = FEED.AGENT_WALLETS;
+    return methods;
   }
 
-  const dialogMethods = { getDlgLstElement};
+  const getBuyTokenDialogMembers = () => {
+    const methods:any = {};
+    methods.titleName = "Select a token to buy";
+    methods.placeHolder = 'Buy token name or paste address';
+    methods.setDlgLstElement = setValidBuyTokenElement;
+    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    return methods;
+  }
+
+  const getSellTokenDialogMembers = () => {
+    const methods:any = {};
+    methods.titleName = "Select a token to sell";
+    methods.placeHolder = 'Sell token name or paste address';
+    methods.setDlgLstElement = setValidSellTokenElement;
+    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    return methods;
+  }
+
+  const getRecipientMembers = () => {
+    const methods:any = {};
+    methods.titleName = "Select a recipient";
+    methods.placeHolder = 'Recipient name or paste address';;
+    methods.setDlgLstElement = setDlgLstElement;
+    methods.dataFeedType = FEED.RECIPIENT_WALLETS;
+    return methods;
+  }
 
 // --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
+  function openFeedModal(feedType:string) {
+    let dialog:any = document.querySelector(feedType)
+    dialog.showModal();
+  }
 
   return (
     <form>
-      <AgentDialog dataFeedType={FEED.AGENT_WALLETS} dialogMethods={dialogMethods}/>
-      <TokenDialog dataFeedType={FEED.POLYGON_TOKENS} getDlgLstElement={getDlgLstElement}/>
-      <TokenDialog dataFeedType={FEED.MAINNET_TOKENS} getDlgLstElement={getDlgLstElement}/>
-      <RecipientDialog dataFeedType={FEED.RECIPIENT_WALLETS} getDlgLstElement={getDlgLstElement}/>
+      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
+      <RecipientDialog dialogMethods={getRecipientMembers()}/>
+      <AgentDialog dialogMethods={getAgentMembers()}/>
 
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
@@ -405,10 +387,11 @@ export default function PriceView({
           </Popover>
         </div>
 
+        // 
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
-          <div className={styles["assetSelect"]} onClick={() => openFeedModal(SET_SELL_TOKEN, FEED.MAINNET_TOKENS)}>
+          <div className={styles["assetSelect"]} onClick={() => openFeedModal("#sellTokenDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
             <DownOutlined />
@@ -417,8 +400,8 @@ export default function PriceView({
 
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-          <div className={styles["assetSelect"]} onClick={() => openFeedModal(SET_BUY_TOKEN, FEED.MAINNET_TOKENS)}>
-            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
+          <div className={styles["assetSelect"]} onClick={() => openFeedModal("#buyTokenDialog")}>
+            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {buyTokenElement.symbol}
             <DownOutlined />
           </div>
@@ -426,15 +409,14 @@ export default function PriceView({
 
         { connectedWalletAddr ? 
             ( <ApproveOrReviewButton tokenToSellAddr={sellTokenElement.address} connectedWalletAddr={connectedWalletAddr}
-              onClick={() => { setFinalize(true); }} disabled={disabled} /> ) 
-          : 
+              onClick={() => { setFinalize(true); }} disabled={disabled} /> ) : 
             ( <CustomConnectButton /> )
         }
 
         <div className={styles.inputs}>
           <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
-          <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal(SET_SELL_TOKEN, FEED.RECIPIENT_WALLETS)}>
+          <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#recipientDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
             <DownOutlined />
@@ -444,7 +426,7 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
-          <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal(SET_SELL_TOKEN, FEED.AGENT_WALLETS)}>
+          <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#agentDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
             <DownOutlined />

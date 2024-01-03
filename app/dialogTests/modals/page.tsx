@@ -14,7 +14,7 @@ export default function Products() {
         decimals: number;
       }
 
-    const getDlgLstElement = async(listElement: ListElement) => {
+    const setDlgLstElement = async(listElement: ListElement) => {
         "use server"
         console.log("Modifying Token Object FROM AgentDlgLstBtn.tsx" + JSON.stringify(listElement,null,2));
       }
@@ -28,9 +28,9 @@ export default function Products() {
     <>
         <h1 className="text-5xl">Dialog Test</h1>
 
-        <AgentDlgLstBtn getDlgLstElement={getDlgLstElement} onClose={onClose}/>
-        <RecipientDlgLstBtn getDlgLstElement={getDlgLstElement} onClose={onClose}/>
-        <DlgDataLstBtn getDlgLstElement={getDlgLstElement} onClose={onClose} />
+        <AgentDlgLstBtn setDlgLstElement={setDlgLstElement} onClose={onClose}/>
+        <RecipientDlgLstBtn setDlgLstElement={setDlgLstElement} onClose={onClose}/>
+        <DlgDataLstBtn setDlgLstElement={setDlgLstElement} onClose={onClose} />
 
         <Link href="/dialogTests" className="text-3xl underline">Go to Dialog Tests</Link>
         <Link href="/" className="text-3xl underline">Home</Link>
