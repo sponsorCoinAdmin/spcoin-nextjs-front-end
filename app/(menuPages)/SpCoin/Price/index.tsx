@@ -268,7 +268,7 @@ export default function PriceView({
   }
 
   function setValidSellTokenElement(_tokenElement: TokenElement) {
-    /**/
+    /*
     let msg = "setValidSellTokenElement "+_tokenElement.symbol;
     console.log(msg);
     alert(msg);
@@ -387,7 +387,6 @@ export default function PriceView({
           </Popover>
         </div>
 
-        // 
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => { setNumSellAmount(e.target.value); }} />
