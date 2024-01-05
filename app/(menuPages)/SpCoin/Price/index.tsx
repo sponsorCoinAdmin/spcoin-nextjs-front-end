@@ -130,6 +130,10 @@ export default function PriceView({
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState<TokenElement>(defaultSellToken);
+  const [agentElement, setAgentElement] = useState<TokenElement>(defaultBuyToken);
+
+
   // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
   // console.log("buyTokenElement.symbol  = " + buyTokenElement.symbol);
 
@@ -164,7 +168,7 @@ export default function PriceView({
           console.log(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
           setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
         } else {
-          setNumSellAmount(formatUnits(data.sellAmount, sellTokenElement.decimals));
+          validateNumericEntry(formatUnits(data.sellAmount, sellTokenElement.decimals));
         }
       },
       onError: ( error ) => {
@@ -176,7 +180,7 @@ export default function PriceView({
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
               // alert('Sell Amount is 0');
             break;
-            case BUY_AMOUNT_ZERO: setNumSellAmount("0");
+            case BUY_AMOUNT_ZERO: validateNumericEntry("0");
             // alert('Buy Amount is 0');
             break;
             case ERROR_0X_RESPONSE:
@@ -186,7 +190,7 @@ export default function PriceView({
             case SELL_AMOUNT_UNDEFINED:
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
-              setNumSellAmount("0");
+              validateNumericEntry("0");
             break;
             case BUY_AMOUNT_UNDEFINED:
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
@@ -284,22 +288,57 @@ export default function PriceView({
     }
   }
 
-  function setValidBuyTokenElement(_tokenElement: TokenElement) {
-    /**/
-    let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
+  function setValidBuyTokenElement(_recipientElement: TokenElement) {
+    /**
+    let msg = "setValidBuyTokenElement "+_recipientElement.symbol;
     console.log(msg);
     alert(msg);
     /**/
-    if (_tokenElement.address === sellTokenElement.address) {
+    if (_recipientElement.address === sellTokenElement.address) {
       alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
       console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
       return false;
     }
     else {
-      setBuyTokenElement(_tokenElement)
+      setBuyTokenElement(_recipientElement)
       return true;
     }
   }
+
+  function setValidRecipientElement(_tokenElement: TokenElement) {
+    /**
+    let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
+    console.log(msg);
+    alert(msg);
+    /**/
+    if (_tokenElement.address === agentElement.address) {
+      alert("Recipient cannot be the same as Agent("+agentElement.symbol+")")
+      console.log("Recipient cannot be the same as Agent("+agentElement.symbol+")");
+      return false;
+    }
+    else {
+      setRecipientElement(_tokenElement)
+      return true;
+    }
+  }
+
+  function setValidAgentElement(_agentElement: TokenElement) {
+    /*
+    let msg = "setValidSellTokenElement "+_agentElement.symbol;
+    console.log(msg);
+    alert(msg);
+    /**/
+    if (_agentElement.address === recipientElement.address) {
+      alert("Agent cannot be the same as Recipient("+recipientElement.symbol+")")
+      console.log("Agent cannot be the same as Recipient("+recipientElement.symbol+")");
+      return false;
+    }
+    else {
+      setAgentElement(_agentElement)
+      return true;
+    }
+  }
+
 
   function switchTokens() {
     let tmpElement: TokenElement = sellTokenElement;
@@ -307,7 +346,7 @@ export default function PriceView({
     setBuyTokenElement(tmpElement);
   }
 
-  function setNumSellAmount(txt: string){
+  function validateNumericEntry(txt: string){
     // Allow only numbers and '.'
     const re = /^-?\d+(?:[.,]\d*?)?$/;
     if (txt === '' || re.test(txt)) {
@@ -333,7 +372,7 @@ export default function PriceView({
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
-    methods.setDlgLstElement = setDlgLstElement;
+    methods.setDlgLstElement = setValidAgentElement;
     methods.dataFeedType = FEED.AGENT_WALLETS;
     return methods;
   }
@@ -360,7 +399,7 @@ export default function PriceView({
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
-    methods.setDlgLstElement = setDlgLstElement;
+    methods.setDlgLstElement = setValidRecipientElement;
     methods.dataFeedType = FEED.RECIPIENT_WALLETS;
     return methods;
   }
@@ -389,7 +428,7 @@ export default function PriceView({
 
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
-            onChange={(e) => { setNumSellAmount(e.target.value); }} />
+            onChange={(e) => { validateNumericEntry(e.target.value); }} />
           <div className={styles["assetSelect"]} onClick={() => openFeedModal("#sellTokenDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
@@ -400,7 +439,7 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
           <div className={styles["assetSelect"]} onClick={() => openFeedModal("#buyTokenDialog")}>
-            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
+            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
             {buyTokenElement.symbol}
             <DownOutlined />
           </div>
@@ -413,21 +452,21 @@ export default function PriceView({
         }
 
         <div className={styles.inputs}>
-          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true}
-            onChange={(e) => { setNumSellAmount(e.target.value); }} />
+          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true} value={recipientElement.name}
+            onChange={(e) => { validateNumericEntry(e.target.value); }} />
           <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#recipientDialog")}>
-            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
-            {sellTokenElement.symbol}
+            <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
+            {recipientElement.symbol}
             <DownOutlined />
           </div>
         </div>
 
         <div className={styles.inputs}>
-          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true}
-            onChange={(e) => { setNumSellAmount(e.target.value); }} />
+          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name}
+            onChange={(e) => { validateNumericEntry(e.target.value); }} />
           <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#agentDialog")}>
-            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
-            {sellTokenElement.symbol}
+            <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />
+            {agentElement.symbol}
             <DownOutlined />
           </div>
         </div>
