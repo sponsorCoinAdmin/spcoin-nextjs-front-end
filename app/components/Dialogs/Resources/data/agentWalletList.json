@@ -36,16 +36,16 @@
         "address": "Dog1's Wallet Address"
     },
     {
-        "symbol": "Dog2",
+        "symbol": "Turbo",
         "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Dog2.png?raw=true",
-        "name": "Dog2 NAME",
+        "name": "Turbo",
         "address": "Dog2's Wallet Address"
     },
     {
-        "symbol": "Dog3",
+        "symbol": "Ruby",
         "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Dog3.png?raw=true",
-        "name": "Dog3 NAME",
-        "address": "Dog3's Wallet Address"
+        "name": "Ruby",
+        "address": "Ruby's Wallet Address"
     },
     {
         "symbol": "FredFlintstone1",

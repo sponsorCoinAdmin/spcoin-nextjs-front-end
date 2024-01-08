@@ -15,6 +15,7 @@ export default async function handler(
   console.log("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
   let query = qs.stringify(req.query);
   let apiQuery = `https://polygon.api.0x.org/swap/v1/price?${query}`;
+  console.log("query: " + query)
   console.log("Executing Price Request: " + apiQuery)
 
   const response = await fetch(
