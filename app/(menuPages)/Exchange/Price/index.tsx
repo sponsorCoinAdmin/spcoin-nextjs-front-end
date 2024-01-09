@@ -1,6 +1,5 @@
 'use client'
-import styles from '../styles/SpCoin.module.css'
-import '../styles/SpCoin.module.css'
+import styles from '../../../styles/SpCoin.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
 
@@ -11,8 +10,8 @@ import {
   BuyTokenDialog
 } from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
-import ApproveOrReviewButton from '../components/Buttons/ApproveOrReviewButton';
-import CustomConnectButton from '../components/Buttons/CustomConnectButton';
+import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
+import CustomConnectButton from '../../../components/Buttons/CustomConnectButton';
 import FEED  from '../../../resources/data/feeds/feedTypes';
 import qs from "qs";
 import useSWR from "swr";

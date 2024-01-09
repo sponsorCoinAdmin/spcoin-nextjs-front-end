@@ -6,7 +6,7 @@ import { type Address } from "wagmi";
   import {
     MAX_ALLOWANCE,
     exchangeProxy,
-  } from "../../../../resources/data/constants";
+  } from "../../resources/data/constants";
 
 
 function ConnectApproveOrReviewButton({
