@@ -5,7 +5,7 @@ export async function GET (req: Request) {
   let params = urlPart[1];
   let apiQuery = `https://polygon.api.0x.org/swap/v1/price?${params}`;
 
-  console.log("URL      = " + url)
+  console.log("PRICE URL = " + url)
   console.log("Executing Price Request: " + apiQuery)
 
   const response = await fetch(
@@ -20,5 +20,6 @@ export async function GET (req: Request) {
   const data = await response.json();
   console.log("Executed Price Response : " + JSON.stringify(data,null,2))
 
-  return new Response(JSON.stringify(data, null, 2))
+ return new Response(JSON.stringify(data, null, 2))
+  // return new Response(data)
 } 
