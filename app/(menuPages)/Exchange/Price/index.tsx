@@ -85,19 +85,11 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
-  // if (!sellAmount || sellAmount == null || sellAmount == undefined) {
-  //   throw {errCode: SELL_AMOUNT_UNDEFINED, errMsg: 'Sell Amount Field is Empty'}
-  // }
-
-  // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
-  //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
-  // }
-
-  // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
+  let hostPort='localhost:3000'
   try {
     console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.log(`${endpoint}?${query}`);
+    console.log(`${hostPort}${endpoint}?${query}`);
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
