@@ -2,8 +2,8 @@
 
 import React from "react";
 import styles from "../../styles/Header.module.css"
-import spCoin_png from '../images/spCoin.png'
-import eth_png from '../images/eth.png'
+import spCoin_png from '../../resources/images/spCoin.png'
+import eth_png from '../../resources/images/eth.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton";

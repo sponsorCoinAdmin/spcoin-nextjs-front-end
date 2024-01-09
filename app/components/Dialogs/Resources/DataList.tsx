@@ -1,13 +1,12 @@
 import React from 'react'
 import styles from './styles/Modal.module.css'
-import info_png from './images/info1.png'
 import Image from 'next/image'
-import FEED  from '../Resources/data/feeds/feedTypes';
-
-import polygonTokenList from '../Resources/data/polygonTokenList.json';
-import mainNetTokenList from '../Resources/data/mainNetTokenList.json';
-import agentWalletList from '../Resources/data/agentWalletList.json';
-import recipientWalletList from '../Resources/data/recipientWalletList.json';
+import info_png from '../../../resources/images/info1.png'
+import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
+import polygonTokenList from '../../../resources/data/polygonTokenList.json';
+import mainNetTokenList from '../../../resources/data/mainNetTokenList.json';
+import agentWalletList from '../../../resources/data/agentWalletList.json';
+import recipientWalletList from '../../../resources/data/recipientWalletList.json';
 
 type Props = {
     dataFeedType: string,

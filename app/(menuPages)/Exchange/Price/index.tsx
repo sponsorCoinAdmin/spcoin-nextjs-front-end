@@ -2,7 +2,7 @@
 import styles from '../styles/SpCoin.module.css'
 import '../styles/SpCoin.module.css'
 import Image from 'next/image'
-import spCoin_png from '../components/images/spCoin.png'
+import spCoin_png from '../../../resources/images/spCoin.png'
 
 import { 
   AgentDialog,
@@ -13,7 +13,7 @@ import {
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '../components/Buttons/CustomConnectButton';
-import FEED  from '../../../components/Dialogs/Resources/data/feeds/feedTypes';
+import FEED  from '../../../resources/data/feeds/feedTypes';
 import qs from "qs";
 import useSWR from "swr";
 import { useState, ChangeEvent, SetStateAction } from "react";

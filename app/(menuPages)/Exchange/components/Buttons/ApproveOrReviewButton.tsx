@@ -13,7 +13,7 @@ import {
 import {
   MAX_ALLOWANCE,
   exchangeProxy,
-} from "../../lib/constants";
+} from "../../../../resources/data/constants";
 
 function ApproveOrReviewButton({
     connectedWalletAddr,

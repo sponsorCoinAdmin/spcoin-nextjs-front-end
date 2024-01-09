@@ -2,7 +2,7 @@ import useSWR from "swr";
 import Image from "next/image";
 import {
   POLYGON_TOKENS_BY_ADDRESS,
-} from "../lib/constants";
+} from "../../../resources/data/constants";
 import { fetcher } from "../Price";
 import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
