@@ -15,6 +15,7 @@
     "autoprefixer": "10.4.14",
     "axios": "^1.6.2",
     "connectkit": "^1.4.0",
+    "connectkit-next-siwe": "^0.2.0",
     "eslint-config-next": "12.3.4",
     "ethers": "^6.4.0",
     "msw": "^1.2.1",
@@ -24,6 +25,7 @@
     "qs": "^6.11.2",
     "react": "^18",
     "react-dom": "^18",
+    "siwe": "^2.1.4",
     "swr": "^2.1.5",
     "typescript": "5.0.4",
     "wagmi": "^1.4.6"

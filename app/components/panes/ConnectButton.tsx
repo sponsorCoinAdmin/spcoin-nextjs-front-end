@@ -2,10 +2,8 @@
 
 import React from "react";
 import { ConnectKitButton } from "connectkit";
-
 import connectTheme from "../../styles/connectTheme.json"
 import ConnectWrapper from "../ConnectWrapper";
-
 
 function ConnectTheme() {
   return (
@@ -18,7 +16,6 @@ function ConnectTheme() {
 function ConnectButton() {
   return (
     <>
-      {/* {<ConnectTheme />} */}
       <ConnectWrapper Component={ConnectTheme} />
     </>
   );

@@ -160,7 +160,7 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
