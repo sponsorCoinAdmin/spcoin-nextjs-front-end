@@ -6,7 +6,7 @@ export async function GET (req: Request) {
   let apiQuery = `https://polygon.api.0x.org/swap/v1/quote?${params}`;
 
   console.log("QUOTE URL = " + url)
-  console.log("Executing Quote Request: " + apiQuery)
+  console.log("Executing API Quote Request: " + apiQuery)
 
   const response = await fetch(
     apiQuery,
