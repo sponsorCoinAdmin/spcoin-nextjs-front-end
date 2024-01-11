@@ -9,6 +9,7 @@ export async function GET (req: Request) {
   const urlPart = url.split("?");
   const params = urlPart[1];
   const apiQuery = `https://polygon.api.0x.org/swap/v1/price?${params}&${feeWalletDetails}`;
+
   console.log("====================================================================================================")
   console.log("OX_API_KEY: " + process.env.OX_API_KEY)
   console.log("PRICE REQUEST URL = " + url)
@@ -29,6 +30,5 @@ export async function GET (req: Request) {
   const data = await response.json();
   // console.log("Executed Price Response : " + JSON.stringify(data,null,2))
 
- return new Response(JSON.stringify(data, null, 2))
-  // return new Response(data)
-} 
+  return new Response(JSON.stringify(data, null, 2))
+}

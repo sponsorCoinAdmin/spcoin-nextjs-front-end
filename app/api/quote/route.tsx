@@ -1,24 +1,34 @@
+const feeRecipientWallet = process.env.FEE_RECIPIENT_WALLET
+const buyTokenPercentFee = process.env.AFFILIATE_FEE
+const feeWalletDetails = `feeRecipientWallet=${feeRecipientWallet}&buyTokenPercentFee=${buyTokenPercentFee}`
+const OX_API_KEY:string = process.env.OX_API_KEY === undefined ? "0" : process.env.OX_API_KEY
+
 export async function GET (req: Request) {
   const url=req.url;
 
-  let urlPart = url.split("?");
-  let params = urlPart[1];
-  let apiQuery = `https://polygon.api.0x.org/swap/v1/quote?${params}`;
+  const urlPart = url.split("?");
+  const params = urlPart[1];
+  const apiQuery = `https://polygon.api.0x.org/swap/v1/quote?${params}&${feeWalletDetails}`;
 
-  console.log("QUOTE URL = " + url)
-  console.log("Executing API Quote Request: " + apiQuery)
+  console.log("====================================================================================================")
+  console.log("OX_API_KEY: " + process.env.OX_API_KEY)
+  console.log("QUOTE REQUEST URL = " + url)
+  console.log("Executing API Price Request: " + apiQuery)
+  console.log("FEE RECIPIENT WALLET  = " + feeRecipientWallet)
+  console.log("AFFILIATE_FEE PERCENT: " + process.env.AFFILIATE_FEE)
+  console.log("====================================================================================================")
 
   const response = await fetch(
     apiQuery,
     {
       headers: {
-        "0x-api-key": "a1d0f41d-3b72-4a50-b3b5-6f10cd534bd7", // process.env.NEXT_PUBLIC_0X_API_KEY,
+        "0x-api-key": OX_API_KEY, // process.env.NEXT_PUBLIC_0X_API_KEY,
       },
     }
   );
 
   const data = await response.json();
-  console.log("Executed Quote Response : " + JSON.stringify(data,null,2))
+  // console.log("Executed Quote Response : " + JSON.stringify(data,null,2))
 
   return new Response(JSON.stringify(data, null, 2))
 }
