@@ -7,11 +7,9 @@ import { useEffect, useState } from "react";
 
 const alchemyId              = process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID === undefined ? "0" : process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID === undefined ? "0" : process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
-// const alchemyId = "EuL5KyMLLBrMyNbZW9CgtiSy45_bh24c"
-// const walletConnectProjectId = "2c23de9d13468896a8a189e8f56ba34e"
 
-console.log ("alchemyId               :" + alchemyId)
-console.log ("walletConnectProjectId  :" + walletConnectProjectId)
+// console.log ("alchemyId               :" + alchemyId)
+// console.log ("walletConnectProjectId  :" + walletConnectProjectId)
 
 // Choose which chains you'd like to show
 const chains = [mainnet, polygon, sepolia];
