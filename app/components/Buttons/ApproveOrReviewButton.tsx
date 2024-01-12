@@ -30,12 +30,17 @@ function ApproveOrReviewButton({
     console.log("ApproveOrReviewButton:tokenToSellAddr: " + tokenToSellAddr);
     console.log("ApproveOrReviewButton:disabled: " + disabled);
     // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
-    const { data: allowance, refetch } = useContractRead({
+    const { isError, data: allowance, refetch } = useContractRead({
       address: tokenToSellAddr,
       abi: erc20ABI,
       functionName: "allowance",
       args: [connectedWalletAddr, exchangeProxy],
+      onError(error) {
+        console.log('***ERROR*** useContractRead Error', error)
+      },
     });
+    console.log("ApproveOrReviewButton:AFTER useContractRead()");
+    console.log("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
   
     // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
     const { config } = usePrepareContractWrite({
@@ -44,20 +49,25 @@ function ApproveOrReviewButton({
       functionName: "approve",
       args: [exchangeProxy, MAX_ALLOWANCE],
     });
+    console.log("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
   
     const {
       data: writeContractResult,
       writeAsync: approveAsync,
       error,
     } = useContractWrite(config);
-  
+
+    console.log("ApproveOrReviewButton:AFTER useContractWrite()");
+
     const { isLoading: isApproving } = useWaitForTransaction({
       hash: writeContractResult ? writeContractResult.hash : undefined,
       onSuccess(data) {
         refetch();
       },
     });
-  
+
+    console.log("ApproveOrReviewButton:AFTER useWaitForTransaction()");
+
     if (error) {
       return <div>Something went wrong: {error.message}</div>;
     }

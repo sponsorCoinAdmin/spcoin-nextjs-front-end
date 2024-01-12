@@ -1,13 +1,11 @@
 'use client'
-
 import { mainnet, polygon, sepolia, } from "wagmi/chains"
-import { WagmiConfig, createConfig, chain } from "wagmi";
+import { WagmiConfig, createConfig } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton, getDefaultConfig } from "connectkit";
 import { useEffect, useState } from "react";
 
 const alchemyId              = process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID === undefined ? "0" : process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID === undefined ? "0" : process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
-
 // console.log ("alchemyId               :" + alchemyId)
 // console.log ("walletConnectProjectId  :" + walletConnectProjectId)
 
@@ -26,8 +24,7 @@ const config = createConfig(
   })
 );
 
-// export default function App({ Component, pageProps }: AppProps) {
-  export default function App(props: {
+export default function App(props: {
       [x: string]: any; Component: any; 
 }) {
     let { Component, pageProps } = props;

@@ -76,11 +76,15 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
   const { sellAmount, buyAmount } = params;
 
+  console.log("HERE 1.0");
   if (!sellAmount && !buyAmount) return;
+  console.log("HERE 1.1");
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
+    console.log("HERE 1.2");
     throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
   if (!sellAmount && buyAmount === "0") {
+    console.log("HERE 1.3");
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
@@ -100,6 +104,7 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
+    console.log("HERE 1.4");
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
 };
@@ -172,27 +177,34 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
+        console.log("HERE 2.0")
         // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
-           switch (errCode) {
+          console.log("HERE 2.1")
+          switch (errCode) {
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
-              // alert('Sell Amount is 0');
+            console.log("HERE 2.2")
+            // alert('Sell Amount is 0');
             break;
             case BUY_AMOUNT_ZERO: validateNumericEntry("0");
+            console.log("HERE 2.3")
             // alert('Buy Amount is 0');
             break;
             case ERROR_0X_RESPONSE:
+              console.log("HERE 2.4")
               console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
             break;
             case SELL_AMOUNT_UNDEFINED:
+              console.log("HERE 2.5")
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
               validateNumericEntry("0");
             break;
             case BUY_AMOUNT_UNDEFINED:
+              console.log("HERE 2.6")
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
               setBuyAmount("0");
@@ -205,12 +217,14 @@ export default function PriceView({
         }
         else {
           if (error === null || error === undefined) {
+            console.log("HERE 2.7")
             alert ("error = undefined");
             alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
             console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
           }
           else {
             // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+            console.log("HERE 2.8")
             console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
           }
         }
