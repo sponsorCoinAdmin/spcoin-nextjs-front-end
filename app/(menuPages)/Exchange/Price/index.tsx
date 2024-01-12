@@ -1,3 +1,4 @@
+'use client'
 import styles from '../../../styles/SpCoin.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
@@ -63,7 +64,8 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-const AFFILIATE_FEE:number = process.env.NEXT_PUBLIC_AFFILIATE_FEE== undefined ? 0 : parseFloat(process.env.NEXT_PUBLIC_AFFILIATE_FEE); // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
@@ -74,22 +76,35 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
   const { sellAmount, buyAmount } = params;
 
+  console.log("HERE 1.0");
   if (!sellAmount && !buyAmount) return;
+  console.log("HERE 1.1");
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
+    console.log("HERE 1.2");
     throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
   if (!sellAmount && buyAmount === "0") {
+    console.log("HERE 1.3");
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
-  let hostPort='localhost:3000'
+  // if (!sellAmount || sellAmount == null || sellAmount == undefined) {
+  //   throw {errCode: SELL_AMOUNT_UNDEFINED, errMsg: 'Sell Amount Field is Empty'}
+  // }
+
+  // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
+  //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
+  // }
+
+  // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
   try {
     console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.log(`${hostPort}${endpoint}?${query}`);
+    console.log(`${endpoint}?${query}`);
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
+    console.log("HERE 1.4");
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
 };
@@ -146,6 +161,8 @@ export default function PriceView({
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
+        feeRecipient: FEE_RECIPIENT,
+        buyTokenPercentageFee: AFFILIATE_FEE,
       },
     ],
     fetcher,
@@ -160,27 +177,34 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        console.log("HERE 2.0")
+        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
-           switch (errCode) {
+          console.log("HERE 2.1")
+          switch (errCode) {
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
-              // alert('Sell Amount is 0');
+            console.log("HERE 2.2")
+            // alert('Sell Amount is 0');
             break;
             case BUY_AMOUNT_ZERO: validateNumericEntry("0");
+            console.log("HERE 2.3")
             // alert('Buy Amount is 0');
             break;
             case ERROR_0X_RESPONSE:
+              console.log("HERE 2.4")
               console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
             break;
             case SELL_AMOUNT_UNDEFINED:
+              console.log("HERE 2.5")
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
               validateNumericEntry("0");
             break;
             case BUY_AMOUNT_UNDEFINED:
+              console.log("HERE 2.6")
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
               setBuyAmount("0");
@@ -193,12 +217,14 @@ export default function PriceView({
         }
         else {
           if (error === null || error === undefined) {
+            console.log("HERE 2.7")
             alert ("error = undefined");
             alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
             console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
           }
           else {
             // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+            console.log("HERE 2.8")
             console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
           }
         }
@@ -213,9 +239,6 @@ export default function PriceView({
     token: sellTokenElement.address,
   });
 
-  console.log("useBalance(connectedWalletAddr: "+connectedWalletAddr+", sellTokenElement.address: "+sellTokenElement.address)
-  console.log("isError:"+isError + " isLoading: " + isLoading + "\ndata: " + JSON.stringify(data,null,2))
-
   // function isDisabled() {
   //   return data && sellAmount
   //     ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
@@ -226,9 +249,7 @@ export default function PriceView({
     data && sellAmount
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
-      
-  console.log("sellAmount: " + sellAmount + " disabled:" + disabled)
-
+  
    // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
 
   // ------------------------------ START MORALIS SCRIPT CODE
@@ -332,6 +353,7 @@ export default function PriceView({
     }
   }
 
+
   function switchTokens() {
     let tmpElement: TokenElement = sellTokenElement;
     setSellTokenElement(buyTokenElement);
@@ -404,14 +426,14 @@ export default function PriceView({
 
   return (
     <form>
-      {/* <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/> */}
+      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
       <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      {/* <AgentDialog dialogMethods={getAgentMembers()}/> */}
+      <AgentDialog dialogMethods={getAgentMembers()}/>
 
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
-          <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="Sponsor Coin Logo" />
+          <Image src={spCoin_png} className={styles.avatarImg}width={30} height={30} alt="Moralis Logo" />
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover content={settings} title="Settings" trigger="click" placement="bottomLeft">
             <SettingOutlined className={styles.cog} />
