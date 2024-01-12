@@ -213,6 +213,9 @@ export default function PriceView({
     token: sellTokenElement.address,
   });
 
+  console.log("useBalance(connectedWalletAddr: "+connectedWalletAddr+", sellTokenElement.address: "+sellTokenElement.address)
+  console.log("isError:"+isError + " isLoading: " + isLoading + "\ndata: " + JSON.stringify(data,null,2))
+
   // function isDisabled() {
   //   return data && sellAmount
   //     ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
@@ -223,7 +226,9 @@ export default function PriceView({
     data && sellAmount
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
-  
+      
+  console.log("sellAmount: " + sellAmount + " disabled:" + disabled)
+
    // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
 
   // ------------------------------ START MORALIS SCRIPT CODE
@@ -399,14 +404,14 @@ export default function PriceView({
 
   return (
     <form>
-      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
+      {/* <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/> */}
       <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      <AgentDialog dialogMethods={getAgentMembers()}/>
+      {/* <AgentDialog dialogMethods={getAgentMembers()}/> */}
 
       <div className={styles.tradeBox}>
         <div className={styles.tradeBoxHeader}>
-          <Image src={spCoin_png} width={30} height={30} alt="Moralis Logo" />
+          <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="Sponsor Coin Logo" />
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover content={settings} title="Settings" trigger="click" placement="bottomLeft">
             <SettingOutlined className={styles.cog} />

@@ -23,8 +23,7 @@ const config = createConfig(
     // Required
     appName: "SponsorCoin Dev Demo App",
     // Optional
-    appDescription: "A Next.js SponsorCoin app for 0x Swap API and ConnectKit",
-    chains,
+    appDescription: "A Next.js demo app for 0x Swap API and ConnectKit",
   })
 );
 

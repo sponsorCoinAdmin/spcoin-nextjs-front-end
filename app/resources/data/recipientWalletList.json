@@ -9,13 +9,13 @@
         "symbol": "Meow",
         "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/AnimalShelter2.png?raw=true",
         "name": "Wiskers Place",
-        "address": "AnimalShelter2 Wallet Address"
+        "address": "Animal Shelter2 Wallet Address"
     },
     {
         "symbol": "Woof",
         "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/AnimalShelter3.png?raw=true",
         "name": "Dogs R Us",
-        "address": "Anima lShelter 3 Wallet Address"
+        "address": "Animal Shelter 3 Wallet Address"
     },
     {
         "symbol": "N.Y.A.S.",
@@ -51,7 +51,7 @@
         "symbol": "WISH",
         "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/ChildrensWishFoundation2.png?raw=true",
         "name": "Wish Foundation",
-        "address": "Children's Wish Foundation2 Wallet Address"
+        "address": "Children's Wish Foundation2 Wallet Address2"
     },
     {
         "symbol": "Parks",
@@ -207,7 +207,7 @@
         "symbol": "Trump",
         "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Trump4.png?raw=true",
         "name": "Support Trump",
-        "address": "Trump3 Wallet Address"
+        "address": "Trump4 Wallet Address"
     },
     {
         "symbol": "Unicef",

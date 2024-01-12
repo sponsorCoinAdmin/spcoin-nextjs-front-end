@@ -26,7 +26,9 @@ function ApproveOrReviewButton({
     tokenToSellAddr: Address;
     disabled?: boolean;
   }) {
-    // console.log("connectedWalletAddr: " + connectedWalletAddr);
+    console.log("ApproveOrReviewButton:connectedWalletAddr: " + connectedWalletAddr);
+    console.log("ApproveOrReviewButton:tokenToSellAddr: " + tokenToSellAddr);
+    console.log("ApproveOrReviewButton:disabled: " + disabled);
     // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
     const { data: allowance, refetch } = useContractRead({
       address: tokenToSellAddr,

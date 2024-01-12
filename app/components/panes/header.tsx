@@ -12,7 +12,7 @@ function Header() {
   return (
     <header>
       <div className={styles.leftH}>
-        <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
+        <Image className={styles.avatarImg} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
         <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
