@@ -485,7 +485,7 @@ export default function PriceView({
           </div>
         </div>
         
-        <div className={styles.switchButton} onClick={switchTokens}>
+        <div className={styles.exchangeButton} onClick={switchTokens}>
             <ArrowDownOutlined className={styles.switchArrow} />
         </div>
 
