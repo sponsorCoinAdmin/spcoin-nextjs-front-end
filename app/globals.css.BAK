@@ -75,7 +75,7 @@ code {
   vertical-align: middle;
 }
 
-.tradeBox {
+.tradeContainer {
   width: 400px;
   background-color: #0E111B;
   border: 2px solid #21273a;

@@ -1,17 +1,20 @@
-
-.connectButton {
-  background-color: #7d3812; 
-  color: #2c1103;
-}
-
 .connectButton:hover {
   cursor: pointer;
   color: #3b4874
 }
 
+.mainWindow {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
+}
 
-
+.link {
+  text-decoration: none;
+  color: white;
+}
 
 .tradeContainer {
   transform: translate(0, 10px);
@@ -45,6 +48,14 @@
   color: white;
   rotate: 90deg;
   cursor: pointer;
+}
+
+.dollarAmount {
+  position: absolute;
+  top: 75px;
+  left: 14px;
+  font-size: 10px;
+  color: #5F6783;
 }
 
 .inputs {
@@ -84,6 +95,12 @@
 
 .agentSelect {
   background-color: #c65e0a;
+}
+
+.assetLogo {
+  height: 22px;
+  margin-left: 5px;
+  object-fit: contain;
 }
 
 .assetSelect:hover {
@@ -134,17 +151,18 @@
   color: #653820;
 }
 
-.swapButton:hover {
-  cursor: pointer;
-  background-color: #3b4874
-}
 .approveButton {
   background-color: #225a14;
   opacity: 0.4;
   color: #b3ceab;
 }
 
-.approveButton:hover {
+.connectButton {
+  background-color: #7d3812; 
+  color: #2c1103;
+}
+
+.swapButton:hover {
   cursor: pointer;
   background-color: #3b4874
 }
@@ -152,6 +170,30 @@
 .tokenLogo {
   height: 40px;
   width: 40px;
+}
+
+.modalContent {
+  border-top: 1px solid #363e54;
+  /* background-color: #3b4874; */
+  /* padding-top: 20px; */
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px
+}
+
+.tokenChoice {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.tokenChoice:hover {
+  cursor: pointer;
+  background-color: #1f2639;
 }
 
 .tokenName {
@@ -175,9 +217,23 @@
   vertical-align: middle;
 }
 
+.antPopoverInner {
+  min-width: 260px !important;
+  min-height: 140px !important;
+  border: 1px solid #3a2d21;
+  background-color: #5a0c35 !important;
+}
+
 .leftH {
   display: flex;
   align-items: center;
+  gap: 20px;
+}
+
+.centerH {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 20px;
 }
 
@@ -205,3 +261,47 @@
 .modal.active {
   transform: translate(-50%, -50%) scale(1);
 }
+
+.modal-header {
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid black;
+}
+
+.modal-header .title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.modal-header .close-button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.modal-body {
+  padding: 10px 15px;
+}
+
+#overlay {
+  position: fixed;
+  opacity: 0;
+  transition: 200ms ease-in-out;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, .5);
+  pointer-events: none;
+}
+
+#overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
