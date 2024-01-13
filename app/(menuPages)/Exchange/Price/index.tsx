@@ -1,5 +1,5 @@
 'use client'
-import styles from '../../../styles/SpCoin.module.css'
+import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
 
