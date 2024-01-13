@@ -30,7 +30,18 @@
   cursor: pointer;
 }
 
-.connectMenuButton:hover {
+/* .connectButton {
+  background-color: #243056; 
+  padding: 10px;
+  padding-right: 20px;
+  padding-left: 20px;
+  border-radius: 100px;
+  color: #5981F3;
+  font-weight: bold;
+  transition: 0.3s;
+} */
+
+.connectButton:hover {
   cursor: pointer;
   color: #3b4874
 }
@@ -82,34 +93,12 @@
   cursor: pointer;
 }
 
-.exchangeButton {
-  background-color: #3a4157;
-  width: 25px;
-  height: 25px;
-  align-items: center;
-  justify-content: center;
-  display: flex;
-  border-radius: 8px;
-  position: absolute;
-  top: 120px;
-  left: 180px;
-  color: #5F6783;
-  border: 3px solid #0E111B;
-  font-size: 12px;
-  transition: 0.3s
-}
-
 .dollarAmount {
   position: absolute;
   top: 75px;
   left: 14px;
   font-size: 10px;
   color: #5F6783;
-}
-
-.exchangeButton:hover {
-  color: white;
-  cursor: pointer;
 }
 
 .inputs {
@@ -161,27 +150,38 @@
   cursor: pointer;
 }
 
-.connectMenuButton {
-  background-color: #243056; 
-  padding: 10px;
-  padding-right: 20px;
-  padding-left: 20px;
-  border-radius: 100px;
-  color: #5981F3;
-  font-weight: bold;
-  transition: 0.3s;
+.switchButton {
+  background-color: #3a4157;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  border-radius: 8px;
+  position: absolute;
+  top: 120px;
+  left: 180px;
+  color: #5F6783;
+  border: 3px solid #0E111B;
+  font-size: 12px;
+  transition: 0.3s
+}
+
+.switchButton:hover {
+  color: white;
+  cursor: pointer;
 }
 
 .exchangeButton {
-  background-color: #243056; 
-  color: #5981F3;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #243056; 
   width: calc(100%);
   height: 55px;
   font-size: 20px;
   border-radius: 12px;
+  color: #5981F3;
   font-weight: bold;
   transition: 0.3s;
   margin-bottom: 5px;
@@ -189,8 +189,15 @@
 }
 
 .swapButton {
-  background-color: #b6470b; 
+  background-color: #b6470b;
+  opacity: 0.4;
   color: #653820;
+}
+
+.approveButton {
+  background-color: #225a14;
+  opacity: 0.4;
+  color: #b3ceab;
 }
 
 .connectButton {
@@ -198,13 +205,7 @@
   color: #2c1103;
 }
 
-.swapButton[disabled] {
-  background-color: #243056;
-  opacity: 0.4;
-  color: #5982f39b;
-}
-
-.exchangeButton:hover {
+.swapButton:hover {
   cursor: pointer;
   background-color: #3b4874
 }
@@ -346,3 +347,4 @@
   opacity: 1;
   pointer-events: all;
 }
+

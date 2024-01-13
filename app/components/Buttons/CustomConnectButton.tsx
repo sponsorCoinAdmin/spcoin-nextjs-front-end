@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from '../../styles/SpCoin.module.css'
+import styles from '../../styles/Exchange.module.css'
 import { ConnectKitButton } from "connectkit";
 
 function CustomConnectButton() {
@@ -20,8 +20,8 @@ function CustomConnectButton() {
               <button
                 onClick={show}
                 type="button"
-                className={styles.swapButton}
-              >
+                className={styles["exchangeButton"] + " " + styles["connectButton"]}
+                >
                 {isConnected ? address : "Connect Wallet"}
               </button>
             );

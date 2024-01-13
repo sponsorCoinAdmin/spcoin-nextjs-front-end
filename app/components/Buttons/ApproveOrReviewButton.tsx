@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from '../../styles/SpCoin.module.css'
+import styles from '../../styles/Exchange.module.css'
 
 import {
     erc20ABI,
@@ -72,14 +72,14 @@ function ApproveOrReviewButton({
       return <div>Something went wrong: {error.message}</div>;
     }
   
+    // Approve Button
     if (allowance === 0n && approveAsync) {
       return (
         <>
           <button
             type="button"
-            // className={styles.swapButton}
+            className={styles["exchangeButton"] + " " + styles["approveButton"]}
             // className={styles["exchangeButton"] + " " + styles["swapButton"]}
-            className={styles["exchangeButton"] + " " + styles["swapButton"]}
             onClick={async () => {
               const writtenValue = await approveAsync();
             }}
@@ -90,6 +90,7 @@ function ApproveOrReviewButton({
       );
     }
   
+    // Bad Request
     return (
       <button
         type="button"
