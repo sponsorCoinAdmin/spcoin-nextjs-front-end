@@ -11,12 +11,25 @@ import {
 } from "wagmi";
 
 import {
-  MAX_ALLOWANCE,
   EXCHANGE_PROXY,
 } from "../../resources/data/constants";
+const NEXT_PUBLIC_EXCHANGE_PROXY          = process.env.NEXT_PUBLIC_EXCHANGE_PROXY === undefined ? "0" : process.env.NEXT_PUBLIC_EXCHANGE_PROXY
 
-const NEXT_PUBLIC_MAX_ALLOWANCE = process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE
-const NEXT_PUBLIC_EXCHANGE_PROXY = process.env.NEXT_PUBLIC_EXCHANGE_PROXY === undefined ? "0" : process.env.NEXT_PUBLIC_EXCHANGE_PROXY
+const MAX_ALLOWANCE  = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE)
+console.debug("MAX_ALLOWANCE              = " + MAX_ALLOWANCE);
+console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
+console.debug("NEXT_PUBLIC_EXCHANGE_PROXY = " + NEXT_PUBLIC_EXCHANGE_PROXY);
+
+if (EXCHANGE_PROXY === NEXT_PUBLIC_EXCHANGE_PROXY)
+  console.debug(" SUCCESS => EXCHANGE_PROXY           = NEXT_PUBLIC_EXCHANGE_PROXY")
+else {
+  console.debug(" ERROR => EXCHANGE_PROXY             = EXCHANGE_PROXY")
+  console.debug(" ERROR => NEXT_PUBLIC_EXCHANGE_PROXY = NEXT_PUBLIC_EXCHANGE_PROXY")
+
+}
+
+
+
 
 function ApproveOrReviewButton({
     connectedWalletAddr,
