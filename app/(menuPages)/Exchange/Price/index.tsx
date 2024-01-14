@@ -64,9 +64,8 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-const AFFILIATE_FEE:string = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
-console.debug("AFFILIATE_FEE =" + AFFILIATE_FEE)
-// const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
+// console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
 const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
@@ -163,9 +162,7 @@ export default function PriceView({
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
-        feeRecipient: FEE_RECIPIENT,
-        buyTokenPercentageFee: AFFILIATE_FEE,
-      },
+       },
     ],
     fetcher,
     {
