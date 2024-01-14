@@ -1,5 +1,5 @@
 'use client'
-import styles from '../../../styles/SpCoin.module.css'
+import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
 
@@ -64,7 +64,9 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE:string = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
+console.debug("AFFILIATE_FEE =" + AFFILIATE_FEE)
+// const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
 const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
@@ -431,8 +433,8 @@ export default function PriceView({
       <RecipientDialog dialogMethods={getRecipientMembers()}/>
       <AgentDialog dialogMethods={getAgentMembers()}/>
 
-      <div className={styles.tradeBox}>
-        <div className={styles.tradeBoxHeader}>
+      <div className={styles.tradeContainer}>
+        <div className={styles.tradeContainerHeader}>
           <Image src={spCoin_png} className={styles.avatarImg}width={30} height={30} alt="Moralis Logo" />
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover content={settings} title="Settings" trigger="click" placement="bottomLeft">
@@ -474,7 +476,6 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-
         <div className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name}
             onChange={(e) => { validateNumericEntry(e.target.value); }} />
@@ -484,7 +485,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-        
+
         <div className={styles.switchButton} onClick={switchTokens}>
             <ArrowDownOutlined className={styles.switchArrow} />
         </div>
