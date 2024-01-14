@@ -5,9 +5,11 @@ import { type Address } from "wagmi";
 
   import {
     MAX_ALLOWANCE,
-    exchangeProxy,
+    EXCHANGE_PROXY,
   } from "../../resources/data/constants";
 
+const NEXT_PUBLIC_MAX_ALLOWANCE = process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE
+const NEXT_PUBLIC_EXCHANGE_PROXY = process.env.NEXT_PUBLIC_EXCHANGE_PROXY === undefined ? "0" : process.env.NEXT_PUBLIC_EXCHANGE_PROXY
 
 function ConnectApproveOrReviewButton({
     connectedWalletAddr,

@@ -12,8 +12,11 @@ import {
 
 import {
   MAX_ALLOWANCE,
-  exchangeProxy,
+  EXCHANGE_PROXY,
 } from "../../resources/data/constants";
+
+const NEXT_PUBLIC_MAX_ALLOWANCE = process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE
+const NEXT_PUBLIC_EXCHANGE_PROXY = process.env.NEXT_PUBLIC_EXCHANGE_PROXY === undefined ? "0" : process.env.NEXT_PUBLIC_EXCHANGE_PROXY
 
 function ApproveOrReviewButton({
     connectedWalletAddr,
@@ -34,7 +37,7 @@ function ApproveOrReviewButton({
       address: tokenToSellAddr,
       abi: erc20ABI,
       functionName: "allowance",
-      args: [connectedWalletAddr, exchangeProxy],
+      args: [connectedWalletAddr, EXCHANGE_PROXY],
       onError(error) {
         console.log('***ERROR*** useContractRead Error', error)
       },
@@ -47,7 +50,7 @@ function ApproveOrReviewButton({
       address: tokenToSellAddr,
       abi: erc20ABI,
       functionName: "approve",
-      args: [exchangeProxy, MAX_ALLOWANCE],
+      args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
     });
     console.log("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
   
