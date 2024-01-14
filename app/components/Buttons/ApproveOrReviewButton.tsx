@@ -82,7 +82,6 @@ function ApproveOrReviewButton({
           <button
             type="button"
             className={styles["exchangeButton"] + " " + styles["approveButton"]}
-            // className={styles["exchangeButton"] + " " + styles["swapButton"]}
             onClick={async () => {
               const writtenValue = await approveAsync();
             }}
