@@ -10,26 +10,13 @@ import {
     type Address,
 } from "wagmi";
 
-import {
-  EXCHANGE_PROXY,
-} from "../../resources/data/constants";
-const NEXT_PUBLIC_EXCHANGE_PROXY          = process.env.NEXT_PUBLIC_EXCHANGE_PROXY === undefined ? "0" : process.env.NEXT_PUBLIC_EXCHANGE_PROXY
+const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
+const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
+const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
+const MAX_ALLOWANCE = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE)
 
-const MAX_ALLOWANCE  = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE)
 console.debug("MAX_ALLOWANCE              = " + MAX_ALLOWANCE);
 console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
-console.debug("NEXT_PUBLIC_EXCHANGE_PROXY = " + NEXT_PUBLIC_EXCHANGE_PROXY);
-
-if (EXCHANGE_PROXY === NEXT_PUBLIC_EXCHANGE_PROXY)
-  console.debug(" SUCCESS => EXCHANGE_PROXY           = NEXT_PUBLIC_EXCHANGE_PROXY")
-else {
-  console.debug(" ERROR => EXCHANGE_PROXY             = EXCHANGE_PROXY")
-  console.debug(" ERROR => NEXT_PUBLIC_EXCHANGE_PROXY = NEXT_PUBLIC_EXCHANGE_PROXY")
-
-}
-
-
-
 
 function ApproveOrReviewButton({
     connectedWalletAddr,
@@ -112,9 +99,7 @@ function ApproveOrReviewButton({
         type="button"
         disabled={disabled}
         onClick={onClick}
-        // className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-25"
-        // className={styles.swapButton}
-        className={styles["exchangeButton"] + " " + styles["swapButton"]}
+         className={styles["exchangeButton"] + " " + styles["swapButton"]}
       >
         {disabled ? "Insufficient Balance" : "Review Trade"}
       </button>
