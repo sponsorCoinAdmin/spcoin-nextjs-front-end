@@ -15,8 +15,8 @@ const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
 const MAX_ALLOWANCE = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE)
 
-console.debug("MAX_ALLOWANCE              = " + MAX_ALLOWANCE);
-console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
+// console.debug("MAX_ALLOWANCE              = " + MAX_ALLOWANCE);
+// console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
 
 function ApproveOrReviewButton({
     connectedWalletAddr,
