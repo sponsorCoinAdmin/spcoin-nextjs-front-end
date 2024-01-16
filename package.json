@@ -11,6 +11,7 @@
   "dependencies": {
     "@sponsorcoin/spcoin-prod": "^1.0.1",
     "@svgr/webpack": "^8.1.0",
+    "@wagmi/chains": "^1.8.0",
     "antd": "^5.12.1",
     "autoprefixer": "10.4.14",
     "axios": "^1.6.2",

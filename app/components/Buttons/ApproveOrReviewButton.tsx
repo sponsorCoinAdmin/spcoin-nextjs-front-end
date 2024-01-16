@@ -39,18 +39,24 @@ function ApproveOrReviewButton({
       functionName: "allowance",
       args: [connectedWalletAddr, EXCHANGE_PROXY],
       onError(error) {
-        console.log('***ERROR*** useContractRead Error', error)
+        console.log('***ERROR*** useContractRead Error', error.message)
+        // alert(error.message)
+        return <div>Something went wrong: {error.message}</div>;
       },
     });
     console.log("ApproveOrReviewButton:AFTER useContractRead()");
     console.log("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
-  
+    // if (!isError) {
+    //   return <div>Something went wrong: {error.message}</div>;
+    // }
+
     // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
     const { config } = usePrepareContractWrite({
       address: tokenToSellAddr,
       abi: erc20ABI,
       functionName: "approve",
       args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
+      enabled: true
     });
     console.log("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
   

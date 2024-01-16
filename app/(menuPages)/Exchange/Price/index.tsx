@@ -132,12 +132,15 @@ export default function PriceView({
   // fetch price here
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
+  const [balance, getBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState<TokenElement>(defaultSellToken);
   const [agentElement, setAgentElement] = useState<TokenElement>(defaultBuyToken);
+
+
 
 
   // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
@@ -447,6 +450,9 @@ export default function PriceView({
             {sellTokenElement.symbol}
             <DownOutlined />
           </div>
+          <div className={styles["assetBalance"]}>
+            Balance: {balance}
+          </div>
         </div>
 
         <div className={styles.inputs}>
@@ -455,6 +461,9 @@ export default function PriceView({
             <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
             {buyTokenElement.symbol}
             <DownOutlined />
+          </div>
+          <div className={styles["assetBalance"]}>
+            Balance: {balance}
           </div>
         </div>
 
