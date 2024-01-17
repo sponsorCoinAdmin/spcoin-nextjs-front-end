@@ -1,6 +1,5 @@
-const { ethers } = require("ethers");
-import { fetchBalance } from '@wagmi/core'
 import { getQueryVariable } from '../../lib/utils'
+import { fetchBigIntBalance, fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
 import { setWagmiConfig } from '../../lib/wagmi/config'
 
 setWagmiConfig();
@@ -11,30 +10,17 @@ export async function GET (req: Request) {
   const urlPart = url.split("?");
   const params = urlPart[1];
 
-  console.debug("====================================================================================================")
+  console.debug("=== balance =================================================================================================")
   console.debug("PRICE REQUEST URL = " + url)
 
-  let jsonRequest:any = {}
-  jsonRequest.address = ethers.getAddress(getQueryVariable(params, "walletAddress"))
-  jsonRequest.token   = ethers.getAddress(getQueryVariable(params, "tokenAddress"))
-  jsonRequest.chainId = parseInt(getQueryVariable(params, "chainId"))
-  console.debug("====================================================================================================")
+  let address = getQueryVariable(params, "walletAddress")
+  let token = getQueryVariable(params, "tokenAddress")
+  let chainId = getQueryVariable(params, "chainId")
 
-  console.log(JSON.stringify(jsonRequest,null,2))
-  const res = await fetchBalance(jsonRequest)
-  console.log(JSON.stringify(jsonRequest,null,2))
+  let wagmiBalance = await fetchStringBalance(address, token, chainId)
+  console.debug("*** wagmiBalance *** " + JSON.stringify(wagmiBalance, null, 2))
 
-  // console.debug("res.decimals  : " + res.decimals)
-  // console.debug("res.formatted : " + res.formatted)
-  // console.debug("res.symbol    : " + res.symbol)
-  // console.debug("res.value     : " + res.value)
+  console.debug("=== balance =================================================================================================")
 
-  const ret = {
-    decimals: res.decimals,
-    formatted: res.formatted,
-    symbol: res.symbol,
-    value: res.value.toString()
-  }
-
-  return new Response(JSON.stringify(ret))
+  return new Response(JSON.stringify(wagmiBalance))
 }
