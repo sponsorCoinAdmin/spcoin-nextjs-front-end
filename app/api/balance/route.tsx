@@ -1,38 +1,9 @@
-import { 
-  createConfig,
-  configureChains,
-  fetchBalance
-} from '@wagmi/core'
+const { ethers } = require("ethers");
+import { fetchBalance } from '@wagmi/core'
+import { getQueryVariable } from '../../lib/utils'
+import { setWagmiConfig } from '../../lib/wagmi/config'
 
-import { publicProvider } from '@wagmi/core/providers/public'
-import { mainnet, polygon, sepolia } from '@wagmi/chains'
-
-const { publicClient, webSocketPublicClient } = configureChains(
-  [mainnet, polygon, sepolia],
-  [publicProvider()],
-)
- 
-const config = createConfig({
-  publicClient,
-  webSocketPublicClient,
-})
-
-
-function getQueryVariable(_urlParams:string, _searchParam:string)
-{
-  console.debug("Searching " + _searchParam + " in _urlParams " + _urlParams)
-   var vars = _urlParams.split("&");
-   for (var i=0; i<vars.length; i++) {
-           var pair = vars[i].split("=");
-           if(pair[0] == _searchParam){
-            console.debug("FOUND Search Param " + _searchParam + ": " + pair[1])
-            return pair[1];
-          }
-   }
-   console.debug("*** ERROR *** Search Param " + _searchParam + " Not Found")
-
-   return null;
-}
+setWagmiConfig();
 
 export async function GET (req: Request) {
   const url=req.url;
@@ -43,35 +14,26 @@ export async function GET (req: Request) {
   console.debug("====================================================================================================")
   console.debug("PRICE REQUEST URL = " + url)
 
-  let walletAddress = getQueryVariable(params, "walletAddress")
-  let tokenAddress  = getQueryVariable(params, "tokenAddress")
-  let chainId       = getQueryVariable(params, "chainId")
+  let jsonRequest:any = {}
+  jsonRequest.address = ethers.getAddress(getQueryVariable(params, "walletAddress"))
+  jsonRequest.token   = ethers.getAddress(getQueryVariable(params, "tokenAddress"))
+  jsonRequest.chainId = parseInt(getQueryVariable(params, "chainId"))
   console.debug("====================================================================================================")
 
-  const jsonRequest = {
-    address: '0xFAbed8e2f3a29aEE5002087F1140Ef4C6ACa25B4', // LEDGER 1
-    token: '0x6982508145454Ce325dDbE47a25d4ec3d2311933', // PEPE
-    chainId: 1, // MainNet
-  }
+  console.log(JSON.stringify(jsonRequest,null,2))
+  const res = await fetchBalance(jsonRequest)
+  console.log(JSON.stringify(jsonRequest,null,2))
 
-  const balance = await fetchBalance({
-    address: '0xFAbed8e2f3a29aEE5002087F1140Ef4C6ACa25B4', // LEDGER 1
-    token: '0x6982508145454Ce325dDbE47a25d4ec3d2311933', // PEPE
-    chainId: 1, // MainNet
-  })
-  // console.debug("mainnet           : " + JSON.stringify(mainnet, null, 2))
-  // console.debug("polygon           : " + JSON.stringify(polygon, null, 2))
-  // console.debug("sepolia           : " + JSON.stringify(sepolia, null, 2))
-  // console.debug("balance.decimals  : " + balance.decimals)
-  // console.debug("balance.formatted : " + balance.formatted)
-  // console.debug("balance.symbol    : " + balance.symbol)
-  // console.debug("balance.value     : " + balance.value)
+  // console.debug("res.decimals  : " + res.decimals)
+  // console.debug("res.formatted : " + res.formatted)
+  // console.debug("res.symbol    : " + res.symbol)
+  // console.debug("res.value     : " + res.value)
 
   const ret = {
-    decimals: balance.decimals,
-    formatted: balance.formatted,
-    symbol: balance.symbol,
-    value: balance.value.toString()
+    decimals: res.decimals,
+    formatted: res.formatted,
+    symbol: res.symbol,
+    value: res.value.toString()
   }
 
   return new Response(JSON.stringify(ret))
