@@ -15,7 +15,7 @@ import CustomConnectButton from '../../../components/Buttons/CustomConnectButton
 import FEED  from '../../../resources/data/feeds/feedTypes';
 import qs from "qs";
 import useSWR from "swr";
-import { useState, ChangeEvent, SetStateAction } from "react";
+import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
@@ -132,7 +132,8 @@ export default function PriceView({
   // fetch price here
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
-  const [balance, getBalance] = useState("0");
+  const [sellBalance, setSellBalance] = useState("0");
+  const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
@@ -140,8 +141,15 @@ export default function PriceView({
   const [recipientElement, setRecipientElement] = useState<TokenElement>(defaultSellToken);
   const [agentElement, setAgentElement] = useState<TokenElement>(defaultBuyToken);
 
+  useEffect(() => {
+    setSellBalance(sellTokenElement.name)
+    console.debug("sellTokenElement.symbol changed to" + sellTokenElement.name)
+  },[sellTokenElement])
 
-
+  useEffect(() => {
+    setBuyBalance(buyTokenElement.name)
+    console.debug("buyTokenElement.symbol changed to" + buyTokenElement.name)
+  },[buyTokenElement])
 
   // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
   // console.log("buyTokenElement.symbol  = " + buyTokenElement.symbol);
@@ -355,7 +363,6 @@ export default function PriceView({
     }
   }
 
-
   function switchTokens() {
     let tmpElement: TokenElement = sellTokenElement;
     setSellTokenElement(buyTokenElement);
@@ -451,7 +458,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
           <div className={styles["assetBalance"]}>
-            Balance: {balance}
+            Balance: {sellBalance}
           </div>
         </div>
 
@@ -463,7 +470,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
           <div className={styles["assetBalance"]}>
-            Balance: {balance}
+            Balance: {buyBalance}
           </div>
         </div>
 
