@@ -2,7 +2,6 @@
 import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
-
 import { 
   AgentDialog,
   RecipientDialog,
@@ -18,50 +17,32 @@ import useSWR from "swr";
 import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
-  useBalance,
+  useBalance, 
   type Address,
 } from "wagmi";
+import {
+  watchAccount,
+  watchNetwork,
+} from "@wagmi/core";
 import {
   ArrowDownOutlined,
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 
-type TokenElement = {
-  chainId: number;
-  symbol: string;
-  img: string;
-  name: string;
-  address: any;
-  decimals: number;
-}  
+import {TokenElement, PriceRequestParams, defaultSellToken, defaultBuyToken} from '../../../lib/defaultSettings'
 
-const defaultSellToken: TokenElement = { 
-  chainId: 137,
-  symbol: "WBTC",
-  img: "https://cdn.moralis.io/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
-  name: "Wrapped Bitcoin",
-  address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-  decimals: 8
- };
+// const unwatch = watchNetwork((network) => console.log(network))
+const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
+const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
 
- const defaultBuyToken: TokenElement = { 
-  chainId: 137,
-  symbol: "USDT",
-  img: "https://cdn.moralis.io/eth/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
-  name: "Tether USD",
-  address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-  decimals: 6
-};
+const processAccountChange = ( account:any ) => {
+  alert("ACCOUNT = " + JSON.stringify(account.address, null, 2))
+  // alert("ACCOUNT = " + JSON.stringify(account, null, 2))
+}
 
-//-------------- Finish Moralis Requirements ----------------------------------
-
-interface PriceRequestParams {
-  sellToken: string;
-  buyToken: string;
-  buyAmount?: string;
-  sellAmount?: string;
-  connectedWalletAddr?: string;
+const processNetworkChange = ( network:any ) => {
+  alert("NETWORK = " + JSON.stringify(network, null, 2))
 }
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
@@ -134,6 +115,7 @@ export default function PriceView({
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
+  const [chainId, setChainId] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);

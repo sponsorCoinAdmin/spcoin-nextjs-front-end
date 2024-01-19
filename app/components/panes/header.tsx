@@ -7,8 +7,21 @@ import eth_png from '../../resources/images/eth.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton";
+import { useState } from "react";
+import { Network } from "ethers";
+
+const updateNetwork = (newNetwork:string) =>  {
+  const [netWork, setNetWork] = useState("ZZZZ");
+
+  if (newNetwork != null && newNetwork !== 'undefined') 
+    setNetWork(newNetwork)
+
+  return netWork;
+}
 
 function Header() {
+  const [netWork, setNetWork] = useState("Ethereum");
+
   return (
     <header>
       <div className={styles.leftH}>
@@ -16,16 +29,13 @@ function Header() {
         <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
-        {/* <div className={styles.headerItem}><Link href="/0X">0X</Link></div> */}
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
           <Image src={eth_png} width={25} height={25} alt="Ethereum Logo" />
-          &nbsp;&nbsp;Ethereum
+          &nbsp;&nbsp; {netWork}
         </div>
         <ConnectButton />
-
-        {/* {<ConnectButton />} */}
       </div>
     </header>
   );
