@@ -29,6 +29,7 @@ import {
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
+import { updateNetworkState } from '../../../components/panes/header'
 
 import {TokenElement, PriceRequestParams, defaultSellToken, defaultBuyToken} from '../../../lib/defaultSettings'
 
@@ -37,12 +38,11 @@ const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unw
 const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
 
 const processAccountChange = ( account:any ) => {
-  alert("ACCOUNT = " + JSON.stringify(account.address, null, 2))
-  // alert("ACCOUNT = " + JSON.stringify(account, null, 2))
+  console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
 }
 
 const processNetworkChange = ( network:any ) => {
-  alert("NETWORK = " + JSON.stringify(network, null, 2))
+  console.debug("APP NETWORK = " + JSON.stringify(network, null, 2))
 }
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
@@ -53,6 +53,8 @@ const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
 const BUY_AMOUNT_ZERO = 400;
 const ERROR_0X_RESPONSE = 500;
+
+// updateNetworkState({chainId:"1", name:"ZZZZ"});
 
 export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
@@ -457,7 +459,7 @@ export default function PriceView({
         </div>
 
         { connectedWalletAddr ? 
-            ( <ApproveOrReviewButton tokenToSellAddr={sellTokenElement.address} connectedWalletAddr={connectedWalletAddr}
+            ( <ApproveOrReviewButton token={sellTokenElement} connectedWalletAddr={connectedWalletAddr}
               onClick={() => { setFinalize(true); }} disabled={disabled} /> ) : 
             ( <CustomConnectButton /> )
         }

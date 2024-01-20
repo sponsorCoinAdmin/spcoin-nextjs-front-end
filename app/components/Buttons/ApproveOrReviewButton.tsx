@@ -19,22 +19,22 @@ const MAX_ALLOWANCE = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined
 // console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
 
 function ApproveOrReviewButton({
+    token,
     connectedWalletAddr,
     onClick,
-    tokenToSellAddr,
     disabled,
   }: {
+    token:any
     connectedWalletAddr: Address;
     onClick: () => void;
-    tokenToSellAddr: Address;
     disabled?: boolean;
   }) {
     console.log("ApproveOrReviewButton:connectedWalletAddr: " + connectedWalletAddr);
-    console.log("ApproveOrReviewButton:tokenToSellAddr: " + tokenToSellAddr);
+    console.log("ApproveOrReviewButton:token.address: " + token.address);
     console.log("ApproveOrReviewButton:disabled: " + disabled);
     // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
     const { isError, data: allowance, refetch } = useContractRead({
-      address: tokenToSellAddr,
+      address: token.address,
       abi: erc20ABI,
       functionName: "allowance",
       args: [connectedWalletAddr, EXCHANGE_PROXY],
@@ -52,7 +52,7 @@ function ApproveOrReviewButton({
 
     // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
     const { config } = usePrepareContractWrite({
-      address: tokenToSellAddr,
+      address: token.address,
       abi: erc20ABI,
       functionName: "approve",
       args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
@@ -106,7 +106,7 @@ function ApproveOrReviewButton({
         onClick={onClick}
          className={styles["exchangeButton"] + " " + styles["swapButton"]}
       >
-        {disabled ? "Insufficient Balance" : "Review Trade"}
+        {disabled ? "Insufficient " + token.symbol + " Balance" : "Review Trade"}
       </button>
     );
   }

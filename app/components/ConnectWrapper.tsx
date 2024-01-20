@@ -24,13 +24,14 @@ const config = createConfig(
   })
 );
 
-export default function App(props: {
+export default function ConnectWrapper(props: {
       [x: string]: any; Component: any; 
 }) {
     let { Component, pageProps } = props;
 
   // alert(Component);
   const [mounted, setMounted] = useState(false);
+  const [JUNK, setJUNK] = useState("JJJJJJJJJ");
   useEffect(() => setMounted(true), []);
 
   return (
