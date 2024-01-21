@@ -105,7 +105,7 @@
     },
     {
         "chainId": 1,
-        "symbol": "SPCT_V001",
+        "symbol": "SPC_V1",
         "img": "https://cdn.moralis.io/eth/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
         "name": "Sponsor Coin",
         "address": "0x7d4e590f15E424Dd635822529a2b24D7Bc18935a",

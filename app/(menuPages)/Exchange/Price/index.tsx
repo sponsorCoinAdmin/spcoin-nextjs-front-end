@@ -6,7 +6,8 @@ import {
   AgentDialog,
   RecipientDialog,
   SellTokenDialog,
-  BuyTokenDialog
+  BuyTokenDialog,
+  ErrorDialog
 } from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
@@ -29,9 +30,14 @@ import {
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { updateNetworkState } from '../../../components/panes/header'
 
-import {TokenElement, PriceRequestParams, defaultSellToken, defaultBuyToken} from '../../../lib/defaultSettings'
+import {
+  TokenElement, 
+  PriceRequestParams, 
+  defaultSellToken, 
+  defaultBuyToken, 
+  defaultAgent,
+  defaultRecipient } from '../../../lib/defaultSettings'
 
 // const unwatch = watchNetwork((network) => console.log(network))
 const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
@@ -122,8 +128,8 @@ export default function PriceView({
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
-  const [recipientElement, setRecipientElement] = useState<TokenElement>(defaultSellToken);
-  const [agentElement, setAgentElement] = useState<TokenElement>(defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState(defaultRecipient);
+  const [agentElement, setAgentElement] = useState(defaultAgent);
 
   useEffect(() => {
     setSellBalance(sellTokenElement.name)
