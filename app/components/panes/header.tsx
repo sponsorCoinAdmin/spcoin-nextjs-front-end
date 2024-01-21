@@ -25,7 +25,7 @@ function Header() {
   }
 
   function getTokenImage(chainId:string) {
-    let imgURL:string = imgHome+'chainId'+imgOptions;
+    let imgURL:string = imgHome+chainId+imgOptions;
     console.error('imgURL  :'+imgURL)
     return imgURL
   }
@@ -41,7 +41,7 @@ function Header() {
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-        <img src={getTokenImage('networkData?.chainId')} alt={'??'} width={20} height={20} className={styles.tokenLogo} />
+        <img src={getTokenImage(networkData?.chainId)} alt={'??'} width={20} height={20} className={styles.tokenLogo} />
           &nbsp;&nbsp;{networkData?.name}
         </div>
         <ConnectButton />
