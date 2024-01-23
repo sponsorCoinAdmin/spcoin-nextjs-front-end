@@ -30,7 +30,6 @@ const fetchTokenList = async() => {
   }
 
 function setFeed(feedType: any, chainId:any) {
-    
     let feed;
     switch (feedType) {
         case FEED.AGENT_WALLETS:

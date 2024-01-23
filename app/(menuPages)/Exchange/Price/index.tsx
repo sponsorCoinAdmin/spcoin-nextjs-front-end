@@ -135,11 +135,13 @@ export default function PriceView({
   },[buyTokenElement])
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
-    const { address: walletAddr } = useAccount()
+    console.debug("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    const address = connectedWalletAddr
+    console.debug("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
     let tokenAddr = sellTokenElement.address;
     let chainId = sellTokenElement.chainId
-    console.debug("updateSellBalance(wallet Address = " + walletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-    let retResponse:any = await fetchStringBalance (walletAddr, tokenAddr, chainId)
+    console.debug("updateSellBalance(wallet Address = " + address + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (address, tokenAddr, chainId)
     console.debug("retResponse = " + JSON.stringify(retResponse))
     setSellBalance(retResponse.value)
     return {sellBalance}
