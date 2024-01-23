@@ -5,12 +5,22 @@ import { Address } from "wagmi";
 
 setWagmiConfig();
 
-async function fetchBigIntBalance (addr:string|Address|undefined, token:string|Address|undefined, chainId:number|string) {
+async function fetchBigIntBalance (walletAddr:string|Address|undefined, tokenAddr:string|Address|undefined, chainId:number|string) {
   console.debug("=== fetchBigIntBalance =============================================================")
 
+  if (walletAddr === undefined || tokenAddr === undefined || chainId === undefined) {
+    const retResponse = {
+      decimals: 0,
+      formatted: "N/A",
+      symbol: "N/A'",
+      value: "N/A"
+    }
+    return retResponse
+  }
+
   let jsonRequest:any = {}
-  jsonRequest.address = typeof addr    === 'string' ? ethers.getAddress(addr) : addr
-  jsonRequest.token   = typeof token   === 'string' ? ethers.getAddress(token) : token
+  jsonRequest.address = typeof walletAddr    === 'string' ? ethers.getAddress(walletAddr) : walletAddr
+  jsonRequest.token   = typeof tokenAddr   === 'string' ? ethers.getAddress(tokenAddr) : tokenAddr
   jsonRequest.chainId = typeof chainId === 'number' ? chainId : parseInt(chainId)
 
   console.debug("jsonRequest = " + JSON.stringify(jsonRequest, null, 2))
@@ -19,10 +29,10 @@ async function fetchBigIntBalance (addr:string|Address|undefined, token:string|A
   return res
 }
 
-async function fetchStringBalance (addr:string|Address|undefined, token:string|Address|undefined, chainId:number|string) {
+async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAddr:string|Address|undefined, chainId:number|string) {
 
   console.debug("=== fetchStringBalance =============================================================")
-  const res = await fetchBigIntBalance(addr, token, chainId)
+  const res = await fetchBigIntBalance(walletAddr, tokenAddr, chainId)
   const retResponse = {
     decimals: res.decimals,
     formatted: res.formatted,

@@ -19,7 +19,6 @@ import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
-  useAccount,
   type Address,
 } from "wagmi";
 import {
@@ -135,26 +134,23 @@ export default function PriceView({
   },[buyTokenElement])
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
-    console.debug("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-    const address = connectedWalletAddr
-    console.debug("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
     let tokenAddr = sellTokenElement.address;
     let chainId = sellTokenElement.chainId
-    console.debug("updateSellBalance(wallet Address = " + address + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-    let retResponse:any = await fetchStringBalance (address, tokenAddr, chainId)
+    console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
     console.debug("retResponse = " + JSON.stringify(retResponse))
-    setSellBalance(retResponse.value)
+    let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals)
+    setSellBalance(sellResponse)
     return {sellBalance}
   }
 
   const updateBuyBalance = async (buyTokenElement:TokenElement) => {
-    const { address: walletAddr } = useAccount()
     let tokenAddr = buyTokenElement.address;
     let chainId = buyTokenElement.chainId
-    console.debug("updateBuyBalance(wallet Address = " + walletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-    let retResponse:any = await fetchStringBalance (walletAddr, tokenAddr, chainId)
+    console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
     console.debug("retResponse = " + JSON.stringify(retResponse))
-    setBuyBalance(retResponse.value)
+    setBuyBalance(retResponse.formatted)
     return {buyBalance}
   }
 
@@ -458,7 +454,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
           <div className={styles["assetBalance"]}>
-            Balance: {sellBalance}
+          Balance: {sellBalance}
           </div>
         </div>
 
