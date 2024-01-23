@@ -39,13 +39,13 @@ function setFeed(feedType: any, chainId:any) {
         case FEED.TOKEN_LIST:
             switch(chainId) {
                 case 1: feed = mainNetTokenList;
-                    console.debug("NETWORK chainId = 1")
+                    // console.debug("NETWORK chainId = 1")
                 break;
                 case 137: feed = polygonTokenList;
-                    console.debug("NETWORK chainId = 137")
+                    // console.debug("NETWORK chainId = 137")
                 break;
                 default: feed = mainNetTokenList;
-                    console.debug("NETWORK chainId = default")
+                    // console.debug("NETWORK chainId = default")
                 break;
             }
         break;

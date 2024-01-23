@@ -1,15 +1,17 @@
 const { ethers } = require("ethers");
 import { fetchBalance } from '@wagmi/core'
 import { setWagmiConfig } from '../config'
+import { Address } from "wagmi";
 
 setWagmiConfig();
 
-async function fetchBigIntBalance (addr:string, token:string, chainId:string) {
+async function fetchBigIntBalance (addr:string|Address|undefined, token:string|Address|undefined, chainId:number|string) {
   console.debug("=== fetchBigIntBalance =============================================================")
+
   let jsonRequest:any = {}
-  jsonRequest.address = ethers.getAddress(addr)
-  jsonRequest.token   = ethers.getAddress(token)
-  jsonRequest.chainId = parseInt(chainId)
+  jsonRequest.address = typeof addr    === 'string' ? ethers.getAddress(addr) : addr
+  jsonRequest.token   = typeof token   === 'string' ? ethers.getAddress(token) : token
+  jsonRequest.chainId = typeof chainId === 'number' ? chainId : parseInt(chainId)
 
   console.debug("jsonRequest = " + JSON.stringify(jsonRequest, null, 2))
   const res = await fetchBalance(jsonRequest)
@@ -17,7 +19,7 @@ async function fetchBigIntBalance (addr:string, token:string, chainId:string) {
   return res
 }
 
-async function fetchStringBalance (addr:string, token:string, chainId:string) {
+async function fetchStringBalance (addr:string|Address|undefined, token:string|Address|undefined, chainId:number|string) {
 
   console.debug("=== fetchStringBalance =============================================================")
   const res = await fetchBigIntBalance(addr, token, chainId)
