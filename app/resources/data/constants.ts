@@ -18,7 +18,7 @@ interface Token {
   logoURI: string;
 }
 
-export const POLYGON_TOKENS: Token[] = [
+export const TOKEN_LIST: Token[] = [
   {
     chainId: 137,
     name: "Wrapped Matic",

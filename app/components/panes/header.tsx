@@ -20,8 +20,8 @@ function Header() {
   const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
   const processNetworkChange = ( network:any ) => {
     setNetworkData({chainId:network.chain.id, name:network.chain.name})
-    console.debug( "HEADER NETWORK = " + JSON.stringify(network, null, 2) )
-    console.debug( "HEADER NETWORK NAME = " + network.chain.name )
+    console.debug( "HEADER NETWORK CHAIN ID = " + network.chain.id)
+    console.debug( "HEADER NETWORK NAME     = " + network.chain.name )
   }
 
   function getTokenImage(chainId:string) {

@@ -18,12 +18,11 @@ import useSWR from "swr";
 import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
-  useBalance, 
+  useBalance,
   type Address,
 } from "wagmi";
 import {
   watchAccount,
-  watchNetwork,
 } from "@wagmi/core";
 import {
   ArrowDownOutlined,
@@ -40,16 +39,6 @@ import {
   defaultRecipient } from '../../../lib/defaultSettings'
 
 // const unwatch = watchNetwork((network) => console.log(network))
-const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
-const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
-
-const processAccountChange = ( account:any ) => {
-  console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
-}
-
-const processNetworkChange = ( network:any ) => {
-  console.debug("APP NETWORK = " + JSON.stringify(network, null, 2))
-}
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 // console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
@@ -123,7 +112,6 @@ export default function PriceView({
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
-  const [chainId, setChainId] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
@@ -131,6 +119,12 @@ export default function PriceView({
   const [recipientElement, setRecipientElement] = useState(defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultAgent);
 
+  const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
+
+  const processAccountChange = ( account:any ) => {
+    console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
+  }
+  
   useEffect(() => {
     setSellBalance(sellTokenElement.name)
     console.debug("sellTokenElement.symbol changed to" + sellTokenElement.name)
@@ -233,7 +227,6 @@ export default function PriceView({
   );
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
-
   const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellTokenElement.address,
@@ -381,7 +374,17 @@ export default function PriceView({
     return txt;
   }
 
-  const getAgentMembers = () => {
+  const updateSellBalance = () => {
+    setSellAmount("01234")
+    return {sellBalance}
+  }
+
+  const updateBuyBalance = () => {
+    setBuyAmount("56789")
+    return {buyBalance}
+  }
+
+  const getAgentDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
@@ -390,25 +393,25 @@ export default function PriceView({
     return methods;
   }
 
-  const getBuyTokenDialogMembers = () => {
+  const getBuyTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to buy";
     methods.placeHolder = 'Buy token name or paste address';
     methods.setDlgLstElement = setValidBuyTokenElement;
-    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    methods.dataFeedType = FEED.TOKEN_LIST;
     return methods;
   }
 
-  const getSellTokenDialogMembers = () => {
+  const getSellTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to sell";
     methods.placeHolder = 'Sell token name or paste address';
     methods.setDlgLstElement = setValidSellTokenElement;
-    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    methods.dataFeedType = FEED.TOKEN_LIST;
     return methods;
   }
 
-  const getRecipientMembers = () => {
+  const getRecipientDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
@@ -425,10 +428,10 @@ export default function PriceView({
 
   return (
     <form>
-      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
-      <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      <AgentDialog dialogMethods={getAgentMembers()}/>
+      <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
+      <RecipientDialog dialogMethods={getRecipientDialogElements()}/>
+      <AgentDialog dialogMethods={getAgentDialogElements()}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>
