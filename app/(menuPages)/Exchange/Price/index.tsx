@@ -7,7 +7,8 @@ import {
   AgentDialog,
   RecipientDialog,
   SellTokenDialog,
-  BuyTokenDialog
+  BuyTokenDialog,
+  ErrorDialog
 } from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
@@ -21,6 +22,9 @@ import {
   useBalance,
   type Address,
 } from "wagmi";
+import {
+  watchAccount,
+} from "@wagmi/core";
 import {
   ArrowDownOutlined,
   DownOutlined,
@@ -77,15 +81,11 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
   const { sellAmount, buyAmount } = params;
 
-  console.log("HERE 1.0");
   if (!sellAmount && !buyAmount) return;
-  console.log("HERE 1.1");
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
-    console.log("HERE 1.2");
     throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
   if (!sellAmount && buyAmount === "0") {
-    console.log("HERE 1.3");
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
@@ -105,7 +105,6 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
-    console.log("HERE 1.4");
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
 };
@@ -173,7 +172,7 @@ export default function PriceView({
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
-       },
+      },
     ],
     fetcher,
     {
@@ -187,34 +186,27 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("HERE 2.0")
         // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
-          console.log("HERE 2.1")
           switch (errCode) {
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
-            console.log("HERE 2.2")
             // alert('Sell Amount is 0');
             break;
             case BUY_AMOUNT_ZERO: validateNumericEntry("0");
-            console.log("HERE 2.3")
             // alert('Buy Amount is 0');
             break;
             case ERROR_0X_RESPONSE:
-              console.log("HERE 2.4")
               console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
             break;
             case SELL_AMOUNT_UNDEFINED:
-              console.log("HERE 2.5")
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
               validateNumericEntry("0");
             break;
             case BUY_AMOUNT_UNDEFINED:
-              console.log("HERE 2.6")
               console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
               alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
               setBuyAmount("0");
@@ -227,14 +219,12 @@ export default function PriceView({
         }
         else {
           if (error === null || error === undefined) {
-            console.log("HERE 2.7")
             alert ("error = undefined");
             alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
             console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
           }
           else {
             // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-            console.log("HERE 2.8")
             console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
           }
         }
@@ -243,7 +233,6 @@ export default function PriceView({
   );
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
-
   const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellTokenElement.address,
@@ -391,7 +380,7 @@ export default function PriceView({
     return txt;
   }
 
-  const getAgentMembers = () => {
+  const getAgentElements = () => {
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
@@ -400,7 +389,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getBuyTokenDialogMembers = () => {
+  const getBuyTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to buy";
     methods.placeHolder = 'Buy token name or paste address';
@@ -409,7 +398,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getSellTokenDialogMembers = () => {
+  const getSellTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to sell";
     methods.placeHolder = 'Sell token name or paste address';
@@ -418,7 +407,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getRecipientMembers = () => {
+  const getRecipientElements = () => {
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
@@ -435,10 +424,10 @@ export default function PriceView({
 
   return (
     <form>
-      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
-      <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      <AgentDialog dialogMethods={getAgentMembers()}/>
+      <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
+      <RecipientDialog dialogMethods={getRecipientElements()}/>
+      <AgentDialog dialogMethods={getAgentElements()}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>

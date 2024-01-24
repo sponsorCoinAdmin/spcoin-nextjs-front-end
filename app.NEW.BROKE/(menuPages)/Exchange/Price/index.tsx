@@ -410,7 +410,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getRecipientDialogElements = () => {
+  const getRecipientElements = () => {
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
@@ -429,8 +429,8 @@ export default function PriceView({
     <form>
       <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
       <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
-      <RecipientDialog dialogMethods={getRecipientDialogElements()}/>
-      <AgentDialog dialogMethods={getAgentDialogElements()}/>
+      <RecipientDialog dialogMethods={getRecipientElements()}/>
+      <AgentDialog dialogMethods={getAgentElements()}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>
@@ -450,7 +450,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
           <div className={styles["assetBalance"]}>
-          Balance: {sellBalance}
+            Balance: {sellBalance}
           </div>
         </div>
 
