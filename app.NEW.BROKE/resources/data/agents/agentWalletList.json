@@ -1,0 +1,242 @@
+[
+    {
+        "symbol": "Bugs",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Bugs%20Bunny.png?raw=true",
+        "name": "Bugs Bunny",
+        "address": "Bugs's Wallet Address"
+    },
+    {
+        "symbol": "?",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/AnonymousBlack.png?raw=true",
+        "name": "AnonymousBlack",
+        "address": "AnonymousBlack's Wallet Address"
+    },
+    {
+        "symbol": "?",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/AnonymousWhite.png?raw=true",
+        "name": "AnonymousWhite",
+        "address": "AnonymousWhite's Wallet Address"
+    },
+    {
+        "symbol": "Smokey",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Cat1.png?raw=true",
+        "name": "Smokey",
+        "address": "Cat1's Wallet Address"
+    },
+    {
+        "symbol": "Boots",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Cat2.png?raw=true",
+        "name": "Boots",
+        "address": "Boots's Wallet Address"
+    },
+    {
+        "symbol": "Ralph",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Dog1.png?raw=true",
+        "name": "Ralphy",
+        "address": "Dog1's Wallet Address"
+    },
+    {
+        "symbol": "Turbo",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Dog2.png?raw=true",
+        "name": "Turbo",
+        "address": "Dog2's Wallet Address"
+    },
+    {
+        "symbol": "Ruby",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Dog3.png?raw=true",
+        "name": "Ruby",
+        "address": "Ruby's Wallet Address"
+    },
+    {
+        "symbol": "FredFlintstone1",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/FredFlintstone1.png?raw=true",
+        "name": "Fred Flintstone",
+        "address": "FredFlintstone's Wallet Address"
+    },
+    {
+        "symbol": "Granny",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Granny.png?raw=true",
+        "name": "Granny",
+        "address": "Granny's Wallet Address"
+    },
+    {
+        "symbol": "Mogly",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/JungleBookMogly.png?raw=true",
+        "name": "Mogly",
+        "address": "Mogly's Wallet Address"
+    },
+    {
+        "symbol": "Lady1",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Lady1.png?raw=true",
+        "name": "Lady1 NAME",
+        "address": "Lady1's Wallet Address"
+    },
+    {
+        "symbol": "Lady2",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Lady2.png?raw=true",
+        "name": "Lady2 NAME",
+        "address": "Lady2's Wallet Address"
+    },
+    {
+        "symbol": "Lady3",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Lady3.png?raw=true",
+        "name": "Lady3 NAME",
+        "address": "Lady3's Wallet Address"
+    },
+    {
+        "symbol": "Lady4",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Lady4.png?raw=true",
+        "name": "Lady4 NAME",
+        "address": "Lady4's Wallet Address"
+    },
+    {
+        "symbol": "Lady5",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Lady5.png?raw=true",
+        "name": "Lady5 NAME",
+        "address": "Lady5's Wallet Address"
+    },
+    {
+        "symbol": "Jim",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Man1.png?raw=true",
+        "name": "Jim Boy",
+        "address": "Jim's Wallet Address"
+    },
+    {
+        "symbol": "Tron",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Man2.png?raw=true",
+        "name": "Tron Bot",
+        "address": "Trons's Wallet Address"
+    },
+    {
+        "symbol": "Sean",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Man3.png?raw=true",
+        "name": "Sean Dude",
+        "address": "Sean's Wallet Address"
+    },
+    {
+        "symbol": "Larry",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/LarryFine.png?raw=true",
+        "name": "Larry Fine",
+        "address": "Larry's Wallet Address"
+    },
+    {
+        "symbol": "Curly",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/CurleyHoward.png?raw=true",
+        "name": "Curly Howard",
+        "address": "Curly's Wallet Address"
+    },
+    {
+        "symbol": "Moe",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/MoeHoward.png?raw=true",
+        "name": "Moe Howard",
+        "address": "Moe's Wallet Address"
+    },
+    {
+        "symbol": "Jim",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Man4.png?raw=true",
+        "name": "Jimmey Babe",
+        "address": "Jimmey's Wallet Address"
+    },
+    {
+        "symbol": "John",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Man5.png?raw=true",
+        "name": "John Doe",
+        "address": "Man5's Wallet Address"
+    },
+    {
+        "symbol": "Spunk",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Monkey1.png?raw=true",
+        "name": "Spunky",
+        "address": "Spunky's Wallet Address"
+    },
+    {
+        "symbol": "Fink",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Monkey2.png?raw=true",
+        "name": "Finkey NAME",
+        "address": "Finkey's Wallet Address"
+    },
+    {
+        "symbol": "QB ?",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionBlack.png?raw=true",
+        "name": "QuestionBlack NAME",
+        "address": "QuestionBlack's Wallet Address"
+    },
+    {
+        "symbol": "QBOB",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionBlackOnBlue.png?raw=true",
+        "name": "QuestionBlackOnBlue NAME",
+        "address": "QuestionBlackOnBlue's Wallet Address"
+    },
+    {
+        "symbol": "QBOR",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionBlackOnRed.png?raw=true",
+        "name": "QuestionBlackOnRed NAME",
+        "address": "QuestionBlackOnRed's Wallet Address"
+    },
+    {
+        "symbol": "QB",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionBlue.png?raw=true",
+        "name": "QuestionBlue NAME",
+        "address": "QuestionBlue's Wallet Address"
+    },
+    {
+        "symbol": "QR",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionRed.png?raw=true",
+        "name": "QuestionRed NAME",
+        "address": "QuestionRed's Wallet Address"
+    },
+    {
+        "symbol": "QW",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionWhite.png?raw=true",
+        "name": "QuestionWhite NAME",
+        "address": "XXX's Wallet Address"
+    },
+    {
+        "symbol": "QWOB",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionWhiteOnBlack.png?raw=true",
+        "name": "QuestionWhiteOnBlack NAME",
+        "address": "QuestionWhiteOnBlack's Wallet Address"
+    },
+    {
+        "symbol": "Tweety",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/TweetyBird.png?raw=true",
+        "name": "Tweety Bird",
+        "address": "TweetyBird's Wallet Address"
+    },
+    {
+        "symbol": "Wilma",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/WilmaFlintstone.png?raw=true",
+        "name": "Wilma Flintstone",
+        "address": "Wilma Flintstone's Wallet Address"
+    },
+    {
+        "symbol": "Sam",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/YosemiteSam.png?raw=true",
+        "name": "Yosemite Sam",
+        "address": "Yosemite Sam's Wallet Address"
+    },
+    {
+        "symbol": "???",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/anonymous-avatar.png?raw=true",
+        "name": "Anonymous Avatar",
+        "address": "anonymous-avatar's Wallet Address"
+    },
+    {
+        "symbol": "Susan",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/Girl1.png?raw=true",
+        "name": "Susan James",
+        "address": "Girl1's Wallet Address"
+    },
+    {
+        "symbol": "QWOB",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionWhiteOnBlue.png?raw=true",
+        "name": "QuestionWhiteOnBlue NAME",
+        "address": "QuestionWhiteOnBlue's Wallet Address"
+    },
+    {
+        "symbol": "QWOR",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/agents/QuestionWhiteOnRed.png?raw=true",
+        "name": "QuestionWhiteOnRed NAME",
+        "address": "QuestionWhiteOnRed's Wallet Address"
+    }
+]

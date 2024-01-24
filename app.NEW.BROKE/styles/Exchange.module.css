@@ -1,0 +1,219 @@
+
+.connectButton {
+  background-color: #7d3812; 
+  color: #2c1103;
+}
+
+.connectButton:hover {
+  cursor: pointer;
+  color: #3b4874
+}
+
+.tradeContainer {
+  transform: translate(0, 10px);
+  font-weight: bold;
+  width: 450px;
+  background-color: #0E111B;
+  border: 2px solid #21273a;
+  min-height: 300px;
+  border-radius: 15px;
+  padding-left: 30px;
+  padding-right: 30px;
+  margin: auto;
+}
+
+.tradeContainerHeader {
+  /* color: #20c974;  
+  background-color: #8f591c; */
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 98%;
+}
+
+.cog {
+  color: #51586f;
+  transition: 0.3s;
+}
+
+.cog:hover {
+  color: white;
+  rotate: 90deg;
+  cursor: pointer;
+}
+
+.inputs {
+  position: relative;
+}
+
+.priceInput {
+  background-color: #1f2639 !important;
+  color: #94a3b8 !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 25px;
+  border-radius: 12px !important;
+}
+
+.assetSelect {
+  position: absolute;
+  min-width: 50px;
+  height: 25px;
+  background-color: #111c7d;
+  top: 10px;
+  right: 20px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+}
+
+.assetBalance {
+  position: absolute;
+  min-width: 50px;
+  height: 10px;
+  color: #94a3b8; 
+  top: 54px;
+  right: 20px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding-right: 8px;
+}
+
+.recipientSelect {
+  background-color: #b09e18;
+}
+
+.agentSelect {
+  background-color: #c65e0a;
+}
+
+.assetSelect:hover {
+  cursor: pointer;
+}
+
+.switchButton {
+  background-color: #3a4157;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  border-radius: 8px;
+  position: absolute;
+  top: 120px;
+  left: 180px;
+  color: #5F6783;
+  border: 3px solid #0E111B;
+  font-size: 12px;
+  transition: 0.3s
+}
+
+.switchButton:hover {
+  color: white;
+  cursor: pointer;
+}
+
+.exchangeButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #243056; 
+  width: calc(100%);
+  height: 55px;
+  font-size: 20px;
+  border-radius: 12px;
+  color: #5981F3;
+  font-weight: bold;
+  transition: 0.3s;
+  margin-bottom: 5px;
+  margin-top: 0px;
+}
+
+.swapButton {
+  background-color: #b6470b;
+  opacity: 0.4;
+  color: #653820;
+}
+
+.swapButton:hover {
+  cursor: pointer;
+  background-color: #3b4874
+}
+.approveButton {
+  background-color: #225a14;
+  opacity: 0.4;
+  color: #b3ceab;
+}
+
+.approveButton:hover {
+  cursor: pointer;
+  background-color: #3b4874
+}
+
+.tokenLogo {
+  height: 40px;
+  width: 40px;
+}
+
+.tokenName {
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.tokenSymbol {
+  margin-left: 10px;
+  font-size: 13px;
+  font-weight: 300;
+  color: #51596f;
+}
+
+/* New Code Entries */
+
+.center {
+  /* Center horizontally*/
+  color: #94a3b8; 
+  text-align: center;
+  vertical-align: middle;
+}
+
+.leftH {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rightH {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: 200ms ease-in-out;
+  border: 1px solid black;
+  border-radius: 10px;
+  z-index: 10;
+  background-color: white;
+  width: 500px;
+  max-width: 80%;
+}
+
+.modal.active {
+  transform: translate(-50%, -50%) scale(1);
+}
