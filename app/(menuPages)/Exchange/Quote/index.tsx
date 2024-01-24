@@ -13,7 +13,8 @@ import {
   type Address,
 } from "wagmi";
 
-const AFFILIATE_FEE:number = process.env.NEXT_PUBLIC_AFFILIATE_FEE== undefined ? 0 : parseFloat(process.env.NEXT_PUBLIC_AFFILIATE_FEE); // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
+console.debug("QUOTE AFFILIATE_FEE =" + AFFILIATE_FEE)
 
 export default function QuoteView({
   price,

@@ -1,44 +1,12 @@
-.App {
-  text-align: center;
+
+.connectButton {
+  background-color: #7d3812; 
+  color: #2c1103;
 }
 
-.logo{
-  width: 40px;
-  height: 40px;
-  padding-right: 20px;
-}
-
-.eth{
-  width: 20px;
-  height: 20px;
-  padding-right: 10px;
-}
-
-.leftH {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.rightH {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 20px;
-}
-
-
-.mainWindow {
-  margin-top: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-}
-
-.link {
-  text-decoration: none;
-  color: white;
+.connectButton:hover {
+  cursor: pointer;
+  color: #3b4874
 }
 
 .tradeContainer {
@@ -75,6 +43,64 @@
   cursor: pointer;
 }
 
+.inputs {
+  position: relative;
+}
+
+.priceInput {
+  background-color: #1f2639 !important;
+  color: #94a3b8 !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 25px;
+  border-radius: 12px !important;
+}
+
+.assetSelect {
+  position: absolute;
+  min-width: 50px;
+  height: 25px;
+  background-color: #111c7d;
+  top: 10px;
+  right: 20px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+}
+
+.assetBalance {
+  position: absolute;
+  min-width: 50px;
+  height: 10px;
+  color: #94a3b8; 
+  top: 54px;
+  right: 20px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding-right: 8px;
+}
+
+.recipientSelect {
+  background-color: #b09e18;
+}
+
+.agentSelect {
+  background-color: #c65e0a;
+}
+
+.assetSelect:hover {
+  cursor: pointer;
+}
+
 .switchButton {
   background-color: #3a4157;
   width: 25px;
@@ -84,7 +110,7 @@
   display: flex;
   border-radius: 8px;
   position: absolute;
-  top: 60px;
+  top: 120px;
   left: 180px;
   color: #5F6783;
   border: 3px solid #0E111B;
@@ -92,72 +118,12 @@
   transition: 0.3s
 }
 
-.dollarAmount {
-  position: absolute;
-  top: 75px;
-  left: 14px;
-  font-size: 10px;
-  color: #5F6783;
-}
-
 .switchButton:hover {
   color: white;
   cursor: pointer;
 }
 
-.inputs {
-  position: relative;
-}
-
-.assetOne {
-  position: absolute;
-  min-width: 20px;
-  height: 25px;
-
-  background-color: #111c7d;
-  top: 21px;
-  right: 20px;
-  border-radius: 100px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-weight: bold;
-  font-size: 17px;
-  padding-right: 8px;
-}
-
-.assetTwo {
-  position: absolute;
-  min-width: 50px;
-  background-color: #111c7d;
-  top: 97px;
-  right: 20px;
-  border-radius: 100px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-weight: bold;
-  font-size: 17px;
-  padding-right: 8px;
-}
-
-.assetLogo {
-  height: 22px;
-  margin-left: 5px;
-  object-fit: contain;
-}
-
-.assetOne:hover{
-  cursor: pointer;
-}
-
-.assetTwo:hover{
-  cursor: pointer;
-}
-
-.swapButton {
+.exchangeButton {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -169,22 +135,27 @@
   color: #5981F3;
   font-weight: bold;
   transition: 0.3s;
-  margin-bottom: 30px;
-  margin-top: 8px;
+  margin-bottom: 5px;
+  margin-top: 0px;
 }
 
-.swapButton[disabled] {
-  background-color: #243056;
+.swapButton {
+  background-color: #b6470b;
   opacity: 0.4;
-  color: #5982f39b;
-}
-
-.swapButton[disabled]:hover {
-  cursor: not-allowed;
-  background-color: #243056;
+  color: #653820;
 }
 
 .swapButton:hover {
+  cursor: pointer;
+  background-color: #3b4874
+}
+.approveButton {
+  background-color: #225a14;
+  opacity: 0.4;
+  color: #b3ceab;
+}
+
+.approveButton:hover {
   cursor: pointer;
   background-color: #3b4874
 }
@@ -192,30 +163,6 @@
 .tokenLogo {
   height: 40px;
   width: 40px;
-}
-
-.modalContent {
-  border-top: 1px solid #363e54;
-  /* background-color: #3b4874; */
-  /* padding-top: 20px; */
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px
-}
-
-.tokenChoice {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding-left: 20px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
-.tokenChoice:hover {
-  cursor: pointer;
-  background-color: #1f2639;
 }
 
 .tokenName {
@@ -235,28 +182,38 @@
 
 .center {
   /* Center horizontally*/
+  color: #94a3b8; 
   text-align: center;
   vertical-align: middle;
 }
 
-
-
-
-
-
-.priceInput {
-  background-color: #1f2639 !important;
-  color: orange !important;
-  border-width: 0px !important;
-  height: 70px !important;
-  margin-bottom: 5px;
-  font-size: 35px;
-  border-radius: 12px !important;
+.leftH {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.antPopoverInner {
-  min-width: 260px !important;
-  min-height: 140px !important;
-  border: 1px solid #3a2d21;
-  background-color: #5a0c35 !important;
+.rightH {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: 200ms ease-in-out;
+  border: 1px solid black;
+  border-radius: 10px;
+  z-index: 10;
+  background-color: white;
+  width: 500px;
+  max-width: 80%;
+}
+
+.modal.active {
+  transform: translate(-50%, -50%) scale(1);
 }

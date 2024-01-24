@@ -355,7 +355,7 @@ export default function PriceView({
     return txt;
   }
 
-  const getAgentMembers = () => {
+  const getAgentElements = () => {
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
@@ -364,7 +364,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getBuyTokenDialogMembers = () => {
+  const getBuyTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to buy";
     methods.placeHolder = 'Buy token name or paste address';
@@ -373,7 +373,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getSellTokenDialogMembers = () => {
+  const getSellTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to sell";
     methods.placeHolder = 'Sell token name or paste address';
@@ -382,7 +382,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getRecipientMembers = () => {
+  const getRecipientElements = () => {
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
@@ -399,10 +399,10 @@ export default function PriceView({
 
   return (
     <form>
-      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
-      <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      <AgentDialog dialogMethods={getAgentMembers()}/>
+      <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
+      <RecipientDialog dialogMethods={getRecipientElements()}/>
+      <AgentDialog dialogMethods={getAgentElements()}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>

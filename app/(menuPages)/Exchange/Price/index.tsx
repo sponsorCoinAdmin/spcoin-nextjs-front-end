@@ -6,7 +6,8 @@ import {
   AgentDialog,
   RecipientDialog,
   SellTokenDialog,
-  BuyTokenDialog
+  BuyTokenDialog,
+  ErrorDialog
 } from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
@@ -14,12 +15,15 @@ import CustomConnectButton from '../../../components/Buttons/CustomConnectButton
 import FEED  from '../../../resources/data/feeds/feedTypes';
 import qs from "qs";
 import useSWR from "swr";
-import { useState, ChangeEvent, SetStateAction } from "react";
+import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
   type Address,
 } from "wagmi";
+import {
+  watchAccount,
+} from "@wagmi/core";
 import {
   ArrowDownOutlined,
   DownOutlined,
@@ -160,13 +164,13 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
-           switch (errCode) {
+          switch (errCode) {
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
-              // alert('Sell Amount is 0');
+            // alert('Sell Amount is 0');
             break;
             case BUY_AMOUNT_ZERO: validateNumericEntry("0");
             // alert('Buy Amount is 0');
@@ -207,7 +211,6 @@ export default function PriceView({
   );
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
-
   const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellTokenElement.address,
@@ -355,7 +358,7 @@ export default function PriceView({
     return txt;
   }
 
-  const getAgentMembers = () => {
+  const getAgentElements = () => {
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
@@ -364,7 +367,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getBuyTokenDialogMembers = () => {
+  const getBuyTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to buy";
     methods.placeHolder = 'Buy token name or paste address';
@@ -373,7 +376,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getSellTokenDialogMembers = () => {
+  const getSellTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to sell";
     methods.placeHolder = 'Sell token name or paste address';
@@ -382,7 +385,7 @@ export default function PriceView({
     return methods;
   }
 
-  const getRecipientMembers = () => {
+  const getRecipientElements = () => {
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
@@ -399,10 +402,10 @@ export default function PriceView({
 
   return (
     <form>
-      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
-      <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      <AgentDialog dialogMethods={getAgentMembers()}/>
+      <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
+      <RecipientDialog dialogMethods={getRecipientElements()}/>
+      <AgentDialog dialogMethods={getAgentElements()}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>
@@ -447,7 +450,6 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-
         <div className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name}
             onChange={(e) => { validateNumericEntry(e.target.value); }} />
@@ -457,7 +459,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-        
+
         <div className={styles.switchButton} onClick={switchTokens}>
             <ArrowDownOutlined className={styles.switchArrow} />
         </div>

@@ -2,7 +2,8 @@
 import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
-import {
+
+import { 
   AgentDialog,
   RecipientDialog,
   SellTokenDialog,
@@ -49,8 +50,6 @@ const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
 const BUY_AMOUNT_ZERO = 400;
 const ERROR_0X_RESPONSE = 500;
-
-// updateNetworkState({chainId:"1", name:"ZZZZ"});
 
 export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
@@ -176,7 +175,7 @@ export default function PriceView({
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
-       },
+      },
     ],
     fetcher,
     {
@@ -384,10 +383,7 @@ export default function PriceView({
     return txt;
   }
 
-  // updateSellBalance()
-  // updateBuyBalance()
-
-  const getAgentDialogElements = () => {
+  const getAgentElements = () => {
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
