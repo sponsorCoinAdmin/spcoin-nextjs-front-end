@@ -4,7 +4,7 @@ import Image from 'next/image'
 import info_png from '../../../resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
-import mainNetTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
+import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
 import {
@@ -37,13 +37,13 @@ function setFeed(feedType: any, chainId:any) {
         break;
         case FEED.TOKEN_LIST:
             switch(chainId) {
-                case 1: feed = mainNetTokenList;
+                case 1: feed = ethereumTokenList;
                     // console.debug("NETWORK chainId = 1")
                 break;
                 case 137: feed = polygonTokenList;
                     // console.debug("NETWORK chainId = 137")
                 break;
-                default: feed = mainNetTokenList;
+                default: feed = ethereumTokenList;
                     // console.debug("NETWORK chainId = default")
                 break;
             }
