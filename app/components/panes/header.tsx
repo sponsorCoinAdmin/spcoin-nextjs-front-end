@@ -26,7 +26,6 @@ function Header() {
 
   function getTokenImage(chainId:string) {
     let imgURL:string = imgHome+chainId+imgOptions;
-    console.error('imgURL  :'+imgURL)
     return imgURL
   }
 

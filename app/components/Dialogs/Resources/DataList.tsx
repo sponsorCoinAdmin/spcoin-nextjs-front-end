@@ -4,7 +4,7 @@ import Image from 'next/image'
 import info_png from '../../../resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
-import mainNetTokenList from '../../../resources/data/Tokens/mainNetTokenList.json';
+import mainNetTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
 import {
