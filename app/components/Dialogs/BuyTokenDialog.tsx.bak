@@ -15,11 +15,11 @@ export default function Dialog({ dialogMethods}: any) {
     }
 
     const closeDialog = () => {
-        dialogRef.current?.close();
+        dialogRef.current?.close()
     }
 
     const Dialog = (
-        <dialog id="agentDialog" ref={dialogRef} className="modalContainer">
+        <dialog id="buyTokenDialog" ref={dialogRef} className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{dialogMethods.titleName}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"

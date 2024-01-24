@@ -24,7 +24,7 @@ const config = createConfig(
   })
 );
 
-export default function App(props: {
+export default function ConnectWrapper(props: {
       [x: string]: any; Component: any; 
 }) {
     let { Component, pageProps } = props;
@@ -37,7 +37,6 @@ export default function App(props: {
     <>
       <WagmiConfig config={config}>
         <ConnectKitProvider>
-          {/* <ConnectKitButton /> */}
           {mounted && <Component {...pageProps}/>}
         </ConnectKitProvider>
       </WagmiConfig>

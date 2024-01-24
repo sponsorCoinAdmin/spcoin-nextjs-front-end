@@ -31,7 +31,6 @@ export default function ConnectWrapper(props: {
 
   // alert(Component);
   const [mounted, setMounted] = useState(false);
-  const [JUNK, setJUNK] = useState("JJJJJJJJJ");
   useEffect(() => setMounted(true), []);
 
   return (
