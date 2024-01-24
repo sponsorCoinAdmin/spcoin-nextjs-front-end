@@ -372,7 +372,7 @@ export default function PriceView({
     methods.titleName = "Select a token to buy";
     methods.placeHolder = 'Buy token name or paste address';
     methods.setDlgLstElement = setValidBuyTokenElement;
-    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    methods.dataFeedType = FEED.TOKEN_LIST;
     return methods;
   }
 
@@ -381,7 +381,7 @@ export default function PriceView({
     methods.titleName = "Select a token to sell";
     methods.placeHolder = 'Sell token name or paste address';
     methods.setDlgLstElement = setValidSellTokenElement;
-    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    methods.dataFeedType = FEED.TOKEN_LIST;
     return methods;
   }
 

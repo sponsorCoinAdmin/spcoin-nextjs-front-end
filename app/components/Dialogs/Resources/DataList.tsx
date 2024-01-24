@@ -26,10 +26,7 @@ function setFeed(feedType: any) {
         case FEED.AGENT_WALLETS:
             feed = agentWalletList;
         break;
-        case FEED.MAINNET_TOKENS:
-            feed = mainNetTokenList;
-        break;
-        case FEED.POLYGON_TOKENS:
+        case FEED.TOKEN_LIST:
             feed = polygonTokenList;
         break;
         case FEED.RECIPIENT_WALLETS:

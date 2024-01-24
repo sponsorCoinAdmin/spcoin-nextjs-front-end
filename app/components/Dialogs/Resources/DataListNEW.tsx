@@ -35,9 +35,6 @@ function setFeed(feedType: any, chainId:any) {
         case FEED.AGENT_WALLETS:
             feed = agentWalletList;
         break;
-        case FEED.MAINNET_TOKENS:
-            feed = mainNetTokenList;
-        break;
         case FEED.TOKEN_LIST:
             switch(chainId) {
                 case 1: feed = mainNetTokenList;
