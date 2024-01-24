@@ -1,3 +1,4 @@
+'use client'
 import styles from '../../../styles/SpCoin.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
@@ -63,7 +64,8 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-const AFFILIATE_FEE:number = process.env.NEXT_PUBLIC_AFFILIATE_FEE== undefined ? 0 : parseFloat(process.env.NEXT_PUBLIC_AFFILIATE_FEE); // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
@@ -82,11 +84,19 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
-  let hostPort='localhost:3000'
+  // if (!sellAmount || sellAmount == null || sellAmount == undefined) {
+  //   throw {errCode: SELL_AMOUNT_UNDEFINED, errMsg: 'Sell Amount Field is Empty'}
+  // }
+
+  // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
+  //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
+  // }
+
+  // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
   try {
     console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.log(`${hostPort}${endpoint}?${query}`);
+    console.log(`${endpoint}?${query}`);
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
@@ -146,6 +156,8 @@ export default function PriceView({
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
+        feeRecipient: FEE_RECIPIENT,
+        buyTokenPercentageFee: AFFILIATE_FEE,
       },
     ],
     fetcher,
@@ -160,7 +172,7 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
@@ -326,6 +338,7 @@ export default function PriceView({
       return true;
     }
   }
+
 
   function switchTokens() {
     let tmpElement: TokenElement = sellTokenElement;

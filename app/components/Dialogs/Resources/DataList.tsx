@@ -1,21 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styles from './styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '../../../resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
-import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
-import mainNetTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
-import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
-import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
-import {
-    watchAccount,
-    watchNetwork,
-  } from "@wagmi/core";
-  
-  import {
-      useChainId
-    } from "wagmi";
-
+import polygonTokenList from '../../../resources/data/polygonTokenList.json';
+import mainNetTokenList from '../../../resources/data/mainNetTokenList.json';
+import agentWalletList from '../../../resources/data/agentWalletList.json';
+import recipientWalletList from '../../../resources/data/recipientWalletList.json';
 
 type Props = {
     dataFeedType: string,
@@ -29,24 +20,17 @@ const fetchTokenList = async() => {
     return "WORKS";
   }
 
-function setFeed(feedType: any, chainId:any) {
+function setFeed(feedType: any) {
     let feed;
     switch (feedType) {
         case FEED.AGENT_WALLETS:
             feed = agentWalletList;
         break;
-        case FEED.TOKEN_LIST:
-            switch(chainId) {
-                case 1: feed = mainNetTokenList;
-                    // console.debug("NETWORK chainId = 1")
-                break;
-                case 137: feed = polygonTokenList;
-                    // console.debug("NETWORK chainId = 137")
-                break;
-                default: feed = mainNetTokenList;
-                    // console.debug("NETWORK chainId = default")
-                break;
-            }
+        case FEED.MAINNET_TOKENS:
+            feed = mainNetTokenList;
+        break;
+        case FEED.POLYGON_TOKENS:
+            feed = polygonTokenList;
         break;
         case FEED.RECIPIENT_WALLETS:
             feed = recipientWalletList;
@@ -62,15 +46,7 @@ function displayElementDetail (le: any) {
 }
 
 function DataList({dataFeedType, getSelectedListElement} : Props) {
-
-    const [chainId, setChainId] = useState(useChainId());
-    const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
-    const processNetworkChange = ( network:any ) => {
-      console.debug("SETTING APP NETWORK CHAIN ID = " + network.chain.id)
-      setChainId(network?.chain?.id);
-    }
-
-    let dataList = setFeed(dataFeedType, chainId);
+    let dataList = setFeed(dataFeedType);
     const tList = dataList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >

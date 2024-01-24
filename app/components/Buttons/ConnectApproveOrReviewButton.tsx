@@ -3,22 +3,28 @@ import ApproveOrReviewButton from './ApproveOrReviewButton';
 import CustomConnectButton from './CustomConnectButton';
 import { type Address } from "wagmi";
 
+  import {
+    MAX_ALLOWANCE,
+    exchangeProxy,
+  } from "../../resources/data/constants";
+
+
 function ConnectApproveOrReviewButton({
     connectedWalletAddr,
-    token,
     onClick,
+    tokenToSellAddr,
     disabled,
   }: {
     connectedWalletAddr: Address;
-    token:any
     onClick: () => void;
+    tokenToSellAddr: Address;
     disabled?: boolean;
   }) {
   return (
     <div>
       {connectedWalletAddr ? (
         <ApproveOrReviewButton
-          token={token}
+          tokenToSellAddr={tokenToSellAddr}
           connectedWalletAddr={connectedWalletAddr}
           onClick={onClick}
           disabled={disabled}

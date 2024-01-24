@@ -1,28 +1,71 @@
-
-.connectButton {
-  background-color: #7d3812; 
-  color: #2c1103;
+.App {
+  text-align: center;
 }
 
-.connectButton:hover {
-  cursor: pointer;
-  color: #3b4874
+.logo{
+  width: 40px;
+  height: 40px;
+  padding-right: 20px;
 }
 
-.tradeContainer {
+.eth{
+  width: 20px;
+  height: 20px;
+  padding-right: 10px;
+}
+
+.leftH {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rightH {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+
+.mainWindow {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.link {
+  text-decoration: none;
+  color: white;
+}
+
+.tradeBox {
+
+  /* position: absolute;  */
+  /* top: 50%; */
   transform: translate(0, 10px);
+  /* padding: 10px; */
+  /* justify-content: center; */
+
   font-weight: bold;
   width: 450px;
   background-color: #0E111B;
   border: 2px solid #21273a;
   min-height: 300px;
   border-radius: 15px;
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* justify-content: flex-start; */
+  /* align-items: flex-start; */
+  /* padding-top: 30px; */
   padding-left: 30px;
   padding-right: 30px;
   margin: auto;
 }
 
-.tradeContainerHeader {
+.tradeBoxHeader {
   /* color: #20c974;  
   background-color: #8f591c; */
   height: 60px;
@@ -43,26 +86,47 @@
   cursor: pointer;
 }
 
+.switchButton {
+  background-color: #3a4157;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  border-radius: 8px;
+  position: absolute;
+  top: 60px;
+  left: 180px;
+  color: #5F6783;
+  border: 3px solid #0E111B;
+  font-size: 12px;
+  transition: 0.3s
+}
+
+.dollarAmount {
+  position: absolute;
+  top: 75px;
+  left: 14px;
+  font-size: 10px;
+  color: #5F6783;
+}
+
+.switchButton:hover {
+  color: white;
+  cursor: pointer;
+}
+
 .inputs {
   position: relative;
 }
 
-.priceInput {
-  background-color: #1f2639 !important;
-  color: #94a3b8 !important;
-  border-width: 0px !important;
-  height: 70px !important;
-  margin-bottom: 5px;
-  font-size: 25px;
-  border-radius: 12px !important;
-}
-
-.assetSelect {
+.assetOne {
   position: absolute;
-  min-width: 50px;
+  min-width: 20px;
   height: 25px;
+
   background-color: #111c7d;
-  top: 10px;
+  top: 21px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -74,56 +138,37 @@
   padding-right: 8px;
 }
 
-.assetBalance {
+.assetTwo {
   position: absolute;
   min-width: 50px;
-  height: 10px;
-  color: #94a3b8; 
-  top: 54px;
+  background-color: #111c7d;
+  top: 97px;
   right: 20px;
+  border-radius: 100px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-weight: bold;
+  font-size: 17px;
   padding-right: 8px;
 }
 
-.recipientSelect {
-  background-color: #b09e18;
+.assetLogo {
+  height: 22px;
+  margin-left: 5px;
+  object-fit: contain;
 }
 
-.agentSelect {
-  background-color: #c65e0a;
-}
-
-.assetSelect:hover {
+.assetOne:hover{
   cursor: pointer;
 }
 
-.switchButton {
-  background-color: #3a4157;
-  width: 25px;
-  height: 25px;
-  align-items: center;
-  justify-content: center;
-  display: flex;
-  border-radius: 8px;
-  position: absolute;
-  top: 120px;
-  left: 180px;
-  color: #5F6783;
-  border: 3px solid #0E111B;
-  font-size: 12px;
-  transition: 0.3s
-}
-
-.switchButton:hover {
-  color: white;
+.assetTwo:hover{
   cursor: pointer;
 }
 
-.exchangeButton {
+.swapButton {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -135,27 +180,22 @@
   color: #5981F3;
   font-weight: bold;
   transition: 0.3s;
-  margin-bottom: 5px;
-  margin-top: 0px;
+  margin-bottom: 30px;
+  margin-top: 8px;
 }
 
-.swapButton {
-  background-color: #b6470b;
+.swapButton[disabled] {
+  background-color: #243056;
   opacity: 0.4;
-  color: #653820;
+  color: #5982f39b;
+}
+
+.swapButton[disabled]:hover {
+  cursor: not-allowed;
+  background-color: #243056;
 }
 
 .swapButton:hover {
-  cursor: pointer;
-  background-color: #3b4874
-}
-.approveButton {
-  background-color: #225a14;
-  opacity: 0.4;
-  color: #b3ceab;
-}
-
-.approveButton:hover {
   cursor: pointer;
   background-color: #3b4874
 }
@@ -163,6 +203,30 @@
 .tokenLogo {
   height: 40px;
   width: 40px;
+}
+
+.modalContent {
+  border-top: 1px solid #363e54;
+  /* background-color: #3b4874; */
+  /* padding-top: 20px; */
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px
+}
+
+.tokenChoice {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.tokenChoice:hover {
+  cursor: pointer;
+  background-color: #1f2639;
 }
 
 .tokenName {
@@ -182,38 +246,28 @@
 
 .center {
   /* Center horizontally*/
-  color: #94a3b8; 
   text-align: center;
   vertical-align: middle;
 }
 
-.leftH {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+
+
+
+
+
+.priceInput {
+  background-color: #1f2639 !important;
+  color: orange !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 35px;
+  border-radius: 12px !important;
 }
 
-.rightH {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 20px;
-}
-
-.modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  transition: 200ms ease-in-out;
-  border: 1px solid black;
-  border-radius: 10px;
-  z-index: 10;
-  background-color: white;
-  width: 500px;
-  max-width: 80%;
-}
-
-.modal.active {
-  transform: translate(-50%, -50%) scale(1);
+.antPopoverInner {
+  min-width: 260px !important;
+  min-height: 140px !important;
+  border: 1px solid #3a2d21;
+  background-color: #5a0c35 !important;
 }

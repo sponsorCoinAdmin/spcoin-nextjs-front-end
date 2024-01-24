@@ -1,12 +1,13 @@
-import styles from '../../../styles/SpCoin.module.css'
+'use client'
+import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../resources/images/spCoin.png'
-
-import { 
+import {
   AgentDialog,
   RecipientDialog,
   SellTokenDialog,
-  BuyTokenDialog
+  BuyTokenDialog,
+  ErrorDialog
 } from '../../../components/Dialogs/Dialogs';
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
@@ -14,61 +15,42 @@ import CustomConnectButton from '../../../components/Buttons/CustomConnectButton
 import FEED  from '../../../resources/data/feeds/feedTypes';
 import qs from "qs";
 import useSWR from "swr";
-import { useState, ChangeEvent, SetStateAction } from "react";
+import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
   type Address,
 } from "wagmi";
 import {
+  watchAccount,
+} from "@wagmi/core";
+import {
   ArrowDownOutlined,
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 
-type TokenElement = {
-  chainId: number;
-  symbol: string;
-  img: string;
-  name: string;
-  address: any;
-  decimals: number;
-}  
+import {
+  TokenElement, 
+  PriceRequestParams, 
+  defaultSellToken, 
+  defaultBuyToken, 
+  defaultAgent,
+  defaultRecipient } from '../../../lib/defaultSettings'
 
-const defaultSellToken: TokenElement = { 
-  chainId: 137,
-  symbol: "WBTC",
-  img: "https://cdn.moralis.io/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
-  name: "Wrapped Bitcoin",
-  address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-  decimals: 8
- };
+import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
+// const unwatch = watchNetwork((network) => console.log(network))
 
- const defaultBuyToken: TokenElement = { 
-  chainId: 137,
-  symbol: "USDT",
-  img: "https://cdn.moralis.io/eth/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
-  name: "Tether USD",
-  address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-  decimals: 6
-};
-
-//-------------- Finish Moralis Requirements ----------------------------------
-
-interface PriceRequestParams {
-  sellToken: string;
-  buyToken: string;
-  buyAmount?: string;
-  sellAmount?: string;
-  connectedWalletAddr?: string;
-}
-
-const AFFILIATE_FEE:number = process.env.NEXT_PUBLIC_AFFILIATE_FEE== undefined ? 0 : parseFloat(process.env.NEXT_PUBLIC_AFFILIATE_FEE); // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
+// console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
+const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
 const BUY_AMOUNT_ZERO = 400;
 const ERROR_0X_RESPONSE = 500;
+
+// updateNetworkState({chainId:"1", name:"ZZZZ"});
 
 export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   console.log("fetcher params = + " + JSON.stringify(params, null, 2))
@@ -82,11 +64,19 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
-  let hostPort='localhost:3000'
+  // if (!sellAmount || sellAmount == null || sellAmount == undefined) {
+  //   throw {errCode: SELL_AMOUNT_UNDEFINED, errMsg: 'Sell Amount Field is Empty'}
+  // }
+
+  // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
+  //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
+  // }
+
+  // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
   try {
     console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.log(`${hostPort}${endpoint}?${query}`);
+    console.log(`${endpoint}?${query}`);
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
@@ -116,13 +106,53 @@ export default function PriceView({
   // fetch price here
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
+  const [sellBalance, setSellBalance] = useState("0");
+  const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
-  const [recipientElement, setRecipientElement] = useState<TokenElement>(defaultSellToken);
-  const [agentElement, setAgentElement] = useState<TokenElement>(defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState(defaultRecipient);
+  const [agentElement, setAgentElement] = useState(defaultAgent);
 
+  const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
+
+  const processAccountChange = ( account:any ) => {
+    console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
+  }
+  
+  useEffect(() => {
+    // setSellBalance(sellTokenElement.name)
+    console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
+    updateSellBalance(sellTokenElement)
+  },[sellTokenElement])
+
+  useEffect(() => {
+    // setBuyBalance(buyTokenElement.name)
+    console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
+    updateBuyBalance(buyTokenElement)
+  },[buyTokenElement])
+
+  const updateSellBalance = async (sellTokenElement:TokenElement) => {
+    let tokenAddr = sellTokenElement.address;
+    let chainId = sellTokenElement.chainId
+    console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+    console.debug("retResponse = " + JSON.stringify(retResponse))
+    let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals)
+    setSellBalance(sellResponse)
+    return {sellBalance}
+  }
+
+  const updateBuyBalance = async (buyTokenElement:TokenElement) => {
+    let tokenAddr = buyTokenElement.address;
+    let chainId = buyTokenElement.chainId
+    console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+    console.debug("retResponse = " + JSON.stringify(retResponse))
+    setBuyBalance(retResponse.formatted)
+    return {buyBalance}
+  }
 
   // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
   // console.log("buyTokenElement.symbol  = " + buyTokenElement.symbol);
@@ -146,7 +176,7 @@ export default function PriceView({
         sellAmount: parsedSellAmount,
         buyAmount: parsedBuyAmount,
         connectedWalletAddr,
-      },
+       },
     ],
     fetcher,
     {
@@ -160,13 +190,13 @@ export default function PriceView({
         }
       },
       onError: ( error ) => {
-        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;
         let errMsg: string = error.errMsg;
         if (errCode != undefined) {
-           switch (errCode) {
+          switch (errCode) {
             case SELL_AMOUNT_ZERO: setBuyAmount("0");
-              // alert('Sell Amount is 0');
+            // alert('Sell Amount is 0');
             break;
             case BUY_AMOUNT_ZERO: validateNumericEntry("0");
             // alert('Buy Amount is 0');
@@ -207,7 +237,6 @@ export default function PriceView({
   );
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
-
   const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellTokenElement.address,
@@ -355,7 +384,10 @@ export default function PriceView({
     return txt;
   }
 
-  const getAgentMembers = () => {
+  // updateSellBalance()
+  // updateBuyBalance()
+
+  const getAgentDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select an agent";
     methods.placeHolder = 'Agent name or paste address';;
@@ -364,25 +396,25 @@ export default function PriceView({
     return methods;
   }
 
-  const getBuyTokenDialogMembers = () => {
+  const getBuyTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to buy";
     methods.placeHolder = 'Buy token name or paste address';
     methods.setDlgLstElement = setValidBuyTokenElement;
-    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    methods.dataFeedType = FEED.TOKEN_LIST;
     return methods;
   }
 
-  const getSellTokenDialogMembers = () => {
+  const getSellTokenDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a token to sell";
     methods.placeHolder = 'Sell token name or paste address';
     methods.setDlgLstElement = setValidSellTokenElement;
-    methods.dataFeedType = FEED.POLYGON_TOKENS;
+    methods.dataFeedType = FEED.TOKEN_LIST;
     return methods;
   }
 
-  const getRecipientMembers = () => {
+  const getRecipientDialogElements = () => {
     const methods:any = {};
     methods.titleName = "Select a recipient";
     methods.placeHolder = 'Recipient name or paste address';;
@@ -399,14 +431,14 @@ export default function PriceView({
 
   return (
     <form>
-      <SellTokenDialog dialogMethods={getSellTokenDialogMembers()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogMembers()}/>
-      <RecipientDialog dialogMethods={getRecipientMembers()}/>
-      <AgentDialog dialogMethods={getAgentMembers()}/>
+      <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
+      <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
+      <RecipientDialog dialogMethods={getRecipientDialogElements()}/>
+      <AgentDialog dialogMethods={getAgentDialogElements()}/>
 
-      <div className={styles.tradeBox}>
-        <div className={styles.tradeBoxHeader}>
-          <Image src={spCoin_png} width={30} height={30} alt="Moralis Logo" />
+      <div className={styles.tradeContainer}>
+        <div className={styles.tradeContainerHeader}>
+          <Image src={spCoin_png} className={styles.avatarImg}width={30} height={30} alt="Moralis Logo" />
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover content={settings} title="Settings" trigger="click" placement="bottomLeft">
             <SettingOutlined className={styles.cog} />
@@ -421,6 +453,9 @@ export default function PriceView({
             {sellTokenElement.symbol}
             <DownOutlined />
           </div>
+          <div className={styles["assetBalance"]}>
+          Balance: {sellBalance}
+          </div>
         </div>
 
         <div className={styles.inputs}>
@@ -430,10 +465,13 @@ export default function PriceView({
             {buyTokenElement.symbol}
             <DownOutlined />
           </div>
+          <div className={styles["assetBalance"]}>
+            Balance: {buyBalance}
+          </div>
         </div>
 
         { connectedWalletAddr ? 
-            ( <ApproveOrReviewButton tokenToSellAddr={sellTokenElement.address} connectedWalletAddr={connectedWalletAddr}
+            ( <ApproveOrReviewButton token={sellTokenElement} connectedWalletAddr={connectedWalletAddr}
               onClick={() => { setFinalize(true); }} disabled={disabled} /> ) : 
             ( <CustomConnectButton /> )
         }
@@ -447,7 +485,6 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-
         <div className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name}
             onChange={(e) => { validateNumericEntry(e.target.value); }} />
@@ -457,7 +494,7 @@ export default function PriceView({
             <DownOutlined />
           </div>
         </div>
-        
+
         <div className={styles.switchButton} onClick={switchTokens}>
             <ArrowDownOutlined className={styles.switchArrow} />
         </div>

@@ -13,7 +13,8 @@ import {
   type Address,
 } from "wagmi";
 
-const AFFILIATE_FEE:number = process.env.NEXT_PUBLIC_AFFILIATE_FEE== undefined ? 0 : parseFloat(process.env.NEXT_PUBLIC_AFFILIATE_FEE); // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const AFFILIATE_FEE = 0.01; // Percentage of the buyAmount that should be attributed to feeRecipient as affiliate fees
+const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 
 export default function QuoteView({
   price,
@@ -44,6 +45,8 @@ export default function QuoteView({
         sellAmount: price.sellAmount,
         // buyAmount: TODO if we want to support buys,
         connectedWalletAddr,
+        feeRecipient: FEE_RECIPIENT,
+        buyTokenPercentageFee: AFFILIATE_FEE,
       },
     ],
     fetcher,
