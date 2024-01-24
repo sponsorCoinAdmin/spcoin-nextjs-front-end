@@ -41,7 +41,7 @@
   color: white;
 }
 
-.tradeBox {
+.tradeContainer {
 
   /* position: absolute;  */
   /* top: 50%; */
@@ -65,7 +65,7 @@
   margin: auto;
 }
 
-.tradeBoxHeader {
+.tradeContainerHeader {
   /* color: #20c974;  
   background-color: #8f591c; */
   height: 60px;

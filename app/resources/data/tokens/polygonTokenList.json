@@ -2,7 +2,7 @@
     {
         "chainId": 137,
         "symbol": "USDC",
-        "img": "https://cdn.moralis.io/eth/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png?raw=true",
         "name": "USD Coin",
         "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
         "decimals": 6
@@ -10,7 +10,7 @@
     {
         "chainId": 137,
         "symbol": "LINK",
-        "img": "https://cdn.moralis.io/eth/0x514910771af9ca656af840dff83e8264ecf986ca.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x514910771af9ca656af840dff83e8264ecf986ca.png?raw=true",
         "name": "Chainlink",
         "address": "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39",
         "decimals": 18
@@ -18,7 +18,7 @@
     {
         "chainId": 137,
         "symbol": "USDT",
-        "img": "https://cdn.moralis.io/eth/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png?raw=true",
         "name": "Tether USD",
         "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
         "decimals": 6
@@ -26,7 +26,7 @@
     {
         "chainId": 137,
         "symbol": "GUSD",
-        "img": "https://cdn.moralis.io/eth/0x056fd409e1d7a124bd7017459dfea2f387b6d5cd.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x056fd409e1d7a124bd7017459dfea2f387b6d5cd.png?raw=true",
         "name": "Gemini USD",
         "address": "0xC8A94a3d3D2dabC3C1CaffFFDcA6A7543c3e3e65",
         "decimals": 2
@@ -34,7 +34,7 @@
     {
         "chainId": 137,
         "symbol": "DAI",
-        "img": "https://cdn.moralis.io/eth/0x6b175474e89094c44da98b954eedeac495271d0f.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x6b175474e89094c44da98b954eedeac495271d0f.png?raw=true",
         "name": "Dai Stablecoin",
         "address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
         "decimals": 18
@@ -42,7 +42,7 @@
     {
         "chainId": 137,
         "symbol": "WETH",
-        "img": "https://cdn.moralis.io/eth/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png?raw=true",
         "name": "Wrapped Ethereum",
         "address": "0xAe740d42E4ff0C5086b2b5b5d149eB2F9e1A754F",
         "decimals": 18
@@ -50,7 +50,7 @@
     {
         "chainId": 137,
         "symbol": "WBTC",
-        "img": "https://cdn.moralis.io/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png?raw=true",
         "name": "Wrapped Bitcoin",
         "address": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
         "decimals": 8
@@ -58,7 +58,7 @@
     {
         "symbol": "MATIC",
         "chainId": 137,
-        "img": "https://cdn.moralis.io/eth/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png?raw=true",
         "name": "Matic Token",
         "address": "0x0000000000000000000000000000000000001010",
         "decimals": 18
@@ -66,7 +66,7 @@
     {
         "chainId": 137,
         "symbol": "UNI",
-        "img": "https://cdn.moralis.io/eth/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.png?raw=true",
         "name": "Uniswap",
         "address": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
         "decimals": 18
@@ -74,7 +74,7 @@
     {
         "chainId": 137,
         "symbol": "CRV",
-        "img": "https://cdn.moralis.io/eth/0xd533a949740bb3306d119cc777fa900ba034cd52.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0xd533a949740bb3306d119cc777fa900ba034cd52.png?raw=true",
         "name": "Curve DAO Token",
         "address": "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
         "decimals": 18
@@ -82,7 +82,7 @@
     {
         "chainId": 137,
         "symbol": "MKR",
-        "img": "https://cdn.moralis.io/eth/0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2.png?raw=true",
         "name": "Maker",
         "address": "0x6f7C932e7684666C9fd1d44527765433e01fF61d",
         "decimals": 18
@@ -90,7 +90,7 @@
     {
         "chainId": 137,
         "symbol": "SHIB",
-        "img": "https://cdn.moralis.io/eth/0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce.png?raw=true",
         "name": "Shiba Inu",
         "address": "0x6f8a06447Ff6FcF75d803135a7de15CE88C1d4ec",
         "decimals": 18
@@ -98,7 +98,7 @@
     {
         "chainId": 137,
         "symbol": "AAVE",
-        "img": "https://cdn.moralis.io/eth/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9.png?raw=true",
         "name": "AAVE",
         "address": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
         "decimals": 18
@@ -106,9 +106,9 @@
     {
         "chainId": 137,
         "symbol": "SPCT_V001",
-        "img": "https://cdn.moralis.io/eth/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
+        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/tokens/0xToDo_SpCoin.png?raw=true",
         "name": "Sponsor Coin",
-        "address": "0x7d4e590f15E424Dd635822529a2b24D7Bc18935a",
+        "address": "0xToDo_SpCoin.png",
         "decimals": 18
     }
 ]

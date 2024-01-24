@@ -417,8 +417,8 @@ export default function PriceView({
       <RecipientDialog dialogMethods={getRecipientMembers()}/>
       <AgentDialog dialogMethods={getAgentMembers()}/>
 
-      <div className={styles.tradeBox}>
-        <div className={styles.tradeBoxHeader}>
+      <div className={styles.tradeContainer}>
+        <div className={styles.tradeContainerHeader}>
           <Image src={spCoin_png} width={30} height={30} alt="Moralis Logo" />
           <h4 className={styles.center}>Sponsor Coin Exchange</h4>
           <Popover content={settings} title="Settings" trigger="click" placement="bottomLeft">

@@ -3,12 +3,12 @@ import styles from './styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '../../../resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
-import polygonTokenList from '../../../resources/data/polygonTokenList.json';
-import mainNetTokenList from '../../../resources/data/mainNetTokenList.json';
-import agentWalletList from '../../../resources/data/agentWalletList.json';
-import recipientWalletList from '../../../resources/data/recipientWalletList.json';
+import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
+import mainNetTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
+import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
+import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
 
-type Props = {
+type Props = {git status
     dataFeedType: string,
     getSelectedListElement:  (listElement: any) => void,
 }

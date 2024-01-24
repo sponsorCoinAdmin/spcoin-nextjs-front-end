@@ -41,31 +41,20 @@
   color: white;
 }
 
-.tradeBox {
-
-  /* position: absolute;  */
-  /* top: 50%; */
+.tradeContainer {
   transform: translate(0, 10px);
-  /* padding: 10px; */
-  /* justify-content: center; */
-
   font-weight: bold;
   width: 450px;
   background-color: #0E111B;
   border: 2px solid #21273a;
   min-height: 300px;
   border-radius: 15px;
-  /* display: flex; */
-  /* flex-direction: column; */
-  /* justify-content: flex-start; */
-  /* align-items: flex-start; */
-  /* padding-top: 30px; */
   padding-left: 30px;
   padding-right: 30px;
   margin: auto;
 }
 
-.tradeBoxHeader {
+.tradeContainerHeader {
   /* color: #20c974;  
   background-color: #8f591c; */
   height: 60px;

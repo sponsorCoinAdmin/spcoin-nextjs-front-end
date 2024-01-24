@@ -14,6 +14,11 @@
   color: #3b4874
 }
 
+.avatarImg {
+  height: auto;
+  width: auto;
+}
+
 .headerItem {
   padding: 10px;
   padding-left: 15px;
