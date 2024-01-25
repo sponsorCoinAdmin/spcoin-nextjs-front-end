@@ -63,14 +63,16 @@ function displayElementDetail (le: any) {
 
 function DataList({dataFeedType, getSelectedListElement} : Props) {
 
-    const [chainId, setChainId] = useState(useChainId());
-    const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
-    const processNetworkChange = ( network:any ) => {
-      console.debug("SETTING APP NETWORK CHAIN ID = " + network.chain.id)
-      setChainId(network?.chain?.id);
-    }
+    // const [chainId, setChainId] = useState(useChainId());
+    // const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
+    // const processNetworkChange = ( network:any ) => {
+    //   console.debug("SETTING APP NETWORK CHAIN ID = " + network.chain.id)
+    //   setChainId(network?.chain?.id);
+    // }
+    // let dataList = setFeed(dataFeedType, chainId);
 
-    let dataList = setFeed(dataFeedType, chainId);
+
+    let dataList = setFeed(dataFeedType, 137);
     const tList = dataList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >
