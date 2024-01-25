@@ -4,6 +4,7 @@ import Image from 'next/image'
 import info_png from '../../../resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
+import chainIdList from '../../../resources/data/networks/chainIds.json';
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
@@ -11,17 +12,34 @@ import recipientWalletList from '../../../resources/data/recipients/recipientWal
 import {
       useChainId
 } from "wagmi";
+
 type Props = {
     dataFeedType: string,
     getSelectedListElement:  (listElement: any) => void,
 }
+
+// NetworkChain Id functions for export
+const chainIdJsonList:any[] = chainIdList
+const getChainMap = (chainList: any[]) => {
+    let chainMap = new Map();
+    const tList = chainList?.map((e: any, i: number) => {
+        chainMap.set(chainList[i].chainId,chainList[i])
+    })
+    return chainMap
+}
+const chainIdMap = getChainMap(chainIdList)
+const getNetworkName = (chainId:number) => {
+    return chainIdMap.get(chainId);
+}
+
+// Data Feed Dialogue functions as follows
 
 const fetchTokenList = async() => {
     const response = await fetch('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
     const jsonResp = await response.json();
     alert(response);
     return "WORKS";
-  }
+}
 
 function setFeed(feedType: any, chainId:any) {
     let feed;
@@ -80,3 +98,9 @@ function DataList({dataFeedType, getSelectedListElement} : Props) {
 }
 
 export default DataList
+export {
+    chainIdJsonList,
+    chainIdMap,
+    getChainMap,
+    getNetworkName
+    }

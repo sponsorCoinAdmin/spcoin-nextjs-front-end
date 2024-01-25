@@ -8,8 +8,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton";
 
-import { useEffect } from "react";
-
 import {
   useChainId
 } from "wagmi";
@@ -22,15 +20,15 @@ const imgHome = "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resour
 const imgOptions = ".png?raw=true"
 
 function Header() {
-  // const [networkData, setNetworkData]=useState({chainId:'1',name:'Ethereum'});    
+  const [networkData, setNetworkData]=useState({chainId:'1',name:'Ethereum'});    
   // const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
-  // const processNetworkChange = ( network:any ) => {
-  //   setNetworkData({chainId:network.chain.id, name:network.chain.name})
-  //   console.debug( "HEADER NETWORK CHAIN ID = " + network.chain.id)
-  //   console.debug( "HEADER NETWORK NAME     = " + network.chain.name )
-  // }
+  const processNetworkChange = ( network:any ) => {
+    setNetworkData({chainId:network.chain.id, name:network.chain.name})
+    console.debug( "HEADER NETWORK CHAIN ID = " + network.chain.id)
+    console.debug( "HEADER NETWORK NAME     = " + network.chain.name )
+  }
 
-  function getTokenImageURL(chainId:number|string) {
+  function getTokenImage(chainId:string) {
     let imgURL:string = imgHome+chainId+imgOptions;
     return imgURL
   }
@@ -46,17 +44,8 @@ function Header() {
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-
-
-        <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.tokenLogo} />
-          &nbsp;&nbsp;{"NETWORK_NAME"}
-
-
-          {/* <Image src={eth_png} width={25} height={25} alt="Ethereum Logo" />
-          &nbsp;&nbsp;Ethereum */}
-
-
-
+        <img src={getTokenImage(networkData?.chainId)} alt={'??'} width={20} height={20} className={styles.tokenLogo} />
+          &nbsp;&nbsp;{networkData?.name}
         </div>
         <ConnectButton />
       </div>
