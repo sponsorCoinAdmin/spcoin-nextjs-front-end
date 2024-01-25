@@ -121,14 +121,37 @@ export default function PriceView({
   }
   
   useEffect(() => {
-    setSellBalance(sellTokenElement.name)
-    console.debug("sellTokenElement.symbol changed to" + sellTokenElement.name)
+    // setSellBalance(sellTokenElement.name)
+    console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
+    updateSellBalance(sellTokenElement)
   },[sellTokenElement])
 
   useEffect(() => {
-    setBuyBalance(buyTokenElement.name)
-    console.debug("buyTokenElement.symbol changed to" + buyTokenElement.name)
+    // setBuyBalance(buyTokenElement.name)
+    console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
+    updateBuyBalance(buyTokenElement)
   },[buyTokenElement])
+
+  const updateSellBalance = async (sellTokenElement:TokenElement) => {
+    let tokenAddr = sellTokenElement.address;
+    let chainId = sellTokenElement.chainId
+    console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+    console.debug("retResponse = " + JSON.stringify(retResponse))
+    let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals)
+    setSellBalance(sellResponse)
+    return {sellBalance}
+  }
+
+  const updateBuyBalance = async (buyTokenElement:TokenElement) => {
+    let tokenAddr = buyTokenElement.address;
+    let chainId = buyTokenElement.chainId
+    console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+    console.debug("retResponse = " + JSON.stringify(retResponse))
+    setBuyBalance(retResponse.formatted)
+    return {buyBalance}
+  }
 
   // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
   // console.log("buyTokenElement.symbol  = " + buyTokenElement.symbol);
