@@ -7,16 +7,10 @@ import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.js
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
+
 import {
-    watchAccount,
-    watchNetwork,
-  } from "@wagmi/core";
-  
-  import {
       useChainId
-    } from "wagmi";
-
-
+} from "wagmi";
 type Props = {
     dataFeedType: string,
     getSelectedListElement:  (listElement: any) => void,
@@ -62,17 +56,7 @@ function displayElementDetail (le: any) {
 }
 
 function DataList({dataFeedType, getSelectedListElement} : Props) {
-
-    // const [chainId, setChainId] = useState(useChainId());
-    // const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
-    // const processNetworkChange = ( network:any ) => {
-    //   console.debug("SETTING APP NETWORK CHAIN ID = " + network.chain.id)
-    //   setChainId(network?.chain?.id);
-    // }
-    // let dataList = setFeed(dataFeedType, chainId);
-
-
-    let dataList = setFeed(dataFeedType, 137);
+    let dataList = setFeed(dataFeedType, useChainId());
     const tList = dataList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >

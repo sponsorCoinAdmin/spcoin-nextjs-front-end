@@ -25,7 +25,7 @@ function Header() {
     console.debug( "HEADER NETWORK CHAIN ID = " + network.chain.id)
     console.debug( "HEADER NETWORK NAME     = " + network.chain.name )
   }
-*/
+/**/
   function getTokenImage(chainId:string) {
     let imgURL:string = imgHome+chainId+imgOptions;
     return imgURL
