@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styles from './styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '../../../resources/images/info1.png'
@@ -7,6 +7,15 @@ import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.js
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
+import {
+    watchAccount,
+    watchNetwork,
+  } from "@wagmi/core";
+  
+  import {
+      useChainId
+    } from "wagmi";
+
 
 type Props = {
     dataFeedType: string,
@@ -20,17 +29,24 @@ const fetchTokenList = async() => {
     return "WORKS";
   }
 
-function setFeed(feedType: any) {
+function setFeed(feedType: any, chainId:any) {
     let feed;
     switch (feedType) {
         case FEED.AGENT_WALLETS:
             feed = agentWalletList;
         break;
-        case FEED.MAINNET_TOKENS:
-            feed = ethereumTokenList;
-        break;
         case FEED.TOKEN_LIST:
-            feed = polygonTokenList;
+            switch(chainId) {
+                case 1: feed = ethereumTokenList;
+                    // console.debug("NETWORK chainId = 1")
+                break;
+                case 137: feed = polygonTokenList;
+                    // console.debug("NETWORK chainId = 137")
+                break;
+                default: feed = ethereumTokenList;
+                    // console.debug("NETWORK chainId = default")
+                break;
+            }
         break;
         case FEED.RECIPIENT_WALLETS:
             feed = recipientWalletList;
@@ -46,7 +62,7 @@ function displayElementDetail (le: any) {
 }
 
 function DataList({dataFeedType, getSelectedListElement} : Props) {
-    let dataList = setFeed(dataFeedType);
+    let dataList = setFeed(dataFeedType, 137);
     const tList = dataList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >
