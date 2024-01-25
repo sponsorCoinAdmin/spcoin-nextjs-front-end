@@ -16,6 +16,7 @@ const imgHome = "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resour
 const imgOptions = ".png?raw=true"
 
 function Header() {
+
 /*
   const [networkData, setNetworkData]=useState({chainId:'1',name:'Ethereum'});    
   const unwatchNetwork = watchNetwork((network) => processNetworkChange(network))
@@ -25,7 +26,6 @@ function Header() {
     console.debug( "HEADER NETWORK NAME     = " + network.chain.name )
   }
 */
-
   function getTokenImage(chainId:string) {
     let imgURL:string = imgHome+chainId+imgOptions;
     return imgURL
