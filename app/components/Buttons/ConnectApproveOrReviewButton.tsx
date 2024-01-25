@@ -5,20 +5,20 @@ import { type Address } from "wagmi";
 
 function ConnectApproveOrReviewButton({
     connectedWalletAddr,
+    token,
     onClick,
-    tokenToSellAddr,
     disabled,
   }: {
     connectedWalletAddr: Address;
+    token:any
     onClick: () => void;
-    tokenToSellAddr: Address;
     disabled?: boolean;
   }) {
   return (
     <div>
       {connectedWalletAddr ? (
         <ApproveOrReviewButton
-          tokenToSellAddr={tokenToSellAddr}
+          token={token}
           connectedWalletAddr={connectedWalletAddr}
           onClick={onClick}
           disabled={disabled}

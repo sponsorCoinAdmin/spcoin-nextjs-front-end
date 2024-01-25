@@ -19,9 +19,9 @@ const MAX_ALLOWANCE = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined
 // console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
 
 function ApproveOrReviewButton({
+    token,
     connectedWalletAddr,
     onClick,
-    token,
     disabled,
   }: {
     token:any
