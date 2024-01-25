@@ -467,7 +467,7 @@ export default function PriceView({
         </div>
 
         { connectedWalletAddr ? 
-            ( <ApproveOrReviewButton token={sellTokenElement} connectedWalletAddr={connectedWalletAddr}
+            ( <ApproveOrReviewButton token={sellTokenElement.address} connectedWalletAddr={connectedWalletAddr}
               onClick={() => { setFinalize(true); }} disabled={disabled} /> ) : 
             ( <CustomConnectButton /> )
         }
