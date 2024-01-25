@@ -31,42 +31,16 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 
-type TokenElement = {
-  chainId: number;
-  symbol: string;
-  img: string;
-  name: string;
-  address: any;
-  decimals: number;
-}  
+import {
+  TokenElement, 
+  PriceRequestParams, 
+  defaultSellToken, 
+  defaultBuyToken, 
+  defaultAgent,
+  defaultRecipient } from '../../../lib/defaultSettings'
 
-const defaultSellToken: TokenElement = { 
-  chainId: 137,
-  symbol: "WBTC",
-  img: "https://cdn.moralis.io/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
-  name: "Wrapped Bitcoin",
-  address: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-  decimals: 8
- };
-
- const defaultBuyToken: TokenElement = { 
-  chainId: 137,
-  symbol: "USDT",
-  img: "https://cdn.moralis.io/eth/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
-  name: "Tether USD",
-  address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-  decimals: 6
-};
-
-//-------------- Finish Moralis Requirements ----------------------------------
-
-interface PriceRequestParams {
-  sellToken: string;
-  buyToken: string;
-  buyAmount?: string;
-  sellAmount?: string;
-  connectedWalletAddr?: string;
-}
+import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
+// const unwatch = watchNetwork((network) => console.log(network))
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 // console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
