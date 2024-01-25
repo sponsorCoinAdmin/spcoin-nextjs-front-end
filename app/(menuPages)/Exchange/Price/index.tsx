@@ -111,9 +111,15 @@ export default function PriceView({
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
-  const [recipientElement, setRecipientElement] = useState<TokenElement>(defaultSellToken);
-  const [agentElement, setAgentElement] = useState<TokenElement>(defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState(defaultRecipient);
+  const [agentElement, setAgentElement] = useState(defaultAgent);
 
+  const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
+
+  const processAccountChange = ( account:any ) => {
+    console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
+  }
+  
   useEffect(() => {
     setSellBalance(sellTokenElement.name)
     console.debug("sellTokenElement.symbol changed to" + sellTokenElement.name)
