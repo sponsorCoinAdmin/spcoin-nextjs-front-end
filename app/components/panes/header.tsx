@@ -17,7 +17,7 @@ const imgHome = "/resources/images/chains/"
 const imgOptions = ".png"
 
 function Header() {
-git
+
   function getTokenImageURL(chainId:number|string) {
     let imgURL:string = imgHome+chainId + imgOptions;
     return imgURL
