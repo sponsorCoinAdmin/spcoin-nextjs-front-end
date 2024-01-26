@@ -6,17 +6,12 @@ import spCoin_png from '../../resources/images/spCoin.png'
 import eth_png from '../../resources/images/eth.png'
 import Image from 'next/image'
 import Link from 'next/link'
-import ConnectButton from "./ConnectButton";
-
-import { useEffect } from "react";
+import ConnectButton from "./ConnectButton"
+import { getNetworkName } from "../../components/Dialogs/Resources/DataList"
 
 import {
   useChainId
 } from "wagmi";
-
-import {
-  watchNetwork,
-} from "@wagmi/core";
 
 const imgHome = "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/chains/"
 const imgOptions = ".png?raw=true"
@@ -49,7 +44,7 @@ function Header() {
 
 
         <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.tokenLogo} />
-          &nbsp;&nbsp;{"NETWORK_NAME"}
+          &nbsp;&nbsp;{getNetworkName(useChainId())}
 
 
           {/* <Image src={eth_png} width={25} height={25} alt="Ethereum Logo" />

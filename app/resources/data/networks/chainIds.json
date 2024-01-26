@@ -5,7 +5,7 @@
     },
     {
         "chainId": 2,
-        "name": "Unknown Network"
+        "name": "Expanse"
     },
     {
         "chainId": 3,
@@ -25,11 +25,11 @@
     },
     {
         "chainId": 7,
-        "name": "Unknown Network"
+        "name": "ThaiChain"
     },
     {
         "chainId": 8,
-        "name": "Unknown Network"
+        "name": "Ubiq"
     },
     {
         "chainId": 9,
@@ -37,11 +37,11 @@
     },
     {
         "chainId": 10,
-        "name": "Unknown Network"
+        "name": "OP"
     },
     {
         "chainId": 11,
-        "name": "Unknown Network"
+        "name": "Metadium"
     },
     {
         "chainId": 12,
@@ -53,11 +53,11 @@
     },
     {
         "chainId": 14,
-        "name": "Unknown Network"
+        "name": "Flare"
     },
     {
         "chainId": 15,
-        "name": "Unknown Network"
+        "name": "Diode Prenet"
     },
     {
         "chainId": 16,
@@ -239,7 +239,6 @@
         "chainId": 61,
         "name": "Ethereum Classic"
     },
-   
     {
         "chainId": 62,
         "name": "Unknown Network"
@@ -486,7 +485,7 @@
     },
     {
         "chainId": 125,
-        "name": "Unknown Network",
+        "name": "Unknown Network"
     },
     {
         "chainId": 126,

@@ -29,7 +29,7 @@ const getChainMap = (chainList: any[]) => {
 }
 const chainIdMap = getChainMap(chainIdList)
 const getNetworkName = (chainId:number) => {
-    return chainIdMap.get(chainId);
+    return chainIdMap?.get(chainId)?.name;
 }
 
 // Data Feed Dialogue functions as follows
@@ -103,4 +103,4 @@ export {
     chainIdMap,
     getChainMap,
     getNetworkName
-    }
+}
