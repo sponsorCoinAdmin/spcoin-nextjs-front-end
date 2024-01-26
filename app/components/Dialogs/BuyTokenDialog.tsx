@@ -4,7 +4,6 @@ import { useRef } from 'react'
 import InputSelect from './Resources/InputSelect'
 import DataList from './Resources/DataList'
 // ToDo Read in data List remotely
-// Example: let DataList = require('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
 
 export default function Dialog({ dialogMethods}: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)

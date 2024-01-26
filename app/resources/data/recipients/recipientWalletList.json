@@ -1,236 +1,242 @@
 [
     {
         "symbol": "Bark",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/AnimalShelter1.png?raw=true",
+        "img": "/resources/images/recipients/AnimalShelter1.png",
         "name": "Paws Prints Shelter",
         "address": "Animal Shelter Wallet Address"
     },
     {
         "symbol": "Meow",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/AnimalShelter2.png?raw=true",
+        "img": "/resources/images/recipients/AnimalShelter2.png",
         "name": "Wiskers Place",
         "address": "Cat Shelter Wallet Address"
     },
     {
         "symbol": "Woof",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/AnimalShelter3.png?raw=true",
+        "img": "/resources/images/recipients/AnimalShelter3.png",
         "name": "Dogs R Us",
         "address": "Dog Shelter Wallet Address"
     },
     {
         "symbol": "N.Y.A.S.",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/AnimalShelter4.png?raw=true",
+        "img": "/resources/images/recipients/AnimalShelter4.png",
         "name": "N.Y. Animal Shelter",
         "address": "Animal Shelter 4 Help Wallet Address"
     },
     {
         "symbol": "Biden",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Biden1.png?raw=true",
+        "img": "/resources/images/recipients/Biden1.png",
         "name": "Support Biden",
         "address": "Biden's Wallet Address"
     },
     {
         "symbol": "Biden",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Biden2.png?raw=true",
+        "img": "/resources/images/recipients/Biden2.png",
         "name": "Bidanomics Works",
         "address": "Biden2 Wallet Address"
     },
     {
         "symbol": "Cancer",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/BreastCancerFoundation.png?raw=true",
+        "img": "/resources/images/recipients/BreastCancerFoundation.png",
         "name": "Breast Cancer",
         "address": "Breast Cancer Foundation's Wallet Address"
     },
     {
         "symbol": "C.W.F.",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/ChildrensWishFoundation1.png?raw=true",
+        "img": "/resources/images/recipients/ChildrensWishFoundation1.png",
         "name": "Children's Wish",
         "address": "Children's Wish Foundation Wallet Address"
     },
     {
         "symbol": "WISH",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/ChildrensWishFoundation2.png?raw=true",
+        "img": "/resources/images/recipients/ChildrensWishFoundation2.png",
         "name": "Wish Foundation",
         "address": "Children's Wish Foundation Wallet Address2"
     },
     {
         "symbol": "Parks",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/CleanTheParks.png?raw=true",
+        "img": "/resources/images/recipients/CleanTheParks.png",
         "name": "Clean The Parks",
         "address": "Clean The Parks Wallet Address"
     },
     {
         "symbol": "DP",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Democrat.png?raw=true",
+        "img": "/resources/images/recipients/Democrat.png",
         "name": "Democratic Party",
         "address": "Democrat Wallet Address"
     },
     {
         "symbol": "PotHoles",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/FixTheRoads.png?raw=true",
+        "img": "/resources/images/recipients/FixTheRoads.png",
         "name": "Fix The Roads",
         "address": "Fix The Roads Wallet Address"
     },
     {
         "symbol": "FoodHank",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/FoodBank.png?raw=true",
+        "img": "/resources/images/recipients/FoodBank.png",
         "name": "T.O. FoodBank",
         "address": "FoodBank Wallet Address"
     },
     {
         "symbol": "Help",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Homeless.png?raw=true",
+        "img": "/resources/images/recipients/Homeless.png",
         "name": "Help the Homeless",
         "address": "Homeless Wallet Address"
     },
     {
         "symbol": "Liberals2",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Liberals2.png?raw=true",
+        "img": "/resources/images/recipients/Liberals2.png",
         "name": "Vote Liberals",
         "address": "Liberals2 Wallet Address"
     },
     {
         "symbol": "Liberals6",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Liberals6.png?raw=true",
+        "img": "/resources/images/recipients/Liberals6.png",
         "name": "Support Liberals",
         "address": "Liberals6 Wallet Address"
     },
     {
         "symbol": "Rebel",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/RebelNews1.png?raw=true",
+        "img": "/resources/images/recipients/RebelNews1.png",
         "name": "Help Rebel News",
         "address": "RebelNews1 Wallet Address"
     },
     {
         "symbol": "Rebel",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/RebelNews2.png?raw=true",
+        "img": "/resources/images/recipients/RebelNews2.png",
         "name": "Support Rebel",
         "address": "RebelNews2 Wallet Address"
     },
     {
         "symbol": "Rebel",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/RebelNews3.png?raw=true",
+        "img": "/resources/images/recipients/RebelNews3.png",
         "name": "Fund Rebel News",
         "address": "RebelNews Wallet Address"
     },
     {
         "symbol": "RC",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/RedCross.png?raw=true",
+        "img": "/resources/images/recipients/RedCross.png",
         "name": "Red Cross",
         "address": "Red Cross's Wallet Address"
     },
     {
         "symbol": "RP",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Republican1.png?raw=true",
+        "img": "/resources/images/recipients/Republican1.png",
         "name": "Fund Republican",
         "address": "Republican Wallet Address"
     },
     {
         "symbol": "Sharks",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SavetheSharks.png?raw=true",
+        "img": "/resources/images/recipients/SavetheSharks.png",
         "name": "Protect The Sharks",
         "address": "Save The Sharks Wallet Address"
     },
     {
         "symbol": "Help Me",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SickGirl.png?raw=true",
+        "img": "/resources/images/recipients/SickGirl.png",
         "name": "Judy's Leukemia",
         "address": "SickGirl Wallet Address"
     },
     {
         "symbol": "Kids",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SickKids.png?raw=true",
+        "img": "/resources/images/recipients/SickKids.png",
         "name": "Support Sick Kids",
         "address": "Sick Kids Wallet Address"
     },
     {
         "symbol": "Drugs",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SickKids.png?raw=true",
+        "img": "/resources/images/recipients/SickKids.png",
         "name": "Stop Drug Abuse",
         "address": "Stop Drug Abuse Wallet Address"
     },
     {
         "symbol": "Tiger",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SaveTheTiger2.png?raw=true",
+        "img": "/resources/images/recipients/SaveTheTiger2.png",
         "name": "Save The Siberian",
         "address": "SaveTheTiger2 Wallet Address"
     },
     {
         "symbol": "Tiger",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SaveTheTiger3.png?raw=true",
+        "img": "/resources/images/recipients/SaveTheTiger3.png",
         "name": "Save The Bangel",
         "address": "SaveTheTiger3 Wallet Address"
     },
     {
         "symbol": "Tiger",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SaveTheTiger4.png?raw=true",
+        "img": "/resources/images/recipients/SaveTheTiger4.png",
         "name": "Support The Tiger",
         "address": "SaveTheTiger4 Wallet Address"
     },
     {
         "symbol": "Tiger",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SaveTheTiger6.png?raw=true",
+        "img": "/resources/images/recipients/SaveTheTiger6.png",
         "name": "Help The Tiger",
         "address": "Help The Tiger Wallet Address"
     },
     {
         "symbol": "Trees",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SaveTheTrees.png?raw=true",
+        "img": "/resources/images/recipients/SaveTheTrees.png",
         "name": "Save The Trees",
         "address": "Save The Trees Wallet Address"
     },
     {
         "symbol": "Whales",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/SaveTheWhales.png?raw=true",
+        "img": "/resources/images/recipients/SaveTheWhales.png",
         "name": "Save The Whales",
         "address": "Save The Whales Wallet Address"
     },
         {
         "symbol": "Trump",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Trump1.png?raw=true",
+        "img": "/resources/images/recipients/Trump1.png",
         "name": "Vote Trump",
         "address": "Trump1 Wallet Address"
     },
     {
         "symbol": "Trump",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Trump2.png?raw=true",
+        "img": "/resources/images/recipients/Trump2.png",
         "name": "Trump For President",
         "address": "Trump2 Wallet Address"
     },
     {
         "symbol": "Trump",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Trump3.png?raw=true",
+        "img": "/resources/images/recipients/Trump3.png",
         "name": "Support Trump",
         "address": "Trump3 Wallet Address"
     },
     {
         "symbol": "Trump",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Trump4.png?raw=true",
+        "img": "/resources/images/recipients/Trump4.png",
         "name": "Support Trump",
         "address": "Trump4 Wallet Address"
     },
     {
         "symbol": "Unicef",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Unicef.png?raw=true",
+        "img": "/resources/images/recipients/Unicef.png",
         "name": "Unicef",
         "address": "Unicef Wallet Address"
     },
     {
         "symbol": "Veterans",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/Veterans.png?raw=true",
+        "img": "/resources/images/recipients/Veterans.png",
         "name": "Support your Veterans",
         "address": "Veterans Wallet Address"
     },
      {
         "symbol": "Pierre",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/VotePierre.png?raw=true",
+        "img": "/resources/images/recipients/VotePierre.png",
         "name": "Pierre as Prime Minister",
         "address": "VotePierre Wallet Address"
     },
     {
         "symbol": "Trudeau",
-        "img": "https://github.com/sponsorCoinAdmin/spCoinData/blob/main/resources/images/recipients/VoteTrudeau.png?raw=true",
+        "img": "/resources/images/recipients/VoteTrudeau.png",
         "name": "Support Trudeau",
         "address": "VoteTrudeau Wallet Address"
+    },
+    {
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xToDo_SpCoin.png"
     }
 ]

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styles from './styles/Modal.module.css'
 import Image from 'next/image'
-import info_png from '../../../resources/images/info1.png'
+import info_png from '../../../../public/resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
 import chainIdList from '../../../resources/data/networks/chainIds.json';
@@ -30,15 +30,6 @@ const getChainMap = (chainList: any[]) => {
 const chainIdMap = getChainMap(chainIdList)
 const getNetworkName = (chainId:number) => {
     return chainIdMap?.get(chainId)?.name;
-}
-
-// Data Feed Dialogue functions as follows
-
-const fetchTokenList = async() => {
-    const response = await fetch('https://raw.githubusercontent.com/sponsorCoinAdmin/coins/main/token-lists/polygonTokenList.json');
-    const jsonResp = await response.json();
-    alert(response);
-    return "WORKS";
 }
 
 function setFeed(feedType: any, chainId:any) {
