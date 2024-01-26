@@ -442,8 +442,9 @@ export default function PriceView({
         </div>
 
         <div className={styles.inputs}>
+        {/* <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount} */}
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
-            onChange={(e) => { validateNumericEntry(e.target.value); }} />
+          onChange={(e) => { validateNumericEntry(e.target.value); }} />
           <div className={styles["assetSelect"]} onClick={() => openFeedModal("#sellTokenDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
