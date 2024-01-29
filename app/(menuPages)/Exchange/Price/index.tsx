@@ -121,7 +121,6 @@ export default function PriceView({
   }
   
   useEffect(() => {
-    // setSellBalance(sellTokenElement.name)
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
   },[sellTokenElement])
@@ -135,9 +134,9 @@ export default function PriceView({
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
     let tokenAddr = sellTokenElement.address;
     let chainId = sellTokenElement.chainId
-    console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    // console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
     let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
-    console.debug("retResponse = " + JSON.stringify(retResponse))
+    // console.debug("retResponse = " + JSON.stringify(retResponse))
     let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals)
     setSellBalance(sellResponse)
     return {sellBalance}
@@ -146,9 +145,9 @@ export default function PriceView({
   const updateBuyBalance = async (buyTokenElement:TokenElement) => {
     let tokenAddr = buyTokenElement.address;
     let chainId = buyTokenElement.chainId
-    console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+    // console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
     let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
-    console.debug("retResponse = " + JSON.stringify(retResponse))
+    // console.debug("retResponse = " + JSON.stringify(retResponse))
     setBuyBalance(retResponse.formatted)
     return {buyBalance}
   }
@@ -425,6 +424,8 @@ export default function PriceView({
     dialog.showModal();
   }
 
+  // alert("sellBalance = " + sellBalance);
+
   return (
     <form>
       <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
@@ -442,7 +443,6 @@ export default function PriceView({
         </div>
 
         <div className={styles.inputs}>
-        {/* <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount} */}
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
           onChange={(e) => { validateNumericEntry(e.target.value); }} />
           <div className={styles["assetSelect"]} onClick={() => openFeedModal("#sellTokenDialog")}>
@@ -468,8 +468,11 @@ export default function PriceView({
         </div>
 
         { connectedWalletAddr ? 
-            ( <ApproveOrReviewButton token={sellTokenElement} connectedWalletAddr={connectedWalletAddr}
-              onClick={() => { setFinalize(true); }} disabled={disabled} /> ) : 
+            ( <ApproveOrReviewButton  token={sellTokenElement} 
+                                      connectedWalletAddr={connectedWalletAddr}
+                                      sellBalance={sellBalance}
+                                      onClick={() => { setFinalize(true); }} 
+                                      disabled={disabled} /> ) : 
             ( <CustomConnectButton /> )
         }
 

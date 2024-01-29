@@ -15,98 +15,165 @@ const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
 const MAX_ALLOWANCE = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE)
 
-// console.debug("MAX_ALLOWANCE              = " + MAX_ALLOWANCE);
-// console.debug("EXCHANGE_PROXY             = " + EXCHANGE_PROXY);
+function isBigInt(value:any) {
+  // console.debug("isBigInt(" + value + ")");
+  try { return BigInt(parseInt(value, 10)) !== BigInt(value) }
+  catch (e) { return false }
+}
+
+function isNumber(value:any) {
+  console.debug("isNumber:Value " + value)
+  return !isNaN(value)
+}
+
+function isInteger(value:any) {
+  return Number.isInteger(+value);
+}
+
+function isValidBigIntNotZero (value:any) {
+  // console.debug("isValidBigIntNotZero(" + value + ")")
+  if (isBigInt(value) && (BigInt(value) !== BigInt("0"))) {
+      console.debug("isBigInt("+value +") Is Not 0")
+      return true;
+  }
+  return false;
+}
+
+function isValidNumberNotZero (value:any) {
+  // console.debug("isValidBigIntNotZero(" + value + ")")
+  if (isNumber(value) && (Number(value) !== 0)) {
+      console.debug("isNumber("+value +") Is Not 0")
+      return true;
+  }
+  return false;
+}
+
+function isValidNotZero (value:any) {
+  // console.debug("isValidBigIntNotZero(" + value + ")")
+  if (isValidBigIntNotZero(value) || isValidNumberNotZero(value)){
+      console.debug("Value "+value +"Is Not 0")
+      return true;
+  }
+  return false;
+}
 
 function ApproveOrReviewButton({
     token,
     connectedWalletAddr,
+    sellBalance,
     onClick,
     disabled,
   }: {
     token:any
     connectedWalletAddr: Address;
+    sellBalance: any
     onClick: () => void;
     disabled?: boolean;
   }) {
-    console.log("ApproveOrReviewButton:connectedWalletAddr: " + connectedWalletAddr);
-    console.log("ApproveOrReviewButton:token.address: " + token.address);
-    console.log("ApproveOrReviewButton:disabled: " + disabled);
-    // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
-    const { isError, data: allowance, refetch } = useContractRead({
-      address: token.address,
-      abi: erc20ABI,
-      functionName: "allowance",
-      args: [connectedWalletAddr, EXCHANGE_PROXY],
-      onError(error) {
-        console.log('***ERROR*** useContractRead Error', error.message)
-        // alert(error.message)
+    console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
+    console.debug("ApproveOrReviewButton:disabled: " + disabled);
+    console.debug("isValidNumberNotZero:         :" + isValidNumberNotZero(sellBalance));
+    let insufficientBalance = disabled || !isValidNumberNotZero(sellBalance)
+    console.debug("insufficientBalance:         :" + insufficientBalance);
+    console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
+    if (!insufficientBalance) {
+      console.debug("connectedWalletAddr: " + connectedWalletAddr);
+      console.debug("token.address      : " + token.address);
+      console.debug("sellBalance        : " + sellBalance);
+      // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
+      const { isError, data: allowance, refetch } = useContractRead({
+        address: token.address,
+        abi: erc20ABI,
+        functionName: "allowance",
+        args: [connectedWalletAddr, EXCHANGE_PROXY],
+        onError(error) {
+          console.debug('***ERROR*** useContractRead Error', error.message)
+          // alert(error.message)
+          return <div>Something went wrong: {error.message}</div>;
+        },
+      });
+      console.debug("ApproveOrReviewButton:AFTER useContractRead()");
+      console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
+      // if (!isError) {
+      //   return <div>Something went wrong: {error.message}</div>;
+      // }
+
+      // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
+      const { config } = usePrepareContractWrite({
+        address: token.address,
+        abi: erc20ABI,
+        functionName: "approve",
+        args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
+        onError(error) {
+          console.debug('***ERROR*** usePrepareContractWrite Error', error.message)
+        }, 
+        enabled: true
+      });
+      console.debug("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
+    
+      const {
+        data: writeContractResult,
+        writeAsync: approveAsync,
+        error,
+      } = useContractWrite(config);
+
+      console.debug("ApproveOrReviewButton:AFTER useContractWrite()");
+
+      const { isLoading: isApproving } = useWaitForTransaction({
+        hash: writeContractResult ? writeContractResult.hash : undefined,
+        onSuccess(data) {
+          refetch();
+        },
+      });
+
+      console.debug("ApproveOrReviewButton:AFTER useWaitForTransaction()");
+
+      if (error) {
         return <div>Something went wrong: {error.message}</div>;
-      },
-    });
-    console.log("ApproveOrReviewButton:AFTER useContractRead()");
-    console.log("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
-    // if (!isError) {
-    //   return <div>Something went wrong: {error.message}</div>;
-    // }
+      }
+    
+      ///////////////////////////////////////////////////////////////
+    
+      let agentElements = {
+        titleName: "Approve TitleName",
+        errMsg: "This is a Test Approve Error Message",
+        approveAsync: approveAsync
+      }
 
-    // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
-    const { config } = usePrepareContractWrite({
-      address: token.address,
-      abi: erc20ABI,
-      functionName: "approve",
-      args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
-      enabled: true
-    });
-    console.log("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
-  
-    const {
-      data: writeContractResult,
-      writeAsync: approveAsync,
-      error,
-    } = useContractWrite(config);
+      function openFeedModal(feedType:string) {
+        let dialog:any = document.querySelector(feedType)
+        dialog.showModal();
+      }
 
-    console.log("ApproveOrReviewButton:AFTER useContractWrite()");
+      // Approve Button
+      if (allowance === 0n && approveAsync) {
+        return (
+          <>
+            {/* zzzzzzzzzzzzzzzzzzzz */}
+            <button
+              type="button"
+              className={styles["exchangeButton"] + " " + styles["approveButton"]}
+              onClick={async () => {
+                const writtenValue = await approveAsync().catch(e => {console.debug(JSON.stringify(e,null,2))});
+                console.debug("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
+                console.debug("writtenValue = " + writtenValue)
+              }}
+            >
+              { isApproving ? "Approving…" : "Approve" }
+            </button>
+          </>
+        );
+      }
+    }  
 
-    const { isLoading: isApproving } = useWaitForTransaction({
-      hash: writeContractResult ? writeContractResult.hash : undefined,
-      onSuccess(data) {
-        refetch();
-      },
-    });
-
-    console.log("ApproveOrReviewButton:AFTER useWaitForTransaction()");
-
-    if (error) {
-      return <div>Something went wrong: {error.message}</div>;
-    }
-  
-    // Approve Button
-    if (allowance === 0n && approveAsync) {
-      return (
-        <>
-          <button
-            type="button"
-            className={styles["exchangeButton"] + " " + styles["approveButton"]}
-            onClick={async () => {
-              const writtenValue = await approveAsync();
-            }}
-          >
-            {isApproving ? "Approving…" : "Approve"}
-          </button>
-        </>
-      );
-    }
-  
-    // Bad Request
     return (
       <button
         type="button"
-        disabled={disabled}
+        disabled={insufficientBalance}
         onClick={onClick}
          className={styles["exchangeButton"] + " " + styles["swapButton"]}
       >
-        {disabled ? "Insufficient " + token.symbol + " Balance" : "Review Trade"}
+        {insufficientBalance ? "Insufficient " + token.symbol + " Balance" : "Review Trade"}
       </button>
     );
   }
