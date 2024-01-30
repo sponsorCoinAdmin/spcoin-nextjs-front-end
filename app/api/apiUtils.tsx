@@ -29,6 +29,5 @@ const apiResponse = async(apiQuery:string, urlParms:string) => {
   }
 
   export { 
-    getURLParams,
     apiResponse
   }
