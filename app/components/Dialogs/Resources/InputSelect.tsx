@@ -17,7 +17,7 @@ function InputSelect({selectElement}:any) {
     <div>
       <div className={styles.leftH}>
         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-        <input className={styles.modalInputSelect} placeholder={selectElement} />
+        <input className={styles.modalInputSelect}  autoComplete="off" placeholder={selectElement} />
       </div>
     </div>
   );

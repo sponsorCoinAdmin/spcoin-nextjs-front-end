@@ -6,8 +6,6 @@ const OX_API_KEY:string = process.env.OX_API_KEY === undefined ? "0" : process.e
 export async function GET (req: Request) {
   const url=req.url;
 
-  const network = 'https://polygon.api.0x.org'
-  const api = '/swap/v1/price'
   const urlPart = url.split("?");
   const params = urlPart[1];
   const apiQuery = `https://polygon.api.0x.org/swap/v1/price?${params}&${feeWalletDetails}`;

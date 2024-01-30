@@ -44,7 +44,6 @@ import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 // console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
-const FEE_RECIPIENT = "0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917"; // The ETH address that should receive affiliate fees
 const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
@@ -73,9 +72,9 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
 
   // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
   try {
-    console.log("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
+    console.debug("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.log(`${endpoint}?${query}`);
+    console.debug(`${endpoint}?${query}`);
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
   }
   catch (e) {
@@ -427,7 +426,7 @@ export default function PriceView({
   // alert("sellBalance = " + sellBalance);
 
   return (
-    <form>
+    <form autoComplete="off">
       <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
       <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
       <RecipientDialog dialogMethods={getRecipientElements()}/>

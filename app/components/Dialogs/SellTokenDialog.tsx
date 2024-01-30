@@ -18,7 +18,7 @@ export default function Dialog({ dialogMethods}: any) {
     }
 
     const Dialog = (
-        <dialog id="sellTokenDialog" ref={dialogRef} className="modalContainer">
+        <dialog id="sellTokenDialog" ref={dialogRef} autoComplete="off" className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{dialogMethods.titleName}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
@@ -26,7 +26,7 @@ export default function Dialog({ dialogMethods}: any) {
                 >X</div>
             </div>
 
-            <div className="modalBox">
+            <div className="modalBox" >
                 <div className="modalInputSelect">
                     <InputSelect dataFeedType={dialogMethods.dataFeedType} selectElement={dialogMethods.placeHolder}/>
                 </div>

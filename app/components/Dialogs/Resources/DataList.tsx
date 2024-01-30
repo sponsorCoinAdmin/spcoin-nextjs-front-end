@@ -4,6 +4,7 @@ import Image from 'next/image'
 import info_png from '../../../../public/resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
+import sepoliaTokenList from '../../../resources/data/Tokens/sepoliaTokenList.json';
 import chainIdList from '../../../resources/data/networks/chainIds.json';
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
@@ -34,6 +35,7 @@ const getNetworkName = (chainId:number) => {
 
 function setFeed(feedType: any, chainId:any) {
     let feed;
+    // console.debug("NETWORK chainId = " + chainId)
     switch (feedType) {
         case FEED.AGENT_WALLETS:
             feed = agentWalletList;
@@ -41,13 +43,12 @@ function setFeed(feedType: any, chainId:any) {
         case FEED.TOKEN_LIST:
             switch(chainId) {
                 case 1: feed = ethereumTokenList;
-                    // console.debug("NETWORK chainId = 1")
                 break;
                 case 137: feed = polygonTokenList;
-                    // console.debug("NETWORK chainId = 137")
+                break;
+                case 11155111: feed = sepoliaTokenList;
                 break;
                 default: feed = ethereumTokenList;
-                    // console.debug("NETWORK chainId = default")
                 break;
             }
         break;
