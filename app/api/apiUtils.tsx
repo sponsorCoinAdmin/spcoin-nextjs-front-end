@@ -1,4 +1,4 @@
-import { OX_API_KEY } from './apiConfig'
+import { OX_API_KEY, FEE_WALLET_DETAILS } from './apiConfig'
 
 const getURLParams = (url:string) => {
   const urlPart = url.split("?");
@@ -7,6 +7,7 @@ const getURLParams = (url:string) => {
 }
 
 const apiResponse = async(apiQuery:string) => {
+    apiQuery += `&${FEE_WALLET_DETAILS}`
     console.debug("====================================================================================================")
     console.debug("OX_API_KEY:                  " + OX_API_KEY)
     console.debug("Executing API Price Request: " + apiQuery)
