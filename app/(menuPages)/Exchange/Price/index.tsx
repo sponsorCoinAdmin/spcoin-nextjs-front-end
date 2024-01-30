@@ -102,6 +102,7 @@ export default function PriceView({
   // console.log("})")
   
   // fetch price here
+  const [network, setNetwork] = useState("polygon");
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
@@ -166,7 +167,7 @@ export default function PriceView({
 
   const { isLoading: isLoadingPrice } = useSWR(
     [
-      "/api/price",
+      "/api/"+network+"/price",
       {
         sellToken: sellTokenElement.address,
         buyToken: buyTokenElement.address,

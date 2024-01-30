@@ -1,21 +1,17 @@
-const feeRecipient = process.env.FEE_RECIPIENT_WALLET
-const AFFILIATE_FEE = process.env.AFFILIATE_FEE
-const feeWalletDetails = `feeRecipient=${feeRecipient}&AFFILIATE_FEE=${AFFILIATE_FEE}`
-const OX_API_KEY:string = process.env.OX_API_KEY === undefined ? "0" : process.env.OX_API_KEY
+import { getURLParams, OX_API_KEY, networkURL, feeWalletDetails } from '../networkConfig'
+const api="/swap/v1/price"
 
 export async function GET (req: Request) {
-  const url=req.url;
+  const params = getURLParams(req.url);
+  const apiQuery = `${networkURL}${api}?${params}&${feeWalletDetails}`;
+  return price(apiQuery)
+}
 
-  const urlPart = url.split("?");
-  const params = urlPart[1];
-  const apiQuery = `https://polygon.api.0x.org/swap/v1/price?${params}&${feeWalletDetails}`;
-
+const price = async(apiQuery:string) => {
   console.log("====================================================================================================")
   console.log("OX_API_KEY:                  " + OX_API_KEY)
-  console.log("QUOTE REQUEST URL:           " + url)
   console.log("Executing API Price Request: " + apiQuery)
-  console.log("FEE RECIPIENT WALLET:        " + feeRecipient)
-  console.log("AFFILIATE_FEE PERCENT:       " + AFFILIATE_FEE)
+  console.log("FEE RECIPIENT WALLET:        " + feeWalletDetails)
   console.log("====================================================================================================")
 
   const response = await fetch(
@@ -31,4 +27,4 @@ export async function GET (req: Request) {
   // console.log("Executed Price Response : " + JSON.stringify(data,null,2))
 
   return new Response(JSON.stringify(data, null, 2))
-}
+} 
