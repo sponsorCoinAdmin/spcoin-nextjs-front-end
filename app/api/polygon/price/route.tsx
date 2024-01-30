@@ -1,13 +1,12 @@
 import { getURLParams, OX_API_KEY, networkURL, feeWalletDetails } from '../networkConfig'
+import {  apiResponse } from './apiResponse'
+
 const api="/swap/v1/price"
 
 export async function GET (req: Request) {
   const params = getURLParams(req.url);
   const apiQuery = `${networkURL}${api}?${params}&${feeWalletDetails}`;
-  return price(apiQuery)
-}
 
-const price = async(apiQuery:string) => {
   console.log("====================================================================================================")
   console.log("OX_API_KEY:                  " + OX_API_KEY)
   console.log("Executing API Price Request: " + apiQuery)
@@ -26,5 +25,5 @@ const price = async(apiQuery:string) => {
   const data = await response.json();
   // console.log("Executed Price Response : " + JSON.stringify(data,null,2))
 
-  return new Response(JSON.stringify(data, null, 2))
-} 
+  return apiResponse(apiQuery)
+}
