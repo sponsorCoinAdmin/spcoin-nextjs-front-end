@@ -1,4 +1,4 @@
-import { OX_API_KEY } from './polygon/networkConfig'
+import { OX_API_KEY } from './apiConfig'
 
 const getURLParams = (url:string) => {
   const urlPart = url.split("?");

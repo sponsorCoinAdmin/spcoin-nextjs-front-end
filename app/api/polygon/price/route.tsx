@@ -1,4 +1,4 @@
-import { getURLParams, OX_API_KEY, networkURL, feeWalletDetails } from '../networkConfig'
+import { getURLParams, networkURL, feeWalletDetails } from '../networkConfig'
 import {  apiResponse } from '../../apiUtils'
 
 const api="/swap/v1/price"
