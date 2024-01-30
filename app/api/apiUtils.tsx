@@ -6,7 +6,8 @@ const getURLParams = (url:string) => {
   return params;
 }
 
-const apiResponse = async(apiQuery:string) => {
+const apiResponse = async(apiQuery:string, urlParms:string) => {
+    apiQuery += `?${getURLParams(urlParms)}`
     apiQuery += `&${FEE_WALLET_DETAILS}`
     console.debug("====================================================================================================")
     console.debug("OX_API_KEY:                  " + OX_API_KEY)
