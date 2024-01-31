@@ -1,1 +1,0 @@
-export const NETWORK = "api.0x.org";

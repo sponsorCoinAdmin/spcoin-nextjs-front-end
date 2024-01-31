@@ -21,7 +21,7 @@ async function fetchBigIntBalance (walletAddr:string|Address|undefined, tokenAdd
   jsonRequest.token   = typeof tokenAddr   === 'string' ? ethers.getAddress(tokenAddr) : tokenAddr
   jsonRequest.chainId = typeof chainId === 'number' ? chainId : parseInt(chainId)
 
-  console.debug("fetchBigIntBalance:jsonRequest = " + JSON.stringify(jsonRequest, null, 2))
+  // console.debug("fetchBigIntBalance:jsonRequest = " + JSON.stringify(jsonRequest, null, 2))
   const res = await fetchBalance(jsonRequest)
   return res
 }
