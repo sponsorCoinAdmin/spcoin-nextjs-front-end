@@ -167,7 +167,7 @@ export default function PriceView({
 
   const { isLoading: isLoadingPrice } = useSWR(
     [
-      "/api/"+network+"/price",
+      "/api/"+network+"/0X/price",
       {
         sellToken: sellTokenElement.address,
         buyToken: buyTokenElement.address,
