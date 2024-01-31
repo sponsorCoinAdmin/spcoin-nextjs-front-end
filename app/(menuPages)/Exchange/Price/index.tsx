@@ -24,6 +24,7 @@ import {
 } from "wagmi";
 import {
   watchAccount,
+  watchNetwork,
 } from "@wagmi/core";
 import {
   ArrowDownOutlined,
@@ -40,7 +41,6 @@ import {
   defaultRecipient } from '../../../lib/defaultSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
-// const unwatch = watchNetwork((network) => console.log(network))
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 // console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
@@ -114,12 +114,6 @@ export default function PriceView({
   const [recipientElement, setRecipientElement] = useState(defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultAgent);
 
-  const unwatchAccount = watchAccount((unwatchAccount) => processAccountChange(unwatchAccount))
-
-  const processAccountChange = ( account:any ) => {
-    console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
-  }
-  
   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
@@ -130,6 +124,21 @@ export default function PriceView({
     console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
     updateBuyBalance(buyTokenElement)
   },[buyTokenElement])
+
+  const unwatch = watchNetwork((network) => processNetworkChange(network))
+  const unwatchAccount = watchAccount((account) => processAccountChange(account))
+
+  const processAccountChange = ( account:any ) => {
+    console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
+  }
+
+  const processNetworkChange = ( network:any ) => {
+    console.debug("APP NETWORK   = " + JSON.stringify(network, null, 2))
+    console.debug("NETWORK CHAIN = " + JSON.stringify(network?.chain, null, 2))
+    console.debug("NETWORK CHAIN_ID  = " + JSON.stringify(network?.chain?.id, null, 2))
+    console.debug("NETWORK NAME  = " + JSON.stringify(network?.chain?.name, null, 2))
+    setNetwork(network?.chain?.name?.toLowerCase());
+  }
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
     let tokenAddr = sellTokenElement.address;

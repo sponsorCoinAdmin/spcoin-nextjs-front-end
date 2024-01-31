@@ -70,12 +70,12 @@ function ApproveOrReviewButton({
     onClick: () => void;
     disabled?: boolean;
   }) {
-    console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
-    console.debug("ApproveOrReviewButton:disabled: " + disabled);
-    console.debug("isValidNumberNotZero:         :" + isValidNumberNotZero(sellBalance));
+    // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
+    // console.debug("ApproveOrReviewButton:disabled: " + disabled);
+    // console.debug("isValidNumberNotZero:         :" + isValidNumberNotZero(sellBalance));
     let insufficientBalance = disabled || !isValidNumberNotZero(sellBalance)
-    console.debug("insufficientBalance:         :" + insufficientBalance);
-    console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
+    // console.debug("insufficientBalance:         :" + insufficientBalance);
+    // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
     if (!insufficientBalance) {
       console.debug("connectedWalletAddr: " + connectedWalletAddr);
       console.debug("token.address      : " + token.address);

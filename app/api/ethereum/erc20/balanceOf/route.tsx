@@ -1,7 +1,7 @@
-import { getQueryVariable } from '../../../lib/utils'
-import { fetchBigIntBalance, fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
-import { getURLParams } from '../../lib/getURLParams'
-import { CHAIN_ID } from '../networkConfig'
+import { getQueryVariable } from '../../../../lib/utils'
+import { fetchBigIntBalance, fetchStringBalance } from '../../../../lib/wagmi/api/fetchBalance'
+import { getURLParams } from '../../../lib/getURLParams'
+import { CHAIN_ID } from '../../networkConfig'
 
 export async function GET(req: Request) {
   const params = getURLParams(req.url);
