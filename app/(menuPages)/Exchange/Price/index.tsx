@@ -2,6 +2,7 @@
 import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../../public/resources/images/spCoin.png'
+import chainIdList from '../../../resources/data/networks/chainIds.json';
 
 import { 
   AgentDialog,
@@ -20,6 +21,7 @@ import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
+  useChainId,
   type Address,
 } from "wagmi";
 import {
@@ -86,6 +88,21 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 };
 
+// This is duplicate code found in Datalist.tsx.  Put in Library call
+/////////////////////////////////////////////////////////////
+const getChainMap = (chainList: any[]) => {
+  let chainMap = new Map();
+  const tList = chainList?.map((e: any, i: number) => {
+      chainMap.set(chainList[i].chainId,chainList[i])
+  })
+  return chainMap
+}
+const chainIdMap = getChainMap(chainIdList)
+const getNetworkName = (chainId:number) => {
+  return chainIdMap?.get(chainId)?.name;
+}
+/////////////////////////////////////////////////////////////
+
 export default function PriceView({
   connectedWalletAddr,
   price,
@@ -104,9 +121,14 @@ export default function PriceView({
   // console.log("  setPrice: " + JSON.stringify(setPrice))
   // console.log("  setFinalize: " + JSON.stringify(setFinalize))
   // console.log("})")
-  
+  ///////////////////////////////////////////////////////////
+
+  let chainId = useChainId();
+  let networkName = getNetworkName(chainId)
+
+  console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [network, setNetwork] = useState("polygon");
+  const [network, setNetwork] = useState(networkName?.toLowerCase());
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
@@ -118,6 +140,9 @@ export default function PriceView({
   const [ZZZbuyTokenElement, ZZZsetBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
   const [ZZZrecipientElement, ZZZsetRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [ZZZagentElement, ZZZsetAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
+
+  console.debug("AAAAAA ZZZsellTokenElement = " + JSON.stringify(defaultEthereumSettings?.defaultSellToken),null,2)
+  console.debug("BBBBBB defaultSellToken    = " + JSON.stringify(defaultSellToken),null,2)
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
