@@ -38,11 +38,7 @@ import {
   getDefaultNetworkSettings,  
   defaultEthereumSettings,
   defaultPolygonSettings,
-  defaultSepoliaSettings,
-  defaultSellToken, 
-  defaultBuyToken, 
-  defaultAgent,
-  defaultRecipient
+  defaultSepoliaSettings
 } from '../../../lib/initialize/defaultSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
@@ -141,10 +137,7 @@ export default function PriceView({
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
 
-  console.debug("AAAAAA ZZZsellTokenElement = " + JSON.stringify(defaultEthereumSettings?.defaultSellToken),null,2)
-  console.debug("BBBBBB defaultSellToken    = " + JSON.stringify(defaultSellToken),null,2)
-
-  useEffect(() => {
+   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
   },[sellTokenElement])
