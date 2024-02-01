@@ -33,14 +33,17 @@ import {
 } from "@ant-design/icons";
 
 import {
-  TokenElement, 
-  PriceRequestParams, 
+  getDefaultNetworkSettings,  
+  defaultEthereumSettings,
+  defaultPolygonSettings,
+  defaultSepoliaSettings,
   defaultSellToken, 
   defaultBuyToken, 
   defaultAgent,
-  defaultRecipient } from '../../../lib/defaultSettings'
+  defaultRecipient } from '../../../lib/initialize/defaultSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
+import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 // console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
@@ -72,7 +75,7 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
 
   // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
   try {
-    console.debug("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
+    console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
     console.debug(`${endpoint}?${query}`);
     return fetch(`${endpoint}?${query}`).then((res) => res.json());
@@ -108,6 +111,12 @@ export default function PriceView({
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
+
+
+  const [ZZZsellTokenElement, ZZZsetSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
+  const [ZZZbuyTokenElement, ZZZsetBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
+  const [ZZZrecipientElement, ZZZsetRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
+  const [ZZZagentElement, ZZZsetAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
 
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
@@ -190,7 +199,7 @@ export default function PriceView({
       onSuccess: (data) => {
         setPrice(data);
         if (tradeDirection === "sell") {
-          console.log(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
+          console.debug(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
           setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
         } else {
           validateNumericEntry(formatUnits(data.sellAmount, sellTokenElement.decimals));
