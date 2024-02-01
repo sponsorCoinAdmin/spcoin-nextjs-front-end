@@ -136,18 +136,13 @@ export default function PriceView({
   const [tradeDirection, setTradeDirection] = useState("sell");
 
 
-  const [ZZZsellTokenElement, ZZZsetSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
-  const [ZZZbuyTokenElement, ZZZsetBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
-  const [ZZZrecipientElement, ZZZsetRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
-  const [ZZZagentElement, ZZZsetAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
+  const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
 
   console.debug("AAAAAA ZZZsellTokenElement = " + JSON.stringify(defaultEthereumSettings?.defaultSellToken),null,2)
   console.debug("BBBBBB defaultSellToken    = " + JSON.stringify(defaultSellToken),null,2)
-
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultSellToken);
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultBuyToken);
-  const [recipientElement, setRecipientElement] = useState(defaultRecipient);
-  const [agentElement, setAgentElement] = useState(defaultAgent);
 
   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
