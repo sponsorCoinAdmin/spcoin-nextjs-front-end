@@ -32,11 +32,13 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 
-import {     
+import {
   getDefaultNetworkSettings,  
   defaultEthereumSettings,
   defaultPolygonSettings,
-  defaultSepoliaSettings } from '../../../lib/initialize/defaultSettings'
+  defaultSepoliaSettings,
+} from '../../../lib/initialize/defaultSettings'
+
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
 import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
 

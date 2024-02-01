@@ -33,10 +33,15 @@ import {
 } from "@ant-design/icons";
 
 import {
+  getDefaultNetworkSettings,  
+  defaultEthereumSettings,
+  defaultPolygonSettings,
+  defaultSepoliaSettings,
   defaultSellToken, 
   defaultBuyToken, 
   defaultAgent,
-  defaultRecipient } from '../../../lib/initialize/defaultSettings'
+  defaultRecipient
+} from '../../../lib/initialize/defaultSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
 import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
