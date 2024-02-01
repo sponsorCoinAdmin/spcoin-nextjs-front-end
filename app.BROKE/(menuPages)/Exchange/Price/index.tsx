@@ -2,6 +2,7 @@
 import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../../public/resources/images/spCoin.png'
+import chainIdList from '../../../resources/data/networks/chainIds.json';
 
 import { 
   AgentDialog,
@@ -20,6 +21,7 @@ import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
+  useChainId,
   type Address,
 } from "wagmi";
 import {
@@ -36,7 +38,7 @@ import {
   getDefaultNetworkSettings,  
   defaultEthereumSettings,
   defaultPolygonSettings,
-  defaultSepoliaSettings,
+  defaultSepoliaSettings
 } from '../../../lib/initialize/defaultSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
@@ -81,6 +83,21 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
 };
+
+// This is duplicate code found in Datalist.tsx.  Put in Library call
+/////////////////////////////////////////////////////////////
+const getChainMap = (chainList: any[]) => {
+  let chainMap = new Map();
+  const tList = chainList?.map((e: any, i: number) => {
+      chainMap.set(chainList[i].chainId,chainList[i])
+  })
+  return chainMap
+}
+const chainIdMap = getChainMap(chainIdList)
+const getNetworkName = (chainId:number) => {
+  return chainIdMap?.get(chainId)?.name;
+}
+/////////////////////////////////////////////////////////////
 
 export default function PriceView({
   connectedWalletAddr,

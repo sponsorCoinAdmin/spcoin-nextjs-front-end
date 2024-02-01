@@ -2,6 +2,7 @@
 import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../../public/resources/images/spCoin.png'
+import chainIdList from '../../../resources/data/networks/chainIds.json';
 
 import { 
   AgentDialog,
@@ -20,6 +21,7 @@ import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import {
   useBalance,
+  useChainId,
   type Address,
 } from "wagmi";
 import {
@@ -36,7 +38,7 @@ import {
   getDefaultNetworkSettings,  
   defaultEthereumSettings,
   defaultPolygonSettings,
-  defaultSepoliaSettings,
+  defaultSepoliaSettings
 } from '../../../lib/initialize/defaultSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
@@ -82,6 +84,21 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 };
 
+// This is duplicate code found in Datalist.tsx.  Put in Library call
+/////////////////////////////////////////////////////////////
+const getChainMap = (chainList: any[]) => {
+  let chainMap = new Map();
+  const tList = chainList?.map((e: any, i: number) => {
+      chainMap.set(chainList[i].chainId,chainList[i])
+  })
+  return chainMap
+}
+const chainIdMap = getChainMap(chainIdList)
+const getNetworkName = (chainId:number) => {
+  return chainIdMap?.get(chainId)?.name;
+}
+/////////////////////////////////////////////////////////////
+
 export default function PriceView({
   connectedWalletAddr,
   price,
@@ -100,21 +117,27 @@ export default function PriceView({
   // console.log("  setPrice: " + JSON.stringify(setPrice))
   // console.log("  setFinalize: " + JSON.stringify(setFinalize))
   // console.log("})")
-  
+  ///////////////////////////////////////////////////////////
+
+  let chainId = useChainId();
+  let networkName = getNetworkName(chainId)
+
+  console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [network, setNetwork] = useState("polygon");
+  const [network, setNetwork] = useState(networkName?.toLowerCase());
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
+
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
 
-  useEffect(() => {
+   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
   },[sellTokenElement])
@@ -124,13 +147,6 @@ export default function PriceView({
     console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
     updateBuyBalance(buyTokenElement)
   },[buyTokenElement])
-
-  useEffect(() => {
-    // setBuyBalance(buyTokenElement.name)
-    let defaultNetworkSettings = getDefaultNetworkSettings(network)
-    console.debug("network changed to " + network)
-    updateBuyBalance(buyTokenElement)
-  },[network])
 
   const unwatch = watchNetwork((network) => processNetworkChange(network))
   const unwatchAccount = watchAccount((account) => processAccountChange(account))
@@ -145,11 +161,6 @@ export default function PriceView({
     console.debug("NETWORK CHAIN_ID  = " + JSON.stringify(network?.chain?.id, null, 2))
     console.debug("NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2))
     setNetwork(network?.chain?.name?.toLowerCase());
-    let defaultNetworkSettings = getDefaultNetworkSettings(network)
-      setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
-      setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
-      setRecipientElement(defaultNetworkSettings?.defaultRecipient)
-      setAgentElement(defaultNetworkSettings?.defaultAgent)
   }
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {

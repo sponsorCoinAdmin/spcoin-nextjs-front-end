@@ -131,13 +131,12 @@ export default function PriceView({
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
-
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
 
-   useEffect(() => {
+  useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
   },[sellTokenElement])
@@ -147,6 +146,13 @@ export default function PriceView({
     console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
     updateBuyBalance(buyTokenElement)
   },[buyTokenElement])
+
+  useEffect(() => {
+    // setBuyBalance(buyTokenElement.name)
+    let defaultNetworkSettings = getDefaultNetworkSettings(network)
+    console.debug("network changed to " + network)
+    updateBuyBalance(buyTokenElement)
+  },[network])
 
   const unwatch = watchNetwork((network) => processNetworkChange(network))
   const unwatchAccount = watchAccount((account) => processAccountChange(account))
@@ -161,6 +167,11 @@ export default function PriceView({
     console.debug("NETWORK CHAIN_ID  = " + JSON.stringify(network?.chain?.id, null, 2))
     console.debug("NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2))
     setNetwork(network?.chain?.name?.toLowerCase());
+    let defaultNetworkSettings = getDefaultNetworkSettings(network)
+      setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
+      setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
+      setRecipientElement(defaultNetworkSettings?.defaultRecipient)
+      setAgentElement(defaultNetworkSettings?.defaultAgent)
   }
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
