@@ -38,7 +38,7 @@ import {
   defaultEthereumSettings,
   defaultPolygonSettings,
   defaultSepoliaSettings
-} from '../../../lib/initialize/defaultNetworkSettings'
+} from '../../../lib/network/initialize/defaultNetworkSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
 import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
@@ -451,8 +451,6 @@ export default function PriceView({
     let dialog:any = document.querySelector(feedType)
     dialog.showModal();
   }
-
-  // alert("sellBalance = " + sellBalance);
 
   return (
     <form autoComplete="off">

@@ -1,4 +1,7 @@
 import chainIdList from '../../resources/data/networks/chainIds.json';
+import { defaultNetworkSettings as defaultEthereumSettings } from './initialize/ethereum/defaultSettings'
+import { defaultNetworkSettings as defaultPolygonSettings } from './initialize/polygon/defaultSettings'
+import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/sepolia/defaultSettings'
 // This is duplicate code found in Datalist.tsx.  Put in Library call
 /////////////////////////////////////////////////////////////
 const getChainMap = (chainList: any[]) => {
@@ -14,7 +17,19 @@ const getChainMap = (chainList: any[]) => {
     return chainIdMap?.get(chainId)?.name;
   }
 
-  export { getNetworkName }
+  // This method is never executed in the main program but is a utility to create a default network json list
+const createNetworkJsonList = () => {
+  const defaultNetworkSettings = {
+    ethereum : defaultEthereumSettings,
+    polygon  : defaultPolygonSettings,
+    sepolia  : defaultSepoliaSettings,
+  }
+  let networkSettings = "default json Network Settings for all Networks AS follows:\n"+ JSON.stringify(defaultNetworkSettings, null, 2);
+  console.debug(networkSettings)
+  alert(networkSettings)
+}
+
+  export { getNetworkName, createNetworkJsonList }
   /////////////////////////////////////////////////////////////
   
   
