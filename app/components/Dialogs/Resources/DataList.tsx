@@ -5,7 +5,6 @@ import info_png from '../../../../public/resources/images/info1.png'
 import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
 import sepoliaTokenList from '../../../resources/data/Tokens/sepoliaTokenList.json';
-import chainIdList from '../../../resources/data/networks/chainIds.json';
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
@@ -17,20 +16,6 @@ import {
 type Props = {
     dataFeedType: string,
     getSelectedListElement:  (listElement: any) => void,
-}
-
-// NetworkChain Id functions for export
-const chainIdJsonList:any[] = chainIdList
-const getChainMap = (chainList: any[]) => {
-    let chainMap = new Map();
-    const tList = chainList?.map((e: any, i: number) => {
-        chainMap.set(chainList[i].chainId,chainList[i])
-    })
-    return chainMap
-}
-const chainIdMap = getChainMap(chainIdList)
-const getNetworkName = (chainId:number) => {
-    return chainIdMap?.get(chainId)?.name;
 }
 
 function setFeed(feedType: any, chainId:any) {
@@ -90,9 +75,3 @@ function DataList({dataFeedType, getSelectedListElement} : Props) {
 }
 
 export default DataList
-export {
-    chainIdJsonList,
-    chainIdMap,
-    getChainMap,
-    getNetworkName
-}

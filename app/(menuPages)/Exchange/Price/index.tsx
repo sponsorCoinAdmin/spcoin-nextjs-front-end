@@ -2,7 +2,6 @@
 import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../../public/resources/images/spCoin.png'
-import chainIdList from '../../../resources/data/networks/chainIds.json';
 
 import { 
   AgentDialog,
@@ -39,10 +38,11 @@ import {
   defaultEthereumSettings,
   defaultPolygonSettings,
   defaultSepoliaSettings
-} from '../../../lib/initialize/defaultSettings'
+} from '../../../lib/initialize/defaultNetworkSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
 import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
+import { getNetworkName } from '@/app/lib/network/utils';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 // console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
@@ -83,21 +83,6 @@ export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
 };
-
-// This is duplicate code found in Datalist.tsx.  Put in Library call
-/////////////////////////////////////////////////////////////
-const getChainMap = (chainList: any[]) => {
-  let chainMap = new Map();
-  const tList = chainList?.map((e: any, i: number) => {
-      chainMap.set(chainList[i].chainId,chainList[i])
-  })
-  return chainMap
-}
-const chainIdMap = getChainMap(chainIdList)
-const getNetworkName = (chainId:number) => {
-  return chainIdMap?.get(chainId)?.name;
-}
-/////////////////////////////////////////////////////////////
 
 export default function PriceView({
   connectedWalletAddr,
@@ -162,13 +147,13 @@ export default function PriceView({
   }
 
   const processNetworkChange = ( network:any ) => {
-    console.debug("APP NETWORK   = " + JSON.stringify(network, null, 2))
-    console.debug("NETWORK CHAIN = " + JSON.stringify(network?.chain, null, 2))
-    console.debug("NETWORK ID    = " + JSON.stringify(network?.chain?.id, null, 2))
+    // console.debug("APP NETWORK   = " + JSON.stringify(network, null, 2))
+    // console.debug("NETWORK CHAIN = " + JSON.stringify(network?.chain, null, 2))
+    // console.debug("NETWORK ID    = " + JSON.stringify(network?.chain?.id, null, 2))
     console.debug("NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2))
-    setNetwork(network?.chain?.name?.toLowerCase());
-    let defaultNetworkSettings = getDefaultNetworkSettings(network?.chain?.name.toLowerCase())
-      setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
+    setNetwork(network?.chain?.name.toLowerCase());
+    let defaultNetworkSettings = getDefaultNetworkSettings(network?.chain?.name)
+    setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
       setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
       setRecipientElement(defaultNetworkSettings?.defaultRecipient)
       setAgentElement(defaultNetworkSettings?.defaultAgent)

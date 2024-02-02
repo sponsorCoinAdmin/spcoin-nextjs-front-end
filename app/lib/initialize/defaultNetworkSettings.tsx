@@ -65,19 +65,27 @@ interface PriceRequestParams {
 
 
 const getDefaultNetworkSettings = (network:string|number) => {
-    switch(network)
-    {
-        case 1:
-        case "ethereum": return defaultEthereumSettings;
-        case 137:
-        case "polygon": return defaultPolygonSettings;
-        case 11155111:
-        case "sepolia": return defaultSepoliaSettings;
-        default: return defaultEthereumSettings
-    }
+  if (typeof network === "string")
+    network = network.toLowerCase()
+  switch(network)
+  {
+      case 1:
+      case "ethereum": return defaultEthereumSettings;
+      case 137:
+      case "polygon": return defaultPolygonSettings;
+      case 11155111:
+      case "sepolia": return defaultSepoliaSettings;
+      default: return defaultEthereumSettings
+  }
 }
 
 const defaultSettings = defaultEthereumSettings;
+
+const defaultNetworkSettings = {
+  ethereum : defaultEthereumSettings,
+  polygon  : defaultPolygonSettings,
+  sepolia  : defaultSepoliaSettings,
+}
 
 export { 
     getDefaultNetworkSettings,  

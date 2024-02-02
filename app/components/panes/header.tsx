@@ -7,7 +7,7 @@ import eth_png from '../../resources/images/eth.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton"
-import { getNetworkName } from "../../components/Dialogs/Resources/DataList"
+import { getNetworkName } from "@/app/lib/network/utils";
 
 import {
   useChainId
