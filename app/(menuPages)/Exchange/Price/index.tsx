@@ -162,12 +162,12 @@ export default function PriceView({
   }
 
   const processNetworkChange = ( network:any ) => {
-    console.debug("APP NETWORK       = " + JSON.stringify(network, null, 2))
-    console.debug("NETWORK CHAIN     = " + JSON.stringify(network?.chain, null, 2))
-    console.debug("NETWORK CHAIN_ID  = " + JSON.stringify(network?.chain?.id, null, 2))
+    console.debug("APP NETWORK   = " + JSON.stringify(network, null, 2))
+    console.debug("NETWORK CHAIN = " + JSON.stringify(network?.chain, null, 2))
+    console.debug("NETWORK ID    = " + JSON.stringify(network?.chain?.id, null, 2))
     console.debug("NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2))
     setNetwork(network?.chain?.name?.toLowerCase());
-    let defaultNetworkSettings = getDefaultNetworkSettings(network)
+    let defaultNetworkSettings = getDefaultNetworkSettings(network?.chain?.name.toLowerCase())
       setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
       setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
       setRecipientElement(defaultNetworkSettings?.defaultRecipient)
