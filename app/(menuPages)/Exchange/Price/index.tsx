@@ -154,9 +154,9 @@ export default function PriceView({
     setNetwork(network?.chain?.name.toLowerCase());
     let defaultNetworkSettings = getDefaultNetworkSettings(network?.chain?.name)
     setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
-      setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
-      setRecipientElement(defaultNetworkSettings?.defaultRecipient)
-      setAgentElement(defaultNetworkSettings?.defaultAgent)
+    setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
+    setRecipientElement(defaultNetworkSettings?.defaultRecipient)
+    setAgentElement(defaultNetworkSettings?.defaultAgent)
   }
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
@@ -180,9 +180,7 @@ export default function PriceView({
     return {buyBalance}
   }
 
-  // console.log("sellTokenElement.symbol = " + sellTokenElement.symbol);
-  // console.log("buyTokenElement.symbol  = " + buyTokenElement.symbol);
-
+  // This code currently only works for sell buy will default to undefined
   const parsedSellAmount =
     sellAmount && tradeDirection === "sell"
       ? parseUnits(sellAmount, sellTokenElement.decimals).toString()
@@ -208,13 +206,9 @@ export default function PriceView({
     {
       onSuccess: (data) => {
         setPrice(data);
-        if (tradeDirection === "sell") {
           console.debug(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
           setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
-        } else {
-          validateNumericEntry(formatUnits(data.sellAmount, sellTokenElement.decimals));
-        }
-      },
+       },
       onError: ( error ) => {
         // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
         let errCode: number = error.errCode;

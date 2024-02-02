@@ -3,10 +3,6 @@ import { defaultNetworkSettings as defaultPolygonSettings } from './polygon/defa
 import { defaultNetworkSettings as defaultSepoliaSettings } from './sepolia/defaultSettings'
 import defaultNetworkSettings from "./defaultNetworkSettings.json"
 
-// const defaultNetworkSettings = JSON.parse(defaultJSONNetworkSettings.toString())
-
-// alert("defaultNetworkSettings.ethereum = " + defaultNetworkSettings.ethereum)
-
 const getDefaultNetworkSettings = (network:string|number) => {
   if (typeof network === "string")
     network = network.toLowerCase()
