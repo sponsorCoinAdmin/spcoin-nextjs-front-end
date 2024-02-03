@@ -9,15 +9,22 @@ const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Buy token name or paste address';
 // ToDo Read in data List remotely
 
-export default function Dialog({ buyTokenElement, callBackSetter, dialogMethods, }: any) {
+export default function Dialog({ sellTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: any) => {
-        if(dialogMethods.setDlgLstElement(listElement))
+        if (listElement.address === sellTokenElement.address) {
+            alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
+            console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
+            return false;
+        }
+        else {
+            callBackSetter(listElement)
             closeDialog()
+        }
     }
 
-    const closeDialog = () => {
+     const closeDialog = () => {
         dialogRef.current?.close()
     }
 

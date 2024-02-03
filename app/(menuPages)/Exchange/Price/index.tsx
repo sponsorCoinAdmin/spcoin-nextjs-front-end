@@ -288,11 +288,6 @@ export default function PriceView({
   const SET_SELL_TOKEN = false;
   let BUY_SELL_ACTION = SET_SELL_TOKEN;
 
-  const setDlgLstElement = (_tokenElement: TokenElement) => {
-    console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
-    return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
-  }
-
   function switchTokens() {
     let tmpElement: TokenElement = sellTokenElement;
     setSellTokenElement(buyTokenElement);
@@ -321,84 +316,6 @@ export default function PriceView({
     return txt;
   }
 
-  function setValidSellTokenElement(_sellTokenElement: TokenElement) {
-    /*
-    let msg = "setValidSellTokenElement "+_tokenElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_sellTokenElement.address === buyTokenElement.address) {
-      alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
-      console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
-      return false;
-    }
-    else {
-      setSellTokenElement(_sellTokenElement)
-      return true;
-    }
-  }
-
-  function setValidBuyTokenElement(_buyTokenElement: TokenElement) {
-    /**
-    let msg = "setValidBuyTokenElement "+_recipientElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_buyTokenElement.address === sellTokenElement.address) {
-      alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
-      console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
-      return false;
-    }
-    else {
-      setBuyTokenElement(_buyTokenElement)
-      return true;
-    }
-  }
-
-  function setValidRecipientElement(_recipientElement: TokenElement) {
-    /**
-    let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_recipientElement.address === agentElement.address) {
-      alert("Recipient cannot be the same as Agent("+agentElement.symbol+")")
-      console.log("Recipient cannot be the same as Agent("+agentElement.symbol+")");
-      return false;
-    }
-    else {
-      setRecipientElement(_recipientElement)
-      return true;
-    }
-  }
-
-  const getBuyTokenDialogElements = () => {
-    const methods:any = {};
-    methods.titleName = "Select a token to buy";
-    methods.placeHolder = 'Buy token name or paste address';
-    methods.setDlgLstElement = setValidBuyTokenElement;
-    methods.dataFeedType = FEED.TOKEN_LIST;
-    return methods;
-  }
-
-  const getSellTokenDialogElements = () => {
-    const methods:any = {};
-    methods.titleName = "Select a token to sell";
-    methods.placeHolder = 'Sell token name or paste address';
-    methods.setDlgLstElement = setValidSellTokenElement;
-    methods.dataFeedType = FEED.TOKEN_LIST;
-    return methods;
-  }
-
-  const getRecipientElements = () => {
-    const methods:any = {};
-    methods.titleName = "Select a recipient";
-    methods.placeHolder = 'Recipient name or paste address';;
-    methods.setDlgLstElement = setValidRecipientElement;
-    methods.dataFeedType = FEED.RECIPIENT_WALLETS;
-    return methods;
-  }
-
 // --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
   function openFeedModal(feedType:string) {
     let dialog:any = document.querySelector(feedType)
@@ -407,10 +324,10 @@ export default function PriceView({
 
   return (
     <form autoComplete="off">
-      <SellTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setSellTokenElement} dialogMethods={getSellTokenDialogElements()}/>
-      <BuyTokenDialog buyTokenElement={buyTokenElement} callBackSetter={setBuyTokenElement} dialogMethods={getBuyTokenDialogElements()}/>
-      <RecipientDialog agentElement={agentElement} callBackSetter={setRecipientElement} dialogMethods={getRecipientElements()}/>
-      <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement}/>
+      <SellTokenDialog buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
+      <BuyTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
+      <RecipientDialog agentElement={agentElement} callBackSetter={setRecipientElement} />
+      <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>

@@ -9,12 +9,19 @@ const TITLE_NAME = "Select a recipient";
 const INPUT_PLACE_HOLDER = 'Recipient name or paste address';
 // ToDo Read in data List remotely
 
-export default function Dialog({ agentElement, callBackSetter, dialogMethods}: any) {
+export default function Dialog({ agentElement, callBackSetter}: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: any) => {
-        if(dialogMethods.setDlgLstElement(listElement))
+        if (listElement.address === agentElement.address) {
+            alert("Recipient cannot be the same as Agent ("+agentElement.symbol+")")
+            console.log("Recipient cannot be the same as Agent("+agentElement.symbol+")");
+            return false;
+        }
+        else {
+            callBackSetter(listElement)
             closeDialog()
+        }
     }
 
     const closeDialog = () => {
