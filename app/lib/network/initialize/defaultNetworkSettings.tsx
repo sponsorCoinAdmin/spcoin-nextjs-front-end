@@ -1,6 +1,3 @@
-import { defaultNetworkSettings as defaultEthereumSettings } from './ethereum/defaultSettings'
-import { defaultNetworkSettings as defaultPolygonSettings } from './polygon/defaultSettings'
-import { defaultNetworkSettings as defaultSepoliaSettings } from './sepolia/defaultSettings'
 import defaultNetworkSettings from "./defaultNetworkSettings.json"
 
 const getDefaultNetworkSettings = (network:string|number) => {
@@ -14,13 +11,11 @@ const getDefaultNetworkSettings = (network:string|number) => {
       case "polygon": return defaultNetworkSettings.polygon;
       case 11155111:
       case "sepolia": return defaultNetworkSettings.sepolia;
-      default: return defaultEthereumSettings
+      default: return defaultNetworkSettings.ethereum;
   }
 }
 
 export { 
     getDefaultNetworkSettings,  
-    defaultEthereumSettings,
-    defaultPolygonSettings,
-    defaultSepoliaSettings
+    defaultNetworkSettings
  };

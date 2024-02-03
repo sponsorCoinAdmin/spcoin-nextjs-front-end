@@ -18,26 +18,13 @@ import qs from "qs";
 import useSWR from "swr";
 import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
-import {
-  useBalance,
-  useChainId,
-  type Address,
-} from "wagmi";
-import {
-  watchAccount,
-  watchNetwork,
-} from "@wagmi/core";
-import {
-  ArrowDownOutlined,
-  DownOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import { useBalance, useChainId, type Address, } from "wagmi";
+import { watchAccount, watchNetwork, } from "@wagmi/core";
+import { ArrowDownOutlined, DownOutlined, SettingOutlined, } from "@ant-design/icons";
 
 import {
   getDefaultNetworkSettings,  
-  defaultEthereumSettings,
-  defaultPolygonSettings,
-  defaultSepoliaSettings
+  defaultNetworkSettings
 } from '../../../lib/network/initialize/defaultNetworkSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
@@ -116,6 +103,7 @@ export default function PriceView({
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
+  const defaultEthereumSettings = defaultNetworkSettings.ethereum
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
@@ -137,6 +125,7 @@ export default function PriceView({
     let defaultNetworkSettings = getDefaultNetworkSettings(network)
     console.debug("network changed to " + network)
     updateBuyBalance(buyTokenElement)
+    updateSellBalance(sellTokenElement)
   },[network])
 
   const unwatch = watchNetwork((network) => processNetworkChange(network))
@@ -295,10 +284,6 @@ export default function PriceView({
     </div>
   );
 
-  // ------------------------------ END MORALIS SCRIPT CODE ------------------------------------------------------
-
-  // --------------------------- START NEW MODAL/DIALOG CODE -----------------------------------------------------
-  
   const SET_BUY_TOKEN = true;
   const SET_SELL_TOKEN = false;
   let BUY_SELL_ACTION = SET_SELL_TOKEN;
@@ -306,74 +291,6 @@ export default function PriceView({
   const setDlgLstElement = (_tokenElement: TokenElement) => {
     console.log("index.tsx:: Modifying Token Object " + JSON.stringify(_tokenElement,null,2));
     return BUY_SELL_ACTION === SET_SELL_TOKEN ? setValidSellTokenElement(_tokenElement) : setValidBuyTokenElement(_tokenElement);
-  }
-
-  function setValidSellTokenElement(_tokenElement: TokenElement) {
-    /*
-    let msg = "setValidSellTokenElement "+_tokenElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_tokenElement.address === buyTokenElement.address) {
-      alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
-      console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
-      return false;
-    }
-    else {
-      setSellTokenElement(_tokenElement)
-      return true;
-    }
-  }
-
-  function setValidBuyTokenElement(_recipientElement: TokenElement) {
-    /**
-    let msg = "setValidBuyTokenElement "+_recipientElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_recipientElement.address === sellTokenElement.address) {
-      alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
-      console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
-      return false;
-    }
-    else {
-      setBuyTokenElement(_recipientElement)
-      return true;
-    }
-  }
-
-  function setValidRecipientElement(_tokenElement: TokenElement) {
-    /**
-    let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_tokenElement.address === agentElement.address) {
-      alert("Recipient cannot be the same as Agent("+agentElement.symbol+")")
-      console.log("Recipient cannot be the same as Agent("+agentElement.symbol+")");
-      return false;
-    }
-    else {
-      setRecipientElement(_tokenElement)
-      return true;
-    }
-  }
-
-  function setValidAgentElement(_agentElement: TokenElement) {
-    /*
-    let msg = "setValidSellTokenElement "+_agentElement.symbol;
-    console.log(msg);
-    alert(msg);
-    /**/
-    if (_agentElement.address === recipientElement.address) {
-      alert("Agent cannot be the same as Recipient("+recipientElement.symbol+")")
-      console.log("Agent cannot be the same as Recipient("+recipientElement.symbol+")");
-      return false;
-    }
-    else {
-      setAgentElement(_agentElement)
-      return true;
-    }
   }
 
   function switchTokens() {
@@ -404,13 +321,55 @@ export default function PriceView({
     return txt;
   }
 
-  const getAgentElements = () => {
-    const methods:any = {};
-    methods.titleName = "Select an agent";
-    methods.placeHolder = 'Agent name or paste address';;
-    methods.setDlgLstElement = setValidAgentElement;
-    methods.dataFeedType = FEED.AGENT_WALLETS;
-    return methods;
+  function setValidSellTokenElement(_sellTokenElement: TokenElement) {
+    /*
+    let msg = "setValidSellTokenElement "+_tokenElement.symbol;
+    console.log(msg);
+    alert(msg);
+    /**/
+    if (_sellTokenElement.address === buyTokenElement.address) {
+      alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
+      console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
+      return false;
+    }
+    else {
+      setSellTokenElement(_sellTokenElement)
+      return true;
+    }
+  }
+
+  function setValidBuyTokenElement(_buyTokenElement: TokenElement) {
+    /**
+    let msg = "setValidBuyTokenElement "+_recipientElement.symbol;
+    console.log(msg);
+    alert(msg);
+    /**/
+    if (_buyTokenElement.address === sellTokenElement.address) {
+      alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
+      console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
+      return false;
+    }
+    else {
+      setBuyTokenElement(_buyTokenElement)
+      return true;
+    }
+  }
+
+  function setValidRecipientElement(_recipientElement: TokenElement) {
+    /**
+    let msg = "setValidBuyTokenElement "+_tokenElement.symbol;
+    console.log(msg);
+    alert(msg);
+    /**/
+    if (_recipientElement.address === agentElement.address) {
+      alert("Recipient cannot be the same as Agent("+agentElement.symbol+")")
+      console.log("Recipient cannot be the same as Agent("+agentElement.symbol+")");
+      return false;
+    }
+    else {
+      setRecipientElement(_recipientElement)
+      return true;
+    }
   }
 
   const getBuyTokenDialogElements = () => {
@@ -448,10 +407,10 @@ export default function PriceView({
 
   return (
     <form autoComplete="off">
-      <SellTokenDialog dialogMethods={getSellTokenDialogElements()}/>
-      <BuyTokenDialog dialogMethods={getBuyTokenDialogElements()}/>
-      <RecipientDialog dialogMethods={getRecipientElements()}/>
-      <AgentDialog dialogMethods={getAgentElements()}/>
+      <SellTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setSellTokenElement} dialogMethods={getSellTokenDialogElements()}/>
+      <BuyTokenDialog buyTokenElement={buyTokenElement} callBackSetter={setBuyTokenElement} dialogMethods={getBuyTokenDialogElements()}/>
+      <RecipientDialog agentElement={agentElement} callBackSetter={setRecipientElement} dialogMethods={getRecipientElements()}/>
+      <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>
