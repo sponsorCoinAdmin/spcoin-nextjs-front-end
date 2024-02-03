@@ -1,9 +1,8 @@
 import useSWR from "swr";
-import Image from "next/image";
 import {
   POLYGON_TOKENS_BY_ADDRESS,
 } from "../../../resources/data/constants";
-import { fetcher } from "../Price";
+import { fetcher } from "@/app/lib/0X/fetcher";
 import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
 import {

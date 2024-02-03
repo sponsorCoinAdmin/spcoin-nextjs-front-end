@@ -30,46 +30,16 @@ import {
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
 import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
 import { getNetworkName } from '@/app/lib/network/utils';
+import {
+  fetcher, 
+  BUY_AMOUNT_UNDEFINED, 
+  BUY_AMOUNT_ZERO, 
+  ERROR_0X_RESPONSE, 
+  SELL_AMOUNT_UNDEFINED, 
+  SELL_AMOUNT_ZERO 
+} from '@/app/lib/0X/fetcher';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
-// console.debug("PRICE AFFILIATE_FEE =" + AFFILIATE_FEE)
-const SELL_AMOUNT_UNDEFINED = 100;
-const BUY_AMOUNT_UNDEFINED = 200;
-const SELL_AMOUNT_ZERO = 300;
-const BUY_AMOUNT_ZERO = 400;
-const ERROR_0X_RESPONSE = 500;
-
-export const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
-  console.log("fetcher params = + " + JSON.stringify(params, null, 2))
-  const { sellAmount, buyAmount } = params;
-
-  if (!sellAmount && !buyAmount) return;
-  if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
-    throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
-  }
-  if (!sellAmount && buyAmount === "0") {
-    throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
-  }
-
-  // if (!sellAmount || sellAmount == null || sellAmount == undefined) {
-  //   throw {errCode: SELL_AMOUNT_UNDEFINED, errMsg: 'Sell Amount Field is Empty'}
-  // }
-
-  // if (!buyAmount || buyAmount == null || buyAmount == undefined) {
-  //   throw {errCode: BUY_AMOUNT_UNDEFINED, errMsg: 'Buy Amount Field is Empty'}
-  // }
-
-  // alert("fetcher([endpoint = " + endpoint + ",\nparams = " + JSON.stringify(params,null,2) + "]")
-  try {
-    console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
-    const query = qs.stringify(params);
-    console.debug(`${endpoint}?${query}`);
-    return fetch(`${endpoint}?${query}`).then((res) => res.json());
-  }
-  catch (e) {
-    throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
-  }
-};
 
 export default function PriceView({
   connectedWalletAddr,
@@ -82,14 +52,6 @@ export default function PriceView({
   setPrice: (price: any) => void;
   setFinalize: (finalize: boolean) => void;
 }) {
-
-  // console.log("EXECUTING Price({")
-  // console.log("  connectedWalletAddr: " + connectedWalletAddr)
-  // console.log("  price: " + JSON.stringify(price))
-  // console.log("  setPrice: " + JSON.stringify(setPrice))
-  // console.log("  setFinalize: " + JSON.stringify(setFinalize))
-  // console.log("})")
-  ///////////////////////////////////////////////////////////
 
   let chainId = useChainId();
   let networkName = getNetworkName(chainId)
@@ -199,51 +161,55 @@ export default function PriceView({
           setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
        },
       onError: ( error ) => {
-        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-        let errCode: number = error.errCode;
-        let errMsg: string = error.errMsg;
-        if (errCode != undefined) {
-          switch (errCode) {
-            case SELL_AMOUNT_ZERO: setBuyAmount("0");
-            // alert('Sell Amount is 0');
-            break;
-            case BUY_AMOUNT_ZERO: validateNumericEntry("0");
-            // alert('Buy Amount is 0');
-            break;
-            case ERROR_0X_RESPONSE:
-              console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
-              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
-            break;
-            case SELL_AMOUNT_UNDEFINED:
-              console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
-              validateNumericEntry("0");
-            break;
-            case BUY_AMOUNT_UNDEFINED:
-              console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
-              setBuyAmount("0");
-            break;
-            default: {
-              console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-              alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
-            }
-          }
-        }
-        else {
-          if (error === null || error === undefined) {
-            alert ("error = undefined");
-            alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
-            console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
-          }
-          else {
-            // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-            console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-          }
-        }
+        processError(error)
       },
     }
   );
+
+  const processError = ( error:any ) => {
+    // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+    let errCode: number = error.errCode;
+    if (errCode != undefined) {
+      let errMsg: string = error.errMsg;
+      switch (errCode) {
+        case SELL_AMOUNT_ZERO: setBuyAmount("0");
+        // alert('Sell Amount is 0');
+        break;
+        case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenElement.decimals);
+        // alert('Buy Amount is 0');
+        break;
+        case ERROR_0X_RESPONSE:
+          console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
+          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+        break;
+        case SELL_AMOUNT_UNDEFINED:
+          console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+          setValidPriceInput("0",sellTokenElement.decimals);
+        break;
+        case BUY_AMOUNT_UNDEFINED:
+          console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+          setBuyAmount("0");
+        break;
+        default: {
+          console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+        }
+      }
+    }
+    else {
+      if (error === null || error === undefined) {
+        alert ("error = undefined");
+        alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
+        console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
+      }
+      else {
+        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+      }
+    }
+  };
 
   // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
   const  { data, isError, isLoading } = useBalance({
@@ -251,13 +217,7 @@ export default function PriceView({
     token: sellTokenElement.address,
   });
 
-  // function isDisabled() {
-  //   return data && sellAmount
-  //     ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
-  //     : true;
-  // }
-
-  const disabled =
+   const disabled =
     data && sellAmount
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
@@ -294,11 +254,11 @@ export default function PriceView({
     setBuyTokenElement(tmpElement);
   }
 
-  function validateNumericEntry(txt: string){
+  const setValidPriceInput = (txt: string, decimals:number) => {
     // Allow only numbers and '.'
     const re = /^-?\d+(?:[.,]\d*?)?$/;
     if (txt === '' || re.test(txt)) {
-      txt = validatePrice(txt, sellTokenElement.decimals);
+      txt = validatePrice(txt, decimals);
       setSellAmount(txt)
     }
   }
@@ -340,7 +300,7 @@ export default function PriceView({
 
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
-          onChange={(e) => { validateNumericEntry(e.target.value); }} />
+          onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
           <div className={styles["assetSelect"]} onClick={() => openFeedModal("#sellTokenDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
@@ -373,8 +333,7 @@ export default function PriceView({
         }
 
         <div className={styles.inputs}>
-          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true} value={recipientElement.name}
-            onChange={(e) => { validateNumericEntry(e.target.value); }} />
+          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true} value={recipientElement.name} />
           <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#recipientDialog")}>
             <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
             {recipientElement.symbol}
@@ -382,8 +341,7 @@ export default function PriceView({
           </div>
         </div>
         <div className={styles.inputs}>
-          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name}
-            onChange={(e) => { validateNumericEntry(e.target.value); }} />
+          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
           <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#agentDialog")}>
             <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />
             {agentElement.symbol}
