@@ -19,7 +19,7 @@
         </collectionProp>
       </HeaderManager>
       <hashTree/>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="spCoin_Api&apos;s" enabled="false">
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="spCoin_Api&apos;s" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <stringProp name="LoopController.loops">1</stringProp>
@@ -34,7 +34,7 @@
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </ThreadGroup>
       <hashTree>
-        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Ethereum" enabled="false"/>
+        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Ethereum" enabled="true"/>
         <hashTree>
           <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="0X" enabled="false"/>
           <hashTree>
@@ -274,7 +274,7 @@
             </hashTree>
           </hashTree>
         </hashTree>
-        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Polygon" enabled="false"/>
+        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Polygon" enabled="true"/>
         <hashTree>
           <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="0X" enabled="false"/>
           <hashTree>
@@ -516,7 +516,7 @@
         </hashTree>
         <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Sepolia" enabled="true"/>
         <hashTree>
-          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="0X" enabled="false"/>
+          <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="0X" enabled="true"/>
           <hashTree>
             <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Price" enabled="true">
               <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>

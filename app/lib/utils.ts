@@ -14,4 +14,24 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-export { getQueryVariable }
+const  validatePrice = (price:string, decimals:number) => {
+  // Allow only numbers and '.'
+  const re = /^-?\d+(?:[.,]\d*?)?$/;
+  if (price === '' || re.test(price)) {
+     let splitText = price.split(".");
+     // Remove leading zeros
+     let formattedPrice = splitText[0].replace(/^0+/, "");
+     if (formattedPrice === "" )
+       formattedPrice = "0";
+     if(splitText[1] != undefined) {
+       // Validate Max allowed decimal size
+       formattedPrice += '.' + splitText[1]?.substring(0, decimals);
+     }
+     return formattedPrice
+  } 
+  return "";
+ }
+
+export { 
+  getQueryVariable,
+  validatePrice }

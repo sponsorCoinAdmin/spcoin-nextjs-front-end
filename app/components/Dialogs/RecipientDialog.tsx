@@ -31,7 +31,7 @@ export default function Dialog({ agentElement, callBackSetter}: any) {
     const Dialog = (
         <dialog id="recipientDialog" ref={dialogRef} className="modalContainer">
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-            <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
+                <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
                     onClick={closeDialog}
                 >X</div>

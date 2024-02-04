@@ -3,7 +3,8 @@ import styles from '../../../styles/Exchange.module.css'
 import Image from 'next/image'
 import spCoin_png from '../../../../public/resources/images/spCoin.png'
 
-import { 
+import {
+  openDialog,
   AgentDialog,
   RecipientDialog,
   SellTokenDialog,
@@ -13,8 +14,6 @@ import {
 import { Input, Popover, Radio, Modal, message } from "antd";
 import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '../../../components/Buttons/CustomConnectButton';
-import FEED  from '../../../resources/data/feeds/feedTypes';
-import qs from "qs";
 import useSWR from "swr";
 import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
@@ -22,9 +21,7 @@ import { useBalance, useChainId, type Address, } from "wagmi";
 import { watchAccount, watchNetwork, } from "@wagmi/core";
 import { ArrowDownOutlined, DownOutlined, SettingOutlined, } from "@ant-design/icons";
 
-import {
-  getDefaultNetworkSettings,  
-  defaultNetworkSettings
+import { getDefaultNetworkSettings, defaultNetworkSettings
 } from '../../../lib/network/initialize/defaultNetworkSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
@@ -38,6 +35,7 @@ import {
   SELL_AMOUNT_UNDEFINED, 
   SELL_AMOUNT_ZERO 
 } from '@/app/lib/0X/fetcher';
+import { validatePrice } from '@/app/lib/utils';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
@@ -70,6 +68,7 @@ export default function PriceView({
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
@@ -211,18 +210,16 @@ export default function PriceView({
     }
   };
 
-  // function setBalanceState({ address, cacheTime, chainId: chainId_, enabled, formatUnits, scopeKey, staleTime, suspense, token, watch, onError, onSettled, onSuccess, }?: UseBalanceArgs & UseBalanceConfig): UseQueryResult<FetchBalanceResult, Error>;
   const  { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
     token: sellTokenElement.address,
   });
 
-   const disabled =
-    data && sellAmount
-      ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
-      : true;
+  const disabled = data && sellAmount
+    ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
+    : true;
   
-   // console.log("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
+  //  console.debug("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
 
   // ------------------------------ START MORALIS SCRIPT CODE
 
@@ -244,42 +241,17 @@ export default function PriceView({
     </div>
   );
 
-  const SET_BUY_TOKEN = true;
-  const SET_SELL_TOKEN = false;
-  let BUY_SELL_ACTION = SET_SELL_TOKEN;
-
   function switchTokens() {
     let tmpElement: TokenElement = sellTokenElement;
     setSellTokenElement(buyTokenElement);
     setBuyTokenElement(tmpElement);
+    // setSellAmount(buyAmount)
   }
 
   const setValidPriceInput = (txt: string, decimals:number) => {
-    // Allow only numbers and '.'
-    const re = /^-?\d+(?:[.,]\d*?)?$/;
-    if (txt === '' || re.test(txt)) {
-      txt = validatePrice(txt, decimals);
-      setSellAmount(txt)
-    }
-  }
-
-  function validatePrice(txt:string, decimals:number) {
-    let splitText = txt.split(".");
-    // Remove leading zeros
-    txt = splitText[0].replace(/^0+/, "");
-    if (txt === "" )
-      txt = "0";
-    if(splitText[1] != undefined) {
-      // Validate Max allowed decimal size
-      txt += '.' + splitText[1]?.substring(0, decimals);
-    }
-    return txt;
-  }
-
-// --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
-  function openFeedModal(feedType:string) {
-    let dialog:any = document.querySelector(feedType)
-    dialog.showModal();
+    txt = validatePrice(txt, decimals);
+    if (txt !== "")
+       setSellAmount(txt)
   }
 
   return (
@@ -288,6 +260,7 @@ export default function PriceView({
       <BuyTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
       <RecipientDialog agentElement={agentElement} callBackSetter={setRecipientElement} />
       <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
+      <ErrorDialog message={errorMessage}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>
@@ -301,7 +274,7 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
           onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
-          <div className={styles["assetSelect"]} onClick={() => openFeedModal("#sellTokenDialog")}>
+          <div className={styles["assetSelect"]} onClick={() => openDialog("#sellTokenDialog")}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
             <DownOutlined />
@@ -313,7 +286,7 @@ export default function PriceView({
 
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-          <div className={styles["assetSelect"]} onClick={() => openFeedModal("#buyTokenDialog")}>
+          <div className={styles["assetSelect"]} onClick={() => openDialog("#buyTokenDialog")}>
             <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
             {buyTokenElement.symbol}
             <DownOutlined />
@@ -328,13 +301,15 @@ export default function PriceView({
                                       connectedWalletAddr={connectedWalletAddr}
                                       sellBalance={sellBalance}
                                       onClick={() => { setFinalize(true); }} 
-                                      disabled={disabled} /> ) : 
+                                      disabled={disabled}
+                                      setErrorMessage={setErrorMessage}
+                                      /> ) : 
             ( <CustomConnectButton /> )
         }
 
         <div className={styles.inputs}>
           <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true} value={recipientElement.name} />
-          <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#recipientDialog")}>
+          <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#recipientDialog")}>
             <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
             {recipientElement.symbol}
             <DownOutlined />
@@ -342,7 +317,7 @@ export default function PriceView({
         </div>
         <div className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
-          <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openFeedModal("#agentDialog")}>
+          <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#agentDialog")}>
             <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />
             {agentElement.symbol}
             <DownOutlined />

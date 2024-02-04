@@ -4,7 +4,15 @@ import SellTokenDialog from './SellTokenDialog';
 import BuyTokenDialog from './BuyTokenDialog';
 import ErrorDialog from './ErrorDialog';
 
-export { 
+// --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
+const openDialog = (dialogType:string) => {
+    let dialog:any = document.querySelector(dialogType)
+    dialog.showModal();
+  }
+
+
+export {
+    openDialog,
     AgentDialog,
     RecipientDialog, 
     SellTokenDialog,
