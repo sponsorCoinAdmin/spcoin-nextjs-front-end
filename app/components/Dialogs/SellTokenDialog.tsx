@@ -14,8 +14,8 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
 
     const getSelectedListElement = (listElement: any) => {
         if (listElement.address === buyTokenElement.address) {
-            alert("Agent cannot be the same as Recipient("+buyTokenElement.symbol+")")
-            console.log("Agent cannot be the same as Recipient("+buyTokenElement.symbol+")");
+            alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
+            console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
             return false;
         }
         else {
