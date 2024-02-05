@@ -73,13 +73,13 @@ export default function PriceView({
   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
-  },[sellTokenElement])
+  }, [sellTokenElement])
 
   useEffect(() => {
     // setBuyBalance(buyTokenElement.name)
     console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
     updateBuyBalance(buyTokenElement)
-  },[buyTokenElement])
+  }, [buyTokenElement])
 
   useEffect(() => {
     // setBuyBalance(buyTokenElement.name)
@@ -87,7 +87,12 @@ export default function PriceView({
     console.debug("network changed to " + network)
     updateBuyBalance(buyTokenElement)
     updateSellBalance(sellTokenElement)
-  },[network])
+  }, [network])
+
+  useEffect(() => {
+    if(errorMessage.name !== "" && errorMessage.message !== "")
+    openDialog("#errorDialog")
+  }, [errorMessage])
 
   const unwatch = watchNetwork((network) => processNetworkChange(network))
   const unwatchAccount = watchAccount((account) => processAccountChange(account))
@@ -110,23 +115,31 @@ export default function PriceView({
   }
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
-    let tokenAddr = sellTokenElement.address;
-    let chainId = sellTokenElement.chainId
-    // console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
-    // console.debug("retResponse = " + JSON.stringify(retResponse))
-    let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals)
-    setSellBalance(sellResponse)
+    try {  
+      let tokenAddr = sellTokenElement.address;
+      let chainId = sellTokenElement.chainId
+      // console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+      let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+      // console.debug("retResponse = " + JSON.stringify(retResponse))
+      let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals)
+      setSellBalance(sellResponse)
+    } catch (e:any) {
+      setErrorMessage({name:"updateSellBalance: " , message:JSON.stringify(e,null,2)})
+    }
     return {sellBalance}
   }
 
   const updateBuyBalance = async (buyTokenElement:TokenElement) => {
-    let tokenAddr = buyTokenElement.address;
-    let chainId = buyTokenElement.chainId
-    // console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-    let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
-    // console.debug("retResponse = " + JSON.stringify(retResponse))
-    setBuyBalance(retResponse.formatted)
+    try {  
+      let tokenAddr = buyTokenElement.address;
+      let chainId = buyTokenElement.chainId
+      // console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+      let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+      // console.debug("retResponse = " + JSON.stringify(retResponse))
+      setBuyBalance(retResponse.formatted)
+    } catch (e:any) {
+      setErrorMessage({name:"updateBuyBalance: " , message:JSON.stringify(e,null,2)})
+    }
     return {buyBalance}
   }
 
@@ -159,7 +172,7 @@ export default function PriceView({
           console.debug(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
           setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
        },
-      onError: ( error ) => {
+       onError: ( error ) => {
         processError(error)
       },
     }
@@ -167,47 +180,46 @@ export default function PriceView({
 
   const processError = ( error:any ) => {
     // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+
     let errCode: number = error.errCode;
-    if (errCode != undefined) {
-      let errMsg: string = error.errMsg;
+    let errMsg: string = error.errMsg;
+    if (errCode !== undefined && error !== null) {
       switch (errCode) {
         case SELL_AMOUNT_ZERO: setBuyAmount("0");
-        // alert('Sell Amount is 0');
         break;
         case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenElement.decimals);
-        // alert('Buy Amount is 0');
         break;
         case ERROR_0X_RESPONSE:
-          console.log("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
-          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+          setErrorMessage({name:"ERROR_0X_RESPONSE: " + errCode , message:errMsg})
+          console.error("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
         break;
         case SELL_AMOUNT_UNDEFINED:
-          console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+          setErrorMessage({name:"SELL_AMOUNT_UNDEFINED: " + errCode , message:errMsg})
+          console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
           setValidPriceInput("0",sellTokenElement.decimals);
         break;
         case BUY_AMOUNT_UNDEFINED:
-          console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+          setErrorMessage({name:"BUY_AMOUNT_UNDEFINED: " + errCode , message:errMsg})
+          console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
           setBuyAmount("0");
         break;
         default: {
-          console.log("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-          alert("errCode = " + errCode + "\n errMsg  = " + errMsg);
+          setErrorMessage({name:"DEFAULT ERROR CODE: " + errCode , message:errMsg})
+          console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+          break;
         }
       }
     }
-    else {
-      if (error === null || error === undefined) {
-        alert ("error = undefined");
-        alert("useSWR fetcher ERROR error = " + error + "\n" + JSON.stringify(error, null, 2));
-        console.log("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
-      }
-      else {
-        // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-        console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-      }
-    }
+    // else {
+    //   if (error === null || error === undefined) {
+    //     setErrorMessage({name:"NULL/UNDEFINED ERROR CODE: " + errCode , message:errMsg})
+    //     console.error("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
+    //   }
+    //   else {
+    //     setErrorMessage({name:"UNSPECIFIED ERROR CODE: " + errCode , message:errMsg})
+    //     console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+    //   }
+    // }
   };
 
   const  { data, isError, isLoading } = useBalance({
@@ -296,7 +308,7 @@ export default function PriceView({
           </div>
         </div>
 
-        { connectedWalletAddr ? 
+        { connectedWalletAddr ?
             ( <ApproveOrReviewButton  token={sellTokenElement} 
                                       connectedWalletAddr={connectedWalletAddr}
                                       sellBalance={sellBalance}

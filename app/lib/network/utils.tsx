@@ -26,7 +26,7 @@ const createNetworkJsonList = () => {
   }
   let networkSettings = "default json Network Settings for all Networks AS follows:\n"+ JSON.stringify(defaultNetworkSettings, null, 2);
   console.debug(networkSettings)
-  alert(networkSettings)
+  alert("NetworkSettings: "+networkSettings)
 }
 
   export { getNetworkName, createNetworkJsonList }

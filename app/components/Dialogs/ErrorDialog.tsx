@@ -1,12 +1,22 @@
 "use client"
 import './Resources/Styles/modal.css';
-import { useRef } from 'react'
-import DataList from './Resources/DataList'
-// ToDo Read in data List remotely
+import { useEffect, useRef, useState } from 'react'
+
+type ErrorType = {
+    name: string;
+    message: string;
+    errorId?: number;
+    stack?: string;
+}
 
 export default function Dialog({errMsg}:any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
+    // const [errorMessage, setErrorMessage] = useState<Error>({name:"", message:""});
 
+    // useEffect(() => {
+    //     alert(JSON.stringify(errorMessage,null,2))
+    // },[errorMessage])
+  
     const closeDialog = () => {
         dialogRef.current?.close();
     }
@@ -22,7 +32,7 @@ export default function Dialog({errMsg}:any) {
 
             <div className="modalBox">
                 <div className="modalScrollBar">
-                    <h1>ERROR as Follows:</h1>
+                    <h1>{errMsg.name}</h1>
                     <div>
                         {errMsg.message}
                     </div>

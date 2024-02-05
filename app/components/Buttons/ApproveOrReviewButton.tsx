@@ -134,7 +134,7 @@ function ApproveOrReviewButton({
 
       if (error) {
         console.error("Something went wrong:\n" + JSON.stringify(error,null,2))
-        setErrorMessage(error)
+        // setErrorMessage(error)
         // setErrorMessage({name:error.name , message:error.message})
         // return <div>Something went wrong: {error.message}</div>;
       }
@@ -155,7 +155,8 @@ function ApproveOrReviewButton({
               type="button"
               className={styles["exchangeButton"] + " " + styles["approveButton"]}
               onClick={async () => {
-                const writtenValue = await approveAsync().catch(e => {openDialog("#errorDialog");});
+                const writtenValue = await approveAsync();
+                // const writtenValue = await approveAsync().catch(e => {openDialog("#errorDialog");});
                 console.debug("writtenValue = " + writtenValue)
               }}
             >
