@@ -5,10 +5,6 @@ export const MAX_ALLOWANCE =
 
 export const EXCHANGE_PROXY = "0xDef1C0ded9bec7F1a1670819833240f027b25EfF";
 
-/* type Token = {
-  address: any;
-}; */
-
 interface Token {
   chainId: number;
   name: string;

@@ -9,8 +9,6 @@ import {
     useWaitForTransaction,
     type Address,
 } from "wagmi";
-import { Quattrocento } from 'next/font/google';
-import ErrorDialog from '../Dialogs/ErrorDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 
 const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
@@ -73,7 +71,8 @@ function ApproveOrReviewButton({
     sellBalance: any
     onClick: () => void;
     disabled?: boolean;
-    setErrorMessage: (msg:string) => void
+    // setErrorMessage:any;
+    setErrorMessage: (msg:Error) => void
   }) {
     // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
     // console.debug("ApproveOrReviewButton:disabled: " + disabled);
@@ -134,8 +133,9 @@ function ApproveOrReviewButton({
       console.debug("ApproveOrReviewButton:AFTER useWaitForTransaction()");
 
       if (error) {
-        console.error("Something went wrong:\n" + JSON.stringify(error.message,null,2))
-        setErrorMessage("Something went wrong:\n" + JSON.stringify(error.message,null,2))
+        console.error("Something went wrong:\n" + JSON.stringify(error,null,2))
+        setErrorMessage(error)
+        // setErrorMessage({name:error.name , message:error.message})
         // return <div>Something went wrong: {error.message}</div>;
       }
     
@@ -155,7 +155,7 @@ function ApproveOrReviewButton({
               type="button"
               className={styles["exchangeButton"] + " " + styles["approveButton"]}
               onClick={async () => {
-                const writtenValue = await approveAsync().catch(e => {openDialog("#errorDialog"); console.error(JSON.stringify(e,null,2))});
+                const writtenValue = await approveAsync().catch(e => {openDialog("#errorDialog");});
                 console.debug("writtenValue = " + writtenValue)
               }}
             >

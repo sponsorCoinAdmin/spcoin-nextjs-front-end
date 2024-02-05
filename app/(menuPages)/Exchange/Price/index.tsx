@@ -25,7 +25,7 @@ import { getDefaultNetworkSettings, defaultNetworkSettings
 } from '../../../lib/network/initialize/defaultNetworkSettings'
 
 import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance'
-import { TokenElement, PriceRequestParams } from '../../../lib/structure/types'
+import { TokenElement } from '../../../lib/structure/types'
 import { getNetworkName } from '@/app/lib/network/utils';
 import {
   fetcher, 
@@ -68,7 +68,7 @@ export default function PriceView({
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<Error>({name:"", message:""});
 
   useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
@@ -260,7 +260,7 @@ export default function PriceView({
       <BuyTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
       <RecipientDialog agentElement={agentElement} callBackSetter={setRecipientElement} />
       <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
-      <ErrorDialog message={errorMessage}/>
+      <ErrorDialog errMsg={errorMessage}/>
 
       <div className={styles.tradeContainer}>
         <div className={styles.tradeContainerHeader}>

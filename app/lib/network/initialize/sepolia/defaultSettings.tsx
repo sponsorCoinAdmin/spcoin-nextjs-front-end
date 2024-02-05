@@ -1,4 +1,4 @@
-import {  TokenElement } from '../../structure/types'
+import {  TokenElement } from '../../../structure/types'
  
  const defaultSellToken: TokenElement = { 
   chainId: 11155111,

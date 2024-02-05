@@ -15,4 +15,7 @@ address: any;
 decimals: number;
 }
   
-export type { TokenElement, PriceRequestParams };
+export type {
+  TokenElement,
+  PriceRequestParams
+};
