@@ -41,10 +41,13 @@
   /* margin: auto; */
 }
 
+
 .modalScrollBar {
   background-color: lightblue;
   height: 400px;
-  overflow: scroll;
+  
+  overflow-y: scroll;
+  scrollbar-width: none;
   padding: 10px;
 
   background-color: #243056; 
