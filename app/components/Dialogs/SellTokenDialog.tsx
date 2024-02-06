@@ -1,28 +1,45 @@
 "use client"
 import './Resources/Styles/modal.css';
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import styles from './Resources/styles/Modal.module.css';
 import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
+import customUnknownToken_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
 import Image from 'next/image'
 
 const TITLE_NAME = "Select a token to sell";
-const INPUT_PLACE_HOLDER = 'Sell token name or paste address';
+const INPUT_PLACE_HOLDER = 'Type or paste token address';
+
 // ToDo Read in data List remotely
 
 export default function Dialog({ buyTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
+    const [tokenInput, setTokenInput] = useState("");
+    const [selectAddress, setSelectAddress] = useState("");
 
-    const showHideToken = (event:any) => {
-        const tokenSelect = document.getElementById('tokenSelect');        
-        alert(event.target.value)
-        alert("tokenSelect.style.display " + tokenSelect);
-        let inputText = event.target.value !== null ? event.target.value : "";
-        let showElement = inputText === "" ? false : true;
-        if (tokenSelect != null) {
-          tokenSelect.style.display = showElement ? 'block' : 'none'
+    const hideElement = (element:any) => {
+        const el = document.getElementById(element);
+        console.debug("hideElement(" + element +")")
+        if (el != null) {
+            el.style.display = 'none'
         }
+    }
+
+    const showElement = (element:any) => {
+        const el = document.getElementById(element);
+        console.debug("showElement(" + element +")")
+        if (el != null) {
+            el.style.display = 'block'
+        }
+    }
+
+    const showHideTokenSelectGroup = (event:any) => {
+        let inputText = event.target.value !== null ? event.target.value : "";
+        setTokenInput(inputText)
+        setSelectAddress(inputText);
+        inputText === "" ? hideElement('tokenSelectGroup') : showElement('tokenSelectGroup')
+        console.debug("inputText = " + inputText)
     }
       
     const getSelectedListElement = (listElement: any) => {
@@ -38,10 +55,14 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
     }
 
      const closeDialog = () => {
+        setTokenInput("")
+        setSelectAddress("");
+        hideElement('tokenSelectGroup')
         dialogRef.current?.close()
     }
 
     // alert("tokenSelect = " + tokenSelect)
+    // hideElement('tokenSelectGroup')
 
     const Dialog = (
         <dialog id="sellTokenDialog" ref={dialogRef} className="modalContainer">
@@ -56,12 +77,15 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                 <div className="modalInputSelect">
                     <div className={styles.leftH}>
                         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-                        <input className={styles.modalInputSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={showHideToken} />
+                        <input id="addrInput" className={styles.modalInputSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={showHideTokenSelectGroup} value={tokenInput}/>
                     </div>
                 </div>
-                {/* <div className={styles.leftH}>
-                <input id="tokenSelect" className={styles.modalInputSelect} autoComplete="off" placeholder={selectElement} />
-                </div> */}
+                <div id="tokenSelectGroup" className="modalInputSelect">
+                    <div className={styles.leftH}>
+                        <Image id="tokenImage" src={customUnknownToken_png} className={styles.searchImage} alt="Search Image Grey" />
+                        <input id="tokenSelect" className={styles.modalInputSelect} autoComplete="off" value={selectAddress} />
+                    </div>
+                </div>
                 <div className="modalScrollBar">
                     <DataList dataFeedType={FEED.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
                 </div>
