@@ -46,7 +46,7 @@ export default function Dialog({recipientElement, callBackSetter}:any) {
             </div>
 
             <div className="modalBox">
-                <div className="modalInputSelect">
+                <div className="modalTokenSelect">
                     <InputSelect selectElement={INPUT_PLACE_HOLDER}/>
                 </div>
                 <div className="modalScrollBar">

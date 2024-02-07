@@ -8,7 +8,7 @@
   bg-blue-300
 }
 
-.modalInputSelect {
+.modalTokenSelect {
   background-color: #243056; 
   color: #5981F3;
   border-width: 0px !important;
@@ -16,6 +16,17 @@
   width: 100%;
   margin-bottom: 5px;
   border-radius: 22px !important;
+}
+
+.modalInputSelect {
+  background-color: lightblue;
+  padding: 10px;
+  background-color: #243056; 
+  color: #5981F3;
+  border-width: 0px !important;
+  width: 100%;
+  margin-bottom: 5px;
+  border-radius: 22px !important; 
 }
 
 .modalContainer{
@@ -29,6 +40,8 @@
 
 .modalBox {
   font-weight: bold;
+  overflow: hidden;
+  height: 450px;
   width: 450px;
   /* background-color: #d9e30b; */
   background-color: #0E111B;
@@ -44,8 +57,9 @@
 
 .modalScrollBar {
   background-color: lightblue;
-  height: 400px;
-  
+  height: 100%;
+  overflow: hidden;
+
   overflow-y: scroll;
   scrollbar-width: none;
   padding: 10px;

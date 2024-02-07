@@ -210,16 +210,6 @@ export default function PriceView({
         }
       }
     }
-    // else {
-    //   if (error === null || error === undefined) {
-    //     setErrorMessage({name:"NULL/UNDEFINED ERROR CODE: " + errCode , message:errMsg})
-    //     console.error("useSWR fetcher ERROR error = " + JSON.stringify(error, null, 2))
-    //   }
-    //   else {
-    //     setErrorMessage({name:"UNSPECIFIED ERROR CODE: " + errCode , message:errMsg})
-    //     console.log("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-    //   }
-    // }
   };
 
   const  { data, isError, isLoading } = useBalance({
