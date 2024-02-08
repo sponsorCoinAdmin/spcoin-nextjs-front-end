@@ -7,12 +7,12 @@ interface PriceRequestParams {
   }
   
 type TokenElement = {
-chainId: number;
-symbol: string;
-img: string;
-name: string;
-address: any;
-decimals: number;
+  chainId: number;
+  address: any;
+  symbol: string;
+  name: string;
+  img: string;
+  decimals: number;
 }
   
 export type {
