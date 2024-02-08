@@ -41,20 +41,92 @@ const showElement = (element:any) => {
 
 export default function Dialog({ sellTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
+    const [tokenInput, setTokenInput] = useState("");
+    const [tokenSelect, setTokenSelect] = useState("");
+    const [tokenElement, setTokenElement] = useState<TokenElement| undefined>();
+    const chainId = sellTokenElement.chainId;
 
-    const getSelectedListElement = (listElement: any) => {
-        if (listElement.address === sellTokenElement.address) {
-            alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
-            console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
-            return false;
+    useEffect(() => {
+        closeDialog();
+      }, []);
+
+    useEffect( () => {
+        // alert("tokenInput Changed "+tokenInput)
+        tokenInput === "" ? hideElement('tokenSelectGroup') : showElement('tokenSelectGroup')
+        if (isAddress(tokenInput)) {
+            setTokenDetails(tokenInput)
         }
-        else {
-            callBackSetter(listElement)
-            closeDialog()
-        }
+        else
+            setTokenSelect("Invalid Address");
+    }, [tokenInput]);
+
+    useEffect( () => {
+        // alert("tokenElement Changed "+tokenInput)
+        if (tokenElement?.symbol != undefined)
+            setTokenSelect(tokenElement.symbol);
+    }, [tokenElement]);
+    
+
+    const setTokenInputField = (event:any) => {
+        setTokenInput(event.target.value)
     }
 
-     const closeDialog = () => {
+    const setTokenDetails = async(tokenAddr:any) => {
+        try {
+            if (isAddress(tokenAddr)) {
+                let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
+                // let tokenAddr = '0x6B175474E89094C44Da98b954EedeAC495271d0F' //DAI
+                let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+                // console.debug("retResponse = " + JSON.stringify(retResponse))
+                // alert(JSON.stringify(retResponse,null,2))
+                let td:TokenElement = {
+                    chainId: chainId,
+                    address: tokenInput,
+                    symbol: retResponse.symbol,
+                    img: '/resources/images/agents/QuestionWhiteOnRed.png',
+                    name: '',
+                    decimals: retResponse.decimals
+                }
+                setTokenElement(td);
+ 
+                return true
+            }
+       // return ELEMENT_DETAILS
+        } catch (e:any) {
+            alert("ERROR:setTokenDetails e.message" + e.message)
+        }
+        return false
+    }
+
+    const displayTokenDetail = async(tokenAddr:any) => {
+        let x = setTokenDetails(tokenAddr)
+         if (!(await setTokenDetails(tokenAddr))) {
+            alert("*** ERROR *** Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
+            return false
+        }
+        alert("displayTokenDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        return true
+    }
+
+    const getSelectedListElement = (listElement: TokenElement | undefined) => {
+        // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
+        if (listElement === undefined) {
+            alert("Invalid Token address : " + tokenInput)
+            return false;
+        }
+        if (listElement.address === sellTokenElement.address) {
+            alert("Sell Token cannot be the same as Buy Token("+sellTokenElement.symbol+")")
+            console.log("Sell Token cannot be the same as Buy Token("+sellTokenElement.symbol+")");
+            return false;
+        }
+        callBackSetter(listElement)
+        closeDialog()
+    }
+
+    const closeDialog = () => {
+        setTokenInput("")
+        setTokenSelect("");
+        hideElement('tokenSelectGroup')
         dialogRef.current?.close()
     }
 
