@@ -1,30 +1,21 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
-
 import { useRef } from 'react'
 import InputSelect from './Resources/InputSelect'
 import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
 
-const TITLE_NAME = "Select an agent";
-const INPUT_PLACE_HOLDER = 'Agent name or paste address';
-
+const TITLE_NAME = "Select a recipient";
+const INPUT_PLACE_HOLDER = 'Recipient name or paste address';
 // ToDo Read in data List remotely
 
-const getAgentElements = () => {
-    const methods:any = {};
-    methods.dataFeedType = FEED.AGENT_WALLETS;
-    return methods;
-  }
-//, {callBackSetter}:any, {recipientElement}:any
-
-export default function Dialog({recipientElement, callBackSetter}:any) {
+export default function Dialog({ agentElement, callBackSetter}: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
 
     const getSelectedListElement = (listElement: any) => {
-        if (listElement.address === recipientElement.address) {
-            alert("Agent cannot be the same as Recipient("+recipientElement.symbol+")")
-            console.log("Agent cannot be the same as Recipient("+recipientElement.symbol+")");
+        if (listElement.address === agentElement.address) {
+            alert("Recipient cannot be the same as Agent ("+agentElement.symbol+")")
+            console.log("Recipient cannot be the same as Agent("+agentElement.symbol+")");
             return false;
         }
         else {
@@ -34,13 +25,13 @@ export default function Dialog({recipientElement, callBackSetter}:any) {
     }
 
     const closeDialog = () => {
-        dialogRef.current?.close();
+        dialogRef.current?.close()
     }
 
     const Dialog = (
-        <dialog id="agentDialog" ref={dialogRef} className={styles.modalContainer}>
+        <dialog id="recipientDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-                <h1 className="text-sm indent-9 mt-1">"{TITLE_NAME}"</h1>
+                <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
                     onClick={closeDialog}
                 >X</div>
@@ -51,7 +42,7 @@ export default function Dialog({recipientElement, callBackSetter}:any) {
                     <InputSelect selectElement={INPUT_PLACE_HOLDER}/>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED.AGENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED.RECIPIENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

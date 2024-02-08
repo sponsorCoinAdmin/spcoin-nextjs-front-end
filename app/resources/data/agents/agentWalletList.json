@@ -145,43 +145,43 @@
     },
     {
         "symbol": "QB ?",
-        "img": "/resources/images/agents/QuestionBlack.png",
+        "img": "/resources/images/miscellaneous/QuestionBlack.png",
         "name": "QuestionBlack NAME",
         "address": "QuestionBlack's Wallet Address"
     },
     {
         "symbol": "QBOB",
-        "img": "/resources/images/agents/QuestionBlackOnBlue.png",
+        "img": "/resources/images/miscellaneous/QuestionBlackOnBlue.png",
         "name": "QuestionBlackOnBlue NAME",
         "address": "QuestionBlackOnBlue's Wallet Address"
     },
     {
         "symbol": "QBOR",
-        "img": "/resources/images/agents/QuestionBlackOnRed.png",
+        "img": "/resources/images/miscellaneous/QuestionBlackOnRed.png",
         "name": "QuestionBlackOnRed NAME",
         "address": "QuestionBlackOnRed's Wallet Address"
     },
     {
         "symbol": "QB",
-        "img": "/resources/images/agents/QuestionBlue.png",
+        "img": "/resources/images/miscellaneous/QuestionBlue.png",
         "name": "QuestionBlue NAME",
         "address": "QuestionBlue's Wallet Address"
     },
     {
         "symbol": "QR",
-        "img": "/resources/images/agents/QuestionRed.png",
+        "img": "/resources/images/miscellaneous/QuestionRed.png",
         "name": "QuestionRed NAME",
         "address": "QuestionRed's Wallet Address"
     },
     {
         "symbol": "QW",
-        "img": "/resources/images/agents/QuestionWhite.png",
+        "img": "/resources/images/miscellaneous/QuestionWhite.png",
         "name": "QuestionWhite NAME",
         "address": "XXX's Wallet Address"
     },
     {
         "symbol": "QWOB",
-        "img": "/resources/images/agents/QuestionWhiteOnBlack.png",
+        "img": "/resources/images/miscellaneous/QuestionWhiteOnBlack.png",
         "name": "QuestionWhiteOnBlack NAME",
         "address": "QuestionWhiteOnBlack's Wallet Address"
     },
@@ -211,13 +211,13 @@
     },
     {
         "symbol": "QWOB",
-        "img": "/resources/images/agents/QuestionWhiteOnBlue.png",
+        "img": "/resources/images/miscellaneous/QuestionWhiteOnBlue.png",
         "name": "QuestionWhiteOnBlue NAME",
         "address": "QuestionWhiteOnBlue's Wallet Address"
     },
     {
         "symbol": "QWOR",
-        "img": "/resources/images/agents/QuestionWhiteOnRed.png",
+        "img": "/resources/images/miscellaneous/QuestionWhiteOnRed.png",
         "name": "QuestionWhiteOnRed NAME",
         "address": "QuestionWhiteOnRed's Wallet Address"
     },

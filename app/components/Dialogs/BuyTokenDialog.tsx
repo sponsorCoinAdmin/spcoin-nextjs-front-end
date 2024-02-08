@@ -5,7 +5,7 @@ import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
 import { fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
-import customUnknownImage_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
+import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
 import { TokenElement } from '@/app/lib/structure/types';
@@ -77,7 +77,7 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
                     chainId: chainId,
                     address: tokenInput,
                     symbol: retResponse.symbol,
-                    img: '/resources/images/agents/QuestionWhiteOnRed.png',
+                    img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
                     decimals: retResponse.decimals
                 }
