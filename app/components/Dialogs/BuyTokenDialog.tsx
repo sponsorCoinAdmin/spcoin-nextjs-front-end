@@ -5,7 +5,7 @@ import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
 import { fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
-import customUnknownToken_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
+import customUnknownImage_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
 import { TokenElement } from '@/app/lib/structure/types';
@@ -53,7 +53,7 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
             setTokenDetails(tokenInput)
         }
         else
-            setTokenSelect("Invalid Address");
+            setTokenSelect("Invalid Token Address");
     }, [tokenInput]);
 
     useEffect( () => {
@@ -144,7 +144,7 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
                     <div id="buySelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
-                            <Image id="tokenImage" src={customUnknownToken_png} className={styles.tokenLogo} alt="Search Image Grey" />
+                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.tokenLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.tokenName}>{tokenSelect}</div>
                                 <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
