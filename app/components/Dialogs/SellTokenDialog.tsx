@@ -24,12 +24,8 @@ const tokenDefault:TokenElement = {
     symbol: "N/A/",
     img: "N/A/",
     name: "N/A/",
-    address: "N/A/",
+    address: "Invalid Address",
     decimals: 0
-    }
-
-const displayElementDetail = (le: any) => {
-        alert("displayElementDetail\n" + JSON.stringify(le, null, 2))
     }
 
 const hideElement = (element:any) => {
@@ -53,7 +49,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
-    const [tokenElement, setTokenElement] = useState<TokenElement>();
+    const [tokenElement, setTokenElement] = useState<TokenElement| undefined>();
     const chainId = buyTokenElement.chainId;
 
     useEffect(() => {
@@ -62,10 +58,14 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
-        setTokenSelect(tokenInput);
         tokenInput === "" ? hideElement('tokenSelectGroup') : showElement('tokenSelectGroup')
-        setTokenDetails(tokenInput)
-            
+        if (isAddress(tokenInput)) {
+            setTokenDetails(tokenInput)
+            if (tokenElement?.symbol != undefined)
+               setTokenSelect(tokenElement.symbol);
+        }
+        else
+            setTokenSelect("Invalid Address");
     }, [tokenInput]);
 
     const setTokenInputField = (event:any) => {
@@ -74,7 +74,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
 
     const setTokenDetails = async(tokenAddr:any) => {
         try {
-            if (isAddress(tokenInput)) {
+            if (isAddress(tokenAddr)) {
                 let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 // let tokenAddr = '0x6B175474E89094C44Da98b954EedeAC495271d0F' //DAI
                 let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
@@ -89,14 +89,26 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                     decimals: retResponse.decimals
                 }
                 setTokenElement(td);
+                return true
             }
-        // return ELEMENT_DETAILS
+       // return ELEMENT_DETAILS
         } catch (e:any) {
             alert("ERROR:setTokenDetails e.message" + e.message)
         }
+        return false
     }
 
-    const getSelectedListElement = (listElement: any) => {
+    const displayTokenDetail = async(tokenAddr:any) => {
+        let x = setTokenDetails(tokenAddr)
+         if (!(await setTokenDetails(tokenAddr))) {
+            alert("Invalid Token Address: " + tokenInput)
+            return false
+        }
+        alert("displayTokenDetail\n" + JSON.stringify(tokenElement, null, 2))
+        return true
+    }
+
+    const getSelectedListElement = (listElement: TokenElement | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         if (listElement === undefined) {
             alert("Invalid Token address : " + tokenInput)
@@ -140,10 +152,10 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                             <Image id="tokenImage" src={customUnknownToken_png} className={styles.searchImage} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.tokenName}>{tokenSelect}</div>
-                                <div className={styles.tokenSymbol}>{"User Specified Token Address"}</div> 
+                                <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
                             </div>
                         </div>
-                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenElement)}>
+                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayTokenDetail(tokenInput)}>
                        {/* <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => alert(ELEMENT_DETAILS)}> */}
                             <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                         </div>
