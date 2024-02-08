@@ -12,7 +12,7 @@ import { TokenElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 
 const TITLE_NAME = "Select a token to sell";
-const INPUT_PLACE_HOLDER = 'Type or paste token address';
+const INPUT_PLACE_HOLDER = 'Type or paste token to sell address';
 const ELEMENT_DETAILS = "This container allows the entry of a valid token address For trading \n"+
     "when the address entry is completed and selected.\n"+
     "This address will be verified prior to entry acceptance.\n"+

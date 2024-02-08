@@ -1,13 +1,43 @@
 "use client"
-import styles from './Resources/styles/Modal.module.css';
-import { useRef } from 'react'
 import InputSelect from './Resources/InputSelect'
+/*
+*/
+
+import styles from './Resources/styles/Modal.module.css';
+import { useEffect, useRef, useState } from 'react'
 import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
+import { fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
+import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
+import customUnknownToken_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
+import info_png from '../../../public/resources/images/info1.png'
+import Image from 'next/image'
+import { TokenElement } from '@/app/lib/structure/types';
+import { isAddress } from 'ethers'; // ethers v6
 
 const TITLE_NAME = "Select a token to buy";
-const INPUT_PLACE_HOLDER = 'Buy token name or paste address';
-// ToDo Read in data List remotely
+const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
+const ELEMENT_DETAILS = "This container allows the entry of a valid token address For trading \n"+
+    "when the address entry is completed and selected.\n"+
+    "This address will be verified prior to entry acceptance.\n"+
+    "Currently, there is no Image token lookup, but that is to come.\n"
+
+const hideElement = (element:any) => {
+    const el = document.getElementById(element);
+    console.debug("hideElement(" + element +")")
+    if (el != null) {
+        el.style.display = 'none'
+    }
+}
+
+const showElement = (element:any) => {
+    const el = document.getElementById(element);
+    console.debug("showElement(" + element +")")
+    if (el != null) {
+        el.style.display = 'block'
+    }
+}
+
 
 export default function Dialog({ sellTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
