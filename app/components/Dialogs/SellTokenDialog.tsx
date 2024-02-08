@@ -140,6 +140,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                     <div className={styles.leftH}>
                         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
                         <input id="tokenInput" className={styles.modalTokenSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={tokenInput}/>
+                        &nbsp;
                     </div>
                 </div>
                     <div id="tokenSelectGroup" className={styles.modalInputSelect}>
