@@ -62,7 +62,6 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
             setTokenSelect(tokenElement.symbol);
     }, [tokenElement]);
     
-
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
