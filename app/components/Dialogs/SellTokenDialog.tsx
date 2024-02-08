@@ -48,7 +48,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('tokenSelectGroup') : showElement('tokenSelectGroup')
+        tokenInput === "" ? hideElement('sellSelectGroup') : showElement('sellSelectGroup')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput)
         }
@@ -84,7 +84,6 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                     decimals: retResponse.decimals
                 }
                 setTokenElement(td);
- 
                 return true
             }
        // return ELEMENT_DETAILS
@@ -122,7 +121,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
     const closeDialog = () => {
         setTokenInput("")
         setTokenSelect("");
-        hideElement('tokenSelectGroup')
+        hideElement('sellSelectGroup')
         dialogRef.current?.close()
     }
 
@@ -143,7 +142,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                         &nbsp;
                     </div>
                 </div>
-                    <div id="tokenSelectGroup" className={styles.modalInputSelect}>
+                    <div id="sellSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
                             <Image id="tokenImage" src={customUnknownToken_png} className={styles.tokenLogo} alt="Search Image Grey" />

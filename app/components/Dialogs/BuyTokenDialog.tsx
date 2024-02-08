@@ -1,8 +1,4 @@
 "use client"
-import InputSelect from './Resources/InputSelect'
-/*
-*/
-
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
 import DataList from './Resources/DataList'
@@ -38,7 +34,7 @@ const showElement = (element:any) => {
     }
 }
 
-
+// ToDo Read in data List remotely
 export default function Dialog({ sellTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
@@ -52,7 +48,7 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('tokenSelectGroup') : showElement('tokenSelectGroup')
+        tokenInput === "" ? hideElement('buySelectGroup') : showElement('buySelectGroup')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput)
         }
@@ -88,7 +84,6 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
                     decimals: retResponse.decimals
                 }
                 setTokenElement(td);
- 
                 return true
             }
        // return ELEMENT_DETAILS
@@ -126,7 +121,7 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
     const closeDialog = () => {
         setTokenInput("")
         setTokenSelect("");
-        hideElement('tokenSelectGroup')
+        hideElement('buySelectGroup')
         dialogRef.current?.close()
     }
 
@@ -139,9 +134,27 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
                 >X</div>
             </div>
 
-            <div className={styles.modalBox}>
+            <div className={styles.modalBox} >
                 <div className={styles.modalTokenSelect}>
-                    <InputSelect selectElement={INPUT_PLACE_HOLDER}/>
+                    <div className={styles.leftH}>
+                        <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
+                        <input id="tokenInput" className={styles.modalTokenSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={tokenInput}/>
+                        &nbsp;
+                    </div>
+                </div>
+                    <div id="buySelectGroup" className={styles.modalInputSelect}>
+                    <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
+                            <Image id="tokenImage" src={customUnknownToken_png} className={styles.tokenLogo} alt="Search Image Grey" />
+                            <div>
+                                <div className={styles.tokenName}>{tokenSelect}</div>
+                                <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
+                            </div>
+                        </div>
+                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayTokenDetail(tokenInput)}>
+                            <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+                        </div>
+                    </div>
                 </div>
                 <div className={styles.modalScrollBar}>
                     <DataList dataFeedType={FEED.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
