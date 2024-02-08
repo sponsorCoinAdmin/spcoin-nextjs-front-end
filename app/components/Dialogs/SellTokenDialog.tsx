@@ -16,7 +16,7 @@ const INPUT_PLACE_HOLDER = 'Type or paste token to sell address';
 const ELEMENT_DETAILS = "This container allows the entry of a valid token address For trading \n"+
     "when the address entry is completed and selected.\n"+
     "This address will be verified prior to entry acceptance.\n"+
-    "Currently, there is no Image token lookup, but that is to come.\n"
+    "Currently, there is no image token lookup, but that is to come."
 
 const hideElement = (element:any) => {
     const el = document.getElementById(element);
