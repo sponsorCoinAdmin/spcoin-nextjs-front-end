@@ -8,7 +8,7 @@ import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGl
 import customUnknownImage_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { TokenElement } from '@/app/lib/structure/types';
+import { WalletElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 
 const TITLE_NAME = "Select an Agent";
@@ -40,8 +40,8 @@ const showElement = (element:any) => {
 export default function Dialog({ recipientElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
-    const [agentSelect, setAgentSelect] = useState("");
-    const [tokenElement, setTokenElement] = useState<TokenElement| undefined>();
+    const [tokenSelect, setTokenSelect] = useState("");
+    const [tokenElement, setWalletElement] = useState<WalletElement| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -54,13 +54,13 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
             setTokenDetails(agentInput)
         }
         else
-            setAgentSelect("Invalid Wallet Address");
+            setTokenSelect("Invalid Wallet Address");
     }, [agentInput]);
 
     useEffect( () => {
         // alert("tokenElement Changed "+agentInput)
         if (tokenElement?.symbol != undefined)
-            setAgentSelect(tokenElement.symbol);
+            setTokenSelect(tokenElement.symbol);
     }, [tokenElement]);
     
 
@@ -77,7 +77,7 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
                 let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:TokenElement = {
+                let td:WalletElement = {
                     chainId: chainId,
                     address: agentInput,
                     symbol: retResponse.symbol,
@@ -85,7 +85,7 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
                     name: '',
                     decimals: retResponse.decimals
                 }
-                setTokenElement(td);
+                setWalletElement(td);
                 return true
             }
        // return ELEMENT_DETAILS
@@ -105,7 +105,7 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
         return true
     }
 
-    const getSelectedListElement = (listElement: TokenElement | undefined) => {
+    const getSelectedListElement = (listElement: WalletElement | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         if (listElement === undefined) {
             alert("Invalid Token address : " + agentInput)
@@ -122,7 +122,7 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
 
     const closeDialog = () => {
         setAgentInput("")
-        setAgentSelect("");
+        setTokenSelect("");
         hideElement('agentSelectGroup')
         dialogRef.current?.close()
     }
@@ -137,10 +137,10 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
             </div>
 
             <div className={styles.modalBox} >
-                <div className={styles.modalAgentSelect}>
+                <div className={styles.modalTokenSelect}>
                     <div className={styles.leftH}>
                         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-                        <input id="agentInput" className={styles.modalAgentSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setAgentInputField} value={agentInput}/>
+                        <input id="agentInput" className={styles.modalTokenSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setAgentInputField} value={agentInput}/>
                         &nbsp;
                     </div>
                 </div>
@@ -149,7 +149,7 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.tokenLogo} alt="Search Image Grey" />
                             <div>
-                                <div className={styles.tokenName}>{agentSelect}</div>
+                                <div className={styles.tokenName}>{tokenSelect}</div>
                                 <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
                             </div>
                         </div>
