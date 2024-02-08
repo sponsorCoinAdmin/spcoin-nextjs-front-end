@@ -61,12 +61,17 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
         tokenInput === "" ? hideElement('tokenSelectGroup') : showElement('tokenSelectGroup')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput)
-            if (tokenElement?.symbol != undefined)
-               setTokenSelect(tokenElement.symbol);
         }
         else
             setTokenSelect("Invalid Address");
     }, [tokenInput]);
+
+    useEffect( () => {
+        // alert("tokenElement Changed "+tokenInput)
+        if (tokenElement?.symbol != undefined)
+            setTokenSelect(tokenElement.symbol);
+    }, [tokenElement]);
+    
 
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
@@ -89,6 +94,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                     decimals: retResponse.decimals
                 }
                 setTokenElement(td);
+ 
                 return true
             }
        // return ELEMENT_DETAILS
