@@ -1,4 +1,14 @@
-.modalTokenSelect {
+.modalElementSelect {
+  outline: none;
+  background-color: #243056; 
+  color: #5981F3;
+  height: 40px !important;
+  width: 100%;
+  margin-bottom: 5px;
+  border-radius: 22px !important;
+}
+
+.modalElementSelect {
   outline: none;
   background-color: #243056; 
   color: #5981F3;
@@ -72,7 +82,7 @@
   gap: 20px;
 }
 
-.tokenLogo {
+.elementLogo {
   height: 40px;
   width: 40px;
 }

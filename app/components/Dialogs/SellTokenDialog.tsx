@@ -71,7 +71,6 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
         try {
             if (isAddress(tokenAddr)) {
                 let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
-                // let tokenAddr = '0x6B175474E89094C44Da98b954EedeAC495271d0F' //DAI
                 let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
@@ -93,13 +92,13 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
         return false
     }
 
-    const displayTokenDetail = async(tokenAddr:any) => {
+    const displayElementDetail = async(tokenAddr:any) => {
         let x = setTokenDetails(tokenAddr)
          if (!(await setTokenDetails(tokenAddr))) {
             alert("*** ERROR *** Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        alert("displayTokenDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        alert("displayElementDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
@@ -135,23 +134,23 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
             </div>
 
             <div className={styles.modalBox} >
-                <div className={styles.modalTokenSelect}>
+                <div className={styles.modalElementSelect}>
                     <div className={styles.leftH}>
                         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-                        <input id="tokenInput" className={styles.modalTokenSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={tokenInput}/>
+                        <input id="tokenInput" className={styles.modalElementSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={tokenInput}/>
                         &nbsp;
                     </div>
                 </div>
                     <div id="sellSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
-                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.tokenLogo} alt="Search Image Grey" />
+                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.tokenName}>{tokenSelect}</div>
                                 <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
                             </div>
                         </div>
-                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayTokenDetail(tokenInput)}>
+                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenInput)}>
                             <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                         </div>
                     </div>

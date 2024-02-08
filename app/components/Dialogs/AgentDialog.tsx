@@ -40,8 +40,8 @@ const showElement = (element:any) => {
 export default function Dialog({ recipientElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
-    const [tokenSelect, setTokenSelect] = useState("");
-    const [tokenElement, setWalletElement] = useState<WalletElement| undefined>();
+    const [walletSelect, setWalletSelect] = useState("");
+    const [walletElement, setWalletElement] = useState<WalletElement| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -51,30 +51,29 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
         // alert("agentInput Changed "+agentInput)
         agentInput === "" ? hideElement('agentSelectGroup') : showElement('agentSelectGroup')
         if (isAddress(agentInput)) {
-            setTokenDetails(agentInput)
+            setWalletDetails(agentInput)
         }
         else
-            setTokenSelect("Invalid Wallet Address");
+            setWalletSelect("Invalid Wallet Address");
     }, [agentInput]);
 
     useEffect( () => {
-        // alert("tokenElement Changed "+agentInput)
-        if (tokenElement?.symbol != undefined)
-            setTokenSelect(tokenElement.symbol);
-    }, [tokenElement]);
+        // alert("walletElement Changed "+agentInput)
+        if (walletElement?.symbol != undefined)
+            setWalletSelect(walletElement.symbol);
+    }, [walletElement]);
     
 
     const setAgentInputField = (event:any) => {
         setAgentInput(event.target.value)
     }
 
-    const setTokenDetails = async(tokenAddr:any) => {
+    const setWalletDetails = async(walletAddr:any) => {
         try {
             let chainId=1;
-            if (isAddress(tokenAddr)) {
+            if (isAddress(walletAddr)) {
                 let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
-                // let tokenAddr = '0x6B175474E89094C44Da98b954EedeAC495271d0F' //DAI
-                let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+                let retResponse:any = await fetchStringBalance (connectedWalletAddr, walletAddr, chainId)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
                 let td:WalletElement = {
@@ -90,25 +89,25 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
             }
        // return ELEMENT_DETAILS
         } catch (e:any) {
-            alert("ERROR:setTokenDetails e.message" + e.message)
+            alert("ERROR:setWalletDetails e.message" + e.message)
         }
         return false
     }
 
-    const displayTokenDetail = async(tokenAddr:any) => {
-        let x = setTokenDetails(tokenAddr)
-         if (!(await setTokenDetails(tokenAddr))) {
-            alert("*** ERROR *** Invalid Token Address: " + agentInput + "\n\n" + ELEMENT_DETAILS)
+    const displayElementDetail = async(elementAddress:any) => {
+        let x = setWalletDetails(elementAddress)
+         if (!(await setWalletDetails(elementAddress))) {
+            alert("*** ERROR *** Invalid Wallet Address: " + agentInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        alert("displayTokenDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        alert("displayElementDetail\n" + JSON.stringify(walletElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
     const getSelectedListElement = (listElement: WalletElement | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         if (listElement === undefined) {
-            alert("Invalid Token address : " + agentInput)
+            alert("Invalid Wallet address : " + agentInput)
             return false;
         }
         if (listElement.address === recipientElement.address) {
@@ -122,7 +121,7 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
 
     const closeDialog = () => {
         setAgentInput("")
-        setTokenSelect("");
+        setWalletSelect("");
         hideElement('agentSelectGroup')
         dialogRef.current?.close()
     }
@@ -137,23 +136,23 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
             </div>
 
             <div className={styles.modalBox} >
-                <div className={styles.modalTokenSelect}>
+                <div className={styles.modalElementSelect}>
                     <div className={styles.leftH}>
                         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-                        <input id="agentInput" className={styles.modalTokenSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setAgentInputField} value={agentInput}/>
+                        <input id="agentInput" className={styles.modalElementSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setAgentInputField} value={agentInput}/>
                         &nbsp;
                     </div>
                 </div>
                     <div id="agentSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
-                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.tokenLogo} alt="Search Image Grey" />
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
+                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
-                                <div className={styles.tokenName}>{tokenSelect}</div>
+                                <div className={styles.tokenName}>{walletSelect}</div>
                                 <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
                             </div>
                         </div>
-                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayTokenDetail(agentInput)}>
+                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(agentInput)}>
                             <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                         </div>
                     </div>

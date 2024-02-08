@@ -34,7 +34,7 @@ function Header() {
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.tokenLogo} />
+          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
             &nbsp;&nbsp;{getNetworkName(useChainId())}
         </div>
         <ConnectButton />
