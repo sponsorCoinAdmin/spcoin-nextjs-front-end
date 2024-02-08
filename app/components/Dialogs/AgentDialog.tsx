@@ -13,10 +13,10 @@ import { isAddress } from 'ethers'; // ethers v6
 
 const TITLE_NAME = "Select an Agent";
 const INPUT_PLACE_HOLDER = 'Type or paste agent wallet address';
-const ELEMENT_DETAILS = "This container allows the entry of a valid agent wallet address For trading \n"+
-    "when the address entry is completed and selected.\n"+
-    "This address will be verified prior to entry acceptance.\n"+
-    "Currently, there is no agent image lookup, but that is to come."
+const ELEMENT_DETAILS = "This container allows for the entry selection of a valid agent address.\n"+
+    "When the address entry is completed and selected, "+
+    "this address will be verified prior to entry acceptance.\n"+
+    "Currently, there is no image token lookup, but that is to come."
 
 const hideElement = (element:any) => {
     const el = document.getElementById(element);
@@ -146,10 +146,10 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
                     <div id="agentSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
-                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
+                            <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
-                                <div className={styles.tokenName}>{walletSelect}</div>
-                                <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
+                                <div className={styles.elementName}>{walletSelect}</div>
+                                <div className={styles.elementSymbol}>{"User Specified Wallet"}</div> 
                             </div>
                         </div>
                         <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(agentInput)}>

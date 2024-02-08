@@ -8,16 +8,6 @@
   border-radius: 22px !important;
 }
 
-.modalElementSelect {
-  outline: none;
-  background-color: #243056; 
-  color: #5981F3;
-  height: 40px !important;
-  width: 100%;
-  margin-bottom: 5px;
-  border-radius: 22px !important;
-}
-
 .modalInputSelect {
   background-color: lightblue;
   padding: 10px;
@@ -87,13 +77,13 @@
   width: 40px;
 }
 
-.tokenName {
+.elementName {
   margin-left: 10px;
   font-size: 16px;
   font-weight: 500;
 }
 
-.tokenSymbol {
+.elementSymbol {
   margin-left: 10px;
   font-size: 13px;
   font-weight: 300;

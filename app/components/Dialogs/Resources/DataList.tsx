@@ -57,8 +57,8 @@ function DataList({dataFeedType, getSelectedListElement} : Props) {
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataList[i])} >
                 <img src={e.img} alt={e.symbol} className={styles.elementLogo} />
                 <div>
-                    <div className={styles.tokenName}>{e.name}</div>
-                    <div className={styles.tokenSymbol}>{e.symbol}</div> 
+                    <div className={styles.elementName}>{e.name}</div>
+                    <div className={styles.elementSymbol}>{e.symbol}</div> 
                 </div>
             </div>
             <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(dataList[i])}>

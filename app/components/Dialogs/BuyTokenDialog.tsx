@@ -13,9 +13,9 @@ import { isAddress } from 'ethers'; // ethers v6
 
 const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
-const ELEMENT_DETAILS = "This container allows the entry of a valid token address For trading \n"+
-    "when the address entry is completed and selected.\n"+
-    "This address will be verified prior to entry acceptance.\n"+
+const ELEMENT_DETAILS = "This container allows for the entry selection of a valid token address.\n"+
+    "When the address entry is completed and selected, "+
+    "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
 
 const hideElement = (element:any) => {
@@ -145,8 +145,8 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
-                                <div className={styles.tokenName}>{tokenSelect}</div>
-                                <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
+                                <div className={styles.elementName}>{tokenSelect}</div>
+                                <div className={styles.elementSymbol}>{"User Specified Token"}</div> 
                             </div>
                         </div>
                         <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenInput)}>
