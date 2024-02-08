@@ -1,10 +1,9 @@
 "use client"
-import './Resources/Styles/modal.css';
-import { useEffect, useRef, useState } from 'react'
 import styles from './Resources/styles/Modal.module.css';
+import { useEffect, useRef, useState } from 'react'
 import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
-import { fetchBigIntBalance, fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
+import { fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownToken_png from '../../../public/resources/images/agents/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
@@ -17,16 +16,7 @@ const INPUT_PLACE_HOLDER = 'Type or paste token address';
 const ELEMENT_DETAILS = "This container allows the entry of a valid token address For trading \n"+
     "when the address entry is completed and selected.\n"+
     "This address will be verified prior to entry acceptance.\n"+
-    "Currently, there is no token lookup, but that is to come.\n"
-
-const tokenDefault:TokenElement = {
-    chainId: 0,
-    symbol: "N/A/",
-    img: "N/A/",
-    name: "N/A/",
-    address: "Invalid Address",
-    decimals: 0
-    }
+    "Currently, there is no Image token lookup, but that is to come.\n"
 
 const hideElement = (element:any) => {
     const el = document.getElementById(element);
@@ -107,10 +97,10 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
     const displayTokenDetail = async(tokenAddr:any) => {
         let x = setTokenDetails(tokenAddr)
          if (!(await setTokenDetails(tokenAddr))) {
-            alert("Invalid Token Address: " + tokenInput)
+            alert("*** ERROR *** Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        alert("displayTokenDetail\n" + JSON.stringify(tokenElement, null, 2))
+        alert("displayTokenDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
@@ -137,7 +127,7 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
     }
 
     const Dialog = (
-        <dialog id="sellTokenDialog" ref={dialogRef} className="modalContainer">
+        <dialog id="sellTokenDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
@@ -145,29 +135,28 @@ export default function Dialog({ buyTokenElement, callBackSetter }: any) {
                 >X</div>
             </div>
 
-            <div className="modalBox" >
-                <div className="modalTokenSelect">
+            <div className={styles.modalBox} >
+                <div className={styles.modalTokenSelect}>
                     <div className={styles.leftH}>
                         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
                         <input id="tokenInput" className={styles.modalTokenSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={tokenInput}/>
                     </div>
                 </div>
-                    <div id="tokenSelectGroup" className="modalInputSelect">
+                    <div id="tokenSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
-                            <Image id="tokenImage" src={customUnknownToken_png} className={styles.searchImage} alt="Search Image Grey" />
+                            <Image id="tokenImage" src={customUnknownToken_png} className={styles.tokenLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.tokenName}>{tokenSelect}</div>
                                 <div className={styles.tokenSymbol}>{"User Specified Token"}</div> 
                             </div>
                         </div>
                         <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayTokenDetail(tokenInput)}>
-                       {/* <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => alert(ELEMENT_DETAILS)}> */}
                             <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                         </div>
                     </div>
                 </div>
-                <div className="modalScrollBar">
+                <div className={styles.modalScrollBar}>
                     <DataList dataFeedType={FEED.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 "use client"
-import './Resources/Styles/modal.css';
+import styles from './Resources/styles/Modal.module.css';
+
 import { useRef } from 'react'
 import InputSelect from './Resources/InputSelect'
 import DataList from './Resources/DataList'
@@ -37,7 +38,7 @@ export default function Dialog({recipientElement, callBackSetter}:any) {
     }
 
     const Dialog = (
-        <dialog id="agentDialog" ref={dialogRef} className="modalContainer">
+        <dialog id="agentDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">"{TITLE_NAME}"</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
@@ -45,11 +46,11 @@ export default function Dialog({recipientElement, callBackSetter}:any) {
                 >X</div>
             </div>
 
-            <div className="modalBox">
-                <div className="modalTokenSelect">
+            <div className={styles.modalBox}>
+                <div className={styles.modalTokenSelect}>
                     <InputSelect selectElement={INPUT_PLACE_HOLDER}/>
                 </div>
-                <div className="modalScrollBar">
+                <div className={styles.modalScrollBar}>
                     <DataList dataFeedType={FEED.AGENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
