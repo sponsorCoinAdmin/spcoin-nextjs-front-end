@@ -11,11 +11,11 @@ import {
   BuyTokenDialog,
   ErrorDialog
 } from '../../../components/Dialogs/Dialogs';
-import { Input, Popover, Radio, Modal, message } from "antd";
+import { Input, Popover, Radio } from "antd";
 import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '../../../components/Buttons/CustomConnectButton';
 import useSWR from "swr";
-import { useState, useEffect, ChangeEvent, SetStateAction } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address, } from "wagmi";
 import { watchAccount, watchNetwork, } from "@wagmi/core";
@@ -54,7 +54,7 @@ export default function PriceView({
   let chainId = useChainId();
   let networkName = getNetworkName(chainId)
 
-  console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
+  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
   const [network, setNetwork] = useState(networkName?.toLowerCase());
   const [sellAmount, setSellAmount] = useState("0");
@@ -71,20 +71,28 @@ export default function PriceView({
   const [errorMessage, setErrorMessage] = useState<Error>({name:"", message:""});
 
   useEffect(() => {
+    updateBuyBalance(buyTokenElement)
+    updateSellBalance(sellTokenElement)
+  }, [connectedWalletAddr])
+
+  useEffect(() => {
     console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name)
     updateSellBalance(sellTokenElement)
   }, [sellTokenElement])
 
   useEffect(() => {
-    // setBuyBalance(buyTokenElement.name)
     console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name)
     updateBuyBalance(buyTokenElement)
   }, [buyTokenElement])
-
+  
   useEffect(() => {
-    // setBuyBalance(buyTokenElement.name)
-    let defaultNetworkSettings = getDefaultNetworkSettings(network)
+    // alert("network changed to " + network)
     console.debug("network changed to " + network)
+    let networkSettings = getDefaultNetworkSettings(network?.chain?.name)
+    setSellTokenElement(networkSettings?.defaultSellToken)
+    setBuyTokenElement(networkSettings?.defaultBuyToken)
+    setRecipientElement(networkSettings?.defaultRecipient)
+    setAgentElement(networkSettings?.defaultAgent)
     updateBuyBalance(buyTokenElement)
     updateSellBalance(sellTokenElement)
   }, [network])
@@ -102,20 +110,12 @@ export default function PriceView({
   const unwatchAccount = watchAccount((account) => processAccountChange(account))
 
   const processAccountChange = ( account:any ) => {
-    console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
+    // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
   }
 
   const processNetworkChange = ( network:any ) => {
-    // console.debug("APP NETWORK   = " + JSON.stringify(network, null, 2))
-    // console.debug("NETWORK CHAIN = " + JSON.stringify(network?.chain, null, 2))
-    // console.debug("NETWORK ID    = " + JSON.stringify(network?.chain?.id, null, 2))
     console.debug("NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2))
     setNetwork(network?.chain?.name.toLowerCase());
-    let defaultNetworkSettings = getDefaultNetworkSettings(network?.chain?.name)
-    setSellTokenElement(defaultNetworkSettings?.defaultSellToken)
-    setBuyTokenElement(defaultNetworkSettings?.defaultBuyToken)
-    setRecipientElement(defaultNetworkSettings?.defaultRecipient)
-    setAgentElement(defaultNetworkSettings?.defaultAgent)
   }
 
   const updateSellBalance = async (sellTokenElement:TokenElement) => {
@@ -313,15 +313,19 @@ export default function PriceView({
             ( <CustomConnectButton /> )
         }
 
-        <div className={styles.inputs}>
-          <Input id="recipient-id" className={styles.priceInput} placeholder="Recipient" disabled={true} value={recipientElement.name} />
+        <div id="recipient" className={styles.inputs}>
+          <Input id="recipient-id" className={styles.recipientInput} placeholder="Recipient" disabled={true} value={recipientElement.name} />
           <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#recipientDialog")}>
             <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
             {recipientElement.symbol}
             <DownOutlined />
           </div>
+          <div className={styles["yourRecipient"]}>
+            You are sponsoring:
+          </div>
+
         </div>
-        <div className={styles.inputs}>
+        <div  id="agent" className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
           <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#agentDialog")}>
             <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />

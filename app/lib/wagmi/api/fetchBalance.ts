@@ -31,12 +31,19 @@ async function fetchBigIntBalance (walletAddr:string|Address|undefined, tokenAdd
 
 async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAddr:string|Address|undefined, chainId:number|string) {
 
-  const res = await fetchBigIntBalance(walletAddr, tokenAddr, chainId)
-  const retResponse = {
-    decimals: res.decimals,
-    formatted: res.formatted,
-    symbol: res.symbol,
-    value: res.value.toString()
+  let retResponse
+  try {
+    const res = await fetchBigIntBalance(walletAddr, tokenAddr, chainId)
+    retResponse = {
+      decimals: res.decimals,
+      formatted: res.formatted,
+      symbol: res.symbol,
+      value: res.value.toString()
+    }
+  }
+  catch (e) {
+      alert ('***ERROR: fetchBigIntBalance(${walletAddr}, ${tokenAddr}, ${chainId})')
+      alert ('***ERROR:\n'+ JSON.stringify(e))
   }
 
   // console.debug("fetchStringBalance:retResponse = " + JSON.stringify(retResponse, null, 2))

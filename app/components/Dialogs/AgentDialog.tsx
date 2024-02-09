@@ -20,12 +20,10 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 
 const hideElement = (element:any) => {
     const el = document.getElementById(element);
-    console.debug("BEFORE display = " + el?.style.display)
     console.debug("hideElement(" + element +")")
     if (el != null) {
         el.style.display = 'none'
     }
-    console.debug("AFTER display = " + el?.style.display)
 }
 
 const showElement = (element:any) => {

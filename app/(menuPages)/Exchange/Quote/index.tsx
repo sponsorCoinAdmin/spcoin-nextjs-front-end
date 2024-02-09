@@ -1,3 +1,4 @@
+'use client'
 import useSWR from "swr";
 import {
   POLYGON_TOKENS_BY_ADDRESS,
@@ -13,7 +14,7 @@ import {
 } from "wagmi";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
-console.debug("QUOTE AFFILIATE_FEE =" + AFFILIATE_FEE)
+console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
 
 export default function QuoteView({
   price,
