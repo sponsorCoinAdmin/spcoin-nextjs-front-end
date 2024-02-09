@@ -133,10 +133,12 @@ function ApproveOrReviewButton({
       console.debug("ApproveOrReviewButton:AFTER useWaitForTransaction()");
 
       if (error) {
-        console.error("Something went wrong:\n" + JSON.stringify(error,null,2))
-        // setErrorMessage(error)
+        console.error("ApproveOrReviewButton:Something went wrong:\n" + JSON.stringify(error,null,2))
+        // setErrorMessage(JSON.stringify(error,null,2))
+        setErrorMessage(error)
         // setErrorMessage({name:error.name , message:error.message})
         // return <div>Something went wrong: {error.message}</div>;
+        // console.error("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
       }
     
       ///////////////////////////////////////////////////////////////
@@ -155,8 +157,8 @@ function ApproveOrReviewButton({
               type="button"
               className={styles["exchangeButton"] + " " + styles["approveButton"]}
               onClick={async () => {
-                const writtenValue = await approveAsync();
-                // const writtenValue = await approveAsync().catch(e => {openDialog("#errorDialog");});
+                //const writtenValue = await approveAsync();
+                const writtenValue = await approveAsync().catch(e => {console.error(JSON.stringify(e,null,2));});
                 console.debug("writtenValue = " + writtenValue)
               }}
             >

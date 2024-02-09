@@ -90,8 +90,12 @@ export default function PriceView({
   }, [network])
 
   useEffect(() => {
-    if(errorMessage.name !== "" && errorMessage.message !== "")
-    openDialog("#errorDialog")
+    // alert("Opening up errorMessage Dialog errorMessage = "+JSON.stringify(errorMessage,null,2))
+    if(errorMessage.name !== "" && errorMessage.message !== "") {
+      // alert("useEffect(() => errorMessage.name = " + errorMessage.name + "\nuseEffect(() => errorMessage.message = " + errorMessage.message)
+      // alert('openDialog("#errorDialog")')
+      openDialog("#errorDialog")
+    }
   }, [errorMessage])
 
   const unwatch = watchNetwork((network) => processNetworkChange(network))
