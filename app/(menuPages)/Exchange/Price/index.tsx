@@ -279,19 +279,11 @@ export default function PriceView({
   function setSponsorRatio(newRate: number) {
     let sponsorRatio: any = document.getElementById("sponsorRatio");
     sponsorRatio.innerHTML = +(100-(newRate*10))+"%";
-    hideElement("radioRateGroup");
   }
 
   function setRecipientRatio(newRate: number) {
     let recipientRatio: any = document.getElementById("recipientRatio");
     recipientRatio.innerHTML = +(newRate*10)+"%";
-    hideElement("radioRateGroup");
-  }
-
-  /* When the user clicks on the button,
-  toggle between hiding and showing the dropdown content */
-  function showDropDownList() {
-    showElement("radioRateGroup");
   }
 
   /// END DROP DOWN STUFF    
@@ -361,40 +353,27 @@ export default function PriceView({
             {recipientElement.symbol}
             <DownOutlined />
           </div>
+          <div className={styles["lineDivider"]}>
+          ------------------------------------------------------
+          </div>
           <div className={styles["rewardRatio"]}>
             Staking Reward Ratio:
           </div>
           <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
           <div className={styles["recipientSelect"] + " " + styles["sponsorAllocation"]}>
             Sponsor:
-            <div onClick={() => showElement("radioRateGroup")}
-              id="sponsorRatio" className={styles.dropButton}
-            >50%
+            <div id="sponsorRatio" className={styles.dropButton}>
+              50%
             </div>
           </div>
           <div className={styles["recipientSelect"] + " " + styles["recipientAllocation"]}>
             Recipient:
-            <div onClick={() => showElement("radioRateGroup")}
-              id="recipientRatio" className={styles.dropButton}
-            >50%
+            <div id="recipientRatio" className={styles.dropButton}>
+              50%
             </div>
           </div>
-
-          <input type="range" className={styles["range-slider"]} min="1" max="100" oninput="this.nextElementSibling.value = this.value"></input>
-          <output>24</output>
-        </div>
-        <div id="radioRateGroup" className={styles.radioRateGroup}>
-          <div className={styles["center"]}>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" value="2%" defaultChecked onClick={() => setRateRatios("2%")}></input>2%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("3")}></input>3%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("4")}></input>4%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("5")}></input>5%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("6")}></input>6%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("7")}></input>7%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("8")}></input>8%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("9")}></input>9%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("10")}></input>10%</label>
-          </div>
+          <input type="range" className={styles["range-slider"]} min="2" max="10" 
+          onChange={(e) => setRateRatios((e.target.value))}></input>
         </div>
 
         {/* --------------------------------------------------- */}

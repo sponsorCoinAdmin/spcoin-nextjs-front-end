@@ -35,7 +35,7 @@ const showElement = (element:any) => {
 }
 
 // ToDo Read in data List remotely
-export default function Dialog({ recipientElement, callBackSetter }: any) {
+export default function Dialog({ agentElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
@@ -103,14 +103,15 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
     }
 
     const getSelectedListElement = (listElement: WalletElement | undefined) => {
-        // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
+        console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
+        console.debug("getSelectedListElement:agentElement: " +JSON.stringify(agentElement,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + recipientInput)
             return false;
         }
-        if (listElement.address === recipientElement.address) {
-            alert("Recipient cannot be the same as Recipient("+recipientElement.symbol+")")
-            console.log("Recipient cannot be the same as Recipient("+recipientElement.symbol+")");
+        if (listElement?.address === agentElement?.address) {
+            alert("Recipient cannot be the same as Recipient("+agentElement.symbol+")")
+            console.log("Recipient cannot be the same as Recipient("+agentElement.symbol+")");
             return false;
         }
         callBackSetter(listElement)

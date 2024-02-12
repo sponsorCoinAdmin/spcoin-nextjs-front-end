@@ -255,17 +255,26 @@
   padding-right: 8px;
 }
 
+.lineDivider {
+  position: absolute;
+  color: #94a3b8;
+  opacity: 0.1; 
+  top: 64px;
+  left: 11px;
+  font-size: 14px;
+}
+
 .rewardRatio {
   position: absolute;
   color: #94a3b8; 
-  top: 80px;
-  left: 11px;
+  top: 84px;
+  left: 10px;
   font-size: 14px;
 }
 
 .infoImg {
   position: absolute;
-  top: 80px;
+  top: 84px;
   left: 167px;
 }
 
@@ -274,7 +283,7 @@
   min-width: 50px;
   height: 25px;
   background-color: #111c7d;
-  top: 76px;
+  top: 80px;
   right: 20px;
   border-radius: 100px;
   display: flex;
@@ -291,7 +300,7 @@
   min-width: 50px;
   height: 25px;
   background-color: #111c7d;
-  top: 110px;
+  top: 114px;
   right: 20px;
   border-radius: 100px;
   display: flex;
