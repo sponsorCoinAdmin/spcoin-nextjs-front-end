@@ -57,11 +57,11 @@
   border-radius: 12px !important;
 }
 
-.recipientInput {
+.sponsorCoinContainer {
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;
-  height: 100px !important;
+  height: 140px !important;
   margin-bottom: 5px;
   font-size: 25px;
   border-radius: 12px !important;
@@ -101,17 +101,10 @@
 
 .yourRecipient {
   position: absolute;
-  min-width: 50px;
-  height: 10px;
   color: #94a3b8; 
-  top: 17px;
-  left: 15px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
+  top: 13px;
+  left: 11px;
   font-size: 14px;
-  padding-right: 8px;
 }
 
 .recipientSelect {
@@ -241,4 +234,85 @@
 
 .modal.active {
   transform: translate(-50%, -50%) scale(1);
+}
+
+
+
+
+
+.recipientName {
+  position: absolute;
+  min-width: 50px;
+  height: 10px;
+  color: #94a3b8; 
+  top: 52px;
+  left: 11px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-size: 25px;
+  padding-right: 8px;
+}
+
+.rewardRatio {
+  position: absolute;
+  color: #94a3b8; 
+  top: 80px;
+  left: 11px;
+  font-size: 14px;
+}
+
+.infoImg {
+  position: absolute;
+  top: 80px;
+  left: 167px;
+}
+
+.sponsorAllocation {
+  position: absolute;
+  min-width: 50px;
+  height: 25px;
+  background-color: #111c7d;
+  top: 76px;
+  right: 50px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+}
+
+.recipientAllocation {
+  position: absolute;
+  min-width: 50px;
+  height: 25px;
+  background-color: #111c7d;
+  top: 110px;
+  right: 50px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+}
+
+.range-slider {
+  position: absolute;
+  top: 143px;
+  left: 11px;
+  border: 0px;
+  height: 1px;
+  width: 150px;
+  border-radius: 0px;
+  outline-width: 0;
+  background: #FFFFFF;
+  cursor: pointer;
+  margin-top: -20.5px;
 }

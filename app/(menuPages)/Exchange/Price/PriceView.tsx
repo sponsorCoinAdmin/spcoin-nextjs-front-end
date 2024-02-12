@@ -16,6 +16,7 @@ import ApproveOrReviewButton from '../../../components/Buttons/ApproveOrReviewBu
 import CustomConnectButton from '../../../components/Buttons/CustomConnectButton';
 import useSWR from "swr";
 import { useState, useEffect, SetStateAction } from "react";
+// import Slider from '@react-native-community/slider';
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
@@ -270,21 +271,9 @@ export default function PriceView({
     }
   };
 
-  function setRateRatios(newRate: string) {
-    var numRate = Number(newRate)
-    setRecipientRatio(numRate);
-    setSponsorRatio(numRate);
-  }
-
-  function setSponsorRatio(newRate: number) {
-    let sponsorRatio: any = document.getElementById("sponsorRatio");
-    sponsorRatio.innerHTML = +(100-(newRate*10))+"%";
-    hideElement("radioRateGroup");
-  }
-
-  function setRecipientRatio(newRate: number) {
-    let recipientRatio: any = document.getElementById("recipientRatio");
-    recipientRatio.innerHTML = +(newRate*10)+"%";
+  function setRate(newRate: string) {
+    let dropDownRate: any = document.getElementById("dropDownRate");
+    dropDownRate.innerHTML = newRate;
     hideElement("radioRateGroup");
   }
 
@@ -346,58 +335,48 @@ export default function PriceView({
             setErrorMessage={setErrorMessage} />) :
           (<CustomConnectButton />)}
 
-        {/* --------------------------------------------------- */}
+        ---------------------------------------------------
 
-        <div id="recipient" className={styles["inputs"]}>
-          <div id="recipient-id" className={styles.sponsorCoinContainer}/>
+        <div id="recipient" className={styles.inputs}>
+          <Input id="recipient-id" className={styles.recipientInput} placeholder="Recipient" disabled={true} value={recipientElement.name} />
           <div className={styles["yourRecipient"]}>
             You are sponsoring:
-          </div>
-          <div className={styles["recipientName"]}>
-            {recipientElement.name}
           </div>
           <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#recipientDialog")}>
             <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
             {recipientElement.symbol}
             <DownOutlined />
           </div>
-          <div className={styles["rewardRatio"]}>
-            Staking Reward Ratio:
+          <div className={styles["sponsoredRate"]}>
+            Sponsor/Recipient Reward Ratio:
           </div>
-          <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
-          <div className={styles["recipientSelect"] + " " + styles["sponsorAllocation"]}>
-            Sponsor:
+          <div className={styles["recipientSelect"] + " " + styles["rateSelect"]}>
+            <Image src={info_png} className={styles.avatarImg} width={30} height={30} alt="Info Image" />
             <div onClick={() => showElement("radioRateGroup")}
-              id="sponsorRatio" className={styles.dropButton}
-            >50%
+              id="dropDownRate" className={styles.dropButton}
+            >2% <DownOutlined />
             </div>
           </div>
-          <div className={styles["recipientSelect"] + " " + styles["recipientAllocation"]}>
-            Recipient:
-            <div onClick={() => showElement("radioRateGroup")}
-              id="recipientRatio" className={styles.dropButton}
-            >50%
-            </div>
-          </div>
-
-          <input type="range" className={styles["range-slider"]} min="1" max="100" oninput="this.nextElementSibling.value = this.value"></input>
-          <output>24</output>
+          {/* <Slider 
+            minimumValue={2}
+            maximumValue={10}
+          />  */}
         </div>
         <div id="radioRateGroup" className={styles.radioRateGroup}>
           <div className={styles["center"]}>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" value="2%" defaultChecked onClick={() => setRateRatios("2%")}></input>2%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("3")}></input>3%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("4")}></input>4%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("5")}></input>5%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("6")}></input>6%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("7")}></input>7%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("8")}></input>8%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("9")}></input>9%</label>
-            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRateRatios("10")}></input>10%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" value="2%" defaultChecked onClick={() => setRate("2%")}></input>2%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("3%")}></input>3%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("4%")}></input>4%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("5%")}></input>5%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("6%")}></input>6%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("7%")}></input>7%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("8%")}></input>8%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("9%")}></input>9%</label>
+            <label className={styles["radioSelect"]}><input type='radio' name="selectPercent" onClick={() => setRate("10%")}></input>10%</label>
           </div>
         </div>
 
-        {/* --------------------------------------------------- */}
+        ---------------------------------------------------
 
         <div id="agent" className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
