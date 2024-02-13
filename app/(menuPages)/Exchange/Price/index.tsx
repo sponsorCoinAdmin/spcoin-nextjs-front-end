@@ -338,8 +338,6 @@ export default function PriceView({
             setErrorMessage={setErrorMessage} />) :
           (<CustomConnectButton />)}
 
-        {/* --------------------------------------------------- */}
-
         <div id="recipient" className={styles["inputs"]}>
           <div id="recipient-id" className={styles.sponsorCoinContainer}/>
           <div className={styles["yourRecipient"]}>
@@ -353,6 +351,10 @@ export default function PriceView({
             {recipientElement.symbol}
             <DownOutlined />
           </div>
+        </div>
+
+        <div id="recipient" className={styles["inputs"]}>
+          <div id="recipient-id" className={styles.rateRatioContainer}/>
           <div className={styles["lineDivider"]}>
           ------------------------------------------------------
           </div>
@@ -375,8 +377,6 @@ export default function PriceView({
           <input type="range" className={styles["range-slider"]} min="2" max="10" 
           onChange={(e) => setRateRatios((e.target.value))}></input>
         </div>
-
-        {/* --------------------------------------------------- */}
 
         <div id="agent" className={styles.inputs}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />

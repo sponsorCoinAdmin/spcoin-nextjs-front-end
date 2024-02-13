@@ -61,7 +61,19 @@
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;
-  height: 140px !important;
+  height: 90px !important;
+  margin-bottom: 5px;
+  font-size: 25px;
+  border-radius: 12px !important;
+}
+
+.rateRatioContainer {
+  position: relative;
+  top: -24px;
+  background-color: #1f2639 !important;
+  color: #94a3b8 !important;
+  border-width: 0px !important;
+  height: 80px !important;
   margin-bottom: 5px;
   font-size: 25px;
   border-radius: 12px !important;
@@ -236,10 +248,6 @@
   transform: translate(-50%, -50%) scale(1);
 }
 
-
-
-
-
 .recipientName {
   position: absolute;
   min-width: 50px;
@@ -259,7 +267,7 @@
   position: absolute;
   color: #94a3b8;
   opacity: 0.1; 
-  top: 64px;
+  top: -24px;
   left: 11px;
   font-size: 14px;
 }
@@ -267,24 +275,24 @@
 .rewardRatio {
   position: absolute;
   color: #94a3b8; 
-  top: 84px;
+  top: 0px;
   left: 10px;
   font-size: 14px;
 }
 
 .infoImg {
   position: absolute;
-  top: 84px;
+  top: 0px;
   left: 167px;
 }
 
 .sponsorAllocation {
   position: absolute;
+  top: -10px;
   min-width: 50px;
-  height: 25px;
+  height: 28px;
   background-color: #111c7d;
-  top: 80px;
-  right: 20px;
+  right: 15px;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -292,16 +300,15 @@
   gap: 5px;
   font-weight: bold;
   font-size: 17px;
-  padding-right: 8px;
 }
 
 .recipientAllocation {
   position: absolute;
+  top: 26px;
   min-width: 50px;
-  height: 25px;
+  height: 24px;
   background-color: #111c7d;
-  top: 114px;
-  right: 20px;
+  right: 15px;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -309,12 +316,11 @@
   gap: 5px;
   font-weight: bold;
   font-size: 17px;
-  padding-right: 8px;
 }
 
 .range-slider {
   position: absolute;
-  top: 143px;
+  top: 58px;
   left: 11px;
   border: 0px;
   height: 1px;
