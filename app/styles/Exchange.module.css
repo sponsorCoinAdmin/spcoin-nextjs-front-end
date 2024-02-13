@@ -47,6 +47,24 @@
   position: relative;
 }
 
+.agent {
+  position: relative;
+  top:-24px;
+}
+
+.addSponsorship {
+  background-color: #1f2639 !important;
+  color: #94a3b8 !important;
+  border-width: 0px !important;
+  height: 70px !important;
+  margin-bottom: 5px;
+  font-size: 25px;
+  border-radius: 12px !important;
+
+  text-align: center;
+  vertical-align: middle;
+}
+
 .priceInput {
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
@@ -286,7 +304,7 @@
   left: 167px;
 }
 
-.sponsorAllocation {
+.sponsorRatio {
   position: absolute;
   top: -10px;
   min-width: 50px;
@@ -302,7 +320,7 @@
   font-size: 17px;
 }
 
-.recipientAllocation {
+.recipientRatio {
   position: absolute;
   top: 26px;
   min-width: 50px;

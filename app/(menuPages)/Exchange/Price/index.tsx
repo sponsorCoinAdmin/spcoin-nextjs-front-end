@@ -33,9 +33,7 @@ import {
   SELL_AMOUNT_ZERO
 } from '@/app/lib/0X/fetcher';
 import { validatePrice } from '@/app/lib/utils';
-import { AFFILIATE_FEE } from '.';
-
-
+const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 export default function PriceView({
   connectedWalletAddr, price, setPrice, setFinalize,
@@ -64,6 +62,10 @@ export default function PriceView({
   const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+
+  useEffect(() => {
+    hideSponsorRecipientConfig();
+  });
 
   useEffect(() => {
     updateBuyBalance(buyTokenElement);
@@ -286,6 +288,19 @@ export default function PriceView({
     recipientRatio.innerHTML = +(newRate*10)+"%";
   }
 
+  const hideSponsorRecipientConfig = () => {
+    hideElement("sponsorRecipient")
+    hideElement("configRateRatio")
+    hideElement("agent");
+  }
+
+  const showSponsorRecipientConfig = () => {
+    // hideElement("addSponsorship")
+    showElement("sponsorRecipient")
+    // showElement("configRateRatio")
+    // showElement("agent");
+  }
+
   /// END DROP DOWN STUFF    
   return (
     <form autoComplete="off">
@@ -338,7 +353,11 @@ export default function PriceView({
             setErrorMessage={setErrorMessage} />) :
           (<CustomConnectButton />)}
 
-        <div id="recipient" className={styles["inputs"]}>
+        <div id="addSponsorship" className={styles.inputs}>
+          <Input id="agent-id" className={styles.addSponsorship} placeholder="Add Sponsorship" onClick={() => showSponsorRecipientConfig()} value={"Add Sponsorship"} />
+        </div>
+
+        <div id="sponsorRecipient" className={styles["inputs"]}>
           <div id="recipient-id" className={styles.sponsorCoinContainer}/>
           <div className={styles["yourRecipient"]}>
             You are sponsoring:
@@ -353,24 +372,24 @@ export default function PriceView({
           </div>
         </div>
 
-        <div id="recipient" className={styles["inputs"]}>
+        <div id="configRateRatio" className={styles["inputs"]}>
           <div id="recipient-id" className={styles.rateRatioContainer}/>
           <div className={styles["lineDivider"]}>
-          ------------------------------------------------------
+          -------------------------------------------------------
           </div>
           <div className={styles["rewardRatio"]}>
             Staking Reward Ratio:
           </div>
           <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
-          <div className={styles["recipientSelect"] + " " + styles["sponsorAllocation"]}>
+          <div className={styles["recipientSelect"] + " " + styles["sponsorRatio"]}>
             Sponsor:
-            <div id="sponsorRatio" className={styles.dropButton}>
+            <div id="sponsorRatio">
               50%
             </div>
           </div>
-          <div className={styles["recipientSelect"] + " " + styles["recipientAllocation"]}>
+          <div className={styles["recipientSelect"] + " " + styles["recipientRatio"]}>
             Recipient:
-            <div id="recipientRatio" className={styles.dropButton}>
+            <div id="recipientRatio">
               50%
             </div>
           </div>
@@ -378,7 +397,7 @@ export default function PriceView({
           onChange={(e) => setRateRatios((e.target.value))}></input>
         </div>
 
-        <div id="agent" className={styles.inputs}>
+        <div id="agent" className={styles.agent}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
           <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#agentDialog")}>
             <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />

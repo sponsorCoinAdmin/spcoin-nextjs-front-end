@@ -1,5 +1,11 @@
 [
     {
+    "symbol": "N/A",
+    "img": "/resources/images/miscellaneous/QuestionWhiteOnRed.png",
+    "name": "No Recipient Selected",
+    "address": "0x0000000000000000000000000000000000000000"
+    },
+    {
         "symbol": "Bark",
         "img": "/resources/images/recipients/AnimalShelter1.png",
         "name": "Paws Prints Shelter",
