@@ -7,10 +7,10 @@ const FEE_WALLET_DETAILS = `feeRecipient=${FEE_RECIPIENT}&AFFILIATE_FEE=${AFFILI
 const apiResponse = async(request:string, urlParms:string) => {
     const apiQuery = `https://${request}?${getURLParams(urlParms)}&${FEE_WALLET_DETAILS}`
     console.debug("====================================================================================================")
-    console.debug("OX_API_KEY:                  " + OX_API_KEY)
-    console.debug("Executing API Price Request: " + apiQuery)
+    console.debug("OX_API_KEY:               " + OX_API_KEY)
+    console.debug("Executing 0X API Request: " + apiQuery)
     console.debug("====================================================================================================")
-  
+
     const response = await fetch(
       apiQuery,
       {

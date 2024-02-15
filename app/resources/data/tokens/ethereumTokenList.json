@@ -1,6 +1,14 @@
 [
     {
         "chainId": 1,
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xToDo_SpCoin.png",
+        "decimals": 18
+    },
+    {
+        "chainId": 1,
         "symbol": "USDC",
         "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
         "name": "USD Coin",
@@ -101,14 +109,6 @@
         "img": "/resources/images/tokens/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9.png",
         "name": "AAVE",
         "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-        "decimals": 18
-    },
-    {
-        "chainId": 1,
-        "symbol": "SpCoin",
-        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
-        "name": "Sponsor Coin",
-        "address": "0xToDo_SpCoin.png",
         "decimals": 18
     }
 ]

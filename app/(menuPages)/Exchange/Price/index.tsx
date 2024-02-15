@@ -3,6 +3,7 @@ import styles from '../../../styles/Exchange.module.css';
 import Image from 'next/image';
 import spCoin_png from '../../../../public/resources/images/spCoin.png';
 import info_png from '../../../../public/resources/images/info1.png';
+import cog_png from '../../../../public/resources/images/miscellaneous/cog.png';
 import {
   openDialog,
   AgentDialog,
@@ -21,8 +22,8 @@ import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { ArrowDownOutlined, DownOutlined, SettingOutlined } from "@ant-design/icons";
 import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
-import { fetchStringBalance } from '../../../lib/wagmi/api/fetchBalance';
-import { TokenElement } from '../../../lib/structure/types';
+import { fetchStringBalance } from '../../../lib/wagmi/fetchBalance';
+import { TokenElement, WalletElement } from '../../../lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import {
   fetcher,
@@ -63,9 +64,9 @@ export default function PriceView({
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
-  useEffect(() => {
+   useEffect(() => {
     hideSponsorRecipientConfig();
-  });
+  },[]);
 
   useEffect(() => {
     updateBuyBalance(buyTokenElement);
@@ -102,6 +103,19 @@ export default function PriceView({
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
+
+  useEffect(() => { {
+    if (buyTokenElement.symbol === "SpCoin") {
+      showElement("addSponsorship")
+    }
+    else {
+      hideElement("addSponsorship")
+      hideElement("recipientSelectDiv")
+      hideElement("recipientConfigDiv")
+      hideElement("agent");
+      }
+    }
+  }, [buyTokenElement]);
 
   const unwatch = watchNetwork((network) => processNetworkChange(network));
   const unwatchAccount = watchAccount((account) => processAccountChange(account));
@@ -272,6 +286,13 @@ export default function PriceView({
     }
   };
 
+  const toggleElement = (element: any) => {
+    const el = document.getElementById(element);
+    if (el != null) {
+      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+  };
+
   function setRateRatios(newRate: string) {
     var numRate = Number(newRate)
     setRecipientRatio(numRate);
@@ -289,24 +310,29 @@ export default function PriceView({
   }
 
   const hideSponsorRecipientConfig = () => {
-    hideElement("sponsorRecipient")
-    hideElement("configRateRatio")
+    hideElement("recipientSelectDiv")
+    hideElement("recipientConfigDiv")
     hideElement("agent");
+    showElement("addSponsorship")
   }
 
   const showSponsorRecipientConfig = () => {
-    // hideElement("addSponsorship")
-    showElement("sponsorRecipient")
-    // showElement("configRateRatio")
+    hideElement("addSponsorship")
+    showElement("recipientSelectDiv")
+    // hideElement("recipientConfigDiv")
     // showElement("agent");
   }
 
-  /// END DROP DOWN STUFF    
+  const setCallBackRecipient = (listElement: any) => {
+    showSponsorRecipientConfig();
+    setRecipientElement(listElement)
+  }
+
   return (
     <form autoComplete="off">
       <SellTokenDialog buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
       <BuyTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
-      <RecipientDialog agentElement={agentElement} callBackSetter={setRecipientElement} />
+      <RecipientDialog agentElement={agentElement} callBackSetter={setCallBackRecipient} />
       <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
       <ErrorDialog errMsg={errorMessage} />
 
@@ -319,31 +345,39 @@ export default function PriceView({
           </Popover>
         </div>
 
+        {/* Sell Token Selection Module */}
         <div className={styles.inputs}>
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
-          <div className={styles["assetSelect"]} onClick={() => openDialog("#sellTokenDialog")}>
+          <div className={styles["assetSelect"]}>
             <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
             {sellTokenElement.symbol}
-            <DownOutlined />
+            <DownOutlined onClick={() => openDialog("#sellTokenDialog")}/>
           </div>
           <div className={styles["assetBalance"]}>
             Balance: {sellBalance}
           </div>
         </div>
 
+        {/* Buy Token Selection Module */}
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-          <div className={styles["assetSelect"]} onClick={() => openDialog("#buyTokenDialog")}>
+          <div className={styles["assetSelect"]}>
             <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
             {buyTokenElement.symbol}
-            <DownOutlined />
+            <DownOutlined onClick={() => openDialog("#buyTokenDialog")}/>
           </div>
           <div className={styles["assetBalance"]}>
             Balance: {buyBalance}
           </div>
         </div>
 
+        {/* Buy/Sell Arrow switch button */}
+        <div className={styles.switchButton}>
+          <ArrowDownOutlined className={styles.switchArrow} onClick={switchTokens}/>
+        </div>
+
+        {/* Connect Approve or Review Buttons */}
         {connectedWalletAddr ?
           (<ApproveOrReviewButton token={sellTokenElement}
             connectedWalletAddr={connectedWalletAddr}
@@ -353,11 +387,13 @@ export default function PriceView({
             setErrorMessage={setErrorMessage} />) :
           (<CustomConnectButton />)}
 
-        <div id="addSponsorship" className={styles.inputs}>
-          <Input id="agent-id" className={styles.addSponsorship} placeholder="Add Sponsorship" onClick={() => showSponsorRecipientConfig()} value={"Add Sponsorship"} />
+        {/* Add Sponsorship Button */}
+        <div id="addSponsorship" className={styles["addSponsorship"]}  onClick={() => openDialog("#recipientDialog")}>
+          <Input id="addAgentSponsor" className={styles["addSponsorship"]} placeholder="Add Sponsorship" value={"Add Sponsorship"} />
         </div>
 
-        <div id="sponsorRecipient" className={styles["inputs"]}>
+        {/* Your Sponsorship/Recipient selection container */}
+        <div id="recipientSelectDiv" className={styles["inputs"]}>
           <div id="recipient-id" className={styles.sponsorCoinContainer}/>
           <div className={styles["yourRecipient"]}>
             You are sponsoring:
@@ -365,51 +401,62 @@ export default function PriceView({
           <div className={styles["recipientName"]}>
             {recipientElement.name}
           </div>
-          <div className={styles["recipientSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#recipientDialog")}>
+          <div className={styles["recipientSelect"]}>
             <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
             {recipientElement.symbol}
-            <DownOutlined />
+            <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
+            {/* <Image src={cog_png}  width={25} height={25} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/> */}
+          </div>
+          <div>
+            <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
+          </div>
+          <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => hideSponsorRecipientConfig()}>
+            X
           </div>
         </div>
 
-        <div id="configRateRatio" className={styles["inputs"]}>
-          <div id="recipient-id" className={styles.rateRatioContainer}/>
-          <div className={styles["lineDivider"]}>
-          -------------------------------------------------------
-          </div>
-          <div className={styles["rewardRatio"]}>
-            Staking Reward Ratio:
-          </div>
-          <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
-          <div className={styles["recipientSelect"] + " " + styles["sponsorRatio"]}>
-            Sponsor:
-            <div id="sponsorRatio">
-              50%
+        {/* Your Sponsorship/Recipient configuration container */}
+        <div id="recipientConfigDiv" className={styles.rateRatioContainer}>
+          <div className={styles["inputs"]}>
+            <div id="recipient-config" className={styles.rateRatioContainer2}/>
+            <div className={styles["lineDivider"]}>
+            -------------------------------------------------------
             </div>
-          </div>
-          <div className={styles["recipientSelect"] + " " + styles["recipientRatio"]}>
-            Recipient:
-            <div id="recipientRatio">
-              50%
+            <div className={styles["rewardRatio"]}>
+              Staking Reward Ratio:
             </div>
+            <div>
+              <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("agent")}/>
+            </div>
+            <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
+            <div className={styles["assetSelect"] + " " + styles["sponsorRatio"]}>
+              Sponsor:
+              <div id="sponsorRatio">
+                50%
+              </div>
+            </div>
+            <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>
+              Recipient:
+              <div id="recipientRatio">
+                50%
+              </div>
+            </div>
+            <input type="range" className={styles["range-slider"]} min="2" max="10" 
+            onChange={(e) => setRateRatios((e.target.value))}></input>
           </div>
-          <input type="range" className={styles["range-slider"]} min="2" max="10" 
-          onChange={(e) => setRateRatios((e.target.value))}></input>
         </div>
 
+        {/* Your Agent selection container */}
         <div id="agent" className={styles.agent}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
-          <div className={styles["agentSelect"] + " " + styles["assetSelect"]} onClick={() => openDialog("#agentDialog")}>
+          <div className={styles["agentSelect"] + " " + styles["assetSelect"]}>
             <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />
             {agentElement.symbol}
-            <DownOutlined />
+            <DownOutlined onClick={() => openDialog("#agentDialog")}/>
           </div>
         </div>
 
-        <div className={styles.switchButton} onClick={switchTokens}>
-          <ArrowDownOutlined className={styles.switchArrow} />
-        </div>
-
+        {/* Affiliate fee display container */}
         <div className="text-slate-400">
           {price && price.grossBuyAmount
             ? "Affiliate Fee: " +

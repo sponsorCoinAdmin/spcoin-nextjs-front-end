@@ -3,7 +3,7 @@ import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
 import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
-import { fetchStringBalance } from '../../lib/wagmi/api/fetchBalance'
+import { fetchStringBalance } from '../../lib/wagmi/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
@@ -11,7 +11,7 @@ import Image from 'next/image'
 import { WalletElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 
-const TITLE_NAME = "Select an Recipient";
+const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
 const ELEMENT_DETAILS = "This container allows for the entry selection of a valid recipient address.\n"+
     "When the address entry is completed and selected, "+

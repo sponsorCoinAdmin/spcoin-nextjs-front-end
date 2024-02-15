@@ -56,12 +56,12 @@ footer {
   align-items: center;
   background: rgb(119, 126, 142);
 }
-/* 
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
-} */
-/* 
+}
+
 .ant-input {
   background-color: #1f2639 !important;
   color: white !important;
@@ -70,9 +70,9 @@ code {
   margin-bottom: 5px;
   font-size: 35px;
   border-radius: 12px !important;
-} */
+}
 
-/* .ant-input::placeholder {
+.ant-input::placeholder {
   color: #5f6783 !important;
 }
 
@@ -86,7 +86,7 @@ code {
 
 .ant-popover-inner-content {
   color: white !important;
-} */
+}
 
 /* .ant-popover-inner {
   min-width: 260px !important;
@@ -95,7 +95,7 @@ code {
   background-color: #0e111b !important;
 } */
 
-/* .popover-inner {
+.popover-inner {
   min-width: 260px !important;
   min-height: 140px !important;
   border: 1px solid #21273a;
@@ -104,9 +104,9 @@ code {
 
 .ant-radio-group {
   margin-top: 10px;
-} */
+}
 
-/* .ant-radio-button-wrapper {
+.ant-radio-button-wrapper {
   background-color: #1f2639 !important;
   color: white !important;
   font-weight: 500;
@@ -152,4 +152,4 @@ code {
 .ant-modal-close-icon:hover {
   color: white !important;
 }
- */
+

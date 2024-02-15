@@ -1,5 +1,5 @@
 import { getQueryVariable } from '../lib/utils'
-import { fetchBigIntBalance, fetchStringBalance } from '../lib/wagmi/api/fetchBalance'
+import { fetchBigIntBalance, fetchStringBalance } from '../lib/wagmi/fetchBalance'
 import { getURLParams } from './lib/getURLParams'
 
 export const getAPIStringBalance = async(_url:string) => {

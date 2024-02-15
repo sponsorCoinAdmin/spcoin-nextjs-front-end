@@ -1,6 +1,14 @@
 [
     {
         "chainId": 11155111,
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xBabA55c7dcE20782fBe8B275216F16d262a70754",
+        "decimals": 18
+    },
+    {
+        "chainId": 11155111,
         "symbol": "USDC",
         "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
         "name": "USD Coin",
@@ -53,14 +61,6 @@
         "img": "/resources/images/tokens/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png",
         "name": "Wrapped Ethereum",
         "address": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
-        "decimals": 18
-    },
-    {
-        "chainId": 11155111,
-        "symbol": "SPCT_V001",
-        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
-        "name": "Sponsor Coin",
-        "address": "0xBabA55c7dcE20782fBe8B275216F16d262a70754",
         "decimals": 18
     }
 ]

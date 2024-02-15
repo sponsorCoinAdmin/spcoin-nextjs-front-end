@@ -1,5 +1,11 @@
 [
     {
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xToDo_SpCoin.png"
+    },
+    {
         "symbol": "?",
         "img": "/resources/images/agents/AnonymousBlack.png",
         "name": "AnonymousBlack",
@@ -226,11 +232,5 @@
         "img": "/resources/images/agents/anonymous-avatar.png",
         "name": "Anonymous Avatar",
         "address": "anonymous-avatar's Wallet Address"
-    },
-    {
-        "symbol": "SpCoin",
-        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
-        "name": "Sponsor Coin",
-        "address": "0xToDo_SpCoin.png"
     }
 ]
