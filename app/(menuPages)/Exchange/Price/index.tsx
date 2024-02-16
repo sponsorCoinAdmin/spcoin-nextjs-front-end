@@ -413,7 +413,6 @@ export default function PriceView({
             <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
             {recipientElement.symbol}
             <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
-            {/* <Image src={cog_png}  width={25} height={25} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/> */}
           </div>
           <div>
             <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
@@ -433,15 +432,18 @@ export default function PriceView({
             <div className={styles["rewardRatio"]}>
               Staking Reward Ratio:
             </div>
-            <div>
+            {/* <div>
               <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("agent")}/>
-            </div>
+            </div> */}
             <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
             <div className={styles["assetSelect"] + " " + styles["sponsorRatio"]}>
               Sponsor:
               <div id="sponsorRatio">
                 50%
               </div>
+            </div>
+            <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideSponsorRecipientConfig()}>
+              X
             </div>
             <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>
               Recipient:
@@ -451,10 +453,10 @@ export default function PriceView({
             </div>
             <input type="range" className={styles["range-slider"]} min="2" max="10" 
             onChange={(e) => setRateRatios((e.target.value))}></input>
-          <div id="agentRateFee" className={styles["agentRateFee"]}>
+          {/* <div id="agentRateFee" className={styles["agentRateFee"]}>
             Fee Disclosures
             <Image src={info_png} className={styles["feeInfoImg"]} width={18} height={18} alt="Info Image" />
-          </div>
+          </div> */}
           </div>
         </div>
 

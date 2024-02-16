@@ -101,7 +101,7 @@
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;
-  height: 91px !important;
+  height: 57px !important;
   margin-bottom: 5px;
   font-size: 25px;
   border-radius: 12px !important;
@@ -145,6 +145,7 @@
   min-width: 50px;
   height: 25px;
   background-color: #111c7d;
+  background-color: #243056;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -157,8 +158,19 @@
 
 .closeSponsorSelect {
   position: absolute;
-  top: 10px;
-  right: 20px;
+  top: 7px;
+  right: 15px;
+  color: #94a3b8; 
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.closeSponsorConfig {
+  position: absolute;
+  top: -10px;
+  right: 15px;
+  color: #94a3b8; 
+  font-size: 20px;
   cursor: pointer;
 }
 
@@ -202,6 +214,9 @@
 
 .recipientSelect {
   background-color: #b09e18;
+  background-color: #111c7d;
+  background-color: #243056;
+  background-color: orange;
 }
 
 .agentSelect {
@@ -390,10 +405,11 @@
 .sponsorRatio {
   position: absolute;
   top: -10px;
-  right: 10px;
+  right: 40px;
   min-width: 50px;
   height: 28px;
   background-color: #111c7d;
+  background-color: #243056;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -406,10 +422,11 @@
 .recipientRatio {
   position: absolute;
   top: 26px;
+  right: 40px;
   min-width: 50px;
   height: 24px;
   background-color: #111c7d;
-  right: 10px;
+  background-color: #243056;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
