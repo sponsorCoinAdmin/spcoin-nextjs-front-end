@@ -9,11 +9,6 @@
   transition: 0.3s;
 }
 
-.connectButton:hover {
-  cursor: pointer;
-  color: #3b4874
-}
-
 .avatarImg {
   height: auto;
   width: auto;

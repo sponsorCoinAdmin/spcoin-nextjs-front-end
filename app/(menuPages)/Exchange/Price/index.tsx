@@ -280,7 +280,7 @@ export default function PriceView({
 
   const showElement = (element: any) => {
     const el = document.getElementById(element);
-    console.debug("showElement(" + element + ")");
+    console.debug("hideElement(" + element + ")");
     if (el != null) {
       el.style.display = 'block';
     }
@@ -354,6 +354,9 @@ export default function PriceView({
             {sellTokenElement.symbol}
             <DownOutlined onClick={() => openDialog("#sellTokenDialog")}/>
           </div>
+          <div className={styles["buySell"]}>
+            You Pay
+          </div>
           <div className={styles["assetBalance"]}>
             Balance: {sellBalance}
           </div>
@@ -367,10 +370,20 @@ export default function PriceView({
             {buyTokenElement.symbol}
             <DownOutlined onClick={() => openDialog("#buyTokenDialog")}/>
           </div>
+          <div className={styles["buySell"]}>
+            You receive
+          </div>
           <div className={styles["assetBalance"]}>
             Balance: {buyBalance}
           </div>
-        </div>
+
+{/* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ */}
+         {/* Add Sponsorship Button */}
+         {/* <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => openDialog("#recipientDialog")}> */}
+         <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showElement("recipientSelectDiv")}>
+            <div className={styles["centerContainer"]} >Add Sponsorship</div>
+          </div>
+      </div>
 
         {/* Buy/Sell Arrow switch button */}
         <div className={styles.switchButton}>
@@ -386,11 +399,6 @@ export default function PriceView({
             disabled={disabled}
             setErrorMessage={setErrorMessage} />) :
           (<CustomConnectButton />)}
-
-        {/* Add Sponsorship Button */}
-        <div id="addSponsorship" className={styles["addSponsorship"]}  onClick={() => openDialog("#recipientDialog")}>
-          <Input id="addAgentSponsor" className={styles["addSponsorship"]} placeholder="Add Sponsorship" value={"Add Sponsorship"} />
-        </div>
 
         {/* Your Sponsorship/Recipient selection container */}
         <div id="recipientSelectDiv" className={styles["inputs"]}>
@@ -443,18 +451,22 @@ export default function PriceView({
             </div>
             <input type="range" className={styles["range-slider"]} min="2" max="10" 
             onChange={(e) => setRateRatios((e.target.value))}></input>
+          <div id="agentRateFee" className={styles["agentRateFee"]}>
+            Fee Disclosures
+            <Image src={info_png} className={styles["feeInfoImg"]} width={18} height={18} alt="Info Image" />
+          </div>
           </div>
         </div>
 
         {/* Your Agent selection container */}
-        <div id="agent" className={styles.agent}>
+        {/* <div id="agent" className={styles.agent}>
           <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
           <div className={styles["agentSelect"] + " " + styles["assetSelect"]}>
             <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />
             {agentElement.symbol}
             <DownOutlined onClick={() => openDialog("#agentDialog")}/>
           </div>
-        </div>
+        </div> */}
 
         {/* Affiliate fee display container */}
         <div className="text-slate-400">
@@ -464,8 +476,8 @@ export default function PriceView({
             AFFILIATE_FEE + " " + buyTokenElement.symbol
             : null}
         </div>
-      </div>
 
+      </div>
       {isLoadingPrice && (
         <div className="text-center mt-2">Fetching the best price...</div>
       )}

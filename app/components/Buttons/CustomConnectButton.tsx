@@ -20,7 +20,7 @@ function CustomConnectButton() {
               <button
                 onClick={show}
                 type="button"
-                className={styles["exchangeButton"] + " " + styles["connectButton"]}
+                className={styles["exchangeButton"]}
                 >
                 {isConnected ? address : "Connect Wallet"}
               </button>

@@ -10,10 +10,10 @@
       },
       "defaultBuyToken": {
         "chainId": 1,
-        "symbol": "USDT",
-        "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
-        "name": "Tether USD",
-        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xToDo_SpCoin.png",
         "decimals": 6
       },
       "defaultRecipient": {
