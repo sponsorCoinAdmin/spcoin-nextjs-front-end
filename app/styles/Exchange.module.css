@@ -1,8 +1,3 @@
-.connectButton:hover {
-  cursor: pointer;
-  color: #3b4874
-}
-
 .tradeContainer {
   transform: translate(0, 10px);
   font-weight: bold;
@@ -124,8 +119,9 @@
   top: 12px;
   min-width: 50px;
   height: 25px;
-  background-color: #111c7d;
   background-color: #243056;
+  /* background-color: green;
+  color: yellow; */
 
   right: 20px;
   border-radius: 100px;
@@ -144,8 +140,6 @@
   left: 152px;
   min-width: 50px;
   height: 25px;
-  background-color: #111c7d;
-  background-color: #243056;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -178,6 +172,21 @@
   position: absolute;
   justify-content: flex-start;
   top: 70px;
+  right: 20px;
+  min-width: 50px;
+  height: 10px;
+  color: #94a3b8; 
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding-right: 8px;
+}
+
+.sponsoredBalance {
+  position: absolute;
+  justify-content: flex-start;
+  top: 85px;
   right: 20px;
   min-width: 50px;
   height: 10px;
@@ -229,12 +238,12 @@
   left: 180px;
   width: 25px;
   height: 25px;
+  color: #5F6783;
   background-color: #3a4157;
   align-items: center;
   justify-content: center;
   display: flex;
   border-radius: 8px;
-  color: #5F6783;
   border: 3px solid #0E111B;
   font-size: 12px;
   transition: 0.3s
@@ -306,13 +315,6 @@
   color: #51596f;
 }
 
-.center {
-  /* Center horizontally*/
-  color: #94a3b8; 
-  text-align: center;
-  vertical-align: middle;
-}
-
 .leftH {
   display: flex;
   align-items: center;
@@ -335,7 +337,6 @@
   border: 1px solid black;
   border-radius: 10px;
   z-index: 10;
-  background-color: white;
   width: 500px;
   max-width: 80%;
 }
@@ -408,8 +409,6 @@
   right: 40px;
   min-width: 50px;
   height: 28px;
-  background-color: #111c7d;
-  background-color: #243056;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -425,8 +424,6 @@
   right: 40px;
   min-width: 50px;
   height: 24px;
-  background-color: #111c7d;
-  background-color: #243056;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;

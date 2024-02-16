@@ -117,6 +117,16 @@ export default function PriceView({
     }
   }, [buyTokenElement]);
 
+  useEffect(() => { {
+    if (sellTokenElement.symbol === "SpCoin") {
+      showElement("sponsoredBalance")
+    }
+    else {
+      hideElement("sponsoredBalance")
+      }
+    }
+  }, [sellTokenElement]);
+
   const unwatch = watchNetwork((network) => processNetworkChange(network));
   const unwatchAccount = watchAccount((account) => processAccountChange(account));
 
@@ -360,6 +370,9 @@ export default function PriceView({
           <div className={styles["assetBalance"]}>
             Balance: {sellBalance}
           </div>
+          <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
+            Sponsored Balance: {"{ToDo}"}
+          </div>
         </div>
 
         {/* Buy Token Selection Module */}
@@ -380,7 +393,7 @@ export default function PriceView({
 {/* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ */}
          {/* Add Sponsorship Button */}
          {/* <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => openDialog("#recipientDialog")}> */}
-         <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showElement("recipientSelectDiv")}>
+         <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
             <div className={styles["centerContainer"]} >Add Sponsorship</div>
           </div>
       </div>
@@ -442,7 +455,7 @@ export default function PriceView({
                 50%
               </div>
             </div>
-            <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideSponsorRecipientConfig()}>
+            <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideElement("recipientConfigDiv")}>
               X
             </div>
             <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>
