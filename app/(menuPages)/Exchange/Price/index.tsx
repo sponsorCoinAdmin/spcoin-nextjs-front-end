@@ -36,6 +36,7 @@ import {
 import { validatePrice } from '@/app/lib/utils';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
+import { rateInfo } from '../../../resources/docs/stakingFormula'
 export default function PriceView({
   connectedWalletAddr, price, setPrice, setFinalize,
 }: {
@@ -445,10 +446,7 @@ export default function PriceView({
             <div className={styles["rewardRatio"]}>
               Staking Reward Ratio:
             </div>
-            {/* <div>
-              <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("agent")}/>
-            </div> */}
-            <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" />
+            <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" onClick={() => alert(rateInfo)}/>
             <div className={styles["assetSelect"] + " " + styles["sponsorRatio"]}>
               Sponsor:
               <div id="sponsorRatio">
