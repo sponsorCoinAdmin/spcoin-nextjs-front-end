@@ -7,15 +7,15 @@ import { isAddress } from 'ethers';
 setWagmiConfig();
 
 async function fetchBigIntBalance (walletAddr:string|Address|undefined, tokenAddr:string|Address|undefined, chainId:number|string) {
-  if (walletAddr === undefined || tokenAddr === undefined || chainId === undefined) {
-    const retResponse = {
-      decimals: 0,
-      formatted: "N/A",
-      symbol: "N/A'",
-      value: "N/A"
-    }
-    return retResponse
-  }
+  // if (walletAddr === undefined || tokenAddr === undefined || chainId === undefined) {
+  //   const retResponse = {
+  //     decimals: 0,
+  //     formatted: "N/A",
+  //     symbol: "N/A'",
+  //     value: "N/A"
+  //   }
+  //   return retResponse
+  // }
 
   let jsonRequest:any = {}
   // jsonRequest.address = typeof walletAddr === 'string' ? ethers.getAddress(walletAddr) : walletAddr
@@ -33,7 +33,9 @@ async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAdd
 
   let retResponse
   try {
+    // console.debug("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
     const res = await fetchBigIntBalance(walletAddr, tokenAddr, chainId)
+    // console.debug("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
     retResponse = {
       decimals: res.decimals,
       formatted: res.formatted,
@@ -42,8 +44,11 @@ async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAdd
     }
   }
   catch (e) {
-      alert ('***ERROR: fetchBigIntBalance(${walletAddr}, ${tokenAddr}, ${chainId})')
-      alert ('***ERROR:\n'+ JSON.stringify(e))
+    // console.debug("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+    let errorMsg = `***ERROR: fetchBigIntBalance(${walletAddr}, ${tokenAddr}, ${chainId})\n`+ JSON.stringify(e);
+    // alert (errorMsg)
+    console.error(errorMsg)
+    throw e
   }
 
   // console.debug("fetchStringBalance:retResponse = " + JSON.stringify(retResponse, null, 2))

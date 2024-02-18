@@ -32,6 +32,26 @@ const  validatePrice = (price:string, decimals:number) => {
   return "";
  }
 
+ function setRateRatios(newRate: string) {
+  var numRate = Number(newRate)
+  setRecipientRatio(numRate);
+  setSponsorRatio(numRate);
+}
+
+function setSponsorRatio(newRate: number) {
+  let sponsorRatio: any = document.getElementById("sponsorRatio");
+  sponsorRatio.innerHTML = +(100-(newRate*10))+"%";
+}
+
+function setRecipientRatio(newRate: number) {
+  let recipientRatio: any = document.getElementById("recipientRatio");
+  recipientRatio.innerHTML = +(newRate*10)+"%";
+}
+
 export { 
   getQueryVariable,
-  validatePrice }
+  validatePrice,
+  setRateRatios,
+  setSponsorRatio,
+  setRecipientRatio
+ }

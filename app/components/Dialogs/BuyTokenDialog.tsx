@@ -10,6 +10,7 @@ import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
 import { TokenElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
+import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 
 const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
@@ -17,34 +18,21 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
-
-const hideElement = (element:any) => {
-    const el = document.getElementById(element);
-    console.debug("hideElement(" + element +")")
-    if (el != null) {
-        el.style.display = 'none'
-    }
-}
-
-const showElement = (element:any) => {
-    const el = document.getElementById(element);
-    console.debug("showElement(" + element +")")
-    if (el != null) {
-        el.style.display = 'block'
-    }
-}
+const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 // ToDo Read in data List remotely
-export default function Dialog({ sellTokenElement, callBackSetter }: any) {
+export default function Dialog({ connectedWalletAddr, sellTokenElement, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [tokenElement, setTokenElement] = useState<TokenElement| undefined>();
     const chainId = sellTokenElement.chainId;
+    if (connectedWalletAddr === undefined) 
+        connectedWalletAddr = BURN_ADDRESS
 
     useEffect(() => {
         closeDialog();
-      }, []);
+    }, []);
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
@@ -69,7 +57,6 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
     const setTokenDetails = async(tokenAddr:any) => {
         try {
             if (isAddress(tokenAddr)) {
-                let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
@@ -86,34 +73,50 @@ export default function Dialog({ sellTokenElement, callBackSetter }: any) {
             }
        // return ELEMENT_DETAILS
         } catch (e:any) {
-            alert("ERROR:setTokenDetails e.message" + e.message)
+            alert("BUY_ERROR:setTokenDetails e.message" + e.message)
         }
         return false
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
-        let x = setTokenDetails(tokenAddr)
-         if (!(await setTokenDetails(tokenAddr))) {
-            alert("*** ERROR *** Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
-            return false
+        try {
+            if (!(await setTokenDetails(tokenAddr))) {
+                alert("*** ERROR *** Invalid Buy Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
+                return false
+            }
+            alert("displayElementDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+            // Validate Token through wagmi get balance call
+            await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+            return true
+        } catch (e:any) {
+            alert("BUY_ERROR:displayElementDetail e.message" + e.message)
         }
-        alert("displayElementDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
-        return true
+        return false
     }
 
-    const getSelectedListElement = (listElement: TokenElement | undefined) => {
+    const getSelectedListElement = async (listElement: TokenElement | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
-        if (listElement === undefined) {
-            alert("Invalid Token address : " + tokenInput)
-            return false;
+        try {
+            if (listElement === undefined) {
+                alert("Undefined Token address")
+                return false;
+            }
+            if (!isAddress(listElement.address)) {
+                alert(`${listElement.name} has invalid token address : ${listElement.address}`)
+                return false;
+            }
+            if (listElement.address === sellTokenElement.address) {
+                alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
+                console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
+                return false;
+            }
+            await fetchStringBalance (connectedWalletAddr, sellTokenElement.address, chainId)
+            callBackSetter(listElement)
+            closeDialog()
+        } catch (e:any) {
+            alert("BUY_ERROR:getSelectedListElement e.message" + e.message)
         }
-        if (listElement.address === sellTokenElement.address) {
-            alert("Sell Token cannot be the same as Buy Token("+sellTokenElement.symbol+")")
-            console.log("Sell Token cannot be the same as Buy Token("+sellTokenElement.symbol+")");
-            return false;
-        }
-        callBackSetter(listElement)
-        closeDialog()
+        return false
     }
 
     const closeDialog = () => {

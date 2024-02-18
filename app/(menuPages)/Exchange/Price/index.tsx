@@ -25,18 +25,20 @@ import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/
 import { fetchStringBalance } from '../../../lib/wagmi/fetchBalance';
 import { TokenElement, WalletElement } from '../../../lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
-import {
-  fetcher,
-  BUY_AMOUNT_UNDEFINED,
-  BUY_AMOUNT_ZERO,
-  ERROR_0X_RESPONSE,
-  SELL_AMOUNT_UNDEFINED,
-  SELL_AMOUNT_ZERO
-} from '@/app/lib/0X/fetcher';
-import { validatePrice } from '@/app/lib/utils';
+import { fetcher, processError } from '@/app/lib/0X/fetcher';
+import { validatePrice, setRateRatios} from '@/app/lib/spCoin/utils';
+import {     
+  hideElement,
+  showElement,
+  hideSponsorRecipientConfig,
+  showSponsorRecipientConfig,
+  toggleElement,
+  switchTokens
+} from '@/app/lib/spCoin/guiControl';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 import { rateInfo } from '../../../resources/docs/stakingFormula'
+
 export default function PriceView({
   connectedWalletAddr, price, setPrice, setFinalize,
 }: {
@@ -65,7 +67,7 @@ export default function PriceView({
   const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
-   useEffect(() => {
+  useEffect(() => {
     hideSponsorRecipientConfig();
   },[]);
 
@@ -145,10 +147,17 @@ export default function PriceView({
       let tokenAddr = sellTokenElement.address;
       let chainId = sellTokenElement.chainId;
       // console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-      let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
-      // console.debug("retResponse = " + JSON.stringify(retResponse))
-      let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals);
-      setSellBalance(sellResponse);
+      // alert("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+      if (connectedWalletAddr !== undefined)
+      {
+        let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
+        // console.debug("retResponse = " + JSON.stringify(retResponse))
+        let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals);
+        setSellBalance(sellResponse);
+      }
+      else {
+        setSellBalance("N/A");
+      }
     } catch (e: any) {
       setErrorMessage({ name: "updateSellBalance: ", message: JSON.stringify(e, null, 2) });
     }
@@ -197,43 +206,17 @@ export default function PriceView({
         setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
       },
       onError: (error) => {
-        processError(error);
+        processError(
+          error,
+          setErrorMessage,
+          buyTokenElement,
+          sellTokenElement,
+          setBuyAmount,
+          setValidPriceInput
+        );
       },
     }
   );
-
-  const processError = (error: any) => {
-    // alert("*** ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-    let errCode: number = error.errCode;
-    let errMsg: string = error.errMsg;
-    if (errCode !== undefined && error !== null) {
-      switch (errCode) {
-        case SELL_AMOUNT_ZERO: setBuyAmount("0");
-          break;
-        case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenElement.decimals);
-          break;
-        case ERROR_0X_RESPONSE:
-          setErrorMessage({ name: "ERROR_0X_RESPONSE: " + errCode, message: errMsg });
-          console.error("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
-          break;
-        case SELL_AMOUNT_UNDEFINED:
-          setErrorMessage({ name: "SELL_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
-          console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-          setValidPriceInput("0", sellTokenElement.decimals);
-          break;
-        case BUY_AMOUNT_UNDEFINED:
-          setErrorMessage({ name: "BUY_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
-          console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-          setBuyAmount("0");
-          break;
-        default: {
-          setErrorMessage({ name: "DEFAULT ERROR CODE: " + errCode, message: errMsg });
-          console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-          break;
-        }
-      }
-    }
-  };
 
   const { data, isError, isLoading } = useBalance({
     address: connectedWalletAddr,
@@ -264,85 +247,23 @@ export default function PriceView({
     </div>
   );
 
-  function switchTokens() {
-    let tmpElement: TokenElement = sellTokenElement;
-    setSellTokenElement(buyTokenElement);
-    setBuyTokenElement(tmpElement);
-    // setSellAmount(buyAmount)
-  }
-
   const setValidPriceInput = (txt: string, decimals: number) => {
     txt = validatePrice(txt, decimals);
     if (txt !== "")
       setSellAmount(txt);
   };
 
-
-  /// START DROPDOWN STUFF
-  const hideElement = (element: any) => {
-    const el = document.getElementById(element);
-    // alert("hideElement(" + element +")")
-    // alert("el = "+el)
-    // console.debug("hideElement(" + element +")")
-    if (el != null) {
-      el.style.display = 'none';
-    }
-  };
-
-  const showElement = (element: any) => {
-    const el = document.getElementById(element);
-    console.debug("hideElement(" + element + ")");
-    if (el != null) {
-      el.style.display = 'block';
-    }
-  };
-
-  const toggleElement = (element: any) => {
-    const el = document.getElementById(element);
-    if (el != null) {
-      el.style.display = el.style.display === 'block' ? 'none' : 'block';
-    }
-  };
-
-  function setRateRatios(newRate: string) {
-    var numRate = Number(newRate)
-    setRecipientRatio(numRate);
-    setSponsorRatio(numRate);
-  }
-
-  function setSponsorRatio(newRate: number) {
-    let sponsorRatio: any = document.getElementById("sponsorRatio");
-    sponsorRatio.innerHTML = +(100-(newRate*10))+"%";
-  }
-
-  function setRecipientRatio(newRate: number) {
-    let recipientRatio: any = document.getElementById("recipientRatio");
-    recipientRatio.innerHTML = +(newRate*10)+"%";
-  }
-
-  const hideSponsorRecipientConfig = () => {
-    hideElement("recipientSelectDiv")
-    hideElement("recipientConfigDiv")
-    hideElement("agent");
-    showElement("addSponsorship")
-  }
-
-  const showSponsorRecipientConfig = () => {
-    hideElement("addSponsorship")
-    showElement("recipientSelectDiv")
-    // hideElement("recipientConfigDiv")
-    // showElement("agent");
-  }
-
   const setCallBackRecipient = (listElement: any) => {
     showSponsorRecipientConfig();
     setRecipientElement(listElement)
   }
 
+  console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
+
   return (
     <form autoComplete="off">
-      <SellTokenDialog buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
-      <BuyTokenDialog sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
+      <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
+      <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
       <RecipientDialog agentElement={agentElement} callBackSetter={setCallBackRecipient} />
       <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
       <ErrorDialog errMsg={errorMessage} />
@@ -391,9 +312,6 @@ export default function PriceView({
             Balance: {buyBalance}
           </div>
 
-{/* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ */}
-         {/* Add Sponsorship Button */}
-         {/* <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => openDialog("#recipientDialog")}> */}
          <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
             <div className={styles["centerContainer"]} >Add Sponsorship</div>
           </div>
@@ -401,7 +319,8 @@ export default function PriceView({
 
         {/* Buy/Sell Arrow switch button */}
         <div className={styles.switchButton}>
-          <ArrowDownOutlined className={styles.switchArrow} onClick={switchTokens}/>
+          <ArrowDownOutlined className={styles.switchArrow} onClick={() => switchTokens(
+            sellTokenElement, buyTokenElement, setSellTokenElement, setBuyTokenElement)}/>
         </div>
 
         {/* Connect Approve or Review Buttons */}
@@ -470,16 +389,6 @@ export default function PriceView({
           </div> */}
           </div>
         </div>
-
-        {/* Your Agent selection container */}
-        {/* <div id="agent" className={styles.agent}>
-          <Input id="agent-id" className={styles.priceInput} placeholder="Agent" disabled={true} value={agentElement.name} />
-          <div className={styles["agentSelect"] + " " + styles["assetSelect"]}>
-            <img alt={agentElement.name} className="h-9 w-9 mr-2 rounded-md" src={agentElement.img} />
-            {agentElement.symbol}
-            <DownOutlined onClick={() => openDialog("#agentDialog")}/>
-          </div>
-        </div> */}
 
         {/* Affiliate fee display container */}
         <div className="text-slate-400">

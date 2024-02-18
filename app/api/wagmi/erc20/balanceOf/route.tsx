@@ -1,4 +1,4 @@
-import { getQueryVariable } from '../../../../lib/utils'
+import { getQueryVariable } from '../../../../lib/spCoin/utils'
 import { fetchBigIntBalance, fetchStringBalance } from '../../../../lib/wagmi/fetchBalance'
 import { getURLParams } from '../../../lib/getURLParams'
 
