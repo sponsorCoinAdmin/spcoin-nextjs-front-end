@@ -2,7 +2,6 @@ const { ethers } = require("ethers");
 import { fetchBalance } from '@wagmi/core'
 import { setWagmiConfig } from './config'
 import { Address } from "wagmi";
-import { isAddress } from 'ethers';
 
 setWagmiConfig();
 

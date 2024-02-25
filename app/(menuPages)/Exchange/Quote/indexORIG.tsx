@@ -6,26 +6,16 @@ import {
 import { fetcher } from "@/app/lib/0X/fetcher";
 import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
-import { useState, useEffect, SetStateAction } from "react";
-import { getNetworkName } from '@/app/lib/network/utils';
-
 import {
   useAccount,
-  useChainId,
   useSendTransaction,
   usePrepareSendTransaction,
   type Address,
 } from "wagmi";
-import { watchAccount, watchNetwork } from "@wagmi/core";
-import { TokenElement } from "@/app/lib/structure/types";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
 
-
-
-
-//////////// Quote Code
 export default function QuoteView({
   price,
   quote,
@@ -37,47 +27,21 @@ export default function QuoteView({
   setQuote: (price: any) => void;
   connectedWalletAddr: Address | undefined;
 }) {
-
-  const unwatch = watchNetwork((network) => processNetworkChange(network));
-  const unwatchAccount = watchAccount((account) => processAccountChange(account));
-
-  const processAccountChange = (account: any) => {
-    // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
-  };
-
-  const processNetworkChange = (network: any) => {
-    console.debug("Price:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
-    setNetwork(network?.chain?.name.toLowerCase());
-  };
-
-  alert("price =\n" + JSON.stringify(price,null,2))
-  alert("price.sellTokenAddress =\n" + price.sellTokenAddress +
-  "\nprice.buyTokenAddress =\n" + price.buyTokenAddress)
   const sellTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+    POLYGON_TOKENS_BY_ADDRESS[price.tokenToSellAddr.toLowerCase()];
 
   const buyTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
-  let chainId = useChainId();
-  let networkName = getNetworkName(chainId);
+    POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()];
 
-  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
-  // fetch price here
-  const [network, setNetwork] = useState(networkName?.toLowerCase());
-  const [sellAmount, setSellAmount] = useState("0");
-  const [buyAmount, setBuyAmount] = useState("0");
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
-  
   // fetch quote here
   const { address } = useAccount();
 
   const { isLoading: isLoadingPrice } = useSWR(
     [
-      "/api/" + network + "/0X/quote",
+      "/api/quote",
       {
-        sellToken: price.sellTokenAddress,
-        buyToken: price.buyTokenAddress,
+        sellToken: price.tokenToSellAddr,
+        buyToken: price.tokenToBuyAddr,
         sellAmount: price.sellAmount,
         // buyAmount: TODO if we want to support buys,
         connectedWalletAddr,
@@ -128,12 +92,12 @@ export default function QuoteView({
           <div className="flex items-center text-lg sm:text-3xl text-white">
             <img
               alt={
-                POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()]
+                POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()]
                   .symbol
               }
               className="h-9 w-9 mr-2 rounded-md"
               src={
-                POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()]
+                POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()]
                   .logoURI
               }
             />

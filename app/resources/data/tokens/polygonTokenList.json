@@ -4,15 +4,23 @@
         "symbol": "SpCoin",
         "img": "/resources/images/tokens/0xToDo_SpCoin.png",
         "name": "Sponsor Coin",
-        "address": "0xToDo_SpCoin.png",
+        "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
         "decimals": 18
+    },
+    {
+        "chainId": 137,
+        "symbol": "USDC.e",
+        "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
+        "name": "USD Coin",
+        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6
     },
     {
         "chainId": 137,
         "symbol": "USDC",
         "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
-        "name": "USD Coin",
-        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "name": "USD Coin Staked",
+        "address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
         "decimals": 6
     },
     {

@@ -4,9 +4,12 @@ import { WagmiConfig, createConfig } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton, getDefaultConfig } from "connectkit";
 import { useEffect, useState } from "react";
 
-const alchemyId              = process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID === undefined ? "0" : process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID
+
+// NOT SURE why this is needed works with address set to "0"
+const polygonAlchemyId       = process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID === undefined ? "0" : process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID === undefined ? "0" : process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
-// console.log ("alchemyId               :" + alchemyId)
+// alert("polygonAlchemyId               :" + polygonAlchemyId)
+// console.log ("polygonAlchemyId               :" + polygonAlchemyId)
 // console.log ("walletConnectProjectId  :" + walletConnectProjectId)
 
 // Choose which chains you'd like to show
@@ -14,7 +17,7 @@ const chains = [mainnet, polygon, sepolia];
 const config = createConfig(
   getDefaultConfig({
     // Required API Keys
-    alchemyId: alchemyId,
+    alchemyId: polygonAlchemyId,
     walletConnectProjectId: walletConnectProjectId,
     // Required
     appName: "SponsorCoin Dev Demo App",

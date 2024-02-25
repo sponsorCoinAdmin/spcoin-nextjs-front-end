@@ -12,9 +12,9 @@ export interface PriceResponse {
   estimatedGas: string;
   protocolFee: string;
   minimumProtocolFee: string;
-  tokenToBuyAddr: string;
+  buyTokenAddress: string;
   buyAmount: string;
-  tokenToSellAddr: string;
+  sellTokenAddress: string;
   sellAmount: string;
   sources: any[];
   allowanceTarget: string;

@@ -20,13 +20,15 @@ import { useState, useEffect, SetStateAction } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
+import { fetchStringBalance } from '../../../lib/wagmi/fetchBalance';
 import { ArrowDownOutlined, DownOutlined, SettingOutlined } from "@ant-design/icons";
 import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
-import { fetchStringBalance } from '../../../lib/wagmi/fetchBalance';
 import { TokenElement, WalletElement } from '../../../lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { validatePrice, setRateRatios} from '@/app/lib/spCoin/utils';
+import type { PriceResponse } from "../../../api/types";
+
 import {     
   hideElement,
   showElement,
@@ -39,12 +41,15 @@ const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? 
 
 import { rateInfo } from '../../../resources/docs/stakingFormula'
 
+
+
+//////////// Price Code
 export default function PriceView({
   connectedWalletAddr, price, setPrice, setFinalize,
 }: {
   connectedWalletAddr: Address | undefined;
-  price: any;
-  setPrice: (price: any) => void;
+  price: PriceResponse | undefined;
+  setPrice: (price: PriceResponse | undefined) => void;
   setFinalize: (finalize: boolean) => void;
 }) {
 
@@ -138,7 +143,7 @@ export default function PriceView({
   };
 
   const processNetworkChange = (network: any) => {
-    console.debug("NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
+    console.debug("Price:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
     setNetwork(network?.chain?.name.toLowerCase());
   };
 
