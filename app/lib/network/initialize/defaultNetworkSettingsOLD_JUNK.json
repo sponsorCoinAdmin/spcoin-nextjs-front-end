@@ -1,0 +1,92 @@
+{
+    "ethereum": {
+      "defaultSellToken": {
+        "chainId": 1,
+        "symbol": "WBTC",
+        "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+        "name": "Wrapped Bitcoin",
+        "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        "decimals": 8
+      },
+      "defaultBuyToken": {
+        "chainId": 1,
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
+        "decimals": 6
+      },
+      "defaultRecipient": {
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xToDo_SpCoin.png"
+      },
+      "defaultAgent": {
+        "symbol": "Wilma",
+        "img": "/resources/images/agents/WilmaFlintstone.png",
+        "name": "Wilma Flintstone",
+        "address": "Wilma Flintstone's Wallet Address"
+      }
+    },
+    "polygon": {
+      "defaultSellToken": {
+        "chainId": 137,
+        "symbol": "WBTC",
+        "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+        "name": "Wrapped Bitcoin",
+        "address": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+        "decimals": 8
+      },
+      "defaultBuyToken": {
+        "chainId": 137,
+        "symbol": "USDT",
+        "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
+        "name": "Tether USD",
+        "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "decimals": 6
+      },
+      "defaultRecipient": {
+        "symbol": "Trees",
+        "img": "/resources/images/recipients/SaveTheTrees.png",
+        "name": "Save The Trees",
+        "address": "Save The Trees Wallet Address"
+      },
+      "defaultAgent": {
+        "symbol": "Tweety",
+        "img": "/resources/images/agents/TweetyBird.png",
+        "name": "Tweety Bird",
+        "address": "TweetyBird's Wallet Address"
+      }
+    },
+    "sepolia": {
+      "defaultSellToken": {
+        "chainId": 11155111,
+        "symbol": "WBTC",
+        "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+        "name": "Wrapped Bitcoin",
+        "address": "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
+        "decimals": 8
+      },
+      "defaultBuyToken": {
+        "chainId": 11155111,
+        "symbol": "USDT",
+        "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
+        "name": "Tether USD",
+        "address": "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
+        "decimals": 6
+      },
+      "defaultRecipient": {
+        "symbol": "Tiger",
+        "img": "/resources/images/recipients/SaveTheTiger4.png",
+        "name": "Support The Tiger",
+        "address": "SaveTheTiger4 Wallet Address"
+      },
+      "defaultAgent": {
+        "symbol": "Stuge 3",
+        "img": "/resources/images/agents/MoeHoward.png",
+        "name": "Moe Howard",
+        "address": "Moe's Wallet Address"
+      }
+    }
+  }
