@@ -1,3 +1,7 @@
+import { isAddress } from "ethers";
+import { fetchStringBalance } from "../wagmi/fetchBalance";
+import { TokenElement } from "../structure/types";
+
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
   console.debug("Searching " + _searchParam + " in _urlParams " + _urlParams)
@@ -48,10 +52,36 @@ function setRecipientRatio(newRate: number) {
   recipientRatio.innerHTML = +(newRate*10)+"%";
 }
 
+const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenElement:any) => {
+  try {
+      if (isAddress(tokenAddr)) {
+          let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+          // console.debug("retResponse = " + JSON.stringify(retResponse))
+          // alert(JSON.stringify(retResponse,null,2))
+          let td:TokenElement = {
+              chainId: chainId,
+              address: tokenAddr,
+              symbol: retResponse.symbol,
+              img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
+              name: '',
+              decimals: retResponse.decimals
+          }
+          setTokenElement(td);
+          return td
+      }
+ // return ELEMENT_DETAILS
+  } catch (e:any) {
+      alert("SELL_ERROR:setTokenDetails e.message" + e.message)
+  }
+  return false
+}
+
+
 export { 
   getQueryVariable,
   validatePrice,
   setRateRatios,
   setSponsorRatio,
-  setRecipientRatio
+  setRecipientRatio,
+  getTokenDetails
  }

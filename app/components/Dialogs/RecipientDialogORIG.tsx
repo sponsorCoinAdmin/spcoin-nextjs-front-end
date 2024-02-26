@@ -2,8 +2,8 @@
 import styles from './Resources/styles/Modal.module.css';
 import { useRef } from 'react'
 import InputSelect from './Resources/InputSelect'
-import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
+import DataList from './Resources/DataList';
 
 const TITLE_NAME = "Select a recipient";
 const INPUT_PLACE_HOLDER = 'Recipient name or paste address';

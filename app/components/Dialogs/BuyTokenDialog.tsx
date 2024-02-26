@@ -1,7 +1,6 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
 import { fetchStringBalance } from '../../lib/wagmi/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
@@ -11,6 +10,8 @@ import Image from 'next/image'
 import { TokenElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
+import { getTokenDetails } from '@/app/lib/spCoin/utils';
+import DataList from './Resources/DataList';
 
 const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
@@ -38,7 +39,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
         // alert("tokenInput Changed "+tokenInput)
         tokenInput === "" ? hideElement('buySelectGroup') : showElement('buySelectGroup')
         if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput)
+            setTokenDetails(tokenInput, setTokenElement)
         }
         else
             setTokenSelect("Invalid Token Address");
@@ -54,33 +55,13 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
         setTokenInput(event.target.value)
     }
 
-    const setTokenDetails = async(tokenAddr:any) => {
-        try {
-            if (isAddress(tokenAddr)) {
-                let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
-                // console.debug("retResponse = " + JSON.stringify(retResponse))
-                // alert(JSON.stringify(retResponse,null,2))
-                let td:TokenElement = {
-                    chainId: chainId,
-                    address: tokenInput,
-                    symbol: retResponse.symbol,
-                    img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
-                    name: '',
-                    decimals: retResponse.decimals
-                }
-                setTokenElement(td);
-                return true
-            }
-       // return ELEMENT_DETAILS
-        } catch (e:any) {
-            alert("BUY_ERROR:setTokenDetails e.message" + e.message)
-        }
-        return false
+    const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
+        return getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
         try {
-            if (!(await setTokenDetails(tokenAddr))) {
+            if (!(await setTokenDetails(tokenAddr, setTokenElement))) {
                 alert("*** ERROR *** Invalid Buy Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
                 return false
             }

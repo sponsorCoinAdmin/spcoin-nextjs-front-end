@@ -8,6 +8,8 @@ import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
 import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
+import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
+
 
 import {
   useAccount,
@@ -38,8 +40,25 @@ export default function QuoteView({
   connectedWalletAddr: Address | undefined;
 }) {
 
+  let chainId = useChainId();
+  let networkName = getNetworkName(chainId);
+  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
+  // fetch price here
+  const [network, setNetwork] = useState(networkName?.toLowerCase());
+  const [sellAmount, setSellAmount] = useState("0");
+  const [buyAmount, setBuyAmount] = useState("0");
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
   const unwatch = watchNetwork((network) => processNetworkChange(network));
   const unwatchAccount = watchAccount((account) => processAccountChange(account));
+
+  useEffect(() => {
+    alert("Quote:network set to " + network)
+    console.debug("Quote:network set to " + network);
+    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
+    setSellTokenElement(networkSettings?.defaultSellToken);
+    setBuyTokenElement(networkSettings?.defaultBuyToken);
+  }, [network]);
 
   const processAccountChange = (account: any) => {
     // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
@@ -50,24 +69,19 @@ export default function QuoteView({
     setNetwork(network?.chain?.name.toLowerCase());
   };
 
-  alert("price =\n" + JSON.stringify(price,null,2))
-  alert("price.sellTokenAddress =\n" + price.sellTokenAddress +
-  "\nprice.buyTokenAddress =\n" + price.buyTokenAddress)
+  console.debug("price =\n" + JSON.stringify(price,null,2))
   const sellTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
 
+  // setSellTokenElement();
+  console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
+
   const buyTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
-  let chainId = useChainId();
-  let networkName = getNetworkName(chainId);
+  console.debug("buyTokenInfo =\n" + JSON.stringify(buyTokenInfo,null,2))
+  // setbuyTokenElement()
 
-  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
-  // fetch price here
-  const [network, setNetwork] = useState(networkName?.toLowerCase());
-  const [sellAmount, setSellAmount] = useState("0");
-  const [buyAmount, setBuyAmount] = useState("0");
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
+
   
   // fetch quote here
   const { address } = useAccount();

@@ -92,8 +92,8 @@ export default function PriceView({
   }, [buyTokenElement]);
 
   useEffect(() => {
-    // alert("network changed to " + network)
-    console.debug("network changed to " + network);
+    // alert("Price:network set to " + network)
+    console.debug("Price:network set to " + network);
     let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
@@ -174,9 +174,15 @@ export default function PriceView({
       let tokenAddr = buyTokenElement.address;
       let chainId = buyTokenElement.chainId;
       // console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-      let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
-      // console.debug("retResponse = " + JSON.stringify(retResponse))
-      setBuyBalance(retResponse.formatted);
+      if (connectedWalletAddr !== undefined)
+      {
+        let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
+        // console.debug("retResponse = " + JSON.stringify(retResponse))
+        setBuyBalance(retResponse.formatted);
+      }
+      else {
+        setBuyBalance("N/A");
+      }
     } catch (e: any) {
       setErrorMessage({ name: "updateBuyBalance: ", message: JSON.stringify(e, null, 2) });
     }

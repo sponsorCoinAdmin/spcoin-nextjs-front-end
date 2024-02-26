@@ -1,7 +1,6 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import DataList from './Resources/DataList'
 import FEED  from '../../resources/data/feeds/feedTypes';
 import { fetchStringBalance } from '../../lib/wagmi/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
@@ -10,6 +9,7 @@ import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
 import { WalletElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
+import DataList from './Resources/DataList';
 
 const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
