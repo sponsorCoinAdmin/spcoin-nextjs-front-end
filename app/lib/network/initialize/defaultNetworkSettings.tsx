@@ -1,3 +1,5 @@
+import defaultNetworkSettings from "./defaultNetworkSettings.json"
+
 import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
 import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
@@ -19,5 +21,6 @@ const getDefaultNetworkSettings = (network:string|number) => {
 }
 
 export { 
-    getDefaultNetworkSettings
+  getDefaultNetworkSettings,  
+  defaultNetworkSettings
  };

@@ -1,0 +1,598 @@
+[
+    {
+        "chainId": 1,
+        "name": "Ethereum"
+    },
+    {
+        "chainId": 2,
+        "name": "Expanse"
+    },
+    {
+        "chainId": 3,
+        "name": "Ropsten"
+    },
+    {
+        "chainId": 4,
+        "name": "Rinkeby"
+    },
+    {
+        "chainId": 5,
+        "name": "Goerli"
+    },
+    {
+        "chainId": 6,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 7,
+        "name": "ThaiChain"
+    },
+    {
+        "chainId": 8,
+        "name": "Ubiq"
+    },
+    {
+        "chainId": 9,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 10,
+        "name": "OP"
+    },
+    {
+        "chainId": 11,
+        "name": "Metadium"
+    },
+    {
+        "chainId": 12,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 13,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 14,
+        "name": "Flare"
+    },
+    {
+        "chainId": 15,
+        "name": "Diode Prenet"
+    },
+    {
+        "chainId": 16,
+        "name": "songBird Testnet"
+    },
+    {
+        "chainId": 17,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 18,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 19,
+        "name": "songBird"
+    },
+    {
+        "chainId": 20,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 21,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 22,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 23,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 24,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 25,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 26,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 27,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 28,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 29,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 30,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 31,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 32,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 33,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 34,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 35,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 36,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 37,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 38,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 39,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 41,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 42,
+        "name": "Kovan"
+    },
+    {
+        "chainId": 43,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 44,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 45,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 46,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 47,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 48,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 49,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 50,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 51,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 52,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 53,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 54,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 55,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 56,
+        "name": "BNB"
+    },
+    {
+        "chainId": 57,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 58,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 59,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 60,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 61,
+        "name": "Ethereum Classic"
+    },
+    {
+        "chainId": 62,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 63,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 64,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 65,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 66,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 67,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 68,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 69,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 70,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 72,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 73,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 74,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 75,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 76,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 77,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 78,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 79,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 80,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 82,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 82,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 84,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 85,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 86,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 87,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 88,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 89,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 90,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 91,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 92,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 93,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 94,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 95,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 96,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 97,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 98,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 99,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 100,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 101,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 102,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 103,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 104,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 105,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 106,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 107,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 108,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 109,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 110,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 111,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 112,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 113,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 114,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 115,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 116,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 117,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 118,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 119,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 120,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 121,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 122,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 123,
+        "name": "SPARK"
+    },
+    {
+        "chainId": 124,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 125,
+        "name": "Unknown Network"
+    },
+    {
+        "chainId": 126,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 126,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 127,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 128,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 129,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 130,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 131,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 132,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 133,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 134,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 135,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 136,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 137,
+        "name": "Polygon"
+    },
+    {
+        "chainId": 138,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 139,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 140,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 141,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 142,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 143,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 144,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 145,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 146,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 147,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 148,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 149,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 150,
+        "name": "Chain Name"
+    },
+    {
+        "chainId": 11155111,
+        "name": "Sepolia"
+    }
+]
