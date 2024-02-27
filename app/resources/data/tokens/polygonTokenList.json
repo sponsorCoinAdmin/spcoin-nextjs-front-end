@@ -72,6 +72,14 @@
         "decimals": 8
     },
     {
+        "chainId": 147,
+        "symbol": "WBTC.e",
+        "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+        "name": "Wrapped Bitcoin Exchange",
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "decimals": 8
+    },
+    {
         "symbol": "MATIC",
         "chainId": 137,
         "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",

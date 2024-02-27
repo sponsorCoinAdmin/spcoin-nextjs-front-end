@@ -13,12 +13,12 @@
   },
   "defaultBuyToken": {
     "chainId": 137,
-    "symbol": "USDT",
-    "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
-    "name": "Tether USD",
-    "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-    "decimals": 6
-  },
+    "symbol": "SpCoin",
+    "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+    "name": "Sponsor Coin",
+    "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
+    "decimals": 18
+},
   "defaultRecipient": {
     "symbol": "Trees",
     "img": "/resources/images/recipients/SaveTheTrees.png",

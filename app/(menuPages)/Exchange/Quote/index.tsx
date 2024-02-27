@@ -8,7 +8,7 @@ import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
 import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
-import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
+import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 
 
 import {

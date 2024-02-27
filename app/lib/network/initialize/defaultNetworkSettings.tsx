@@ -1,4 +1,7 @@
-import defaultNetworkSettings from "./defaultNetworkSettings.json"
+import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
+import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
+import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
+
 
 const getDefaultNetworkSettings = (network:string|number) => {
   if (typeof network === "string")
@@ -6,16 +9,15 @@ const getDefaultNetworkSettings = (network:string|number) => {
   switch(network)
   {
       case 1:
-      case "ethereum": return defaultNetworkSettings.ethereum;
+      case "ethereum": return defaultEthereumSettings;
       case 137:
-      case "polygon": return defaultNetworkSettings.polygon;
+      case "polygon": return defaultPolygonSettings;
       case 11155111:
-      case "sepolia": return defaultNetworkSettings.sepolia;
-      default: return defaultNetworkSettings.ethereum;
+      case "sepolia": return defaultSoliditySettings;
+      default: return defaultEthereumSettings;
   }
 }
 
 export { 
-    getDefaultNetworkSettings,  
-    defaultNetworkSettings
+    getDefaultNetworkSettings
  };

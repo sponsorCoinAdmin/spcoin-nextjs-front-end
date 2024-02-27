@@ -22,7 +22,7 @@ import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { fetchStringBalance } from '../../../lib/wagmi/fetchBalance';
 import { ArrowDownOutlined, DownOutlined, SettingOutlined } from "@ant-design/icons";
-import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
+import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 import { TokenElement, WalletElement } from '../../../lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
@@ -33,15 +33,13 @@ import {
   hideElement,
   showElement,
   hideSponsorRecipientConfig,
-  showSponsorRecipientConfig,
+  showSponsorRecipientConfig, 
   toggleElement,
   switchTokens
 } from '@/app/lib/spCoin/guiControl';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 import { rateInfo } from '../../../resources/docs/stakingFormula'
-
-
 
 //////////// Price Code
 export default function PriceView({
@@ -58,18 +56,20 @@ export default function PriceView({
 
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [network, setNetwork] = useState(networkName?.toLowerCase());
+  // const [network, setNetwork] = useState(networkName?.toLowerCase());
+  const [network, setNetwork] = useState("Ethereum");
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
-  const defaultEthereumSettings = defaultNetworkSettings.ethereum;
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
-  const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
-  const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
+  // const defaultNetworkSettings = defaultEthereumSettings;
+  const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState(defaultNetworkSettings?.defaultRecipient);
+  const [agentElement, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
@@ -91,19 +91,7 @@ export default function PriceView({
     updateBuyBalance(buyTokenElement);
   }, [buyTokenElement]);
 
-  useEffect(() => {
-    // alert("Price:network set to " + network)
-    console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
-    setSellTokenElement(networkSettings?.defaultSellToken);
-    setBuyTokenElement(networkSettings?.defaultBuyToken);
-    setRecipientElement(networkSettings?.defaultRecipient);
-    setAgentElement(networkSettings?.defaultAgent);
-    updateBuyBalance(buyTokenElement);
-    updateSellBalance(sellTokenElement);
-  }, [network]);
-
-  useEffect(() => {
+    useEffect(() => {
     // alert("Opening up errorMessage Dialog errorMessage = "+JSON.stringify(errorMessage,null,2))
     if (errorMessage.name !== "" && errorMessage.message !== "") {
       // alert("useEffect(() => errorMessage.name = " + errorMessage.name + "\nuseEffect(() => errorMessage.message = " + errorMessage.message)
@@ -134,6 +122,22 @@ export default function PriceView({
       }
     }
   }, [sellTokenElement]);
+
+  useEffect(() => {
+    // alert("Price:network set to " + network)
+    console.debug("Price:network set to " + network);
+    let networkSettings = getDefaultNetworkSettings(network);
+    setSellTokenElement(networkSettings?.defaultSellToken);
+    setBuyTokenElement(networkSettings?.defaultBuyToken);
+    setRecipientElement(networkSettings?.defaultRecipient);
+    setAgentElement(networkSettings?.defaultAgent);
+    updateBuyBalance(buyTokenElement);
+    updateSellBalance(sellTokenElement);
+  }, [network]);
+
+  const changeNetwork = (network:string | number) => {
+
+  }
 
   const unwatch = watchNetwork((network) => processNetworkChange(network));
   const unwatchAccount = watchAccount((account) => processAccountChange(account));
@@ -293,7 +297,7 @@ export default function PriceView({
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
           <div className={styles["assetSelect"]}>
-            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
+            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenElement.img} onClick={() => alert("sellTokenElement " + JSON.stringify(sellTokenElement,null,2))}/>
             {sellTokenElement.symbol}
             <DownOutlined onClick={() => openDialog("#sellTokenDialog")}/>
           </div>
@@ -312,7 +316,7 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
           <div className={styles["assetSelect"]}>
-            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
+            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={buyTokenElement.img} onClick={() => alert("buyTokenElement " + JSON.stringify(buyTokenElement,null,2))}/>
             {buyTokenElement.symbol}
             <DownOutlined onClick={() => openDialog("#buyTokenDialog")}/>
           </div>
