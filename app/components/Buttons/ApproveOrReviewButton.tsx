@@ -34,7 +34,7 @@ function isInteger(value:any) {
 function isValidBigIntNotZero (value:any) {
   // console.debug("isValidBigIntNotZero(" + value + ")")
   if (isBigInt(value) && (BigInt(value) !== BigInt("0"))) {
-      console.debug("isBigInt("+value +") Is Not 0")
+      // console.debug("isBigInt("+value +") Is Not 0")
       return true;
   }
   return false;
@@ -43,7 +43,7 @@ function isValidBigIntNotZero (value:any) {
 function isValidNumberNotZero (value:any) {
   // console.debug("isValidBigIntNotZero(" + value + ")")
   if (isNumber(value) && (Number(value) !== 0)) {
-      console.debug("isNumber("+value +") Is Not 0")
+      // console.debug("isNumber("+value +") Is Not 0")
       return true;
   }
   return false;
@@ -81,9 +81,9 @@ function ApproveOrReviewButton({
     // console.debug("insufficientBalance:         :" + insufficientBalance);
     // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
     if (!insufficientBalance) {
-      console.debug("connectedWalletAddr: " + connectedWalletAddr);
-      console.debug("token.address      : " + token.address);
-      console.debug("sellBalance        : " + sellBalance);
+      // console.debug("connectedWalletAddr: " + connectedWalletAddr);
+      // console.debug("token.address      : " + token.address);
+      // console.debug("sellBalance        : " + sellBalance);
       // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
       const { isError, data: allowance, refetch } = useContractRead({
         address: token.address,
@@ -91,13 +91,12 @@ function ApproveOrReviewButton({
         functionName: "allowance",
         args: [connectedWalletAddr, EXCHANGE_PROXY],
         onError(error) {
-          console.debug('***ERROR*** useContractRead Error', error.message)
+          console.error('***ERROR*** useContractRead Error', error.message)
           // alert(error.message)
           return <div>Something went wrong: {error.message}</div>;
         },
       });
-      console.debug("ApproveOrReviewButton:AFTER useContractRead()");
-      console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
+      // console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
       // if (!isError) {
       //   return <div>Something went wrong: {error.message}</div>;
       // }
@@ -109,11 +108,11 @@ function ApproveOrReviewButton({
         functionName: "approve",
         args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
         onError(error) {
-          console.debug('***ERROR*** usePrepareContractWrite Error', error.message)
+          console.error('***ERROR*** usePrepareContractWrite Error', error.message)
         }, 
         enabled: true
       });
-      console.debug("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
+      // console.debug("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
     
       const {
         data: writeContractResult,
@@ -121,7 +120,7 @@ function ApproveOrReviewButton({
         error,
       } = useContractWrite(config);
 
-      console.debug("ApproveOrReviewButton:AFTER useContractWrite()");
+      // console.debug("ApproveOrReviewButton:AFTER useContractWrite()");
 
       const { isLoading: isApproving } = useWaitForTransaction({
         hash: writeContractResult ? writeContractResult.hash : undefined,
@@ -130,7 +129,7 @@ function ApproveOrReviewButton({
         },
       });
 
-      console.debug("ApproveOrReviewButton:AFTER useWaitForTransaction()");
+      // console.debug("ApproveOrReviewButton:AFTER useWaitForTransaction()");
 
       if (error) {
         console.error("ApproveOrReviewButton:Something went wrong:\n" + JSON.stringify(error,null,2))
@@ -159,7 +158,7 @@ function ApproveOrReviewButton({
               onClick={async () => {
                 //const writtenValue = await approveAsync();
                 const writtenValue = await approveAsync().catch(e => {console.error(JSON.stringify(e,null,2));});
-                console.debug("writtenValue = " + writtenValue)
+                // console.debug("writtenValue = " + writtenValue)
               }}
             >
               { isApproving ? "Approving…" : "Approve" }

@@ -29,7 +29,7 @@ import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { validatePrice, setRateRatios} from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "../../../api/types";
 
-import {     
+import {
   hideElement,
   showElement,
   hideSponsorRecipientConfig,
@@ -54,9 +54,6 @@ export default function PriceView({
   let chainId = useChainId();
   let networkName = getNetworkName(chainId);
 
-  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
-  // fetch price here
-  // const [network, setNetwork] = useState(networkName?.toLowerCase());
   const [network, setNetwork] = useState("Ethereum");
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
@@ -124,6 +121,10 @@ export default function PriceView({
   }, [sellTokenElement]);
 
   useEffect(() => {
+    updateNetwork(network)
+  }, [network]);
+
+  const updateNetwork = (network:string | number) => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
     let networkSettings = getDefaultNetworkSettings(network);
@@ -131,12 +132,10 @@ export default function PriceView({
     setBuyTokenElement(networkSettings?.defaultBuyToken);
     setRecipientElement(networkSettings?.defaultRecipient);
     setAgentElement(networkSettings?.defaultAgent);
+    console.debug(`Price:EXECUTING updateNetwork.updateBuyBalance(${buyTokenElement});`)
+    console.debug(`Price:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
     updateBuyBalance(buyTokenElement);
     updateSellBalance(sellTokenElement);
-  }, [network]);
-
-  const changeNetwork = (network:string | number) => {
-
   }
 
   const unwatch = watchNetwork((network) => processNetworkChange(network));
@@ -273,7 +272,7 @@ export default function PriceView({
     setRecipientElement(listElement)
   }
 
-  console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
+  // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
 
   return (
     <form autoComplete="off">

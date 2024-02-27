@@ -11,7 +11,7 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   const { sellAmount, buyAmount } = params;
 
   if (!sellAmount && !buyAmount) return;
-  console.debug("fetcher")
+  // console.debug("fetcher")
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
     throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
@@ -20,11 +20,11 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 
   try {
-    console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
+    // console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.debug(`${endpoint}?${query}`);
+    // console.debug(`${endpoint}?${query}`);
     let result = fetch(`${endpoint}?${query}`).then((res) => res.json());
-    console.debug("fetcher result = " + JSON.stringify(result,null,2) + "]")
+    // console.debug("fetcher result = " + JSON.stringify(result,null,2) + "]")
     return result
   }
   catch (e) {
@@ -40,29 +40,29 @@ const processError = (
   sellTokenElement:any, 
   setBuyAmount:any, 
   setValidPriceInput:any) => {
-  console.debug("***AAA ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+  // console.error("***AAA ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
   let errCode: number = error.errCode;
   let errMsg: string = error.errMsg;
   if (errCode !== undefined && error !== null) {
     switch (errCode) {
       case SELL_AMOUNT_ZERO: setBuyAmount("0");
-      console.debug("***ZZZ ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
+      // console.error("***ZZZ ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
 
         break;
       case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenElement.decimals);
         break;
       case ERROR_0X_RESPONSE:
         setErrorMessage({ name: "ERROR_0X_RESPONSE: " + errCode, message: errMsg });
-        console.error("ERROR: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
+        console.error("ERROR_0X_RESPONSE: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
         break;
       case SELL_AMOUNT_UNDEFINED:
         setErrorMessage({ name: "SELL_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
-        console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+        console.error("SELL_AMOUNT_UNDEFINED: errCode = " + errCode + "\nerrMsg = " + errMsg);
         setValidPriceInput("0", sellTokenElement.decimals);
         break;
       case BUY_AMOUNT_UNDEFINED:
         setErrorMessage({ name: "BUY_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
-        console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
+        console.error("BUY_AMOUNT_UNDEFINED: errCode = " + errCode + "\nerrMsg = " + errMsg);
         setBuyAmount("0");
         break;
       default: {

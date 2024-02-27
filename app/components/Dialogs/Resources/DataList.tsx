@@ -18,23 +18,24 @@ type Props = {
     getSelectedListElement:  (listElement: any) => void,
 }
 
-const getDataFeedList = (feedType: any, chainId:any) => {
+const getDataFeedList = (feedType: any, network:string|number) => {
     let dataFeedList;
-    // console.debug("NETWORK chainId = " + chainId)
+    if (typeof network === "string")
+      network = network.toLowerCase()
+    // console.debug("NETWORK network = " + network)
     switch (feedType) {
         case FEED.AGENT_WALLETS:
             dataFeedList = agentWalletList;
         break;
         case FEED.TOKEN_LIST:
-            switch(chainId) {
-                case 1: dataFeedList = ethereumTokenList;
-                break;
-                case 137: dataFeedList = polygonTokenList;
-                break;
-                case 11155111: dataFeedList = sepoliaTokenList;
-                break;
-                default: dataFeedList = ethereumTokenList;
-                break;
+            switch(network) {
+                case 1:
+                case "ethereum": return ethereumTokenList;
+                case 137:
+                case "polygon": return polygonTokenList;
+                case 11155111:
+                case "sepolia": return sepoliaTokenList;
+                default: return ethereumTokenList;
             }
         break;
         case FEED.RECIPIENT_WALLETS:
@@ -52,6 +53,15 @@ const getDataFeedMap = (feedType: any, chainId:any) => {
     return dataFeedMap
 }
 
+const getNetworkListElement = (network: any, addressKey:any) => {
+    console.debug(`DataList:getNetworkListElement(${network}, ${addressKey})`)
+    let dataFeedList = getDataFeedList(FEED.TOKEN_LIST, network)
+    console.debug(`DataList:getNetworkListElement:dataFeedList = ${JSON.stringify(dataFeedList,null,2)}`)
+    let element = getDataFeedListElement(dataFeedList, addressKey)
+    console.debug(`DataList:element:dataFeedList = ${JSON.stringify(element,null,2)}`)
+    return element
+}
+
 const getDataFeedListElement = (dataFeedList: any, addressKey:any) => {
     // let dataFeedList = getDataFeedList(feedType, chainId);
     let dataFeedMap = new Map(dataFeedList?.map((element: { address: any }) => [element.address, element]));
@@ -66,7 +76,7 @@ function displayElementDetail (le: any) {
 
 function DataList({dataFeedType, getSelectedListElement} : Props) {
     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
-    console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
+    // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
     const tList = dataFeedList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataFeedList[i])} >
@@ -93,5 +103,6 @@ export default DataList
 export { 
     getDataFeedList,
     getDataFeedMap,
+    getNetworkListElement,
     getDataFeedListElement
  }
