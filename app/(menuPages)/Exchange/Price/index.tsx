@@ -89,8 +89,6 @@ export default function PriceView({
     updateBuyBalance(buyTokenElement);
   }, [buyTokenElement]);
 
-
-
   useEffect(() => {
     // alert("Opening up errorMessage Dialog errorMessage = "+JSON.stringify(errorMessage,null,2))
     if (errorMessage.name !== "" && errorMessage.message !== "") {
@@ -122,6 +120,7 @@ export default function PriceView({
       }
     }
   }, [sellTokenElement]);
+
   useEffect(() => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
@@ -133,6 +132,7 @@ export default function PriceView({
     updateBuyBalance(buyTokenElement);
     updateSellBalance(sellTokenElement);
   }, [network]);
+
   const updateNetwork = (network:string | number) => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
