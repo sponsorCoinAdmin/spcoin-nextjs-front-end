@@ -28,10 +28,10 @@ export default function QuoteView({
   connectedWalletAddr: Address | undefined;
 }) {
   const sellTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.tokenToSellAddr.toLowerCase()];
+    POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
 
   const buyTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()];
+    POLYGON_TOKENS_BY_ADDRESS[price?.buyTokenAddress.toLowerCase()];
 
   // fetch quote here
   const { address } = useAccount();
@@ -40,8 +40,8 @@ export default function QuoteView({
     [
       "/api/quote",
       {
-        sellToken: price.tokenToSellAddr,
-        buyToken: price.tokenToBuyAddr,
+        sellToken: price.sellTokenAddress,
+        buyToken: price.buyTokenAddress,
         sellAmount: price.sellAmount,
         // buyAmount: TODO if we want to support buys,
         connectedWalletAddr,
@@ -92,12 +92,12 @@ export default function QuoteView({
           <div className="flex items-center text-lg sm:text-3xl text-white">
             <img
               alt={
-                POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()]
+                POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()]
                   .symbol
               }
               className="h-9 w-9 mr-2 rounded-md"
               src={
-                POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()]
+                POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()]
                   .logoURI
               }
             />

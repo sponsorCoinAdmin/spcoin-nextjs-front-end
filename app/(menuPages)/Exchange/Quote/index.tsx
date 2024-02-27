@@ -8,7 +8,7 @@ import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
 import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
-import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
+import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 
 
 import {
@@ -20,12 +20,10 @@ import {
 } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { TokenElement } from "@/app/lib/structure/types";
+import { getNetworkListElement } from "@/app/components/Dialogs/Resources/DataList";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
-
-
-
 
 //////////// Quote Code
 export default function QuoteView({
@@ -53,12 +51,18 @@ export default function QuoteView({
   const unwatchAccount = watchAccount((account) => processAccountChange(account));
 
   useEffect(() => {
-    alert("Quote:network set to " + network)
+    updateNetwork(network)
+  }, [network]);
+
+  const updateNetwork = (network:string | number) => {
+    // alert("Quote:network set to " + network)
     console.debug("Quote:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
+    let networkSettings = getDefaultNetworkSettings(network);
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
-  }, [network]);
+    console.debug(`Quote:EXECUTING updateNetwork.updateBuyBalance(${buyTokenElement});`)
+    console.debug(`Quote:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
+  }
 
   const processAccountChange = (account: any) => {
     // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
@@ -69,19 +73,25 @@ export default function QuoteView({
     setNetwork(network?.chain?.name.toLowerCase());
   };
 
-  console.debug("price =\n" + JSON.stringify(price,null,2))
+  console.debug("price = " +JSON.stringify(price))
+
   const sellTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+
+  console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
+  setSellTokenElement(getNetworkListElement(network, price.sellTokenAddress))
+  // console.debug("sellTokenElement =\n" + JSON.stringify(sellTokenElement, null, 2))
 
   // setSellTokenElement();
   console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
 
   const buyTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
+
   console.debug("buyTokenInfo =\n" + JSON.stringify(buyTokenInfo,null,2))
+  // setBuyTokenElement(getNetworkListElement(network, price.buyTokenAddress))
+  // console.debug("buyTokenElement =\n" + JSON.stringify(buyTokenElement, null, 2))
   // setbuyTokenElement()
-
-
   
   // fetch quote here
   const { address } = useAccount();
