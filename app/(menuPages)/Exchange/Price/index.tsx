@@ -29,7 +29,7 @@ import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { validatePrice, setRateRatios} from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "../../../api/types";
 
-import {     
+import {
   hideElement,
   showElement,
   hideSponsorRecipientConfig,
@@ -40,8 +40,6 @@ import {
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 import { rateInfo } from '../../../resources/docs/stakingFormula'
-
-
 
 //////////// Price Code
 export default function PriceView({
@@ -91,17 +89,7 @@ export default function PriceView({
     updateBuyBalance(buyTokenElement);
   }, [buyTokenElement]);
 
-  useEffect(() => {
-    // alert("Price:network set to " + network)
-    console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
-    setSellTokenElement(networkSettings?.defaultSellToken);
-    setBuyTokenElement(networkSettings?.defaultBuyToken);
-    setRecipientElement(networkSettings?.defaultRecipient);
-    setAgentElement(networkSettings?.defaultAgent);
-    updateBuyBalance(buyTokenElement);
-    updateSellBalance(sellTokenElement);
-  }, [network]);
+
 
   useEffect(() => {
     // alert("Opening up errorMessage Dialog errorMessage = "+JSON.stringify(errorMessage,null,2))
@@ -134,6 +122,30 @@ export default function PriceView({
       }
     }
   }, [sellTokenElement]);
+  useEffect(() => {
+    // alert("Price:network set to " + network)
+    console.debug("Price:network set to " + network);
+    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
+    setSellTokenElement(networkSettings?.defaultSellToken);
+    setBuyTokenElement(networkSettings?.defaultBuyToken);
+    setRecipientElement(networkSettings?.defaultRecipient);
+    setAgentElement(networkSettings?.defaultAgent);
+    updateBuyBalance(buyTokenElement);
+    updateSellBalance(sellTokenElement);
+  }, [network]);
+  const updateNetwork = (network:string | number) => {
+    // alert("Price:network set to " + network)
+    console.debug("Price:network set to " + network);
+    let networkSettings = getDefaultNetworkSettings(network);
+    setSellTokenElement(networkSettings?.defaultSellToken);
+    setBuyTokenElement(networkSettings?.defaultBuyToken);
+    setRecipientElement(networkSettings?.defaultRecipient);
+    setAgentElement(networkSettings?.defaultAgent);
+    console.debug(`Price:EXECUTING updateNetwork.updateBuyBalance(${buyTokenElement});`)
+    console.debug(`Price:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
+    updateBuyBalance(buyTokenElement);
+    updateSellBalance(sellTokenElement);
+  }
 
   const unwatch = watchNetwork((network) => processNetworkChange(network));
   const unwatchAccount = watchAccount((account) => processAccountChange(account));
@@ -269,7 +281,7 @@ export default function PriceView({
     setRecipientElement(listElement)
   }
 
-  console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
+  // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
 
   return (
     <form autoComplete="off">
@@ -293,7 +305,7 @@ export default function PriceView({
           <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
             onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
           <div className={styles["assetSelect"]}>
-            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={sellTokenElement.img} />
+            <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenElement.img} onClick={() => alert("sellTokenElement " + JSON.stringify(sellTokenElement,null,2))}/>
             {sellTokenElement.symbol}
             <DownOutlined onClick={() => openDialog("#sellTokenDialog")}/>
           </div>
@@ -312,7 +324,7 @@ export default function PriceView({
         <div className={styles.inputs}>
           <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
           <div className={styles["assetSelect"]}>
-            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md" src={buyTokenElement.img} />
+            <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={buyTokenElement.img} onClick={() => alert("buyTokenElement " + JSON.stringify(buyTokenElement,null,2))}/>
             {buyTokenElement.symbol}
             <DownOutlined onClick={() => openDialog("#buyTokenDialog")}/>
           </div>
