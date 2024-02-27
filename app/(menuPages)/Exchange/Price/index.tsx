@@ -122,21 +122,13 @@ export default function PriceView({
   }, [sellTokenElement]);
 
   useEffect(() => {
-    // alert("Price:network set to " + network)
-    console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
-    setSellTokenElement(networkSettings?.defaultSellToken);
-    setBuyTokenElement(networkSettings?.defaultBuyToken);
-    setRecipientElement(networkSettings?.defaultRecipient);
-    setAgentElement(networkSettings?.defaultAgent);
-    updateBuyBalance(buyTokenElement);
-    updateSellBalance(sellTokenElement);
+    updateNetwork(network)
   }, [network]);
 
   const updateNetwork = (network:string | number) => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network);
+    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
     setRecipientElement(networkSettings?.defaultRecipient);
