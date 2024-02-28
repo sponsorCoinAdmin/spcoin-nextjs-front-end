@@ -38,21 +38,13 @@ export default function QuoteView({
   connectedWalletAddr: Address | undefined;
 }) {
 
+  console.debug("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
   let chainId = useChainId();
-  let networkName = getNetworkName(chainId);
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [network, setNetwork] = useState(networkName?.toLowerCase());
-  const [sellAmount, setSellAmount] = useState("0");
-  const [buyAmount, setBuyAmount] = useState("0");
+  const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
-  const unwatch = watchNetwork((network) => processNetworkChange(network));
-  const unwatchAccount = watchAccount((account) => processAccountChange(account));
-
-  useEffect(() => {
-    updateNetwork(network)
-  }, [network]);
 
   const updateNetwork = (network:string | number) => {
     // alert("Quote:network set to " + network)
@@ -64,22 +56,17 @@ export default function QuoteView({
     console.debug(`Quote:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
   }
 
-  const processAccountChange = (account: any) => {
-    // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
-  };
-
-  const processNetworkChange = (network: any) => {
-    console.debug("Price:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
-    setNetwork(network?.chain?.name.toLowerCase());
-  };
-
   console.debug("price = " +JSON.stringify(price))
 
   const sellTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
 
   console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
-  setSellTokenElement(getNetworkListElement(network, price.sellTokenAddress))
+  console.debug(`EXECUTING: getNetworkListElement(${network}, ${price.sellTokenAddress})`)
+  let zzz = getNetworkListElement(network, price.sellTokenAddress);
+  console.debug(`zzz = ${zzz})`)
+
+  // setSellTokenElement(getNetworkListElement(network, price.sellTokenAddress))
   // console.debug("sellTokenElement =\n" + JSON.stringify(sellTokenElement, null, 2))
 
   // setSellTokenElement();
