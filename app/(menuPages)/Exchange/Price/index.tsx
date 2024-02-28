@@ -22,7 +22,7 @@ import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { fetchStringBalance } from '../../../lib/wagmi/fetchBalance';
 import { ArrowDownOutlined, DownOutlined, SettingOutlined } from "@ant-design/icons";
-import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
+import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 import { TokenElement, WalletElement } from '../../../lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
@@ -51,24 +51,23 @@ export default function PriceView({
   setFinalize: (finalize: boolean) => void;
 }) {
 
-  let chainId = useChainId();
-  let networkName = getNetworkName(chainId);
-
-  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
-  // fetch price here
-  const [network, setNetwork] = useState(networkName?.toLowerCase());
+// From New Not Working
+const [network, setNetwork] = useState("ethereum");
+  // const [network, setNetwork] = useState(networkName?.toLowerCase());
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
-  const defaultEthereumSettings = defaultNetworkSettings.ethereum;
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultSellToken);
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultEthereumSettings?.defaultBuyToken);
-  const [recipientElement, setRecipientElement] = useState(defaultEthereumSettings?.defaultRecipient);
-  const [agentElement, setAgentElement] = useState(defaultEthereumSettings?.defaultAgent);
+// Start From New Not Working
+  const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
+  const [recipientElement, setRecipientElement] = useState(defaultNetworkSettings?.defaultRecipient);
+  const [agentElement, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+// End From New Not Working
 
   useEffect(() => {
     hideSponsorRecipientConfig();
@@ -128,7 +127,7 @@ export default function PriceView({
   const updateNetwork = (network:string | number) => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
+    let networkSettings = getDefaultNetworkSettings(network);
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
     setRecipientElement(networkSettings?.defaultRecipient);

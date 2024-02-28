@@ -33,7 +33,7 @@ import {
   hideElement,
   showElement,
   hideSponsorRecipientConfig,
-  showSponsorRecipientConfig, 
+  showSponsorRecipientConfig,
   toggleElement,
   switchTokens
 } from '@/app/lib/spCoin/guiControl';

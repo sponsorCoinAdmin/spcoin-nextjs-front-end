@@ -61,7 +61,6 @@ export default function PriceView({
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
-  // const defaultNetworkSettings = defaultEthereumSettings;
   const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
@@ -88,7 +87,7 @@ export default function PriceView({
     updateBuyBalance(buyTokenElement);
   }, [buyTokenElement]);
 
-    useEffect(() => {
+  useEffect(() => {
     // alert("Opening up errorMessage Dialog errorMessage = "+JSON.stringify(errorMessage,null,2))
     if (errorMessage.name !== "" && errorMessage.message !== "") {
       // alert("useEffect(() => errorMessage.name = " + errorMessage.name + "\nuseEffect(() => errorMessage.message = " + errorMessage.message)
