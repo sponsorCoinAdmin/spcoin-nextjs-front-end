@@ -71,7 +71,7 @@ const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: a
       }
  // return ELEMENT_DETAILS
   } catch (e:any) {
-      alert("SELL_ERROR:setTokenDetails e.message" + e.message)
+      console.debug("SELL_ERROR:setTokenDetails e.message" + e.message)
   }
   return false
 }

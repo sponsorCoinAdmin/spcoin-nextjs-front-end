@@ -5,7 +5,7 @@ import {
 } from "../../../resources/data/constants";
 import { fetcher } from "@/app/lib/0X/fetcher";
 import type { PriceResponse, QuoteResponse } from "../../../api/types";
-import { formatUnits } from "ethers";
+import { formatUnits, isAddress } from "ethers";
 import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
 import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
@@ -18,9 +18,10 @@ import {
   usePrepareSendTransaction,
   type Address,
 } from "wagmi";
-import { watchAccount, watchNetwork } from "@wagmi/core";
-import { TokenElement } from "@/app/lib/structure/types";
+import { TokenElement, WalletElement } from "@/app/lib/structure/types";
 import { getNetworkListElement } from "@/app/components/Dialogs/Resources/DataList";
+import { fetchStringBalance } from "@/app/lib/wagmi/fetchBalance";
+import { getTokenDetails } from "@/app/lib/spCoin/utils";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -38,7 +39,6 @@ export default function QuoteView({
   connectedWalletAddr: Address | undefined;
 }) {
 
-  console.debug("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
   let chainId = useChainId();
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
@@ -56,21 +56,25 @@ export default function QuoteView({
     console.debug(`Quote:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
   }
 
+  const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
+    let tokenDetails = await getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
+    // console.debug(`setTokenDetails:tokenDetails = ${JSON.stringify(tokenDetails,null,2)}`)
+    return tokenDetails
+  }
+
   console.debug("price = " +JSON.stringify(price))
+
+  console.debug(`Executing Quote:setTokenDetails (${price.sellTokenAddress}, ${sellTokenElement})`)
+  setTokenDetails (price.sellTokenAddress, setSellTokenElement)
 
   const sellTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
 
   console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
-  console.debug(`EXECUTING: getNetworkListElement(${network}, ${price.sellTokenAddress})`)
-  let zzz = getNetworkListElement(network, price.sellTokenAddress);
-  console.debug(`zzz = ${zzz})`)
 
-  // setSellTokenElement(getNetworkListElement(network, price.sellTokenAddress))
-  // console.debug("sellTokenElement =\n" + JSON.stringify(sellTokenElement, null, 2))
 
-  // setSellTokenElement();
-  console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
+  console.debug(`Executing Quote:setTokenDetails (${price.buyTokenAddress}, ${buyTokenElement})`)
+  setTokenDetails (price.buyTokenAddress, setBuyTokenElement)
 
   const buyTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
@@ -115,7 +119,8 @@ export default function QuoteView({
     return <div>Getting best quote...</div>;
   }
 
-  console.log("quote", quote);
+  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+  console.log("quote" + JSON.stringify(quote,null,2));
   console.log(formatUnits(quote.sellAmount, sellTokenInfo.decimals));
 
   return (
