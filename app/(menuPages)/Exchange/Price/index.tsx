@@ -51,23 +51,23 @@ export default function PriceView({
   setFinalize: (finalize: boolean) => void;
 }) {
 
+  let chainId = useChainId();
+  let networkName = getNetworkName(chainId);
+
 // From New Not Working
 const [network, setNetwork] = useState("ethereum");
-  // const [network, setNetwork] = useState(networkName?.toLowerCase());
   const [sellAmount, setSellAmount] = useState("0");
   const [buyAmount, setBuyAmount] = useState("0");
   const [sellBalance, setSellBalance] = useState("0");
   const [buyBalance, setBuyBalance] = useState("0");
   const [tradeDirection, setTradeDirection] = useState("sell");
 
-// Start From New Not Working
   const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
   const [recipientElement, setRecipientElement] = useState(defaultNetworkSettings?.defaultRecipient);
   const [agentElement, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
-// End From New Not Working
 
   useEffect(() => {
     hideSponsorRecipientConfig();
@@ -127,7 +127,7 @@ const [network, setNetwork] = useState("ethereum");
   const updateNetwork = (network:string | number) => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network);
+    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
     setRecipientElement(networkSettings?.defaultRecipient);

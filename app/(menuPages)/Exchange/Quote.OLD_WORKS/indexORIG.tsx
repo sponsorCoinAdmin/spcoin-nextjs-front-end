@@ -28,7 +28,7 @@ export default function QuoteView({
   connectedWalletAddr: Address | undefined;
 }) {
   const sellTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+    POLYGON_TOKENS_BY_ADDRESS[price.tokenToSellAddr.toLowerCase()];
 
   const buyTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.tokenToBuyAddr.toLowerCase()];
