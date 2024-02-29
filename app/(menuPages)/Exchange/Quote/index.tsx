@@ -17,8 +17,10 @@ import {
   usePrepareSendTransaction,
   type Address,
 } from "wagmi";
-import { watchAccount, watchNetwork } from "@wagmi/core";
-import { TokenElement } from "@/app/lib/structure/types";
+import { TokenElement, WalletElement } from "@/app/lib/structure/types";
+import { getNetworkListElement } from "@/app/components/Dialogs/Resources/DataList";
+import { fetchStringBalance } from "@/app/lib/wagmi/fetchBalance";
+import { getTokenDetails } from "@/app/lib/spCoin/utils";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -42,8 +44,6 @@ export default function QuoteView({
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
-  const unwatch = watchNetwork((network) => processNetworkChange(network));
-  const unwatchAccount = watchAccount((account) => processAccountChange(account));
 
   useEffect(() => {
     alert("Quote:network set to " + network)
@@ -58,16 +58,10 @@ export default function QuoteView({
     // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
   };
 
-  const processNetworkChange = (network: any) => {
-    console.debug("Price:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
-    setNetwork(network?.chain?.name.toLowerCase());
-  };
-
-  console.debug("price =\n" + JSON.stringify(price,null,2))
+   // console.debug("price =\n" + JSON.stringify(price,null,2))
   const sellTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
 
-  // setSellTokenElement();
   console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
 
   const buyTokenInfo =

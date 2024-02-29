@@ -66,6 +66,7 @@ export default function QuoteView({
   console.debug(`Executing Quote:setTokenDetails (${price.sellTokenAddress}, ${sellTokenElement})`)
   setTokenDetails (price.sellTokenAddress, setSellTokenElement)
 
+  // console.debug("price =\n" + JSON.stringify(price,null,2))
   const sellTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
 
@@ -79,8 +80,6 @@ export default function QuoteView({
     POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
 
   console.debug("buyTokenInfo =\n" + JSON.stringify(buyTokenInfo,null,2))
-  // setBuyTokenElement(getNetworkListElement(network, price.buyTokenAddress))
-  // console.debug("buyTokenElement =\n" + JSON.stringify(buyTokenElement, null, 2))
   // setbuyTokenElement()
   
   // fetch quote here

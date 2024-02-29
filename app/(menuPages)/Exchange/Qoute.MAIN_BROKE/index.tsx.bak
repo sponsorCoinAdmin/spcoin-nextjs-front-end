@@ -44,7 +44,7 @@ export default function QuoteView({
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
-
+ 
   const updateNetwork = (network:string | number) => {
     // alert("Quote:network set to " + network)
     console.debug("Quote:network set to " + network);
