@@ -10,8 +10,8 @@ import {
     type Address,
 } from "wagmi";
 import { openDialog } from '../Dialogs/Dialogs';
+import { BURN_ADDRESS } from '@/app/lib/network/utils';
 
-const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
 const MAX_ALLOWANCE = BigInt(process.env.NEXT_PUBLIC_MAX_ALLOWANCE === undefined ? "0" : process.env.NEXT_PUBLIC_MAX_ALLOWANCE)

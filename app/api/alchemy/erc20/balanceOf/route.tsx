@@ -1,7 +1,7 @@
-import { getQueryVariable } from '../../../../lib/spCoin/utils'
-import { fetchBigIntBalance, fetchStringBalance } from '../../../../lib/wagmi/fetchBalance'
-import { balanceOf } from '../../../../lib/ethers/providers/alchemy'
-import { getURLParams } from '../../../lib/getURLParams'
+import { getQueryVariable } from '../@/app/lib/spCoin/utils'
+import { fetchBigIntBalance, fetchStringBalance } from '../@/app/lib/wagmi/fetchBalance'
+import { balanceOf } from '../@/app/lib/ethers/providers/alchemy'
+import { getURLParams } from '@/app/lib/getURLParams'
 
 export async function GET(req: Request) {
   const params = getURLParams(req.url);

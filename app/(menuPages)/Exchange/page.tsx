@@ -1,6 +1,6 @@
 'use client'
 
-import ConnectWrapper from "../../components/ConnectWrapper";
+import ConnectWrapper from "@/app/components/ConnectWrapper";
 import Component from './index'
 
 import React from 'react'

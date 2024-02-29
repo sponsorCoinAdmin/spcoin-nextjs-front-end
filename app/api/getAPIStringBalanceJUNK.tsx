@@ -1,5 +1,5 @@
-import { getQueryVariable } from '../lib/spCoin/utils'
-import { fetchBigIntBalance, fetchStringBalance } from '../lib/wagmi/fetchBalance'
+import { getQueryVariable } from '@/app/lib/spCoin/utils'
+import { fetchBigIntBalance, fetchStringBalance } from '@/app/lib/wagmi/fetchBalance'
 import { getURLParams } from './lib/getURLParams'
 
 export const getAPIStringBalance = async(_url:string) => {

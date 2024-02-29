@@ -4,7 +4,7 @@ import {
   POLYGON_TOKENS_BY_ADDRESS,
 } from "../../../resources/data/constants";
 import { fetcher } from "@/app/lib/0X/fetcher";
-import type { PriceResponse, QuoteResponse } from "../../../api/types";
+import type { PriceResponse, QuoteResponse } from "@/app/api/types";
 import { formatUnits } from "ethers";
 import {
   useAccount,

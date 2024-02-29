@@ -37,12 +37,9 @@ export default function QuoteView({
 }) {
 
   let chainId = useChainId();
-  let networkName = getNetworkName(chainId);
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [network, setNetwork] = useState(networkName?.toLowerCase());
-  const [sellAmount, setSellAmount] = useState("0");
-  const [buyAmount, setBuyAmount] = useState("0");
+  const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
   const unwatch = watchNetwork((network) => processNetworkChange(network));
@@ -55,6 +52,7 @@ export default function QuoteView({
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
   }, [network]);
+ 
 
   const processAccountChange = (account: any) => {
     // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
@@ -74,10 +72,9 @@ export default function QuoteView({
 
   const buyTokenInfo =
     POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
+
   console.debug("buyTokenInfo =\n" + JSON.stringify(buyTokenInfo,null,2))
   // setbuyTokenElement()
-
-
   
   // fetch quote here
   const { address } = useAccount();
@@ -114,7 +111,7 @@ export default function QuoteView({
     return <div>Getting best quote...</div>;
   }
 
-  console.log("quote", quote);
+  console.log("quote" + JSON.stringify(quote,null,2));
   console.log(formatUnits(quote.sellAmount, sellTokenInfo.decimals));
 
   return (

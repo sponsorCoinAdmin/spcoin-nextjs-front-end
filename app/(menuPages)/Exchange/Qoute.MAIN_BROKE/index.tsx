@@ -10,7 +10,6 @@ import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
 import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 
-
 import {
   useAccount,
   useChainId,
@@ -19,6 +18,8 @@ import {
   type Address,
 } from "wagmi";
 import { TokenElement, WalletElement } from "@/app/lib/structure/types";
+import { getNetworkListElement } from "@/app/components/Dialogs/Resources/DataList";
+import { fetchStringBalance } from "@/app/lib/wagmi/fetchBalance";
 import { getTokenDetails } from "@/app/lib/spCoin/utils";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
@@ -43,7 +44,7 @@ export default function QuoteView({
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
   const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
-
+ 
   const updateNetwork = (network:string | number) => {
     // alert("Quote:network set to " + network)
     console.debug("Quote:network set to " + network);

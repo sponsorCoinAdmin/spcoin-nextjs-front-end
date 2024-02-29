@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PriceView from "./Price";
 import QuoteView from "./Quote";
-import type { PriceResponse } from "../../api/types";
+import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 
 export default function Home() {

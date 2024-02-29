@@ -11,6 +11,7 @@ import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/app/lib/spCoin/utils';
 import DataList from './Resources/DataList';
+import { BURN_ADDRESS } from '@/app/lib/network/utils';
 
 const TITLE_NAME = "Select a token to sell";
 const INPUT_PLACE_HOLDER = 'Type or paste token to sell address';
@@ -18,7 +19,6 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
-const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 // ToDo Read in data List remotely
 export default function Dialog({ connectedWalletAddr, buyTokenElement, callBackSetter }: any) {

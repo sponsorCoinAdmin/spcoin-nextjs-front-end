@@ -4,6 +4,7 @@ import { defaultNetworkSettings as defaultPolygonSettings } from './initialize/p
 import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/sepolia/defaultNetworkSettings'
 // This is duplicate code found in Datalist.tsx.  Put in Library call
 /////////////////////////////////////////////////////////////
+const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
 const getChainMap = (chainList: any[]) => {
     let chainMap = new Map();
     const tList = chainList?.map((e: any, i: number) => {
@@ -29,7 +30,7 @@ const createNetworkJsonList = () => {
   alert("NetworkSettings: "+networkSettings)
 }
 
-  export { getNetworkName, createNetworkJsonList }
+  export { BURN_ADDRESS, getNetworkName, createNetworkJsonList }
   /////////////////////////////////////////////////////////////
   
   

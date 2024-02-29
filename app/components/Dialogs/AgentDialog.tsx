@@ -2,7 +2,7 @@
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
 import FEED  from '../../resources/data/feeds/feedTypes';
-import { fetchStringBalance } from '../../lib/wagmi/fetchBalance'
+import { fetchStringBalance } from '@/app/lib/wagmi/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'

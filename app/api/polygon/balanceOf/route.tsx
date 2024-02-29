@@ -1,6 +1,6 @@
-import { getQueryVariable } from '../../../lib/spCoin/utils'
-import { fetchBigIntBalance, fetchStringBalance } from '../../../lib/wagmi/fetchBalance'
-import { getURLParams } from '../../lib/getURLParams'
+import { getQueryVariable } from '@/app/lib/spCoin/utils'
+import { fetchBigIntBalance, fetchStringBalance } from '@/app/lib/wagmi/fetchBalance'
+import { getURLParams } from '@/app/lib/getURLParams'
 import { CHAIN_ID } from '../networkConfig'
 
 export async function GET(req: Request) {
