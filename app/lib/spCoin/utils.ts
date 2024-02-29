@@ -14,7 +14,6 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
           }
    }
    console.debug("*** ERROR *** Search Param " + _searchParam + " Not Found")
-
    return "";
 }
 

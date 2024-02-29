@@ -127,7 +127,7 @@ const [network, setNetwork] = useState("ethereum");
   const updateNetwork = (network:string | number) => {
     // alert("Price:network set to " + network)
     console.debug("Price:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
+    let networkSettings = getDefaultNetworkSettings(network);
     setSellTokenElement(networkSettings?.defaultSellToken);
     setBuyTokenElement(networkSettings?.defaultBuyToken);
     setRecipientElement(networkSettings?.defaultRecipient);

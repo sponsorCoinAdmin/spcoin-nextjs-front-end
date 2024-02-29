@@ -19,8 +19,6 @@ import {
   type Address,
 } from "wagmi";
 import { TokenElement, WalletElement } from "@/app/lib/structure/types";
-import { getNetworkListElement } from "@/app/components/Dialogs/Resources/DataList";
-import { fetchStringBalance } from "@/app/lib/wagmi/fetchBalance";
 import { getTokenDetails } from "@/app/lib/spCoin/utils";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
@@ -119,7 +117,6 @@ export default function QuoteView({
     return <div>Getting best quote...</div>;
   }
 
-  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
   console.log("quote" + JSON.stringify(quote,null,2));
   console.log(formatUnits(quote.sellAmount, sellTokenInfo.decimals));
 

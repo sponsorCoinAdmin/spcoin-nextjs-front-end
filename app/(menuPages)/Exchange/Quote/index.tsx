@@ -5,11 +5,10 @@ import {
 } from "../../../resources/data/constants";
 import { fetcher } from "@/app/lib/0X/fetcher";
 import type { PriceResponse, QuoteResponse } from "../../../api/types";
-import { formatUnits } from "ethers";
+import { formatUnits, isAddress } from "ethers";
 import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
-import { getDefaultNetworkSettings, defaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
-
+import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 
 import {
   useAccount,
@@ -23,9 +22,6 @@ import { TokenElement } from "@/app/lib/structure/types";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
-
-
-
 
 //////////// Quote Code
 export default function QuoteView({
