@@ -9,7 +9,7 @@ import Image from 'next/image'
 import { TokenElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
-import { getTokenDetails } from '@/app/lib/spCoin/utils';
+import { getTokenDetails, fetchTokenDetails } from '@/app/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 

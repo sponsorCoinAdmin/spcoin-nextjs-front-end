@@ -53,7 +53,7 @@ export default function PriceView({
   try {
     let chainId = useChainId();
     let networkName = getNetworkName(chainId);
-
+console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
   const [network, setNetwork] = useState("ethereum");
     const [sellAmount, setSellAmount] = useState("0");

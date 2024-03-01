@@ -1,7 +1,6 @@
-import { getQueryVariable } from '../@/app/lib/spCoin/utils'
-import { fetchBigIntBalance, fetchStringBalance } from '../@/app/lib/wagmi/fetchBalance'
-import { balanceOf } from '../@/app/lib/ethers/providers/alchemy'
-import { getURLParams } from '@/app/lib/getURLParams'
+import { getURLParams } from "@/app/api/lib/getURLParams";
+import { getQueryVariable } from "@/app/lib/spCoin/utils";
+import { fetchStringBalance } from "@/app/lib/wagmi/fetchBalance";
 
 export async function GET(req: Request) {
   const params = getURLParams(req.url);
@@ -11,9 +10,6 @@ export async function GET(req: Request) {
 
   const wagmiBalance = await fetchStringBalance(address, token, chainId)
 
-  const retBalanceOf = balanceOf(address, token)
-  console.log("Wagmi BalanceOf = "+wagmiBalance)
-
-  console.log("Wagmi BalanceOf = " + )
+  console.log(`wagmiBalance+${JSON.stringify(wagmiBalance)}`)
   return new Response(JSON.stringify(wagmiBalance))
 }

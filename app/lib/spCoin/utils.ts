@@ -52,6 +52,13 @@ function setRecipientRatio(newRate: number) {
 }
 
 const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenElement:any) => {
+        let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
+        if (td !== false)
+          setTokenElement(td);
+        return td
+}
+
+const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any) => {
   try {
       if (isAddress(tokenAddr)) {
           let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
@@ -62,10 +69,9 @@ const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: a
               address: tokenAddr,
               symbol: retResponse.symbol,
               img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
-              name: '',
+              name:  retResponse.symbol,
               decimals: retResponse.decimals
           }
-          setTokenElement(td);
           return td
       }
  // return ELEMENT_DETAILS
@@ -76,11 +82,13 @@ const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: a
 }
 
 
+
 export { 
   getQueryVariable,
   validatePrice,
   setRateRatios,
   setSponsorRatio,
   setRecipientRatio,
-  getTokenDetails
+  getTokenDetails,
+  fetchTokenDetails
  }

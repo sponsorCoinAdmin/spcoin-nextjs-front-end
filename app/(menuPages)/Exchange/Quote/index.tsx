@@ -8,7 +8,6 @@ import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits, isAddress } from "ethers";
 import { useState, useEffect, SetStateAction } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
-import { getDefaultNetworkSettings } from '../../../lib/network/initialize/defaultNetworkSettings';
 
 import {
   useAccount,
@@ -18,9 +17,7 @@ import {
   type Address,
 } from "wagmi";
 import { TokenElement, WalletElement } from "@/app/lib/structure/types";
-import { getNetworkListElement } from "@/app/components/Dialogs/Resources/DataList";
-import { fetchStringBalance } from "@/app/lib/wagmi/fetchBalance";
-import { getTokenDetails } from "@/app/lib/spCoin/utils";
+import { getTokenDetails, fetchTokenDetails } from "@/app/lib/spCoin/utils";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -38,6 +35,8 @@ export default function QuoteView({
   connectedWalletAddr: Address | undefined;
 }) {
 
+  console.debug("########################### QUOTE RERENDERED #####################################")
+
   let chainId = useChainId();
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
@@ -46,29 +45,49 @@ export default function QuoteView({
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
 
   useEffect(() => {
-    alert("Quote:network set to " + network)
-    console.debug("Quote:network set to " + network);
-    let networkSettings = getDefaultNetworkSettings(network?.chain?.name);
-    setSellTokenElement(networkSettings?.defaultSellToken);
-    setBuyTokenElement(networkSettings?.defaultBuyToken);
-  }, [network]);
- 
+    setTokenDetails(price.sellTokenAddress, setSellTokenElement)
+    setTokenDetails(price.buyTokenAddress, setBuyTokenElement)
+    // let std:any = fetchTokenDetails2(price.buyTokenAddress)
+    // setBuyTokenElement(std)
+    // let btd:any = fetchTokenDetails2(price.buyTokenAddress)
+    // setBuyTokenElement(btd)
+  },[]);
 
-  const processAccountChange = (account: any) => {
-    // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
-  };
+  const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
+    let tokenDetails = await getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
+    setTokenElement(tokenDetails)
+    return tokenDetails
+  }
 
-   // console.debug("price =\n" + JSON.stringify(price,null,2))
-  const sellTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+  const fetchTokenDetails2 = async(tokenAddr: any) => {
+    let tokenDetails = await fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
+    console.debug(`********* fetchTokenDetails:tokenDetails:\n ${JSON.stringify(tokenDetails,null,2)}`)
+    return tokenDetails
+  }
 
-  console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
+  // let beforeDetails = JSON.stringify(sellTokenElement,null,2)
 
-  const buyTokenInfo =
-    POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
+  console.debug(`********* price.sellTokenAddress: ${price.sellTokenAddress}`)
+  console.debug(`********* price.buyTokenAddress: ${price.buyTokenAddress}`)
 
-  console.debug("buyTokenInfo =\n" + JSON.stringify(buyTokenInfo,null,2))
-  // setbuyTokenElement()
+  console.debug(`Executing Quote:setTokenDetails (${price.sellTokenAddress}, ${sellTokenElement})`)
+  // setTokenDetails (price.sellTokenAddress, setSellTokenElement)
+
+  // console.debug("price =\n" + JSON.stringify(price,null,2))
+  // const sellTokenInfo =
+  //   POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()];
+
+  // console.debug("sellTokenInfo =\n" + JSON.stringify(sellTokenInfo, null, 2))
+
+  console.debug(`Executing Quote:setTokenDetails (${price.buyTokenAddress}, ${buyTokenElement})`)
+  
+  // setTokenDetails (price.buyTokenAddress, setBuyTokenElement)
+
+  // const buyTokenInfo =
+  //   POLYGON_TOKENS_BY_ADDRESS[price.buyTokenAddress.toLowerCase()];
+
+  // console.debug("buyTokenInfo = \n" + JSON.stringify(buyTokenInfo,null,2))
+  // setBuyTokenElement()
   
   // fetch quote here
   const { address } = useAccount();
@@ -89,7 +108,7 @@ export default function QuoteView({
       onSuccess: (data) => {
         setQuote(data);
         console.log("quote", data);
-        console.log(formatUnits(data.buyAmount, buyTokenInfo.decimals), data);
+        console.log(formatUnits(data.buyAmount, buyTokenElement?.decimals), data);
       },
     }
   );
@@ -106,7 +125,7 @@ export default function QuoteView({
   }
 
   console.log("quote" + JSON.stringify(quote,null,2));
-  console.log(formatUnits(quote.sellAmount, sellTokenInfo.decimals));
+  console.log(formatUnits(quote.sellAmount, sellTokenElement?.decimals));
 
   return (
     <div className="p-3 mx-auto max-w-screen-sm ">
@@ -115,12 +134,12 @@ export default function QuoteView({
           <div className="text-xl mb-2 text-white">You pay</div>
           <div className="flex items-center text-lg sm:text-3xl text-white">
             <img
-              alt={sellTokenInfo.symbol}
+              alt={sellTokenElement?.symbol}
               className="h-9 w-9 mr-2 rounded-md"
-              src={sellTokenInfo.logoURI}
+              src={sellTokenElement?.logoURI}
             />
-            <span>{formatUnits(quote.sellAmount, sellTokenInfo.decimals)}</span>
-            <div className="ml-2">{sellTokenInfo.symbol}</div>
+            <span>{formatUnits(quote.sellAmount, sellTokenElement?.decimals)}</span>
+            <div className="ml-2">{sellTokenElement?.symbol}</div>
           </div>
         </div>
 
@@ -128,18 +147,12 @@ export default function QuoteView({
           <div className="text-xl mb-2 text-white">You receive</div>
           <div className="flex items-center text-lg sm:text-3xl text-white">
             <img
-              alt={
-                POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()]
-                  .symbol
-              }
+              alt={buyTokenElement?.symbol}
               className="h-9 w-9 mr-2 rounded-md"
-              src={
-                POLYGON_TOKENS_BY_ADDRESS[price.sellTokenAddress.toLowerCase()]
-                  .logoURI
-              }
+              src={buyTokenElement?.img}
             />
-            <span>{formatUnits(quote.buyAmount, buyTokenInfo.decimals)}</span>
-            <div className="ml-2">{buyTokenInfo.symbol}</div>
+            <span>{formatUnits(quote.buyAmount, buyTokenElement?.decimals)}</span>
+            <div className="ml-2">{buyTokenElement?.symbol}</div>
           </div>
         </div>
         <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-sm mb-3">
@@ -149,12 +162,12 @@ export default function QuoteView({
                 Number(
                   formatUnits(
                     BigInt(quote.grossBuyAmount),
-                    buyTokenInfo.decimals
+                    buyTokenElement?.decimals
                   )
                 ) *
                   AFFILIATE_FEE +
                 " " +
-                buyTokenInfo.symbol
+                buyTokenElement?.symbol
               : null}
           </div>
         </div>
