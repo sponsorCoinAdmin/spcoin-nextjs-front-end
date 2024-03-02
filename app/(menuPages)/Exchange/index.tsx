@@ -3,13 +3,26 @@ import PriceView from "./Price";
 import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
+import { TokenElement } from "@/app/lib/structure/types";
+
+enum  EXCHANGE_STATE {
+  PRICE, QUOTE, PENDING
+}
+
+type ExchangeTokens = {
+  state: EXCHANGE_STATE;
+  sellToken: TokenElement;
+  buyToken: TokenElement;
+}
 
 export default function Home() {
   const [finalize, setFinalize] = useState(false);
+  const [exchangeTokens, setExchangeTokens] = useState<ExchangeTokens|undefined>();
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();
   const { address } = useAccount();
 
+ 
   return (
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24`}
@@ -27,8 +40,14 @@ export default function Home() {
           price={price}
           setPrice={setPrice}
           setFinalize={setFinalize}
+          setExchangeTokens={setExchangeTokens}
         />
       )}
     </main>
   );
+}
+
+export {
+  type ExchangeTokens,
+  EXCHANGE_STATE
 }
