@@ -16,8 +16,8 @@ import {
   usePrepareSendTransaction,
   type Address,
 } from "wagmi";
-import { TokenElement, WalletElement } from "@/app/lib/structure/types";
 import { getTokenDetails, fetchTokenDetails } from "@/app/lib/spCoin/utils";
+import { ExchangeTokens } from "..";
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -28,11 +28,13 @@ export default function QuoteView({
   quote,
   setQuote,
   connectedWalletAddr,
+  exchangeTokens,
 }: {
   price: PriceResponse;
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
   connectedWalletAddr: Address | undefined;
+  exchangeTokens: ExchangeTokens | undefined;
 }) {
 
   console.debug("########################### QUOTE RERENDERED #####################################")
@@ -41,17 +43,12 @@ export default function QuoteView({
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>();
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>();
-
   useEffect(() => {
-    setTokenDetails(price.sellTokenAddress, setSellTokenElement)
-    setTokenDetails(price.buyTokenAddress, setBuyTokenElement)
-    // let std:any = fetchTokenDetails2(price.buyTokenAddress)
-    // setBuyTokenElement(std)
-    // let btd:any = fetchTokenDetails2(price.buyTokenAddress)
-    // setBuyTokenElement(btd)
+    console.debug("price =\n" + JSON.stringify(exchangeTokens,null,2))
   },[]);
+  
+  const sellTokenElement = exchangeTokens?.sellToken;
+  const buyTokenElement = exchangeTokens?.buyToken;
 
   const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
     let tokenDetails = await getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
@@ -131,12 +128,12 @@ export default function QuoteView({
     <div className="p-3 mx-auto max-w-screen-sm ">
       <form>
         <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-sm mb-3">
-          <div className="text-xl mb-2 text-white">You pay</div>
-          <div className="flex items-center text-lg sm:text-3xl text-white">
+          <div className="text-xl mb-2 text-slate-600">You pay</div>
+          <div className="flex items-center text-lg sm:text-3xl text-slate-600">
             <img
               alt={sellTokenElement?.symbol}
               className="h-9 w-9 mr-2 rounded-md"
-              src={sellTokenElement?.logoURI}
+              src={sellTokenElement?.img}
             />
             <span>{formatUnits(quote.sellAmount, sellTokenElement?.decimals)}</span>
             <div className="ml-2">{sellTokenElement?.symbol}</div>
@@ -144,8 +141,8 @@ export default function QuoteView({
         </div>
 
         <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-sm mb-3">
-          <div className="text-xl mb-2 text-white">You receive</div>
-          <div className="flex items-center text-lg sm:text-3xl text-white">
+          <div className="text-xl mb-2 text-slate-600">You receive</div>
+          <div className="flex items-center text-lg sm:text-3xl text-slate-600">
             <img
               alt={buyTokenElement?.symbol}
               className="h-9 w-9 mr-2 rounded-md"
@@ -156,7 +153,7 @@ export default function QuoteView({
           </div>
         </div>
         <div className="bg-slate-200 dark:bg-slate-800 p-4 rounded-sm mb-3">
-          <div className="text-slate-400">
+          <div className="text-slate-600">
             {quote && quote.grossBuyAmount
               ? "Affiliate Fee: " +
                 Number(
