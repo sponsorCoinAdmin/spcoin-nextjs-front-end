@@ -16,18 +16,16 @@ type ExchangeTokens = {
 }
 
 export default function Home() {
-  const [finalize, setFinalize] = useState(false);
   const [exchangeTokens, setExchangeTokens] = useState<ExchangeTokens|undefined>();
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();
   const { address } = useAccount();
-
  
   return (
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24`}
     >
-      {finalize && price ? (
+      {exchangeTokens?.state === EXCHANGE_STATE.QUOTE && price ? (
         <QuoteView
           connectedWalletAddr={address}
           price={price}
@@ -40,7 +38,6 @@ export default function Home() {
           connectedWalletAddr={address}
           price={price}
           setPrice={setPrice}
-          setFinalize={setFinalize}
           setExchangeTokens={setExchangeTokens}
         />
       )}

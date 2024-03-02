@@ -44,12 +44,11 @@ import { ExchangeTokens, EXCHANGE_STATE } from '..';
 
 //////////// Price Code
 export default function PriceView({
-  connectedWalletAddr, price, setPrice, setFinalize, setExchangeTokens
+  connectedWalletAddr, price, setPrice, setExchangeTokens
 }: {
     connectedWalletAddr: Address | undefined;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
-    setFinalize: (finalize: boolean) => void;
     setExchangeTokens: (exchangeTokens: ExchangeTokens|undefined) => void;
 }) {
   try {
@@ -351,13 +350,11 @@ console.debug("########################### PRICE RERENDERED ####################
               connectedWalletAddr={connectedWalletAddr}
               sellBalance={sellBalance}
               onClick={() => { 
-                let exchangeTokens:ExchangeTokens = {
+                setExchangeTokens({
                   state: EXCHANGE_STATE.QUOTE,
                   sellToken: sellTokenElement,
                   buyToken: buyTokenElement         
-                }
-                setExchangeTokens(exchangeTokens)
-                setFinalize(true);
+                })
               }}
               disabled={disabled}
               setErrorMessage={setErrorMessage} />) :
