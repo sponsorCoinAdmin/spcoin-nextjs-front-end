@@ -1,7 +1,6 @@
 'use client';
 import styles from '../../../styles/Exchange.module.css';
 import Image from 'next/image';
-import spCoin_png from '../../../../public/resources/images/spCoin.png';
 import info_png from '../../../../public/resources/images/info1.png';
 import cog_png from '../../../../public/resources/images/miscellaneous/cog.png';
 import {
@@ -12,7 +11,6 @@ import {
   BuyTokenDialog,
   ErrorDialog
 } from '@/app/components/Dialogs/Dialogs';
-import { Input, Popover, Radio } from "antd";
 import ApproveOrReviewButton from '@/app/components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '@/app/components/Buttons/CustomConnectButton';
 import useSWR from "swr";
@@ -41,6 +39,7 @@ const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? 
 
 import { rateInfo } from '../../../resources/docs/stakingFormula'
 import { ExchangeTokens, EXCHANGE_STATE } from '..';
+import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 
 //////////// Price Code
 export default function PriceView({
@@ -69,10 +68,15 @@ console.debug("########################### PRICE RERENDERED ####################
     const [recipientElement, setRecipientElement] = useState(defaultNetworkSettings?.defaultRecipient);
     const [agentElement, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+    const [slippage, setSlippage] = useState<string | null>("0.02");
 
     useEffect(() => {
       hideSponsorRecipientConfig();
     },[]);
+
+    useEffect(() => {
+      alert('Price slippage changed to  ' + slippage);
+    }, [slippage]);
 
     useEffect(() => {
       updateBuyBalance(buyTokenElement);
@@ -142,7 +146,6 @@ console.debug("########################### PRICE RERENDERED ####################
       } catch (e) {
         setErrorMessage({ name: "XXXXX: ", message: JSON.stringify(e, null, 2) });
       }
-
     }
 
     const unwatch = watchNetwork((network) => processNetworkChange(network));
@@ -216,6 +219,9 @@ console.debug("########################### PRICE RERENDERED ####################
           buyToken: buyTokenElement.address,
           sellAmount: parsedSellAmount,
           buyAmount: parsedBuyAmount,
+          // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
+          // slippagePercentage: slippage,
+          // expectedSlippage: slippage,
           connectedWalletAddr
         },
       ],
@@ -249,24 +255,6 @@ console.debug("########################### PRICE RERENDERED ####################
       : true;
 
     //  console.debug("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
-    // ------------------------------ START MORALIS SCRIPT CODE
-    let [slippage, setSlippage] = useState(2.5);
-    function handleSlippageChange(e: { target: { value: SetStateAction<number>; }; }) {
-      setSlippage(e.target.value);
-    }
-
-    const settings = (
-      <div>
-        <div>Slippage Tolerance</div>
-        <div>
-          <Radio.Group value={slippage} onChange={handleSlippageChange}>
-            <Radio.Button value={0.5}>0.5%</Radio.Button>
-            <Radio.Button value={2.5}>2.5%</Radio.Button>
-            <Radio.Button value={5}>5.0%</Radio.Button>
-          </Radio.Group>
-        </div>
-      </div>
-    );
 
     const setValidPriceInput = (txt: string, decimals: number) => {
       txt = validatePrice(txt, decimals);
@@ -280,7 +268,6 @@ console.debug("########################### PRICE RERENDERED ####################
     }
 
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
-
     return (
       <form autoComplete="off">
         <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
@@ -288,19 +275,11 @@ console.debug("########################### PRICE RERENDERED ####################
         <RecipientDialog agentElement={agentElement} callBackSetter={setCallBackRecipient} />
         <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
         <ErrorDialog errMsg={errorMessage} />
-
         <div className={styles.tradeContainer}>
-          <div className={styles.tradeContainerHeader}>
-            <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="Moralis Logo" />
-            <h4 className={styles.center}>Sponsor Coin Exchange</h4>
-            <Popover content={settings} title="Settings" trigger="click" placement="bottomLeft">
-              <SettingOutlined className={styles.cog} />
-            </Popover>
-          </div>
-
+          <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
           {/* Sell Token Selection Module */}
           <div className={styles.inputs}>
-            <Input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
+            <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
               onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
             <div className={styles["assetSelect"]}>
               <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenElement.img} onClick={() => alert("sellTokenElement " + JSON.stringify(sellTokenElement,null,2))}/>
@@ -320,7 +299,7 @@ console.debug("########################### PRICE RERENDERED ####################
 
           {/* Buy Token Selection Module */}
           <div className={styles.inputs}>
-            <Input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
+            <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
             <div className={styles["assetSelect"]}>
               <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={buyTokenElement.img} onClick={() => alert("buyTokenElement " + JSON.stringify(buyTokenElement,null,2))}/>
               {buyTokenElement.symbol}
@@ -333,10 +312,10 @@ console.debug("########################### PRICE RERENDERED ####################
               Balance: {buyBalance}
             </div>
 
-          <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
+            <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
               <div className={styles["centerContainer"]} >Add Sponsorship</div>
             </div>
-        </div>
+          </div>
 
           {/* Buy/Sell Arrow switch button */}
           <div className={styles.switchButton}>
@@ -352,6 +331,7 @@ console.debug("########################### PRICE RERENDERED ####################
               onClick={() => { 
                 setExchangeTokens({
                   state: EXCHANGE_STATE.QUOTE,
+                  slippage:slippage,
                   sellToken: sellTokenElement,
                   buyToken: buyTokenElement         
                 })

@@ -71,13 +71,19 @@
 }
 
 .priceInput {
+  width: 100%;
+  text-indent: 10px;
+  height: 106px !important;
+  margin-bottom: 5px;
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;
-  height: 106px !important;
-  margin-bottom: 5px;
   font-size: 25px;
   border-radius: 12px !important;
+}
+
+.priceInput:focus{
+  outline: none;
 }
 
 .sponsorCoinContainer {
@@ -274,7 +280,6 @@
   cursor: pointer;
   color: green
 }
-
 
 .swapButton {
   background-color: #b6470b;

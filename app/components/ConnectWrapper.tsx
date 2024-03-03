@@ -1,7 +1,7 @@
 'use client'
 import { mainnet, polygon, sepolia, } from "wagmi/chains"
 import { WagmiConfig, createConfig } from "wagmi";
-import { ConnectKitProvider, ConnectKitButton, getDefaultConfig } from "connectkit";
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { useEffect, useState } from "react";
 
 
