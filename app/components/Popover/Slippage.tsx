@@ -8,7 +8,7 @@ function Slippage({initialSlippage, setSlippageCallback}:any) {
         console.log (`setting Initial slippage value`+ value)
         setValue(initialSlippage)
       }, []);
-  
+
       const setRadioButton = ({ target: { value } }: RadioChangeEvent) => {
         console.log('radio checked ' + value);
         setValue(value);

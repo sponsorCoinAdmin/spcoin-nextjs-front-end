@@ -11,7 +11,7 @@ enum  EXCHANGE_STATE {
 
 type ExchangeTokens = {
   state: EXCHANGE_STATE;
-  slippage:string;
+  slippage:string|undefined|null;
   sellToken: TokenElement;
   buyToken: TokenElement;
 }

@@ -140,6 +140,17 @@
   padding-right: 8px;
 }
 
+.recipientPosition {
+  position: absolute;
+  justify-content: flex-start;
+  top: 0px;
+  left: 265px;
+  background-color: #b09e18;
+  background-color: #111c7d;
+  background-color: #243056;
+  background-color: orange;
+}
+
 .recipientSelect {
   position: absolute;
   top: 10px;
@@ -155,6 +166,14 @@
   font-size: 17px;
   padding-right: 8px;
 }
+
+.recipientSelect {
+  background-color: #b09e18;
+  background-color: #111c7d;
+  background-color: #243056;
+  background-color: orange;
+}
+
 
 .closeSponsorSelect {
   position: absolute;
@@ -225,13 +244,6 @@
   left: 11px;
   font-size: 14px;
   color: #94a3b8; 
-}
-
-.recipientSelect {
-  background-color: #b09e18;
-  background-color: #111c7d;
-  background-color: #243056;
-  background-color: orange;
 }
 
 .agentSelect {

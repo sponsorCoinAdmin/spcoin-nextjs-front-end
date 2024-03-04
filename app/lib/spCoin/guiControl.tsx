@@ -40,21 +40,10 @@ const hideElement = (element: any) => {
     }
   };
   
-  function switchTokens(sellTokenElement:TokenElement, 
-                        buyTokenElement:TokenElement,
-                        setSellTokenElement:any,
-                        setBuyTokenElement:any) {
-    let tmpElement: TokenElement = sellTokenElement;
-    setSellTokenElement(buyTokenElement);
-    setBuyTokenElement(tmpElement);
-    // setSellAmount(buyAmount)
-  }
-
   export {
     hideElement,
     showElement,
     hideSponsorRecipientConfig,
     showSponsorRecipientConfig,
-    toggleElement,
-    switchTokens
+    toggleElement
   }

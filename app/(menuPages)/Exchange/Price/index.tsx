@@ -14,12 +14,12 @@ import {
 import ApproveOrReviewButton from '@/app/components/Buttons/ApproveOrReviewButton';
 import CustomConnectButton from '@/app/components/Buttons/CustomConnectButton';
 import useSWR from "swr";
-import { useState, useEffect, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { fetchStringBalance } from '@/app/lib/wagmi/fetchBalance';
-import { ArrowDownOutlined, DownOutlined, SettingOutlined } from "@ant-design/icons";
+import { ArrowDownOutlined, DownOutlined } from "@ant-design/icons";
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
@@ -32,14 +32,15 @@ import {
   showElement,
   hideSponsorRecipientConfig,
   showSponsorRecipientConfig,
-  toggleElement,
-  switchTokens
+  toggleElement
 } from '@/app/lib/spCoin/guiControl';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 import { rateInfo } from '../../../resources/docs/stakingFormula'
 import { ExchangeTokens, EXCHANGE_STATE } from '..';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
+import AssetSelect from '@/app/components/containers/AssetSelect';
+import BuySellSwapButton, { swapTokens } from '@/app/components/Buttons/BuySellSwapButton';
 
 //////////// Price Code
 export default function PriceView({
@@ -75,7 +76,7 @@ console.debug("########################### PRICE RERENDERED ####################
     },[]);
 
     useEffect(() => {
-      alert('Price slippage changed to  ' + slippage);
+      // alert('Price slippage changed to  ' + slippage);
     }, [slippage]);
 
     useEffect(() => {
@@ -281,11 +282,7 @@ console.debug("########################### PRICE RERENDERED ####################
           <div className={styles.inputs}>
             <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
               onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
-            <div className={styles["assetSelect"]}>
-              <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenElement.img} onClick={() => alert("sellTokenElement " + JSON.stringify(sellTokenElement,null,2))}/>
-              {sellTokenElement.symbol}
-              <DownOutlined onClick={() => openDialog("#sellTokenDialog")}/>
-            </div>
+            <AssetSelect tokenElement={sellTokenElement} id={"#sellTokenDialog"}></AssetSelect>
             <div className={styles["buySell"]}>
               You Pay
             </div>
@@ -300,28 +297,15 @@ console.debug("########################### PRICE RERENDERED ####################
           {/* Buy Token Selection Module */}
           <div className={styles.inputs}>
             <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-            <div className={styles["assetSelect"]}>
-              <img alt={buyTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={buyTokenElement.img} onClick={() => alert("buyTokenElement " + JSON.stringify(buyTokenElement,null,2))}/>
-              {buyTokenElement.symbol}
-              <DownOutlined onClick={() => openDialog("#buyTokenDialog")}/>
-            </div>
-            <div className={styles["buySell"]}>
-              You receive
-            </div>
-            <div className={styles["assetBalance"]}>
-              Balance: {buyBalance}
-            </div>
-
+            <AssetSelect  tokenElement={buyTokenElement} id={"#buyTokenDialog"}></AssetSelect>
+            <div className={styles["buySell"]}>You receive </div>
+            <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
             <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
               <div className={styles["centerContainer"]} >Add Sponsorship</div>
             </div>
           </div>
-
-          {/* Buy/Sell Arrow switch button */}
-          <div className={styles.switchButton}>
-            <ArrowDownOutlined className={styles.switchArrow} onClick={() => switchTokens(
-              sellTokenElement, buyTokenElement, setSellTokenElement, setBuyTokenElement)}/>
-          </div>
+          
+          <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
 
           {/* Connect Approve or Review Buttons */}
           {connectedWalletAddr ?
@@ -351,9 +335,10 @@ console.debug("########################### PRICE RERENDERED ####################
             </div>
             <div className={styles["recipientSelect"]}>
               <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
-              {recipientElement.symbol}
+              {recipientElement.symbol} 
               <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
             </div>
+            {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientElement} id={"#recipientDialog"}></AssetSelect></div> */}
             <div>
               <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
             </div>
