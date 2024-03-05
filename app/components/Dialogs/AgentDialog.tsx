@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { WalletElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
+import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 
 const TITLE_NAME = "Select an Agent";
 const INPUT_PLACE_HOLDER = 'Type or paste agent wallet address';
@@ -17,22 +18,6 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
-
-const hideElement = (element:any) => {
-    const el = document.getElementById(element);
-    console.debug("hideElement(" + element +")")
-    if (el != null) {
-        el.style.display = 'none'
-    }
-}
-
-const showElement = (element:any) => {
-    const el = document.getElementById(element);
-    console.debug("showElement(" + element +")")
-    if (el != null) {
-        el.style.display = 'block'
-    }
-}
 
 // ToDo Read in data List remotely
 export default function Dialog({ recipientElement, callBackSetter }: any) {

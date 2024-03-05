@@ -1,6 +1,7 @@
 import { isAddress } from "ethers";
 import { fetchStringBalance } from "../wagmi/fetchBalance";
 import { TokenElement } from "../structure/types";
+import { Address } from "wagmi";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
@@ -16,6 +17,13 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    console.debug("*** ERROR *** Search Param " + _searchParam + " Not Found")
    return "";
 }
+
+const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:string) => void ) => {
+  txt = validatePrice(txt, decimals);
+  if (txt !== "")
+    setSellAmount(txt);
+  return txt;
+};
 
 const  validatePrice = (price:string, decimals:number) => {
   // Allow only numbers and '.'
@@ -34,22 +42,6 @@ const  validatePrice = (price:string, decimals:number) => {
   } 
   return "";
  }
-
- function setRateRatios(newRate: string) {
-  var numRate = Number(newRate)
-  setRecipientRatio(numRate);
-  setSponsorRatio(numRate);
-}
-
-function setSponsorRatio(newRate: number) {
-  let sponsorRatio: any = document.getElementById("sponsorRatio");
-  sponsorRatio.innerHTML = +(100-(newRate*10))+"%";
-}
-
-function setRecipientRatio(newRate: number) {
-  let recipientRatio: any = document.getElementById("recipientRatio");
-  recipientRatio.innerHTML = +(newRate*10)+"%";
-}
 
 const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenElement:any) => {
         let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
@@ -81,14 +73,32 @@ const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr:
   return false
 }
 
-
+const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenElement: TokenElement, setBalance:any) => {
+  let success = true;
+  let balance:string = "N/A";
+  let errMsg = "N/A";
+  let tokenAddr = tokenElement.address;
+  let chainId = tokenElement.chainId;
+  // console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
+  if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
+  {
+    let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
+    // console.debug("retResponse = " + JSON.stringify(retResponse))
+    balance = retResponse.formatted;
+    setBalance(balance);
+  }
+  else {
+    errMsg = "Wallet Connection Required for Balance"
+    success = true
+  }
+  return {success, errMsg, balance} ;
+};
 
 export { 
+  fetchTokenDetails,
   getQueryVariable,
-  validatePrice,
-  setRateRatios,
-  setSponsorRatio,
-  setRecipientRatio,
+  setValidPriceInput,
   getTokenDetails,
-  fetchTokenDetails
- }
+  validatePrice,
+  updateBalance
+}

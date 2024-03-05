@@ -1,49 +1,67 @@
 import { TokenElement } from "../structure/types";
 
 /// START DROPDOWN STUFF
-const hideElement = (element: any) => {
-    const el = document.getElementById(element);
-    // alert("hideElement(" + element +")")
-    // alert("el = "+el)
-    // console.debug("hideElement(" + element +")")
-    if (el != null) {
-      el.style.display = 'none';
-    }
-  };
-  
-  const showElement = (element: any) => {
-    const el = document.getElementById(element);
-    console.debug("hideElement(" + element + ")");
-    if (el != null) {
-      el.style.display = 'block';
-    }
-  };
-  
-  const hideSponsorRecipientConfig = () => {
-    hideElement("recipientSelectDiv")
-    hideElement("recipientConfigDiv")
-    hideElement("agent");
-    showElement("addSponsorship")
+const hideElement = (element: string) => {
+  const el = document.getElementById(element);
+  console.debug("hideElement(" + element +")")
+  if (el != null) {
+    el.style.display = 'none';
   }
-  
-  const showSponsorRecipientConfig = () => {
-    hideElement("addSponsorship")
-    showElement("recipientSelectDiv")
-    // hideElement("recipientConfigDiv")
-    // showElement("agent");
+};
+
+const showElement = (element: string) => {
+  const el = document.getElementById(element);
+  console.debug("hideElement(" + element + ")");
+  if (el != null) {
+    el.style.display = 'block';
   }
 
-  const toggleElement = (element: any) => {
-    const el = document.getElementById(element);
-    if (el != null) {
-      el.style.display = el.style.display === 'block' ? 'none' : 'block';
-    }
-  };
-  
-  export {
-    hideElement,
-    showElement,
-    hideSponsorRecipientConfig,
-    showSponsorRecipientConfig,
-    toggleElement
+};
+
+// ToDo: Check out the next 2 functions
+const hideClass = (className: string) => {
+  let els = document.getElementsByClassName(className);
+
+  for (var i = 0; i < els.length; i ++) {
+    els[i].style.display = 'none';
   }
+}
+
+const showClass = (className: string) => {
+  let els = document.getElementsByClassName(className);
+
+  for (var i = 0; i < els.length; i ++) {
+    els[i].style.display = 'block';
+  }
+};
+
+const hideSponsorRecipientConfig = () => {
+  hideElement("recipientSelectDiv")
+  hideElement("recipientConfigDiv")
+  hideElement("agent");
+  showElement("addSponsorship")
+}
+
+const showSponsorRecipientConfig = () => {
+  hideElement("addSponsorship")
+  showElement("recipientSelectDiv")
+  // hideElement("recipientConfigDiv")
+  // showElement("agent");
+}
+
+const toggleElement = (element: any) => {
+  const el = document.getElementById(element);
+  if (el != null) {
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  }
+};
+
+export {
+  hideElement,
+  showElement,
+  hideClass,
+  showClass,
+  hideSponsorRecipientConfig,
+  showSponsorRecipientConfig,
+  toggleElement
+}

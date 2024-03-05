@@ -1,8 +1,5 @@
 'use client';
 import styles from '../../../styles/Exchange.module.css';
-import Image from 'next/image';
-import info_png from '../../../../public/resources/images/info1.png';
-import cog_png from '../../../../public/resources/images/miscellaneous/cog.png';
 import {
   openDialog,
   AgentDialog,
@@ -18,29 +15,26 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { fetchStringBalance } from '@/app/lib/wagmi/fetchBalance';
-import { ArrowDownOutlined, DownOutlined } from "@ant-design/icons";
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { validatePrice, setRateRatios} from '@/app/lib/spCoin/utils';
+import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-
 import {
   hideElement,
   showElement,
   hideSponsorRecipientConfig,
   showSponsorRecipientConfig,
-  toggleElement
 } from '@/app/lib/spCoin/guiControl';
-const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
-
-import { rateInfo } from '../../../resources/docs/stakingFormula'
 import { ExchangeTokens, EXCHANGE_STATE } from '..';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
-import AssetSelect from '@/app/components/containers/AssetSelect';
-import BuySellSwapButton, { swapTokens } from '@/app/components/Buttons/BuySellSwapButton';
+import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
+import SellContainer from '@/app/components/containers/SellContainer';
+import BuyContainer from '@/app/components/containers/BuyContainer';
+import RecipientContainer from '@/app/components/containers/RecipientContainer';
+import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
+import AffiliateFee from '@/app/components/containers/AffiliateFee';
 
 //////////// Price Code
 export default function PriceView({
@@ -54,13 +48,13 @@ export default function PriceView({
   try {
     let chainId = useChainId();
     let networkName = getNetworkName(chainId);
-console.debug("########################### PRICE RERENDERED #####################################")
+// console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
   const [network, setNetwork] = useState("ethereum");
-    const [sellAmount, setSellAmount] = useState("0");
-    const [buyAmount, setBuyAmount] = useState("0");
-    const [sellBalance, setSellBalance] = useState("0");
-    const [buyBalance, setBuyBalance] = useState("0");
+    const [sellAmount, setSellAmount] = useState<string>("0");
+    const [buyAmount, setBuyAmount] = useState<string>("0");
+    const [sellBalance, setSellBalance] = useState<string>("0");
+    const [buyBalance, setBuyBalance] = useState<string>("0");
     const [tradeDirection, setTradeDirection] = useState("sell");
 
     const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
@@ -162,45 +156,38 @@ console.debug("########################### PRICE RERENDERED ####################
     };
 
     const updateSellBalance = async (sellTokenElement: TokenElement) => {
+
+      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenElement, setSellBalance)
+      // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalance=${balance}}`);
+
       try {
-        let tokenAddr = sellTokenElement.address;
-        let chainId = sellTokenElement.chainId;
-        // console.debug("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-        // alert("updateSellBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-        if (connectedWalletAddr !== undefined)
-        {
-          let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
-          // console.debug("retResponse = " + JSON.stringify(retResponse))
-          let sellResponse = validatePrice(retResponse.formatted, retResponse.decimals);
-          setSellBalance(sellResponse);
-        }
-        else {
-          setSellBalance("N/A");
+        setSellBalance(balance);
+
+        if (!success) {  
+          setErrorMessage({ name: "updateSellBalance: ", message: errMsg });
         }
       } catch (e: any) {
         setErrorMessage({ name: "updateSellBalance: ", message: JSON.stringify(e, null, 2) });
       }
-      return { sellBalance };
+      return { balance };
     };
 
+
     const updateBuyBalance = async (buyTokenElement: TokenElement) => {
+
+      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenElement, setBuyBalance)
+      // alert(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
+
       try {
-        let tokenAddr = buyTokenElement.address;
-        let chainId = buyTokenElement.chainId;
-        // console.debug("updateBuyBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
-        if (connectedWalletAddr !== undefined)
-        {
-          let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
-          // console.debug("retResponse = " + JSON.stringify(retResponse))
-          setBuyBalance(retResponse.formatted);
-        }
-        else {
-          setBuyBalance("N/A");
+        setBuyBalance(balance);
+
+        if (!success) {  
+          setErrorMessage({ name: "updateBuyBalance: ", message: errMsg });
         }
       } catch (e: any) {
         setErrorMessage({ name: "updateBuyBalance: ", message: JSON.stringify(e, null, 2) });
       }
-      return { buyBalance };
+      return { balance };
     };
 
   // This code currently only works for sell buy will default to undefined
@@ -255,14 +242,6 @@ console.debug("########################### PRICE RERENDERED ####################
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
 
-    //  console.debug("data = " + JSON.stringify(data, null, 2), "\nisError = " + isError, "isLoading = " + isLoading);
-
-    const setValidPriceInput = (txt: string, decimals: number) => {
-      txt = validatePrice(txt, decimals);
-      if (txt !== "")
-        setSellAmount(txt);
-    };
-
     const setCallBackRecipient = (listElement: any) => {
       showSponsorRecipientConfig();
       setRecipientElement(listElement)
@@ -278,33 +257,8 @@ console.debug("########################### PRICE RERENDERED ####################
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          {/* Sell Token Selection Module */}
-          <div className={styles.inputs}>
-            <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={sellAmount}
-              onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals); }} />
-            <AssetSelect tokenElement={sellTokenElement} id={"#sellTokenDialog"}></AssetSelect>
-            <div className={styles["buySell"]}>
-              You Pay
-            </div>
-            <div className={styles["assetBalance"]}>
-              Balance: {sellBalance}
-            </div>
-            <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
-              Sponsored Balance: {"{ToDo}"}
-            </div>
-          </div>
-
-          {/* Buy Token Selection Module */}
-          <div className={styles.inputs}>
-            <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-            <AssetSelect  tokenElement={buyTokenElement} id={"#buyTokenDialog"}></AssetSelect>
-            <div className={styles["buySell"]}>You receive </div>
-            <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-            <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
-              <div className={styles["centerContainer"]} >Add Sponsorship</div>
-            </div>
-          </div>
-          
+          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
+          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount } disabled={false}/>          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
 
           {/* Connect Approve or Review Buttons */}
@@ -322,74 +276,17 @@ console.debug("########################### PRICE RERENDERED ####################
               }}
               disabled={disabled}
               setErrorMessage={setErrorMessage} />) :
-            (<CustomConnectButton />)}
+            (<CustomConnectButton />)
+          }
 
-          {/* Your Sponsorship/Recipient selection container */}
-          <div id="recipientSelectDiv" className={styles["inputs"]}>
-            <div id="recipient-id" className={styles.sponsorCoinContainer}/>
-            <div className={styles["yourRecipient"]}>
-              You are sponsoring:
-            </div>
-            <div className={styles["recipientName"]}>
-              {recipientElement.name}
-            </div>
-            <div className={styles["recipientSelect"]}>
-              <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
-              {recipientElement.symbol} 
-              <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
-            </div>
-            {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientElement} id={"#recipientDialog"}></AssetSelect></div> */}
-            <div>
-              <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
-            </div>
-            <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => hideSponsorRecipientConfig()}>
-              X
-            </div>
-          </div>
-
-          {/* Your Sponsorship/Recipient configuration container */}
-          <div id="recipientConfigDiv" className={styles.rateRatioContainer}>
-            <div className={styles["inputs"]}>
-              <div id="recipient-config" className={styles.rateRatioContainer2}/>
-              <div className={styles["lineDivider"]}>
-              -------------------------------------------------------
-              </div>
-              <div className={styles["rewardRatio"]}>
-                Staking Reward Ratio:
-              </div>
-              <Image src={info_png} className={styles["infoImg"]} width={18} height={18} alt="Info Image" onClick={() => alert(rateInfo)}/>
-              <div className={styles["assetSelect"] + " " + styles["sponsorRatio"]}>
-                Sponsor:
-                <div id="sponsorRatio">
-                  50%
-                </div>
-              </div>
-              <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideElement("recipientConfigDiv")}>
-                X
-              </div>
-              <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>
-                Recipient:
-                <div id="recipientRatio">
-                  50%
-                </div>
-              </div>
-              <input type="range" className={styles["range-slider"]} min="2" max="10" 
-              onChange={(e) => setRateRatios((e.target.value))}></input>
-            {/* <div id="agentRateFee" className={styles["agentRateFee"]}>
+          <RecipientContainer recipientElement={recipientElement} />
+          <SponsorRateConfig />
+          <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
+          {/* <div id="agentRateFee" className={styles["agentRateFee"]}>
               Fee Disclosures
               <Image src={info_png} className={styles["feeInfoImg"]} width={18} height={18} alt="Info Image" />
             </div> */}
-            </div>
-          </div>
-
           {/* Affiliate fee display container */}
-          <div className="text-slate-400">
-            {price && price.grossBuyAmount
-              ? "Affiliate Fee: " +
-              Number(formatUnits(BigInt(price.grossBuyAmount), buyTokenElement.decimals)) *
-              AFFILIATE_FEE + " " + buyTokenElement.symbol
-              : null}
-          </div>
 
         </div>
         {isLoadingPrice && (

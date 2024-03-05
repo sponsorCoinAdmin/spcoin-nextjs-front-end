@@ -10,7 +10,6 @@ const openDialog = (dialogType:string) => {
     dialog.showModal();
   }
 
-
 export {
     openDialog,
     AgentDialog,

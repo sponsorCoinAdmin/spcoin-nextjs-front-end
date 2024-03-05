@@ -34,4 +34,3 @@ const BuySellSwapButton = (
 }
 
 export default BuySellSwapButton;
-export { swapTokens }

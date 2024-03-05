@@ -2,6 +2,7 @@ const { ethers } = require("ethers");
 import { fetchBalance } from '@wagmi/core'
 import { setWagmiConfig } from './config'
 import { Address } from "wagmi";
+import { TokenElement } from '../structure/types';
 
 setWagmiConfig();
 
@@ -32,9 +33,7 @@ async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAdd
 
   let retResponse
   try {
-    // console.debug("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
     const res = await fetchBigIntBalance(walletAddr, tokenAddr, chainId)
-    // console.debug("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
     retResponse = {
       decimals: res.decimals,
       formatted: res.formatted,
@@ -43,7 +42,6 @@ async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAdd
     }
   }
   catch (e) {
-    // console.debug("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
     let errorMsg = `***ERROR: fetchBigIntBalance(${walletAddr}, ${tokenAddr}, ${chainId})\n`+ JSON.stringify(e);
     // alert (errorMsg)
     console.error(errorMsg)
@@ -54,5 +52,7 @@ async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAdd
 
   return retResponse
 }
+
+
 
 export { fetchBigIntBalance, fetchStringBalance }
