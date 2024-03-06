@@ -9,7 +9,6 @@ import {
     useWaitForTransaction,
     type Address,
 } from "wagmi";
-import { openDialog } from '../Dialogs/Dialogs';
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
@@ -141,11 +140,6 @@ function ApproveOrReviewButton({
       }
     
       ///////////////////////////////////////////////////////////////
-
-      function openFeedModal(feedType:string) {
-        let dialog:any = document.querySelector(feedType)
-        dialog.showModal();
-      }
 
       // WORK HERE
       // Approve Button 

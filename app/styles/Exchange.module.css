@@ -472,9 +472,8 @@
 }
 
 .agentRateFee {
-  position: absolute;
-  top: 60px;
-  left: 10px;
+  position: relative;
+  top: 15px;
   color: #94a3b8; 
   font-size: 14px;
 }
@@ -483,5 +482,10 @@
   position: absolute;
   top: 0px;
   left: 115px;
+  cursor: pointer;
+}
+.feeInfoImg:hover {
+  color: white;
+  rotate: 360deg;
   cursor: pointer;
 }

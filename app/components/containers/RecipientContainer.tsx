@@ -27,7 +27,7 @@ const RecipientContainer = ({recipientElement} : Props) => {
       </div>
       {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientElement} id={"#recipientDialog"}></AssetSelect></div> */}
       <div>
-        <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
+        <Image src={cog_png} className={styles["Imgcog"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
       </div>
       <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => hideSponsorRecipientConfig()}>
         X

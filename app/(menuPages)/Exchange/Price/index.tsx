@@ -1,4 +1,7 @@
 'use client';
+import Image from 'next/image';
+import info_png from '../../../../public/resources/images/info1.png'
+
 import styles from '../../../styles/Exchange.module.css';
 import {
   openDialog,
@@ -8,8 +11,6 @@ import {
   BuyTokenDialog,
   ErrorDialog
 } from '@/app/components/Dialogs/Dialogs';
-import ApproveOrReviewButton from '@/app/components/Buttons/ApproveOrReviewButton';
-import CustomConnectButton from '@/app/components/Buttons/CustomConnectButton';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
@@ -35,6 +36,9 @@ import BuyContainer from '@/app/components/containers/BuyContainer';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
+import PriceButton from '@/app/components/Buttons/PriceButton';
+import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
+import IsLoading from '@/app/components/containers/IsLoading';
 
 //////////// Price Code
 export default function PriceView({
@@ -124,7 +128,6 @@ export default function PriceView({
       updateNetwork(network)
     }, [network]);
 
-
     const updateNetwork = (network:string | number) => {
       // alert("Price:network set to " + network)
       try {
@@ -172,9 +175,7 @@ export default function PriceView({
       return { balance };
     };
 
-
     const updateBuyBalance = async (buyTokenElement: TokenElement) => {
-
       let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenElement, setBuyBalance)
       // alert(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
 
@@ -247,6 +248,14 @@ export default function PriceView({
       setRecipientElement(listElement)
     }
 
+    const setExchangeTokensCallback = () => {
+      setExchangeTokens({
+        state: EXCHANGE_STATE.QUOTE,
+        slippage:slippage,
+        sellToken: sellTokenElement,
+        buyToken: buyTokenElement         
+      })
+    }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
       <form autoComplete="off">
@@ -260,38 +269,13 @@ export default function PriceView({
           <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
           <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount } disabled={false}/>          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
-
-          {/* Connect Approve or Review Buttons */}
-          {connectedWalletAddr ?
-            (<ApproveOrReviewButton token={sellTokenElement}
-              connectedWalletAddr={connectedWalletAddr}
-              sellBalance={sellBalance}
-              onClick={() => { 
-                setExchangeTokens({
-                  state: EXCHANGE_STATE.QUOTE,
-                  slippage:slippage,
-                  sellToken: sellTokenElement,
-                  buyToken: buyTokenElement         
-                })
-              }}
-              disabled={disabled}
-              setErrorMessage={setErrorMessage} />) :
-            (<CustomConnectButton />)
-          }
-
+          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />
           <RecipientContainer recipientElement={recipientElement} />
           <SponsorRateConfig />
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
-          {/* <div id="agentRateFee" className={styles["agentRateFee"]}>
-              Fee Disclosures
-              <Image src={info_png} className={styles["feeInfoImg"]} width={18} height={18} alt="Info Image" />
-            </div> */}
-          {/* Affiliate fee display container */}
-
         </div>
-        {isLoadingPrice && (
-          <div className="text-center mt-2">Fetching the best price...</div>
-        )}
+        <FeeDisclosure/>
+        <IsLoading isLoadingPrice={isLoadingPrice} />
       </form>
     );
   } catch (err:any) {

@@ -18,10 +18,12 @@ import { getTokenDetails, fetchTokenDetails } from "@/app/lib/spCoin/utils";
 import { ExchangeTokens } from "..";
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import SellContainer from '@/app/components/containers/SellContainer';
+import { TokenElement } from '@/app/lib/structure/types';
 import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
+import PlaceOrder from '@/app/components/Buttons/QuoteButton';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -149,7 +151,17 @@ export default function QuoteView({
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
           <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenElement?.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
           <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement?.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined } disabled={true}/>          
-          <QuoteButton sendTransaction={sendTransaction}/>
+          <QuoteButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={"ToDo: SellBalance"} disabled={true} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />
+          <PlaceOrder sendTransaction={sendTransaction}/>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+            onClick={() => {
+              console.log("submitting quote to blockchain");
+              sendTransaction && sendTransaction();
+              }
+            }>
+            Place Order
+          </button>
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
           <FeeDisclosure/>
         </div>
