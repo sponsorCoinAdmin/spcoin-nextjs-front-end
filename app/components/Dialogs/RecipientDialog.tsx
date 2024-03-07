@@ -20,7 +20,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ agentElement, callBackSetter }: any) {
+export default function Dialog({ agentElement, setRecipientElement }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
@@ -99,7 +99,7 @@ export default function Dialog({ agentElement, callBackSetter }: any) {
             console.log("Recipient cannot be the same as Recipient("+agentElement.symbol+")");
             return false;
         }
-        callBackSetter(listElement)
+        setRecipientElement(listElement)
         closeDialog()
     }
 

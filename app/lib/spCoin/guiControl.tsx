@@ -39,11 +39,11 @@ const hideSponsorRecipientConfig = () => {
   hideElement("recipientSelectDiv")
   hideElement("recipientConfigDiv")
   hideElement("agent");
-  showElement("addSponsorship")
+  showElement("addSponsorshipDiv")
 }
 
 const showSponsorRecipientConfig = () => {
-  hideElement("addSponsorship")
+  hideElement("addSponsorshipDiv")
   showElement("recipientSelectDiv")
   // hideElement("recipientConfigDiv")
   // showElement("agent");

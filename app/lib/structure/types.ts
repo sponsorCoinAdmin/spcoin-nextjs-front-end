@@ -16,12 +16,10 @@ interface PriceRequestParams {
   }
     
   type WalletElement = {
-    chainId: number;
     address: any;
     symbol: string;
     name: string;
     img: string;
-    decimals: number;
   }
     
   export type {

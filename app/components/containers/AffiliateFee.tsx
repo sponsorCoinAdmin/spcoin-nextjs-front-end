@@ -6,8 +6,8 @@ const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? 
 
 type Props = {
     price: PriceResponse | undefined,
-    sellTokenElement: TokenElement, 
-    buyTokenElement: TokenElement, 
+    sellTokenElement: TokenElement | undefined, 
+    buyTokenElement: TokenElement | undefined, 
   }
 
 const AffiliateFee = ({price, sellTokenElement, buyTokenElement} : Props) => {

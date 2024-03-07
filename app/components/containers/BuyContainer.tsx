@@ -19,7 +19,7 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
     <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
     <div className={styles["buySell"]}>You receive </div>
     <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-    <div id="addSponsorship" className={styles["addSponsorship"]} onClick={() => showSponsorRecipientConfig()}>
+    <div id="addSponsorshipDiv" className={styles["addSponsorshipDiv"]} onClick={() => showSponsorRecipientConfig()}>
       <div className={styles["centerContainer"]} >Add Sponsorship</div>
     </div>
   </div>

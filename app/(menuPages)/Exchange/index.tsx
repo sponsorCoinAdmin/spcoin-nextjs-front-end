@@ -3,7 +3,7 @@ import PriceView from "./Price";
 import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
-import { TokenElement } from "@/app/lib/structure/types";
+import { WalletElement, TokenElement } from "@/app/lib/structure/types";
 
 enum  EXCHANGE_STATE {
   PRICE, QUOTE, PENDING
@@ -11,9 +11,11 @@ enum  EXCHANGE_STATE {
 
 type ExchangeTokens = {
   state: EXCHANGE_STATE;
-  slippage:string|undefined|null;
+  slippage: string|undefined|null;
   sellToken: TokenElement;
   buyToken: TokenElement;
+  recipientElement: WalletElement;
+  agentElement: WalletElement;
 }
 
 export default function Home() {

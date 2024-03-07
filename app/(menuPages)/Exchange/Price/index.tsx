@@ -17,7 +17,7 @@ import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
@@ -26,7 +26,6 @@ import {
   hideElement,
   showElement,
   hideSponsorRecipientConfig,
-  showSponsorRecipientConfig,
 } from '@/app/lib/spCoin/guiControl';
 import { ExchangeTokens, EXCHANGE_STATE } from '..';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
@@ -64,7 +63,7 @@ export default function PriceView({
     const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
     const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
     const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
-    const [recipientElement, setRecipientElement] = useState(defaultNetworkSettings?.defaultRecipient);
+    const [recipientElement, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
     const [agentElement, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
@@ -93,20 +92,17 @@ export default function PriceView({
     }, [buyTokenElement]);
 
     useEffect(() => {
-      // alert("Opening up errorMessage Dialog errorMessage = "+JSON.stringify(errorMessage,null,2))
       if (errorMessage.name !== "" && errorMessage.message !== "") {
-        // alert("useEffect(() => errorMessage.name = " + errorMessage.name + "\nuseEffect(() => errorMessage.message = " + errorMessage.message)
-        // alert('openDialog("#errorDialog")')
         openDialog("#errorDialog");
       }
     }, [errorMessage]);
 
     useEffect(() => { {
       if (buyTokenElement.symbol === "SpCoin") {
-        showElement("addSponsorship")
+        showElement("addSponsorshipDiv")
       }
       else {
-        hideElement("addSponsorship")
+        hideElement("addSponsorshipDiv")
         hideElement("recipientSelectDiv")
         hideElement("recipientConfigDiv")
         hideElement("agent");
@@ -243,17 +239,14 @@ export default function PriceView({
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
 
-    const setCallBackRecipient = (listElement: any) => {
-      showSponsorRecipientConfig();
-      setRecipientElement(listElement)
-    }
-
-    const setExchangeTokensCallback = () => {
+      const setExchangeTokensCallback = () => {
       setExchangeTokens({
         state: EXCHANGE_STATE.QUOTE,
         slippage:slippage,
         sellToken: sellTokenElement,
-        buyToken: buyTokenElement         
+        buyToken: buyTokenElement,
+        recipientElement: recipientElement,      
+        agentElement: agentElement        
       })
     }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
@@ -261,7 +254,7 @@ export default function PriceView({
       <form autoComplete="off">
         <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
         <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
-        <RecipientDialog agentElement={agentElement} callBackSetter={setCallBackRecipient} />
+        <RecipientDialog agentElement={agentElement} setRecipientElement={setRecipientElement} />
         <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>

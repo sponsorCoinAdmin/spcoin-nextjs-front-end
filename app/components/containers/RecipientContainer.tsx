@@ -11,6 +11,7 @@ type Props = {
 }
 
 const RecipientContainer = ({recipientElement} : Props) => {
+  // alert("RecipientContainer:\n" + JSON.stringify(recipientElement,null,2))
   return (
     <div id="recipientSelectDiv" className={styles["inputs"]}>
       <div id="recipient-id" className={styles.sponsorCoinContainer}/>
