@@ -7,11 +7,11 @@ import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
 
 type Props = {
-  recipientElement: any, 
+  recipientWallet: any, 
 }
 
-const RecipientContainer = ({recipientElement} : Props) => {
-  // alert("RecipientContainer:\n" + JSON.stringify(recipientElement,null,2))
+const RecipientContainer = ({recipientWallet} : Props) => {
+  // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
   return (
     <div id="recipientSelectDiv" className={styles["inputs"]}>
       <div id="recipient-id" className={styles.sponsorCoinContainer}/>
@@ -19,14 +19,14 @@ const RecipientContainer = ({recipientElement} : Props) => {
         You are sponsoring:
       </div>
       <div className={styles["recipientName"]}>
-        {recipientElement.name}
+        {recipientWallet.name}
       </div>
       <div className={styles["recipientSelect"]}>
-        <img alt={recipientElement.name} className="h-9 w-9 mr-2 rounded-md" src={recipientElement.img} />
-        {recipientElement.symbol} 
+        <img alt={recipientWallet.name} className="h-9 w-9 mr-2 rounded-md" src={recipientWallet.img} />
+        {recipientWallet.symbol} 
         <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
       </div>
-      {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientElement} id={"#recipientDialog"}></AssetSelect></div> */}
+      {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientWallet} id={"#recipientDialog"}></AssetSelect></div> */}
       <div>
         <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
       </div>

@@ -22,12 +22,13 @@ import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
-import { showElement, hideElement } from '@/app/lib/spCoin/guiControl';
+import { showElement, hideElement, hideSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
 import ErrorDialog from '@/app/components/Dialogs/ErrorDialog';
 import { RecipientDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
+import { TokenElement, WalletElement } from '@/app/lib/structure/types';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -43,8 +44,8 @@ export default function QuoteView({
   price: PriceResponse;
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
-  connectedWalletAddr: Address | undefined;
-  exchangeTokens: ExchangeTokens | undefined;
+  connectedWalletAddr: Address;
+  exchangeTokens: ExchangeTokens;
 }) {
 
   console.debug("########################### QUOTE RERENDERED #####################################")
@@ -53,11 +54,11 @@ export default function QuoteView({
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
-  const [slippage, setSlippage] = useState<string | undefined | null>(exchangeTokens?.slippage);
-  const [sellTokenElement, setSellTokenElement] = useState(exchangeTokens?.sellToken);
-  const [buyTokenElement, setVuyTokenElement] = useState(exchangeTokens?.buyToken);
-  const [recipientElement, setRecipientElement] = useState(exchangeTokens?.recipientElement);
-  const [agentElement, setAgentElement] = useState(exchangeTokens?.agentElement);
+  const [slippage, setSlippage] = useState<string | undefined | null>(exchangeTokens.slippage);
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeTokens.sellToken);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
+  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
+  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeTokens.agentWallet);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
@@ -66,32 +67,47 @@ export default function QuoteView({
   },[]);
 
   useEffect(() => {
-    // alert('Quote slippage changed to  ' + slippage);
+    initBuyTokenComponents(buyTokenElement)
+    initSellTokenComponents(sellTokenElement)
   }, [slippage]);
 
-  useEffect(() => { {
-    if (buyTokenElement?.symbol === "SpCoin") {
+  useEffect(() => { 
+      initBuyTokenComponents(buyTokenElement)
+   }, [buyTokenElement]);
+
+
+  useEffect(() => {
+      initSellTokenComponents(sellTokenElement)
+    }, [sellTokenElement]);
+
+  const initBuyTokenComponents = (buyTokenElement:TokenElement) => {
+    // alert(`initBuyTokenComponents:buyTokenElement.symbol === ${buyTokenElement.symbol}`)
+    if (buyTokenElement.symbol === "SpCoin") {
+      // alert("HERE 1")
       showElement("addSponsorshipDiv")
     }
     else {
+      // hideSponsorRecipientConfig()
+      // alert("HERE 2")
       hideElement("addSponsorshipDiv")
       hideElement("recipientSelectDiv")
       hideElement("recipientConfigDiv")
       hideElement("agent");
-      }
     }
-  }, [buyTokenElement]);
+  }
 
-  useEffect(() => { {
-    if (sellTokenElement?.symbol === "SpCoin") {
+  const initSellTokenComponents = (sellTokenElement:TokenElement) => {
+    // alert(`initSellTokenComponents:sellTokenElement.symbol === ${sellTokenElement.symbol}`)
+    if (sellTokenElement.symbol === "SpCoin") {
+      // alert("HERE 3")
       showElement("sponsoredBalance")
     }
     else {
+      // alert("HERE 4")
       hideElement("sponsoredBalance")
-      }
-    }
-  }, [sellTokenElement]);
-
+    }      
+  }
+  
   useEffect(() => {
     if (errorMessage.name !== "" && errorMessage.message !== "") {
       openDialog("#errorDialog");
@@ -155,7 +171,7 @@ export default function QuoteView({
       onSuccess: (data) => {
         setQuote(data);
         console.log("quote", data);
-        console.log(formatUnits(data.buyAmount, buyTokenElement?.decimals), data);
+        console.log(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
       },
     }
   );
@@ -172,23 +188,19 @@ export default function QuoteView({
   }
 
   console.log("quote" + JSON.stringify(quote,null,2));
-  console.log(formatUnits(quote.sellAmount, sellTokenElement?.decimals));
-
-  function setExchangeTokensCallback(): void {
-    throw new Error('Function not implemented.');
-  }
+  console.log(formatUnits(quote.sellAmount, sellTokenElement.decimals));
 
   return (
     <div className="p-3 mx-auto max-w-screen-sm ">
       <form>
-      <RecipientDialog agentElement={agentElement} setRecipientElement={setRecipientElement} />
+      <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenElement?.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
-          <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement?.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined } disabled={true}/>          
+          <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenElement.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
+          <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined } disabled={true}/>          
           <QuoteButton sendTransaction={sendTransaction}/>
-          <RecipientContainer recipientElement={recipientElement} />
+          <RecipientContainer recipientWallet={recipientWallet} />
           <SponsorRateConfig />
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
         </div>

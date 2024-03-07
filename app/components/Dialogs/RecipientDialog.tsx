@@ -20,7 +20,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ agentElement, setRecipientElement }: any) {
+export default function Dialog({ agentWallet, setRecipientElement }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
@@ -89,14 +89,14 @@ export default function Dialog({ agentElement, setRecipientElement }: any) {
 
     const getSelectedListElement = (listElement: WalletElement | undefined) => {
         console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
-        console.debug("getSelectedListElement:agentElement: " +JSON.stringify(agentElement,null,2))
+        console.debug("getSelectedListElement:agentWallet: " +JSON.stringify(agentWallet,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + recipientInput)
             return false;
         }
-        if (listElement?.address === agentElement?.address) {
-            alert("Recipient cannot be the same as Recipient("+agentElement.symbol+")")
-            console.log("Recipient cannot be the same as Recipient("+agentElement.symbol+")");
+        if (listElement?.address === agentWallet?.address) {
+            alert("Recipient cannot be the same as Recipient("+agentWallet.symbol+")")
+            console.log("Recipient cannot be the same as Recipient("+agentWallet.symbol+")");
             return false;
         }
         setRecipientElement(listElement)

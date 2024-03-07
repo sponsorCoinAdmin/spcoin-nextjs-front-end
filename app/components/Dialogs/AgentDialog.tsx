@@ -20,7 +20,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ recipientElement, callBackSetter }: any) {
+export default function Dialog({ recipientWallet, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
@@ -93,9 +93,9 @@ export default function Dialog({ recipientElement, callBackSetter }: any) {
             alert("Invalid Wallet address : " + agentInput)
             return false;
         }
-        if (listElement.address === recipientElement.address) {
-            alert("Agent cannot be the same as Recipient("+recipientElement.symbol+")")
-            console.log("Agent cannot be the same as Recipient("+recipientElement.symbol+")");
+        if (listElement.address === recipientWallet.address) {
+            alert("Agent cannot be the same as Recipient("+recipientWallet.symbol+")")
+            console.log("Agent cannot be the same as Recipient("+recipientWallet.symbol+")");
             return false;
         }
         callBackSetter(listElement)

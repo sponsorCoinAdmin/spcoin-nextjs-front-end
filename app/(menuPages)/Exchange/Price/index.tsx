@@ -53,7 +53,7 @@ export default function PriceView({
     let networkName = getNetworkName(chainId);
 // console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
-  const [network, setNetwork] = useState("ethereum");
+    const [network, setNetwork] = useState("ethereum");
     const [sellAmount, setSellAmount] = useState<string>("0");
     const [buyAmount, setBuyAmount] = useState<string>("0");
     const [sellBalance, setSellBalance] = useState<string>("0");
@@ -63,8 +63,8 @@ export default function PriceView({
     const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
     const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
     const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
-    const [recipientElement, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
-    const [agentElement, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
+    const [recipientWallet, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
+    const [agentWallet, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
 
@@ -245,8 +245,8 @@ export default function PriceView({
         slippage:slippage,
         sellToken: sellTokenElement,
         buyToken: buyTokenElement,
-        recipientElement: recipientElement,      
-        agentElement: agentElement        
+        recipientWallet: recipientWallet,      
+        agentWallet: agentWallet        
       })
     }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
@@ -254,8 +254,8 @@ export default function PriceView({
       <form autoComplete="off">
         <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
         <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
-        <RecipientDialog agentElement={agentElement} setRecipientElement={setRecipientElement} />
-        <AgentDialog recipientElement={recipientElement} callBackSetter={setAgentElement} />
+        <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
+        <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
@@ -263,7 +263,7 @@ export default function PriceView({
           <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount } disabled={false}/>          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
           <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />
-          <RecipientContainer recipientElement={recipientElement} />
+          <RecipientContainer recipientWallet={recipientWallet} />
           <SponsorRateConfig />
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
         </div>

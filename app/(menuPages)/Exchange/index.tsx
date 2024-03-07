@@ -14,8 +14,8 @@ type ExchangeTokens = {
   slippage: string|undefined|null;
   sellToken: TokenElement;
   buyToken: TokenElement;
-  recipientElement: WalletElement;
-  agentElement: WalletElement;
+  recipientWallet: WalletElement;
+  agentWallet: WalletElement;
 }
 
 export default function Home() {
@@ -28,7 +28,8 @@ export default function Home() {
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24`}
     >
-      {exchangeTokens?.state === EXCHANGE_STATE.QUOTE && price ? (
+      {exchangeTokens?.state === EXCHANGE_STATE.QUOTE && price && address  && exchangeTokens ? 
+      (
         <QuoteView
           connectedWalletAddr={address}
           price={price}
