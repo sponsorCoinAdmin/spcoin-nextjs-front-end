@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import styles from '../../styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenElement } from '@/app/lib/structure/types';
@@ -17,20 +17,14 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
     let isSpCoin = buyTokenElement.symbol === "SpCoin" ? true:false
     return isSpCoin
   }
-  const [spCoin, setSpCoin] = useState<boolean>(isSpCoin(buyTokenElement))
-  
-  useEffect(() => {
-    hideElement("recipientSelectDiv")
-    hideElement("recipientConfigDiv")
-
-  },[])
 
   useEffect(() => {
     isSpCoin(buyTokenElement) ? showElement("addSponsorshipDiv") : hideElement("addSponsorshipDiv")
+    hideElement("recipientSelectDiv")
+    hideElement("recipientConfigDiv")
   },[buyTokenElement])
 
   const showRecipientSelect = () => {
-    console.debug(`CCCCCCCCCCCCCCCCCCCC setSpCoinContainers:showRecipientSelect`)
     hideElement("addSponsorshipDiv")
     showElement("recipientSelectDiv")
   }
