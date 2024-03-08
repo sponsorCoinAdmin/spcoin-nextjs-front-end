@@ -19,10 +19,14 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
     // console.debug(`%%%%%%%%%%%%%%%%%%%% isSpCoin = ${isSpCoin}`)
     return isSpCoin
   }
-  const [spCoin, setSpCoin] = useState(isSpCoin(buyTokenElement))
-  const [showSponsorButton, setShowSponsorButton] = useState(spCoin)
+  const [spCoin, setSpCoin] = useState<boolean>(isSpCoin(buyTokenElement))
+  const [showSponsorButton, setShowSponsorButton] = useState<boolean>(spCoin)
+  const [jj, setJj] = useState<boolean>(false)
+  
   useEffect(() => {
     setShowSponsorButton(showSponsorButtonStatus)
+    setJj(true)
+
     // setSpCoinContainers()
   },[])
   useEffect(() => {
@@ -31,11 +35,6 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
       setShowSponsorButton(showSponsorButtonStatus)
     }
   },[buyTokenElement])
-
-  // useEffect(() => {
-  //   toggleSpCoinContainers()
-  // },[spCoin, showSponsorButton, buyTokenElement])
-
 
   const showButton = () => {
     console.debug(`AAAAAAAAAAAAAAAAAAAA setSpCoinContainers:showButton`)
@@ -59,13 +58,18 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
   }
 
   const toggleSpCoinContainers = () => {
+    console.debug("%%%%%%%%%%%%%%%%%%%% BEFORE TOGGLE jj ="+jj)
     console.debug(`%%%%%%%%%%%%%%%%%%%% BEFORE TOGGLE showSponsorButton = ${showSponsorButton}`)
+    setJj(true)
     setShowSponsorButton(!showSponsorButton)
     console.debug(`%%%%%%%%%%%%%%%%%%%% AFTER TOGGLE showSponsorButton = ${showSponsorButton}`)
+    console.debug("%%%%%%%%%%%%%%%%%%%% AFTER TOGGLE AAjj ="+jj)
     setSpCoinContainers()
    }
 
   const setSpCoinContainers = () => {
+    console.debug(`spCoin = ${spCoin}  showSponsorButton = ${showSponsorButton}`)
+
     if (!spCoin){
       hideButton()
       hideRecipientDivs()
@@ -93,7 +97,7 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
       <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive </div>
       <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-      <div className={styles[`addSponsorshipDiv`]+" "+styles[`${getButtonStatus()}`]} onClick={() => toggleSpCoinContainers()}>
+      <div className={styles[`addSponsorshipDiv`]+" "+styles[`${getButtonStatus()}`]} onClick={() => setSpCoinContainers()}>
         <div className={styles["centerContainer"]} >Add Sponsorship</div>
       </div>
     </div>
