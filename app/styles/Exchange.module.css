@@ -65,6 +65,14 @@
   border-radius: 12px !important;
 }
 
+.hidden{
+  display: none
+}
+
+.open{
+  display: block
+}
+
 .addSponsorshipDiv:hover {
   cursor: pointer;
   color: green

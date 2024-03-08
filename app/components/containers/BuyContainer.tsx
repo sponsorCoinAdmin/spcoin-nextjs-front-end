@@ -1,29 +1,111 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from '../../styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenElement } from '@/app/lib/structure/types';
-import { showSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
+import { hideElement, showElement, showSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
 
 type Props = {
   buyAmount: string,
   buyBalance: string,
   buyTokenElement: TokenElement, 
   setBuyAmount: any,
-  disabled:boolean
+  disabled:boolean,
+  showSponsorButtonStatus:boolean
 }
 
-const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, disabled} : Props) => {
+const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, disabled, showSponsorButtonStatus} : Props) => {
+  const isSpCoin = (buyTokenElement:TokenElement) => {
+    let isSpCoin = buyTokenElement.symbol === "SpCoin" ? true:false
+    // console.debug(`%%%%%%%%%%%%%%%%%%%% isSpCoin = ${isSpCoin}`)
+    return isSpCoin
+  }
+  const [spCoin, setSpCoin] = useState(isSpCoin(buyTokenElement))
+  const [showSponsorButton, setShowSponsorButton] = useState(spCoin)
+  useEffect(() => {
+    setShowSponsorButton(showSponsorButtonStatus)
+    // setSpCoinContainers()
+  },[])
+  useEffect(() => {
+    if (isSpCoin(buyTokenElement)) {
+      setSpCoin(true)
+      setShowSponsorButton(showSponsorButtonStatus)
+    }
+  },[buyTokenElement])
+
+  // useEffect(() => {
+  //   toggleSpCoinContainers()
+  // },[spCoin, showSponsorButton, buyTokenElement])
+
+  const toggleSpCoinContainers = () => {
+    setShowSponsorButton(!showSponsorButton)
+    setSpCoinContainers()
+   }
+
+  const showButton = () => {
+    console.debug(`AAAAAAAAAAAAAAAAAAAA setSpCoinContainers:showButton`)
+    setShowSponsorButton(true)
+  }
+
+  const hideButton = () => {
+    console.debug(`BBBBBBBBBBBBBBBBBBBB setSpCoinContainers:hideButton`)
+    setShowSponsorButton(false)
+  }
+
+  const showRecipientSelect = () => {
+    console.debug(`CCCCCCCCCCCCCCCCCCCC setSpCoinContainers:showRecipientSelect`)
+    showElement("recipientSelectDiv")
+  }
+
+  const hideRecipientDivs = () => {
+    console.debug(`DDDDDDDDDDDDDDDDDDDD setSpCoinContainers:hideRecipientDivs`)
+    hideElement("recipientSelectDiv")
+    hideElement("recipientConfigDiv")
+  }
+
+  const setSpCoinContainers = () => {
+    if (!spCoin){
+      hideButton()
+      hideRecipientDivs()
+    } else {}
+      if (!showSponsorButton){
+        showRecipientSelect()
+      } else {
+        showButton()
+        hideRecipientDivs
+      }
+    }
+
+
+
+
+    // if (spCoin && !showSponsorButton){
+    //   console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:showElement("recipientSelectDiv")`) 
+    //   showRecipientSelect()
+    // } else {
+    //   console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:hideElement("recipientSelectDiv")`) 
+    //   hideRecipientDivs()
+    // }
+    // console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:spCoin       = ${spCoin ? "SpCoin":"Not SpCoin"}`) 
+    // console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:SpCoinButton = ${showSponsorButton ? "open":"hidden"}`) 
+
+  const getButtonStatus = () => {
+    let buttonStatus = showSponsorButton ? 'open' : 'hidden'
+    // setSpCoinContainers()
+    // console.debug(`%%%%%%%%%%%%%%%%%%%% getButtonStatus:buttonStatus  = ${buttonStatus}`)
+    return buttonStatus
+  }
+
   return (
     <div className={styles.inputs}>
-    <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={true} value={parseFloat(buyAmount).toFixed(6)} />
-    <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
-    <div className={styles["buySell"]}>You receive </div>
-    <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-    <div id="addSponsorshipDiv" className={styles["addSponsorshipDiv"]} onClick={() => showSponsorRecipientConfig()}>
-      <div className={styles["centerContainer"]} >Add Sponsorship</div>
+      <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={parseFloat(buyAmount).toFixed(6)} />
+      <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
+      <div className={styles["buySell"]}>You receive </div>
+      <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
+      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]+" "+styles[`${getButtonStatus()}`]} onClick={() => toggleSpCoinContainers()}>
+        <div className={styles["centerContainer"]} >Add Sponsorship</div>
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default BuyContainer;

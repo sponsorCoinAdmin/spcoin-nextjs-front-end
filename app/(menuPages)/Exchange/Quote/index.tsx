@@ -64,12 +64,9 @@ export default function QuoteView({
   useEffect(() => {
     console.debug("exchangeTokens =\n" + JSON.stringify(exchangeTokens,null,2))
     console.debug("price =\n" + JSON.stringify(price,null,2))
-  },[]);
+    hideSponsorRecipientConfig();
 
-  useEffect(() => {
-    initBuyTokenComponents(buyTokenElement)
-    initSellTokenComponents(sellTokenElement)
-  }, [slippage]);
+  },[]);
 
   useEffect(() => { 
       initBuyTokenComponents(buyTokenElement)

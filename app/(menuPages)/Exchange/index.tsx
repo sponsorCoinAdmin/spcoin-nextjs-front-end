@@ -25,9 +25,7 @@ export default function Home() {
   const { address } = useAccount();
  
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24`}
-    >
+    <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
       {exchangeTokens?.state === EXCHANGE_STATE.QUOTE && price && address  && exchangeTokens ? 
       (
         <QuoteView

@@ -11,7 +11,7 @@ const hideElement = (element: string) => {
 
 const showElement = (element: string) => {
   const el = document.getElementById(element);
-  console.debug("hideElement(" + element + ")");
+  console.debug("showElement(" + element + ")");
   if (el != null) {
     el.style.display = 'block';
   }
