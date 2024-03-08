@@ -64,7 +64,6 @@ export default function PriceView({
     const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
     const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
-    const [showSponsorButtonStatus, setShowSponsorButtonStatus] = useState<boolean>(true);
     const [agentWallet, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
@@ -261,7 +260,7 @@ export default function PriceView({
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
           <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
-          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} showSponsorButtonStatus={showSponsorButtonStatus}/>          
+          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} />          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
           <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />
           <RecipientContainer recipientWallet={recipientWallet} />

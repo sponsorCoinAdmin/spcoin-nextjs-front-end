@@ -9,76 +9,30 @@ type Props = {
   buyBalance: string,
   buyTokenElement: TokenElement, 
   setBuyAmount: any,
-  disabled:boolean,
-  showSponsorButtonStatus:boolean
+  disabled:boolean
 }
 
-const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, disabled, showSponsorButtonStatus} : Props) => {
+const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, disabled} : Props) => {
   const isSpCoin = (buyTokenElement:TokenElement) => {
     let isSpCoin = buyTokenElement.symbol === "SpCoin" ? true:false
-    // console.debug(`%%%%%%%%%%%%%%%%%%%% isSpCoin = ${isSpCoin}`)
     return isSpCoin
   }
   const [spCoin, setSpCoin] = useState<boolean>(isSpCoin(buyTokenElement))
-  const [showSponsorButton, setShowSponsorButton] = useState<boolean>(spCoin)
   
   useEffect(() => {
-    setShowSponsorButton(showSponsorButtonStatus)
-    hideRecipientDivs()
+    hideElement("recipientSelectDiv")
+    hideElement("recipientConfigDiv")
 
-    // setSpCoinContainers()
   },[])
+
   useEffect(() => {
-    if (isSpCoin(buyTokenElement)) {
-      setSpCoin(true)
-      setShowSponsorButton(showSponsorButtonStatus)
-    }
+    isSpCoin(buyTokenElement) ? showElement("addSponsorshipDiv") : hideElement("addSponsorshipDiv")
   },[buyTokenElement])
-
-  const showButton = () => {
-    console.debug(`AAAAAAAAAAAAAAAAAAAA setSpCoinContainers:showButton`)
-    setShowSponsorButton(true)
-  }
-
-  const hideButton = () => {
-    console.debug(`BBBBBBBBBBBBBBBBBBBB setSpCoinContainers:hideButton`)
-    setShowSponsorButton(false)
-  }
 
   const showRecipientSelect = () => {
     console.debug(`CCCCCCCCCCCCCCCCCCCC setSpCoinContainers:showRecipientSelect`)
     hideElement("addSponsorshipDiv")
     showElement("recipientSelectDiv")
-  }
-
-  const hideRecipientDivs = () => {
-    console.debug(`DDDDDDDDDDDDDDDDDDDD setSpCoinContainers:hideRecipientDivs`)
-    hideElement("recipientSelectDiv")
-    hideElement("recipientConfigDiv")
-  }
-
-  const setSpCoinContainers = () => {
-    console.debug(`spCoin = ${spCoin}  showSponsorButton = ${showSponsorButton}`)
-
-    if (!spCoin){
-      hideButton()
-      hideRecipientDivs()
-    } else {
-      if (!showSponsorButton){
-        hideRecipientDivs()
-        hideButton()
-      } else {
-        hideButton()
-        showRecipientSelect()
-      }
-    }
-  }
-
-  const getButtonStatus = () => {
-    let buttonStatus = showSponsorButton ? 'visible' : 'hidden'
-    // setSpCoinContainers()
-    console.debug(`%%%%%%%%%%%%%%%%%%%% getButtonStatus:buttonStatus  = ${buttonStatus}`)
-    return buttonStatus
   }
 
   return (
@@ -87,7 +41,6 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
       <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive </div>
       <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-      {/* <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]+" "+styles[`${getButtonStatus()}`]} onClick={() => setSpCoinContainers()}> */}
       <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => showRecipientSelect()}>
         <div className={styles["centerContainer"]} >Add Sponsorship</div>
       </div>
