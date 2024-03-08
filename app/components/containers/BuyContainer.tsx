@@ -36,10 +36,6 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
   //   toggleSpCoinContainers()
   // },[spCoin, showSponsorButton, buyTokenElement])
 
-  const toggleSpCoinContainers = () => {
-    setShowSponsorButton(!showSponsorButton)
-    setSpCoinContainers()
-   }
 
   const showButton = () => {
     console.debug(`AAAAAAAAAAAAAAAAAAAA setSpCoinContainers:showButton`)
@@ -62,36 +58,32 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
     hideElement("recipientConfigDiv")
   }
 
+  const toggleSpCoinContainers = () => {
+    console.debug(`%%%%%%%%%%%%%%%%%%%% BEFORE TOGGLE showSponsorButton = ${showSponsorButton}`)
+    setShowSponsorButton(!showSponsorButton)
+    console.debug(`%%%%%%%%%%%%%%%%%%%% AFTER TOGGLE showSponsorButton = ${showSponsorButton}`)
+    setSpCoinContainers()
+   }
+
   const setSpCoinContainers = () => {
     if (!spCoin){
       hideButton()
       hideRecipientDivs()
-    } else {}
+    } else {
       if (!showSponsorButton){
-        showRecipientSelect()
+        hideRecipientDivs()
+        hideButton()
       } else {
-        showButton()
-        hideRecipientDivs
+        hideButton()
+        showRecipientSelect()
       }
     }
-
-
-
-
-    // if (spCoin && !showSponsorButton){
-    //   console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:showElement("recipientSelectDiv")`) 
-    //   showRecipientSelect()
-    // } else {
-    //   console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:hideElement("recipientSelectDiv")`) 
-    //   hideRecipientDivs()
-    // }
-    // console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:spCoin       = ${spCoin ? "SpCoin":"Not SpCoin"}`) 
-    // console.debug(`%%%%%%%%%%%%%%%%%%%% setSpCoinContainers:SpCoinButton = ${showSponsorButton ? "open":"hidden"}`) 
+  }
 
   const getButtonStatus = () => {
-    let buttonStatus = showSponsorButton ? 'open' : 'hidden'
+    let buttonStatus = showSponsorButton ? 'visible' : 'hidden'
     // setSpCoinContainers()
-    // console.debug(`%%%%%%%%%%%%%%%%%%%% getButtonStatus:buttonStatus  = ${buttonStatus}`)
+    console.debug(`%%%%%%%%%%%%%%%%%%%% getButtonStatus:buttonStatus  = ${buttonStatus}`)
     return buttonStatus
   }
 
@@ -101,7 +93,7 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
       <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive </div>
       <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]+" "+styles[`${getButtonStatus()}`]} onClick={() => toggleSpCoinContainers()}>
+      <div className={styles[`addSponsorshipDiv`]+" "+styles[`${getButtonStatus()}`]} onClick={() => toggleSpCoinContainers()}>
         <div className={styles["centerContainer"]} >Add Sponsorship</div>
       </div>
     </div>
