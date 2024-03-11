@@ -20,6 +20,7 @@ interface PriceRequestParams {
     symbol: string;
     name: string;
     img: string;
+    url: string;
   }
     
   export type {

@@ -6,17 +6,22 @@ type Props = {
   }
 
 const PlaceOrder = ({
-    sendTransaction }:Props) => {
+    sendTransaction } : Props) => {
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
 
+    const placeOrder = async () => {
+        console.log("submitting quote to blockchain");
+        if (sendTransaction) {
+            let receipt = await sendTransaction();
+            alert("Transaction receipt : " + receipt)
+        }
+    }
+
     return (
         <button type="button"
-            onClick={() => {
-                console.log("submitting quote to blockchain");
-                sendTransaction && sendTransaction();
-                }
+            onClick={() => { placeOrder(); }
             }
             className={styles["exchangeButton"] + " " + styles["swapButton"]}
             >

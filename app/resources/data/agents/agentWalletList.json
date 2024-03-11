@@ -3,229 +3,267 @@
         "symbol": "SpCoin",
         "img": "/resources/images/tokens/0xToDo_SpCoin.png",
         "name": "Sponsor Coin",
-        "address": "0xToDo_SpCoin.png"
+        "address": "0xToDo_SpCoin.png",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "?",
         "img": "/resources/images/agents/AnonymousBlack.png",
         "name": "AnonymousBlack",
-        "address": "AnonymousBlack's Wallet Address"
+        "address": "AnonymousBlack's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "?",
         "img": "/resources/images/agents/AnonymousWhite.png",
         "name": "AnonymousWhite",
-        "address": "AnonymousWhite's Wallet Address"
+        "address": "AnonymousWhite's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Smokey",
         "img": "/resources/images/agents/Cat1.png",
         "name": "Smokey",
-        "address": "Cat1's Wallet Address"
+        "address": "Cat1's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Boots",
         "img": "/resources/images/agents/Cat2.png",
         "name": "Boots",
-        "address": "Boots's Wallet Address"
+        "address": "Boots's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Bugs",
         "img": "/resources/images/agents/Bugs%20Bunny.png",
         "name": "Bugs Bunny",
-        "address": "Bugs's Wallet Address"
+        "address": "Bugs's Wallet Address",
+        "url": "ToDo add URL here"
     },
   {
         "symbol": "FredFlintstone1",
         "img": "/resources/images/agents/FredFlintstone1.png",
         "name": "Fred Flintstone",
-        "address": "FredFlintstone's Wallet Address"
+        "address": "FredFlintstone's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Granny",
         "img": "/resources/images/agents/Granny.png",
         "name": "Granny",
-        "address": "Granny's Wallet Address"
+        "address": "Granny's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Jim",
         "img": "/resources/images/agents/Man1.png",
         "name": "Jim Boy",
-        "address": "Jim's Wallet Address"
+        "address": "Jim's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Mogly",
         "img": "/resources/images/agents/JungleBookMogly.png",
         "name": "Mogly",
-        "address": "Mogly's Wallet Address"
+        "address": "Mogly's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Lady1",
         "img": "/resources/images/agents/Lady1.png",
         "name": "Lady1 NAME",
-        "address": "Lady1's Wallet Address"
+        "address": "Lady1's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Lady2",
         "img": "/resources/images/agents/Lady2.png",
         "name": "Lady2 NAME",
-        "address": "Lady2's Wallet Address"
+        "address": "Lady2's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Lady3",
         "img": "/resources/images/agents/Lady3.png",
         "name": "Lady3 NAME",
-        "address": "Lady3's Wallet Address"
+        "address": "Lady3's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Lady4",
         "img": "/resources/images/agents/Lady4.png",
         "name": "Lady4 NAME",
-        "address": "Lady4's Wallet Address"
+        "address": "Lady4's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Lady5",
         "img": "/resources/images/agents/Lady5.png",
         "name": "Lady5 NAME",
-        "address": "Lady5's Wallet Address"
+        "address": "Lady5's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Ralph",
         "img": "/resources/images/agents/Dog1.png",
         "name": "Ralphy",
-        "address": "Dog1's Wallet Address"
+        "address": "Dog1's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Ruby",
         "img": "/resources/images/agents/Dog3.png",
         "name": "Ruby",
-        "address": "Ruby's Wallet Address"
+        "address": "Ruby's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Sean",
         "img": "/resources/images/agents/Man3.png",
         "name": "Sean Dude",
-        "address": "Sean's Wallet Address"
+        "address": "Sean's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Stuge 1",
         "img": "/resources/images/agents/LarryFine.png",
         "name": "Larry Fine",
-        "address": "Larry's Wallet Address"
+        "address": "Larry's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Stuge 2",
         "img": "/resources/images/agents/CurleyHoward.png",
         "name": "Curly Howard",
-        "address": "Curly's Wallet Address"
+        "address": "Curly's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Stuge 3",
         "img": "/resources/images/agents/MoeHoward.png",
         "name": "Moe Howard",
-        "address": "Moe's Wallet Address"
+        "address": "Moe's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Jim",
         "img": "/resources/images/agents/Man4.png",
         "name": "Jimmey Babe",
-        "address": "Jimmey's Wallet Address"
+        "address": "Jimmey's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "John",
         "img": "/resources/images/agents/Man5.png",
         "name": "John Doe",
-        "address": "Man5's Wallet Address"
+        "address": "Man5's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Spunk",
         "img": "/resources/images/agents/Monkey1.png",
         "name": "Spunky",
-        "address": "Spunky's Wallet Address"
+        "address": "Spunky's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Fink",
         "img": "/resources/images/agents/Monkey2.png",
         "name": "Finkey NAME",
-        "address": "Finkey's Wallet Address"
+        "address": "Finkey's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QB ?",
         "img": "/resources/images/miscellaneous/QuestionBlack.png",
         "name": "QuestionBlack NAME",
-        "address": "QuestionBlack's Wallet Address"
+        "address": "QuestionBlack's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QBOB",
         "img": "/resources/images/miscellaneous/QuestionBlackOnBlue.png",
         "name": "QuestionBlackOnBlue NAME",
-        "address": "QuestionBlackOnBlue's Wallet Address"
+        "address": "QuestionBlackOnBlue's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QBOR",
         "img": "/resources/images/miscellaneous/QuestionBlackOnRed.png",
         "name": "QuestionBlackOnRed NAME",
-        "address": "QuestionBlackOnRed's Wallet Address"
+        "address": "QuestionBlackOnRed's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QB",
         "img": "/resources/images/miscellaneous/QuestionBlue.png",
         "name": "QuestionBlue NAME",
-        "address": "QuestionBlue's Wallet Address"
+        "address": "QuestionBlue's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QR",
         "img": "/resources/images/miscellaneous/QuestionRed.png",
         "name": "QuestionRed NAME",
-        "address": "QuestionRed's Wallet Address"
+        "address": "QuestionRed's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QW",
         "img": "/resources/images/miscellaneous/QuestionWhite.png",
         "name": "QuestionWhite NAME",
-        "address": "XXX's Wallet Address"
+        "address": "XXX's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QWOB",
         "img": "/resources/images/miscellaneous/QuestionWhiteOnBlack.png",
         "name": "QuestionWhiteOnBlack NAME",
-        "address": "QuestionWhiteOnBlack's Wallet Address"
+        "address": "QuestionWhiteOnBlack's Wallet Address",
+        "url": "ToDo add URL here"
     },
    {
         "symbol": "Sam",
         "img": "/resources/images/agents/YosemiteSam.png",
         "name": "Yosemite Sam",
-        "address": "Yosemite Sam's Wallet Address"
+        "address": "Yosemite Sam's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Susan",
         "img": "/resources/images/agents/Girl1.png",
         "name": "Susan James",
-        "address": "Girl1's Wallet Address"
+        "address": "Girl1's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "Tweety",
         "img": "/resources/images/agents/TweetyBird.png",
         "name": "Tweety Bird",
-        "address": "TweetyBird's Wallet Address"
+        "address": "TweetyBird's Wallet Address",
+        "url": "ToDo add URL here"
     },
      {
         "symbol": "Wilma",
         "img": "/resources/images/agents/WilmaFlintstone.png",
         "name": "Wilma Flintstone",
-        "address": "Wilma Flintstone's Wallet Address"
+        "address": "Wilma Flintstone's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QWOB",
         "img": "/resources/images/miscellaneous/QuestionWhiteOnBlue.png",
         "name": "QuestionWhiteOnBlue NAME",
-        "address": "QuestionWhiteOnBlue's Wallet Address"
+        "address": "QuestionWhiteOnBlue's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "QWOR",
         "img": "/resources/images/miscellaneous/QuestionWhiteOnRed.png",
         "name": "QuestionWhiteOnRed NAME",
-        "address": "QuestionWhiteOnRed's Wallet Address"
+        "address": "QuestionWhiteOnRed's Wallet Address",
+        "url": "ToDo add URL here"
     },
     {
         "symbol": "???",

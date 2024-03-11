@@ -49,6 +49,15 @@
   transform: translateX(-50%) translateY(-50%);
 }
 
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+}
+
 .addSponsorshipDiv {
   position: absolute;
   top: 75px;
@@ -383,6 +392,11 @@
   gap: 5px;
   font-size: 25px;
   padding-right: 8px;
+}
+
+.recipientName:hover {
+  cursor: pointer;
+  color: orange
 }
 
 .lineDivider {
