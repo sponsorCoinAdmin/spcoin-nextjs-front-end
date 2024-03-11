@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 
 type Props = {
     isLoadingPrice: boolean

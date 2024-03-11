@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import styles from '../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenElement } from '@/app/lib/structure/types';
 import { setValidPriceInput } from '@/app/lib/spCoin/utils';

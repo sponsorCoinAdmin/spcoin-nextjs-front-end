@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import info_png from '../../../../public/resources/images/info1.png'
 
-import styles from '../../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 import {
   openDialog,
   AgentDialog,

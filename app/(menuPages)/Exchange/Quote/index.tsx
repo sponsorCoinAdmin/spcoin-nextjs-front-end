@@ -1,5 +1,5 @@
 'use client'
-import styles from '../../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 import useSWR from "swr";
 import { fetcher } from "@/app/lib/0X/fetcher";
 import type { PriceResponse, QuoteResponse } from "../../../api/types";

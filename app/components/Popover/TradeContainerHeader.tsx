@@ -1,4 +1,4 @@
-import styles from '../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 import { Popover } from 'antd';
 import Slippage from './Slippage';
 import { SettingOutlined } from "@ant-design/icons";

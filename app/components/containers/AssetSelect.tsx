@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import styles from '../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { TokenElement } from '@/app/lib/structure/types';

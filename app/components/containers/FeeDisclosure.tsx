@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
-import styles from '../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 
 const FeeDisclosure = () => {
     return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../styles/Exchange.module.css';
+import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
 import { hideElement, hideSponsorRecipientConfig, toggleElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
