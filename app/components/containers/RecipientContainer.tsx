@@ -21,10 +21,12 @@ const RecipientContainer = ({recipientWallet} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
   // let urlParms:string = `/Recipient?address=${recipientWallet.address}`
   let urlParms:string = `/Recipient/${recipientWallet.address}`
-  urlParms += `name=?${recipientWallet.name}`
-  urlParms += `symbol=&${recipientWallet.symbol}`
-  urlParms += `img=&${recipientWallet.img}`
-  urlParms += `url=&${recipientWallet.url}`
+  urlParms += `?name=${recipientWallet.name}`
+  urlParms += `&symbol=${recipientWallet.symbol}`
+  urlParms += `&address=${recipientWallet.address}`
+  urlParms += `&img=${recipientWallet.img}`
+  urlParms += `&url=${recipientWallet.url}`
+
   console.debug (`calling urlParms: ${urlParms}`)
   return (
     <div id="recipientSelectDiv" className={styles["inputs"]}>

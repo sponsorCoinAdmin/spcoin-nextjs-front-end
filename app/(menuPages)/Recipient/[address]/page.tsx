@@ -12,6 +12,7 @@ function RecipientAddress({params}: {params: {address:string}}) {
     const router = useRouter();
     let url = searchParams.get('url');
     const name = searchParams.get('name');
+    const address = searchParams.get('address');
     const symbol = searchParams.get('symbol');
     const img = searchParams.get('img');
     // if (url != null)
@@ -22,16 +23,16 @@ function RecipientAddress({params}: {params: {address:string}}) {
         searchParams = {searchParams}
         </div>
         <div> 
-            Name = {name}
-        </div>
-        <div> 
-            Details about Recipient Address {params.address}
-        </div>
-        <div> 
             pathname = {pathname}
         </div>
         <div> 
+            Name = {name}
+        </div>
+        <div> 
             Symbol = {symbol}
+        </div>
+        <div> 
+            Address {address}
         </div>
         <div> 
             Image = {img}
