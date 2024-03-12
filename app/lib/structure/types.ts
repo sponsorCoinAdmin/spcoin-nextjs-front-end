@@ -1,8 +1,8 @@
 import { Address } from "wagmi";
 
 interface PriceRequestParams {
-    sellToken: string;
-    buyToken: string;
+    sellToken: Address|string;
+    buyToken: Address|string;
     buyAmount?: string;
     sellAmount?: string;
     connectedWalletAddr?: string;
@@ -18,7 +18,7 @@ interface PriceRequestParams {
   }
     
   type WalletElement = {
-    address: any;
+    address: Address|string;
     name: string;
     symbol: string;
     img: string;

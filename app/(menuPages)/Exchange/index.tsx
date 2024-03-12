@@ -4,6 +4,7 @@ import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { WalletElement, TokenElement } from "@/app/lib/structure/types";
+import { getDefaultNetworkSettings } from "@/app/lib/network/initialize/defaultNetworkSettings";
 
 enum  EXCHANGE_STATE {
   PRICE, QUOTE, PENDING
@@ -18,8 +19,21 @@ type ExchangeTokens = {
   agentWallet: WalletElement;
 }
 
+const initialExchangeTokens = (network:string|number) => {
+  const defaultNetworkSettings = getDefaultNetworkSettings(network)
+  let exchangeTokens:ExchangeTokens = {
+    state: EXCHANGE_STATE.PRICE,
+    slippage:"0.02",
+    sellToken: defaultNetworkSettings?.defaultSellToken,
+    buyToken: defaultNetworkSettings?.defaultBuyToken,
+    recipientWallet: defaultNetworkSettings?.defaultRecipient,      
+    agentWallet: defaultNetworkSettings?.defaultAgent        
+  }
+  return exchangeTokens;
+}
+
 export default function Home() {
-  const [exchangeTokens, setExchangeTokens] = useState<ExchangeTokens|undefined>();
+  const [exchangeTokens, setExchangeTokens] = useState<ExchangeTokens>(initialExchangeTokens('ethereum'));
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();
   const { address } = useAccount();
@@ -40,6 +54,7 @@ export default function Home() {
           connectedWalletAddr={address}
           price={price}
           setPrice={setPrice}
+          exchangeTokens={exchangeTokens}
           setExchangeTokens={setExchangeTokens}
         />
       )}

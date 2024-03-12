@@ -13,11 +13,11 @@
 },
 "defaultBuyToken": {
   "chainId": 1,
-  "symbol": "WBTC",
-  "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
-  "name": "Wrapped Bitcoin",
-  "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-  "decimals": 8
+  "symbol": "SpCoin",
+  "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+  "name": "Sponsor Coin",
+  "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
+  "decimals": 18
 },
 "defaultRecipient": {
     "symbol": "SpCoin",

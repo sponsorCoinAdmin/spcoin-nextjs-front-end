@@ -1,7 +1,4 @@
 'use client';
-import Image from 'next/image';
-import info_png from '../../../../public/resources/images/info1.png'
-
 import styles from '@/app/styles/Exchange.module.css';
 import {
   openDialog,
@@ -16,7 +13,6 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { WalletElement, TokenElement } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
@@ -38,15 +34,17 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
+import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 
 //////////// Price Code
 export default function PriceView({
-  connectedWalletAddr, price, setPrice, setExchangeTokens
+  connectedWalletAddr, price, setPrice, exchangeTokens, setExchangeTokens
 }: {
     connectedWalletAddr: Address | undefined;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
-    setExchangeTokens: (exchangeTokens: ExchangeTokens|undefined) => void;
+    exchangeTokens: ExchangeTokens;
+    setExchangeTokens: (exchangeTokens: ExchangeTokens) => void;
 }) {
   try {
     let chainId = useChainId();
@@ -60,11 +58,10 @@ export default function PriceView({
     const [buyBalance, setBuyBalance] = useState<string>("0");
     const [tradeDirection, setTradeDirection] = useState("sell");
 
-    const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
-    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
-    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
-    const [recipientWallet, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
-    const [agentWallet, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
+    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeTokens.sellToken);
+    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
+    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
+    const [agentWallet, setAgentElement] = useState(exchangeTokens.agentWallet);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
 
@@ -173,7 +170,7 @@ export default function PriceView({
 
     const updateBuyBalance = async (buyTokenElement: TokenElement) => {
       let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenElement, setBuyBalance)
-      // alert(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
+      console.debug(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
 
       try {
         setBuyBalance(balance);

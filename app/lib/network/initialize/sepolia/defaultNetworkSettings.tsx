@@ -22,14 +22,16 @@ const defaultRecipient = {
   "symbol": "Tiger",
   "img": "/resources/images/recipients/SaveTheTiger4.png",
   "name": "Support The Tiger",
-  "address": "SaveTheTiger4 Wallet Address"
+  "address": "SaveTheTiger4 Wallet Address",
+  "url": "ToDo N/A"
 };
 
 const defaultAgent = {
   "symbol": "Stuge 3",
   "img": "/resources/images/agents/MoeHoward.png",
   "name": "Moe Howard",
-  "address": "Moe's Wallet Address"
+  "address": "Moe's Wallet Address",
+  "url": "ToDo N/A"
 };
 
 const defaultNetworkSettings = {
