@@ -27,7 +27,7 @@ function Header() {
     <header>
       <div className={styles.leftH}>
         <Image className={styles.imgOptions} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
-        <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
+        <div className={styles.headerItem}><Link href="/">SponsorCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
         <div className={styles.headerItem}><Link href="/Recipient"></Link></div>
