@@ -428,6 +428,15 @@
   transition: 0.3s;
 }
 
+.select {
+  color:green;
+}
+
+.select:hover {
+  color: orange;
+  cursor: pointer;
+}
+
 .cog:hover {
   color: white;
   rotate: 360deg;

@@ -1,4 +1,5 @@
 'use client'
+import styles from '@/app/styles/Exchange.module.css';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React from 'react'
 
@@ -6,6 +7,21 @@ import React from 'react'
 //     router.push('https://www.youtube.com');
 //   }, []);
 
+async function fetchText(target:any, url: string): Promise<any> {
+    fetch('https://ca.yahoo.com/?p=us') // <---- notice 
+    .then(
+        async function(response)
+        {
+          alert(response.status)
+          target.innerHTML = await response.text();
+
+        }
+    )
+    .catch(function(err:any)
+    {
+       alert('Fetch Error : '+ err);
+    });
+  }
 
 function RecipientAddress({params}: {params: {address:string}}) {
     const pathname = usePathname()
@@ -19,32 +35,41 @@ function RecipientAddress({params}: {params: {address:string}}) {
     // if (url != null)
     //     router.push(url);
     const showSite = (url:any) => {
-        alert(url)
-        if (url != null)
-         router.push(url);
-     }
-  return (
-    <>
+        let recipientTarget = document.getElementById("RecipientTarget")
+        if (recipientTarget)
+            recipientTarget.innerHTML = url;
+        fetchText(recipientTarget, url)
+        // if (url != null)
+        //  router.push(url);
+    }
+    return (
+        // <div className={styles["center-screen"]}>
+        //     <div> 
+        //         pathname = {pathname}
+        //     </div>
+        //     <div> 
+        //         Name = {name}
+        //     </div>
+        //     <div> 
+        //         Symbol = {symbol}
+        //     </div>
+        //     <div> 
+        //         Address {address}
+        //     </div>
+        //     <div> 
+        //         Image = {img}
+        //     </div>
+        //     <div className={styles["select"]} onClick={() => { showSite(url) }}>
+        //         URL = {url}
+        //     </div>
+        //     <div id="RecipientTarget"></div>
+            
         <div> 
-            pathname = {pathname}
+            <iframe src={url?url:"NotFound"} 
+                width="100%"
+                height="700px"/>
         </div>
-        <div> 
-            Name = {name}
-        </div>
-        <div> 
-            Symbol = {symbol}
-        </div>
-        <div> 
-            Address {address}
-        </div>
-        <div> 
-            Image = {img}
-        </div>
-         <div onClick={() => { showSite(url)}}>
-            URL = {url}
-        </div>
-    </>
-  )
+    )
 }
 
 export default RecipientAddress

@@ -11,11 +11,6 @@ import Recipient from '@/app/(menuPages)/Recipient/page';
 type Props = {
   recipientWallet: any, 
 }
-// address: any;
-// symbol: string;
-// name: string;
-// img: string;
-// url: string;
 
 const RecipientContainer = ({recipientWallet} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
