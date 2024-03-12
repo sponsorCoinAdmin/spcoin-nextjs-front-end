@@ -34,7 +34,7 @@ const RecipientContainer = ({recipientWallet} : Props) => {
         {recipientWallet.name}
       </Link>
       <div className={styles["recipientSelect"]}>
-        <img alt={recipientWallet.name} className="h-9 w-9 mr-2 rounded-md" src={recipientWallet.img} />
+        <img alt={recipientWallet.name} className="h-9 w-9 mr-2 rounded-md" src={recipientWallet.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientWallet,null,2))}/>
         {recipientWallet.symbol} 
         <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
       </div>

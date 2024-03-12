@@ -189,7 +189,7 @@ export default function QuoteView({
 
   return (
     <div className="p-3 mx-auto max-w-screen-sm ">
-      <form>
+      <form autoComplete="off">
       <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>

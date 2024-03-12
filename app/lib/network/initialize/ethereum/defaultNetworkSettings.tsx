@@ -22,14 +22,16 @@ const defaultRecipient = {
   "symbol": "SpCoin",
   "img": "/resources/images/tokens/0xToDo_SpCoin.png",
   "name": "Sponsor Coin",
-  "address": "0xToDo_SpCoin.png"
+  "address": "0xToDo_SpCoin.png",
+  "url": "ToDo add URL here"
 };
 
 const defaultAgent = { 
   symbol: "Wilma",
   img: "/resources/images/agents/WilmaFlintstone.png",
   name: "Wilma Flintstone",
-  address: "Wilma Flintstone's Wallet Address"
+  address: "Wilma Flintstone's Wallet Address",
+  "url": "ToDo add URL here"
 };
 
 const defaultNetworkSettings = {
