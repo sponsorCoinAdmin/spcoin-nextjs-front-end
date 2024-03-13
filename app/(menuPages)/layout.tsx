@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
+import { AppWrapper } from './Context'
 
 export const metadata: Metadata = {
   title: 'spCoin',
@@ -14,8 +12,10 @@ export default function RootLayout({
         children: React.ReactNode
     }) {
     return (
-    <>
-        {children}
-    </>
+    <html lang="en">
+        {/* <AppWrapper> */}
+            {children}
+        {/* </AppWrapper> */}
+    </html>
     )
 }
