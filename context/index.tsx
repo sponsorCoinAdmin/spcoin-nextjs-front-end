@@ -17,7 +17,9 @@ const initialExchangeTokens = (network:string|number) => {
   }
 
 const context = initialExchangeTokens('ethereum');
-const AppContext = createContext(context);
+const ExchangeContext = createContext(context);
+const ExchangeProvider = ExchangeContext.Provider
+const ExchangeConsumer = ExchangeContext.Consumer
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
@@ -26,13 +28,15 @@ export function ExchangeWrapper({children} : {
 
     return (
         <>
-        <AppContext.Provider value={exchangeTokens}>
+        <ExchangeProvider value={exchangeTokens}>
             <div>{children}</div>
-        </AppContext.Provider>
+        </ExchangeProvider>
         </>
     )
 }
 
-export function useAppContext() {
-    return useContext(AppContext);
+export function useExchangeContext() {
+    return useContext(ExchangeContext);
 }
+
+export {ExchangeProvider, ExchangeConsumer}

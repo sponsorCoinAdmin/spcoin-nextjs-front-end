@@ -4,17 +4,17 @@ import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { ExchangeTokens, EXCHANGE_STATE } from "@/app/lib/structure/types";
-import { useAppContext } from "@/context";
+import { useExchangeContext } from "@/context";
 
 export default function Home() {
-  const exchangeContext:ExchangeTokens = useAppContext()
+  const exchangeContext:ExchangeTokens = useExchangeContext()
   const [exchangeTokens, setExchangeTokens] = useState<ExchangeTokens>(exchangeContext);
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();
   const { address } = useAccount();
  
   alert (JSON.stringify(exchangeContext, null, 2))
-  // const { hello } = useAppContext()
+  // const { hello } = useExchangeContext()
   // alert (hello)
 return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
