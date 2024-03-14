@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { WalletElement, TokenElement } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
@@ -23,7 +23,6 @@ import {
   showElement,
   hideSponsorRecipientConfig,
 } from '@/app/lib/spCoin/guiControl';
-import { ExchangeTokens, EXCHANGE_STATE } from '..';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
 import SellContainer from '@/app/components/containers/SellContainer';

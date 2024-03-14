@@ -1,5 +1,9 @@
 import { Address } from "wagmi";
 
+enum  EXCHANGE_STATE {
+  PRICE, QUOTE, PENDING
+}
+
 interface PriceRequestParams {
     sellToken: Address|string;
     buyToken: Address|string;
@@ -24,9 +28,21 @@ interface PriceRequestParams {
     img: string;
     url: string;
   }
+
+  type ExchangeTokens = {
+    state: EXCHANGE_STATE;
+    slippage: string|undefined|null;
+    sellToken: TokenElement;
+    buyToken: TokenElement;
+    recipientWallet: WalletElement;
+    agentWallet: WalletElement;
+  }
     
+  export { EXCHANGE_STATE }
   export type {
     TokenElement,
     WalletElement,
-    PriceRequestParams
+    PriceRequestParams,
+    ExchangeTokens
 };
+

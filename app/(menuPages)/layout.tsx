@@ -1,5 +1,5 @@
+import { ExchangeWrapper } from '@/context'
 import type { Metadata } from 'next'
-import { AppWrapper } from './Context'
 
 export const metadata: Metadata = {
   title: 'spCoin',
@@ -12,10 +12,10 @@ export default function RootLayout({
         children: React.ReactNode
     }) {
     return (
-    <html lang="en">
-        {/* <AppWrapper> */}
+    <>
+        <ExchangeWrapper>
             {children}
-        {/* </AppWrapper> */}
-    </html>
+        </ExchangeWrapper>
+    </>
     )
 }

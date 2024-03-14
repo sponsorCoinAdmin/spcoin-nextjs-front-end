@@ -2,7 +2,6 @@
 import styles from '@/app/styles/Exchange.module.css';
 import useSWR from "swr";
 import { fetcher } from "@/app/lib/0X/fetcher";
-import type { PriceResponse, QuoteResponse } from "../../../api/types";
 import { formatUnits } from "ethers";
 import { useState, useEffect } from "react";
 import { getNetworkName } from '@/app/lib/network/utils';
@@ -15,7 +14,6 @@ import {
   type Address,
 } from "wagmi";
 import { getTokenDetails, fetchTokenDetails } from "@/app/lib/spCoin/utils";
-import { ExchangeTokens } from "..";
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import SellContainer from '@/app/components/containers/SellContainer';
 import BuyContainer from '@/app/components/containers/BuyContainer';
@@ -28,7 +26,8 @@ import { RecipientDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { ExchangeTokens, TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { PriceResponse, QuoteResponse } from '@/app/api/types';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)

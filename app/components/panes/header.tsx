@@ -31,12 +31,11 @@ function Header() {
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
         <div className={styles.headerItem}><Link href="/Recipient"></Link></div>
-        {/* <div className={styles.headerItem}><Link href="/0X">0X</Link></div> */}
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
           <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
-            &nbsp;&nbsp;{getNetworkName(useChainId())}
+            {/* &nbsp;&nbsp;{getNetworkName(useChainId())} */}
         </div>
         <ConnectButton />
       </div>
