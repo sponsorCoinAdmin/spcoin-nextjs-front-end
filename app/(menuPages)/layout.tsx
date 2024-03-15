@@ -1,5 +1,5 @@
-import { ExchangeWrapper } from '@/context'
 import type { Metadata } from 'next'
+import { ExchangeWrapper } from '../lib/context'
 
 export const metadata: Metadata = {
   title: 'spCoin',

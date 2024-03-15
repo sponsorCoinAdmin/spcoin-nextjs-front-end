@@ -1,4 +1,4 @@
-import { TokenElement } from "../structure/types";
+import { DISPLAY_STATE, TokenElement } from "../structure/types";
 
 /// START DROPDOWN STUFF
 const hideElement = (element: string) => {
@@ -15,38 +15,52 @@ const showElement = (element: string) => {
   if (el != null) {
     el.style.display = 'block';
   }
-
 };
 
-// ToDo: Check out the next 2 functions
-const hideClass = (className: string) => {
-  let els = document.getElementsByClassName(className);
-
-  for (var i = 0; i < els.length; i ++) {
-    els[i].style.display = 'none';
+const setDisplayPanels = (displayState:DISPLAY_STATE) => {
+  
+  alert(`guiControl.setDisplayState(${getDisplayStateString(displayState)})`)
+  switch(displayState) {
+    case DISPLAY_STATE.OFF:
+      hideElement("addSponsorshipDiv")
+      hideElement("recipientSelectDiv")
+      hideElement("recipientConfigDiv")
+    break
+    case DISPLAY_STATE.SPONSOR:
+      showElement("addSponsorshipDiv")
+      hideElement("recipientSelectDiv")
+      hideElement("recipientConfigDiv")
+    break
+    case DISPLAY_STATE.RECIPIENT:
+      hideElement("addSponsorshipDiv")
+      showElement("recipientSelectDiv")
+      hideElement("recipientConfigDiv")
+    break
+    case DISPLAY_STATE.CONFIG:
+      hideElement("addSponsorshipDiv")
+      showElement("recipientSelectDiv")
+      showElement("recipientConfigDiv")
+    break
   }
 }
 
-const showClass = (className: string) => {
-  let els = document.getElementsByClassName(className);
+const getDisplayStateString  = (displayState:DISPLAY_STATE) => {
+  switch(displayState) {
+    case DISPLAY_STATE.OFF:
+      return("DISPLAY_STATE.OFF")
+    break
+    case DISPLAY_STATE.SPONSOR:
+      return("DISPLAY_STATE.SPONSOR")
 
-  for (var i = 0; i < els.length; i ++) {
-    els[i].style.display = 'block';
+    break
+    case DISPLAY_STATE.RECIPIENT:
+      return("DISPLAY_STATE.RECIPIENT")
+
+    break
+    case DISPLAY_STATE.CONFIG:
+      return("DISPLAY_STATE.CONFIG")
+    break
   }
-};
-
-const hideSponsorRecipientConfig = () => {
-  hideElement("recipientSelectDiv")
-  hideElement("recipientConfigDiv")
-  hideElement("agent");
-  showElement("addSponsorshipDiv")
-}
-
-const showSponsorRecipientConfig = () => {
-  hideElement("addSponsorshipDiv")
-  showElement("recipientSelectDiv")
-  // hideElement("recipientConfigDiv")
-  // showElement("agent");
 }
 
 const toggleElement = (element: any) => {
@@ -59,9 +73,7 @@ const toggleElement = (element: any) => {
 export {
   hideElement,
   showElement,
-  hideClass,
-  showClass,
-  hideSponsorRecipientConfig,
-  showSponsorRecipientConfig,
+  setDisplayPanels,
+  getDisplayStateString,
   toggleElement
 }

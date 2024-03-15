@@ -9,11 +9,11 @@ let InitialExchangeState;
 let ExchangeProvider: Provider<any>;
 let ExchangeConsumer: Consumer<any>;
 
-const initialContext = (value:any) => {
+const initializeContext = (value:any) => {
     InitialExchangeState = createContext(value);
     ExchangeProvider = InitialExchangeState.Provider
     ExchangeConsumer = InitialExchangeState.Consumer
     return InitialExchangeState
 }
 
-export { initialContext, ExchangeProvider, ExchangeConsumer };
+export { initializeContext, ExchangeProvider, ExchangeConsumer };

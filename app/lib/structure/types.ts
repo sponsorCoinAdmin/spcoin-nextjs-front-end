@@ -5,7 +5,7 @@ enum  EXCHANGE_STATE {
 }
 
 enum  DISPLAY_STATE {
-  OFF, SPONSOR, CONFIG
+  OFF, SPONSOR, RECIPIENT, CONFIG
 }
 
 interface PriceRequestParams {

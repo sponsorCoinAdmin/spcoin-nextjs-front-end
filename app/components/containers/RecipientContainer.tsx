@@ -1,16 +1,26 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
-import { hideSponsorRecipientConfig, toggleElement } from '@/app/lib/spCoin/guiControl';
+import { setDisplayPanels, toggleElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
 import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
 import Link from 'next/link'
-import Recipient from '@/app/(menuPages)/Recipient/page';
+import { DISPLAY_STATE } from '@/app/lib/structure/types';
 
 type Props = {
   recipientWallet: any, 
 }
+
+const toggleConfig = () => {
+  const el = document.getElementById('recipientConfigDiv');
+  if (el != null) {
+    el.style.display === 'block' ? 
+      setDisplayPanels(DISPLAY_STATE.RECIPIENT) :
+      setDisplayPanels(DISPLAY_STATE.CONFIG);
+  }
+};
+
 
 const RecipientContainer = ({recipientWallet} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
@@ -29,7 +39,6 @@ const RecipientContainer = ({recipientWallet} : Props) => {
       <div className={styles["yourRecipient"]}>
         You are sponsoring:
       </div>
-      {/* <Link href={`/Recipient?address=${recipientWallet.address}`} className={styles["recipientName"]}> */}
       <Link href={`${urlParms}`} className={styles["recipientName"]}>
         {recipientWallet.name}
       </Link>
@@ -38,11 +47,11 @@ const RecipientContainer = ({recipientWallet} : Props) => {
         {recipientWallet.symbol} 
         <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
       </div>
-      {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientWallet} id={"#recipientDialog"}></AssetSelect></div> */}
       <div>
-        <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
+        <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
+        onClick={() => toggleConfig()}/>
       </div>
-      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => hideSponsorRecipientConfig()}>
+      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayPanels(DISPLAY_STATE.SPONSOR)}>
         X
       </div>
     </div>

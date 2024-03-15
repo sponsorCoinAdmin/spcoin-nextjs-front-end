@@ -1,10 +1,7 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
-import { openDialog } from '../Dialogs/Dialogs';
-import { hideElement, hideSponsorRecipientConfig, toggleElement } from '@/app/lib/spCoin/guiControl';
+import { hideElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
-import { DownOutlined } from "@ant-design/icons";
-// import info_png from '../../../public/resources/images/miscellaneous/info1.png';
 import info_png from '../../../public/resources/images/info1.png';
 
 function setRateRatios(newRate: string) {

@@ -4,7 +4,7 @@ import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { EXCHANGE_STATE } from "@/app/lib/structure/types";
-import { useExchangeContext, useExchangeContextSetter } from "@/context";
+import { useExchangeContext, useExchangeContextSetter } from "@/app/lib/context";
 
 export default function Home() {
   const exchangeContext  = useExchangeContext()
@@ -34,6 +34,7 @@ export default function Home() {
           quote={quote}
           setQuote={setQuote}
           exchangeTokens={exchangeContext}
+          setExchangeTokens={exchangeContextSetter}
         />
       ) : (
         <PriceView

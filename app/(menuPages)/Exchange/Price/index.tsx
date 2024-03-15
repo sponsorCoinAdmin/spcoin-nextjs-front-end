@@ -13,15 +13,16 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeTokens, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {
   hideElement,
   showElement,
-  hideSponsorRecipientConfig,
+  setDisplayPanels,
+  getDisplayStateString,
 } from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
@@ -61,12 +62,17 @@ export default function PriceView({
     const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
     const [agentWallet, setAgentElement] = useState(exchangeTokens.agentWallet);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeTokens.displayState);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
 
     useEffect(() => {
-      hideSponsorRecipientConfig();
     },[]);
+
+    useEffect(() => {
+      alert(`Price.useEffect[] displayState = ${getDisplayStateString(displayState)}`)
+      setDisplayPanels(displayState);
+    },[displayState]);
 
     useEffect(() => {
       console.debug('Price slippage changed to  ' + slippage);
@@ -91,9 +97,7 @@ export default function PriceView({
     useEffect(() => {
       // console.debug(`useEffect[****]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
       setExchangeTokensCallback()
-    }, [slippage, buyTokenElement, sellTokenElement, recipientWallet]);
-
-
+    }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
     useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
@@ -102,20 +106,7 @@ export default function PriceView({
     }, [errorMessage]);
 
     useEffect(() => { {
-      if (buyTokenElement.symbol === "SpCoin") {
-        showElement("addSponsorshipDiv")
-      }
-      else {
-        hideElement("addSponsorshipDiv")
-        hideElement("recipientSelectDiv")
-        hideElement("recipientConfigDiv")
-        hideElement("agent");
-        }
-      }
-    }, [buyTokenElement]);
-
-    useEffect(() => { {
-      if (sellTokenElement.symbol === "SpCoin") {
+      if (isSpCoin(sellTokenElement)) {
         showElement("sponsoredBalance")
       }
       else {
@@ -242,7 +233,8 @@ export default function PriceView({
       const setExchangeTokensCallback = () => {
       setExchangeTokens({
         state: EXCHANGE_STATE.QUOTE,
-        slippage:slippage,
+        displayState: displayState,
+        slippage: slippage,
         sellToken: sellTokenElement,
         buyToken: buyTokenElement,
         recipientWallet: recipientWallet,      

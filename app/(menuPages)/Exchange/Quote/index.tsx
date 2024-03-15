@@ -20,13 +20,13 @@ import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
-import { showElement, hideElement, hideSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
+import { showElement, hideElement, setDisplayPanels } from '@/app/lib/spCoin/guiControl';
 import ErrorDialog from '@/app/components/Dialogs/ErrorDialog';
 import { RecipientDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { ExchangeTokens, TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeTokens, TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
@@ -39,12 +39,14 @@ export default function QuoteView({
   setQuote,
   connectedWalletAddr,
   exchangeTokens,
+  setExchangeTokens
 }: {
   price: PriceResponse;
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
   connectedWalletAddr: Address;
   exchangeTokens: ExchangeTokens;
+  setExchangeTokens: (exchangeTokens: ExchangeTokens) => void;
 }) {
 
   console.debug("########################### QUOTE RERENDERED #####################################")
@@ -58,19 +60,25 @@ export default function QuoteView({
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
   const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
   const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeTokens.agentWallet);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeTokens.displayState);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
     console.debug("exchangeTokens =\n" + JSON.stringify(exchangeTokens,null,2))
     console.debug("price =\n" + JSON.stringify(price,null,2))
-    hideSponsorRecipientConfig();
-
   },[]);
+
+  useEffect(() => {
+    setDisplayPanels(displayState);
+  },[displayState]);
+
+  useEffect(() => {
+    setExchangeTokensCallback()
+  }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
   useEffect(() => { 
       initBuyTokenComponents(buyTokenElement)
    }, [buyTokenElement]);
-
 
   useEffect(() => {
       initSellTokenComponents(sellTokenElement)
@@ -83,7 +91,6 @@ export default function QuoteView({
       showElement("addSponsorshipDiv")
     }
     else {
-      // hideSponsorRecipientConfig()
       // alert("HERE 2")
       hideElement("addSponsorshipDiv")
       hideElement("recipientSelectDiv")
@@ -109,7 +116,6 @@ export default function QuoteView({
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
-
 
   const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
     let tokenDetails = await getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
@@ -186,6 +192,18 @@ export default function QuoteView({
   console.log("quote" + JSON.stringify(quote,null,2));
   console.log(formatUnits(quote.sellAmount, sellTokenElement.decimals));
 
+  const setExchangeTokensCallback = () => {
+    setExchangeTokens({
+      state: EXCHANGE_STATE.QUOTE,
+      displayState: displayState,
+      slippage: slippage,
+      sellToken: sellTokenElement,
+      buyToken: buyTokenElement,
+      recipientWallet: recipientWallet,      
+      agentWallet: agentWallet        
+    })
+  }
+  
   return (
     <div className="p-3 mx-auto max-w-screen-sm ">
       <form autoComplete="off">
