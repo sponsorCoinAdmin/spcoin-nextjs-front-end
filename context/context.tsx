@@ -5,15 +5,15 @@ interface Context<T> {
     displayName?: string | undefined;
 }
 
-let ExchangeContext;
+let InitialExchangeState;
 let ExchangeProvider: Provider<any>;
 let ExchangeConsumer: Consumer<any>;
 
 const initialContext = (value:any) => {
-    ExchangeContext = createContext(value);
-    ExchangeProvider = ExchangeContext.Provider
-    ExchangeConsumer = ExchangeContext.Consumer
-    return ExchangeContext
+    InitialExchangeState = createContext(value);
+    ExchangeProvider = InitialExchangeState.Provider
+    ExchangeConsumer = InitialExchangeState.Consumer
+    return InitialExchangeState
 }
 
 export { initialContext, ExchangeProvider, ExchangeConsumer };

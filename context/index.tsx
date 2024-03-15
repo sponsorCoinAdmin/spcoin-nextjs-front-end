@@ -1,13 +1,14 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
 import { useState, useEffect, useContext } from 'react';
-import { ExchangeProvider, initialContext } from './testContext';
+import { ExchangeProvider, initialContext } from './context';
 
 const initialExchangeTokens = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let exchangeContext:ExchangeTokens = {
       state: EXCHANGE_STATE.PRICE,
+      displayState: DISPLAY_STATE.OFF,
       slippage:"0.02",
       sellToken: defaultNetworkSettings.defaultSellToken,
       buyToken: defaultNetworkSettings.defaultBuyToken,
@@ -18,7 +19,7 @@ const initialExchangeTokens = (network:string|number) => {
   }
 
 const context = initialExchangeTokens('ethereum');
-const ExchangeContext = initialContext(context);
+const InitialExchangeState = initialContext(context);
 let CallBackSetter: (exchangeTokens:ExchangeTokens) => void;
 
 export function ExchangeWrapper({children} : {
@@ -40,11 +41,11 @@ export function ExchangeWrapper({children} : {
 }
 
 export function useExchangeContext() {
-    let useExchangeContext = useContext(ExchangeContext);
+    let useExchangeContext = useContext(InitialExchangeState);
     return useExchangeContext;
 }
 
 export function useExchangeContextSetter() {
-    let useExchangeContext = useContext(ExchangeContext);
+    let useExchangeContext = useContext(InitialExchangeState);
     return CallBackSetter;
 }

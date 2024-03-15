@@ -4,6 +4,10 @@ enum  EXCHANGE_STATE {
   PRICE, QUOTE, PENDING
 }
 
+enum  DISPLAY_STATE {
+  OFF, SPONSOR, CONFIG
+}
+
 interface PriceRequestParams {
     sellToken: Address|string;
     buyToken: Address|string;
@@ -31,6 +35,7 @@ interface PriceRequestParams {
 
   type ExchangeTokens = {
     state: EXCHANGE_STATE;
+    displayState: DISPLAY_STATE;
     slippage: string|undefined|null;
     sellToken: TokenElement;
     buyToken: TokenElement;
@@ -38,11 +43,14 @@ interface PriceRequestParams {
     agentWallet: WalletElement;
   }
     
-  export { EXCHANGE_STATE }
+  export {
+    EXCHANGE_STATE,
+    DISPLAY_STATE
+  }
+
   export type {
     TokenElement,
     WalletElement,
     PriceRequestParams,
     ExchangeTokens
 };
-
