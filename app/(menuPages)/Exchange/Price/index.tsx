@@ -25,7 +25,7 @@ import {
 } from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
-import SellContainer from '@/app/components/containers/SellContainer';
+import SellContainer2 from '@/app/components/containers/SellContainer2';
 import BuyContainer from '@/app/components/containers/BuyContainer';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
@@ -69,10 +69,11 @@ export default function PriceView({
     },[]);
 
     useEffect(() => {
-      // alert('Price slippage changed to  ' + slippage);
+      console.debug('Price slippage changed to  ' + slippage);
     }, [slippage]);
 
     useEffect(() => {
+      // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
       updateBuyBalance(buyTokenElement);
       updateSellBalance(sellTokenElement);
     }, [connectedWalletAddr]);
@@ -83,9 +84,16 @@ export default function PriceView({
     }, [sellTokenElement]);
 
     useEffect(() => {
-      console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name);
+      // console.debug(`useEffect[buyTokenElement]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
       updateBuyBalance(buyTokenElement);
     }, [buyTokenElement]);
+
+    useEffect(() => {
+      // console.debug(`useEffect[****]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
+      setExchangeTokensCallback()
+    }, [slippage, buyTokenElement, sellTokenElement, recipientWallet]);
+
+
 
     useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
@@ -116,21 +124,16 @@ export default function PriceView({
       }
     }, [sellTokenElement]);
 
-    useEffect(() => {
-      updateNetwork(network)
-    }, [network]);
-
     const updateNetwork = (network:string | number) => {
-      // alert("Price:network set to " + network)
       try {
         console.debug("Price:network set to " + network);
         let networkSettings = getDefaultNetworkSettings(network);
-        setSellTokenElement(networkSettings?.defaultSellToken);
-        setBuyTokenElement(networkSettings?.defaultBuyToken);
-        setRecipientElement(networkSettings?.defaultRecipient);
-        setAgentElement(networkSettings?.defaultAgent);
-        console.debug(`Price:EXECUTING updateNetwork.updateBuyBalance(${buyTokenElement});`)
-        console.debug(`Price:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
+        setSellTokenElement(networkSettings.defaultSellToken);
+        setBuyTokenElement(networkSettings.defaultBuyToken);
+        setRecipientElement(networkSettings.defaultRecipient);
+        setAgentElement(networkSettings.defaultAgent);
+        console.debug(`Price:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement.name});`)
+        console.debug(`Price:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
         updateBuyBalance(buyTokenElement);
         updateSellBalance(sellTokenElement);
       } catch (e) {
@@ -146,12 +149,12 @@ export default function PriceView({
     };
 
     const processNetworkChange = (network: any) => {
-      console.debug("Price:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
+      console.debug("Price.processNetworkChange:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
       setNetwork(network?.chain?.name.toLowerCase());
     };
 
     const updateSellBalance = async (sellTokenElement: TokenElement) => {
-
+      console.debug(`Price.updateSellBalance(${sellTokenElement.name});`)
       let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenElement, setSellBalance)
       // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalance=${balance}}`);
 
@@ -169,6 +172,7 @@ export default function PriceView({
 
     const updateBuyBalance = async (buyTokenElement: TokenElement) => {
       let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenElement, setBuyBalance)
+      console.debug(`updateBuyBalance:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
       console.debug(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
 
       try {
@@ -255,7 +259,7 @@ export default function PriceView({
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
+          <SellContainer2 sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
           <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} />          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
           <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />

@@ -15,7 +15,7 @@ import {
 } from "wagmi";
 import { getTokenDetails, fetchTokenDetails } from "@/app/lib/spCoin/utils";
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
-import SellContainer from '@/app/components/containers/SellContainer';
+import SellContainer2 from '@/app/components/containers/SellContainer2';
 import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
@@ -193,7 +193,7 @@ export default function QuoteView({
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenElement.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
+          <SellContainer2 sellAmount={formatUnits(quote.sellAmount, sellTokenElement.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
           <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined } disabled={true}/>          
           <QuoteButton sendTransaction={sendTransaction}/>
           <RecipientContainer recipientWallet={recipientWallet} />

@@ -1,11 +1,12 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
-import { createContext, useState, useContext } from 'react';
- 
+import { useState, useEffect, useContext } from 'react';
+import { ExchangeProvider, initialContext } from './testContext';
+
 const initialExchangeTokens = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
-    let exchangeTokens:ExchangeTokens = {
+    let exchangeContext:ExchangeTokens = {
       state: EXCHANGE_STATE.PRICE,
       slippage:"0.02",
       sellToken: defaultNetworkSettings.defaultSellToken,
@@ -13,22 +14,25 @@ const initialExchangeTokens = (network:string|number) => {
       recipientWallet: defaultNetworkSettings.defaultRecipient,      
       agentWallet: defaultNetworkSettings.defaultAgent        
     }
-    return exchangeTokens;
+    return exchangeContext;
   }
 
 const context = initialExchangeTokens('ethereum');
-const ExchangeContext = createContext(context);
-const ExchangeProvider = ExchangeContext.Provider
-const ExchangeConsumer = ExchangeContext.Consumer
+const ExchangeContext = initialContext(context);
+let CallBackSetter: (exchangeTokens:ExchangeTokens) => void;
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-    let [exchangeTokens, setExchangeTokens] = useState<ExchangeTokens>(context);
+    let [exchangeContext, setExchangeTokens] = useState<ExchangeTokens>(context);
+
+    useEffect(() => {
+        // alert (`ExchangeWrapper:exchangeContext = ${JSON.stringify(exchangeContext,null,2)}`)
+      },[exchangeContext]);    CallBackSetter = setExchangeTokens
 
     return (
         <>
-        <ExchangeProvider value={exchangeTokens}>
+        <ExchangeProvider value={exchangeContext}>
             <div>{children}</div>
         </ExchangeProvider>
         </>
@@ -36,7 +40,11 @@ export function ExchangeWrapper({children} : {
 }
 
 export function useExchangeContext() {
-    return useContext(ExchangeContext);
+    let useExchangeContext = useContext(ExchangeContext);
+    return useExchangeContext;
 }
 
-export {ExchangeProvider, ExchangeConsumer}
+export function useExchangeContextSetter() {
+    let useExchangeContext = useContext(ExchangeContext);
+    return CallBackSetter;
+}
