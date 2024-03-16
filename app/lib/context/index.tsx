@@ -3,12 +3,13 @@ import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultN
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
 import { useState, useEffect, useContext } from 'react';
 import { initializeContext, ExchangeProvider } from './context';
+import { isSpCoin } from '../spCoin/utils';
 
 const initialExchangeContext = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let exchangeContext:ExchangeTokens = {
       state: EXCHANGE_STATE.PRICE,
-      displayState: DISPLAY_STATE.OFF,
+      displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR:DISPLAY_STATE.OFF,
       slippage:"0.02",
       sellToken: defaultNetworkSettings.defaultSellToken,
       buyToken: defaultNetworkSettings.defaultBuyToken,

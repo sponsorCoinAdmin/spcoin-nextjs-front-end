@@ -19,7 +19,7 @@ const showElement = (element: string) => {
 
 const setDisplayPanels = (displayState:DISPLAY_STATE) => {
   
-  alert(`guiControl.setDisplayState(${getDisplayStateString(displayState)})`)
+  // alert(`guiControl.setDisplayState(${getDisplayStateString(displayState)})`)
   switch(displayState) {
     case DISPLAY_STATE.OFF:
       hideElement("addSponsorshipDiv")
@@ -51,11 +51,9 @@ const getDisplayStateString  = (displayState:DISPLAY_STATE) => {
     break
     case DISPLAY_STATE.SPONSOR:
       return("DISPLAY_STATE.SPONSOR")
-
     break
     case DISPLAY_STATE.RECIPIENT:
       return("DISPLAY_STATE.RECIPIENT")
-
     break
     case DISPLAY_STATE.CONFIG:
       return("DISPLAY_STATE.CONFIG")

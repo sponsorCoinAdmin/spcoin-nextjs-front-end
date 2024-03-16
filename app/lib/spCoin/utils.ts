@@ -95,8 +95,7 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
 };
 
 const isSpCoin = (tokenElement:TokenElement) => {
-  let isSpCoin = tokenElement.symbol === "SpCoin" ? true:false
-  return isSpCoin
+  return tokenElement.symbol === "SpCoin" ? true:false
 }
 
 export { 

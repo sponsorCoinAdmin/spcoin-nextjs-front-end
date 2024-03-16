@@ -17,7 +17,7 @@ type Props = {
   }
   
 /* Sell Token Selection Module */
-const SellContainer2 = ({sellAmount, sellBalance, sellTokenElement, setSellAmount, disabled} : Props) => {
+const SellContainer = ({sellAmount, sellBalance, sellTokenElement, setSellAmount, disabled} : Props) => {
     // if (disabled) {
     //   console.debug(`hideElement("downOutlinedSell2")`)
     //   hideElement("downOutlinedSell2")
@@ -48,4 +48,4 @@ const SellContainer2 = ({sellAmount, sellBalance, sellTokenElement, setSellAmoun
   );
 }
 
-export default SellContainer2;
+export default SellContainer;

@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
-import { setDisplayPanels, toggleElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
 import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
@@ -9,20 +8,20 @@ import Link from 'next/link'
 import { DISPLAY_STATE } from '@/app/lib/structure/types';
 
 type Props = {
-  recipientWallet: any, 
+  recipientWallet: any,
+  setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
-const toggleConfig = () => {
+const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
   const el = document.getElementById('recipientConfigDiv');
   if (el != null) {
     el.style.display === 'block' ? 
-      setDisplayPanels(DISPLAY_STATE.RECIPIENT) :
-      setDisplayPanels(DISPLAY_STATE.CONFIG);
+      setDisplayState(DISPLAY_STATE.RECIPIENT) :
+      setDisplayState(DISPLAY_STATE.CONFIG);
   }
 };
 
-
-const RecipientContainer = ({recipientWallet} : Props) => {
+const RecipientContainer = ({recipientWallet, setDisplayState} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
   // let urlParms:string = `/Recipient?address=${recipientWallet.address}`
   let urlParms:string = `/Recipient/${recipientWallet.address}`
@@ -49,9 +48,9 @@ const RecipientContainer = ({recipientWallet} : Props) => {
       </div>
       <div>
         <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
-        onClick={() => toggleConfig()}/>
+        onClick={() => toggleConfig(setDisplayState)}/>
       </div>
-      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayPanels(DISPLAY_STATE.SPONSOR)}>
+      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR)}>
         X
       </div>
     </div>

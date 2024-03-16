@@ -3,6 +3,7 @@ import styles from '@/app/styles/Exchange.module.css';
 import { hideElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
 import info_png from '../../../public/resources/images/info1.png';
+import { DISPLAY_STATE } from '@/app/lib/structure/types';
 
 function setRateRatios(newRate: string) {
   var numRate = Number(newRate)
@@ -20,7 +21,11 @@ function setRecipientRatio(newRate: number) {
   recipientRatio.innerHTML = +(newRate*10)+"%";
 }
 
-const SponsorRateConfig = () => {
+type Props = {
+  setDisplayState:(displayState:DISPLAY_STATE) => void
+}
+
+const SponsorRateConfig = ({setDisplayState}:Props) => {
   return (
     <div id="recipientConfigDiv" className={styles.rateRatioContainer}>
     <div className={styles["inputs"]}>
@@ -38,7 +43,7 @@ const SponsorRateConfig = () => {
           50%
         </div>
       </div>
-      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideElement("recipientConfigDiv")}>
+      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
         X
       </div>
       <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>

@@ -15,7 +15,7 @@ import {
 } from "wagmi";
 import { getTokenDetails, fetchTokenDetails } from "@/app/lib/spCoin/utils";
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
-import SellContainer2 from '@/app/components/containers/SellContainer2';
+import SellContainer from '@/app/components/containers/SellContainer';
 import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
@@ -66,6 +66,7 @@ export default function QuoteView({
   useEffect(() => {
     console.debug("exchangeTokens =\n" + JSON.stringify(exchangeTokens,null,2))
     console.debug("price =\n" + JSON.stringify(price,null,2))
+    setDisplayPanels(displayState);
   },[]);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function QuoteView({
   },[displayState]);
 
   useEffect(() => {
-    setExchangeTokensCallback()
+    // setExchangeTokensCallback()
   }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
   useEffect(() => { 
@@ -211,10 +212,10 @@ export default function QuoteView({
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer2 sellAmount={formatUnits(quote.sellAmount, sellTokenElement.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
-          <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined } disabled={true}/>          
+          <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenElement.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenElement={sellTokenElement} setSellAmount={undefined} disabled={true}/>
+          <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>          
           <QuoteButton sendTransaction={sendTransaction}/>
-          <RecipientContainer recipientWallet={recipientWallet} />
+          <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
           <SponsorRateConfig />
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
         </div>

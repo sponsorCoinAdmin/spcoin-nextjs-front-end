@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenElement } from '@/app/lib/structure/types';
-import { setDisplayPanels } from '@/app/lib/spCoin/guiControl';
 import { isSpCoin } from '@/app/lib/spCoin/utils';
 
 type Props = {
@@ -10,13 +9,14 @@ type Props = {
   buyBalance: string,
   buyTokenElement: TokenElement, 
   setBuyAmount: any,
+  setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled:boolean
 }
 
-const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, disabled} : Props) => {
-  
+const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, setDisplayState, disabled} : Props) => {
+// alert(`BuyContainer isSpCoin = ${isSpCoin}`)
   useEffect(() => {
-    isSpCoin(buyTokenElement) ? setDisplayPanels(DISPLAY_STATE.SPONSOR) : setDisplayPanels(DISPLAY_STATE.OFF)
+    // isSpCoin(buyTokenElement) ? setDisplayState(DISPLAY_STATE.SPONSOR) : setDisplayState(DISPLAY_STATE.OFF)
   },[buyTokenElement])
 
   return (
@@ -25,7 +25,7 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
       <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive </div>
       <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayPanels(DISPLAY_STATE.RECIPIENT)}>
+      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
         <div className={styles["centerContainer"]} >Add Sponsorship</div>
       </div>
     </div>
