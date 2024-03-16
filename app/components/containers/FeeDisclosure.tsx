@@ -7,7 +7,8 @@ const FeeDisclosure = () => {
     return (
         <div id="agentRateFee" className={styles["agentRateFee"]}>
             Fee Disclosures
-            <Image src={cog_png} className={styles["feeInfoImg"]} width={18} height={18} alt="Info Image" />
+            <Image src={cog_png} className={styles["feeInfoCog"]} width={18} height={18} alt="Info Image" 
+            onClick={() => alert("Fees Explained")}/>
         </div>
     );
 }

@@ -32,6 +32,31 @@
   cursor: pointer;
 }
 
+.feeInfoCog {
+  position: absolute;
+  top: 0px;
+  left: 115px;
+  cursor: pointer;
+  color: #51586f;
+  transition: 0.3s;
+}
+.feeInfoCog:hover {
+  color: white;
+  rotate: 360deg;
+  cursor: pointer;
+}
+
+.feeInfoCogOLD {
+  top: 0px;
+  left: 115px;
+  cursor: pointer;
+}
+.feeInfoCogOLD:hover {
+  color: white;
+  rotate: 360deg;
+  cursor: pointer;
+}
+
 .inputs {
   position: relative;
 }
@@ -42,6 +67,7 @@
 }
 
 .centerContainer {
+  color: #51586f;
   position: absolute;
   width: 100%;
   top: 50%;
@@ -437,12 +463,6 @@
   cursor: pointer;
 }
 
-.cog:hover {
-  color: white;
-  rotate: 360deg;
-  cursor: pointer;
-}
-
 .cogImg {
   position: absolute;
   object-fit: contain;
@@ -450,6 +470,27 @@
   transition: 0.3s;
   top: 12px;
   right: 43px;
+}
+
+.cogImg2 {
+  position: absolute;
+  object-fit: contain;
+  color: #51586f;
+  transition: 0.3s;
+  top: 12px;
+  right: 12px;
+}
+
+.cog:hover {
+  color: white;
+  rotate: 360deg;
+  cursor: pointer;
+}
+
+.cogImg2:hover {
+  color: red;
+  rotate: 360deg;
+  cursor: pointer;
 }
 
 .cogImg:hover {
@@ -509,14 +550,62 @@
   font-size: 14px;
 }
 
-.feeInfoImg {
-  position: absolute;
-  top: 0px;
-  left: 115px;
-  cursor: pointer;
+/* Popover CSS */
+.popover-inner {
+  min-width: 260px !important;
+  min-height: 100px !important;
+  border: 1px solid #21273a;
+  background-color: #0e111b !important;
 }
-.feeInfoImg:hover {
-  color: white;
-  rotate: 360deg;
-  cursor: pointer;
+
+.ant-radio-group {
+  margin-top: 10px;
 }
+
+/* .ant-radio-button-wrapper {
+  background-color: #1f2639 !important;
+  color: white !important;
+  font-weight: 500;
+  border-color: white !important;
+}
+
+.ant-radio-button-wrapper-checked {
+  border-color: white !important;
+  background-color: #363e54 !important;
+}
+
+.ant-radio-button-wrapper-checked::before {
+  background-color: white !important;
+}
+
+.ant-modal-content {
+  background-color: #0e111b !important;
+  color: white !important;
+  padding: 0px !important;
+}
+
+.ant-modal {
+  border: 1px solid #363e54;
+  width: 400px !important;
+  border-radius: 10px;
+}
+
+.ant-modal-header {
+  background-color: #0e111b !important;
+}
+
+.ant-modal-title {
+  color: white !important;
+  padding-top: 17px !important;
+  margin-left: 20px !important;
+}
+
+.ant-modal-close-icon {
+  color: #363e54 !important;
+  transition: 0.3s;
+}
+
+.ant-modal-close-icon:hover {
+  color: white !important;
+}
+*/

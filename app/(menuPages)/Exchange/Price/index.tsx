@@ -92,7 +92,7 @@ export default function PriceView({
     }, [buyTokenElement]);
 
     useEffect(() => {
-      setExchangeContext()
+      setExchangeTokensCallback()
     }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
     useEffect(() => {
