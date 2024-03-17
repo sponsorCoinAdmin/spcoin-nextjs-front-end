@@ -26,7 +26,7 @@ import { RecipientDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeTokens, TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
@@ -45,8 +45,8 @@ export default function QuoteView({
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
   connectedWalletAddr: Address;
-  exchangeTokens: ExchangeTokens;
-  setExchangeTokens: (exchangeTokens: ExchangeTokens) => void;
+  exchangeTokens: ExchangeContext;
+  setExchangeTokens: (exchangeTokens: ExchangeContext) => void;
 }) {
 
   console.debug("########################### QUOTE RERENDERED #####################################")

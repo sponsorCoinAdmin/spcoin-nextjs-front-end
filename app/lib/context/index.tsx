@@ -1,13 +1,13 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeTokens } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext } from '@/app/lib/structure/types';
 import { useState, useEffect, useContext } from 'react';
 import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
 
 const initialExchangeContext = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
-    let exchangeContext:ExchangeTokens = {
+    let exchangeContext:ExchangeContext = {
       state: EXCHANGE_STATE.PRICE,
       displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR:DISPLAY_STATE.OFF,
       slippage:"0.02",
@@ -21,12 +21,12 @@ const initialExchangeContext = (network:string|number) => {
 
 const initialContext = initialExchangeContext('ethereum');
 const InitialExchangeState = initializeContext(initialContext);
-let CallBackSetter: (exchangeTokens:ExchangeTokens) => void;
+let CallBackSetter: (exchangeTokens:ExchangeContext) => void;
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-    let [exchangeContext, setExchangeContext] = useState<ExchangeTokens>(initialContext);
+    let [exchangeContext, setExchangeContext] = useState<ExchangeContext>(initialContext);
 
     useEffect(() => {
         // alert (`ExchangeWrapper:exchangeContext = ${JSON.stringify(exchangeContext,null,2)}`)

@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeTokens, DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
@@ -38,8 +38,8 @@ export default function PriceView({
     connectedWalletAddr: Address | undefined;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
-    exchangeTokens: ExchangeTokens;
-    setExchangeTokens: (exchangeTokens: ExchangeTokens) => void;
+    exchangeTokens: ExchangeContext;
+    setExchangeTokens: (exchangeTokens: ExchangeContext) => void;
 }) {
   try {
     let chainId = useChainId();
