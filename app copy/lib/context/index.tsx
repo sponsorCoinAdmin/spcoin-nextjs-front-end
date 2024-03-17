@@ -7,15 +7,15 @@ import { isSpCoin } from '../spCoin/utils';
 import { useChainId } from "wagmi";
 
 const initialExchangeContext = (network:string|number) => {
-    const defaultContextSettings = getDefaultNetworkSettings(network)
+    const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let exchangeContext:ExchangeContext = {
       state: EXCHANGE_STATE.PRICE,
-      displayState: isSpCoin(defaultContextSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR:DISPLAY_STATE.OFF,
+      displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR:DISPLAY_STATE.OFF,
       slippage:"0.02",
-      sellToken: defaultContextSettings.defaultSellToken,
-      buyToken: defaultContextSettings.defaultBuyToken,
-      recipientWallet: defaultContextSettings.defaultRecipient,      
-      agentWallet: defaultContextSettings.defaultAgent        
+      sellToken: defaultNetworkSettings.defaultSellToken,
+      buyToken: defaultNetworkSettings.defaultBuyToken,
+      recipientWallet: defaultNetworkSettings.defaultRecipient,      
+      agentWallet: defaultNetworkSettings.defaultAgent        
     }
     return exchangeContext;
   }
@@ -26,16 +26,16 @@ let CallBackSetter: (exchangeContext:ExchangeContext) => void;
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-    alert("ExchangeWrapper")
+//    alert("ExchangeWrapper")
     const network = useChainId()
     const initialContext = initialExchangeContext(network);
-
+    if (!InitialExchangeState)
+        InitialExchangeState = initializeContext(initialContext);
     let [exchangeContext, setExchangeContext] = useState<ExchangeContext>(initialContext);
-    InitialExchangeState = initializeContext(initialContext);
-
+ 
     useEffect(() => {
         // alert (`ExchangeWrapper:exchangeContext = ${JSON.stringify(exchangeContext,null,2)}`)
-      },[exchangeContext]);    
+      },[exchangeContext]);
       
     CallBackSetter = setExchangeContext
 
