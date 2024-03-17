@@ -28,6 +28,7 @@ import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
+import { useExchangeContext, useExchangeContextSetter } from '@/app/lib/context';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -37,34 +38,32 @@ export default function QuoteView({
   price,
   quote,
   setQuote,
-  connectedWalletAddr,
-  exchangeTokens,
-  setExchangeTokens
+  connectedWalletAddr
 }: {
   price: PriceResponse;
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
   connectedWalletAddr: Address;
-  exchangeTokens: ExchangeContext;
-  setExchangeTokens: (exchangeTokens: ExchangeContext) => void;
 }) {
 
   console.debug("########################### QUOTE RERENDERED #####################################")
+  const exchangeContext:ExchangeContext  = useExchangeContext()
+  const setExchangeContext = useExchangeContextSetter();
 
   let chainId = useChainId();
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
-  const [slippage, setSlippage] = useState<string | undefined | null>(exchangeTokens.slippage);
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeTokens.sellToken);
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
-  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
-  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeTokens.agentWallet);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeTokens.displayState);
+  const [slippage, setSlippage] = useState<string | undefined | null>(exchangeContext.slippage);
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeContext.sellToken);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeContext.buyToken);
+  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
+  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeContext.agentWallet);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
-    console.debug("exchangeTokens =\n" + JSON.stringify(exchangeTokens,null,2))
+    console.debug("exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
     console.debug("price =\n" + JSON.stringify(price,null,2))
     setDisplayPanels(displayState);
   },[]);
@@ -74,7 +73,7 @@ export default function QuoteView({
   },[displayState]);
 
   useEffect(() => {
-    // setExchangeTokensCallback()
+    // setExchangeContextCallback()
   }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
   useEffect(() => { 
@@ -193,18 +192,6 @@ export default function QuoteView({
   console.log("quote" + JSON.stringify(quote,null,2));
   console.log(formatUnits(quote.sellAmount, sellTokenElement.decimals));
 
-  const setExchangeTokensCallback = () => {
-    setExchangeTokens({
-      state: EXCHANGE_STATE.QUOTE,
-      displayState: displayState,
-      slippage: slippage,
-      sellToken: sellTokenElement,
-      buyToken: buyTokenElement,
-      recipientWallet: recipientWallet,      
-      agentWallet: agentWallet        
-    })
-  }
-  
   return (
     <div className="p-3 mx-auto max-w-screen-sm ">
       <form autoComplete="off">
@@ -216,7 +203,7 @@ export default function QuoteView({
           <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>          
           <QuoteButton sendTransaction={sendTransaction}/>
           <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
-          <SponsorRateConfig />
+          <SponsorRateConfig setDisplayState={setDisplayState}/>
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
         </div>
         <FeeDisclosure/>

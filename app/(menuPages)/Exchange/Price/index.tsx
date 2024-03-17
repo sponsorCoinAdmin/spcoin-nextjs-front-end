@@ -18,7 +18,7 @@ import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-import {setDisplayPanels, getDisplayStateString,} from '@/app/lib/spCoin/guiControl';
+import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
 import SellContainer from '@/app/components/containers/SellContainer';
@@ -29,18 +29,16 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
+import { useExchangeContext, useExchangeContextSetter } from "@/app/lib/context";
 
 //////////// Price Code
-export default function PriceView({
-  connectedWalletAddr, price, setPrice, exchangeTokens, setExchangeTokens
-}: {
+export default function PriceView({connectedWalletAddr, price, setPrice}: {
     connectedWalletAddr: Address | undefined;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
-    exchangeTokens: ExchangeContext;
-    setExchangeTokens: (exchangeTokens: ExchangeContext) => void;
 }) {
+  const exchangeContext:ExchangeContext = useExchangeContext();
+  const setExchangeContext = useExchangeContextSetter();
   try {
     let chainId = useChainId();
     let networkName = getNetworkName(chainId);
@@ -53,11 +51,11 @@ export default function PriceView({
     const [buyBalance, setBuyBalance] = useState<string>("0");
     const [tradeDirection, setTradeDirection] = useState("sell");
 
-    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeTokens.sellToken);
-    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
-    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
-    const [agentWallet, setAgentElement] = useState(exchangeTokens.agentWallet);
-    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeTokens.displayState);
+    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeContext.sellToken);
+    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeContext.buyToken);
+    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
+    const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
 
@@ -86,13 +84,16 @@ export default function PriceView({
     }, [sellTokenElement]);
 
     useEffect(() => {
-      // console.debug(`useEffect[buyTokenElement]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
-      // isSpCoin(buyTokenElement) ? setDisplayState(DISPLAY_STATE.SPONSOR) : setDisplayState(DISPLAY_STATE.OFF)
+      // alert(`useEffect[buyTokenElement]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
+      if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenElement))
+        setDisplayState(DISPLAY_STATE.SPONSOR) 
+      else if (!isSpCoin(buyTokenElement)) 
+        setDisplayState(DISPLAY_STATE.OFF)
       updateBuyBalance(buyTokenElement);
     }, [buyTokenElement]);
 
     useEffect(() => {
-      setExchangeTokensCallback()
+      setExchangeContextCallback(EXCHANGE_STATE.PRICE)
     }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
     useEffect(() => {
@@ -100,23 +101,6 @@ export default function PriceView({
         openDialog("#errorDialog");
       }
     }, [errorMessage]);
-
-    const updateNetwork = (network:string | number) => {
-      try {
-        console.debug("Price:network set to " + network);
-        let networkSettings = getDefaultNetworkSettings(network);
-        setSellTokenElement(networkSettings.defaultSellToken);
-        setBuyTokenElement(networkSettings.defaultBuyToken);
-        setRecipientElement(networkSettings.defaultRecipient);
-        setAgentElement(networkSettings.defaultAgent);
-        console.debug(`Price:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement.name});`)
-        console.debug(`Price:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
-        updateBuyBalance(buyTokenElement);
-        updateSellBalance(sellTokenElement);
-      } catch (e) {
-        setErrorMessage({ name: "XXXXX: ", message: JSON.stringify(e, null, 2) });
-      }
-    }
 
     const unwatch = watchNetwork((network) => processNetworkChange(network));
     const unwatchAccount = watchAccount((account) => processAccountChange(account));
@@ -215,22 +199,14 @@ export default function PriceView({
     const disabled = data && sellAmount
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
-
-      const setExchangeContext = () => {
-        setExchangeTokens({
-          state: EXCHANGE_STATE.PRICE,
-          displayState: displayState,
-          slippage: slippage,
-          sellToken: sellTokenElement,
-          buyToken: buyTokenElement,
-          recipientWallet: recipientWallet,      
-          agentWallet: agentWallet        
-        })
-      }
   
-      const setExchangeTokensCallback = () => {
-      setExchangeTokens({
-        state: EXCHANGE_STATE.QUOTE,
+    const setExchangeContextCallback = (state:EXCHANGE_STATE) => {
+        setContext(state)
+    }
+
+    const setContext = (state:EXCHANGE_STATE) => {
+      setExchangeContext({
+        state: state,
         displayState: displayState,
         slippage: slippage,
         sellToken: sellTokenElement,
@@ -252,7 +228,7 @@ export default function PriceView({
           <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
           <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
-          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />
+          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeContextCallback={setExchangeContextCallback} />
           <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
           <SponsorRateConfig setDisplayState={setDisplayState}/>
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />

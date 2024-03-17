@@ -33,7 +33,7 @@ const RecipientContainer = ({recipientWallet, setDisplayState} : Props) => {
 
   console.debug (`calling urlParms: ${urlParms}`)
   return (
-    <div id="recipientSelectDiv" className={styles["inputs"]}>
+    <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
       <div id="recipient-id" className={styles.sponsorCoinContainer}/>
       <div className={styles["yourRecipient"]}>
         You are sponsoring:
