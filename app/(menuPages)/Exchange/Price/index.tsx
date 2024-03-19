@@ -29,7 +29,7 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { useExchangeContext, useExchangeContextSetter } from "@/app/lib/context";
+import { useExchangeContext, setExchangeContext } from "@/app/lib/context";
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {
@@ -38,7 +38,6 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
   const exchangeContext:ExchangeContext = useExchangeContext();
-  const setExchangeContext = useExchangeContextSetter();
   try {
     let chainId = useChainId();
     let networkName = getNetworkName(chainId);

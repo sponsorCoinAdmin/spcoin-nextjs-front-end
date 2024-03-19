@@ -28,7 +28,7 @@ import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TokenElement, WalletElement } from '@/app/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
-import { useExchangeContext, useExchangeContextSetter } from '@/app/lib/context';
+import { useExchangeContext, setExchangeContext } from '@/app/lib/context';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -48,7 +48,6 @@ export default function QuoteView({
 
   console.debug("########################### QUOTE RERENDERED #####################################")
   const exchangeContext:ExchangeContext  = useExchangeContext()
-  const setExchangeContext = useExchangeContextSetter();
 
   let chainId = useChainId();
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)

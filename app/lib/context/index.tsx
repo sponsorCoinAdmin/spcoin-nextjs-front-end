@@ -21,7 +21,8 @@ const initialExchangeContext = (network:string|number) => {
   }
 
 let InitialExchangeState:any;
-let CallBackSetter: (exchangeContext:ExchangeContext) => void;
+let setExchangeContext : (exchangeContext:ExchangeContext) => void
+let exchangeContext:ExchangeContext;
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
@@ -31,14 +32,9 @@ export function ExchangeWrapper({children} : {
     const initialContext = initialExchangeContext(network);
     if (!InitialExchangeState)
         InitialExchangeState = initializeContext(initialContext);
-    let [exchangeContext, setExchangeContext] = useState<ExchangeContext>(initialContext);
- 
-    useEffect(() => {
-        // alert (`ExchangeWrapper:exchangeContext = ${JSON.stringify(exchangeContext,null,2)}`)
-      },[exchangeContext]);
-      
-    CallBackSetter = setExchangeContext
+        const [exchangeContext, setExContext] = useState<ExchangeContext>(initialContext);
 
+        setExchangeContext = setExContext;
     return (
         <>
             <ExchangeProvider value={exchangeContext}>
@@ -49,15 +45,11 @@ export function ExchangeWrapper({children} : {
 }
 
 function useExchangeContext() {
-    let useExchangeContext:ExchangeContext = useContext<ExchangeContext>(InitialExchangeState);
-    return useExchangeContext;
-}
-
-function useExchangeContextSetter() {
-    return CallBackSetter;
+    exchangeContext = useContext<ExchangeContext>(InitialExchangeState);
+    return exchangeContext;
 }
 
 export {
+    setExchangeContext,
     useExchangeContext,
-    useExchangeContextSetter,
 }
