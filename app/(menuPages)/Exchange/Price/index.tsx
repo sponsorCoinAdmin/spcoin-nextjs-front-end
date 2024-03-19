@@ -52,6 +52,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
+    const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.state);
     const [slippage, setSlippage] = useState<string>(exchangeContext.slippage);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     let chainId = useChainId();
@@ -69,6 +70,10 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     useEffect(() => {
       console.debug('Price slippage changed to  ' + slippage);
     }, [slippage]);
+
+    useEffect(() => {
+      console.debug('Price state changed to  ' + state.toString);
+    }, [state]);
 
     useEffect(() => {
       // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)

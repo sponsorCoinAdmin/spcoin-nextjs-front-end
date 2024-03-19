@@ -6,7 +6,7 @@ import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
 
 const initialExchangeContext = (network:string|number) => {
-    console.log(`initialExchangeContext:ExchangeWrapper chainId = ${network}`)
+    alert(`initialExchangeContext:ExchangeWrapper chainId = ${network}`)
 
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let exchangeContext:ExchangeContext = {
