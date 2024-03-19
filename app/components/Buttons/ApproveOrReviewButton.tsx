@@ -11,6 +11,7 @@ import {
 } from "wagmi";
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 import { EXCHANGE_STATE } from '@/app/lib/structure/types';
+import { exchangeContext } from '@/app/lib/context';
 
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
@@ -167,7 +168,8 @@ function ApproveOrReviewButton({
       <button
         type="button"
         disabled={insufficientBalance}
-        onClick={() => setExchangeContextCallback(EXCHANGE_STATE.QUOTE)}
+        onClick={() => exchangeContext.state = EXCHANGE_STATE.QUOTE}
+        // onClick={() => setExchangeContextCallback(EXCHANGE_STATE.QUOTE)}
          className={styles["exchangeButton"] + " " + styles["swapButton"]}
       >
         {insufficientBalance ? "Insufficient " + token.symbol + " Balance" : "Review Trade"}

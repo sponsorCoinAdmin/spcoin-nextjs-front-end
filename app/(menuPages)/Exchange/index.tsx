@@ -3,11 +3,10 @@ import PriceView from "./Price";
 import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
-import { EXCHANGE_STATE, ExchangeContext } from "@/app/lib/structure/types";
-import { useExchangeContext } from "@/app/lib/context";
+import { EXCHANGE_STATE } from "@/app/lib/structure/types";
+import { exchangeContext } from "@/app/lib/context";
 
 export default function Home() {
-  const exchangeContext:ExchangeContext  = useExchangeContext()
   
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();

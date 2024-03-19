@@ -1,12 +1,13 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext } from '@/app/lib/structure/types';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
-import { useChainId } from "wagmi";
 
 const initialExchangeContext = (network:string|number) => {
+    console.log(`initialExchangeContext:ExchangeWrapper chainId = ${network}`)
+
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let exchangeContext:ExchangeContext = {
       state: EXCHANGE_STATE.PRICE,
@@ -18,23 +19,20 @@ const initialExchangeContext = (network:string|number) => {
       agentWallet: defaultNetworkSettings.defaultAgent        
     }
     return exchangeContext;
-  }
+}
 
-let InitialExchangeState:any;
-let setExchangeContext : (exchangeContext:ExchangeContext) => void
+// Returns
+const context:any = initializeContext(initialExchangeContext("ethereum"));
 let exchangeContext:ExchangeContext;
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-//    alert("ExchangeWrapper")
-    const network = useChainId()
-    const initialContext = initialExchangeContext(network);
-    if (!InitialExchangeState)
-        InitialExchangeState = initializeContext(initialContext);
-        const [exchangeContext, setExContext] = useState<ExchangeContext>(initialContext);
+    //  alert(`ExchangeWrapper:ExchangeWrapper exchangeContext = ${exchangeContext}`)
+     const [exContext, setExContext] = useState<ExchangeContext>(useContext<ExchangeContext>(context));
 
-        setExchangeContext = setExContext;
+    exchangeContext = exContext;
+
     return (
         <>
             <ExchangeProvider value={exchangeContext}>
@@ -45,11 +43,10 @@ export function ExchangeWrapper({children} : {
 }
 
 function useExchangeContext() {
-    exchangeContext = useContext<ExchangeContext>(InitialExchangeState);
+    exchangeContext = useContext<ExchangeContext>(context);
     return exchangeContext;
-}
+}   
 
 export {
-    setExchangeContext,
-    useExchangeContext,
+    exchangeContext
 }

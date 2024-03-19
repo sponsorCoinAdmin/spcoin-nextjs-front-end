@@ -36,7 +36,7 @@ interface PriceRequestParams {
   type ExchangeContext = {
     state: EXCHANGE_STATE;
     displayState: DISPLAY_STATE;
-    slippage: string|undefined|null;
+    slippage: string;
     sellToken: TokenElement;
     buyToken: TokenElement;
     recipientWallet: WalletElement;

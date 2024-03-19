@@ -29,7 +29,7 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { useExchangeContext, setExchangeContext } from "@/app/lib/context";
+import { exchangeContext } from "@/app/lib/context";
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {
@@ -37,10 +37,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
-  const exchangeContext:ExchangeContext = useExchangeContext();
   try {
-    let chainId = useChainId();
-    let networkName = getNetworkName(chainId);
 // console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
     const [network, setNetwork] = useState("ethereum");
@@ -55,8 +52,10 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
+    const [slippage, setSlippage] = useState<string>(exchangeContext.slippage);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
-    const [slippage, setSlippage] = useState<string | null>("0.02");
+    let chainId = useChainId();
+    let networkName = getNetworkName(chainId);
 
     useEffect(() => {
       setDisplayPanels(displayState);
@@ -91,11 +90,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       updateBuyBalance(buyTokenElement);
     }, [buyTokenElement]);
 
-    useEffect(() => {
-      setExchangeContextCallback(EXCHANGE_STATE.PRICE)
-    }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
-
-    useEffect(() => {
+     useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
         openDialog("#errorDialog");
       }
@@ -109,7 +104,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     };
 
     const processNetworkChange = (network: any) => {
-      console.debug("Price.processNetworkChange:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
+      // alert("Price.processNetworkChange:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
       setNetwork(network?.chain?.name.toLowerCase());
     };
 
@@ -201,18 +196,11 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
   
     const setExchangeContextCallback = (state:EXCHANGE_STATE) => {
         setContext(state)
-    }
+        exchangeContext.state = state;
+      }
 
     const setContext = (state:EXCHANGE_STATE) => {
-      setExchangeContext({
-        state: state,
-        displayState: displayState,
-        slippage: slippage,
-        sellToken: sellTokenElement,
-        buyToken: buyTokenElement,
-        recipientWallet: recipientWallet,      
-        agentWallet: agentWallet        
-      })
+      alert (`EXECUTING:setContext = (state:${EXCHANGE_STATE})`)
     }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
