@@ -34,6 +34,7 @@ interface PriceRequestParams {
   }
 
   type ExchangeContext = {
+    networkName: string;
     state: EXCHANGE_STATE;
     displayState: DISPLAY_STATE;
     slippage: string;
