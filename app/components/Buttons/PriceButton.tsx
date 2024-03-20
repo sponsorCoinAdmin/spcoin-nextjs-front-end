@@ -11,7 +11,6 @@ type Props = {
     sellBalance:string,
     disabled: boolean,
     slippage:string | null,
-    setExchangeContextCallback: (state:EXCHANGE_STATE) => void
   }
 
 const PriceButton = ({
@@ -20,8 +19,7 @@ const PriceButton = ({
     buyTokenElement,
     sellBalance,
     slippage,
-    disabled,
-    setExchangeContextCallback}:Props) => {
+    disabled}:Props) => {
 
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
@@ -34,7 +32,6 @@ const PriceButton = ({
                 token={sellTokenElement}
                 connectedWalletAddr={connectedWalletAddr}
                 sellBalance={sellBalance}
-                setExchangeContextCallback={setExchangeContextCallback}
                 disabled={disabled}
                 setErrorMessage={setErrorMessage}/>) :
             (<CustomConnectButton />)

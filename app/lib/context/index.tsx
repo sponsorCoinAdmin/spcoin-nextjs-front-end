@@ -6,7 +6,7 @@ import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
 
 const initialExchangeContext = (network:string|number) => {
-    alert(`initialExchangeContext:ExchangeWrapper chainId = ${network}`)
+    // alert(`initialExchangeContext:ExchangeWrapper chainId = ${network}`)
 
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let exchangeContext:ExchangeContext = {
@@ -28,10 +28,7 @@ let exchangeContext:ExchangeContext;
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-    //  alert(`ExchangeWrapper:ExchangeWrapper exchangeContext = ${exchangeContext}`)
-     const [exContext, setExContext] = useState<ExchangeContext>(useContext<ExchangeContext>(context));
-
-    exchangeContext = exContext;
+     exchangeContext = useContext<ExchangeContext>(context);
 
     return (
         <>

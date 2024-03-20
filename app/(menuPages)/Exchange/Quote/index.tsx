@@ -61,8 +61,8 @@ export default function QuoteView({
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
-    console.debug("exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
-    console.debug("price =\n" + JSON.stringify(price,null,2))
+    console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+    // console.debug("price =\n" + JSON.stringify(price,null,2))
     setDisplayPanels(displayState);
   },[]);
 
@@ -71,7 +71,6 @@ export default function QuoteView({
   },[displayState]);
 
   useEffect(() => {
-    // setExchangeContextCallback()
   }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
   useEffect(() => { 
