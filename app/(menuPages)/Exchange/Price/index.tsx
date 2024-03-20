@@ -29,7 +29,8 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { exchangeContext } from "@/app/lib/context";
+import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
+import { setExchangeState } from '..';
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {
@@ -56,7 +57,6 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     const [slippage, setSlippage] = useState<string>(exchangeContext.slippage);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     let chainId = useChainId();
-    let networkName = getNetworkName(chainId);
 
     useEffect(() => {
       console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
@@ -110,8 +110,34 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     };
 
     const processNetworkChange = (network: any) => {
-      // alert("Price.processNetworkChange:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
-      setNetwork(network?.chain?.name.toLowerCase());
+      const newNetworkName:string = network?.chain?.name.toLowerCase()
+      console.debug("======================================================================");
+      console.debug("newNetworkName = " + newNetworkName);
+      console.debug("exchangeContext.networkName = " + exchangeContext.networkName);
+
+      // console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+      if (exchangeContext.networkName !== newNetworkName) {
+        resetContextNetwork(exchangeContext, newNetworkName)
+        console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.networkName);
+        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        setNetwork(newNetworkName);
+        console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
+        console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellToken, null, 2)}`)
+        console.debug(`BEFORE sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        setSellTokenElement(exchangeContext.sellToken);
+        console.debug(`AFTER  sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        console.debug("------------------------ AFTER SELL TOKEN ---------------------------");
+        setBuyTokenElement(exchangeContext.buyToken);
+        setRecipientElement(exchangeContext.recipientWallet);
+        setAgentElement(exchangeContext.agentWallet);
+        setDisplayState(exchangeContext.displayState);
+        setState(exchangeContext.state);
+        setSlippage(exchangeContext.slippage);
+        setExchangeState(exchangeContext.state);
+        console.debug(`sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+
+        console.debug("======================================================================");
+      }
     };
 
     const updateSellBalance = async (sellTokenElement: TokenElement) => {

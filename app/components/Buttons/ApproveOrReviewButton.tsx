@@ -12,7 +12,7 @@ import {
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 import { EXCHANGE_STATE } from '@/app/lib/structure/types';
 import { exchangeContext } from '@/app/lib/context';
-import { setFinalize } from '@/app/(menuPages)/Exchange';
+import { setExchangeState } from '@/app/(menuPages)/Exchange';
 
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
@@ -162,13 +162,6 @@ function ApproveOrReviewButton({
         );
       }
     }  
-
-    const setExchangeState = (state:EXCHANGE_STATE) => {
-      console.debug(`BEFORE.setExchangeState = ${exchangeContext.state }`)
-      exchangeContext.state = state
-      console.debug(`AFTER.setExchangeState = ${exchangeContext.state }`)
-      setFinalize(true);
-    }
 
     return (
       <button
