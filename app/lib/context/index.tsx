@@ -7,8 +7,11 @@ import { isSpCoin } from '../spCoin/utils';
 import { getNetworkName, isLowerCase } from '../network/utils';
 import { useChainId } from 'wagmi';
 
+let chainId:number = 1;
+let context:any;
+let exchangeContext:ExchangeContext;
+
 const getInitialContext = (network:string|number) => {
-    // alert(`getInitialContext:ExchangeWrapper chainId = ${network}`)
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let initialContext:ExchangeContext = {
         networkName:typeof network === "string" ? network.toLowerCase() : getNetworkName(network),
@@ -24,6 +27,7 @@ const getInitialContext = (network:string|number) => {
 }
 
 const resetContextNetwork = (context:ExchangeContext, network:string|number) => {
+    
     // alert(`getInitialContext:ExchangeWrapper chainId = ${network}`)
     const newNetworkName:string = typeof network === "string" ? network.toLowerCase() : getNetworkName(network)
     console.debug("resetContextNetwork: newNetworkName = " + newNetworkName);
@@ -47,12 +51,12 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
 }
 
 
-const context:any = getInitialContext("ethereum");
-let exchangeContext:ExchangeContext;
-
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
+    chainId = useChainId();
+    // alert(`chainId = ${chainId}`)
+    context = getInitialContext(chainId)
      exchangeContext = useContext<ExchangeContext>(context);
 
     return (

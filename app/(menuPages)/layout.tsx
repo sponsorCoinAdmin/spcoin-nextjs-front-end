@@ -13,9 +13,9 @@ export default function RootLayout({
     }) {
     return (
     <>
-        <ExchangeWrapper>
+        {/* <ExchangeWrapper> */}
             {children}
-        </ExchangeWrapper>
+        {/* </ExchangeWrapper> */}
     </>
     )
 }
