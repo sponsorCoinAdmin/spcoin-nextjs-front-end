@@ -18,14 +18,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <ExchangeWrapper>
+      <html lang="en">
         <body className={inter.className}>
+        <ExchangeWrapper>
           <Header />
           {children}
           {/* <Footer /> */}
+          </ExchangeWrapper>
         </body>
-      </ExchangeWrapper>
-    </html>
+      </html>
   )
 }

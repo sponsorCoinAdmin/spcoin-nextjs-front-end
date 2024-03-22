@@ -23,7 +23,7 @@ export default function Dialog({errMsg}:any) {
     }
 
     const Dialog = (
-        <dialog id="selectNetworkDialog" ref={dialogRef} className={styles.modalContainer}>
+        <dialog id="selectNetworkDialog" ref={dialogRef} className={styles.networkModal}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{errMsg.name}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"

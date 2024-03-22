@@ -1,7 +1,10 @@
 {
   "networkHeader": {
     "chainId": 137,
-    "name": "Polygon"
+    "name": "Polygon",
+    "symbol": "MATIC",
+    "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
+    "url": "https://polygonscan.com/"
   },
   "defaultSellToken": {
     "chainId": 137,

@@ -15,7 +15,7 @@ import {
 } from "wagmi";
 import { id } from "ethers";
 import { openDialog } from "../Dialogs/Dialogs";
-import AssetSelect from "../containers/AssetSelect";
+import NetworkSelect from "../containers/NetworkSelect";
 // import { ExchangeContext, TokenElement } from "@/app/lib/structure/types";
 import { context } from "msw";
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
@@ -47,7 +47,7 @@ function Header() {
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
           <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
-          <AssetSelect tokenElement={exchangeElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
+          <NetworkSelect tokenElement={exchangeElement} id={"selectNetworkDialog"} disabled={disabled}></NetworkSelect>
           {/* <DownOutlined id={"selectNetworkDialog"} onClick={() => openDialog("#"+id)}/> */}
                       {/* &nbsp;&nbsp;{getNetworkName(useChainId())} */}
         </div>

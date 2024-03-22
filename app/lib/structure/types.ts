@@ -38,20 +38,30 @@ interface PriceRequestParams {
     state: EXCHANGE_STATE;
     displayState: DISPLAY_STATE;
     slippage: string;
+    network: NetworkElement;
     sellToken: TokenElement;
     buyToken: TokenElement;
     recipientWallet: WalletElement;
     agentWallet: WalletElement;
   }
-    
+
+  type NetworkElement = {
+    chainId: number;
+    name: string;
+    symbol: string;
+    img: string;
+    url: string;
+  }
+  
   export {
     EXCHANGE_STATE,
     DISPLAY_STATE
   }
 
   export type {
-    TokenElement,
-    WalletElement,
+    ExchangeContext,
+    NetworkElement,
     PriceRequestParams,
-    ExchangeContext
+    TokenElement,
+    WalletElement
 };

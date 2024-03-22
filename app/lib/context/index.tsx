@@ -14,14 +14,21 @@ let exchangeContext:ExchangeContext;
 const getInitialContext = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let initialContext:ExchangeContext = {
-        networkName:typeof network === "string" ? network.toLowerCase() : getNetworkName(network),
+        networkName: typeof network === "string" ? network.toLowerCase() : getNetworkName(network),
         state: EXCHANGE_STATE.PRICE,
-        displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR:DISPLAY_STATE.OFF,
-        slippage:"0.02",
+        displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR : DISPLAY_STATE.OFF,
+        slippage: "0.02",
         sellToken: defaultNetworkSettings.defaultSellToken,
         buyToken: defaultNetworkSettings.defaultBuyToken,
-        recipientWallet: defaultNetworkSettings.defaultRecipient,      
-        agentWallet: defaultNetworkSettings.defaultAgent        
+        recipientWallet: defaultNetworkSettings.defaultRecipient,
+        agentWallet: defaultNetworkSettings.defaultAgent,
+        network: {
+            chainId: 0,
+            symbol: '',
+            name: '',
+            img: '',
+            url: ''
+        }
     }
     return initializeContext(initialContext);
 }
