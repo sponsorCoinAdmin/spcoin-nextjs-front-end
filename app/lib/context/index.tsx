@@ -18,17 +18,11 @@ const getInitialContext = (network:string|number) => {
         state: EXCHANGE_STATE.PRICE,
         displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR : DISPLAY_STATE.OFF,
         slippage: "0.02",
+        network: defaultNetworkSettings.networkHeader,
         sellToken: defaultNetworkSettings.defaultSellToken,
         buyToken: defaultNetworkSettings.defaultBuyToken,
         recipientWallet: defaultNetworkSettings.defaultRecipient,
-        agentWallet: defaultNetworkSettings.defaultAgent,
-        network: {
-            chainId: 0,
-            symbol: '',
-            name: '',
-            img: '',
-            url: ''
-        }
+        agentWallet: defaultNetworkSettings.defaultAgent
     }
     return initializeContext(initialContext);
 }

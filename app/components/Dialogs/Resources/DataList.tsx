@@ -2,16 +2,13 @@ import React, { useState } from 'react'
 import styles from './styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '../../../../public/resources/images/info1.png'
-import FEED  from '../../../resources/data/feeds/feedTypes'//data/feeds/feedTypes'';
 import polygonTokenList from '../../../resources/data/Tokens/polygonTokenList.json';
 import sepoliaTokenList from '../../../resources/data/Tokens/sepoliaTokenList.json';
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
-
-import {
-      useChainId
-} from "wagmi";
+import { FEED } from '@/app/lib/structure/types';
+import { useChainId } from "wagmi";
 
 type Props = {
     dataFeedType: string,

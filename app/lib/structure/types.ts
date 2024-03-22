@@ -58,10 +58,22 @@ interface PriceRequestParams {
     DISPLAY_STATE
   }
 
-  export type {
-    ExchangeContext,
-    NetworkElement,
-    PriceRequestParams,
-    TokenElement,
-    WalletElement
+const TOKEN_LIST= 'TOKEN_LIST';
+const AGENT_WALLETS ='AGENT_WALLETS';
+const RECIPIENT_WALLETS ='RECIPIENT_WALLETS';
+
+const FEED = {
+    TOKEN_LIST,
+    AGENT_WALLETS,
+    RECIPIENT_WALLETS
+}
+
+export { FEED }
+
+export type {
+  ExchangeContext,
+  NetworkElement,
+  PriceRequestParams,
+  TokenElement,
+  WalletElement
 };

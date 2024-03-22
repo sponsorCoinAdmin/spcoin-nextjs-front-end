@@ -620,6 +620,10 @@
   padding-right: 8px;
 }
 
+.networks {
+  display: none;
+}
+
 .dropdown-content {
   display: block;
   position: absolute;
@@ -628,7 +632,6 @@
 
   background-color: #750808;
   color:green;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
+
+  border-radius: 20px !important;
 }
