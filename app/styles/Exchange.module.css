@@ -380,7 +380,6 @@
 .elementLogo {
   height: 20px;
   width: 20px;
-  right:200;
 }
 
 .elementName {
@@ -581,57 +580,4 @@
 
 .hidden {
   display : none;
-}
-
-
-.dropdown {
-  float: left;
-  overflow: hidden;
-}
-
-.dropdown .dropbtn {
-  font-size: 16px;  
-  border: none;
-  outline: none;
-  color: white;
-  padding: 14px 16px;
-  background-color: yellow;
-  font-family: inherit;
-  margin: 0;
-}
-
-.networkSelect {
-  /* position: absolute;
-  top: 10px;
-  right: 160px; */
-  min-width: 50px;
-  height: 40px;
-  background-color: #243056;
-  /* background-color: green;
-  color: yellow; */
-
-  border-radius: 100px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-weight: bold;
-  font-size: 17px;
-  padding-right: 8px;
-}
-
-.networks {
-  display: none;
-}
-
-.dropdown-content {
-  display: block;
-  position: absolute;
-  top: 10px;
-  right: 160px;
-
-  background-color: #750808;
-  color:green;
-
-  border-radius: 20px !important;
 }

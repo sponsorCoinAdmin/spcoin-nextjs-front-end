@@ -9,6 +9,7 @@ import ConnectButton from "./ConnectButton"
 import { DownOutlined } from "@ant-design/icons";
 import NetworkDialog from "../Dialogs/NetworkDialog";
 
+
 import {
   useChainId
 } from "wagmi";
@@ -44,8 +45,8 @@ function Header() {
         <div className={styles.headerItem}><Link href="/Recipient"></Link></div>
       </div>
       <div className={styles.rightH}>
-        <div className={styles.headerItem}>
-          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
+        <div >
+          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.networkLogo} />
           <NetworkSelect networkElement={networkElement} id={"selectNetworkDialog"} disabled={disabled}></NetworkSelect>
           {/* <DownOutlined id={"selectNetworkDialog"} onClick={() => openDialog("#"+id)}/> */}
                       {/* &nbsp;&nbsp;{getNetworkName(useChainId())} */}
