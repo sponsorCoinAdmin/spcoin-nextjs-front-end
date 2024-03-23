@@ -7,6 +7,7 @@ import { EXCHANGE_STATE } from "@/app/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
+let setFinalize;
 
 export default function Home() {
   
@@ -14,6 +15,7 @@ export default function Home() {
   const [quote, setQuote] = useState();
   const [finalize, setFinal] = useState<EXCHANGE_STATE>(EXCHANGE_STATE.PRICE);
   const { address } = useAccount();
+  setFinalize = setFinal
 
   const setState = (exchangeState:EXCHANGE_STATE) => {
     setFinal(exchangeState)
@@ -42,5 +44,6 @@ export default function Home() {
 }
 
 export {
+  setFinalize,
   setExchangeState
 }
