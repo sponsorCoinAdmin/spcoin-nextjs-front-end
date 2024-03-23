@@ -7,7 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton"
 import { DownOutlined } from "@ant-design/icons";
-import NetworkDialog from "../Dialogs/NetworkDialog";
+// import NetworkDialog from "../Dialogs/NetworkDialog";
 
 
 import {
@@ -36,7 +36,7 @@ function Header() {
 
   return (
     <header>
-      <NetworkDialog errMsg={"Header Test Message"} />
+      {/* <NetworkDialog errMsg={"Header Test Message"} /> */}
       <div className={styles.leftH}>
         <Image className={styles.imgOptions} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
         <div className={styles.headerItem}><Link href="/">SponsorCoin</Link></div>

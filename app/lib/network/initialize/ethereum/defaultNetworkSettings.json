@@ -1,7 +1,10 @@
 {
   "networkHeader": {
     "chainId": 1,
-    "name": "Ethereum"
+    "name": "Ethereum",
+    "symbol": "ETH",
+    "img": "/resources/images/eth.png",
+    "url": "https://etherscan.io/"
   },
   "defaultSellToken":  {
     "chainId": 1,
@@ -26,11 +29,11 @@
     "address": "0xToDo_SpCoin.png",
     "url": "ToDo add URL here"
   },
-  "defaultAgent": {
-    "symbol": "Wilma",
-    "img": "/resources/images/agents/WilmaFlintstone.png",
-    "name": "Wilma Flintstone",
-    "address": "Wilma Flintstone's Wallet Address",
-    "url": "ToDo add URL here"
-  }
+"defaultAgent": {
+  "symbol": "Wilma",
+  "img": "/resources/images/agents/WilmaFlintstone.png",
+  "name": "Wilma Flintstone",
+  "address": "Wilma Flintstone's Wallet Address",
+  "url": "ToDo add URL here"
+}
 }

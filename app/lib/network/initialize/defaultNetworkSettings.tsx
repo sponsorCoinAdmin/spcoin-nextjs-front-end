@@ -1,16 +1,13 @@
 import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
 import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
+import { isLowerCase } from '../utils';
 
 /**
  * Determine whether the given `input` is a string in lowercase.
  * @param {*} input
  * @returns {Boolean}
  */
-
-function isLowerCase (input:string) {  
-  return input === String(input).toLowerCase()
-}
 
 const getDefaultNetworkSettings = (network:string|number) => {
   if (typeof network === "string" && !isLowerCase(network)) {
