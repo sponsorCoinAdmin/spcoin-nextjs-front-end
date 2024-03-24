@@ -7,7 +7,7 @@ import { EXCHANGE_STATE } from "@/app/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
-let setFinalize;
+let setFinalize: (value:EXCHANGE_STATE) => void;
 
 export default function Home() {
   
@@ -24,7 +24,7 @@ export default function Home() {
   setExchangeState = setState;
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
-      {finalize && price && address ? 
+      {(finalize === EXCHANGE_STATE.QUOTE) && price && address ? 
       (
         <QuoteView
           connectedWalletAddr={address}

@@ -117,16 +117,21 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
       // console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
       if (exchangeContext.networkName !== newNetworkName) {
+        // alert(`processNetworkChange: exchangeContext.networkName = ${exchangeContext.networkName}\n newNetworkName = ${newNetworkName}`)
         resetContextNetwork(exchangeContext, newNetworkName)
+        // alert("HERE 1")
         console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.networkName);
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
         setNetwork(newNetworkName);
+        // alert("HERE 2")
         console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
         console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellToken, null, 2)}`)
         console.debug(`BEFORE sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        // alert("HERE 3")
         setSellTokenElement(exchangeContext.sellToken);
         console.debug(`AFTER  sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
         console.debug("------------------------ AFTER SELL TOKEN ---------------------------");
+        // alert("HERE 4")
         setBuyTokenElement(exchangeContext.buyToken);
         setRecipientElement(exchangeContext.recipientWallet);
         setAgentElement(exchangeContext.agentWallet);
@@ -134,8 +139,8 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
         setState(exchangeContext.state);
         setSlippage(exchangeContext.slippage);
         setExchangeState(exchangeContext.state);
+        // alert("HERE 5")
         console.debug(`sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
-
         console.debug("======================================================================");
       }
     };
