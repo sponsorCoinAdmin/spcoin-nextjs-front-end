@@ -157,7 +157,7 @@ function ApproveOrReviewButton({
           console.debug("HERE 8");
           return (
             <>
-              <button
+              {/* <button
                 type="button"
                 className={styles["exchangeButton"] + " " + styles["approveButton"]}
                 onClick={async () => {
@@ -167,7 +167,7 @@ function ApproveOrReviewButton({
                 }}
               >
                 { isApproving ? "Approving…" : "Approve" }
-              </button>
+              </button> */}
             </>
           );
         }
