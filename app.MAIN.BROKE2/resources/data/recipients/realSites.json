@@ -1,0 +1,30 @@
+[
+    {
+        "symbol": "SpCoin",
+        "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+        "name": "Sponsor Coin",
+        "address": "0xToDo_SpCoin.png",
+        "url": "ToDo add URL here"
+    },
+    {
+        "symbol": "BFree",
+        "img": "/resources/images/recipients/BornFree2.png",
+        "name": "Born Free USA",
+        "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67",
+        "url": "https://www.bornfreeusa.org"
+    },
+    {
+        "symbol": "Rebel",
+        "img": "/resources/images/recipients/RebelNews3.png",
+        "name": "Fund Rebel News",
+        "address": "0x39846f9558199c333c5212fe4658293cbf3da679",
+        "url": "https://www.rebelnews.com/"
+    },
+    {
+        "symbol": "Tiger",
+        "img": "/resources/images/recipients/SaveTheTiger2.png",
+        "name": "Save The Siberian",
+        "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b",
+        "url": "ToDo add URL here"
+    },
+
