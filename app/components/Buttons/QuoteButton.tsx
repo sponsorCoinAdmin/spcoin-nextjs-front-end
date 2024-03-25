@@ -12,7 +12,7 @@ const PlaceOrder = ({
     }
 
     const placeOrder = async () => {
-        console.log(`placing order transaction sendTransaction = ${sendTransaction}`);
+        console.log("submitting quote to blockchain");
         if (sendTransaction) {
             let receipt = await sendTransaction();
             alert("Transaction receipt : " + receipt)
@@ -23,7 +23,7 @@ const PlaceOrder = ({
         <button type="button"
             onClick={() => { placeOrder(); }
             }
-                className={styles["exchangeButton"] + " " + styles["swapButton"]}
+            className={styles["exchangeButton"] + " " + styles["swapButton"]}
             >
             Place Order
         </button>

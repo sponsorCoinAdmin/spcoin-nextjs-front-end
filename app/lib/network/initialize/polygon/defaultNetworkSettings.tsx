@@ -22,16 +22,14 @@ const defaultRecipient = {
   "symbol": "Trees",
   "img": "/resources/images/recipients/SaveTheTrees.png",
   "name": "Save The Trees",
-  "address": "Save The Trees Wallet Address",
-  "url": "ToDo N/A"
+  "address": "Save The Trees Wallet Address"
 };
 
 const defaultAgent = { 
   "symbol": "Tweety",
   "img": "/resources/images/agents/TweetyBird.png",
   "name": "Tweety Bird",
-  "address": "TweetyBird's Wallet Address",
-  "url": "ToDo N/A"
+  "address": "TweetyBird's Wallet Address"
 };
 
 const defaultNetworkSettings = {

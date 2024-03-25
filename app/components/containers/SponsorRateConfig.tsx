@@ -1,9 +1,11 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
-import { hideElement } from '@/app/lib/spCoin/guiControl';
+import { openDialog } from '../Dialogs/Dialogs';
+import { hideElement, hideSponsorRecipientConfig, toggleElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
+import { DownOutlined } from "@ant-design/icons";
+// import info_png from '../../../public/resources/images/miscellaneous/info1.png';
 import info_png from '../../../public/resources/images/info1.png';
-import { DISPLAY_STATE } from '@/app/lib/structure/types';
 
 function setRateRatios(newRate: string) {
   var numRate = Number(newRate)
@@ -21,11 +23,7 @@ function setRecipientRatio(newRate: number) {
   recipientRatio.innerHTML = +(newRate*10)+"%";
 }
 
-type Props = {
-  setDisplayState:(displayState:DISPLAY_STATE) => void
-}
-
-const SponsorRateConfig = ({setDisplayState}:Props) => {
+const SponsorRateConfig = () => {
   return (
     <div id="recipientConfigDiv" className={styles.rateRatioContainer}>
     <div className={styles["inputs"]}>
@@ -43,7 +41,7 @@ const SponsorRateConfig = ({setDisplayState}:Props) => {
           50%
         </div>
       </div>
-      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
+      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideElement("recipientConfigDiv")}>
         X
       </div>
       <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>

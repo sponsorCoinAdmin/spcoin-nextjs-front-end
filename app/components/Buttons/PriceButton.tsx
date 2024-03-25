@@ -1,9 +1,8 @@
 import React from 'react';
 import ApproveOrReviewButton from './ApproveOrReviewButton'
 import { Address } from 'wagmi';
-// import { EXCHANGE_STATE, TokenElement } from '@/app/lib/structure/types';
+import { TokenElement } from '@/app/lib/structure/types';
 import CustomConnectButton from './CustomConnectButton';
-import { TokenElement } from '@/app.MAIN.BROKE/lib/structure/types';
 
 type Props = {
     connectedWalletAddr: Address | undefined;
@@ -12,7 +11,9 @@ type Props = {
     sellBalance:string,
     disabled: boolean,
     slippage:string | null,
+    setExchangeTokensCallback: () => void
   }
+
 
 const PriceButton = ({
     connectedWalletAddr,
@@ -20,8 +21,8 @@ const PriceButton = ({
     buyTokenElement,
     sellBalance,
     slippage,
-    disabled}:Props) => {
-
+    disabled,
+    setExchangeTokensCallback}:Props) => {
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
@@ -33,6 +34,7 @@ const PriceButton = ({
                 token={sellTokenElement}
                 connectedWalletAddr={connectedWalletAddr}
                 sellBalance={sellBalance}
+                onClick={() => { setExchangeTokensCallback()}}
                 disabled={disabled}
                 setErrorMessage={setErrorMessage}/>) :
             (<CustomConnectButton />)

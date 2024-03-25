@@ -1,32 +1,41 @@
 import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { DISPLAY_STATE, TokenElement } from '@/app/lib/structure/types';
-import { isSpCoin } from '@/app/lib/spCoin/utils';
+import { TokenElement } from '@/app/lib/structure/types';
+import { hideElement, showElement, showSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
 
 type Props = {
   buyAmount: string,
   buyBalance: string,
   buyTokenElement: TokenElement, 
   setBuyAmount: any,
-  setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled:boolean
 }
 
-const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, setDisplayState, disabled} : Props) => {
-// alert(`BuyContainer isSpCoin = ${isSpCoin}`)
+const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, disabled} : Props) => {
+  const isSpCoin = (buyTokenElement:TokenElement) => {
+    let isSpCoin = buyTokenElement.symbol === "SpCoin" ? true:false
+    return isSpCoin
+  }
+
   useEffect(() => {
-    // isSpCoin(buyTokenElement) ? setDisplayState(DISPLAY_STATE.SPONSOR) : setDisplayState(DISPLAY_STATE.OFF)
+    isSpCoin(buyTokenElement) ? showElement("addSponsorshipDiv") : hideElement("addSponsorshipDiv")
+    hideElement("recipientSelectDiv")
+    hideElement("recipientConfigDiv")
   },[buyTokenElement])
+
+  const showRecipientSelect = () => {
+    hideElement("addSponsorshipDiv")
+    showElement("recipientSelectDiv")
+  }
 
   return (
     <div className={styles.inputs}>
-      <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={parseFloat(buyAmount).toFixed(6)}
-              onChange={(e) => { console.log(`BuyContainer.input:buyAmount =${buyAmount}`) }} />
+      <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={parseFloat(buyAmount).toFixed(6)} />
       <AssetSelect tokenElement={buyTokenElement} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
-      <div className={styles["buySell"]}>You receive</div>
+      <div className={styles["buySell"]}>You receive </div>
       <div className={styles["assetBalance"]}>Balance: {buyBalance}</div>
-      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
+      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => showRecipientSelect()}>
         <div className={styles["centerContainer"]} >Add Sponsorship</div>
       </div>
     </div>
