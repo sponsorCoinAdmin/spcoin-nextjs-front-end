@@ -33,7 +33,6 @@
     "symbol": "Stuge 3",
     "img": "/resources/images/agents/MoeHoward.png",
     "name": "Moe Howard",
-    "address": "Moe's Wallet Address",
-    "url": "ToDo N/A"
+    "address": "Moe's Wallet Address"
   }
 }

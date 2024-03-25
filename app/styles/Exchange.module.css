@@ -32,6 +32,31 @@
   cursor: pointer;
 }
 
+.feeInfoCog {
+  position: absolute;
+  top: 0px;
+  left: 115px;
+  cursor: pointer;
+  color: #51586f;
+  transition: 0.3s;
+}
+.feeInfoCog:hover {
+  color: white;
+  rotate: 360deg;
+  cursor: pointer;
+}
+
+.feeInfoCogOLD {
+  top: 0px;
+  left: 115px;
+  cursor: pointer;
+}
+.feeInfoCogOLD:hover {
+  color: white;
+  rotate: 360deg;
+  cursor: pointer;
+}
+
 .inputs {
   position: relative;
 }
@@ -42,6 +67,7 @@
 }
 
 .centerContainer {
+  color: #51586f;
   position: absolute;
   width: 100%;
   top: 50%;
@@ -59,6 +85,7 @@
 }
 
 .addSponsorshipDiv {
+  display: none;
   position: absolute;
   top: 75px;
   left: 2;
@@ -114,6 +141,7 @@
 }
 
 .rateRatioContainer {
+  display : none;
   position: relative;
   top: 0px;
   background-color: #1f2639 !important;
@@ -140,13 +168,13 @@
 .assetSelect {
   position: absolute;
   top: 12px;
+  right: 20px;
   min-width: 50px;
   height: 25px;
   background-color: #243056;
   /* background-color: green;
   color: yellow; */
 
-  right: 20px;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
@@ -156,6 +184,25 @@
   font-size: 17px;
   padding-right: 8px;
 }
+
+/* 
+.networkSelect {
+  position: absolute;
+  top: 10px;
+  right: 160px;
+  min-width: 50px;
+  height: 40px;
+  background-color: #243056;
+ 
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+  font-size: 17px;
+  padding-right: 8px;
+} */
 
 .recipientPosition {
   position: absolute;
@@ -190,7 +237,6 @@
   background-color: #243056;
   background-color: orange;
 }
-
 
 .closeSponsorSelect {
   position: absolute;
@@ -332,8 +378,8 @@
 }
 
 .elementLogo {
-  height: 40px;
-  width: 40px;
+  height: 20px;
+  width: 20px;
 }
 
 .elementName {
@@ -437,12 +483,6 @@
   cursor: pointer;
 }
 
-.cog:hover {
-  color: white;
-  rotate: 360deg;
-  cursor: pointer;
-}
-
 .cogImg {
   position: absolute;
   object-fit: contain;
@@ -450,6 +490,27 @@
   transition: 0.3s;
   top: 12px;
   right: 43px;
+}
+
+.cogImg2 {
+  position: absolute;
+  object-fit: contain;
+  color: #51586f;
+  transition: 0.3s;
+  top: 12px;
+  right: 12px;
+}
+
+.cog:hover {
+  color: white;
+  rotate: 360deg;
+  cursor: pointer;
+}
+
+.cogImg2:hover {
+  color: red;
+  rotate: 360deg;
+  cursor: pointer;
 }
 
 .cogImg:hover {
@@ -509,14 +570,14 @@
   font-size: 14px;
 }
 
-.feeInfoImg {
-  position: absolute;
-  top: 0px;
-  left: 115px;
-  cursor: pointer;
+/* Popover CSS */
+.popover-inner {
+  min-width: 260px !important;
+  min-height: 100px !important;
+  border: 1px solid #21273a;
+  background-color: #0e111b !important;
 }
-.feeInfoImg:hover {
-  color: white;
-  rotate: 360deg;
-  cursor: pointer;
+
+.hidden {
+  display : none;
 }
