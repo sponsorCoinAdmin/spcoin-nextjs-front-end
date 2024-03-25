@@ -30,7 +30,6 @@
     "symbol": "Tweety",
     "img": "/resources/images/agents/TweetyBird.png",
     "name": "Tweety Bird",
-    "address": "TweetyBird's Wallet Address",
-    "url": "ToDo N/A"
+    "address": "TweetyBird's Wallet Address"
   }
 }

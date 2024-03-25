@@ -23,8 +23,7 @@
     "symbol": "Tiger",
     "img": "/resources/images/recipients/SaveTheTiger4.png",
     "name": "Support The Tiger",
-    "address": "SaveTheTiger4 Wallet Address",
-    "url": "ToDo N/A"
+    "address": "SaveTheTiger4 Wallet Address"
   },
   "defaultAgent": {
     "symbol": "Stuge 3",
