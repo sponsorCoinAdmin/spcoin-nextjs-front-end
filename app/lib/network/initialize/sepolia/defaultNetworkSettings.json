@@ -1,10 +1,7 @@
 {
   "networkHeader": {
     "chainId": 11155111,
-    "name": "Sepolia",
-    "symbol": "ETH",
-    "img": "/resources/images/eth.png",
-    "url": "https://sepolia.etherscan.io/"
+    "name": "Sepolia"
   },
   "defaultSellToken": {
     "chainId": 11155111,
@@ -26,14 +23,12 @@
     "symbol": "Tiger",
     "img": "/resources/images/recipients/SaveTheTiger4.png",
     "name": "Support The Tiger",
-    "address": "SaveTheTiger4 Wallet Address",
-    "url": "ToDo N/A"
+    "address": "SaveTheTiger4 Wallet Address"
   },
   "defaultAgent": {
     "symbol": "Stuge 3",
     "img": "/resources/images/agents/MoeHoward.png",
     "name": "Moe Howard",
-    "address": "Moe's Wallet Address",
-    "url": "ToDo N/A"
+    "address": "Moe's Wallet Address"
   }
 }

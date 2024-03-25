@@ -1,4 +1,4 @@
-import { DISPLAY_STATE, TokenElement } from "../structure/types";
+import { TokenElement } from "../structure/types";
 
 /// START DROPDOWN STUFF
 const hideElement = (element: string) => {

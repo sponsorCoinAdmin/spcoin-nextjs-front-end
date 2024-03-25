@@ -79,7 +79,7 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
   let errMsg = "N/A";
   let tokenAddr = tokenElement.address;
   let chainId = tokenElement.chainId;
-  console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenElement = " + JSON.stringify(tokenElement,null,2) + ")");
+  // console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " Token Address = "+tokenAddr+ ", chainId = " + chainId +")");
   if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
   {
     let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
@@ -94,16 +94,11 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
   return {success, errMsg, balance} ;
 };
 
-const isSpCoin = (tokenElement:TokenElement) => {
-  return tokenElement.symbol === "SpCoin" ? true:false
-}
-
 export { 
   fetchTokenDetails,
   getQueryVariable,
-  getTokenDetails,
-  isSpCoin,
   setValidPriceInput,
+  getTokenDetails,
   validatePrice,
   updateBalance
 }

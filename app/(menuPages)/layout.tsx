@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
-import { ExchangeWrapper } from '../lib/context'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'spCoin',
@@ -13,7 +15,7 @@ export default function RootLayout({
     }) {
     return (
     <>
-            {children}
+        {children}
     </>
     )
 }

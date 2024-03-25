@@ -30,10 +30,7 @@ const createNetworkJsonList = () => {
   alert("NetworkSettings: "+networkSettings)
 }
 
-function isLowerCase (input:string) {  
-  return input === String(input).toLowerCase()
-}
-
-
-  export { BURN_ADDRESS, getNetworkName, createNetworkJsonList, isLowerCase }
+  export { BURN_ADDRESS, getNetworkName, createNetworkJsonList }
+  /////////////////////////////////////////////////////////////
+  
   
