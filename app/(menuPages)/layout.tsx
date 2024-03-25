@@ -13,9 +13,7 @@ export default function RootLayout({
     }) {
     return (
     <>
-        <ExchangeWrapper>
             {children}
-        </ExchangeWrapper>
     </>
     )
 }
