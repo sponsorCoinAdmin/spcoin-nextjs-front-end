@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
+import { ExchangeWrapper } from '../lib/context'
 
 export const metadata: Metadata = {
   title: 'spCoin',
