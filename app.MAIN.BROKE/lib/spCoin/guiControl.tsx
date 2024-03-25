@@ -15,6 +15,7 @@ const showElement = (element: string) => {
   if (el != null) {
     el.style.display = 'block';
   }
+
 };
 
 const setDisplayPanels = (displayState:DISPLAY_STATE) => {
