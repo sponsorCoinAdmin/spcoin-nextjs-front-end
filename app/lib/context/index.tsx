@@ -4,7 +4,7 @@ import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext } from '@/app/lib/struct
 import { useContext } from 'react';
 import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
-import { getNetworkName, isLowerCase } from '../network/utils';
+import { getNetworkName } from '../network/utils';
 import { useChainId } from 'wagmi';
 
 let chainId:number = 1;
