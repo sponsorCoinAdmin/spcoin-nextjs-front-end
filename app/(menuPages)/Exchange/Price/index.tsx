@@ -1,7 +1,4 @@
 'use client';
-import Image from 'next/image';
-import info_png from '../../../../public/resources/images/info1.png'
-
 import styles from '@/app/styles/Exchange.module.css';
 import {
   openDialog,
@@ -17,17 +14,13 @@ import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { WalletElement, TokenElement } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-import {
-  hideElement,
-  showElement,
-  hideSponsorRecipientConfig,
-} from '@/app/lib/spCoin/guiControl';
-import { ExchangeTokens, EXCHANGE_STATE } from '..';
+import { ExchangeTokens} from '..';
+import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
 import SellContainer from '@/app/components/containers/SellContainer';
@@ -49,8 +42,6 @@ export default function PriceView({
     setExchangeTokens: (exchangeTokens: ExchangeTokens|undefined) => void;
 }) {
   try {
-    let chainId = useChainId();
-    let networkName = getNetworkName(chainId);
 // console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
     const [network, setNetwork] = useState("ethereum");
@@ -65,11 +56,15 @@ export default function PriceView({
     const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
     const [agentWallet, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(DISPLAY_STATE.OFF);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [slippage, setSlippage] = useState<string | null>("0.02");
+    let chainId = useChainId();
+    let networkName = getNetworkName(chainId);
 
     useEffect(() => {
-      hideSponsorRecipientConfig();
+      // console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+      setDisplayPanels(displayState);
     },[]);
 
     useEffect(() => {
@@ -97,28 +92,6 @@ export default function PriceView({
       }
     }, [errorMessage]);
 
-    useEffect(() => { {
-      if (buyTokenElement.symbol === "SpCoin") {
-        showElement("addSponsorshipDiv")
-      }
-      else {
-        hideElement("addSponsorshipDiv")
-        hideElement("recipientSelectDiv")
-        hideElement("recipientConfigDiv")
-        hideElement("agent");
-        }
-      }
-    }, [buyTokenElement]);
-
-    useEffect(() => { {
-      if (sellTokenElement.symbol === "SpCoin") {
-        showElement("sponsoredBalance")
-      }
-      else {
-        hideElement("sponsoredBalance")
-        }
-      }
-    }, [sellTokenElement]);
 
     useEffect(() => {
       updateNetwork(network)
@@ -162,7 +135,7 @@ export default function PriceView({
       try {
         setSellBalance(balance);
 
-        if (!success) {  
+        if (!success) {
           setErrorMessage({ name: "updateSellBalance: ", message: errMsg });
         }
       } catch (e: any) {

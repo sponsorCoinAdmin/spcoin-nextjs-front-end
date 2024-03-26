@@ -96,7 +96,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       updateBuyBalance(buyTokenElement);
     }, [buyTokenElement]);
 
-     useEffect(() => {
+    useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
         openDialog("#errorDialog");
       }
