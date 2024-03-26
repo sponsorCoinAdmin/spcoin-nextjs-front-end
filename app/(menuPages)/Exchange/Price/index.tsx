@@ -128,7 +128,7 @@ export default function PriceView({
     };
 
     const updateSellBalance = async (sellTokenElement: TokenElement) => {
-
+      console.debug(`Price.updateSellBalance(${sellTokenElement.name});`)
       let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenElement, setSellBalance)
       // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalance=${balance}}`);
 

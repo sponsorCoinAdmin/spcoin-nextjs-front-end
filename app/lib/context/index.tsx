@@ -16,7 +16,7 @@ const getInitialContext = (network:string|number) => {
     let initialContext:ExchangeContext = {
         networkName: typeof network === "string" ? network.toLowerCase() : getNetworkName(network),
         state: EXCHANGE_STATE.PRICE,
-        displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR : DISPLAY_STATE.OFF,
+        displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
         slippage: "0.02",
         network: defaultNetworkSettings.networkHeader,
         sellToken: defaultNetworkSettings.defaultSellToken,
@@ -41,7 +41,7 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
         console.debug(`Loaded defaultNetworkSettings for ${newNetworkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
         context.networkName = newNetworkName
         context.state = EXCHANGE_STATE.PRICE;
-        context.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR:DISPLAY_STATE.OFF,
+        context.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
         context.slippage = "0.02",
         context.sellToken = defaultNetworkSettings.defaultSellToken,
         context.buyToken = defaultNetworkSettings.defaultBuyToken,

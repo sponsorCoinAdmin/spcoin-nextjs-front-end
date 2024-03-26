@@ -25,7 +25,15 @@ const setDisplayPanels = (displayState:DISPLAY_STATE) => {
       hideElement("recipientSelectDiv")
       hideElement("recipientConfigDiv")
     break
-    case DISPLAY_STATE.SPONSOR:
+    case DISPLAY_STATE.SPONSOR_SELL_ON:
+      showElement("addSponsorshipDiv")
+      hideElement("recipientSelectDiv")
+      hideElement("recipientConfigDiv")
+    break;
+    case DISPLAY_STATE.SPONSOR_SELL_OFF:
+      hideElement("addSponsorshipDiv")
+     break;
+    case DISPLAY_STATE.SPONSOR_BUY:
       showElement("addSponsorshipDiv")
       hideElement("recipientSelectDiv")
       hideElement("recipientConfigDiv")
@@ -45,18 +53,13 @@ const setDisplayPanels = (displayState:DISPLAY_STATE) => {
 
 const getDisplayStateString  = (displayState:DISPLAY_STATE) => {
   switch(displayState) {
-    case DISPLAY_STATE.OFF:
-      return("DISPLAY_STATE.OFF")
-    break
-    case DISPLAY_STATE.SPONSOR:
-      return("DISPLAY_STATE.SPONSOR")
-    break
-    case DISPLAY_STATE.RECIPIENT:
-      return("DISPLAY_STATE.RECIPIENT")
-    break
-    case DISPLAY_STATE.CONFIG:
-      return("DISPLAY_STATE.CONFIG")
-    break
+    case DISPLAY_STATE.OFF: return("DISPLAY_STATE.OFF")
+    case DISPLAY_STATE.SPONSOR_SELL_ON: return("DISPLAY_STATE.SPONSOR_SELL_ON")
+    case DISPLAY_STATE.SPONSOR_SELL_OFF: return("DISPLAY_STATE.SPONSOR_SELL_OFF")
+    case DISPLAY_STATE.SPONSOR_BUY: return("DISPLAY_STATE.SPONSOR_BUY")
+    case DISPLAY_STATE.RECIPIENT: return("DISPLAY_STATE.RECIPIENT")
+    case DISPLAY_STATE.CONFIG: return("DISPLAY_STATE.CONFIG")
+    default: return(`UNDEFINED DISPLAY_STATE ${displayState}`)
   }
 };
 

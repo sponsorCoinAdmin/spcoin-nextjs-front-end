@@ -22,13 +22,13 @@ import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
-import { showElement, hideElement, hideSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
+import { setDisplayPanels } from '@/app/lib/spCoin/guiControl';
 import ErrorDialog from '@/app/components/Dialogs/ErrorDialog';
 import { RecipientDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, TokenElement, WalletElement } from '@/app/lib/structure/types';
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
@@ -59,19 +59,25 @@ export default function QuoteView({
   const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
   const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
   const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeTokens.agentWallet);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(DISPLAY_STATE.OFF);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
-    console.debug("exchangeTokens =\n" + JSON.stringify(exchangeTokens,null,2))
-    console.debug("price =\n" + JSON.stringify(price,null,2))
-    hideSponsorRecipientConfig();
-
+    // console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+    // console.debug("price =\n" + JSON.stringify(price,null,2))
+    setDisplayPanels(displayState);
   },[]);
+
+  useEffect(() => {
+    setDisplayPanels(displayState);
+  },[displayState]);
+
+  useEffect(() => {
+  }, [slippage, displayState, buyTokenElement, sellTokenElement, recipientWallet]);
 
   useEffect(() => { 
       initBuyTokenComponents(buyTokenElement)
    }, [buyTokenElement]);
-
 
   useEffect(() => {
       initSellTokenComponents(sellTokenElement)
@@ -81,15 +87,11 @@ export default function QuoteView({
     // alert(`initBuyTokenComponents:buyTokenElement.symbol === ${buyTokenElement.symbol}`)
     if (buyTokenElement.symbol === "SpCoin") {
       // alert("HERE 1")
-      showElement("addSponsorshipDiv")
+      setDisplayPanels(DISPLAY_STATE.SPONSOR_BUY);
     }
     else {
-      // hideSponsorRecipientConfig()
       // alert("HERE 2")
-      hideElement("addSponsorshipDiv")
-      hideElement("recipientSelectDiv")
-      hideElement("recipientConfigDiv")
-      hideElement("agent");
+      setDisplayPanels(DISPLAY_STATE.OFF);
     }
   }
 
@@ -97,11 +99,11 @@ export default function QuoteView({
     // alert(`initSellTokenComponents:sellTokenElement.symbol === ${sellTokenElement.symbol}`)
     if (sellTokenElement.symbol === "SpCoin") {
       // alert("HERE 3")
-      showElement("sponsoredBalance")
+      setDisplayPanels(DISPLAY_STATE.SPONSOR_SELL_ON);
     }
     else {
       // alert("HERE 4")
-      hideElement("sponsoredBalance")
+      setDisplayPanels(DISPLAY_STATE.SPONSOR_SELL_OFF);
     }      
   }
   
@@ -110,7 +112,6 @@ export default function QuoteView({
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
-
 
   const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
     let tokenDetails = await getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)

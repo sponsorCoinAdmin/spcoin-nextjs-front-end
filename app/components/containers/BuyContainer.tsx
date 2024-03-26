@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenElement } from '@/app/lib/structure/types';
-import { hideElement, showElement, showSponsorRecipientConfig } from '@/app/lib/spCoin/guiControl';
+import { DISPLAY_STATE, TokenElement } from '@/app/lib/structure/types';
+import { hideElement, setDisplayPanels, showElement } from '@/app/lib/spCoin/guiControl';
 
 type Props = {
   buyAmount: string,
@@ -19,10 +19,10 @@ const BuyContainer = ({buyAmount, buyBalance, buyTokenElement, setBuyAmount, dis
   }
 
   useEffect(() => {
-    isSpCoin(buyTokenElement) ? showElement("addSponsorshipDiv") : hideElement("addSponsorshipDiv")
+    isSpCoin(buyTokenElement) ? setDisplayPanels(DISPLAY_STATE.SPONSOR_SELL_ON) : setDisplayPanels(DISPLAY_STATE.OFF) 
     hideElement("recipientSelectDiv")
     hideElement("recipientConfigDiv")
-  },[buyTokenElement])
+  } , [buyTokenElement])
 
   const showRecipientSelect = () => {
     hideElement("addSponsorshipDiv")

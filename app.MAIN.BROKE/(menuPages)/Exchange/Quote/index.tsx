@@ -38,7 +38,7 @@ export default function QuoteView({
   price,
   quote,
   setQuote,
-  connectedWalletAddr
+  connectedWalletAddr,
 }: {
   price: PriceResponse;
   quote: QuoteResponse | undefined;

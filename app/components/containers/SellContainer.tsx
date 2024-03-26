@@ -3,9 +3,6 @@ import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenElement } from '@/app/lib/structure/types';
 import { setValidPriceInput } from '@/app/lib/spCoin/utils';
-import { openDialog } from '../Dialogs/Dialogs';
-import { DownOutlined } from "@ant-design/icons";
-import { showElement, hideElement } from '@/app/lib/spCoin/guiControl';
 
 type Props = {
     sellAmount: string,
