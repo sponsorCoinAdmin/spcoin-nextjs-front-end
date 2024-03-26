@@ -1,7 +1,7 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext } from '@/app/lib/structure/types';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
 import { getNetworkName } from '../network/utils';
@@ -51,29 +51,23 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
     return context;
 }
 
+type Props = {
+    children: React.ReactNode,
+    value:any
+}
 
-export function ExchangeWrapper({children} : {
-    children: React.ReactNode;
-}) {
+export function ExchangeProvider2({children, value} : Props) {
     chainId = useChainId();
     // alert(`chainId = ${chainId}`)
     context = getInitialContext(chainId)
-    const [exchangeContext, setExchangeContext] = useState(context)
-    // exchangeContext = useContext<ExchangeContext>(context);
+    exchangeContext = useContext<ExchangeContext>(context);
 
     return (
         <div>
-    {/* <ExchangeProvider value={exchangeContext}> */}
             {children}
-    {/* </ExchangeProvider> */}
         </div>
     )
 }
-
-function useExchangeContext() {
-    exchangeContext = useContext<ExchangeContext>(context);
-    return exchangeContext;
-}   
 
 export {
     exchangeContext,

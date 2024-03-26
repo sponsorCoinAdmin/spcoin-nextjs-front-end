@@ -4,6 +4,8 @@ import './globals.css'
 import Footer from './components/panes/footer'
 import Header from './components/panes/header'
 import { ExchangeWrapper } from './lib/context'
+import { Junk } from './lib/context/junk'
+import { ExchangeWrapper3 } from './lib/context/context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,11 +22,11 @@ export default function RootLayout({
   return (
       <html lang="en">
         <body className={inter.className}>
-          {/* <ExchangeWrapper> */}
+          <ExchangeWrapper>
             <Header />
             {children}
             {/* <Footer /> */}
-          {/* </ExchangeWrapper> */}
+          </ExchangeWrapper>
         </body>
       </html>
   )

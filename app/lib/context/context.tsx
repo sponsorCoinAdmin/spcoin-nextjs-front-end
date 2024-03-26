@@ -17,3 +17,32 @@ const initializeContext = (value:any) => {
 }
 
 export { initializeContext, ExchangeProvider, ExchangeConsumer };
+
+////////////////////////////////////////// REMOVE LATER ////////////////////
+
+// import { useContext } from 'react';
+
+// type HelloType = {
+//     hello: string;
+//   }
+
+// let helloWorld= {hello : 'world'}
+// const ExchangeContext = createContext<HelloType>(helloWorld);
+// type Props = {
+//     children: React.ReactNode,
+//     value:any
+// }
+
+// export function ExchangeWrapper3({children} : Props) {
+//     // let [state, setState] = useState(helloWorld);
+
+//     return (
+//         <ExchangeContext.Provider value = {helloWorld} >
+//             {children}
+//         </ExchangeContext.Provider>
+//     )
+// }
+
+// export function useExchangeFunction() {
+//     return useContext(ExchangeContext)
+// }
