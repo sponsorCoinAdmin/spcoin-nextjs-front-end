@@ -31,6 +31,7 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
+import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 
 //////////// Price Code
 export default function PriceView({
@@ -63,7 +64,7 @@ export default function PriceView({
     let networkName = getNetworkName(chainId);
 
     useEffect(() => {
-      // console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+      alert("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       setDisplayPanels(displayState);
     },[]);
 

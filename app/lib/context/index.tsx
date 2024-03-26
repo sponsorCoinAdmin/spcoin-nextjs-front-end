@@ -2,13 +2,11 @@
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext } from '@/app/lib/structure/types';
 import { useContext, useState } from 'react';
-import { initializeContext, ExchangeProvider } from './context';
 import { isSpCoin } from '../spCoin/utils';
 import { getNetworkName } from '../network/utils';
 import { useChainId } from 'wagmi';
 
 let chainId:number = 1;
-let context:any;
 let exchangeContext:ExchangeContext;
 
 const getInitialContext = (network:string|number) => {
@@ -24,7 +22,7 @@ const getInitialContext = (network:string|number) => {
         recipientWallet: defaultNetworkSettings.defaultRecipient,
         agentWallet: defaultNetworkSettings.defaultAgent
     }
-    return initializeContext(initialContext);
+    return initialContext;
 }
 
 const resetContextNetwork = (context:ExchangeContext, network:string|number) => {
@@ -57,9 +55,8 @@ export function ExchangeWrapper({children} : {
 }) {
     chainId = useChainId();
     // alert(`chainId = ${chainId}`)
-    context = getInitialContext(chainId)
-    const [exchangeContext, setExchangeContext] = useState(context)
-    // exchangeContext = useContext<ExchangeContext>(context);
+    const [context, setContext] = useState<ExchangeContext>(getInitialContext(chainId))
+    exchangeContext = context;
 
     return (
         <div>
@@ -69,11 +66,6 @@ export function ExchangeWrapper({children} : {
         </div>
     )
 }
-
-function useExchangeContext() {
-    exchangeContext = useContext<ExchangeContext>(context);
-    return exchangeContext;
-}   
 
 export {
     exchangeContext,
