@@ -50,7 +50,7 @@ const RecipientContainer = ({recipientWallet, setDisplayState} : Props) => {
         <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
         onClick={() => toggleConfig(setDisplayState)}/>
       </div>
-      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR)}>
+      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON)}>
         X
       </div>
     </div>
