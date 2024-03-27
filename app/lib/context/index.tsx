@@ -74,9 +74,7 @@ export function ExchangeWrapper({children} : {
 
     return (
         <div>
-    {/* <ExchangeProvider value={exchangeContext}> */}
             {children}
-    {/* </ExchangeProvider> */}
         </div>
     )
 }

@@ -85,14 +85,11 @@ export default function QuoteView({
     // alert(`initBuyTokenComponents:buyTokenElement.symbol === ${buyTokenElement.symbol}`)
     if (buyTokenElement.symbol === "SpCoin") {
       // alert("HERE 1")
-      showElement("addSponsorshipDiv")
+      setDisplayPanels(DISPLAY_STATE.SPONSOR_BUY);
     }
     else {
       // alert("HERE 2")
-      hideElement("addSponsorshipDiv")
-      hideElement("recipientSelectDiv")
-      hideElement("recipientConfigDiv")
-      hideElement("agent");
+      setDisplayPanels(DISPLAY_STATE.OFF);
     }
   }
 
@@ -100,11 +97,11 @@ export default function QuoteView({
     // alert(`initSellTokenComponents:sellTokenElement.symbol === ${sellTokenElement.symbol}`)
     if (sellTokenElement.symbol === "SpCoin") {
       // alert("HERE 3")
-      showElement("sponsoredBalance")
+      setDisplayPanels(DISPLAY_STATE.SPONSOR_SELL_ON);
     }
     else {
       // alert("HERE 4")
-      hideElement("sponsoredBalance")
+      setDisplayPanels(DISPLAY_STATE.SPONSOR_SELL_OFF);
     }      
   }
   

@@ -175,6 +175,7 @@
   /* background-color: green;
   color: yellow; */
 
+  right: 20px;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
