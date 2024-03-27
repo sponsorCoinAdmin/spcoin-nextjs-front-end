@@ -13,11 +13,10 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, EXCHANGE_STATE,  DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
+import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import { ExchangeTokens} from '..';
 import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
@@ -31,6 +30,8 @@ import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
+import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
+import { setExchangeState } from '@/app copy/(menuPages)/Exchange';
 
 //////////// Price Code
 export default function PriceView({
@@ -44,26 +45,25 @@ export default function PriceView({
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
-    const [network, setNetwork] = useState("ethereum");
-    const [sellAmount, setSellAmount] = useState<string>("0");
-    const [buyAmount, setBuyAmount] = useState<string>("0");
+    const [network, setNetwork] = useState(exchangeContext.data.networkName);
+    const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
+    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
     const [sellBalance, setSellBalance] = useState<string>("0");
     const [buyBalance, setBuyBalance] = useState<string>("0");
-    const [tradeDirection, setTradeDirection] = useState("sell");
+    const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
 
-    const defaultNetworkSettings = getDefaultNetworkSettings('ethereum')
-    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultSellToken);
-    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(defaultNetworkSettings?.defaultBuyToken);
-    const [recipientWallet, setRecipientElement] = useState<WalletElement>(defaultNetworkSettings?.defaultRecipient);
-    const [agentWallet, setAgentElement] = useState(defaultNetworkSettings?.defaultAgent);
-    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(DISPLAY_STATE.OFF);
+    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeContext.sellTokenElement);
+    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeContext.buyTokenElement);
+    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
+    const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
+    const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
+    const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
-    const [slippage, setSlippage] = useState<string | null>("0.02");
     let chainId = useChainId();
-    let networkName = getNetworkName(chainId);
 
     useEffect(() => {
-      // console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+      console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       setDisplayPanels(displayState);
     },[]);
 
@@ -77,12 +77,16 @@ export default function PriceView({
     }, [connectedWalletAddr]);
 
     useEffect(() => {
+      exchangeContext.buyTokenElement=buyTokenElement
       console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name);
+      console.debug("sellTokenElement:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       updateSellBalance(sellTokenElement);
     }, [sellTokenElement]);
 
     useEffect(() => {
+      exchangeContext.buyTokenElement=buyTokenElement
       console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name);
+      console.debug("buyTokenElement:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       updateBuyBalance(buyTokenElement);
     }, [buyTokenElement]);
 
@@ -92,29 +96,6 @@ export default function PriceView({
       }
     }, [errorMessage]);
 
-
-    useEffect(() => {
-      updateNetwork(network)
-    }, [network]);
-
-    const updateNetwork = (network:string | number) => {
-      // alert("Price:network set to " + network)
-      try {
-        console.debug("Price:network set to " + network);
-        let networkSettings = getDefaultNetworkSettings(network);
-        setSellTokenElement(networkSettings?.defaultSellToken);
-        setBuyTokenElement(networkSettings?.defaultBuyToken);
-        setRecipientElement(networkSettings?.defaultRecipient);
-        setAgentElement(networkSettings?.defaultAgent);
-        console.debug(`Price:EXECUTING updateNetwork.updateBuyBalance(${buyTokenElement});`)
-        console.debug(`Price:EXECUTING updateNetwork.updateSellBalance(${sellTokenElement});`)
-        updateBuyBalance(buyTokenElement);
-        updateSellBalance(sellTokenElement);
-      } catch (e) {
-        setErrorMessage({ name: "XXXXX: ", message: JSON.stringify(e, null, 2) });
-      }
-    }
-
     const unwatch = watchNetwork((network) => processNetworkChange(network));
     const unwatchAccount = watchAccount((account) => processAccountChange(account));
 
@@ -123,8 +104,34 @@ export default function PriceView({
     };
 
     const processNetworkChange = (network: any) => {
-      console.debug("Price:NETWORK NAME      = " + JSON.stringify(network?.chain?.name, null, 2));
-      setNetwork(network?.chain?.name.toLowerCase());
+      const newNetworkName:string = network?.chain?.name.toLowerCase()
+      console.debug("======================================================================");
+      console.debug("newNetworkName = " + newNetworkName);
+      console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
+
+      // console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+      if (exchangeContext.data.networkName !== newNetworkName) {
+        resetContextNetwork(exchangeContext, newNetworkName)
+        console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
+        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        setNetwork(newNetworkName);
+        console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
+        console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellTokenElement, null, 2)}`)
+        console.debug(`BEFORE sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        setSellTokenElement(exchangeContext.sellTokenElement);
+        console.debug(`AFTER  sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        console.debug("------------------------ AFTER SELL TOKEN ---------------------------");
+        setBuyTokenElement(exchangeContext.buyTokenElement);
+        setRecipientElement(exchangeContext.recipientWallet);
+        setAgentElement(exchangeContext.agentWallet);
+        setDisplayState(exchangeContext.data.displayState);
+        setState(exchangeContext.data.state);
+        setSlippage(exchangeContext.data.slippage);
+        setExchangeState(exchangeContext.data.state);
+        console.debug(`sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+
+        console.debug("======================================================================");
+      }
     };
 
     const updateSellBalance = async (sellTokenElement: TokenElement) => {

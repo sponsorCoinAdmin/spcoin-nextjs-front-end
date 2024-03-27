@@ -1,6 +1,6 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/app/lib/structure/types';
 import { useContext, useState } from 'react';
 import { isSpCoin } from '../spCoin/utils';
 import { getNetworkName } from '../network/utils';
@@ -12,22 +12,36 @@ let exchangeContext:ExchangeContext;
 const getInitialContext = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
     let initialContext:ExchangeContext = {
-        networkName: typeof network === "string" ? network.toLowerCase() : getNetworkName(network),
-        state: EXCHANGE_STATE.PRICE,
-        displayState: isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
-        slippage: "0.02",
+        data: getInitialDataSettings(network, isSpCoin(defaultNetworkSettings.defaultBuyToken)),
         network: defaultNetworkSettings.networkHeader,
-        sellToken: defaultNetworkSettings.defaultSellToken,
-        buyToken: defaultNetworkSettings.defaultBuyToken,
+        sellTokenElement: defaultNetworkSettings.defaultSellToken,
+        buyTokenElement: defaultNetworkSettings.defaultBuyToken,
         recipientWallet: defaultNetworkSettings.defaultRecipient,
         agentWallet: defaultNetworkSettings.defaultAgent
     }
     return initialContext;
 }
 
+function getInitialDataSettings(network: string | number, ifSpCoin:boolean): { chainId: number; networkName: string; sellAmount: any; buyAmount: any; tradeDirection: string; displayState: DISPLAY_STATE; state: EXCHANGE_STATE; slippage: string; } {
+let data:TradeData = {
+        chainId: 1,
+        networkName: "ethereum",
+        sellAmount: "0",
+        buyAmount: "0",
+        tradeDirection: "sell",
+        state: EXCHANGE_STATE.PRICE,
+        displayState: ifSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
+        slippage: "0.02"
+    }
+    return data;
+}
+
+
+
+
 const resetContextNetwork = (context:ExchangeContext, network:string|number) => {
     
-    // alert(`getInitialContext:ExchangeWrapper chainId = ${network}`)
+    // alert(`getInitialContext:resetContextNetwork chainId = ${network}`)
     const newNetworkName:string = typeof network === "string" ? network.toLowerCase() : getNetworkName(network)
     console.debug("resetContextNetwork: newNetworkName = " + newNetworkName);
     console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.networkName);
@@ -71,3 +85,4 @@ export {
     exchangeContext,
     resetContextNetwork
 }
+

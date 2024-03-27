@@ -33,14 +33,23 @@ interface PriceRequestParams {
     url: string;
   }
 
-  type ExchangeContext = {
+
+  type TradeData = {
+    chainId: number;
     networkName: string;
-    state: EXCHANGE_STATE;
+    sellAmount:string;
+    buyAmount:string;
+    tradeDirection:string
     displayState: DISPLAY_STATE;
+    state: EXCHANGE_STATE;
     slippage: string;
+  }
+
+  type ExchangeContext = {
+    data: TradeData;
     network: NetworkElement;
-    sellToken: TokenElement;
-    buyToken: TokenElement;
+    sellTokenElement: TokenElement;
+    buyTokenElement: TokenElement;
     recipientWallet: WalletElement;
     agentWallet: WalletElement;
   }
@@ -75,5 +84,6 @@ export type {
   NetworkElement,
   PriceRequestParams,
   TokenElement,
+  TradeData,
   WalletElement
 };
