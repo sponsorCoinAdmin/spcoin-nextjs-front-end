@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenElement } from '@/app/lib/structure/types';

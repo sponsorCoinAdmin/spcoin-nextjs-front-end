@@ -9,7 +9,6 @@ import ConnectButton from "./ConnectButton"
 import { DownOutlined } from "@ant-design/icons";
 // import NetworkDialog from "../Dialogs/NetworkDialog";
 
-
 import {
   useChainId
 } from "wagmi";

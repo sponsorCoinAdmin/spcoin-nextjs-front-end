@@ -13,12 +13,11 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useBalance, useChainId, type Address } from "wagmi";
 import { watchAccount, watchNetwork } from "@wagmi/core";
-import { WalletElement, TokenElement, EXCHANGE_STATE,  DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-import { ExchangeTokens} from '..';
 import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
@@ -31,16 +30,13 @@ import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
-import { setExchangeState } from '@/app copy/(menuPages)/Exchange';
+import { setExchangeState } from '..';
 
 //////////// Price Code
-export default function PriceView({
-  connectedWalletAddr, price, setPrice, setExchangeTokens
-}: {
+export default function PriceView({connectedWalletAddr, price, setPrice}: {
     connectedWalletAddr: Address | undefined;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
-    setExchangeTokens: (exchangeTokens: ExchangeTokens|undefined) => void;
 }) {
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
@@ -68,25 +64,35 @@ export default function PriceView({
     },[]);
 
     useEffect(() => {
-      // alert('Price slippage changed to  ' + slippage);
+      // alert(`Price.useEffect[${displayState}] displayState = ${getDisplayStateString(displayState)}`)
+      setDisplayPanels(displayState);
+    },[displayState]);
+
+    useEffect(() => {
+      console.debug('Price slippage changed to  ' + slippage);
     }, [slippage]);
 
     useEffect(() => {
+      console.debug('Price state changed to  ' + state.toString);
+    }, [state]);
+
+    useEffect(() => {
+      // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
       updateBuyBalance(buyTokenElement);
       updateSellBalance(sellTokenElement);
     }, [connectedWalletAddr]);
 
     useEffect(() => {
-      exchangeContext.buyTokenElement=buyTokenElement
       console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name);
-      console.debug("sellTokenElement:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       updateSellBalance(sellTokenElement);
     }, [sellTokenElement]);
 
     useEffect(() => {
-      exchangeContext.buyTokenElement=buyTokenElement
-      console.debug("buyTokenElement.symbol changed to " + buyTokenElement.name);
-      console.debug("buyTokenElement:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+      // alert(`useEffect[buyTokenElement]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
+      if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenElement))
+        setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
+      else if (!isSpCoin(buyTokenElement)) 
+        setDisplayState(DISPLAY_STATE.OFF)
       updateBuyBalance(buyTokenElement);
     }, [buyTokenElement]);
 
@@ -96,14 +102,14 @@ export default function PriceView({
       }
     }, [errorMessage]);
 
-    const unwatch = watchNetwork((network) => rehydrateModule(network));
+    const unwatch = watchNetwork((network) => processNetworkChange(network));
     const unwatchAccount = watchAccount((account) => processAccountChange(account));
 
     const processAccountChange = (account: any) => {
       // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
     };
 
-    const rehydrateModule = (network: any) => {
+    const processNetworkChange = (network: any) => {
       const newNetworkName:string = network?.chain?.name.toLowerCase()
       console.debug("======================================================================");
       console.debug("newNetworkName = " + newNetworkName);
@@ -218,17 +224,19 @@ export default function PriceView({
     const disabled = data && sellAmount
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
+  
+    const setContext = (state:EXCHANGE_STATE) => {
+      alert (`EXECUTING:setContext = (state:${EXCHANGE_STATE})`)
+    }
 
-      const setExchangeTokensCallback = () => {
-        setExchangeState(EXCHANGE_STATE.QUOTE);
-        setExchangeTokens({
-          state: EXCHANGE_STATE.QUOTE,
-          slippage:slippage,
-          sellToken: sellTokenElement,
-          buyToken: buyTokenElement,
-          recipientWallet: recipientWallet,      
-          agentWallet: agentWallet        
-        })
+    const setSellTokenContext = (tokenElement:TokenElement) => {
+      exchangeContext.sellTokenElement = tokenElement;
+      setSellTokenElement(tokenElement)
+    }
+
+    const setBuyTokenContext = (tokenElement:TokenElement) => {
+      exchangeContext.buyTokenElement = tokenElement;
+      setBuyTokenElement(tokenElement)
     }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
@@ -241,11 +249,11 @@ export default function PriceView({
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
           <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
-          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} />          
+          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
           <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
-          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} setExchangeTokensCallback={setExchangeTokensCallback} />
-          <RecipientContainer recipientWallet={recipientWallet} />
-          <SponsorRateConfig />
+          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
+          <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+          <SponsorRateConfig setDisplayState={setDisplayState}/>
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
         </div>
         <FeeDisclosure/>

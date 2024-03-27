@@ -1,18 +1,27 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
-import { hideSponsorRecipientConfig, toggleElement } from '@/app/lib/spCoin/guiControl';
 import Image from 'next/image';
 import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
 import Link from 'next/link'
-import Recipient from '@/app/(menuPages)/Recipient/page';
+import { DISPLAY_STATE } from '@/app/lib/structure/types';
 
 type Props = {
-  recipientWallet: any, 
+  recipientWallet: any,
+  setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
-const RecipientContainer = ({recipientWallet} : Props) => {
+const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
+  const el = document.getElementById('recipientConfigDiv');
+  if (el != null) {
+    el.style.display === 'block' ? 
+      setDisplayState(DISPLAY_STATE.RECIPIENT) :
+      setDisplayState(DISPLAY_STATE.CONFIG);
+  }
+};
+
+const RecipientContainer = ({recipientWallet, setDisplayState} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
   // let urlParms:string = `/Recipient?address=${recipientWallet.address}`
   let urlParms:string = `/Recipient/${recipientWallet.address}`
@@ -22,14 +31,13 @@ const RecipientContainer = ({recipientWallet} : Props) => {
   urlParms += `&img=${recipientWallet.img}`
   urlParms += `&url=${recipientWallet.url}`
 
-  console.debug (`calling urlParms: ${urlParms}`)
+  // console.debug (`calling urlParms: ${urlParms}`)
   return (
-    <div id="recipientSelectDiv" className={styles["inputs"]}>
+    <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
       <div id="recipient-id" className={styles.sponsorCoinContainer}/>
       <div className={styles["yourRecipient"]}>
         You are sponsoring:
       </div>
-      {/* <Link href={`/Recipient?address=${recipientWallet.address}`} className={styles["recipientName"]}> */}
       <Link href={`${urlParms}`} className={styles["recipientName"]}>
         {recipientWallet.name}
       </Link>
@@ -38,11 +46,11 @@ const RecipientContainer = ({recipientWallet} : Props) => {
         {recipientWallet.symbol} 
         <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
       </div>
-      {/* <div className={styles["recipientPosition"]}> <AssetSelect tokenElement={recipientWallet} id={"#recipientDialog"}></AssetSelect></div> */}
       <div>
-        <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  onClick={() => toggleElement("recipientConfigDiv")}/>
+        <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
+        onClick={() => toggleConfig(setDisplayState)}/>
       </div>
-      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => hideSponsorRecipientConfig()}>
+      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR)}>
         X
       </div>
     </div>
