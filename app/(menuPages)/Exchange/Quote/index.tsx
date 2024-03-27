@@ -28,8 +28,9 @@ import { RecipientDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { DISPLAY_STATE, TokenElement, WalletElement } from '@/app/lib/structure/types';
-
+import { DISPLAY_STATE, EXCHANGE_STATE, TokenElement, WalletElement } from '@/app/lib/structure/types';
+import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
+import { setExchangeState } from '@/app copy/(menuPages)/Exchange';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 console.debug("QUOTE AFFILIATE_FEE = " + AFFILIATE_FEE)
 
@@ -50,17 +51,24 @@ export default function QuoteView({
 
   console.debug("########################### QUOTE RERENDERED #####################################")
 
-  let chainId = useChainId();
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
-  const [slippage, setSlippage] = useState<string | undefined | null>(exchangeTokens.slippage);
-  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeTokens.sellToken);
-  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeTokens.buyToken);
-  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeTokens.recipientWallet);
-  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeTokens.agentWallet);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(DISPLAY_STATE.OFF);
+  const [network, setNetwork] = useState(exchangeContext.data.networkName);
+  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
+  const [sellBalance, setSellBalance] = useState<string>("0");
+  const [buyBalance, setBuyBalance] = useState<string>("0");
+  const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
+
+  const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeContext.sellTokenElement);
+  const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeContext.buyTokenElement);
+  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
+  const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
+  const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
+  const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+  let chainId = useChainId();
 
   useEffect(() => {
     // console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))

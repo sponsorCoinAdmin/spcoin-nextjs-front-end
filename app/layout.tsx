@@ -4,8 +4,6 @@ import './globals.css'
 import Footer from './components/panes/footer'
 import Header from './components/panes/header'
 import { ExchangeWrapper } from './lib/context'
-import { Junk } from './lib/context/junk'
-import { ExchangeWrapper3 } from './lib/context/context'
 
 const inter = Inter({ subsets: ['latin'] })
 

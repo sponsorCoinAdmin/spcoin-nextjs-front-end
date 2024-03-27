@@ -96,14 +96,14 @@ export default function PriceView({
       }
     }, [errorMessage]);
 
-    const unwatch = watchNetwork((network) => processNetworkChange(network));
+    const unwatch = watchNetwork((network) => rehydrateModule(network));
     const unwatchAccount = watchAccount((account) => processAccountChange(account));
 
     const processAccountChange = (account: any) => {
       // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
     };
 
-    const processNetworkChange = (network: any) => {
+    const rehydrateModule = (network: any) => {
       const newNetworkName:string = network?.chain?.name.toLowerCase()
       console.debug("======================================================================");
       console.debug("newNetworkName = " + newNetworkName);
@@ -220,14 +220,15 @@ export default function PriceView({
       : true;
 
       const setExchangeTokensCallback = () => {
-      setExchangeTokens({
-        state: EXCHANGE_STATE.QUOTE,
-        slippage:slippage,
-        sellToken: sellTokenElement,
-        buyToken: buyTokenElement,
-        recipientWallet: recipientWallet,      
-        agentWallet: agentWallet        
-      })
+        setExchangeState(EXCHANGE_STATE.QUOTE);
+        setExchangeTokens({
+          state: EXCHANGE_STATE.QUOTE,
+          slippage:slippage,
+          sellToken: sellTokenElement,
+          buyToken: buyTokenElement,
+          recipientWallet: recipientWallet,      
+          agentWallet: agentWallet        
+        })
     }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
