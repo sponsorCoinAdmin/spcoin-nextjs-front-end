@@ -10,6 +10,9 @@ import {
     type Address,
 } from "wagmi";
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
+import { EXCHANGE_STATE } from '@/app/lib/structure/types';
+import { exchangeContext } from '@/app/lib/context';
+import { setFinalize } from '@/app/(menuPages)/Exchange';
 
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
@@ -61,14 +64,12 @@ function ApproveOrReviewButton({
     token,
     connectedWalletAddr,
     sellBalance,
-    onClick,
     disabled,
     setErrorMessage
   }: {
     token:any
     connectedWalletAddr: Address;
-    sellBalance: any
-    onClick: () => void;
+    sellBalance: any;
     disabled?: boolean;
     // setErrorMessage:any;
     setErrorMessage: (msg:Error) => void
@@ -162,11 +163,15 @@ function ApproveOrReviewButton({
       }
     }  
 
+    const setExchangeState = (state:EXCHANGE_STATE) => {
+      setFinalize(state);
+    }
+
     return (
       <button
         type="button"
         disabled={insufficientBalance}
-        onClick={onClick}
+        onClick={() => setExchangeState(EXCHANGE_STATE.QUOTE)}
          className={styles["exchangeButton"] + " " + styles["swapButton"]}
       >
         {insufficientBalance ? "Insufficient " + token.symbol + " Balance" : "Review Trade"}

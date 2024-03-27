@@ -48,7 +48,6 @@ export default function QuoteView({
 
   console.debug("########################### QUOTE RERENDERED #####################################")
 
-  let chainId = useChainId();
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
   const [network, setNetwork] = useState(getNetworkName(chainId).toLowerCase());
