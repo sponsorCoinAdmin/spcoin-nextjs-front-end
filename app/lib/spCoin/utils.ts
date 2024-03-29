@@ -2,6 +2,8 @@ import { isAddress } from "ethers";
 import { fetchStringBalance } from "../wagmi/fetchBalance";
 import { TokenElement } from "../structure/types";
 import { Address } from "wagmi";
+import { exchangeContext } from "../context";
+import { showElement, toggleElement } from "./guiControl";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
@@ -98,8 +100,16 @@ const isSpCoin = (tokenElement:TokenElement) => {
   return tokenElement.symbol === "SpCoin" ? true:false
 }
 
+const exchangeDataDump = () => {
+  const exchangeData = JSON.stringify(exchangeContext,null,2);
+  alert(exchangeData);
+  toggleElement("addSponsorshipDiv")
+  console.debug(exchangeData);
+}
+
 export { 
   fetchTokenDetails,
+  exchangeDataDump,
   getQueryVariable,
   getTokenDetails,
   isSpCoin,

@@ -44,25 +44,24 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
     // alert(`getInitialContext:resetContextNetwork chainId = ${network}`)
     const newNetworkName:string = typeof network === "string" ? network.toLowerCase() : getNetworkName(network)
     console.debug("resetContextNetwork: newNetworkName = " + newNetworkName);
-    console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.networkName);
+    console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.data.networkName);
 
-    if (context.networkName !== newNetworkName) {
+    if (context.data.networkName !== newNetworkName) {
         console.debug(`UPDATING NETWORK to ${newNetworkName}`);
 
         const defaultNetworkSettings = getDefaultNetworkSettings(newNetworkName)
         console.debug(`Loaded defaultNetworkSettings for ${newNetworkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-        context.networkName = newNetworkName
-        context.state = EXCHANGE_STATE.PRICE;
-        context.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
-        context.slippage = "0.02",
-        context.sellToken = defaultNetworkSettings.defaultSellToken,
-        context.buyToken = defaultNetworkSettings.defaultBuyToken,
+        context.data.networkName = newNetworkName
+        context.data.state = EXCHANGE_STATE.PRICE;
+        context.data.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
+        context.data.slippage = "0.02",
+        context.sellTokenElement = defaultNetworkSettings.defaultSellToken,
+        context.buyTokenElement = defaultNetworkSettings.defaultBuyToken,
         context.recipientWallet = defaultNetworkSettings.defaultRecipient,
         context.agentWallet = defaultNetworkSettings.defaultAgent
     }      
     return context;
 }
-
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;

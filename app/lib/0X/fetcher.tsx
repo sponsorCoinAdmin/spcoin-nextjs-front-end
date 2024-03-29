@@ -20,10 +20,12 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 
   try {
-    // console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
+    alert("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    // console.debug(`${endpoint}?${query}`);
+    alert(`BEFORE fetcher:${endpoint}?${query}`);
     let result = fetch(`${endpoint}?${query}`).then((res) => res.json());
+    alert(`AFTER fetcher:${endpoint}?${query}`);
+    alert(`AFTER fetcher result =  + ${JSON.stringify(result,null,2)} + ]`)
     // console.debug("fetcher result = " + JSON.stringify(result,null,2) + "]")
     return result
   }
@@ -40,6 +42,7 @@ const processError = (
   sellTokenElement:any, 
   setBuyAmount:any, 
   setValidPriceInput:any) => {
+  alert(`EEEEERRRRRROOOORRRRR = ${JSON.stringify(error, null, 2)}`)
   // console.error("***AAA ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
   let errCode: number = error.errCode;
   let errMsg: string = error.errMsg;

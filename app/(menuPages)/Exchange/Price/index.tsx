@@ -31,6 +31,7 @@ import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import { setExchangeState } from '..';
+import QuoteButton from '@/app/components/Buttons/QuoteButton';
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {
@@ -41,39 +42,52 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
+    const [chainId, setChainId] = useState(exchangeContext.data.chainId);
     const [network, setNetwork] = useState(exchangeContext.data.networkName);
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
     const [sellBalance, setSellBalance] = useState<string>("0");
     const [buyBalance, setBuyBalance] = useState<string>("0");
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
+    const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
+    const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
 
     const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeContext.sellTokenElement);
     const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeContext.buyTokenElement);
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
-    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
-    const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
-    const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
+
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
-    let chainId = useChainId();
 
     useEffect(() => {
       console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
-      setDisplayPanels(displayState);
+      // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
+      // For up to 15 seconds in half second increments set dom settings
+      for(let i = 1; i <= 30; i++) {
+        setTimeout(() => setDisplayPanels(displayState),i*500)
+      }
     },[]);
+    
+    useEffect(() => {
+      console.debug(`PRICE:useEffect:chainId = ${chainId}`)
+      exchangeContext.data.chainId = chainId;
+    },[chainId]);
 
     useEffect(() => {
-      // alert(`Price.useEffect[${displayState}] displayState = ${getDisplayStateString(displayState)}`)
+      console.debug(`PRICE:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
+      exchangeContext.data.displayState = displayState;
     },[displayState]);
 
     useEffect(() => {
       console.debug('Price slippage changed to  ' + slippage);
+      exchangeContext.data.slippage = slippage;
     }, [slippage]);
 
     useEffect(() => {
       console.debug('Price state changed to  ' + state.toString);
+      exchangeContext.data.state = state;
     }, [state]);
 
     useEffect(() => {
@@ -84,6 +98,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     useEffect(() => {
       console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name);
+      exchangeContext.sellTokenElement = sellTokenElement;
       updateSellBalance(sellTokenElement);
     }, [sellTokenElement]);
 
@@ -94,7 +109,14 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       else if (!isSpCoin(buyTokenElement)) 
         setDisplayState(DISPLAY_STATE.OFF)
       updateBuyBalance(buyTokenElement);
+      exchangeContext.buyTokenElement = buyTokenElement;
     }, [buyTokenElement]);
+
+    useEffect(() => {
+      console.debug("recipientWallet changed to " + recipientWallet.name);
+      exchangeContext.recipientWallet = recipientWallet;
+    }, [recipientWallet]);
+
 
     useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
@@ -110,8 +132,14 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     };
 
     const processNetworkChange = (network: any) => {
-      const newNetworkName:string = network?.chain?.name.toLowerCase()
       console.debug("======================================================================");
+      console.debug(`AAA processNetworkChange:network = ${JSON.stringify(network.chain,null,2)}`)
+      console.debug(`BBB processNetworkChange:chainId = ${chainId}`)
+      console.debug(`CCC network.chain.id             = ${network.chain.id}`)
+      setChainId(network.chain.id)
+      console.debug(`DDD chainId = ${chainId}`)
+
+      const newNetworkName:string = network?.chain?.name.toLowerCase()
       console.debug("newNetworkName = " + newNetworkName);
       console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
 
@@ -225,40 +253,28 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
       : true;
   
-    const setContext = (state:EXCHANGE_STATE) => {
-      alert (`EXECUTING:setContext = (state:${EXCHANGE_STATE})`)
-    }
-
-    const setSellTokenContext = (tokenElement:TokenElement) => {
-      exchangeContext.sellTokenElement = tokenElement;
-      setSellTokenElement(tokenElement)
-    }
-
-    const setBuyTokenContext = (tokenElement:TokenElement) => {
-      exchangeContext.buyTokenElement = tokenElement;
-      setBuyTokenElement(tokenElement)
-    }
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
       <form autoComplete="off">
-        <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
-        <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
-        <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
-        <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
-        <ErrorDialog errMsg={errorMessage} />
-        <div className={styles.tradeContainer}>
-          <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
-          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
-          <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
-          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
-          <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
-          <SponsorRateConfig setDisplayState={setDisplayState}/>
-          <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
-        </div>
-        <FeeDisclosure/>
-        <IsLoading isLoadingPrice={isLoadingPrice} />
-      </form>
+      <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
+      <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
+      <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
+      <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
+      <ErrorDialog errMsg={errorMessage} />
+      <div className={styles.tradeContainer}>
+        <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
+        <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
+        <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
+        <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
+        <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
+        {/* <QuoteButton sendTransaction={sendTransaction}/> */}
+        <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+        <SponsorRateConfig setDisplayState={setDisplayState}/>
+        <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
+      </div>
+      <FeeDisclosure/>
+      <IsLoading isLoadingPrice={isLoadingPrice} />
+    </form>
     );
   } catch (err:any) {
     console.debug (`Price Error:\n ${err.message}`)

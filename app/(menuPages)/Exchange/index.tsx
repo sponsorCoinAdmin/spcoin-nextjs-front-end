@@ -7,7 +7,7 @@ import { EXCHANGE_STATE } from "@/app/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
-let setFinalize;
+let setFinalize:any;
 
 export default function Home() {
   
@@ -44,6 +44,6 @@ export default function Home() {
 }
 
 export {
-  setFinalize,
-  setExchangeState
+  type ExchangeTokens,
+  EXCHANGE_STATE
 }

@@ -19,6 +19,7 @@ import NetworkSelect from "../containers/NetworkSelect";
 import { context } from "msw";
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import { NetworkElement } from "@/app/lib/structure/types";
+import { exchangeDataDump } from "@/app/lib/spCoin/utils";
 
 const imgHome = "/resources/images/chains/"
 const imgOptions = ".png"
@@ -33,11 +34,15 @@ function Header() {
     return imgURL
   }
 
+
   return (
     <header>
       {/* <NetworkDialog errMsg={"Header Test Message"} /> */}
       <div className={styles.leftH}>
+
+      <div  onClick={() => exchangeDataDump()}>
         <Image className={styles.imgOptions} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
+      </div>
         <div className={styles.headerItem}><Link href="/">SponsorCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
