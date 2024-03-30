@@ -30,8 +30,8 @@ import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
-import { setExchangeState } from '..';
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
+import { setExchangeState } from '@/app/(menuPages)/Exchange';
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {

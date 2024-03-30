@@ -9,7 +9,7 @@ enum  DISPLAY_STATE {
 }
 
 // ToDo Convert the following to an enum
-const TOKEN_LIST= 'TOKEN_LIST';
+const TOKEN_LIST = 'TOKEN_LIST';
 const AGENT_WALLETS ='AGENT_WALLETS';
 const RECIPIENT_WALLETS ='RECIPIENT_WALLETS';
 

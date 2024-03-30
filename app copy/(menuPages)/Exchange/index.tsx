@@ -18,9 +18,12 @@ export default function Home() {
   setFinalize = setFinal
 
   const setState = (exchangeState:EXCHANGE_STATE) => {
+    alert(`setState = (${exchangeState})`)
+
     setFinal(exchangeState)
-    exchangeContext.state = exchangeState;
+    exchangeContext.data.state = exchangeState;
   }
+  alert("SETTING STATE")
   setExchangeState = setState;
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
