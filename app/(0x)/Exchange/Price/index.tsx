@@ -31,7 +31,7 @@ import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
-import { setExchangeState } from '@/app/(menuPages)/Exchange';
+import { setExchangeState } from '@/app/(0x)/Exchange';
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {
