@@ -5,8 +5,6 @@ import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { EXCHANGE_STATE } from "@/app/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
-import { ExchangeTokens } from "@/app.wip-add-recipient-page/(menuPages)/Exchange";
-// import { ExchangeTokens } from "@/app.wip-add-recipient-page/(0x)/Exchange";
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
 let setFinalize:any;
@@ -49,7 +47,6 @@ export default function Home() {
 }
 
 export {
-  type ExchangeTokens,
   setExchangeState,
   EXCHANGE_STATE
 }
