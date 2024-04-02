@@ -29,7 +29,8 @@
     "siwe": "^2.1.4",
     "swr": "^2.1.5",
     "typescript": "5.0.4",
-    "wagmi": "^1.4.6"
+    "wagmi": "^1.4.6",
+    "web-vitals": "^3.5.2"
   },
   "devDependencies": {
     "@types/node": "20.1.3",
