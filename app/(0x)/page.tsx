@@ -4,7 +4,7 @@ import React from 'react'
 
 function Home() {
   return (
-    <div className="mainApp"><h1>Sponsor Coin Home Page</h1></div>
+    <div className="mainApp"><h1>Sponsor Coin 0x Home Page</h1></div>
   )
 }
 

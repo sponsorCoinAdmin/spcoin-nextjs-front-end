@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '../globals.css'
 import Footer from '../components/panes/footer'
-import Header from '../components/panes/header'
+// import Header from '../components/panes/header'
+import Header from './components/Header'
 import { ExchangeWrapper } from '../lib/context'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -20,8 +21,9 @@ export default function RootLayout({
   return (
       <html lang="en">
         <body className={inter.className}>
-          {/* <ExchangeWrapper> */}
-            {/* <Header /> */}
+        {/* <Header connect={connect} isConnected={isConnected} address={address} /> */}
+          {/* <ExchangeWrapper>
+            <Header /> */}
             {children}
             {/* <Footer /> */}
           {/* </ExchangeWrapper> */}

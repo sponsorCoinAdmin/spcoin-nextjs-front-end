@@ -16,14 +16,11 @@ function Header(props) {
   return (
     <header>
       <div className="leftH">
-        <img src={Logo} alt="logo" className="logo" />
-        {/* <Link to="/" className="link"> */}
-          {/* <div className="headerItem">Swap</div> */}
-          <div><Link href="/1Inch/Exchange/Swap" props={props}>Swap</Link></div>
+        <div><Link href="/1Inch/Exchange/Swap" props={props}>Swap</Link></div>
         {/* </Link>
         <Link to="/tokens" className="link"> */}
-          {/* <div className="headerItem">Tokens</div> */}
-          <div><Link href="/1Inch/Exchange/Tokens">Tokens</Link></div>
+        {/* <div className="headerItem">Tokens</div> */}
+        <div><Link href="/1Inch/Exchange/Tokens">Tokens</Link></div>
         {/* </Link> */}
       </div>
       <div className="rightH">
