@@ -5,7 +5,7 @@ import {
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import tokenList from "../tokenList.json";
+import tokenList from "../components/data/tokenList.json";
 import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 
@@ -24,7 +24,7 @@ function Swap(props) {
     to:null,
     data: null,
     value: null,
-  }); 
+  });
 
   const {data, sendTransaction} = useSendTransaction({
     request: {

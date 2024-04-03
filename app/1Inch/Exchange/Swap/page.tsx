@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import {
@@ -5,12 +6,11 @@ import {
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import tokenList from "../tokenList.json";
+import tokenList from "../../components/data/tokenList.json";
 import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
 
-
-function Swap(props) {
+function Swap(props: { address: any; isConnected: any; }) {
   const { address, isConnected } = props;
   const [messageApi, contextHolder] = message.useMessage();
   const [slippage, setSlippage] = useState(2.5);
@@ -26,6 +26,8 @@ function Swap(props) {
     data: null,
     value: null,
   }); 
+
+  alert(`SWAP:\nprops = ${JSON.stringify(props,null,2)}`)
 
   const {data, sendTransaction} = useSendTransaction({
     request: {
@@ -44,7 +46,7 @@ function Swap(props) {
     setSlippage(e.target.value);
   }
 
-  function changeAmount(e) {
+  function changeAmount(e:any) {
     setTokenOneAmount(e.target.value);
     if(e.target.value && prices){
       setTokenTwoAmount((e.target.value * prices.ratio).toFixed(2))
@@ -64,12 +66,12 @@ function Swap(props) {
     fetchPrices(two.address, one.address);
   }
 
-  function openModal(asset) {
+  function openModal(asset: React.SetStateAction<number>) {
     setChangeToken(asset);
     setIsOpen(true);
   }
 
-  function modifyToken(i){
+  function modifyToken(i:any){
     setPrices(null);
     setTokenOneAmount(null);
     setTokenTwoAmount(null);
@@ -83,13 +85,11 @@ function Swap(props) {
     setIsOpen(false);
   }
 
-  async function fetchPrices(one, two){
+  async function fetchPrices(one: string, two: string){
 
       const res = await axios.get(`http://localhost:3001/tokenPrice`, {
         params: {addressOne: one, addressTwo: two}
       })
-
-      
       setPrices(res.data)
   }
 
@@ -126,7 +126,6 @@ function Swap(props) {
   }, [])
 
   useEffect(()=>{
-
       if(txDetails.to && isConnected){
         sendTransaction();
       }

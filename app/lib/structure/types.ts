@@ -64,16 +64,6 @@ type ExchangeContext = {
   recipientWallet: WalletElement;
   agentWallet: WalletElement;
 }
-/*
-type ExchangeTokens = {
-  state: EXCHANGE_STATE;
-  slippage: string|undefined|null;
-  sellToken: TokenElement;
-  buyToken: TokenElement;
-  recipientWallet: WalletElement;
-  agentWallet: WalletElement;
-}
-*/
 
 type NetworkElement = {
   chainId: number;
