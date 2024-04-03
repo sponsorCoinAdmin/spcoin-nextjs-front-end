@@ -1,4 +1,3 @@
-'use client'
 import React, { useState, useEffect } from "react";
 import { Input, Popover, Radio, Modal, message } from "antd";
 import {
@@ -6,12 +5,11 @@ import {
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import tokenList from "../../components/data/tokenList.json";
+import tokenList from "../tokenList.json";
 import axios from "axios";
 import { useSendTransaction, useWaitForTransaction } from "wagmi";
-import { setWagmiConfig } from "@/app/lib/wagmi/config";
 
-function Swap(props: { address: any; isConnected: any; }) {
+function Swap(props) {
   const { address, isConnected } = props;
   const [messageApi, contextHolder] = message.useMessage();
   const [slippage, setSlippage] = useState(2.5);
@@ -27,17 +25,6 @@ function Swap(props: { address: any; isConnected: any; }) {
     data: null,
     value: null,
   }); 
-
-  // alert(`SWAP:\nprops = ${JSON.stringify(props,null,2)}`)
-
-  /*
-  const { config } = usePrepareSendTransaction({
-    to: quote?.to, // The address of the contract to send call data to, in this case 0x Exchange Proxy
-    data: quote?.data, // The call data required to be sent to the to contract address.
-  });
-
-  const { sendTransaction } = useSendTransaction(config);
-*/
 
   const {data, sendTransaction} = useSendTransaction({
     request: {
@@ -56,7 +43,7 @@ function Swap(props: { address: any; isConnected: any; }) {
     setSlippage(e.target.value);
   }
 
-  function changeAmount(e:any) {
+  function changeAmount(e) {
     setTokenOneAmount(e.target.value);
     if(e.target.value && prices){
       setTokenTwoAmount((e.target.value * prices.ratio).toFixed(2))
@@ -76,12 +63,12 @@ function Swap(props: { address: any; isConnected: any; }) {
     fetchPrices(two.address, one.address);
   }
 
-  function openModal(asset: React.SetStateAction<number>) {
+  function openModal(asset) {
     setChangeToken(asset);
     setIsOpen(true);
   }
 
-  function modifyToken(i:any){
+  function modifyToken(i){
     setPrices(null);
     setTokenOneAmount(null);
     setTokenTwoAmount(null);
@@ -95,11 +82,13 @@ function Swap(props: { address: any; isConnected: any; }) {
     setIsOpen(false);
   }
 
-  async function fetchPrices(one: string, two: string){
+  async function fetchPrices(one, two){
 
       const res = await axios.get(`http://localhost:3001/tokenPrice`, {
         params: {addressOne: one, addressTwo: two}
       })
+
+      
       setPrices(res.data)
   }
 
@@ -136,6 +125,7 @@ function Swap(props: { address: any; isConnected: any; }) {
   }, [])
 
   useEffect(()=>{
+
       if(txDetails.to && isConnected){
         sendTransaction();
       }

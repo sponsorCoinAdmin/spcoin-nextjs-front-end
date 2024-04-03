@@ -1,14 +1,12 @@
-'use client'
 import "./App.css";
-import Header from "../components/Header";
-import Swap from "../components/Swap";
-import Tokens from "../components/Tokens";
+import Header from "./components/Header";
+import Swap from "./components/Swap";
+import Tokens from "./components/Tokens";
 // import { Routes, Route } from "react-router-dom";
 import { useConnect, useAccount } from "wagmi";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
 
 function App() {
-
   const { address, isConnected } = useAccount();
   const { connect } = useConnect({
     connector: new MetaMaskConnector(),
@@ -28,8 +26,3 @@ function App() {
 }
 
 export default App;
-
-// import styles from '@/app/styles/Exchange.module.css'
-// export default function Loading() {
-//     return <div className={styles["center-screen"]}><h1>1Inch Page</h1></div>;
-// }
