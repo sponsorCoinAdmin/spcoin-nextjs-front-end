@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useContext, useState } from "react";
+// import styles from "../../styles/Header.module.css"
 import styles from "../../styles/Header.module.css"
 import spCoin_png from '../../../public/resources/images/spCoin.png'
 import Image from 'next/image'
@@ -27,13 +28,12 @@ const imgOptions = ".png"
 let disabled = false
 
 function Header() {
-  const [networkElement, setNetworkElement] = useState<NetworkElement>(exchangeContext.network);
+  // const [networkElement, setNetworkElement] = useState<NetworkElement>(exchangeContext.network);
 
   function getTokenImageURL(chainId:number|string) {
     let imgURL:string = imgHome+chainId + imgOptions;
     return imgURL
   }
-
 
   return (
     <header>
@@ -50,12 +50,12 @@ function Header() {
       </div>
       <div className={styles.rightH}>
         <div >
-          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.networkLogo} />
-          <NetworkSelect networkElement={networkElement} id={"selectNetworkDialog"} disabled={disabled}></NetworkSelect>
+          {/* <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.networkLogo} /> */}
+          {/* <NetworkSelect networkElement={networkElement} id={"selectNetworkDialog"} disabled={disabled}></NetworkSelect> */}
           {/* <DownOutlined id={"selectNetworkDialog"} onClick={() => openDialog("#"+id)}/> */}
-                      {/* &nbsp;&nbsp;{getNetworkName(useChainId())} */}
+          {/* &nbsp;&nbsp;{getNetworkName(useChainId())} */}
         </div>
-        <ConnectButton />
+        {/* <ConnectButton /> */}
       </div>
     </header>
   );

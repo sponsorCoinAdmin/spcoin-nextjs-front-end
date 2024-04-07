@@ -11,8 +11,7 @@ import {
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
-import { useBalance, useChainId, usePrepareSendTransaction, useSendTransaction, type Address } from "wagmi";
-import { watchAccount, watchNetwork } from "@wagmi/core";
+import { useEstimateGas, useSendTransaction } from 'wagmi' 
 import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
@@ -31,6 +30,7 @@ import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import IsLoading from '@/app/components/containers/IsLoading';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
+import { Address, parseEther } from 'viem';
 
 
 /*
@@ -151,7 +151,6 @@ export default function QuoteView({
     exchangeContext.recipientWallet = recipientWallet;
   }, [recipientWallet]);
 
-
   useEffect(() => {
     if (errorMessage.name !== "" && errorMessage.message !== "") {
       openDialog("#errorDialog");
@@ -223,13 +222,19 @@ export default function QuoteView({
     }
   );
 
-  const { config } = usePrepareSendTransaction({
-    to: quote?.to, // The address of the contract to send call data to, in this case 0x Exchange Proxy
-    data: quote?.data, // The call data required to be sent to the to contract address.
-  });
+  // const { config } = usePrepareSendTransaction({
+  //   to: quote?.to, // The address of the contract to send call data to, in this case 0x Exchange Proxy
+  //   data: quote?.data, // The call data required to be sent to the to contract address.
+  // });
 
-  const { sendTransaction } = useSendTransaction(config);
+  const { sendTransaction } = useSendTransaction();
 
+  const { data } = useEstimateGas({
+    // to: '0xd2135CfB216b74109775236E36d4b433F1DF507B',
+    to: quote?.to,
+    value: parseEther('0.01'),
+  })
+  
   if (!quote) {
     return <div>Getting best quote...</div>;
   }
@@ -250,6 +255,18 @@ export default function QuoteView({
         <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenElement.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenElement={buyTokenElement} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>          
         {/* <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} /> */}
         {/* <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} /> */}
+        <button
+  // disabled={!Boolean(sendTransaction)} 
+  // onClick={() => sendTransaction()} 
+  // disabled={!Boolean(data)} 
+  // onClick={() => sendTransaction({ 
+  //   gas: data, 
+  //   to: quote?.to, 
+  //   value: parseEther('0.01'), 
+  // })} 
+>
+  Send transaction
+</button>
         <QuoteButton sendTransaction={sendTransaction}/>
         <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
         <SponsorRateConfig setDisplayState={setDisplayState}/>

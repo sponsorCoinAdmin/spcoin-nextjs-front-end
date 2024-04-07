@@ -11,8 +11,10 @@ import {
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
-import { useBalance, useChainId, type Address } from "wagmi";
-import { watchAccount, watchNetwork } from "@wagmi/core";
+// import { useBalance } from "wagmi";
+import { useReadContracts } from 'wagmi' 
+import { erc20Abi } from 'viem' 
+import { watchAccount } from "@wagmi/core";
 import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
@@ -32,6 +34,8 @@ import IsLoading from '@/app/components/containers/IsLoading';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(0x)/Exchange';
+import { Address } from 'viem';
+import { wagmiConfig } from '@/app/lib/wagmi/wagmiConfig';
 
 //////////// Price Code
 export default function PriceView({connectedWalletAddr, price, setPrice}: {
@@ -60,6 +64,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
+    alert("HERE 1")
     useEffect(() => {
       console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
@@ -117,29 +122,32 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       exchangeContext.recipientWallet = recipientWallet;
     }, [recipientWallet]);
 
-
     useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
         openDialog("#errorDialog");
       }
     }, [errorMessage]);
 
-    const unwatch = watchNetwork((network) => processNetworkChange(network));
-    const unwatchAccount = watchAccount((account) => processAccountChange(account));
-
+    const unwatch = watchAccount(wagmiConfig, { 
+      onChange(data) {
+        alert(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
+        const chains = wagmiConfig.chains 
+        const chain = chains.find(chain => chain.id === data.chainId)
+        processNetworkChange(chain)
+      },
+    }) 
     const processAccountChange = (account: any) => {
       // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
     };
 
-    const processNetworkChange = (network: any) => {
+    const processNetworkChange = (chainId: any) => {
       console.debug("======================================================================");
-      console.debug(`AAA processNetworkChange:network = ${JSON.stringify(network.chain,null,2)}`)
       console.debug(`BBB processNetworkChange:chainId = ${chainId}`)
-      console.debug(`CCC network.chain.id             = ${network.chain.id}`)
-      setChainId(network.chain.id)
+      setChainId(chainId)
       console.debug(`DDD chainId = ${chainId}`)
+      let newNetworkName = getNetworkName(chainId);
 
-      const newNetworkName:string = network?.chain?.name.toLowerCase()
+      // const newNetworkName:string = network?.chain?.name.toLowerCase()
       console.debug("newNetworkName = " + newNetworkName);
       console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
 
@@ -244,37 +252,59 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       }
     );
 
-    const { data, isError, isLoading } = useBalance({
-      address: connectedWalletAddr,
-      token: sellTokenElement.address,
-    });
+    // const { data, isError, isLoading } = useBalance({
+    //   address: connectedWalletAddr,
+    //   token: sellTokenElement.address,
+    // });
+    
+    const result = useReadContracts({ 
+      allowFailure: false, 
+      contracts: [ 
+        { 
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+          abi: erc20Abi, 
+          functionName: 'balanceOf', 
+          args: ['0x4557B18E779944BFE9d78A672452331C186a9f48'], 
+        }, 
+        { 
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+          abi: erc20Abi, 
+          functionName: 'decimals', 
+        }, 
+        { 
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+          abi: erc20Abi, 
+          functionName: 'symbol', 
+        }, 
+      ] 
+    }) 
 
-    const disabled = data && sellAmount
-      ? parseUnits(sellAmount, sellTokenElement.decimals) > data.value
+    const disabled = result && sellAmount
+      ? parseUnits(sellAmount, sellTokenElement.decimals) > 0 // ToDo FIX This result.value
       : true;
   
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
       <form autoComplete="off">
-      <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
-      <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
-      <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
-      <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
-      <ErrorDialog errMsg={errorMessage} />
-      <div className={styles.tradeContainer}>
-        <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-        <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
-        <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
-        <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
-        <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
-        {/* <QuoteButton sendTransaction={sendTransaction}/> */}
-        <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
-        <SponsorRateConfig setDisplayState={setDisplayState}/>
-        <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
-      </div>
-      <FeeDisclosure/>
-      <IsLoading isLoadingPrice={isLoadingPrice} />
-    </form>
+        <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
+        <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
+        <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
+        <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
+        <ErrorDialog errMsg={errorMessage} />
+        <div className={styles.tradeContainer}>
+          <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
+          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
+          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
+          <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
+          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
+          {/* <QuoteButton sendTransaction={sendTransaction}/> */}
+          <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+          <SponsorRateConfig setDisplayState={setDisplayState}/>
+          <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
+        </div>
+        <FeeDisclosure/>
+        <IsLoading isLoadingPrice={isLoadingPrice} />
+      </form>
     );
   } catch (err:any) {
     console.debug (`Price Error:\n ${err.message}`)

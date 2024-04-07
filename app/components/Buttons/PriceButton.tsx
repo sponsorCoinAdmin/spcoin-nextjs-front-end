@@ -1,8 +1,8 @@
 import React from 'react';
 import ApproveOrReviewButton from './ApproveOrReviewButton'
-import { Address } from 'wagmi';
 import { EXCHANGE_STATE, TokenElement } from '@/app/lib/structure/types';
 import CustomConnectButton from './CustomConnectButton';
+import { Address } from 'viem';
 
 type Props = {
     connectedWalletAddr: Address | undefined;

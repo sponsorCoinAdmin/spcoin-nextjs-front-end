@@ -1,10 +1,10 @@
 const { ethers } = require("ethers");
 import { fetchBalance } from '@wagmi/core'
-import { setWagmiConfig } from './config'
-import { Address } from "wagmi";
+import { getWagmiConfig } from './wagmiConfig'
+import { Address } from "viem";
 import { TokenElement } from '../structure/types';
 
-setWagmiConfig();
+getWagmiConfig();
 
 async function fetchBigIntBalance (walletAddr:string|Address|undefined, tokenAddr:string|Address|undefined, chainId:number|string) {
   // if (walletAddr === undefined || tokenAddr === undefined || chainId === undefined) {
@@ -52,7 +52,5 @@ async function fetchStringBalance (walletAddr:string|Address|undefined, tokenAdd
 
   return retResponse
 }
-
-
 
 export { fetchBigIntBalance, fetchStringBalance }

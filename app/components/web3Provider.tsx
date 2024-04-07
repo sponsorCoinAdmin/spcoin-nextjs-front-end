@@ -1,10 +1,8 @@
-'use client'
-import { mainnet, polygon, sepolia, } from "wagmi/chains"
 import { WagmiProvider, createConfig, http } from "wagmi";
+import { mainnet, polygon, sepolia } from "wagmi/chains";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
-import { useEffect, useState } from "react";
 
-// Choose which chains you'd like to show
 const connectKitConfig = createConfig(
   getDefaultConfig({
     // Your dApps chains
@@ -23,28 +21,20 @@ const connectKitConfig = createConfig(
     appName: "SponsorCoin Exchange",
 
     // Optional App Info
-    appDescription: "SponsorCoin Exchange",
+    appDescription: "Your App Description",
     appUrl: "https://family.co", // your app's url
     appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
   }),
 );
 
-export default function ConnectWrapper(props: {
-      [x: string]: any; Component: any; 
-}) {
-    let { Component, pageProps } = props;
+const queryClient = new QueryClient();
 
-  // alert(Component);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
+export const Web3Provider = ({ children }: any) => {
   return (
-    <>
-      <WagmiProvider config={connectKitConfig}>
-        <ConnectKitProvider>
-          {mounted && <Component {...pageProps}/>}
-        </ConnectKitProvider>
-      </WagmiProvider>
-    </>
+    <WagmiProvider config={connectKitConfig}>
+      <QueryClientProvider client={queryClient}>
+        <ConnectKitProvider>{children}</ConnectKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
-}
+};

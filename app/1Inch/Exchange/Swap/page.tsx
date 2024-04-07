@@ -8,8 +8,8 @@ import {
 } from "@ant-design/icons";
 import tokenList from "../../components/data/tokenList.json";
 import axios from "axios";
-import { useSendTransaction, useWaitForTransaction } from "wagmi";
-import { setWagmiConfig } from "@/app/lib/wagmi/config";
+import { useSendTransaction } from "wagmi";
+import { getWagmiConfig } from "@/app/lib/wagmi/wagmiConfig";
 
 function Swap(props: { address: any; isConnected: any; }) {
   const { address, isConnected } = props;
@@ -22,11 +22,8 @@ function Swap(props: { address: any; isConnected: any; }) {
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
   const [prices, setPrices] = useState(null);
-  const [txDetails, setTxDetails] = useState({
-    to:null,
-    data: null,
-    value: null,
-  }); 
+  const [txDetails, setTxDetails] = useState({to:null, data: null, value: null,}); 
+  const wagmiConfig = getWagmiConfig();
 
   // alert(`SWAP:\nprops = ${JSON.stringify(props,null,2)}`)
 
@@ -123,9 +120,7 @@ function Swap(props: { address: any; isConnected: any; }) {
 
     let decimals = Number(`1E${tokenTwo.decimals}`)
     setTokenTwoAmount((Number(tx.data.toTokenAmount)/decimals).toFixed(2));
-
     setTxDetails(tx.data.tx);
-  
   }
 
 
@@ -170,8 +165,6 @@ function Swap(props: { address: any; isConnected: any; }) {
         duration: 1.50,
       })
     }
-
-
   },[isSuccess])
 
 

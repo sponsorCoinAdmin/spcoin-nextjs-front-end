@@ -1,4 +1,4 @@
-import { Address } from "wagmi";
+import { Address } from "viem";
 
 enum  EXCHANGE_STATE {
   PRICE, QUOTE, PENDING

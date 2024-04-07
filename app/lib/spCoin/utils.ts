@@ -1,9 +1,9 @@
 import { isAddress } from "ethers";
 import { fetchStringBalance } from "../wagmi/fetchBalance";
 import { TokenElement } from "../structure/types";
-import { Address } from "wagmi";
 import { exchangeContext } from "../context";
 import { showElement, toggleElement } from "./guiControl";
+import { Address } from "viem";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
