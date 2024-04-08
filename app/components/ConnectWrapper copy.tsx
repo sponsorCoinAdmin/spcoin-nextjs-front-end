@@ -3,7 +3,6 @@ import { mainnet, polygon, sepolia, } from "wagmi/chains"
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { useEffect, useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Choose which chains you'd like to show
 const connectKitConfig = createConfig(
@@ -39,27 +38,13 @@ export default function ConnectWrapper(props: {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const queryClient = new QueryClient();
-
   return (
     <>
       <WagmiProvider config={connectKitConfig}>
-        <QueryClientProvider client={queryClient}>
-          <ConnectKitProvider>
-            {mounted && <Component {...pageProps}/>}
-          </ConnectKitProvider>
-        </QueryClientProvider>
+        <ConnectKitProvider>
+          {mounted && <Component {...pageProps}/>}
+        </ConnectKitProvider>
       </WagmiProvider>
     </>
   );
-
-  // return (
-  //   <>
-  //     <WagmiProvider config={connectKitConfig}>
-  //       <ConnectKitProvider>
-  //         {mounted && <Component {...pageProps}/>}
-  //       </ConnectKitProvider>
-  //     </WagmiProvider>
-  //   </>
-  // );
 }

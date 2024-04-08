@@ -8,7 +8,6 @@ import React from 'react'
 function connectedPage() {
   return (
     <>
-    {/* <div>AAAAAAAAAAAAAAAAA</div> */}
        <ConnectWrapper Component={Component} />
     </>
   )
