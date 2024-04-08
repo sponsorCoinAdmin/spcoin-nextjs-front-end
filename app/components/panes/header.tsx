@@ -10,7 +10,8 @@ import ConnectButton from "./ConnectButton"
 import { getNetworkName } from "@/app/lib/network/utils";
 
 import {
-  useChainId
+  useChainId,
+  WagmiProvider
 } from "wagmi";
 
 const imgHome = "/resources/images/chains/"
