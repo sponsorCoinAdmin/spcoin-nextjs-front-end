@@ -1,10 +1,13 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/app/lib/structure/types';
-import { useContext, useState } from 'react';
-import { isSpCoin } from '../spCoin/utils';
+import { useState } from 'react';
+import { isSpCoin } from '../spCoin/utilsDuplicate';
 import { getNetworkName } from '../network/utils';
 import { useChainId } from 'wagmi';
+
+// import { junkName, isSpCoin, isSpCoin2 } from '../spCoin/junk'
+// import { junkName } from '../spCoin/utils';
 
 let chainId:number = 1;
 let exchangeContext:ExchangeContext;
@@ -36,12 +39,8 @@ let data:TradeData = {
     return data;
 }
 
-
-
-
 const resetContextNetwork = (context:ExchangeContext, network:string|number) => {
     
-    // alert(`getInitialContext:resetContextNetwork chainId = ${network}`)
     const newNetworkName:string = typeof network === "string" ? network.toLowerCase() : getNetworkName(network)
     console.debug("resetContextNetwork: newNetworkName = " + newNetworkName);
     console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.data.networkName);
@@ -78,8 +77,10 @@ export function ExchangeWrapper({children} : {
     )
 }
 
+exchangeContext = getInitialContext(chainId);
+// alert(`getInitialContext:exchangeContext = ${exchangeContext}`)
+
 export {
     exchangeContext,
     resetContextNetwork
 }
-

@@ -1,4 +1,4 @@
-import { getQueryVariable } from '@/app/lib/spCoin/utils'
+import { getQueryVariable } from '@/app/lib/spCoin/utils2'
 import { fetchBigIntBalance, fetchStringBalance } from '@/app/lib/wagmi/fetchBalance'
 import { getURLParams } from '@/app/lib/getURLParams'
 import { CHAIN_ID } from '../networkConfig'

@@ -77,6 +77,7 @@ export default function QuoteView({
   connectedWalletAddr: Address;
 }) {
 
+  // alert("EXCHANGE/QUOTE HERE 1")
   console.debug("########################### QUOTE RERENDERED #####################################")
 
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)

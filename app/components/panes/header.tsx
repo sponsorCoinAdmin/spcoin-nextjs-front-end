@@ -18,7 +18,7 @@ import ConnectWrapper from "../ConnectWrapper";
 const imgHome = "/resources/images/chains/"
 const imgOptions = ".png"
 
-function Header() {
+function HeaderBody() {
 
   function getTokenImageURL(chainId:number|string) {
     let imgURL:string = imgHome+chainId + imgOptions;
@@ -27,24 +27,30 @@ function Header() {
 
   return (
     <header>
-      <ConnectWrapper>
-        <div className={styles.leftH}>
-          <Image className={styles.imgOptions} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
-          <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
-          <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
-          <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
-          <div className={styles.headerItem}><Link href="/Recipient"></Link></div>
-          {/* <div className={styles.headerItem}><Link href="/0X">0X</Link></div> */}
+      <div className={styles.leftH}>
+        <Image className={styles.imgOptions} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
+        <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
+        <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
+        <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
+        <div className={styles.headerItem}><Link href="/Recipient"></Link></div>
+        {/* <div className={styles.headerItem}><Link href="/0X">0X</Link></div> */}
+      </div>
+      <div className={styles.rightH}>
+        <div className={styles.headerItem}>
+          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
+            &nbsp;&nbsp;{getNetworkName(useChainId())}
         </div>
-        <div className={styles.rightH}>
-          <div className={styles.headerItem}>
-            <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
-              &nbsp;&nbsp;{getNetworkName(useChainId())}
-          </div>
-          <ConnectButton />
-        </div>
-      </ConnectWrapper>
+        <ConnectButton />
+      </div>
     </header>
+  );
+}
+
+function Header() {
+  return (
+    <>
+      <ConnectWrapper Component={HeaderBody} />
+    </>
   );
 }
 

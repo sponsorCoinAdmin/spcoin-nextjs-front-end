@@ -12,7 +12,7 @@ function Recipient() {
 //     router.push('https://www.youtube.com');
 //   }, []);
 useEffect(() => {
-    alert(`pathname: ${pathname}\n searchParams: ${searchParams}`)
+    // alert(`pathname: ${pathname}\n searchParams: ${searchParams}`)
 
   }, [])
 

@@ -12,7 +12,7 @@ async function fetchText(target:any, url: string): Promise<any> {
     .then(
         async function(response)
         {
-          alert(response.status)
+        //   alert(response.status)
           target.innerHTML = await response.text();
 
         }

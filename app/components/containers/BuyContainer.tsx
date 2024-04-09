@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenElement } from '@/app/lib/structure/types';
-import { isSpCoin } from '@/app/lib/spCoin/utils';
+import { isSpCoin } from '@/app/lib/spCoin/utils2';
 
 type Props = {
   buyAmount: string,

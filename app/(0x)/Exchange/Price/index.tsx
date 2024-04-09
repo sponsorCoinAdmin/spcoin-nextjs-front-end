@@ -18,7 +18,7 @@ import { watchAccount } from "@wagmi/core";
 import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utilsDuplicate';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
@@ -43,6 +43,8 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
+  // alert(`EXCHANGE/PRICE HERE 1exchangeContext = \n ${exchangeContext}`)
+
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
   // From New Not Working
@@ -63,8 +65,8 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
 
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+    // alert("EXCHANGE/PRICE HERE 2")
 
-    alert("HERE 1")
     useEffect(() => {
       console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
