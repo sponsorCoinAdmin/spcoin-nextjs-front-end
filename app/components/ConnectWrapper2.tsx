@@ -29,10 +29,30 @@ const connectKitConfig = createConfig(
   }),
 );
 
-export default function ConnectWrapper(props: {Component: any; }) {
-    let { Component } = props;
+export default function ConnectWrapper2({children} : {
+  children: React.ReactNode;
+}) {
 
-    // alert(`pageProps = ${JSON.stringify(pageProps,null,2)}`)
+  const queryClient = new QueryClient();
+
+  return (
+      <div>
+      <WagmiProvider config={connectKitConfig}>
+        <QueryClientProvider client={queryClient}>
+          <ConnectKitProvider>
+            {children}
+          </ConnectKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+      </div>
+  )
+}
+
+/*
+export default function ConnectWrapper(props: {Component: any; }) {
+  let { Component } = props;
+
+  // alert(`pageProps = ${JSON.stringify(pageProps,null,2)}`)
 
   const queryClient = new QueryClient();
 
@@ -48,3 +68,4 @@ export default function ConnectWrapper(props: {Component: any; }) {
     </>
   );
 }
+*/

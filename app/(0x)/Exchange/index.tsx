@@ -5,11 +5,12 @@ import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { EXCHANGE_STATE } from "@/app/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
+import React from 'react';
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
 let setFinalize:any;
 
-export default function Home() {
+export function Home() {
   
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();
@@ -28,11 +29,9 @@ export default function Home() {
   setExchangeState = setState;
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
-      RRRRRRRRRRRRRRRRRRRRRRRR
       {finalize && price && address ? 
       (
       <>
-        QQQQQQQQQQQQQQQQQQQQQQQQQQQQ
         <QuoteView
           connectedWalletAddr={address}
           price={price}
@@ -42,7 +41,6 @@ export default function Home() {
       </>
         ) : (
           <>
-          PPPPPPPPPPPPPPPPPPPPPPPPPPPP
           <PriceView
           connectedWalletAddr={address}
           price={price}
@@ -53,6 +51,16 @@ export default function Home() {
     </main>
   );
 }
+
+const index = () => {
+  return (
+    <div>
+      {Home()}
+    </div>
+  );
+}
+
+export default index;
 
 export {
   setExchangeState,

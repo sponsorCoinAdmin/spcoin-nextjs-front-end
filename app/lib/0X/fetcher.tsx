@@ -37,10 +37,10 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
 
 const processError = (
   error: any, 
-  setErrorMessage:any, 
-  buyTokenElement:any, 
-  sellTokenElement:any, 
-  setBuyAmount:any, 
+  setErrorMessage:any,
+  buyTokenElement:any,
+  sellTokenElement:any,
+  setBuyAmount:any,
   setValidPriceInput:any) => {
   // alert(`EEEEERRRRRROOOORRRRR = ${JSON.stringify(error, null, 2)}`)
   // console.error("***AAA ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
