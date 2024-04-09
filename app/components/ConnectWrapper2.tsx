@@ -29,7 +29,7 @@ const connectKitConfig = createConfig(
   }),
 );
 
-export default function ConnectWrapper2({children} : {
+export default function ({children} : {
   children: React.ReactNode;
 }) {
 

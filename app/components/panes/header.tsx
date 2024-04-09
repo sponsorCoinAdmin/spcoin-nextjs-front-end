@@ -14,6 +14,7 @@ import {
   WagmiProvider
 } from "wagmi";
 import ConnectWrapper from "../ConnectWrapper";
+import ConnectWrapper2 from "../ConnectWrapper2";
 
 const imgHome = "/resources/images/chains/"
 const imgOptions = ".png"
@@ -46,7 +47,7 @@ function HeaderBody() {
   );
 }
 
-function Header() {
+function HeaderOLD() {
   return (
     <>
       <ConnectWrapper Component={HeaderBody} />
@@ -54,4 +55,14 @@ function Header() {
   );
 }
 
-export default Header;
+function Header() {
+  return (
+    <>
+    <ConnectWrapper2>
+      {HeaderBody()}
+    </ConnectWrapper2>
+    </>
+  );
+}
+
+export default HeaderOLD;

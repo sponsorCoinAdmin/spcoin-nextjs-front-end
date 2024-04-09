@@ -1,3 +1,5 @@
+import ConnectWrapper2 from '@/app/components/ConnectWrapper2'
+import { C } from 'msw/lib/glossary-de6278a9'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
@@ -15,7 +17,9 @@ export default function RootLayout({
     }) {
     return (
         <div>
+            {/* <ConnectWrapper2> */}
             {children}
+            {/* </ConnectWrapper2> */}
         </div>
     )
 }

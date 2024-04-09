@@ -4,6 +4,7 @@ import '../globals.css'
 import Footer from '../components/panes/footer'
 import Header from '../components/panes/header'
 import { ExchangeWrapper } from '../lib/context'
+import ConnectWrapper2 from '../components/ConnectWrapper2'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,11 +21,14 @@ export default function RootLayout({
   return (
       <html lang="en">
         <body className={inter.className}>
+        {/* <ConnectWrapper2> */}
+
           {/* <ExchangeWrapper> */}
             <Header />
             {children}
             {/* <Footer /> */}
           {/* </ExchangeWrapper> */}
+          {/* </ConnectWrapper2> */}
         </body>
       </html>
   )
