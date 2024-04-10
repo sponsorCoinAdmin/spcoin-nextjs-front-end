@@ -46,25 +46,3 @@ return (
     </WagmiProvider>
   )
 }
-
-/*
-export default function ConnectWrapper(props: {Component: any; }) {
-  let { Component } = props;
-
-  // alert(`pageProps = ${JSON.stringify(pageProps,null,2)}`)
-
-  const queryClient = new QueryClient();
-
-  return (
-    <>
-      <WagmiProvider config={connectKitConfig}>
-        <QueryClientProvider client={queryClient}>
-          <ConnectKitProvider>
-            <Component />
-          </ConnectKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </>
-  );
-}
-*/
