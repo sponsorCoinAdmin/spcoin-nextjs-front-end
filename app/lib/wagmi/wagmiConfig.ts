@@ -10,8 +10,3 @@ import { createConfig, http } from 'wagmi'
     },
   })
   
-  function getWagmiConfig() {
-    return wagmiConfig
-  }
-  
-  export { getWagmiConfig }

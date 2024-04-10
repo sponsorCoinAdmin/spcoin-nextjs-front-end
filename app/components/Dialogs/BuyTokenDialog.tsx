@@ -1,7 +1,7 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import { fetchStringBalance } from '@/app/lib/wagmi/fetchBalance'
+import { getWagmiBalanceOfRec } from '@/app/lib/wagmi/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
@@ -66,7 +66,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
             }
             alert("displayElementDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
             // Validate Token through wagmi get balance call
-            await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+            await getWagmiBalanceOfRec (tokenAddr)
             return true
         } catch (e:any) {
             alert("BUY_ERROR:displayElementDetail e.message" + e.message)
@@ -90,7 +90,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
                 console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
                 return false;
             }
-            await fetchStringBalance (connectedWalletAddr, sellTokenElement.address, chainId)
+            await getWagmiBalanceOfRec (sellTokenElement.address)
             callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {

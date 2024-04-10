@@ -1,5 +1,5 @@
 import { isAddress } from "ethers";
-import { fetchStringBalance } from "../wagmi/fetchBalance";
+import { getWagmiBalanceOfRec } from "../wagmi/fetchBalance";
 import { TokenElement } from "../structure/types";
 import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
@@ -55,7 +55,7 @@ const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: a
 const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any) => {
   try {
       if (isAddress(tokenAddr)) {
-          let retResponse:any = await fetchStringBalance (connectedWalletAddr, tokenAddr, chainId)
+          let retResponse:any = await getWagmiBalanceOfRec (tokenAddr)
           // console.debug("retResponse = " + JSON.stringify(retResponse))
           // alert(JSON.stringify(retResponse,null,2))
           let td:TokenElement = {
@@ -84,7 +84,7 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
   console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenElement = " + JSON.stringify(tokenElement,null,2) + ")");
   if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
   {
-    let retResponse: any = await fetchStringBalance(connectedWalletAddr, tokenAddr, chainId);
+    let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);
     // console.debug("retResponse = " + JSON.stringify(retResponse))
     balance = retResponse.formatted;
     setBalance(balance);

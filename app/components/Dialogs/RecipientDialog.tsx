@@ -1,7 +1,7 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import { fetchStringBalance } from '@/app/lib/wagmi/fetchBalance'
+import { getWagmiBalanceOfRec } from '@/app/lib/wagmi/fetchBalance'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
@@ -55,16 +55,15 @@ export default function Dialog({ agentWallet, setRecipientElement }: any) {
             let chainId=1;
             if (isAddress(walletAddr)) {
                 let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
-                let retResponse:any = await fetchStringBalance (connectedWalletAddr, walletAddr, chainId)
+                let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
                 let td:WalletElement = {
-                    chainId: chainId,
                     address: recipientInput,
                     symbol: retResponse.symbol,
                     img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
-                    decimals: retResponse.decimals
+                    url: "ToDo add WalletElement URL"
                 }
                 setWalletElement(td);
                 return true

@@ -9,7 +9,7 @@ import {
 import tokenList from "../../components/data/tokenList.json";
 import axios from "axios";
 import { useSendTransaction } from "wagmi";
-import { getWagmiConfig } from "@/app/lib/wagmi/wagmiConfig";
+import { wagmiConfig } from "@/app/lib/wagmi/wagmiConfig";
 
 function Swap(props: { address: any; isConnected: any; }) {
   const { address, isConnected } = props;
@@ -23,7 +23,6 @@ function Swap(props: { address: any; isConnected: any; }) {
   const [changeToken, setChangeToken] = useState(1);
   const [prices, setPrices] = useState(null);
   const [txDetails, setTxDetails] = useState({to:null, data: null, value: null,}); 
-  const wagmiConfig = getWagmiConfig();
 
   // alert(`SWAP:\nprops = ${JSON.stringify(props,null,2)}`)
 
