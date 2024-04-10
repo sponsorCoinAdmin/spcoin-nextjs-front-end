@@ -4,7 +4,7 @@ import '../globals.css'
 import Footer from '../components/panes/footer'
 import Header from '../components/panes/header'
 import { ExchangeWrapper } from '../lib/context'
-import ConnectWrapper2 from '../components/ConnectWrapper2'
+import SpCoinWrapper from '../components/SpCoinWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,14 +21,13 @@ export default function RootLayout({
   return (
       <html lang="en">
         <body className={inter.className}>
-        {/* <ConnectWrapper2> */}
-
           {/* <ExchangeWrapper> */}
+          <SpCoinWrapper>
             <Header />
             {children}
             {/* <Footer /> */}
+          </SpCoinWrapper>
           {/* </ExchangeWrapper> */}
-          {/* </ConnectWrapper2> */}
         </body>
       </html>
   )

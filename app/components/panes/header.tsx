@@ -1,26 +1,19 @@
 'use client'
 
-import React, { useState } from "react";
+import React from "react";
 import styles from "../../styles/Header.module.css"
 import spCoin_png from '../../../public/resources/images/spCoin.png'
-import eth_png from '../../resources/images/eth.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton"
 import { getNetworkName } from "@/app/lib/network/utils";
 
-import {
-  useChainId,
-  WagmiProvider
-} from "wagmi";
-import ConnectWrapper from "../ConnectWrapper";
-import ConnectWrapper2 from "../ConnectWrapper2";
+import { useChainId } from "wagmi";
 
 const imgHome = "/resources/images/chains/"
 const imgOptions = ".png"
 
-function HeaderBody() {
-
+export default () => {
   function getTokenImageURL(chainId:number|string) {
     let imgURL:string = imgHome+chainId + imgOptions;
     return imgURL
@@ -46,23 +39,3 @@ function HeaderBody() {
     </header>
   );
 }
-
-function HeaderOLD() {
-  return (
-    <>
-      <ConnectWrapper Component={HeaderBody} />
-    </>
-  );
-}
-
-function Header() {
-  return (
-    <>
-    <ConnectWrapper2>
-      {HeaderBody()}
-    </ConnectWrapper2>
-    </>
-  );
-}
-
-export default HeaderOLD;

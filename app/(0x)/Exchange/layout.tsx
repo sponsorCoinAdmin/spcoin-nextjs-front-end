@@ -1,9 +1,6 @@
-import ConnectWrapper2 from '@/app/components/ConnectWrapper2'
-import { C } from 'msw/lib/glossary-de6278a9'
+import SpCoinWrapper from '@/app/components/SpCoinWrapper'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'] })
+import Header from '../../components/panes/header'
 
 export const metadata: Metadata = {
   title: 'spCoin',
@@ -17,9 +14,7 @@ export default function RootLayout({
     }) {
     return (
         <div>
-            {/* <ConnectWrapper2> */}
             {children}
-            {/* </ConnectWrapper2> */}
         </div>
     )
 }

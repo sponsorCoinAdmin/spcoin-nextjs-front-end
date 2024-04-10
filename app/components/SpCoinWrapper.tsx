@@ -2,7 +2,7 @@
 import { mainnet, polygon, sepolia, } from "wagmi/chains"
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
-import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Choose which chains you'd like to show
 const connectKitConfig = createConfig(
@@ -29,22 +29,42 @@ const connectKitConfig = createConfig(
   }),
 );
 
-export default function ConnectWrapper(props: {
-      [x: string]: any; Component: any; 
+export default function ({children} : {
+  children: React.ReactNode;
 }) {
-    let { Component, pageProps } = props;
 
-  // alert(Component);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+// alert(`children = ${JSON.stringify(children,null,2)}`)
+const queryClient = new QueryClient();
+
+return (
+    <WagmiProvider config={connectKitConfig}>
+      <QueryClientProvider client={queryClient}>
+        <ConnectKitProvider>
+          { children }
+        </ConnectKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+
+/*
+export default function ConnectWrapper(props: {Component: any; }) {
+  let { Component } = props;
+
+  // alert(`pageProps = ${JSON.stringify(pageProps,null,2)}`)
+
+  const queryClient = new QueryClient();
 
   return (
     <>
       <WagmiProvider config={connectKitConfig}>
-        <ConnectKitProvider>
-          {mounted && <Component {...pageProps}/>}
-        </ConnectKitProvider>
+        <QueryClientProvider client={queryClient}>
+          <ConnectKitProvider>
+            <Component />
+          </ConnectKitProvider>
+        </QueryClientProvider>
       </WagmiProvider>
     </>
   );
 }
+*/

@@ -32,7 +32,7 @@ const connectKitConfig = createConfig(
 export default function ConnectWrapper(props: {Component: any; }) {
     let { Component } = props;
 
-    // alert(`pageProps = ${JSON.stringify(pageProps,null,2)}`)
+//  alert(`pageProps = ${JSON.stringify(props,null,2)}`)
 
   const queryClient = new QueryClient();
 

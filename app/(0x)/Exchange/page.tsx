@@ -1,6 +1,6 @@
 'use client'
 
-import ConnectWrapper2 from "@/app/components/ConnectWrapper2";
+import SpCoinWrapper from "@/app/components/SpCoinWrapper";
 import Component from './index'
 
 import React from 'react'
@@ -8,9 +8,7 @@ import React from 'react'
 function connectedPage() {
   return (
     <>
-      <ConnectWrapper2>
-        <Component />
-      </ConnectWrapper2>
+      <Component />
     </>
   )
 }
