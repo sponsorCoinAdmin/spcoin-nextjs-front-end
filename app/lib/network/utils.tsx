@@ -12,17 +12,19 @@ const imgHome = "/resources/images/chains/"
 const imgType = ".png"
 
 const getChainMap = (chainList: any[]) => {
-    let chainMap = new Map();
-    const tList = chainList?.map((e: any, i: number) => {
+    const chainMap = new Map();
+    const tList = chainList.map((e: any, i: number) => {
         chainMap.set(chainList[i].chainId,chainList[i])
     })
     return chainMap
   }
+
 const chainIdMap = getChainMap(chainIdList)
 
 const getNetworkName = (chainId:number) => {
   console.debug(`getNetworkName:chainId = (${chainId})`)
-  const networkName = chainIdMap?.get(chainId)?.name;
+  const networkName:string = chainIdMap.get(chainId)?.name;
+  // const networkName:string = await chainIdMap?.get(chainId)?.name;
   console.debug(`getNetworkName:networkName = (${networkName})`)
   return networkName;
 }

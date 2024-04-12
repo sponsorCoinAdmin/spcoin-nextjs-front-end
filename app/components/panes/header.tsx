@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "../../styles/Header.module.css"
 import spCoin_png from '../../../public/resources/images/spCoin.png'
 import Image from 'next/image'
@@ -11,9 +11,15 @@ import { getNetworkName, getAvatarImageURL } from "@/app/lib/network/utils";
 import { useChainId } from "wagmi";
 
 export default () => {
+  const [networkName, setNetworkName] = useState<string>("Ethereum");
+  const [avatar, setAvatar] = useState<string>("/resources/images/chains/1.png");
   let chainId = useChainId();
-  let AAA = getNetworkName(chainId)
-  const [networkName, setNetworkName] = useState<>(chainId);
+  let network = getNetworkName(chainId)
+
+  useEffect(() => {
+    setAvatar(getAvatarImageURL(chainId));
+    setNetworkName(network);
+  },[network]);
 
   return (
     <header>
@@ -27,10 +33,8 @@ export default () => {
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-          <img src={getAvatarImageURL(chainId)} alt={'??'} width={20} height={20} className={styles.elementLogo}/>
-          {/* &nbsp;&nbsp;{getNetworkName(chainId)} */}
-          {/* {"GGG"} */}
-          &nbsp;&nbsp;{networkName}
+          <img src={avatar} alt={'??'} width={20} height={20} className={styles.elementLogo}/>
+           &nbsp;&nbsp;{networkName}
         </div>
         <ConnectButton />
       </div>
