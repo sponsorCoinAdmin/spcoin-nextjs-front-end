@@ -15,7 +15,9 @@ export default () => {
   const [avatar, setAvatar] = useState<string>("/resources/images/chains/1.png");
   let chainId = useChainId();
   let network = getNetworkName(chainId)
-
+  // ToDo Optimize this: useEffect is used to set the network and image for the set chainId when
+  // the networkName async is complete.
+  // This is required because NextJS Currently does not allow aync functions in client components.
   useEffect(() => {
     setAvatar(getAvatarImageURL(chainId));
     setNetworkName(network);
