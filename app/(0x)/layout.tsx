@@ -19,16 +19,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-      <html lang="en">
-        <body className={inter.className}>
-          {/* <ExchangeWrapper> */}
-          <SpCoinWrapper>
-            <Header />
-            {children}
-            {/* <Footer /> */}
-          </SpCoinWrapper>
-          {/* </ExchangeWrapper> */}
-        </body>
-      </html>
+    <>
+      {/* <ExchangeWrapper> */}
+      <SpCoinWrapper>
+        <Header />
+        {children}
+        {/* <Footer /> */}
+      </SpCoinWrapper>
+      {/* </ExchangeWrapper> */}
+    </>
   )
 }

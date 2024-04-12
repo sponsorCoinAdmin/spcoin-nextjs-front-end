@@ -2,7 +2,7 @@
   "name": "0x-nextjs-swap-pages",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
+    "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -20,7 +20,7 @@
     "eslint-config-next": "12.3.4",
     "ethers": "^6.4.0",
     "msw": "^1.2.1",
-    "next": "^14.2.0-canary.64",
+    "next": "^14.1.4",
     "pino-pretty": "^10.3.0",
     "postcss": "8.4.23",
     "qs": "^6.11.2",

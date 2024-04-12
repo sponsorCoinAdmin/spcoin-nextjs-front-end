@@ -8,17 +8,7 @@ enum  DISPLAY_STATE {
   OFF, SPONSOR_SELL_ON, SPONSOR_SELL_OFF, SPONSOR_BUY, RECIPIENT, CONFIG
 }
 
-// ToDo Convert the following to an enum
-const TOKEN_LIST = 'TOKEN_LIST';
-const AGENT_WALLETS ='AGENT_WALLETS';
-const RECIPIENT_WALLETS ='RECIPIENT_WALLETS';
-
-const FEED = {
-    TOKEN_LIST,
-    AGENT_WALLETS,
-    RECIPIENT_WALLETS
-}
-// End ToDo
+enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 
 interface PriceRequestParams {
     sellToken: Address|string;
@@ -76,7 +66,7 @@ type NetworkElement = {
 export {
   EXCHANGE_STATE,
   DISPLAY_STATE,
-  FEED
+  FEED_TYPE
 }
 
 export type {

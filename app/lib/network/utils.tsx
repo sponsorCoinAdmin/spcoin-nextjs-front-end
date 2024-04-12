@@ -5,6 +5,12 @@ import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/s
 // This is duplicate code found in Datalist.tsx.  Put in Library call
 /////////////////////////////////////////////////////////////
 const BURN_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+// This should work
+const imgHome = "/resources/images/chains/"
+// const imgHome = "../../resources/images/chains"
+const imgType = ".png"
+
 const getChainMap = (chainList: any[]) => {
     let chainMap = new Map();
     const tList = chainList?.map((e: any, i: number) => {
@@ -12,11 +18,21 @@ const getChainMap = (chainList: any[]) => {
     })
     return chainMap
   }
-  const chainIdMap = getChainMap(chainIdList)
+const chainIdMap = getChainMap(chainIdList)
 
-  const getNetworkName = (chainId:number) => {
-    return chainIdMap?.get(chainId)?.name;
-  }
+const getNetworkName = (chainId:number) => {
+  console.debug(`getNetworkName:chainId = (${chainId})`)
+  const networkName = chainIdMap?.get(chainId)?.name;
+  console.debug(`getNetworkName:networkName = (${networkName})`)
+  return networkName;
+}
+
+function getAvatarImageURL(chainId:number|string) {
+  console.debug(`getAvatarImageURL:chainId = (${chainId})`)
+  let imgURL:string = imgHome+chainId + imgType;
+  console.debug(`getAvatarImageURL:imgURL = (${imgURL})`)
+  return imgURL
+}
 
   // This method is never executed in the main program but is a utility to create a default network json list
 const createNetworkJsonList = () => {
@@ -34,6 +50,5 @@ function isLowerCase (input:string) {
   return input === String(input).toLowerCase()
 }
 
-
-  export { BURN_ADDRESS, getNetworkName, createNetworkJsonList, isLowerCase }
+export { BURN_ADDRESS, getNetworkName, createNetworkJsonList, getAvatarImageURL, isLowerCase }
   

@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGl
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED, WalletElement } from '@/app/lib/structure/types';
+import { FEED_TYPE, WalletElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
@@ -140,7 +140,7 @@ export default function Dialog({ agentWallet, setRecipientElement }: any) {
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED.RECIPIENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.RECIPIENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

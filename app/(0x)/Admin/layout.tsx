@@ -16,7 +16,6 @@ export default function RootLayout({
     }) {
     return (
         <div>
-            {/* <Title /> */}
             {children}
         </div>
     )

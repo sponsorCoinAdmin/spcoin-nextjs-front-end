@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styles from './styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '../../../../public/resources/images/info1.png'
@@ -7,7 +7,7 @@ import sepoliaTokenList from '../../../resources/data/Tokens/sepoliaTokenList.js
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
-import { FEED } from '@/app/lib/structure/types';
+import { FEED_TYPE } from '@/app/lib/structure/types';
 import { useChainId } from "wagmi";
 
 type Props = {
@@ -16,15 +16,12 @@ type Props = {
 }
 
 const getDataFeedList = (feedType: any, network:string|number) => {
-    let dataFeedList;
     if (typeof network === "string")
       network = network.toLowerCase()
     // console.debug("NETWORK network = " + network)
     switch (feedType) {
-        case FEED.AGENT_WALLETS:
-            dataFeedList = agentWalletList;
-        break;
-        case FEED.TOKEN_LIST:
+        case FEED_TYPE.AGENT_WALLETS: return agentWalletList;
+        case FEED_TYPE.TOKEN_LIST:
             switch(network) {
                 case 1:
                 case "ethereum": return ethereumTokenList;
@@ -34,14 +31,9 @@ const getDataFeedList = (feedType: any, network:string|number) => {
                 case "sepolia": return sepoliaTokenList;
                 default: return ethereumTokenList;
             }
-        break;
-        case FEED.RECIPIENT_WALLETS:
-            dataFeedList = recipientWalletList;
-        break;
-        default:
-        break;
+        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList;
+        default: return ethereumTokenList;
     }
-    return dataFeedList
 }
 
 const getDataFeedMap = (feedType: any, chainId:any) => {
@@ -52,7 +44,7 @@ const getDataFeedMap = (feedType: any, chainId:any) => {
 
 const getNetworkListElement = (network: any, addressKey:any) => {
     console.debug(`DataList:getNetworkListElement(${network}, ${addressKey})`)
-    let dataFeedList = getDataFeedList(FEED.TOKEN_LIST, network)
+    let dataFeedList = getDataFeedList(FEED_TYPE.TOKEN_LIST, network)
     console.debug(`DataList:getNetworkListElement:dataFeedList = ${JSON.stringify(dataFeedList,null,2)}`)
     let element = getDataFeedListElement(dataFeedList, addressKey)
     console.debug(`DataList:element:dataFeedList = ${JSON.stringify(element,null,2)}`)

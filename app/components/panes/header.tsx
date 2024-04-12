@@ -1,23 +1,19 @@
 'use client'
 
-import React from "react";
+import React, { useState } from "react";
 import styles from "../../styles/Header.module.css"
 import spCoin_png from '../../../public/resources/images/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "./ConnectButton"
-import { getNetworkName } from "@/app/lib/network/utils";
+import { getNetworkName, getAvatarImageURL } from "@/app/lib/network/utils";
 
 import { useChainId } from "wagmi";
 
-const imgHome = "/resources/images/chains/"
-const imgOptions = ".png"
-
 export default () => {
-  function getTokenImageURL(chainId:number|string) {
-    let imgURL:string = imgHome+chainId + imgOptions;
-    return imgURL
-  }
+  let chainId = useChainId();
+  let AAA = getNetworkName(chainId)
+  const [networkName, setNetworkName] = useState<>(chainId);
 
   return (
     <header>
@@ -31,8 +27,10 @@ export default () => {
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-          <img src={getTokenImageURL(useChainId())} alt={'??'} width={20} height={20} className={styles.elementLogo} />
-            &nbsp;&nbsp;{getNetworkName(useChainId())}
+          <img src={getAvatarImageURL(chainId)} alt={'??'} width={20} height={20} className={styles.elementLogo}/>
+          {/* &nbsp;&nbsp;{getNetworkName(chainId)} */}
+          {/* {"GGG"} */}
+          &nbsp;&nbsp;{networkName}
         </div>
         <ConnectButton />
       </div>

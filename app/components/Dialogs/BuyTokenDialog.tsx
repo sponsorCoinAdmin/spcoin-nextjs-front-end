@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGl
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED, TokenElement } from '@/app/lib/structure/types';
+import { FEED_TYPE, TokenElement } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/app/lib/spCoin/utils';
@@ -138,7 +138,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>
