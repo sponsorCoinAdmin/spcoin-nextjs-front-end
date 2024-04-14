@@ -1,5 +1,5 @@
 import { isAddress } from "ethers";
-import { getWagmiBalanceOfRec } from "../wagmi/fetchBalance";
+import { getWagmiBalanceOfRec } from "../wagmi/getWagmiBalanceOfRec";
 import { TokenElement } from "../structure/types";
 import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
@@ -31,43 +31,43 @@ const  validatePrice = (price:string, decimals:number) => {
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
   if (price === '' || re.test(price)) {
-     let splitText = price.split(".");
-     // Remove leading zeros
-     let formattedPrice = splitText[0].replace(/^0+/, "");
-     if (formattedPrice === "" )
-       formattedPrice = "0";
-     if(splitText[1] != undefined) {
-       // Validate Max allowed decimal size
-       formattedPrice += '.' + splitText[1]?.substring(0, decimals);
-     }
-     return formattedPrice
+    let splitText = price.split(".");
+    // Remove leading zeros
+    let formattedPrice = splitText[0].replace(/^0+/, "");
+    if (formattedPrice === "" )
+      formattedPrice = "0";
+    if(splitText[1] != undefined) {
+      // Validate Max allowed decimal size
+      formattedPrice += '.' + splitText[1]?.substring(0, decimals);
+    }
+    return formattedPrice
   } 
   return "";
  }
 
 const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenElement:any) => {
-        let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
-        if (td !== false)
-          setTokenElement(td);
-        return td
+  let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
+  if (td !== false)
+    setTokenElement(td);
+  return td
 }
 
 const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any) => {
   try {
-      if (isAddress(tokenAddr)) {
-          let retResponse:any = await getWagmiBalanceOfRec (tokenAddr)
-          // console.debug("retResponse = " + JSON.stringify(retResponse))
-          // alert(JSON.stringify(retResponse,null,2))
-          let td:TokenElement = {
-              chainId: chainId,
-              address: tokenAddr,
-              symbol: retResponse.symbol,
-              img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
-              name:  retResponse.symbol,
-              decimals: retResponse.decimals
-          }
-          return td
+    if (isAddress(tokenAddr)) {
+      let retResponse:any = await getWagmiBalanceOfRec (tokenAddr)
+      // console.debug("retResponse = " + JSON.stringify(retResponse))
+      // alert(JSON.stringify(retResponse,null,2))
+      let td:TokenElement = {
+          chainId: chainId,
+          address: tokenAddr,
+          symbol: retResponse.symbol,
+          img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
+          name:  retResponse.symbol,
+          decimals: retResponse.decimals
       }
+      return td
+    }
  // return ELEMENT_DETAILS
   } catch (e:any) {
       console.debug("SELL_ERROR:setTokenDetails e.message" + e.message)

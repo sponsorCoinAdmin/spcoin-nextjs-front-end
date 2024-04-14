@@ -3,14 +3,13 @@ import { Address, getAddress } from "viem";
 import { formatUnits } from 'viem' 
 import { getBalance } from '@wagmi/core'
 
-async function getWagmiBalanceOfRec (tokenAddr:Address|string|undefined) {
+const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
   if (tokenAddr === undefined) {
     throw `ERROR: getWagmiBalanceOfRec(tokenAddr:Address = ${tokenAddr})`
   }
 
-  const addr:Address = getAddress(tokenAddr)
   const resp = await getBalance(wagmiConfig, {
-    address: addr, 
+    address: getAddress(tokenAddr), 
   })
 
   const retResponse = {
@@ -19,6 +18,9 @@ async function getWagmiBalanceOfRec (tokenAddr:Address|string|undefined) {
     symbol: resp.symbol,
     value: resp.value.toString()
   }
+  // alert(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
+  console.debug(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
+
   return retResponse
 }
 

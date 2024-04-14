@@ -11,17 +11,13 @@ const { provider, signer } = alchemy = async () => {
     return ( provider, signer )
 };
 
-const getWallet = async () => {
-  let wallet = ethers.Wallet("aaa")
-}
-
 const balanceOf = ( walletAddr, tokenAddr ) => {
   try {
-    let balanceOf = provider.getBalanceOf(walletAddr);
+    let balanceOf = provider.getBalanceOf(tokenAddr);
     return balanceOf;
   } catch (e) {
     console.error(m.message);
-    return "ERROR" + e.message;
+    return "ERROR: " + e.message;
   }
 }
 

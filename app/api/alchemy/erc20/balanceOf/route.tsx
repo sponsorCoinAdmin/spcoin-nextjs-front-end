@@ -1,6 +1,6 @@
 import { getURLParams } from "@/app/api/lib/getURLParams";
 import { getQueryVariable } from "@/app/lib/spCoin/utils";
-import { getWagmiBalanceOfRec } from "@/app/lib/wagmi/fetchBalance";
+import { getWagmiBalanceOfRec } from "@/app/lib/wagmi/getWagmiBalanceOfRec";
 
 export async function GET(req: Request) {
   const params = getURLParams(req.url);

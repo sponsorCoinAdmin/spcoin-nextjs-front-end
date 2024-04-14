@@ -46,8 +46,6 @@ async function getWagmiBalanceOfRec (walletAddr:string|Address|undefined, tokenA
     throw e
   }
 
-  // console.debug("getWagmiBalanceOfRec:retResponse = " + JSON.stringify(retResponse, null, 2))
-
   return retResponse
 }
 

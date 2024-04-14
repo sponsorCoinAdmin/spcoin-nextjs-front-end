@@ -1,7 +1,7 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import { getWagmiBalanceOfRec } from '@/app/lib/wagmi/fetchBalance'
+import { getWagmiBalanceOfRec } from '@/app/lib/wagmi/getWagmiBalanceOfRec'
 import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'

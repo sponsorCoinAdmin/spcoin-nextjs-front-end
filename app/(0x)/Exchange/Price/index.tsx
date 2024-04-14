@@ -132,10 +132,10 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     const unwatch = watchAccount(wagmiConfig, { 
       onChange(data) {
-        alert(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
+        console.debug(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
         const chains = wagmiConfig.chains 
         const chain = chains.find(chain => chain.id === data.chainId)
-        processNetworkChange(chain)
+        // processNetworkChange(chain)
       },
     }) 
     const processAccountChange = (account: any) => {
@@ -143,10 +143,9 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     };
 
     const processNetworkChange = (chainId: any) => {
-      console.debug("======================================================================");
-      console.debug(`BBB processNetworkChange:chainId = ${chainId}`)
+      console.debug(`======================================================================`);
+      console.debug(`processNetworkChange:chainId = ${JSON.stringify(chainId,null,2)}`)
       setChainId(chainId)
-      console.debug(`DDD chainId = ${chainId}`)
       let newNetworkName = getNetworkName(chainId);
 
       // const newNetworkName:string = network?.chain?.name.toLowerCase()

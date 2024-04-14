@@ -13,9 +13,8 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
 import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
-import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput } from '@/app/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';

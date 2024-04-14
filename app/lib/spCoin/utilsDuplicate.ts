@@ -1,5 +1,5 @@
 import { isAddress } from "ethers";
-import { getWagmiBalanceOfRec } from "../wagmi/fetchBalance";
+import { getWagmiBalanceOfRec } from "../wagmi/getWagmiBalanceOfRec";
 import { TokenElement } from "../structure/types";
 import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
