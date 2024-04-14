@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PriceView from "./Price";
 import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
@@ -27,6 +27,8 @@ export function Home() {
   // alert(`EXCHANGE HERE 1\n FINALIZE = ${finalize} PRICE = ${price} ADDRESS = ${address}` )
 
   setExchangeState = setState;
+  alert("HERE 0")
+
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
       {finalize && price && address ? 

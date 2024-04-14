@@ -24,6 +24,7 @@ const PriceButton = ({
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
+    alert("HERE 0")
 
   return (
     <div>

@@ -1,16 +1,18 @@
 import React from 'react'
 import styles from '@/app/styles/Exchange.module.css'
-import { Address, erc20Abi } from 'viem' 
+
 import {
-    useReadContract,
-    useSimulateContract,
-    useWriteContract,
-    useWaitForTransactionReceipt,
+    erc20ABI,
+    useContractRead,
+    usePrepareContractWrite,
+    useContractWrite,
+    useWaitForTransaction,
+    type Address,
 } from "wagmi";
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 import { EXCHANGE_STATE } from '@/app/lib/structure/types';
 import { exchangeContext } from '@/app/lib/context';
-import { setExchangeState } from '@/app/(0x)/Exchange';
+import { setFinalize } from '@/app/(menuPages)/Exchange';
 
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS
@@ -72,9 +74,6 @@ function ApproveOrReviewButton({
     // setErrorMessage:any;
     setErrorMessage: (msg:Error) => void
   }) {
-  alert("HERE 0")
-
-    const { writeContract } = useWriteContract()
     // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
     // console.debug("ApproveOrReviewButton:disabled: " + disabled);
     // console.debug("isValidNumberNotZero:         :" + isValidNumberNotZero(sellBalance));
@@ -86,17 +85,16 @@ function ApproveOrReviewButton({
       // console.debug("token.address      : " + token.address);
       // console.debug("sellBalance        : " + sellBalance);
       // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
-      alert("HERE 1")
-      const { isError, data: allowance, refetch } = useReadContract({
+      const { isError, data: allowance, refetch } = useContractRead({
         address: token.address,
-        abi: erc20Abi,
+        abi: erc20ABI,
         functionName: "allowance",
         args: [connectedWalletAddr, EXCHANGE_PROXY],
-        // onError(error) {
-        //   console.error('***ERROR*** useReadContract Error', error.message)
-        //   // alert(error.message)
-        //   return <div>Something went wrong: {error.message}</div>;
-        // },
+        onError(error) {
+          console.error('***ERROR*** useContractRead Error', error.message)
+          // alert(error.message)
+          return <div>Something went wrong: {error.message}</div>;
+        },
       });
       // console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
       // if (!isError) {
@@ -104,102 +102,81 @@ function ApproveOrReviewButton({
       // }
 
       // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
-      alert("HERE 2")
-      const { data } = useSimulateContract({
+      const { config } = usePrepareContractWrite({
         address: token.address,
-        abi: erc20Abi,
+        abi: erc20ABI,
         functionName: "approve",
         args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
+        onError(error) {
+          console.error('***ERROR*** usePrepareContractWrite Error', error.message)
+        }, 
+        enabled: true
       });
-      // console.debug("ApproveOrReviewButton:AFTER useSimulateContract()");
+      // console.debug("ApproveOrReviewButton:AFTER usePrepareContractWrite()");
     
-      // const {
-      //   data: writeContractResult,
-      //   error,
-      // } = useWriteContract(data);
+      const {
+        data: writeContractResult,
+        writeAsync: approveAsync,
+        error,
+      } = useContractWrite(config);
 
-      writeContract
+      // console.debug("ApproveOrReviewButton:AFTER useContractWrite()");
 
-      // console.debug("ApproveOrReviewButton:AFTER useWriteContract()");
-
-      alert("HERE 3")
-      const { isLoading: isApproving } = useWaitForTransactionReceipt({
-        // hash: writeContractResult ? writeContractResult : undefined,
-        // onSuccess(data) {
-        //   refetch();
-        // },
+      const { isLoading: isApproving } = useWaitForTransaction({
+        hash: writeContractResult ? writeContractResult.hash : undefined,
+        onSuccess(data) {
+          refetch();
+        },
       });
 
-      // console.debug("ApproveOrReviewButton:AFTER useWaitForTransactionReceipt()");
+      // console.debug("ApproveOrReviewButton:AFTER useWaitForTransaction()");
 
-      // if (error) {
-      //   console.error("ApproveOrReviewButton:Something went wrong:\n" + JSON.stringify(error,null,2))
-      //   // setErrorMessage(JSON.stringify(error,null,2))
-      //   setErrorMessage(error)
-      //   // setErrorMessage({name:error.name , message:error.message})
-      //   // return <div>Something went wrong: {error.message}</div>;
-      //   // console.error("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
-      // }
+      if (error) {
+        console.error("ApproveOrReviewButton:Something went wrong:\n" + JSON.stringify(error,null,2))
+        // setErrorMessage(JSON.stringify(error,null,2))
+        setErrorMessage(error)
+        // setErrorMessage({name:error.name , message:error.message})
+        // return <div>Something went wrong: {error.message}</div>;
+        // console.error("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM")
+      }
     
       ///////////////////////////////////////////////////////////////
 
       // WORK HERE
       // Approve Button 
-    //   if (allowance === 0n && approveAsync) {
-    //     return (
-    //       <>
-    //         <button
-    //           type="button"
-    //           className={styles["exchangeButton"] + " " + styles["approveButton"]}
-    //           onClick={async () => {
-    //             const writtenValue = await approveAsync();
-    //             // const writtenValue = await approveAsync().catch(e => {console.error(JSON.stringify(e,null,2));});
-    //             // console.debug("writtenValue = " + writtenValue)
-    //           }}
-    //         >
-    //           { isApproving ? "Approving…" : "Approve" }
-    //         </button>
-    //       </>
-    //     );
-    //   }
-    // }  
+      if (allowance === 0n && approveAsync) {
+        return (
+          <>
+            <button
+              type="button"
+              className={styles["exchangeButton"] + " " + styles["approveButton"]}
+              onClick={async () => {
+                //const writtenValue = await approveAsync();
+                const writtenValue = await approveAsync().catch(e => {console.error(JSON.stringify(e,null,2));});
+                // console.debug("writtenValue = " + writtenValue)
+              }}
+            >
+              { isApproving ? "Approving…" : "Approve" }
+            </button>
+          </>
+        );
+      }
+    }  
 
-    alert("HERE 4")
-    const setExState = (state:EXCHANGE_STATE) => {
-      alert(`setExState = (${state}`)
-      setExchangeState(state);
+    const setExchangeState = (state:EXCHANGE_STATE) => {
+      setFinalize(state);
     }
 
     return (
-      <>
-      
-      <button 
-      // onClick={() => 
-      //   writeContract({ 
-      //     erc20Abi,
-      //     address: '0x6b175474e89094c44da98b954eedeac495271d0f',
-      //     functionName: 'transferFrom',
-      //     args: [
-      //       '0xd2135CfB216b74109775236E36d4b433F1DF507B',
-      //       '0xA0Cf798816D4b9b9866b5330EEa46a18382f251e',
-      //       123n,
-      //     ],
-      //  })
-      // }
-    >
-      Transfer
-    </button>
-
       <button
         type="button"
         disabled={insufficientBalance}
-        onClick={() => setExState(EXCHANGE_STATE.QUOTE)}
+        onClick={() => setExchangeState(EXCHANGE_STATE.QUOTE)}
          className={styles["exchangeButton"] + " " + styles["swapButton"]}
       >
         {insufficientBalance ? "Insufficient " + token.symbol + " Balance" : "Review Trade"}
       </button>
-      </>
     );
   }
-}
+
 export default ApproveOrReviewButton
