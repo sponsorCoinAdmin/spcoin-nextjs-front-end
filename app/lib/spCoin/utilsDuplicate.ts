@@ -81,7 +81,7 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
   let errMsg = "N/A";
   let tokenAddr = tokenElement.address;
   let chainId = tokenElement.chainId;
-  console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenElement = " + JSON.stringify(tokenElement,null,2) + ")");
+  // console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenElement = " + JSON.stringify(tokenElement,null,2) + ")");
   if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
   {
     let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);

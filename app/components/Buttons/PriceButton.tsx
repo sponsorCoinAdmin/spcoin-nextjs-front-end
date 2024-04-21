@@ -1,5 +1,6 @@
 import React from 'react';
 import ApproveOrReviewButton from './ApproveOrReviewButton'
+import ApproveOrReviewButtonTEST from './ApproveOrReviewButtonTEST';
 import { EXCHANGE_STATE, TokenElement } from '@/app/lib/structure/types';
 import CustomConnectButton from './CustomConnectButton';
 import { Address } from 'viem';
@@ -24,12 +25,12 @@ const PriceButton = ({
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
-    alert("HERE 0")
+    // alert("HERE 0")
 
   return (
     <div>
         {connectedWalletAddr ?
-            (<ApproveOrReviewButton 
+            (<ApproveOrReviewButtonTEST 
                 token={sellTokenElement}
                 connectedWalletAddr={connectedWalletAddr}
                 sellBalance={sellBalance}

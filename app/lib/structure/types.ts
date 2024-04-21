@@ -1,8 +1,6 @@
 import { Address } from "viem";
 
-enum  EXCHANGE_STATE {
-  PRICE, QUOTE, PENDING
-}
+enum  EXCHANGE_STATE { PRICE, QUOTE, APPROVE, PENDING }
 
 enum  DISPLAY_STATE {
   OFF, SPONSOR_SELL_ON, SPONSOR_SELL_OFF, SPONSOR_BUY, RECIPIENT, CONFIG
@@ -11,12 +9,12 @@ enum  DISPLAY_STATE {
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 
 interface PriceRequestParams {
-    sellToken: Address|string;
-    buyToken: Address|string;
-    buyAmount?: string;
-    sellAmount?: string;
-    connectedWalletAddr?: string;
-  }
+  sellToken: Address|string;
+  buyToken: Address|string;
+  buyAmount?: string;
+  sellAmount?: string;
+  connectedWalletAddr?: string;
+}
   
 type TokenElement = {
   chainId: number;

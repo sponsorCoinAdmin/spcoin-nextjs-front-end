@@ -43,11 +43,11 @@ const getDataFeedMap = (feedType: any, chainId:any) => {
 }
 
 const getNetworkListElement = (network: any, addressKey:any) => {
-    console.debug(`DataList:getNetworkListElement(${network}, ${addressKey})`)
+    // console.debug(`DataList:getNetworkListElement(${network}, ${addressKey})`)
     let dataFeedList = getDataFeedList(FEED_TYPE.TOKEN_LIST, network)
-    console.debug(`DataList:getNetworkListElement:dataFeedList = ${JSON.stringify(dataFeedList,null,2)}`)
+    // console.debug(`DataList:getNetworkListElement:dataFeedList = ${JSON.stringify(dataFeedList,null,2)}`)
     let element = getDataFeedListElement(dataFeedList, addressKey)
-    console.debug(`DataList:element:dataFeedList = ${JSON.stringify(element,null,2)}`)
+    // console.debug(`DataList:element:dataFeedList = ${JSON.stringify(element,null,2)}`)
     return element
 }
 

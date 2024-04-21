@@ -10,7 +10,7 @@ import {
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 import { EXCHANGE_STATE } from '@/app/lib/structure/types';
 import { exchangeContext } from '@/app/lib/context';
-import { setExchangeState } from '@/app/(0x)/Exchange';
+import { setExchangeState } from '@/app/(menu)/Exchange';
 
 const ENV_ADDRESS:any = process.env.NEXT_PUBLIC_EXCHANGE_PROXY;
 const EXCHANGE_PROXY:Address  = ENV_ADDRESS === undefined ? BURN_ADDRESS : ENV_ADDRESS

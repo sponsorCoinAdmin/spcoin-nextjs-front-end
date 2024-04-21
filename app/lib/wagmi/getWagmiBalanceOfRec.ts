@@ -19,7 +19,7 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
     value: resp.value.toString()
   }
   // alert(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
-  console.debug(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
+  // console.debug(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
 
   return retResponse
 }

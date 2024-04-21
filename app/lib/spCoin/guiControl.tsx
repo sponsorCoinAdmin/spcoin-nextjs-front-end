@@ -3,7 +3,7 @@ import { DISPLAY_STATE, TokenElement } from "../structure/types";
 /// START DROPDOWN STUFF
 const hideElement = (element: string) => {
   const el = document.getElementById(element);
-  console.debug("hideElement(" + element +")")
+  // console.debug("hideElement(" + element +")")
   if (el != null) {
     el.style.display = 'none';
   }
@@ -11,7 +11,7 @@ const hideElement = (element: string) => {
 
 const showElement = (element: string) => {
   const el = document.getElementById(element);
-  console.debug("showElement(" + element + ")");
+  // console.debug("showElement(" + element + ")");
   if (el != null) {
     el.style.display = 'block';
   }

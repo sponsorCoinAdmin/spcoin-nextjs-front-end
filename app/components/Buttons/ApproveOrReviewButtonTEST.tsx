@@ -72,6 +72,8 @@ function ApproveOrReviewButton({
     // setErrorMessage:any;
     setErrorMessage: (msg:Error) => void
   }) {
+    // alert("ApproveOrReviewButton:HERE 0")
+    // console.debug("ApproveOrReviewButton:HERE 0")
 
     const { writeContract } = useWriteContract()
     // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
@@ -85,6 +87,13 @@ function ApproveOrReviewButton({
       // console.debug("token.address      : " + token.address);
       // console.debug("sellBalance        : " + sellBalance);
       // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
+      // alert("HERE 1")
+      console.debug(`useReadContract({
+      \n  address: ${token.address},
+      \n  abi: ${JSON.stringify(erc20Abi,null,2)},
+      \n  functionName: "allowance",
+      \n  args: [${connectedWalletAddr}, ${EXCHANGE_PROXY}]`)
+      
       const { isError, data: allowance, refetch } = useReadContract({
         address: token.address,
         abi: erc20Abi,
@@ -96,18 +105,19 @@ function ApproveOrReviewButton({
         //   return <div>Something went wrong: {error.message}</div>;
         // },
       });
-      // console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
-      // if (!isError) {
-      //   return <div>Something went wrong: {error.message}</div>;
-      // }
+      console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
+      if (!isError) {
+        return <div>Something went wrong: {error.message}</div>;
+      }
 
       // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
-      const { data } = useSimulateContract({
-        address: token.address,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
-      });
+      // alert("HERE 2")
+      // const { data } = useSimulateContract({
+      //   address: token.address,
+      //   abi: erc20Abi,
+      //   functionName: "approve",
+      //   args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
+      // });
       // console.debug("ApproveOrReviewButton:AFTER useSimulateContract()");
     
       // const {
@@ -119,12 +129,13 @@ function ApproveOrReviewButton({
 
       // console.debug("ApproveOrReviewButton:AFTER useWriteContract()");
 
-      const { isLoading: isApproving } = useWaitForTransactionReceipt({
-        // hash: writeContractResult ? writeContractResult : undefined,
-        // onSuccess(data) {
-        //   refetch();
-        // },
-      });
+      // alert("HERE 3")
+      // const { isLoading: isApproving } = useWaitForTransactionReceipt({
+      //   // hash: writeContractResult ? writeContractResult : undefined,
+      //   // onSuccess(data) {
+      //   //   refetch();
+      //   // },
+      // });
 
       // console.debug("ApproveOrReviewButton:AFTER useWaitForTransactionReceipt()");
 
@@ -160,6 +171,7 @@ function ApproveOrReviewButton({
     //   }
     // }  
 
+    // alert("HERE 4")
     const setExState = (state:EXCHANGE_STATE) => {
       alert(`setExState = (${state}`)
       setExchangeState(state);
@@ -168,22 +180,22 @@ function ApproveOrReviewButton({
     return (
       <>
       
-      {/* <button 
-      onClick={() => 
-        writeContract({ 
-          erc20Abi,
-          address: '0x6b175474e89094c44da98b954eedeac495271d0f',
-          functionName: 'transferFrom',
-          args: [
-            '0xd2135CfB216b74109775236E36d4b433F1DF507B',
-            '0xA0Cf798816D4b9b9866b5330EEa46a18382f251e',
-            123n,
-          ],
-       })
-      }
+      <button 
+      // onClick={() => 
+      //   writeContract({ 
+      //     erc20Abi,
+      //     address: '0x6b175474e89094c44da98b954eedeac495271d0f',
+      //     functionName: 'transferFrom',
+      //     args: [
+      //       '0xd2135CfB216b74109775236E36d4b433F1DF507B',
+      //       '0xA0Cf798816D4b9b9866b5330EEa46a18382f251e',
+      //       123n,
+      //     ],
+      //  })
+      // }
     >
       Transfer
-    </button> */}
+    </button>
 
       <button
         type="button"
