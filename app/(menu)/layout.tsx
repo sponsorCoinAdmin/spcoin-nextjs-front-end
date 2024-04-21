@@ -3,10 +3,7 @@ import { Inter } from 'next/font/google'
 import '../globals.css'
 import Footer from '../components/panes/footer'
 import Header from '../components/panes/header'
-import { ExchangeWrapper } from '../lib/context'
 import SpCoinWrapper from '../components/SpCoinWrapper'
-import { Web3Provider } from '../components/web3provider'
-import { ConnectKitButton } from "connectkit";
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -23,14 +20,10 @@ export default function RootLayout({
     <>
       {/* <ExchangeWrapper> */}
       <SpCoinWrapper>
-      {/* <Web3Provider> */}
-        {/* <Header /> */}
+        <Header />
         {children}
-        {/* <ConnectKitButton /> */}
         {/* <Footer /> */}
-      {/* </Web3Provider> */}
       </SpCoinWrapper>
-      {/* </ExchangeWrapper> */}
     </>
   )
 }

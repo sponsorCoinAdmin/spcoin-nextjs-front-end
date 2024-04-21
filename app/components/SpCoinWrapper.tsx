@@ -35,8 +35,7 @@ export default function ({children} : {
 
 // alert(`children = ${JSON.stringify(children,null,2)}`)
 const queryClient = new QueryClient();
-
-return (
+  return (
     <WagmiProvider config={connectKitConfig}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
