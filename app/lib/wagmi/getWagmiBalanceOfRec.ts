@@ -5,10 +5,10 @@ import { getBalance } from '@wagmi/core'
 import { useReadContract } from 'wagmi'
 import { erc20Abi} from 'viem' 
 
-function readContractBalanceOf(contractAddress:Address) {
+function readContractBalanceOf(contractAddress:Address|string) {
   const result = useReadContract({
     abi: erc20Abi,
-    address: contractAddress,
+    address: '0x${contractAddress.toString()}',
     functionName: 'balanceOf',
   })
   alert(`result = ${JSON.stringify(result,null,2)}`)
