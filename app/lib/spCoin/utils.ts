@@ -1,5 +1,5 @@
 import { isAddress } from "ethers";
-import { getWagmiBalanceOfRec } from "../wagmi/getWagmiBalanceOfRec";
+import { getWagmiBalanceOfRec, readContractBalanceOf } from "../wagmi/getWagmiBalanceOfRec";
 import { TokenElement } from "../structure/types";
 import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
@@ -84,6 +84,10 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
   if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
   {
     let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);
+
+    // TESTING FIX UP
+    readContractBalanceOf(tokenAddr)
+    // END TESTING
     // console.debug("retResponse = " + JSON.stringify(retResponse))
     balance = retResponse.formatted;
     setBalance(balance);

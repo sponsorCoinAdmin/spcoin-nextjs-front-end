@@ -5,7 +5,7 @@ type Props = {
     isLoadingPrice: boolean
   }
 
-const IsLoading = ({isLoadingPrice} : Props) => {
+const IsLoadingPrice = ({isLoadingPrice} : Props) => {
   return (
     <div className={styles["agentRateFee"]}>
         {isLoadingPrice && (<div className="text-center mt-2">Fetching the best price...</div>)}
@@ -14,4 +14,4 @@ const IsLoading = ({isLoadingPrice} : Props) => {
   );
 }
 
-export default IsLoading;
+export default IsLoadingPrice;

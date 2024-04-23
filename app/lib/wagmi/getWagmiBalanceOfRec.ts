@@ -2,6 +2,18 @@ import { wagmiConfig } from './wagmiConfig'
 import { Address, getAddress } from "viem";
 import { formatUnits } from 'viem' 
 import { getBalance } from '@wagmi/core'
+import { useReadContract } from 'wagmi'
+import { erc20Abi} from 'viem' 
+
+function readContractBalanceOf(contractAddress:Address) {
+  const result = useReadContract({
+    abi: erc20Abi,
+    address: contractAddress,
+    functionName: 'balanceOf',
+  })
+  alert(`result = ${JSON.stringify(result,null,2)}`)
+  return result;
+}
 
 const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
   if (tokenAddr === undefined) {
@@ -9,10 +21,11 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
   }
 
   const resp = await getBalance(wagmiConfig, {
-    address: getAddress(tokenAddr), 
+    address: getAddress(tokenAddr),
   })
 
   const retResponse = {
+    tokenAddr: tokenAddr,
     decimals: resp.decimals,
     formatted: formatUnits(resp.value, resp.decimals),
     symbol: resp.symbol,
@@ -20,8 +33,10 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
   }
   // alert(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
   // console.debug(`getWagmiBalanceOfRec:wagmiConfig:\n${JSON.stringify(wagmiConfig,null,2)}`)
+  // console.debug(`getWagmiBalanceOfRec:resp:\n${JSON.stringify(resp,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
+  console.debug(`getWagmiBalanceOfRec:retResponse:\n${JSON.stringify(retResponse,null,2)}`)
 
   return retResponse
 }
 
-export { getWagmiBalanceOfRec }
+export { getWagmiBalanceOfRec, readContractBalanceOf }

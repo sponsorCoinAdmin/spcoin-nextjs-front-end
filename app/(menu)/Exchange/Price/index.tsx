@@ -12,13 +12,13 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 // import { useBalance } from "wagmi";
-import { useReadContracts } from 'wagmi' 
+import { useReadContracts, useSwitchChain  } from 'wagmi' 
 import { erc20Abi } from 'viem' 
 import { watchAccount } from "@wagmi/core";
 import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utilsDuplicate';
+import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
@@ -30,7 +30,7 @@ import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
-import IsLoading from '@/app/components/containers/IsLoading';
+import IsLoadingPrice from '@/app/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
@@ -66,6 +66,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     // alert("EXCHANGE/PRICE HERE 2")
+    const { chains, switchChain } = useSwitchChain()
 
     useEffect(() => {
       // console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
@@ -132,21 +133,25 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     const unwatch = watchAccount(wagmiConfig, { 
       onChange(data) {
-        console.debug(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
+        // console.debug(`account changed`);
+        // console.debug(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
         const chains = wagmiConfig.chains 
         const chain = chains.find(chain => chain.id === data.chainId)
-        // processNetworkChange(chain)
+        alert(`chain = ${chain}`)
+        processNetworkChange(data.chainId)
       },
-    }) 
+    })
+      
     const processAccountChange = (account: any) => {
       // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
     };
 
-    const processNetworkChange = (chainId: any) => {
+    const processNetworkChange = (newChainId: any) => {
       console.debug(`======================================================================`);
-      console.debug(`processNetworkChange:chainId = ${JSON.stringify(chainId,null,2)}`)
-      setChainId(chainId)
-      let newNetworkName = getNetworkName(chainId);
+      console.debug(`processNetworkChange:newChainId = ${JSON.stringify(newChainId,null,2)}`)
+      switchChain(newChainId)
+      setChainId(newChainId)
+      let newNetworkName = getNetworkName(newChainId);
 
       // const newNetworkName:string = network?.chain?.name.toLowerCase()
       console.debug("newNetworkName = " + newNetworkName);
@@ -181,16 +186,6 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       console.debug(`Price.updateSellBalance(${sellTokenElement.name});`)
       let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenElement, setSellBalance)
       // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalance=${balance}}`);
-
-      try {
-        setSellBalance(balance);
-
-        if (!success) {
-          setErrorMessage({ name: "updateSellBalance: ", message: errMsg });
-        }
-      } catch (e: any) {
-        setErrorMessage({ name: "updateSellBalance: ", message: JSON.stringify(e, null, 2) });
-      }
       return { balance };
     };
 
@@ -304,7 +299,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
           <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
         </div>
         <FeeDisclosure/>
-        <IsLoading isLoadingPrice={isLoadingPrice} />
+        <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
       </form>
     );
   } catch (err:any) {

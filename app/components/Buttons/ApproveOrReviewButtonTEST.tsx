@@ -88,27 +88,27 @@ function ApproveOrReviewButton({
       // console.debug("sellBalance        : " + sellBalance);
       // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
       // alert("HERE 1")
-      console.debug(`useReadContract({
-      \n  address: ${token.address},
-      \n  abi: ${JSON.stringify(erc20Abi,null,2)},
-      \n  functionName: "allowance",
-      \n  args: [${connectedWalletAddr}, ${EXCHANGE_PROXY}]`)
+      // console.debug(`useReadContract({
+      // \n  address: ${token.address},
+      // \n  abi: ${JSON.stringify(erc20Abi,null,2)},
+      // \n  functionName: "allowance",
+      // \n  args: [${connectedWalletAddr}, ${EXCHANGE_PROXY}]`)
       
-      const { isError, data: allowance, refetch } = useReadContract({
-        address: token.address,
-        abi: erc20Abi,
-        functionName: "allowance",
-        args: [connectedWalletAddr, EXCHANGE_PROXY],
-        // onError(error) {
-        //   console.error('***ERROR*** useReadContract Error', error.message)
-        //   // alert(error.message)
-        //   return <div>Something went wrong: {error.message}</div>;
-        // },
-      });
-      console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
-      if (!isError) {
-        return <div>Something went wrong: {error.message}</div>;
-      }
+      // const { isError, data: allowance, refetch } = useReadContract({
+      //   address: token.address,
+      //   abi: erc20Abi,
+      //   functionName: "allowance",
+      //   args: [connectedWalletAddr, EXCHANGE_PROXY],
+      //   // onError(error) {
+      //   //   console.error('***ERROR*** useReadContract Error', error.message)
+      //   //   // alert(error.message)
+      //   //   return <div>Something went wrong: {error.message}</div>;
+      //   // },
+      // });
+      // console.debug("isError:" + isError + " allowance:" + allowance + " refetch:"+ refetch);
+      // if (!isError) {
+      //   return <div>Something went wrong: {error.message}</div>;
+      // }
 
       // 2. (only if no allowance): write to erc20, approve 0x Exchange Proxy to spend max integer
       // alert("HERE 2")
@@ -194,7 +194,6 @@ function ApproveOrReviewButton({
       //  })
       // }
     >
-      Transfer
     </button>
 
       <button

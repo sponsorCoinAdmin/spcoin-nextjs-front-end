@@ -182,7 +182,6 @@ function ApproveOrReviewButton({
        })
       }
     >
-      Transfer
     </button> */}
 
       <button

@@ -26,7 +26,7 @@ import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import PriceButton from '@/app/components/Buttons/PriceButton';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
-import IsLoading from '@/app/components/containers/IsLoading';
+import IsLoading from '@/app/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
 import { Address, parseEther } from 'viem';
