@@ -1,6 +1,6 @@
 'use client'
 import { WagmiProvider } from 'wagmi'
-import { config } from './wagmiConfig' 
+import { wagmiConfig } from './wagmiConfig' 
 import { useEffect, useState } from "react";
 
 export default function WagmiProviderWrapper(props: {
@@ -11,7 +11,7 @@ export default function WagmiProviderWrapper(props: {
   useEffect(() => setMounted(true), []);
 
   return (
-    <WagmiProvider config={config}> 
+    <WagmiProvider config={wagmiConfig}> 
       {/** ... */} 
     </WagmiProvider> 
   )

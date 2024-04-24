@@ -11,7 +11,7 @@ const config = createConfig(
     transports: {
       // RPC URL for each chain
       [mainnet.id]: http(
-        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_ID}`,
+        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID}`,
       ),
     },
 

@@ -86,7 +86,7 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
     let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);
 
     // TESTING FIX UP
-    readContractBalanceOf(tokenAddr)
+    // readContractBalanceOf(tokenAddr)
     // END TESTING
     // console.debug("retResponse = " + JSON.stringify(retResponse))
     balance = retResponse.formatted;

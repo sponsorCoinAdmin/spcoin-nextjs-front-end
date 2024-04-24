@@ -2,6 +2,7 @@ import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenElement } from '@/app/lib/structure/types';
 import { setValidPriceInput } from '@/app/lib/spCoin/utils';
+import UseBalanceOf from '@/app/components/containers/UseBalanceOf';
 
 type Props = {
     sellAmount: string,
@@ -39,6 +40,7 @@ const SellContainer = ({sellAmount, sellBalance, sellTokenElement, setSellAmount
       </div>
       <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
         Sponsored Balance: {"{ToDo}"}
+        <UseBalanceOf accountAddress={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} contractAddress={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`}/>
       </div>
     </div>
   );
