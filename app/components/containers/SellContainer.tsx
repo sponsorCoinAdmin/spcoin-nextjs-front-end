@@ -40,6 +40,7 @@ const SellContainer = ({sellAmount, sellBalance, sellTokenElement, setSellAmount
       </div>
       <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
         Sponsored Balance: {"{ToDo}"}
+        {/* <UseBalanceOf accountAddress={'0xc2132D05D31c914a87C6611C10748AEb04B58e8F'} contractAddress={`0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59`}/> */}
         <UseBalanceOf accountAddress={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} contractAddress={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`}/>
       </div>
     </div>

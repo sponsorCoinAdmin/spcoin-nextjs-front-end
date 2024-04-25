@@ -12,10 +12,10 @@ const connectKitConfig = createConfig(
     transports: {
       // RPC URL for each chain
       [mainnet.id]: http(
-      `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_MAINNET_ALCHEMY_ID}`,
+        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_MAINNET_ALCHEMY_ID}`,
       ),      
       [polygon.id]: http(
-        `https://polygonzkevm-mainnet.g.alchemy.com/v2${process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID}`,
+        `https://polygonzkevm-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_POLYGON_ALCHEMY_ID}`,
       ),
       [sepolia.id]: http(
         `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_SEPOLIA_ALCHEMY_ID}`,
@@ -41,7 +41,8 @@ export default function ({children} : {
 
 // alert(`children = ${JSON.stringify(children,null,2)}`)
 const queryClient = new QueryClient();
-  return (
+
+return (
     <WagmiProvider config={connectKitConfig}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
@@ -51,3 +52,7 @@ const queryClient = new QueryClient();
     </WagmiProvider>
   )
 }
+function cors(): any {
+  throw new Error("Function not implemented.");
+}
+

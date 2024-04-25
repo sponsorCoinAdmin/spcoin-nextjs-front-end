@@ -137,7 +137,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
         // console.debug(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
         const chains = wagmiConfig.chains 
         const chain = chains.find(chain => chain.id === data.chainId)
-        alert(`chain = ${chain}`)
+        console.debug(`chain = ${JSON.stringify(chain,null,2)}`)
         processNetworkChange(data.chainId)
       },
     })
