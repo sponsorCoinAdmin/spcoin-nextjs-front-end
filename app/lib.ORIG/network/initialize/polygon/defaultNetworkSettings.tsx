@@ -1,6 +1,6 @@
-import {  TokenElement } from '../../../structure/types'
+import {  TokenContract } from '../../../structure/types'
  
- const defaultSellToken: TokenElement = { 
+ const defaultSellToken: TokenContract = { 
   chainId: 137,
   "symbol": "USDC",
   "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
@@ -9,7 +9,7 @@ import {  TokenElement } from '../../../structure/types'
   "decimals": 6
  };
 
-const defaultBuyToken: TokenElement = { 
+const defaultBuyToken: TokenContract = { 
   chainId: 137,
   symbol: "SpCoin",
   img: "/resources/images/tokens/0xToDo_SpCoin.png",

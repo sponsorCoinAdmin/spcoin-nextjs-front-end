@@ -15,14 +15,23 @@ interface PriceRequestParams {
   sellAmount?: string;
   connectedWalletAddr?: string;
 }
-  
-type TokenElement = {
+
+type TokenContract = {
   chainId: number;
   address: Address|string;
-  symbol: string;
   name: string;
-  img: string;
+  symbol: string;
   decimals: number;
+  img: string;
+}
+
+type TokenContract2 = {
+  chainId: number;
+  address: Address|string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  img: string;
 }
   
 type WalletElement = {
@@ -47,8 +56,8 @@ type TradeData = {
 type ExchangeContext = {
   data: TradeData;
   network: NetworkElement;
-  sellTokenElement: TokenElement;
-  buyTokenElement: TokenElement;
+  sellTokenContract: TokenContract;
+  buyTokenContract: TokenContract;
   recipientWallet: WalletElement;
   agentWallet: WalletElement;
 }
@@ -71,7 +80,7 @@ export type {
   ExchangeContext,
   NetworkElement,
   PriceRequestParams,
-  TokenElement,
+  TokenContract,
   TradeData,
   WalletElement
 }

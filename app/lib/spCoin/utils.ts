@@ -1,6 +1,6 @@
 import { isAddress } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "../wagmi/getWagmiBalanceOfRec";
-import { TokenElement } from "../structure/types";
+import { TokenContract } from "../structure/types";
 import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
 import { Address } from "viem";
@@ -45,10 +45,10 @@ const  validatePrice = (price:string, decimals:number) => {
   return "";
  }
 
-const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenElement:any) => {
+const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
   let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
   if (td !== false)
-    setTokenElement(td);
+    setTokenContract(td);
   return td
 }
 
@@ -58,7 +58,7 @@ const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr:
       let retResponse:any = await getWagmiBalanceOfRec (tokenAddr)
       // console.debug("retResponse = " + JSON.stringify(retResponse))
       // alert(JSON.stringify(retResponse,null,2))
-      let td:TokenElement = {
+      let td:TokenContract = {
           chainId: chainId,
           address: tokenAddr,
           symbol: retResponse.symbol,
@@ -75,12 +75,12 @@ const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr:
   return false
 }
 
-const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenElement: TokenElement, setBalance:any) => {
+const updateBalance = async (connectedWalletAddr: Address|undefined|null, TokenContract: TokenContract, setBalance:any) => {
   let success = true;
   let balance:string = "N/A";
   let errMsg = "N/A";
-  let tokenAddr = tokenElement.address;
-  console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenElement = " + JSON.stringify(tokenElement,null,2) + ")");
+  let tokenAddr = TokenContract.address;
+  console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenContract = " + JSON.stringify(TokenContract,null,2) + ")");
   if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
   {
     let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);
@@ -99,9 +99,9 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, tokenE
   return {success, errMsg, balance} ;
 };
 
-const isSpCoin = (tokenElement:TokenElement) => {
-  // alert(`isSpCoin = ${JSON.stringify(tokenElement,null,2)}`)
-  return tokenElement.symbol === "SpCoin" ? true:false
+const isSpCoin = (TokenContract:TokenContract) => {
+  // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
+  return TokenContract.symbol === "SpCoin" ? true:false
 }
 
 const exchangeDataDump = () => {

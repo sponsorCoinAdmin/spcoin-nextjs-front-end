@@ -1,14 +1,14 @@
 import React from 'react';
 import ApproveOrReviewButton from './ApproveOrReviewButton'
 import ApproveOrReviewButtonTEST from './ApproveOrReviewButtonTEST';
-import { EXCHANGE_STATE, TokenElement } from '@/app/lib/structure/types';
+import { EXCHANGE_STATE, TokenContract } from '@/app/lib/structure/types';
 import CustomConnectButton from './CustomConnectButton';
 import { Address } from 'viem';
 
 type Props = {
     connectedWalletAddr: Address | undefined;
-    sellTokenElement: TokenElement, 
-    buyTokenElement: TokenElement,
+    sellTokenContract: TokenContract, 
+    buyTokenContract: TokenContract,
     sellBalance:string,
     disabled: boolean,
     slippage:string | null,
@@ -16,8 +16,8 @@ type Props = {
 
 const PriceButton = ({
     connectedWalletAddr,
-    sellTokenElement,
-    buyTokenElement,
+    sellTokenContract,
+    buyTokenContract,
     sellBalance,
     slippage,
     disabled}:Props) => {
@@ -31,7 +31,7 @@ const PriceButton = ({
     <div>
         {connectedWalletAddr ?
             (<ApproveOrReviewButtonTEST 
-                token={sellTokenElement}
+                token={sellTokenContract}
                 connectedWalletAddr={connectedWalletAddr}
                 sellBalance={sellBalance}
                 disabled={disabled}

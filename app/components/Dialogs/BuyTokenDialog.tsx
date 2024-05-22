@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGl
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenElement } from '@/app/lib/structure/types';
+import { FEED_TYPE, TokenContract } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/app/lib/spCoin/utils';
@@ -21,12 +21,12 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ connectedWalletAddr, sellTokenElement, callBackSetter }: any) {
+export default function Dialog({ connectedWalletAddr, sellTokenContract, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
-    const [tokenElement, setTokenElement] = useState<TokenElement| undefined>();
-    const chainId = sellTokenElement.chainId;
+    const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
+    const chainId = sellTokenContract.chainId;
     if (connectedWalletAddr === undefined) 
         connectedWalletAddr = BURN_ADDRESS
 
@@ -38,33 +38,33 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
         // alert("tokenInput Changed "+tokenInput)
         tokenInput === "" ? hideElement('buySelectGroup') : showElement('buySelectGroup')
         if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput, setTokenElement)
+            setTokenDetails(tokenInput, setTokenContract)
         }
         else
             setTokenSelect("Invalid Token Address");
     }, [tokenInput]);
 
     useEffect( () => {
-        // alert("tokenElement Changed "+tokenInput)
-        if (tokenElement?.symbol != undefined)
-            setTokenSelect(tokenElement.symbol);
-    }, [tokenElement]);
+        // alert("TokenContract Changed "+tokenInput)
+        if (TokenContract?.symbol != undefined)
+            setTokenSelect(TokenContract.symbol);
+    }, [TokenContract]);
     
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
 
-    const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
-        return getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
+    const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
+        return getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
         try {
-            if (!(await setTokenDetails(tokenAddr, setTokenElement))) {
+            if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
                 alert("*** ERROR *** Invalid Buy Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
                 return false
             }
-            alert("displayElementDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+            alert("displayElementDetail\n" + JSON.stringify(TokenContract, null, 2) + "\n\n" + ELEMENT_DETAILS)
             // Validate Token through wagmi get balance call
             await getWagmiBalanceOfRec (tokenAddr)
             return true
@@ -74,7 +74,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
         return false
     }
 
-    const getSelectedListElement = async (listElement: TokenElement | undefined) => {
+    const getSelectedListElement = async (listElement: TokenContract | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         try {
             if (listElement === undefined) {
@@ -85,12 +85,12 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === sellTokenElement.address) {
-                alert("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")")
-                console.log("Buy Token cannot be the same as Sell Token("+sellTokenElement.symbol+")");
+            if (listElement.address === sellTokenContract.address) {
+                alert("Buy Token cannot be the same as Sell Token("+sellTokenContract.symbol+")")
+                console.log("Buy Token cannot be the same as Sell Token("+sellTokenContract.symbol+")");
                 return false;
             }
-            await getWagmiBalanceOfRec (sellTokenElement.address)
+            await getWagmiBalanceOfRec (sellTokenContract.address)
             callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
@@ -125,7 +125,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenElement, callBack
                 </div>
                     <div id="buySelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.elementName}>{tokenSelect}</div>

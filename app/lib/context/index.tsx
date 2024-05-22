@@ -17,8 +17,8 @@ const getInitialContext = (network:string|number) => {
     let initialContext:ExchangeContext = {
         data: getInitialDataSettings(network, isSpCoin(defaultNetworkSettings.defaultBuyToken)),
         network: defaultNetworkSettings.networkHeader,
-        sellTokenElement: defaultNetworkSettings.defaultSellToken,
-        buyTokenElement: defaultNetworkSettings.defaultBuyToken,
+        sellTokenContract: defaultNetworkSettings.defaultSellToken,
+        buyTokenContract: defaultNetworkSettings.defaultBuyToken,
         recipientWallet: defaultNetworkSettings.defaultRecipient,
         agentWallet: defaultNetworkSettings.defaultAgent
     }
@@ -54,8 +54,8 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
         context.data.state = EXCHANGE_STATE.PRICE;
         context.data.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
         context.data.slippage = "0.02",
-        context.sellTokenElement = defaultNetworkSettings.defaultSellToken,
-        context.buyTokenElement = defaultNetworkSettings.defaultBuyToken,
+        context.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+        context.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
         context.recipientWallet = defaultNetworkSettings.defaultRecipient,
         context.agentWallet = defaultNetworkSettings.defaultAgent
     }      

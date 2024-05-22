@@ -2,17 +2,17 @@ import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { TokenElement } from '@/app/lib/structure/types';
+import { TokenContract } from '@/app/lib/structure/types';
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 
 type Props = {
-    tokenElement: TokenElement, 
+    TokenContract: TokenContract, 
     id: string,
     disabled: boolean
     // setSellAmount: (txt: string) => void|undefined,
   }
 
-const AssetSelect = ({tokenElement, id, disabled}:Props) => {
+const AssetSelect = ({TokenContract, id, disabled}:Props) => {
     let selectId = id + "Select"
     useEffect(() => {
         if (disabled) {
@@ -26,8 +26,8 @@ const AssetSelect = ({tokenElement, id, disabled}:Props) => {
   
     return (
         <div className={styles["assetSelect"]}>
-            <img alt={tokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={tokenElement.img} onClick={() => alert("sellTokenElement " + JSON.stringify(tokenElement,null,2))}/>
-            {tokenElement.symbol}
+            <img alt={TokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={TokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(TokenContract,null,2))}/>
+            {TokenContract.symbol}
             <DownOutlined id={selectId} onClick={() => openDialog("#"+id)}/>
         </div>
     );

@@ -15,7 +15,7 @@ import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useSwitchChain  } from 'wagmi' 
 import { erc20Abi } from 'viem' 
 import { watchAccount } from "@wagmi/core";
-import { WalletElement, TokenElement, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/app/lib/spCoin/utils';
@@ -59,8 +59,8 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
 
-    const [sellTokenElement, setSellTokenElement] = useState<TokenElement>(exchangeContext.sellTokenElement);
-    const [buyTokenElement, setBuyTokenElement] = useState<TokenElement>(exchangeContext.buyTokenElement);
+    const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+    const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
 
@@ -99,26 +99,26 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     }, [state]);
 
     useEffect(() => {
-      // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
-      updateBuyBalance(buyTokenElement);
-      updateSellBalance(sellTokenElement);
+      // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenContract.name});`)
+      updateBuyBalance(buyTokenContract);
+      updateSellBalance(sellTokenContract);
     }, [connectedWalletAddr]);
 
     useEffect(() => {
-      console.debug("sellTokenElement.symbol changed to " + sellTokenElement.name);
-      exchangeContext.sellTokenElement = sellTokenElement;
-      updateSellBalance(sellTokenElement);
-    }, [sellTokenElement]);
+      console.debug("sellTokenContract.symbol changed to " + sellTokenContract.name);
+      exchangeContext.sellTokenContract = sellTokenContract;
+      updateSellBalance(sellTokenContract);
+    }, [sellTokenContract]);
 
     useEffect(() => {
-      // alert(`useEffect[buyTokenElement]:EXECUTING updateBuyBalance(${buyTokenElement.name});`)
-      if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenElement))
+      // alert(`useEffect[buyTokenContract]:EXECUTING updateBuyBalance(${buyTokenContract.name});`)
+      if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenContract))
         setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
-      else if (!isSpCoin(buyTokenElement)) 
+      else if (!isSpCoin(buyTokenContract)) 
         setDisplayState(DISPLAY_STATE.OFF)
-      updateBuyBalance(buyTokenElement);
-      exchangeContext.buyTokenElement = buyTokenElement;
-    }, [buyTokenElement]);
+      updateBuyBalance(buyTokenContract);
+      exchangeContext.buyTokenContract = buyTokenContract;
+    }, [buyTokenContract]);
 
     useEffect(() => {
       console.debug("recipientWallet changed to " + recipientWallet.name);
@@ -164,33 +164,33 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
         setNetwork(newNetworkName);
         console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
-        console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellTokenElement, null, 2)}`)
-        console.debug(`BEFORE sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
-        setSellTokenElement(exchangeContext.sellTokenElement);
-        console.debug(`AFTER  sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellTokenContract, null, 2)}`)
+        console.debug(`BEFORE sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
+        setSellTokenContract(exchangeContext.sellTokenContract);
+        console.debug(`AFTER  sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
         console.debug("------------------------ AFTER SELL TOKEN ---------------------------");
-        setBuyTokenElement(exchangeContext.buyTokenElement);
+        setBuyTokenContract(exchangeContext.buyTokenContract);
         setRecipientElement(exchangeContext.recipientWallet);
         setAgentElement(exchangeContext.agentWallet);
         setDisplayState(exchangeContext.data.displayState);
         setState(exchangeContext.data.state);
         setSlippage(exchangeContext.data.slippage);
         setExchangeState(exchangeContext.data.state);
-        console.debug(`sellTokenElement = ${JSON.stringify(sellTokenElement, null, 2)}`)
+        console.debug(`sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
 
         console.debug("======================================================================");
       }
     };
 
-    const updateSellBalance = async (sellTokenElement: TokenElement) => {
-      console.debug(`Price.updateSellBalance(${sellTokenElement.name});`)
-      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenElement, setSellBalance)
+    const updateSellBalance = async (sellTokenContract: TokenContract) => {
+      console.debug(`Price.updateSellBalance(${sellTokenContract.name});`)
+      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenContract, setSellBalance)
       // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalance=${balance}}`);
       return { balance };
     };
 
-    const updateBuyBalance = async (buyTokenElement: TokenElement) => {
-      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenElement, setBuyBalance)
+    const updateBuyBalance = async (buyTokenContract: TokenContract) => {
+      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenContract, setBuyBalance)
       // alert(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
 
       try {
@@ -207,19 +207,19 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
   // This code currently only works for sell buy will default to undefined
     const parsedSellAmount = sellAmount && tradeDirection === "sell"
-      ? parseUnits(sellAmount, sellTokenElement.decimals).toString()
+      ? parseUnits(sellAmount, sellTokenContract.decimals).toString()
       : undefined;
 
     const parsedBuyAmount = buyAmount && tradeDirection === "buy"
-      ? parseUnits(buyAmount, buyTokenElement.decimals).toString()
+      ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
       : undefined;
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
         "/api/" + network + "/0X/price",
         {
-          sellToken: sellTokenElement.address,
-          buyToken: buyTokenElement.address,
+          sellToken: sellTokenContract.address,
+          buyToken: buyTokenContract.address,
           sellAmount: parsedSellAmount,
           buyAmount: parsedBuyAmount,
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
@@ -232,15 +232,15 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       {
         onSuccess: (data) => {
           setPrice(data);
-          console.debug(formatUnits(data.buyAmount, buyTokenElement.decimals), data);
-          setBuyAmount(formatUnits(data.buyAmount, buyTokenElement.decimals));
+          console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
+          setBuyAmount(formatUnits(data.buyAmount, buyTokenContract.decimals));
         },
         onError: (error) => {
           processError(
             error,
             setErrorMessage,
-            buyTokenElement,
-            sellTokenElement,
+            buyTokenContract,
+            sellTokenContract,
             setBuyAmount,
             setValidPriceInput
           );
@@ -250,7 +250,7 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     // const { data, isError, isLoading } = useBalance({
     //   address: connectedWalletAddr,
-    //   token: sellTokenElement.address,
+    //   token: sellTokenContract.address,
     // });
     
     const result = useReadContracts({ 
@@ -276,27 +276,27 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     }) 
 
     const disabled = result && sellAmount
-      ? parseUnits(sellAmount, sellTokenElement.decimals) > 0 // ToDo FIX This result.value
+      ? parseUnits(sellAmount, sellTokenContract.decimals) > 0 // ToDo FIX This result.value
       : true;
   
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
       <form autoComplete="off">
-        <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenElement={buyTokenElement} callBackSetter={setSellTokenElement} />
-        <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} callBackSetter={setBuyTokenElement} />
+        <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
+        <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
         <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
         <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenElement={sellTokenElement} setSellAmount={setSellAmount} disabled={false} />
-          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenElement={buyTokenElement} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
-          <BuySellSwapButton  sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} setSellTokenElement={setSellTokenElement} setBuyTokenElement={setBuyTokenElement} />
-          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenElement={sellTokenElement} buyTokenElement={buyTokenElement} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
+          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} />
+          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
+          <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
+          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
           {/* <QuoteButton sendTransaction={sendTransaction}/> */}
           <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
           <SponsorRateConfig setDisplayState={setDisplayState}/>
-          <AffiliateFee price={price} sellTokenElement={sellTokenElement} buyTokenElement= {buyTokenElement} />
+          <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract= {buyTokenContract} />
         </div>
         <FeeDisclosure/>
         <IsLoadingPrice isLoadingPrice={isLoadingPrice} />

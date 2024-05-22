@@ -38,8 +38,8 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
 const processError = (
   error: any, 
   setErrorMessage:any,
-  buyTokenElement:any,
-  sellTokenElement:any,
+  buyTokenContract:any,
+  sellTokenContract:any,
   setBuyAmount:any,
   setValidPriceInput:any) => {
   // alert(`EEEEERRRRRROOOORRRRR = ${JSON.stringify(error, null, 2)}`)
@@ -52,7 +52,7 @@ const processError = (
       // console.error("***ZZZ ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
 
         break;
-      case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenElement.decimals);
+      case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenContract.decimals);
         break;
       case ERROR_0X_RESPONSE:
         setErrorMessage({ name: "ERROR_0X_RESPONSE: " + errCode, message: errMsg });
@@ -61,7 +61,7 @@ const processError = (
       case SELL_AMOUNT_UNDEFINED:
         setErrorMessage({ name: "SELL_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
         console.error("SELL_AMOUNT_UNDEFINED: errCode = " + errCode + "\nerrMsg = " + errMsg);
-        setValidPriceInput("0", sellTokenElement.decimals);
+        setValidPriceInput("0", sellTokenContract.decimals);
         break;
       case BUY_AMOUNT_UNDEFINED:
         setErrorMessage({ name: "BUY_AMOUNT_UNDEFINED: " + errCode, message: errMsg });

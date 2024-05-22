@@ -5,7 +5,7 @@ import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGl
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenElement } from '@/app/lib/structure/types';
+import { FEED_TYPE, TokenContract } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails } from '@/app/lib/spCoin/utils';
@@ -20,12 +20,12 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ connectedWalletAddr, buyTokenElement, callBackSetter }: any) {
+export default function Dialog({ connectedWalletAddr, buyTokenContract, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
-    const [tokenElement, setTokenElement] = useState<TokenElement| undefined>();
-    const chainId = buyTokenElement.chainId;
+    const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
+    const chainId = buyTokenContract.chainId;
     if (connectedWalletAddr === undefined) 
         connectedWalletAddr = BURN_ADDRESS
 
@@ -37,36 +37,36 @@ export default function Dialog({ connectedWalletAddr, buyTokenElement, callBackS
         // alert("tokenInput Changed "+tokenInput)
         tokenInput === "" ? hideElement('sellSelectGroup') : showElement('sellSelectGroup')
         if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput, setTokenElement)
+            setTokenDetails(tokenInput, setTokenContract)
         }
         else
             setTokenSelect("Invalid Token Address");
     }, [tokenInput]);
 
     useEffect( () => {
-        // alert("tokenElement Changed "+tokenInput)
-        if (tokenElement?.symbol != undefined)
-            setTokenSelect(tokenElement.symbol);
-    }, [tokenElement]);
+        // alert("TokenContract Changed "+tokenInput)
+        if (TokenContract?.symbol != undefined)
+            setTokenSelect(TokenContract.symbol);
+    }, [TokenContract]);
 
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
 
-    const setTokenDetails = async(tokenAddr: any, setTokenElement:any) => {
-        return getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenElement)
+    const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
+        return getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
-         if (!(await setTokenDetails(tokenAddr, setTokenElement))) {
+         if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
             alert("SELL_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        alert("displayElementDetail\n" + JSON.stringify(tokenElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        alert("displayElementDetail\n" + JSON.stringify(TokenContract, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
-    const getSelectedListElement = (listElement: TokenElement | undefined) => {
+    const getSelectedListElement = (listElement: TokenContract | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         try {
             if (listElement === undefined) {
@@ -77,9 +77,9 @@ export default function Dialog({ connectedWalletAddr, buyTokenElement, callBackS
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === buyTokenElement.address) {
-                alert("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")")
-                console.log("Sell Token cannot be the same as Buy Token("+buyTokenElement.symbol+")");
+            if (listElement.address === buyTokenContract.address) {
+                alert("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")")
+                console.log("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")");
                 return false;
             }
             callBackSetter(listElement)
@@ -116,7 +116,7 @@ export default function Dialog({ connectedWalletAddr, buyTokenElement, callBackS
                 </div>
                     <div id="sellSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenElement)} >
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.elementName}>{tokenSelect}</div>

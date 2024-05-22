@@ -1,6 +1,6 @@
-import {  TokenElement } from '../../../structure/types'
+import {  TokenContract } from '../../../structure/types'
  
- const defaultSellToken: TokenElement = { 
+ const defaultSellToken: TokenContract = { 
   chainId: 1,
   symbol: "WBTC",
   img: "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
@@ -9,7 +9,7 @@ import {  TokenElement } from '../../../structure/types'
   decimals: 8
  };
 
- const defaultBuyToken: TokenElement = { 
+ const defaultBuyToken: TokenContract = { 
   chainId: 1,
   symbol: "USDT",
   img: "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png",

@@ -1,20 +1,20 @@
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenElement } from '@/app/lib/structure/types';
+import { TokenContract } from '@/app/lib/structure/types';
 import { setValidPriceInput } from '@/app/lib/spCoin/utils';
 import UseBalanceOf from '@/app/components/containers/UseBalanceOf';
 
 type Props = {
     sellAmount: string,
     sellBalance: string,
-    sellTokenElement: TokenElement, 
+    sellTokenContract: TokenContract, 
     setSellAmount: any,
     disabled: boolean
     // setSellAmount: (txt: string) => void|undefined,
   }
   
 /* Sell Token Selection Module */
-const SellContainer = ({sellAmount, sellBalance, sellTokenElement, setSellAmount, disabled} : Props) => {
+const SellContainer = ({sellAmount, sellBalance, sellTokenContract, setSellAmount, disabled} : Props) => {
     // if (disabled) {
     //   console.debug(`hideElement("downOutlinedSell2")`)
     //   hideElement("downOutlinedSell2")
@@ -25,11 +25,11 @@ const SellContainer = ({sellAmount, sellBalance, sellTokenElement, setSellAmount
   return (
     <div className={styles.inputs}>
       <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={sellAmount}
-        onChange={(e) => { setValidPriceInput(e.target.value, sellTokenElement.decimals, setSellAmount); }} />
-      <AssetSelect tokenElement={sellTokenElement} id={"sellTokenDialog"} disabled={disabled}></AssetSelect>
+        onChange={(e) => { setValidPriceInput(e.target.value, sellTokenContract.decimals, setSellAmount); }} />
+      <AssetSelect TokenContract={sellTokenContract} id={"sellTokenDialog"} disabled={disabled}></AssetSelect>
       {/* <div className={styles["assetSelect"]}>
-          <img alt={sellTokenElement.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenElement.img} onClick={() => alert("sellTokenElement " + JSON.stringify(sellTokenElement,null,2))}/>
-          {sellTokenElement.symbol}
+          <img alt={sellTokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(sellTokenContract,null,2))}/>
+          {sellTokenContract.symbol}
           <DownOutlined id="downOutlinedSell2" onClick={() => openDialog("#sellTokenDialog")}/>
       </div> */}
       <div className={styles["buySell"]}>

@@ -1,7 +1,7 @@
 const { ethers } = require("ethers");
 import { wagmiConfig } from './wagmiConfig'
 import { Address } from "viem";
-import { TokenElement } from '../structure/types';
+import { TokenContract } from '../structure/types';
 import { getBalance } from '@wagmi/core'
 
 async function fetchBigIntBalance (walletAddr:string|Address|undefined, tokenAddr:string|Address|undefined, chainId:number|string) {
