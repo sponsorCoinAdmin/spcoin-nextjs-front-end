@@ -11,7 +11,7 @@ const contractDecimals = ({ TOKEN_CONTRACT}: Props) => {
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Reading Wagmi Token Contract Decimals for {TOKEN_CONTRACT}</h2>
+      <h2>Reading Wagmi Token Decimals for Contract({TOKEN_CONTRACT})</h2>
       Token Decimals : {decimals} <br/>
     </>
   )

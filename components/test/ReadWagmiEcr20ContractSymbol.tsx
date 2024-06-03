@@ -11,7 +11,7 @@ const contractSymbol = ({ TOKEN_CONTRACT}: Props) => {
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Reading Wagmi Token Contract Symbol for {TOKEN_CONTRACT}</h2>
+      <h2>Reading Wagmi Token Symbol for Contract({TOKEN_CONTRACT})</h2>
       Token Symbol : {symbol} <br/>
     </>
   )

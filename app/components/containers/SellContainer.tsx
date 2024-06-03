@@ -3,6 +3,8 @@ import AssetSelect from './AssetSelect';
 import { TokenContract } from '@/app/lib/structure/types';
 import { setValidPriceInput } from '@/app/lib/spCoin/utils';
 import UseBalanceOf from '@/app/components/containers/UseBalanceOf';
+import ReadWagmiEcr20BalanceOf from '@/components/test/ReadWagmiEcr20BalanceOf';
+import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 
 type Props = {
     sellAmount: string,
@@ -41,7 +43,9 @@ const SellContainer = ({sellAmount, sellBalance, sellTokenContract, setSellAmoun
       <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
         Sponsored Balance: {"{ToDo}"}
         {/* <UseBalanceOf accountAddress={'0xc2132D05D31c914a87C6611C10748AEb04B58e8F'} contractAddress={`0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59`}/> */}
-        <UseBalanceOf accountAddress={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} contractAddress={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`}/>
+        {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
+        {/* <ReadWagmiEcr20BalanceOf  ACTIVE_WALLET_ACCOUNT={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} TOKEN_CONTRACT={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`} /> */}
+        {/* <UseBalanceOf accountAddress={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} contractAddress={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`}/> */}
       </div>
     </div>
   );
