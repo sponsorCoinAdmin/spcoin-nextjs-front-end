@@ -4,7 +4,7 @@ import { openDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { NetworkElement } from '@/app/lib/structure/types';
 import { hideElement, showElement, toggleElement } from '@/app/lib/spCoin/guiControl';
-import networks from '../../lib/network/initialize/networks.json';
+import networks from '@/lib/network/initialize/networks.json';
 import Image from 'next/image'
 import info_png from '../../../public/resources/images/info1.png'
 

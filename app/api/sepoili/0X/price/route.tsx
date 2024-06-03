@@ -1,5 +1,5 @@
 import { NETWORK } from '../../networkConfig'
-import { apiResponse } from '../../../lib/0X/apiResponse'
+import { apiResponse } from '@/lib/0X/apiResponse'
 
 const api="/swap/v1/price"
 
