@@ -39,10 +39,10 @@ export default function ({children} : {
   children: React.ReactNode;
 }) {
 
-// alert(`children = ${JSON.stringify(children,null,2)}`)
-const queryClient = new QueryClient();
+  // alert(`children = ${JSON.stringify(children,null,2)}`)
+  const queryClient = new QueryClient();
 
-return (
+  return (
     <WagmiProvider config={connectKitConfig}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
@@ -52,7 +52,7 @@ return (
     </WagmiProvider>
   )
 }
+
 function cors(): any {
   throw new Error("Function not implemented.");
 }
-

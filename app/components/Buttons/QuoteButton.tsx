@@ -21,10 +21,9 @@ const PlaceOrder = ({
 
     return (
         <button type="button"
-            onClick={() => { placeOrder(); }
-            }
-                className={styles["exchangeButton"] + " " + styles["swapButton"]}
-            >
+            onClick={() => { placeOrder(); } }
+            className={styles["exchangeButton"] + " " + styles["swapButton"]}
+        >
             Place Order
         </button>
     );

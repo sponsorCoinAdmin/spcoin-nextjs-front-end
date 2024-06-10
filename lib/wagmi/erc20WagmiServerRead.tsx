@@ -32,8 +32,8 @@ const getERC20WagmiServerBalanceOfRec = async (walletAddress: Address | string |
   return "wagmiBalanceOfRec";
 }
 
-// let ACTIVE_WALLET_ACCOUNT:Address|undefined;
-const ACTIVE_WALLET_ACCOUNT:Address  = '0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'
+// let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
+const ACTIVE_ACCOUNT_ADDRESS:Address  = '0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
 const CHKN_ETHEREUM_CONTRACT:Address = '0xD55210Bb6898C021a19de1F58d27b71f095921Ee'
 const NULL_CONTRACT:Address          = '0x0000000000000000000000000000000000000000';
@@ -42,6 +42,6 @@ const TOKEN_CONTRACT:Address         = USDT_POLYGON_CONTRACT
 
 export const getTestName = async () => {
   console.log(`getTestName = ${getTestName}`)
-  let balanceOf = await getERC20WagmiServerBalanceOfRec(ACTIVE_WALLET_ACCOUNT, TOKEN_CONTRACT || "")
+  let balanceOf = await getERC20WagmiServerBalanceOfRec(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT || "")
   return `balanceOf = ${balanceOf}`
 }
