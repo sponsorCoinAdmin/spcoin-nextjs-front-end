@@ -34,15 +34,16 @@ import IsLoadingPrice from '@/app/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
-import { Address } from 'viem';
 import { wagmiConfig } from '@/app/lib/wagmi/wagmiConfig';
+import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 
 //////////// Price Code
-export default function PriceView({connectedWalletAddr, price, setPrice}: {
-    connectedWalletAddr: Address | undefined;
+export default function PriceView({activeAccount, price, setPrice}: {
+    activeAccount: any;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
+  const connectedWalletAddr = activeAccount.address
   // alert(`EXCHANGE/PRICE HERE 1exchangeContext = \n ${exchangeContext}`)
 
   try {
@@ -52,8 +53,8 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
     const [network, setNetwork] = useState(exchangeContext.data.networkName);
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
-    const [sellBalance, setSellBalance] = useState<string>("0");
-    const [buyBalance, setBuyBalance] = useState<string>("0");
+    // const [sellBalanceOf, setSellBalanceOf] = useState<string>("0");
+    // const [buyBalanceOf, setBuyBalanceOf] = useState<string>("0");
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
     const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
     const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
@@ -72,9 +73,12 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       // console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
       // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
       // For up to 15 seconds in half second increments set dom settings
-      for(let i = 1; i <= 30; i++) {
-        setTimeout(() => setDisplayPanels(displayState),i*500)
-      }
+      // for(let i = 1; i <= 30; i++) {
+      //   setTimeout(() => setDisplayPanels(displayState),i*500)
+      // }
+      // setBuyBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+      // setSellBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+
     },[]);
     
     useEffect(() => {
@@ -131,6 +135,9 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       }
     }, [errorMessage]);
 
+    // setBuyBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+    // setSellBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+
     const unwatch = watchAccount(wagmiConfig, { 
       onChange(data) {
         // console.debug(`account changed`);
@@ -184,17 +191,17 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
 
     const updateSellBalance = async (sellTokenContract: TokenContract) => {
       console.debug(`Price.updateSellBalance(${sellTokenContract.name});`)
-      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenContract, setSellBalance)
-      // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalance=${balance}}`);
+      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, sellTokenContract, setSellAmount)
+      // alert(`updateSellBalance:{status=${success}, errMsg=${errMsg}, sellBalanceOf=${balance}}`);
       return { balance };
     };
 
     const updateBuyBalance = async (buyTokenContract: TokenContract) => {
-      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenContract, setBuyBalance)
-      // alert(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalance=${balance}}`);
+      let {success, errMsg, balance} = await updateBalance(connectedWalletAddr, buyTokenContract, setBuyAmount)
+      // alert(`updateBuyBalance:{status=${success}, errMsg=${errMsg}, buyBalanceOf=${balance}}`);
 
       try {
-        setBuyBalance(balance);
+        setBuyAmount(balance);
 
         if (!success) {  
           setErrorMessage({ name: "updateBuyBalance: ", message: errMsg });
@@ -275,6 +282,12 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
       ] 
     }) 
 
+    let buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+    let sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+    // let buyBalanceOf = "0";
+    // let sellBalanceOf = "0";
+
+
     const disabled = result && sellAmount
       ? parseUnits(sellAmount, sellTokenContract.decimals) > 0 // ToDo FIX This result.value
       : true;
@@ -289,10 +302,10 @@ export default function PriceView({connectedWalletAddr, price, setPrice}: {
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={sellAmount} sellBalance={sellBalance} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} />
-          <BuyContainer buyAmount={buyAmount} buyBalance={buyBalance} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
+          <SellContainer sellAmount={sellAmount} balanceOf={sellBalanceOf} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} />
+          <BuyContainer buyAmount={buyAmount} balanceOf={buyBalanceOf} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
           <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} />
+          <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalanceOf} disabled={disabled} slippage={slippage} />
           {/* <QuoteButton sendTransaction={sendTransaction}/> */}
           <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
           <SponsorRateConfig setDisplayState={setDisplayState}/>

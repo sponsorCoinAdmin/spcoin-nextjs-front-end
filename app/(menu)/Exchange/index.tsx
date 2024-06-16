@@ -17,14 +17,8 @@ export function Home() {
   const [state, setState] = useState<EXCHANGE_STATE>(EXCHANGE_STATE.PRICE);
 
    // alert(`children = ${JSON.stringify(children,null,2)}`)
-   console.debug("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-   let ACTIVE_ACCOUNT;
-   console.debug("*** page:BEFORE ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
-   ACTIVE_ACCOUNT = useAccount()
-   const address = ACTIVE_ACCOUNT.address;
-   console.debug("*** page:AFTER ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
- 
- 
+   const ACTIVE_ACCOUNT = useAccount()
+   console.debug("*** Exchange:ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
 
   const setExState = (exchangeState:EXCHANGE_STATE) => {
     // alert(`setState = (${exchangeState})`)
@@ -40,7 +34,7 @@ export function Home() {
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
       <PriceView
-        connectedWalletAddr={address}
+        activeAccount={ACTIVE_ACCOUNT}
         price={price}
         setPrice={setPrice}
       />

@@ -4,18 +4,17 @@ import { TokenContract } from '@/app/lib/structure/types';
 import { setValidPriceInput } from '@/app/lib/spCoin/utils';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { useEffect } from 'react';
-import { ACTIVE_ACCOUNT } from '../SpCoinWrapper';
 
 type Props = {
     sellAmount: string,
-    sellBalance: string,
+    balanceOf: any,
     sellTokenContract: TokenContract, 
     setSellAmount: any,
     disabled: boolean
   }
   
 /* Sell Token Selection Module */
-const SellContainer = ({sellAmount, sellBalance, sellTokenContract, setSellAmount, disabled} : Props) => {
+const SellContainer = ({sellAmount, balanceOf, sellTokenContract, setSellAmount, disabled} : Props) => {
     // if (disabled) {
     //   console.debug(`hideElement("downOutlinedSell2")`)
     //   hideElement("downOutlinedSell2")
@@ -24,9 +23,8 @@ const SellContainer = ({sellAmount, sellBalance, sellTokenContract, setSellAmoun
     //   showElement("downOutlinedSell2")
     // }
   useEffect(() => {
-   }, [sellBalance]);
+  }, [balanceOf]);
 
-  console.debug("*** SellContainer: ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
 
   return (
     <div className={styles.inputs}>
@@ -42,7 +40,8 @@ const SellContainer = ({sellAmount, sellBalance, sellTokenContract, setSellAmoun
         You Pay
       </div>
       <div className={styles["assetBalance"]}>
-        Balance: {sellBalance}
+        Balance: {balanceOf}
+        {"ToDo"+balanceOf+"ToDo"}
       </div>
       <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
         Sponsored Balance: {"{ToDo}"}
