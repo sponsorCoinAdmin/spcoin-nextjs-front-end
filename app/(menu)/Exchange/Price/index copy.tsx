@@ -11,7 +11,6 @@ import {
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
-// import { useBalance } from "wagmi";
 import { useReadContracts, useSwitchChain  } from 'wagmi' 
 import { erc20Abi } from 'viem' 
 import { watchAccount } from "@wagmi/core";
@@ -35,7 +34,6 @@ import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
 import { wagmiConfig } from '@/app/lib/wagmi/wagmiConfig';
-import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 
 //////////// Price Code
 export default function PriceView({activeAccount, price, setPrice}: {
@@ -53,8 +51,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const [network, setNetwork] = useState(exchangeContext.data.networkName);
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
-    // const [sellBalanceOf, setSellBalanceOf] = useState<string>("0");
-    // const [buyBalanceOf, setBuyBalanceOf] = useState<string>("0");
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
     const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
     const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
@@ -69,7 +65,10 @@ export default function PriceView({activeAccount, price, setPrice}: {
     // alert("EXCHANGE/PRICE HERE 2")
     const { chains, switchChain } = useSwitchChain()
 
-     useEffect(() => {
+    useEffect(() => {
+    },[]);
+    
+    useEffect(() => {
       console.debug(`PRICE:useEffect:chainId = ${chainId}`)
       exchangeContext.data.chainId = chainId;
     },[chainId]);
@@ -169,7 +168,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
         setSlippage(exchangeContext.data.slippage);
         setExchangeState(exchangeContext.data.state);
         console.debug(`sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
-
         console.debug("======================================================================");
       }
     };
@@ -187,7 +185,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
       try {
         setBuyAmount(balance);
-
         if (!success) {  
           setErrorMessage({ name: "updateBuyBalance: ", message: errMsg });
         }
@@ -267,16 +264,10 @@ export default function PriceView({activeAccount, price, setPrice}: {
       ] 
     }) 
 
-    let buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-    let sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-    // let buyBalanceOf = "0";
-    // let sellBalanceOf = "0";
-
-
     const disabled = result && sellAmount
       ? parseUnits(sellAmount, sellTokenContract.decimals) > 0 // ToDo FIX This result.value
       : true;
-
+  
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
       <form autoComplete="off">
