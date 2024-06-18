@@ -6,24 +6,16 @@ import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { useEffect } from 'react';
 
 type Props = {
-    sellAmount: string,
-    balanceOf: any,
-    sellTokenContract: TokenContract, 
-    setSellAmount: any,
-    disabled: boolean
-  }
-  
+  activeAccount:any,
+  sellAmount: string,
+  sellTokenContract: TokenContract, 
+  setSellAmount: any,
+  disabled: boolean
+}
+
 /* Sell Token Selection Module */
-const SellContainer = ({sellAmount, balanceOf, sellTokenContract, setSellAmount, disabled} : Props) => {
-    // if (disabled) {
-    //   console.debug(`hideElement("downOutlinedSell2")`)
-    //   hideElement("downOutlinedSell2")
-    // } else {
-    //   console.debug(`showElement("downOutlinedSell2")`)
-    //   showElement("downOutlinedSell2")
-    // }
-  useEffect(() => {
-  }, [balanceOf]);
+const SellContainer = ({activeAccount, sellAmount, sellTokenContract, setSellAmount, disabled} : Props) => {
+  const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
 
 
   return (
@@ -41,14 +33,12 @@ const SellContainer = ({sellAmount, balanceOf, sellTokenContract, setSellAmount,
       </div>
       <div className={styles["assetBalance"]}>
         Balance: {balanceOf}
-        {"ToDo"+balanceOf+"ToDo"}
       </div>
       <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
         Sponsored Balance: {"{ToDo}"}
         {/* <UseBalanceOf accountAddress={'0xc2132D05D31c914a87C6611C10748AEb04B58e8F'} contractAddress={`0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59`}/> */}
         {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
         {/* {getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")} */}
-  FIX
         {/* <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} TOKEN_CONTRACT={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`} /> */}
         {/* <UseBalanceOf accountAddress={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} contractAddress={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`}/> */}
       </div>

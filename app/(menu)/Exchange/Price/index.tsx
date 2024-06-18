@@ -69,19 +69,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     // alert("EXCHANGE/PRICE HERE 2")
     const { chains, switchChain } = useSwitchChain()
 
-    useEffect(() => {
-      // console.debug("PRICE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
-      // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
-      // For up to 15 seconds in half second increments set dom settings
-      // for(let i = 1; i <= 30; i++) {
-      //   setTimeout(() => setDisplayPanels(displayState),i*500)
-      // }
-      // setBuyBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-      // setSellBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-
-    },[]);
-    
-    useEffect(() => {
+     useEffect(() => {
       console.debug(`PRICE:useEffect:chainId = ${chainId}`)
       exchangeContext.data.chainId = chainId;
     },[chainId]);
@@ -134,9 +122,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
         openDialog("#errorDialog");
       }
     }, [errorMessage]);
-
-    // setBuyBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-    // setSellBalanceOf(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
 
     const unwatch = watchAccount(wagmiConfig, { 
       onChange(data) {
@@ -291,7 +276,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const disabled = result && sellAmount
       ? parseUnits(sellAmount, sellTokenContract.decimals) > 0 // ToDo FIX This result.value
       : true;
-  
+
     // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
     return (
       <form autoComplete="off">
@@ -302,7 +287,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
         <ErrorDialog errMsg={errorMessage} />
         <div className={styles.tradeContainer}>
           <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-          <SellContainer sellAmount={sellAmount} balanceOf={sellBalanceOf} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} />
+          <SellContainer activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} />
           <BuyContainer buyAmount={buyAmount} balanceOf={buyBalanceOf} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
           <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
           <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalanceOf} disabled={disabled} slippage={slippage} />
