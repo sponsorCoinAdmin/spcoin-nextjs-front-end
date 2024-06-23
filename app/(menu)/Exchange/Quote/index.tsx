@@ -12,11 +12,11 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput } from '@/app/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
-import {setDisplayPanels,} from '@/app/lib/spCoin/guiControl';
+import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
 import SellContainer from '@/app/components/containers/SellContainer';
@@ -40,20 +40,20 @@ import {
   usePrepareSendTransaction,
   type Address,
 } from "wagmi";
-import { getTokenDetails, fetchTokenDetails, isSpCoin, setValidPriceInput } from "@/app/lib/spCoin/utils";
+import { getTokenDetails, fetchTokenDetails, isSpCoin, setValidPriceInput } from "@/lib/spCoin/utils";
 import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
 import SellContainer from '@/app/components/containers/SellContainer';
 import BuyContainer from '@/app/components/containers/BuyContainer';
 import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
 import AffiliateFee from '@/app/components/containers/AffiliateFee';
 import QuoteButton from '@/app/components/Buttons/QuoteButton';
-import { setDisplayPanels, showElement } from '@/app/lib/spCoin/guiControl';
+import { setDisplayPanels, showElement } from '@/lib/spCoin/guiControl';
 import ErrorDialog from '@/app/components/Dialogs/ErrorDialog';
 import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletElement } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletElement } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 import { exchangeContext } from '@/app/lib/context';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';

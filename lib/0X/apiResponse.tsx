@@ -1,4 +1,4 @@
-import { getURLParams } from '../getURLParams'
+import { getURLParams } from '@/lib/getURLParams'
 const OX_API_KEY:string = process.env.OX_API_KEY === undefined ? "0" : process.env.OX_API_KEY
 const FEE_RECIPIENT = process.env.FEE_RECIPIENT_WALLET
 const AFFILIATE_FEE = process.env.AFFILIATE_FEE

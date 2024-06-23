@@ -1,21 +1,22 @@
 'use client'
 import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/lib/structure/types';
 import { useState } from 'react';
-import { isSpCoin } from '../spCoin/utilsDuplicate';
+import { isSpCoin } from '@/lib/spCoin/utils';
 import { getNetworkName } from '../network/utils';
 import { useChainId } from 'wagmi';
 
 // import { junkName, isSpCoin, isSpCoin2 } from '../spCoin/junk'
-// import { junkName } from '../spCoin/utils';
+// import { junkName } from '@/lib/spCoin/utils';
 
 let chainId:number = 1;
 let exchangeContext:ExchangeContext;
 
 const getInitialContext = (network:string|number) => {
     const defaultNetworkSettings = getDefaultNetworkSettings(network)
+    const defaultBuyToken = defaultNetworkSettings.defaultBuyToken;
     let initialContext:ExchangeContext = {
-        data: getInitialDataSettings(network, isSpCoin(defaultNetworkSettings.defaultBuyToken)),
+        data: getInitialDataSettings(network, isSpCoin(defaultBuyToken)),
         network: defaultNetworkSettings.networkHeader,
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
@@ -43,7 +44,7 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
     
     const newNetworkName:string = typeof network === "string" ? network.toLowerCase() : getNetworkName(network)
     console.debug("resetContextNetwork: newNetworkName = " + newNetworkName);
-    console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.data.networkName);
+    console.debug("resetContextNetwork: context.networkName = " + context.data.networkName);
 
     if (context.data.networkName !== newNetworkName) {
         console.debug(`UPDATING NETWORK to ${newNetworkName}`);

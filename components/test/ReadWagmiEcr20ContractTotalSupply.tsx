@@ -11,7 +11,7 @@ const contractTotalSupply = ({ TOKEN_CONTRACT}: Props) => {
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Reading Wagmi Token Contract TotalSupply for {TOKEN_CONTRACT}</h2>
+      <h2>Reading Wagmi Token TotalSupply for Contract({TOKEN_CONTRACT})</h2>
       Token TotalSupply   : {totalSupply?.toString()} <br/>
     </>
   )

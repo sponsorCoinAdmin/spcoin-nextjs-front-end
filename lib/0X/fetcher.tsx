@@ -1,4 +1,4 @@
-import { PriceRequestParams } from '@/app/lib/structure/types'
+import { PriceRequestParams } from '@/lib/structure/types'
 import qs from "qs";
 
 const SELL_AMOUNT_UNDEFINED = 100;

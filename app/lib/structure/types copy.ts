@@ -24,15 +24,6 @@ type TokenContract = {
   decimals: number;
   img: string;
 }
-
-type TokenContract2 = {
-  chainId: number;
-  address: Address|string;
-  name: string;
-  symbol: string;
-  decimals: number;
-  img: string;
-}
   
 type WalletElement = {
   address: Address|string;

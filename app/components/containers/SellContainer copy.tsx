@@ -3,20 +3,26 @@ import AssetSelect from './AssetSelect';
 import { TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
-import { useEffect } from 'react';
+import { isSpCoin } from '@/lib/spCoin/utils';
+import { showElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
-  activeAccount:any,
-  sellAmount: string,
-  sellTokenContract: TokenContract, 
-  setSellAmount: any,
-  disabled: boolean
-}
-
+    activeAccount:any,
+    sellAmount: string,
+    sellTokenContract: TokenContract, 
+    setSellAmount: any,
+    disabled: boolean
+  }
+  
 /* Sell Token Selection Module */
 const SellContainer = ({activeAccount, sellAmount, sellTokenContract, setSellAmount, disabled} : Props) => {
+
   const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
 
+  // if (isSpCoin(sellTokenContract)) {
+
+  // }
+  // showElement("addSponsorshipDiv")
 
   return (
     <div className={styles.inputs}>

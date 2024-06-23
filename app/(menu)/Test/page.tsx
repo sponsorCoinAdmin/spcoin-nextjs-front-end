@@ -52,7 +52,7 @@ function App() {
   return (
     <>
       <ProviderConfigurationStatus />
-      <WagmiConnect />
+      {/* <WagmiConnect /> */}
       <ReadWagmiEcr20Fields TOKEN_CONTRACT={TOKEN_CONTRACT} />
       <ReadWagmiEcr20RecordFields TOKEN_CONTRACT={TOKEN_CONTRACT} />
       <ReadWagmiEcr20Records TOKEN_CONTRACT={TOKEN_CONTRACT} />

@@ -1,5 +1,5 @@
 import { PriceResponse } from '@/app/api/types';
-import { TokenContract } from '@/app/lib/structure/types';
+import { TokenContract } from '@/lib/structure/types';
 import { formatUnits } from 'ethers';
 import React from 'react';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE

@@ -3,17 +3,17 @@ import { Address } from 'viem'
 import { getERC20WagmiClientBalanceOf, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  ACTIVE_WALLET_ACCOUNT:Address, 
+  ACTIVE_ACCOUNT_ADDRESS:Address, 
   TOKEN_CONTRACT:Address
 }
 
-const ReadWagmiEcr20BalanceOf = ({ ACTIVE_WALLET_ACCOUNT, TOKEN_CONTRACT}: Props) => {
-  let balanceOf            = getERC20WagmiClientBalanceOf(ACTIVE_WALLET_ACCOUNT, TOKEN_CONTRACT || "")
-  let formattedBalanceOf   = getFormattedClientBalanceOf(ACTIVE_WALLET_ACCOUNT, TOKEN_CONTRACT || "")
+const ReadWagmiEcr20BalanceOf = ({ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT}: Props) => {
+  let balanceOf            = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT || "")
+  let formattedBalanceOf   = getFormattedClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT || "")
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>For Wallet {ACTIVE_WALLET_ACCOUNT} Reading Wagmi Ecr20 BalanceOf {TOKEN_CONTRACT}</h2>
+      <h2>For Wallet {ACTIVE_ACCOUNT_ADDRESS} Reading Wagmi ERC20 BalanceOf {TOKEN_CONTRACT}</h2>
       BalanceOf               : {balanceOf} <br/>
       Formatted BalanceOf     : {formattedBalanceOf}
     </>

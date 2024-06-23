@@ -7,15 +7,15 @@ import { useReadContract } from 'wagmi'
 import { erc20Abi } from 'viem' 
 import { TokenContract, ContractRecs } from '../structure/types'
 
-const getERC20WagmiClientBalanceOfRec = (walletAddress: Address | string | undefined, contractAddress: Address | string | undefined) => {
-  // console.debug(`getERC20WagmiClientBalanceOfRec:walletAddress = ${walletAddress}, contractAddress = ${contractAddress}`)
+const getERC20WagmiClientBalanceOfRec = (accountAddress: Address | string | undefined, contractAddress: Address | string | undefined) => {
+  // console.debug(`getERC20WagmiClientBalanceOfRec:accountAddress = ${accountAddress}, contractAddress = ${contractAddress}`)
   let wagmiBalanceOfRec;
-  if (contractAddress !== undefined && walletAddress !== undefined) {
+  if (contractAddress !== undefined && accountAddress !== undefined) {
     wagmiBalanceOfRec = useReadContract({
       abi: erc20Abi,
       address: getAddress(contractAddress),
       functionName: 'balanceOf',
-      args: [getAddress(walletAddress)],
+      args: [getAddress(accountAddress)],
       config, 
     })
   }
@@ -94,8 +94,8 @@ const getERC20WagmiClientTotalSupply = (contractAddress:Address | undefined) => 
   return getERC20WagmiClientTotalSupplyRec(contractAddress).data;
 }
 
-const getERC20WagmiClientBalanceOf = (walletAddress: Address | string, contractAddress: Address | string ) => {
-  return getERC20WagmiClientBalanceOfRec(walletAddress , contractAddress )?.data?.toString();
+const getERC20WagmiClientBalanceOf = (accountAddress: Address | string, contractAddress: Address | string ) => {
+  return getERC20WagmiClientBalanceOfRec(accountAddress , contractAddress )?.data?.toString();
 }
 
 const getErc20ClientContract = (contractAddress:Address | undefined) => {
@@ -123,8 +123,8 @@ const getFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
   return formatDecimals(totalSupply, decimals);
 }
 
-const getFormattedClientBalanceOf = (walletAddress: Address | string , contractAddress: Address | string ) => {
-  let balanceOf = getERC20WagmiClientBalanceOf(walletAddress, contractAddress)
+const getFormattedClientBalanceOf = (accountAddress: Address | string , contractAddress: Address | string ) => {
+  let balanceOf = getERC20WagmiClientBalanceOf(accountAddress, contractAddress)
   let decimals  = getERC20WagmiClientDecimals(contractAddress)
  return formatDecimals(balanceOf, decimals);
 }

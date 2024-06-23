@@ -7,7 +7,7 @@ import sepoliaTokenList from '../../../resources/data/Tokens/sepoliaTokenList.js
 import ethereumTokenList from '../../../resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '../../../resources/data/agents/agentWalletList.json';
 import recipientWalletList from '../../../resources/data/recipients/recipientWalletList.json';
-import { FEED_TYPE } from '@/app/lib/structure/types';
+import { FEED_TYPE } from '@/lib/structure/types';
 import { useChainId } from "wagmi";
 
 type Props = {

@@ -1,4 +1,5 @@
-import { DISPLAY_STATE, TokenContract } from "../structure/types";
+import { DISPLAY_STATE, TokenContract } from "@/lib/structure/types";
+
 
 /// START DROPDOWN STUFF
 const hideElement = (element: string) => {

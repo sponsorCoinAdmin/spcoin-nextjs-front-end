@@ -1,4 +1,4 @@
-import chainIdList from '../../resources/data/networks/chainIds.json';
+import chainIdList from '@/app/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultEthereumSettings } from './initialize/ethereum/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultPolygonSettings } from './initialize/polygon/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/sepolia/defaultNetworkSettings'

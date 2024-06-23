@@ -6,10 +6,10 @@ import searchMagGlassGrey_png from '../../../public/resources/images/SearchMagGl
 import customUnknownImage_png from '../../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, WalletElement } from '@/app/lib/structure/types';
+import { FEED_TYPE, WalletElement } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
-import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
+import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 
 const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';

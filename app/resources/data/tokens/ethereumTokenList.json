@@ -9,6 +9,14 @@
     },
     {
         "chainId": 1,
+        "symbol": "CHKN",
+        "img": "/resources/images/tokens/0xD55210Bb6898C021a19de1F58d27b71f095921Ee.png",
+        "name": "Chicken Coin",
+        "address": "0xD55210Bb6898C021a19de1F58d27b71f095921Ee",
+        "decimals": 18
+    },
+    {
+        "chainId": 1,
         "symbol": "USDC",
         "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
         "name": "USD Coin",

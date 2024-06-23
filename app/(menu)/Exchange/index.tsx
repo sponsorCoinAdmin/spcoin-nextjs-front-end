@@ -3,7 +3,7 @@ import PriceView from "./Price";
 import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
-import { EXCHANGE_STATE } from "@/app/lib/structure/types";
+import { EXCHANGE_STATE } from "@/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
 import React from 'react';
 
@@ -15,7 +15,10 @@ export function Home() {
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [quote, setQuote] = useState();
   const [state, setState] = useState<EXCHANGE_STATE>(EXCHANGE_STATE.PRICE);
-  const { address } = useAccount();
+
+   // alert(`children = ${JSON.stringify(children,null,2)}`)
+   const ACTIVE_ACCOUNT = useAccount()
+   console.debug("*** Exchange:ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
 
   const setExState = (exchangeState:EXCHANGE_STATE) => {
     // alert(`setState = (${exchangeState})`)
@@ -31,7 +34,7 @@ export function Home() {
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
       <PriceView
-        connectedWalletAddr={address}
+        activeAccount={ACTIVE_ACCOUNT}
         price={price}
         setPrice={setPrice}
       />

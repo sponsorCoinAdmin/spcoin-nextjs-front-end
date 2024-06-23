@@ -1,7 +1,7 @@
 import React from 'react';
 import ApproveOrReviewButton from './ApproveOrReviewButton'
 import ApproveOrReviewButtonTEST from './ApproveOrReviewButtonTEST';
-import { EXCHANGE_STATE, TokenContract } from '@/app/lib/structure/types';
+import { EXCHANGE_STATE, TokenContract } from '@/lib/structure/types';
 import CustomConnectButton from './CustomConnectButton';
 import { Address } from 'viem';
 

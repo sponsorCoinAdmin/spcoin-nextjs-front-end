@@ -18,6 +18,8 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
 
   const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
   
+  
+
   return (
     <div className={styles.inputs}>
       <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={parseFloat(buyAmount).toFixed(6)}

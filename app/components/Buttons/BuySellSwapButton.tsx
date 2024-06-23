@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import { ArrowDownOutlined } from "@ant-design/icons";
-import { TokenContract } from '@/app/lib/structure/types';
+import { TokenContract } from '@/lib/structure/types';
 
 function swapTokens(sellTokenContract:TokenContract, 
   buyTokenContract:TokenContract,
