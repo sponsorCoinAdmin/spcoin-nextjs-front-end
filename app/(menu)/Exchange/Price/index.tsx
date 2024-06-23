@@ -15,7 +15,7 @@ import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useSwitchChain  } from 'wagmi' 
 import { erc20Abi } from 'viem' 
 import { watchAccount } from "@wagmi/core";
-import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
 import { getNetworkName } from '@/app/lib/network/utils';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/lib/spCoin/utils';

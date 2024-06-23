@@ -3,7 +3,7 @@ import PriceView from "./Price";
 import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
-import { EXCHANGE_STATE } from "@/app/lib/structure/types";
+import { EXCHANGE_STATE } from "@/lib/structure/types";
 import { exchangeContext } from "@/app/lib/context";
 import React from 'react';
 

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { DISPLAY_STATE, TokenContract } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, TokenContract } from '@/lib/structure/types';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 

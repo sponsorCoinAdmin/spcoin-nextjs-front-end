@@ -12,7 +12,7 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/app/lib/structure/types';
+import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
 import { fetcher, processError } from '@/app/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
@@ -53,7 +53,7 @@ import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDial
 import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/app/components/containers/RecipientContainer';
 import IsLoading from '@/app/components/containers/IsLoading';
-import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletElement } from '@/app/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletElement } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 import { exchangeContext } from '@/app/lib/context';
 import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';

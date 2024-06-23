@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styles from '@/app/styles/Header.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { NetworkElement } from '@/app/lib/structure/types';
+import { NetworkElement } from '@/lib/structure/types';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 import networks from '@/lib/network/initialize/networks.json';
 import Image from 'next/image'

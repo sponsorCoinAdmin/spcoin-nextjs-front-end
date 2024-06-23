@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
 import Link from 'next/link'
-import { DISPLAY_STATE } from '@/app/lib/structure/types';
+import { DISPLAY_STATE } from '@/lib/structure/types';
 
 type Props = {
   recipientWallet: any,

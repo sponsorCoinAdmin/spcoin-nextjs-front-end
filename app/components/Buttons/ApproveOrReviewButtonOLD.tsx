@@ -10,7 +10,7 @@ import {
     type Address,
 } from "wagmi";
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
-import { EXCHANGE_STATE } from '@/app/lib/structure/types';
+import { EXCHANGE_STATE } from '@/lib/structure/types';
 import { exchangeContext } from '@/app/lib/context';
 import { setFinalize } from '@/app/(menuPages)/Exchange';
 

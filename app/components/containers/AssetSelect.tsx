@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styles from '@/app/styles/Exchange.module.css';
 import { openDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { TokenContract } from '@/app/lib/structure/types';
+import { TokenContract } from '@/lib/structure/types';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
