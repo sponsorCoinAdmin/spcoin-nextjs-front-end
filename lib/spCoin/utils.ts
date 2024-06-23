@@ -1,6 +1,6 @@
 import { isAddress } from "ethers";
-import { getWagmiBalanceOfRec, readContractBalanceOf } from "../wagmi/getWagmiBalanceOfRec";
-import { TokenContract } from "../structure/types";
+import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/app/lib/wagmi/getWagmiBalanceOfRec";
+import { TokenContract } from "@/lib/structure/types";
 import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
 import { Address } from "viem";

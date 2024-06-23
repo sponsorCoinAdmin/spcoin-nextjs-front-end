@@ -1,4 +1,4 @@
-import { getQueryVariable } from '@/app/lib/spCoin/utils'
+import { getQueryVariable } from '@/lib/spCoin/utils'
 import { getWagmiBalanceOfRec } from '@/app/lib/wagmi/getWagmiBalanceOfRec'
 import { getURLParams } from "@/lib/getURLParams";
 

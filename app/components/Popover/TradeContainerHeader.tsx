@@ -7,7 +7,7 @@ import spCoin_png from '../../../public/resources/images/spCoin.png';
 import cog_png from '../../../public/resources/images/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
-import { exchangeDataDump } from '@/app/lib/spCoin/utils';
+import { exchangeDataDump } from '@/lib/spCoin/utils';
 
 const TradeContainerHeader = ({slippage, setSlippageCallback}:any) => {
   return (

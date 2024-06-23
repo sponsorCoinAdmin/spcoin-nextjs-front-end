@@ -1,7 +1,7 @@
 import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract } from '@/app/lib/structure/types';
-import { setValidPriceInput } from '@/app/lib/spCoin/utils';
+import { setValidPriceInput } from '@/lib/spCoin/utils';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { useEffect } from 'react';
 

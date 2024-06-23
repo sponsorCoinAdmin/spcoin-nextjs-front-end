@@ -1,5 +1,5 @@
 import { getURLParams } from "@/lib/getURLParams";
-import { getQueryVariable } from "@/app/lib/spCoin/utils";
+import { getQueryVariable } from "@/lib/spCoin/utils";
 import { getWagmiBalanceOfRec } from "@/app/lib/wagmi/getWagmiBalanceOfRec";
 
 export async function GET(req: Request) {

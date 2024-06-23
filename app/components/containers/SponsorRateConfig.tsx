@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '@/app/styles/Exchange.module.css';
-import { hideElement } from '@/app/lib/spCoin/guiControl';
+import { hideElement } from '@/lib/spCoin/guiControl';
 import Image from 'next/image';
 import info_png from '../../../public/resources/images/info1.png';
 import { DISPLAY_STATE } from '@/app/lib/structure/types';

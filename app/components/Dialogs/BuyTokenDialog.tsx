@@ -8,8 +8,8 @@ import info_png from '../../../public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/app/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
-import { hideElement, showElement } from '@/app/lib/spCoin/guiControl';
-import { getTokenDetails } from '@/app/lib/spCoin/utils';
+import { hideElement, showElement } from '@/lib/spCoin/guiControl';
+import { getTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/app/lib/network/utils';
 

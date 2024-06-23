@@ -3,7 +3,7 @@ import styles from '@/app/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract } from '@/app/lib/structure/types';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
-// import { isSpCoin } from '@/app/lib/spCoin/utils';
+// import { isSpCoin } from '@/lib/spCoin/utils';
 
 type Props = {
   activeAccount: any,
