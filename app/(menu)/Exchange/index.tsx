@@ -4,7 +4,7 @@ import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { EXCHANGE_STATE } from "@/lib/structure/types";
-import { exchangeContext } from "@/app/lib/context";
+import { exchangeContext } from "@/lib/context";
 import React from 'react';
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;

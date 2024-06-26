@@ -1,5 +1,5 @@
 'use client';
-import styles from '@/app/styles/Exchange.module.css';
+import styles from '@/styles/Exchange.module.css';
 import {
   openDialog,
   AgentDialog,
@@ -7,28 +7,28 @@ import {
   SellTokenDialog,
   BuyTokenDialog,
   ErrorDialog
-} from '@/app/components/Dialogs/Dialogs';
+} from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
 import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
-import { fetcher, processError } from '@/app/lib/0X/fetcher';
+import { fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
-import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
-import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
-import SellContainer from '@/app/components/containers/SellContainer';
-import BuyContainer from '@/app/components/containers/BuyContainer';
-import RecipientContainer from '@/app/components/containers/RecipientContainer';
-import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
-import AffiliateFee from '@/app/components/containers/AffiliateFee';
-import PriceButton from '@/app/components/Buttons/PriceButton';
-import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
-import IsLoading from '@/app/components/containers/IsLoadingPrice';
-import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
-import QuoteButton from '@/app/components/Buttons/QuoteButton';
+import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
+import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
+import SellContainer from '@/components/containers/SellContainer';
+import BuyContainer from '@/components/containers/BuyContainer';
+import RecipientContainer from '@/components/containers/RecipientContainer';
+import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
+import AffiliateFee from '@/components/containers/AffiliateFee';
+import PriceButton from '@/components/Buttons/PriceButton';
+import FeeDisclosure from '@/components/containers/FeeDisclosure';
+import IsLoading from '@/components/containers/IsLoadingPrice';
+import { exchangeContext, resetContextNetwork } from "@/lib/context";
+import QuoteButton from '@/components/Buttons/QuoteButton';
 import { Address, parseEther } from 'viem';
 
 
@@ -41,23 +41,23 @@ import {
   type Address,
 } from "wagmi";
 import { getTokenDetails, fetchTokenDetails, isSpCoin, setValidPriceInput } from "@/lib/spCoin/utils";
-import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
-import SellContainer from '@/app/components/containers/SellContainer';
-import BuyContainer from '@/app/components/containers/BuyContainer';
-import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
-import AffiliateFee from '@/app/components/containers/AffiliateFee';
-import QuoteButton from '@/app/components/Buttons/QuoteButton';
+import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
+import SellContainer from '@/components/containers/SellContainer';
+import BuyContainer from '@/components/containers/BuyContainer';
+import FeeDisclosure from '@/components/containers/FeeDisclosure';
+import AffiliateFee from '@/components/containers/AffiliateFee';
+import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setDisplayPanels, showElement } from '@/lib/spCoin/guiControl';
-import ErrorDialog from '@/app/components/Dialogs/ErrorDialog';
-import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDialog } from '@/app/components/Dialogs/Dialogs';
-import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
-import RecipientContainer from '@/app/components/containers/RecipientContainer';
-import IsLoading from '@/app/components/containers/IsLoading';
+import ErrorDialog from '@/components/Dialogs/ErrorDialog';
+import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDialog } from '@/components/Dialogs/Dialogs';
+import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
+import RecipientContainer from '@/components/containers/RecipientContainer';
+import IsLoading from '@/components/containers/IsLoading';
 import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletElement } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
-import { exchangeContext } from '@/app/lib/context';
-import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
-import PriceButton from '@/app/components/Buttons/PriceButton';
+import { exchangeContext } from '@/lib/context';
+import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
+import PriceButton from '@/components/Buttons/PriceButton';
 */
 
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE

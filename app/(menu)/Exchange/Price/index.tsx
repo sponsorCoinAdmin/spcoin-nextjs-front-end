@@ -1,5 +1,5 @@
 'use client';
-import styles from '@/app/styles/Exchange.module.css';
+import styles from '@/styles/Exchange.module.css';
 import {
   openDialog,
   AgentDialog,
@@ -7,7 +7,7 @@ import {
   SellTokenDialog,
   BuyTokenDialog,
   ErrorDialog
-} from '@/app/components/Dialogs/Dialogs';
+} from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
@@ -16,25 +16,25 @@ import { useReadContracts, useSwitchChain  } from 'wagmi'
 import { erc20Abi } from 'viem' 
 import { watchAccount } from "@wagmi/core";
 import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
-import { getNetworkName } from '@/app/lib/network/utils';
-import { fetcher, processError } from '@/app/lib/0X/fetcher';
+import { getNetworkName } from '@/lib/network/utils';
+import { fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
-import TradeContainerHeader from '@/app/components/Popover/TradeContainerHeader';
-import BuySellSwapButton from '@/app/components/Buttons/BuySellSwapButton';
-import SellContainer from '@/app/components/containers/SellContainer';
-import BuyContainer from '@/app/components/containers/BuyContainer';
-import RecipientContainer from '@/app/components/containers/RecipientContainer';
-import SponsorRateConfig from '@/app/components/containers/SponsorRateConfig';
-import AffiliateFee from '@/app/components/containers/AffiliateFee';
-import PriceButton from '@/app/components/Buttons/PriceButton';
-import FeeDisclosure from '@/app/components/containers/FeeDisclosure';
-import IsLoadingPrice from '@/app/components/containers/IsLoadingPrice';
-import { exchangeContext, resetContextNetwork } from "@/app/lib/context";
-import QuoteButton from '@/app/components/Buttons/QuoteButton';
+import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
+import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
+import SellContainer from '@/components/containers/SellContainer';
+import BuyContainer from '@/components/containers/BuyContainer';
+import RecipientContainer from '@/components/containers/RecipientContainer';
+import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
+import AffiliateFee from '@/components/containers/AffiliateFee';
+import PriceButton from '@/components/Buttons/PriceButton';
+import FeeDisclosure from '@/components/containers/FeeDisclosure';
+import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
+import { exchangeContext, resetContextNetwork } from "@/lib/context";
+import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
-import { wagmiConfig } from '@/app/lib/wagmi/wagmiConfig';
+import { wagmiConfig } from '@/lib/wagmi/wagmiConfig';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 
 //////////// Price Code
