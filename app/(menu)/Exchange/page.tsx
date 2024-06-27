@@ -1,6 +1,6 @@
 'use client'
 
-import SpCoinWrapper from "@/app/components/SpCoinWrapper";
+import SpCoinWrapper from "@/components/SpCoinWrapper";
 import Component from './index'
 
 import React from 'react'

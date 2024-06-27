@@ -1,5 +1,5 @@
 'use client'
-import styles from '@/app/styles/Exchange.module.css';
+import styles from '@/styles/Exchange.module.css';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React from 'react'
 

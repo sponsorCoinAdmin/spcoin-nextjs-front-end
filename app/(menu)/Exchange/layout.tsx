@@ -1,6 +1,6 @@
-import SpCoinWrapper from '@/app/components/SpCoinWrapper'
+import SpCoinWrapper from '@/components/SpCoinWrapper'
 import type { Metadata } from 'next'
-import Header from '../../components/panes/header'
+import Header from '../@/components/panes/header'
 
 export const metadata: Metadata = {
   title: 'spCoin',

@@ -1,5 +1,5 @@
 'use client'
-import { getDefaultNetworkSettings } from '@/app/lib/network/initialize/defaultNetworkSettings';
+import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/lib/structure/types';
 import { useState } from 'react';
 // import { isSpCoin } from '@/lib/spCoin/utils';
