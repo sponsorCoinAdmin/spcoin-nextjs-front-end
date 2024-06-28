@@ -28,7 +28,7 @@ const getERC20WagmiServerBalanceOfRec = async (walletAddress: Address | string |
       config, 
     })
   }
-  console.debug(`balanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
+  // console.debug(`balanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
   return "wagmiBalanceOfRec";
 }
 

@@ -107,7 +107,7 @@
         "chainId": 1,
         "name": "USD Coin Test",
         "symbol": "USDC",
-        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec8",
         "decimals": 6,
         "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
     },
