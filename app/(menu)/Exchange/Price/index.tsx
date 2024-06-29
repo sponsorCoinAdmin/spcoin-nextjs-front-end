@@ -161,9 +161,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     };
 
       // This code currently only works for sell buy will default to undefined
-        console.debug (`parsedSellAmount sellAmount = \n ${sellAmount}`)
-        console.debug (`parsedSellAmount sellTokenContract.decimals = \n ${sellTokenContract.decimals}`)
-        const parsedSellAmount = sellAmount && tradeDirection === "sell"
+         const parsedSellAmount = sellAmount && tradeDirection === "sell"
         ? parseUnits(sellAmount, sellTokenContract.decimals).toString()
         : undefined;
  
@@ -249,7 +247,9 @@ export default function PriceView({activeAccount, price, setPrice}: {
             <BuyContainer activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
             <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
             <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalanceOf} disabled={disabled} slippage={slippage} />
-            {/* <QuoteButton sendTransaction={sendTransaction}/> */}
+              {
+                // <QuoteButton sendTransaction={sendTransaction}/>
+              }
             <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
             <SponsorRateConfig setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract= {buyTokenContract} />
