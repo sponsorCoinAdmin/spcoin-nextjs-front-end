@@ -47490,7 +47490,7 @@
         "chainId": 137,
         "name": "FLOKI INU",
         "symbol": "FLOKI",
-        "decimals": 18,
+        "decimals": 9,
         "address": "0xc632bfb57c9ea41b5a231a97f6e63dcf8b6e90be",
         "tags": [
             "pos",
