@@ -3,37 +3,39 @@
     "chainId": 11155111,
     "name": "Sepolia",
     "symbol": "ETH",
-    "img": "/resources/images/eth.png",
-    "url": "https://sepolia.etherscan.io/"
+    "url": "https://sepolia.etherscan.io/",
+    "img": "/resources/images/eth.png"
   },
   "defaultSellToken": {
     "chainId": 11155111,
-    "symbol": "WBTC",
-    "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
-    "name": "Wrapped Bitcoin",
     "address": "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
-    "decimals": 8
+    "symbol": "WBTC",
+    "name": "Wrapped Bitcoin",
+    "totalSupply": null,
+    "decimals": 8,
+    "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
   },
   "defaultBuyToken": {
     "chainId": 11155111,
-    "symbol": "USDT",
-    "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
-    "name": "Tether USD",
     "address": "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
-    "decimals": 6
+    "symbol": "USDT",
+    "totalSupply": null,
+    "name": "Tether USD",
+    "decimals": 6,
+    "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
   },
   "defaultRecipient": {
-    "symbol": "Tiger",
-    "img": "/resources/images/recipients/SaveTheTiger4.png",
-    "name": "Support The Tiger",
     "address": "SaveTheTiger4 Wallet Address",
-    "url": "ToDo N/A"
+    "symbol": "Tiger",
+    "name": "Support The Tiger",
+    "url": "ToDo N/A",
+    "img": "/resources/images/recipients/SaveTheTiger4.png"
   },
   "defaultAgent": {
-    "symbol": "Stuge 3",
-    "img": "/resources/images/agents/MoeHoward.png",
-    "name": "Moe Howard",
     "address": "Moe's Wallet Address",
-    "url": "ToDo N/A"
+    "symbol": "Stuge 3",
+    "name": "Moe Howard",
+    "url": "ToDo N/A",
+    "img": "/resources/images/agents/MoeHoward.png"
   }
 }

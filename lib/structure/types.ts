@@ -22,7 +22,7 @@ type TokenContract = {
   name :string | undefined,
   symbol :string | undefined,
   decimals : any,
-  totalSupply : any
+  totalSupply : any,
   img: string | undefined;
 }
 

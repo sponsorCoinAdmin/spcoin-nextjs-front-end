@@ -75,6 +75,24 @@
   transform: translateX(-50%) translateY(-50%);
 }
 
+.centerTop {
+  color: #51586f;
+  position: absolute;
+  width: 100%;
+  top: 25%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.centerBottom {
+  color: #51586f;
+  position: absolute;
+  width: 100%;
+  top: 75%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
 .center-screen {
   display: flex;
   flex-direction: column;

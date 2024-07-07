@@ -3,37 +3,39 @@
     "chainId": 137,
     "name": "Polygon",
     "symbol": "MATIC",
-    "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
-    "url": "https://polygonscan.com/"
+    "url": "https://polygonscan.com/",
+    "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"
   },
   "defaultSellToken": {
     "chainId": 137,
-    "symbol": "USDC",
-    "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
-    "name": "USD Coin Staked",
     "address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-    "decimals": 6
+    "name": "USD Coin Staked",
+    "symbol": "USDC",
+    "totalSupply": null,
+    "decimals": 6,
+    "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
   },
   "defaultBuyToken": {
     "chainId": 137,
-    "symbol": "SpCoin",
-    "img": "/resources/images/tokens/0xToDo_SpCoin.png",
-    "name": "Sponsor Coin",
     "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
-    "decimals": 18
+    "name": "Sponsor Coin",
+    "symbol": "SpCoin",
+    "totalSupply": null,
+    "decimals": 18,
+    "img": "/resources/images/tokens/0xToDo_SpCoin.png"
 },
   "defaultRecipient": {
-    "symbol": "Trees",
-    "img": "/resources/images/recipients/SaveTheTrees.png",
-    "name": "Save The Trees",
     "address": "Save The Trees Wallet Address",
-    "url": "ToDo N/A"
+    "name": "Save The Trees",
+    "symbol": "Trees",
+    "url": "ToDo N/A",
+    "img": "/resources/images/recipients/SaveTheTrees.png"
   },
   "defaultAgent": {
-    "symbol": "Tweety",
-    "img": "/resources/images/agents/TweetyBird.png",
-    "name": "Tweety Bird",
     "address": "TweetyBird's Wallet Address",
-    "url": "ToDo N/A"
+    "name": "Tweety Bird",
+    "symbol": "Tweety",
+    "url": "ToDo N/A",
+    "img": "/resources/images/agents/TweetyBird.png"
   }
 }

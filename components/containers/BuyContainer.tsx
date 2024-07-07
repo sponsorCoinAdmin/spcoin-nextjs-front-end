@@ -3,6 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract } from '@/lib/structure/types';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import AddSponsorButton from '../Buttons/AddSponsorButton';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
 type Props = {
@@ -26,9 +27,15 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
         <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
         <div className={styles["buySell"]}>You receive</div>
         <div className={styles["assetBalance"]}>Balance: {balanceOf}</div>
-        <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
-        <div className={styles["centerContainer"]} >Add Sponsorship</div>
-        </div>
+        {/* <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
+          {true ? <div className={styles["centerContainer"]} >Add Sponsorship</div> : null}
+          <div className={styles["centerContainer"]} >Add Sponsorship</div>
+        </div> */}
+        <AddSponsorButton activeAccount={activeAccount} 
+                          buyAmount={buyAmount} buyTokenContract={buyTokenContract} 
+                          setBuyAmount={undefined} setDisplayState={function (displayState: DISPLAY_STATE): void {
+          throw new Error('Function not implemented.');
+        } } disabled={false} />
       </div>
     );
   } catch (err:any) {

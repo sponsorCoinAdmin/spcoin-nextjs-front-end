@@ -8,15 +8,15 @@ type Props = {
     price: PriceResponse | undefined,
     sellTokenContract: TokenContract | undefined, 
     buyTokenContract: TokenContract | undefined, 
-  }
+}
 
 const AffiliateFee = ({price, sellTokenContract, buyTokenContract} : Props) => {
     return (
         <div className="text-slate-400">
             {price && price.grossBuyAmount
             ? "Affiliate Fee: " +
-            Number(formatUnits(BigInt(price.grossBuyAmount), buyTokenContract.decimals)) *
-            AFFILIATE_FEE + " " + buyTokenContract.symbol
+            Number(formatUnits(BigInt(price.grossBuyAmount), buyTokenContract?.decimals)) *
+            AFFILIATE_FEE + " " + buyTokenContract?.symbol
             : null}
         </div>
     );
