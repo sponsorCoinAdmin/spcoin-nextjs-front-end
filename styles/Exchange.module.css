@@ -235,7 +235,7 @@
 .recipientSelect {
   position: absolute;
   top: 10px;
-  left: 152px;
+  left: 247px;
   min-width: 50px;
   height: 25px;
   border-radius: 100px;
@@ -246,9 +246,6 @@
   font-weight: bold;
   font-size: 17px;
   padding-right: 8px;
-}
-
-.recipientSelect {
   background-color: #b09e18;
   background-color: #111c7d;
   background-color: #243056;
@@ -506,7 +503,7 @@
   color: #51586f;
   transition: 0.3s;
   top: 12px;
-  right: 43px;
+  right: 39px;
 }
 
 .cogImg2 {
