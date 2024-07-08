@@ -1,7 +1,8 @@
 .tradeContainer {
-  transform: translate(0, 10px);
+  transform: translate(0, -50px);
+
   font-weight: bold;
-  width: 450px;
+  width: 520px;
   background-color: #0E111B;
   border: 2px solid #21273a;
   min-height: 300px;
@@ -51,6 +52,7 @@
   left: 115px;
   cursor: pointer;
 }
+
 .feeInfoCogOLD:hover {
   color: white;
   rotate: 360deg;
@@ -103,11 +105,10 @@
 }
 
 .addSponsorshipDiv {
-  display: none;
+  /* display: none; */
   position: absolute;
   top: 75px;
-  left: 2;
-  width: 135px;
+  width: 100px;
   height: 30px;
   color: rgb(163, 145, 46);
   background-color: #0E111B;
@@ -120,18 +121,18 @@
 }
 
 .manageSponsorshipsDiv {
-  display: none;
+  /* display: none; */
   position: absolute;
   top: 75px;
-  left: 2;
-  width: 135px;
+  width: 100px;
   height: 30px;
+  /* margin-left: 75px; */
   color: rgb(163, 145, 46);
   background-color: #0E111B;
   background-color: #243056;
   text-align: center;
-  vertical-align: middle;
-  gap: 5px;
+  /* vertical-align: middle; */
+  /* gap: 5px; */
   font-size: 12px;
   border-radius: 12px !important;
 }
@@ -332,7 +333,7 @@
 .switchButton {
   position: absolute;
   top: 157px;
-  left: 211px;
+  left: 245px;
   width: 25px;
   height: 25px;
   color: #5F6783;
@@ -581,7 +582,8 @@
 
 .agentRateFee {
   position: relative;
-  top: 15px;
+  top: -46px;
+  left: 12px;
   color: #94a3b8; 
   font-size: 14px;
 }

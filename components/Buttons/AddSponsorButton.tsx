@@ -13,8 +13,9 @@ const AddSponsorshipButton = ({activeAccount, buyTokenContract, setDisplayState}
   try {
   const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
     return (
-      <div id="addSponsorshipDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
-        <div className={styles["centerContainer"]} >Add Sponsorship</div>
+      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
+        <div className={styles["centerTop"]} >Add</div>
+        <div className={styles["centerBottom"]} >Sponsorship</div>
       </div>
     );
   } catch (err:any) {
