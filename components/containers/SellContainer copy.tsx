@@ -25,6 +25,7 @@ const SellContainer = ({activeAccount, sellAmount, sellTokenContract, setSellAmo
 
     const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
 
+
     return (
       <div className={styles.inputs}>
         <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={sellAmount}
@@ -41,14 +42,20 @@ const SellContainer = ({activeAccount, sellAmount, sellTokenContract, setSellAmo
         <div className={styles["assetBalance"]}>
           Balance: {balanceOf}
         </div>
-        {IsSpCoin ?
-          <>
-            <ManageSponsorsButton activeAccount={activeAccount} buyTokenContract={sellTokenContract} setDisplayState={setDisplayState} />
-            <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
+        <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
+          {IsSpCoin ?
+            <>
+              <AddSponsorButton activeAccount={activeAccount} buyTokenContract={sellTokenContract} setDisplayState={setDisplayState} />
+              {/* <ManageSponsorsButton activeAccount={activeAccount} buyTokenContract={sellTokenContract} setDisplayState={setDisplayState} /> */}
               Sponsored Balance: {"{ToDo}"}
-              {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
-            </div>
-          </> : null}
+              </>
+            : null}
+          {/* <UseBalanceOf accountAddress={'0xc2132D05D31c914a87C6611C10748AEb04B58e8F'} contractAddress={`0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59`}/> */}
+          {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
+          {/* {getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")} */}
+          {/* <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} TOKEN_CONTRACT={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`} /> */}
+          {/* <UseBalanceOf accountAddress={'0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59'} contractAddress={`0xc2132D05D31c914a87C6611C10748AEb04B58e8F`}/> */}
+        </div>
       </div>
     );
   } catch (err:any) {

@@ -119,6 +119,23 @@
   border-radius: 12px !important;
 }
 
+.manageSponsorshipsDiv {
+  display: none;
+  position: absolute;
+  top: 75px;
+  left: 2;
+  width: 135px;
+  height: 30px;
+  color: rgb(163, 145, 46);
+  background-color: #0E111B;
+  background-color: #243056;
+  text-align: center;
+  vertical-align: middle;
+  gap: 5px;
+  font-size: 12px;
+  border-radius: 12px !important;
+}
+
 .hidden{
   display: none
 }

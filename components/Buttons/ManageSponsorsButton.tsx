@@ -8,18 +8,21 @@ type Props = {
   setDisplayState:(displayState:DISPLAY_STATE) => void,
 }
 
-const AddSponsorshipButton = ({activeAccount, buyTokenContract, setDisplayState} : Props) => {
+const ManageSponsorsButton = ({activeAccount, buyTokenContract, setDisplayState} : Props) => {
 
   try {
   const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
     return (
-      <div id="addSponsorshipDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
-        <div className={styles["centerContainer"]} >Add Sponsorship</div>
-      </div>
+      <>
+        <div id="manageSponsorshipsDiv" className={styles[`addSponsorshipDiv`]} onClick={() => setDisplayState(DISPLAY_STATE.RECIPIENT)}>
+          <div className={styles["centerTop"]} >Manage</div>
+          <div className={styles["centerBottom"]} >Sponsorships</div>
+        </div>
+      </>
     );
   } catch (err:any) {
-    console.debug (`Buy Container Error:\n ${err.message}`)
+    console.debug (`Sell Container Error:\n ${err.message}`)
   }
 }
 
-export default AddSponsorshipButton;
+export default ManageSponsorsButton;

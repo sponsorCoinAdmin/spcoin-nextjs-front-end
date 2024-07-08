@@ -243,7 +243,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} />
+            <SellContainer activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} setDisplayState={setDisplayState}/>
             <BuyContainer activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
             <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
             <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalanceOf} disabled={disabled} slippage={slippage} />
