@@ -534,7 +534,7 @@
 }
 
 .tradeContainer {
-  transform: translate(0, -50px);
+  transform: translate(0px, -50px);
   font-weight: bold;
   width: 520px;
   background-color: #0E111B;
