@@ -22,7 +22,6 @@ const SellContainer = ({activeAccount, sellAmount, sellTokenContract, setSellAmo
   try {
     let IsSpCoin = isSpCoin(sellTokenContract);
     console.debug("SellContainer.isSpCoin = " + IsSpCoin)
-
     const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
 
     return (
@@ -44,10 +43,10 @@ const SellContainer = ({activeAccount, sellAmount, sellTokenContract, setSellAmo
         {IsSpCoin ?
           <>
             <ManageSponsorsButton activeAccount={activeAccount} buyTokenContract={sellTokenContract} setDisplayState={setDisplayState} />
-            <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
+            {/* <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
               Sponsored Balance: {"{ToDo}"}
               {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
-            </div>
+            </div> */}
           </> : null}
       </div>
     );

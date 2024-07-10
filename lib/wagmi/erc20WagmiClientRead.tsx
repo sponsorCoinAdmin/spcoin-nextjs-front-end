@@ -95,7 +95,9 @@ const getERC20WagmiClientTotalSupply = (contractAddress:Address | undefined) => 
 }
 
 const getERC20WagmiClientBalanceOf = (accountAddress: Address | string, contractAddress: Address | string ) => {
-  return getERC20WagmiClientBalanceOfRec(accountAddress , contractAddress )?.data?.toString();
+  const eRC20WagmiClientBalanceOf = getERC20WagmiClientBalanceOfRec(accountAddress , contractAddress )?.data?.toString();
+  console.log("eRC20WagmiClientBalanceOf = "+eRC20WagmiClientBalanceOf);
+  return eRC20WagmiClientBalanceOf;
 }
 
 const getErc20ClientContract = (contractAddress:Address | undefined) => {
