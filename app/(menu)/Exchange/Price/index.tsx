@@ -35,7 +35,6 @@ import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
 import { wagmiConfig } from '@/lib/wagmi/wagmiConfig';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
-import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
 //////////// Price Code
 export default function PriceView({activeAccount, price, setPrice}: {
@@ -110,6 +109,22 @@ export default function PriceView({activeAccount, price, setPrice}: {
         openDialog("#errorDialog");
       }
     }, [errorMessage]);
+
+    let buyBalanceOf = "0";
+    let sellBalanceOf = "0";
+
+    useEffect(() => {
+      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+    }, [sellTokenContract.address]);
+
+    useEffect(() => {
+      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+    }, [buyTokenContract.address]);
+
+    useEffect(() => {
+      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+    }, [activeAccount.address]);
 
     const unwatch = watchAccount(wagmiConfig, { 
       onChange(data) {
@@ -226,9 +241,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
       ] 
     }) 
 
-    let buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-    let sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-
     const disabled = result && sellAmount
       ? parseUnits(sellAmount, sellTokenContract.decimals) > 0 // ToDo FIX This result.value
       : true;
@@ -240,7 +252,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
           <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
           <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
-          <ManageSponsorships connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>

@@ -25,12 +25,12 @@ export function Home() {
     setState(exchangeState)
     exchangeContext.data.state = exchangeState;
   }
-  // alert(`EXCHANGE HERE 1\n state = ${state} PRICE = ${price} ADDRESS = ${address}` )
 
   setExchangeState = setExState;
   exchangeState = state;
   // alert("HERE 1")
 
+  console.debug(`EXCHANGE HERE 1\n activeAccount = ${ACTIVE_ACCOUNT} PRICE = ${price} setPrice = ${setPrice}` )
   return (
     <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
       <PriceView

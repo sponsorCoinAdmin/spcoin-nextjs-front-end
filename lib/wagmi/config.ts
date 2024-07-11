@@ -25,7 +25,7 @@ console.debug(`MAINNET_URL         = ${MAINNET_URL}`)
 console.debug(`POLYGON_URL         = ${POLYGON_URL}`)
 console.debug(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
 
-export const config = createConfig({
+export const config:any = createConfig({
   chains: [mainnet, polygon, sepolia],
   connectors: [
     injected(),
