@@ -8,7 +8,7 @@ import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '../structure/types'
 
 const getERC20WagmiClientBalanceOfRec = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
-  // console.debug(`getERC20WagmiClientBalanceOfRec:connectedWalletAddr = ${connectedWalletAddr}, contractAddress = ${contractAddress}`)
+  console.debug(`getERC20WagmiClientBalanceOfRec:connectedWalletAddr = ${connectedWalletAddr}, contractAddress = ${contractAddress}`)
   let wagmiBalanceOfRec;
   if (contractAddress !== undefined && connectedWalletAddr !== undefined) {
     wagmiBalanceOfRec = useReadContract({
@@ -19,7 +19,8 @@ const getERC20WagmiClientBalanceOfRec = (connectedWalletAddr: Address | string |
       config, 
     })
   }
-  // console.debug(`balanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
+  console.debug(`getERC20WagmiClientBalanceOfRec.balanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
+  console.debug(`getERC20WagmiClientBalanceOf.wagmiBalanceOfRec = ${wagmiBalanceOfRec}`);
   return wagmiBalanceOfRec;
 }
 
@@ -101,7 +102,7 @@ const getERC20WagmiClientBalanceOf = (connectedWalletAddr: Address | string, con
     if (connectedWalletAddr) {
       console.debug(`Executing:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress})`);
       eRC20WagmiClientBalanceOf = getERC20WagmiClientBalanceOfRec(connectedWalletAddr , contractAddress )?.data?.toString();
-      console.debug(`Executing:BalanceOf = ${eRC20WagmiClientBalanceOf}`);
+      console.debug(`getERC20WagmiClientBalanceOf:Executing:BalanceOf = ${eRC20WagmiClientBalanceOf}`);
     }
   }
   catch (err:any) {

@@ -35,6 +35,7 @@ import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
 import { wagmiConfig } from '@/lib/wagmi/wagmiConfig';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
 //////////// Price Code
 export default function PriceView({activeAccount, price, setPrice}: {
@@ -63,9 +64,25 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     // alert("EXCHANGE/PRICE HERE 2")
-    const { chains, switchChain } = useSwitchChain()
 
-     useEffect(() => {
+    let buyBalanceOf = "0";
+    let sellBalanceOf = "0";
+
+    useEffect(() => {
+      console.log(`useEffect(() =>`);
+      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+    }, [sellTokenContract.address]);
+
+    useEffect(() => {
+      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+    }, [buyTokenContract.address]);
+
+    useEffect(() => {
+      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+    }, [activeAccount.address]);
+
+    useEffect(() => {
       console.debug(`PRICE:useEffect:chainId = ${chainId}`)
       exchangeContext.data.chainId = chainId;
     },[chainId]);
@@ -110,41 +127,9 @@ export default function PriceView({activeAccount, price, setPrice}: {
       }
     }, [errorMessage]);
 
-    let buyBalanceOf = "0";
-    let sellBalanceOf = "0";
-
-    useEffect(() => {
-      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-    }, [sellTokenContract.address]);
-
-    useEffect(() => {
-      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-    }, [buyTokenContract.address]);
-
-    useEffect(() => {
-      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-    }, [activeAccount.address]);
-
-    const unwatch = watchAccount(wagmiConfig, { 
-      onChange(data) {
-        // console.debug(`account changed`);
-        // console.debug(`watchAccount:\ndata =  ${JSON.stringify(data,null,2)}`)
-        const chains = wagmiConfig.chains 
-        const chain = chains.find(chain => chain.id === data.chainId)
-        console.debug(`chain = ${JSON.stringify(chain,null,2)}`)
-        processNetworkChange(data.chainId)
-      },
-    })
-      
-    const processAccountChange = (account: any) => {
-      // console.debug("APP ACCOUNT = " + JSON.stringify(account.address, null, 2))
-    };
-
     const processNetworkChange = (newChainId: any) => {
       console.debug(`======================================================================`);
       console.debug(`processNetworkChange:newChainId = ${JSON.stringify(newChainId,null,2)}`)
-      switchChain(newChainId)
       setChainId(newChainId)
       let newNetworkName = getNetworkName(newChainId);
 
@@ -176,12 +161,12 @@ export default function PriceView({activeAccount, price, setPrice}: {
       }
     };
 
-      // This code currently only works for sell buy will default to undefined
-         const parsedSellAmount = sellAmount && tradeDirection === "sell"
-        ? parseUnits(sellAmount, sellTokenContract.decimals).toString()
-        : undefined;
- 
-        const parsedBuyAmount = buyAmount && tradeDirection === "buy"
+  // This code currently only works for sell buy will default to undefined
+    const parsedSellAmount = sellAmount && tradeDirection === "sell"
+      ? parseUnits(sellAmount, sellTokenContract.decimals).toString()
+      : undefined;
+
+    const parsedBuyAmount = buyAmount && tradeDirection === "buy"
       ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
       : undefined;
 
@@ -251,6 +236,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
         <form autoComplete="off">
           <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
           <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+          <ManageSponsorships connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
           <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
           <ErrorDialog errMsg={errorMessage} />
