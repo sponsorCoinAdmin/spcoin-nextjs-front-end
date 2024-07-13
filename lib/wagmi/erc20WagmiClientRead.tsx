@@ -1,7 +1,7 @@
 'use client'
 
 import { useChainId } from 'wagmi'
-import { config } from '@/lib/wagmi/config'
+import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits, getAddress } from 'viem'
 import { useReadContract } from 'wagmi'
 import { erc20Abi } from 'viem' 
