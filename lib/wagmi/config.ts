@@ -10,13 +10,13 @@ let SEPOLIA_URL:string = "";
 switch (BLOCKCHAIN_PROVIDER) {
   case "ALCHEMY":
     MAINNET_URL = process.env.NEXT_PUBLIC_ALCHEMY_MAINNET_URL || "";
-    POLYGON_URL = process.env.NEXT_PUBLIC_ALCHEMY_POLYGON_KEY || "";
-    SEPOLIA_URL = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_KEY || "";
+    POLYGON_URL = process.env.NEXT_PUBLIC_ALCHEMY_POLYGON_URL || "";
+    SEPOLIA_URL = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_URL || "";
   break;
   case "INFURA":
     MAINNET_URL = process.env.NEXT_PUBLIC_INFURA_MAINNET_URL || "";
-    POLYGON_URL = process.env.NEXT_PUBLIC_INFURA_POLYGON_KEY || "";
-    SEPOLIA_URL = process.env.NEXT_PUBLIC_INFURA_SEPOLIA_KEY || "";
+    POLYGON_URL = process.env.NEXT_PUBLIC_INFURA_POLYGON_URL || "";
+    SEPOLIA_URL = process.env.NEXT_PUBLIC_INFURA_SEPOLIA_URL || "";
   break;
 }
 
@@ -43,8 +43,8 @@ export const config:any = createConfig({
   },
 })
 
-declare module 'wagmi' {
-  interface Register {
-    config: typeof config
-  }
-}
+// declare module 'wagmi' {
+//   interface Register {
+//     config: typeof config
+//   }
+// }
