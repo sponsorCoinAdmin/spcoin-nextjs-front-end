@@ -1,6 +1,7 @@
 import { mainnet, polygon, sepolia } from 'wagmi/chains'
 import { createConfig, http } from 'wagmi'
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 
 export const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
 let MAINNET_URL:string = "";
@@ -29,8 +30,8 @@ export const wagmiConfig = createConfig({
   chains: [mainnet, polygon, sepolia],
   connectors: [
     injected(),
-    // coinbaseWallet({ appName: 'Create Wagmi' }),
-    // walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
+    coinbaseWallet({ appName: 'Create Wagmi' }),
+    walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
   ],
   ssr: true,
   transports: {
@@ -41,8 +42,41 @@ export const wagmiConfig = createConfig({
     [polygon.id]: http(POLYGON_URL),
     [sepolia.id]: http(SEPOLIA_URL),
   },
+  
 })
 
+// Choose which chains you'd like to show
+const connectKitConfig_NEW = createConfig(
+  getDefaultConfig({
+    // Your dApps chains
+    chains: [mainnet, polygon, sepolia],
+    connectors: [
+      injected(),
+      coinbaseWallet({ appName: 'Create Wagmi' }),
+      walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
+    ],
+    ssr: true,
+    transports: {
+      // [mainnet.id]: http(),
+      // [polygon.id]: http(),
+      // [sepolia.id]: http(),
+      [mainnet.id]: http(MAINNET_URL),      
+      [polygon.id]: http(POLYGON_URL),
+      [sepolia.id]: http(SEPOLIA_URL),
+    },
+  
+    // Required API Keys
+    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
+
+    // Required App Info
+    appName: "SponsorCoin Exchange",
+
+    // Optional App Info
+    appDescription: "SponsorCoin Exchange",
+    appUrl: "https://family.co", // your app's url
+    appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
+  }),
+);
   /*
   // Choose which chains you'd like to show
 const connectKitConfig = createConfig(
