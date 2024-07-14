@@ -29,7 +29,7 @@ console.debug(`POLYGON_URL         = ${POLYGON_URL}`)
 console.debug(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
 
 // Choose which chains you'd like to show
-const connectKitConfig = createConfig(
+const connectKitWagmiConfig = createConfig(
   getDefaultConfig({
     // Your dApps chains
     chains: [mainnet, polygon, sepolia],
@@ -69,7 +69,7 @@ export default function ({children} : {
   const queryClient = new QueryClient();
 
   return (
-    <WagmiProvider config={connectKitConfig}>
+    <WagmiProvider config={connectKitWagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
           { children }
@@ -77,8 +77,4 @@ export default function ({children} : {
       </QueryClientProvider>
     </WagmiProvider>
   )
-}
-
-function cors(): any {
-  throw new Error("Function not implemented.");
 }

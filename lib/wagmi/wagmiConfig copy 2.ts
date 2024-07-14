@@ -79,7 +79,7 @@ const connectKitConfig_NEW = createConfig(
 );
   /*
   // Choose which chains you'd like to show
-const connectKitConfig = createConfig(
+const connectKitWagmiConfig = createConfig(
   getDefaultConfig({
     // Your dApps chains
     chains: [mainnet, polygon, sepolia],
