@@ -1,6 +1,7 @@
 import { mainnet, polygon, sepolia } from 'wagmi/chains'
 import { createConfig, http } from 'wagmi'
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
+import { getDefaultConfig } from 'connectkit';
 
 export const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
 let MAINNET_URL:string = "";
@@ -34,34 +35,28 @@ export const wagmiConfig = createConfig({
   ],
   ssr: true,
   transports: {
-    // [mainnet.id]: http(),
-    // [polygon.id]: http(),
-    // [sepolia.id]: http(),
     [mainnet.id]: http(MAINNET_URL),      
     [polygon.id]: http(POLYGON_URL),
     [sepolia.id]: http(SEPOLIA_URL),
   },
 })
 
-  /*
-  // Choose which chains you'd like to show
-const connectKitWagmiConfig = createConfig(
+export const connectKitWagmiConfig = createConfig(
   getDefaultConfig({
     // Your dApps chains
     chains: [mainnet, polygon, sepolia],
+    connectors: [
+      injected(),
+      // coinbaseWallet({ appName: 'Create Wagmi' }),
+      // walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
+    ],
+    ssr: true,
     transports: {
-      // RPC URL for each chain
-      [mainnet.id]: http(
-      `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_MAINNET_KEY}`,
-      ),      
-      [polygon.id]: http(
-        `https://polygonzkevm-mainnet.g.alchemy.com/v2${process.env.NEXT_PUBLIC_ALCHEMY_POLYGON_KEY}`,
-      ),
-      [sepolia.id]: http(
-        `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_KEY}`,
-      ),
+      [mainnet.id]: http(MAINNET_URL),      
+      [polygon.id]: http(POLYGON_URL),
+      [sepolia.id]: http(SEPOLIA_URL),
     },
-
+  
     // Required API Keys
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
 
@@ -70,8 +65,7 @@ const connectKitWagmiConfig = createConfig(
 
     // Optional App Info
     appDescription: "SponsorCoin Exchange",
-    appUrl: "https://family.com", // your app's url
+    appUrl: "https://family.co", // your app's url
     appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
   }),
 );
-*/

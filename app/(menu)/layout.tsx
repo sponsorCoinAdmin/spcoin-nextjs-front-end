@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import '@/app/globals.css'
 import Footer from '@/components/panes/footer'
 import Header from '@/components/panes/header'
-import SpCoinWrapper from '@/components/SpCoinWrapper'
+import SpCoinWrapper from '@/components/Wrappers/SpCoinWrapper'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
