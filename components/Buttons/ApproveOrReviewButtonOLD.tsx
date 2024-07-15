@@ -107,7 +107,7 @@ function ApproveOrReviewButton({
         abi: erc20ABI,
         functionName: "approve",
         args: [EXCHANGE_PROXY, MAX_ALLOWANCE],
-        onError(error) {
+        onError(error:any) {
           console.error('***ERROR*** usePrepareContractWrite Error', error.message)
         }, 
         enabled: true
