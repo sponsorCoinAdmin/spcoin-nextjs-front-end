@@ -33,7 +33,6 @@ import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
-import { wagmiConfig } from '@/lib/wagmi/wagmiConfig';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 

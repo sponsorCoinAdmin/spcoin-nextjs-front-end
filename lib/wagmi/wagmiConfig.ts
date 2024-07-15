@@ -41,7 +41,7 @@ export const config = createConfig({
   },
 })
 
-export const wagmiConfig = createConfig(
+export const wagmiConfig_OLD = createConfig(
   getDefaultConfig({
     // Your dApps chains
     chains: [mainnet, polygon, sepolia],
