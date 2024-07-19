@@ -1,4 +1,4 @@
-import { connectKitWagmiConfig } from './wagmiConfig'
+import { config } from './wagmiConfig'
 import { Address, getAddress } from "viem";
 import { formatUnits } from 'viem' 
 import { getBalance } from '@wagmi/core'
@@ -22,7 +22,7 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
 
   console.debug(`BEFORE: getWagmiBalanceOfRec:tokenAddr = :\n${JSON.stringify(tokenAddr,null,2)}`)
 
-  const resp = await getBalance(connectKitWagmiConfig, {
+  const resp = await getBalance(config, {
     address: getAddress(tokenAddr),
   })
 
@@ -33,8 +33,8 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
     symbol: resp.symbol,
     value: resp.value.toString()
   }
-  // alert(`getWagmiBalanceOfRec:connectKitWagmiConfig:\n${JSON.stringify(connectKitWagmiConfig,null,2)}`)
-  // console.debug(`getWagmiBalanceOfRec:connectKitWagmiConfig:\n${JSON.stringify(connectKitWagmiConfig,null,2)}`)
+  // alert(`getWagmiBalanceOfRec:config:\n${JSON.stringify(config,null,2)}`)
+  // console.debug(`getWagmiBalanceOfRec:config:\n${JSON.stringify(config,null,2)}`)
   // console.debug(`getWagmiBalanceOfRec:resp:\n${JSON.stringify(resp,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
   console.debug(`AFTER: getWagmiBalanceOfRec:retResponse:\n${JSON.stringify(retResponse,null,2)}`)
 

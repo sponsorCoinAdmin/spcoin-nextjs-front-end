@@ -26,51 +26,51 @@ console.debug(`MAINNET_URL         = ${MAINNET_URL}`)
 console.debug(`POLYGON_URL         = ${POLYGON_URL}`)
 console.debug(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
 
-export const config = createConfig({
-  chains: [mainnet, polygon, sepolia],
-  connectors: [
-    injected(),
-    // coinbaseWallet({ appName: 'Create Wagmi' }),
-    // walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
-  ],
-  ssr: true,
-  transports: {
-    [mainnet.id]: http(MAINNET_URL),      
-    [polygon.id]: http(POLYGON_URL),
-    [sepolia.id]: http(SEPOLIA_URL),
-  },
-})
+// export const config_OLD = createConfig({
+//   chains: [mainnet, polygon, sepolia],
+//   connectors: [
+//     injected(),
+//     // coinbaseWallet({ appName: 'Create Wagmi' }),
+//     // walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
+//   ],
+//   ssr: true,
+//   transports: {
+//     [mainnet.id]: http(MAINNET_URL),      
+//     [polygon.id]: http(POLYGON_URL),
+//     [sepolia.id]: http(SEPOLIA_URL),
+//   },
+// })
 
-export const wagmiConfig_OLD = createConfig(
-  getDefaultConfig({
-    // Your dApps chains
-    chains: [mainnet, polygon, sepolia],
-    connectors: [
-      injected(),
-      // coinbaseWallet({ appName: 'Create Wagmi' }),
-      // walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
-    ],
-    ssr: true,
-    transports: {
-      [mainnet.id]: http(MAINNET_URL),      
-      [polygon.id]: http(POLYGON_URL),
-      [sepolia.id]: http(SEPOLIA_URL),
-    },
+// export const wagmiConfig_OLD = createConfig(
+//   getDefaultConfig({
+//     // Your dApps chains
+//     chains: [mainnet, polygon, sepolia],
+//     connectors: [
+//       injected(),
+//       // coinbaseWallet({ appName: 'Create Wagmi' }),
+//       // walletConnect({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ""}),
+//     ],
+//     ssr: true,
+//     transports: {
+//       [mainnet.id]: http(MAINNET_URL),      
+//       [polygon.id]: http(POLYGON_URL),
+//       [sepolia.id]: http(SEPOLIA_URL),
+//     },
   
-    // Required API Keys
-    walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
+//     // Required API Keys
+//     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "",
 
-    // Required App Info
-    appName: "SponsorCoin Exchange",
+//     // Required App Info
+//     appName: "SponsorCoin Exchange",
 
-    // Optional App Info
-    appDescription: "SponsorCoin Exchange",
-    appUrl: "https://family.co", // your app's url
-    appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
-  }),
-);
+//     // Optional App Info
+//     appDescription: "SponsorCoin Exchange",
+//     appUrl: "https://family.co", // your app's url
+//     appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
+//   }),
+// );
 
-export const connectKitWagmiConfig = createConfig(
+export const config = createConfig(
   getDefaultConfig({
     // Your dApps chains
     chains: [mainnet, polygon, sepolia],

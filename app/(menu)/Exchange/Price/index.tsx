@@ -35,6 +35,7 @@ import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setExchangeState } from '@/app/(menu)/Exchange';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
+import { useAccount } from 'wagmi'
 
 //////////// Price Code
 export default function PriceView({activeAccount, price, setPrice}: {
@@ -66,9 +67,24 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
     let buyBalanceOf = "0";
     let sellBalanceOf = "0";
+    const { chain } = useAccount();
 
     useEffect(() => {
-      console.log(`useEffect(() =>`);
+      console.debug(`useEffect(() => chain = ${JSON.stringify(chain, null, 2)}`);
+      // if (chain != undefined) {
+      //   processNetworkChange(chain.id);
+      //   console.debug(`useEffect(() => chainId =${chain.id}`);
+      // }
+    }, [chain]);
+
+    useEffect(() => {
+      console.debug(`PRICE:useEffect:chainId = ${chainId}`)
+      exchangeContext.data.chainId = chainId;
+      // processNetworkChange(chainId);
+    },[chainId]);
+
+    useEffect(() => {
+      console.debug(`useEffect(() =>`);
       sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
     }, [sellTokenContract.address]);
 
@@ -82,28 +98,23 @@ export default function PriceView({activeAccount, price, setPrice}: {
     }, [activeAccount.address]);
 
     useEffect(() => {
-      console.debug(`PRICE:useEffect:chainId = ${chainId}`)
-      exchangeContext.data.chainId = chainId;
-    },[chainId]);
-
-    useEffect(() => {
-      console.debug(`PRICE:setDisplayPanels(${displayState})`);
+      console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
       exchangeContext.data.displayState = displayState;
     },[displayState]);
 
     useEffect(() => {
-      console.debug('Price slippage changed to  ' + slippage);
+      console.debug('PRICE:useEffect slippage changed to  ' + slippage);
       exchangeContext.data.slippage = slippage;
     }, [slippage]);
 
     useEffect(() => {
-      console.debug('Price state changed to  ' + state.toString);
+      console.debug('PRICE:useEffect: state changed to  ' + state.toString);
       exchangeContext.data.state = state;
     }, [state]);
 
     useEffect(() => {
-      console.debug("sellTokenContract.symbol changed to " + sellTokenContract.name);
+      console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract]);
 
@@ -116,7 +127,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     }, [buyTokenContract]);
 
     useEffect(() => {
-      console.debug("recipientWallet changed to " + recipientWallet.name);
+      console.debug("PRICE:useEffect:recipientWallet changed to " + recipientWallet.name);
       exchangeContext.recipientWallet = recipientWallet;
     }, [recipientWallet]);
 
@@ -126,10 +137,10 @@ export default function PriceView({activeAccount, price, setPrice}: {
       }
     }, [errorMessage]);
 
-    const processNetworkChange = (newChainId: any) => {
+    const processNetworkChange = (newChainId:number) => {
       console.debug(`======================================================================`);
       console.debug(`processNetworkChange:newChainId = ${JSON.stringify(newChainId,null,2)}`)
-      setChainId(newChainId)
+      exchangeContext.data.chainId = newChainId;
       let newNetworkName = getNetworkName(newChainId);
 
       // const newNetworkName:string = network?.chain?.name.toLowerCase()

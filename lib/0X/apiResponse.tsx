@@ -19,7 +19,6 @@ const apiResponse = async(request:string, urlParms:string) => {
         },
       }
     );
-  
     const data = await response.json();
     return new Response(JSON.stringify(data, null, 2))
   }

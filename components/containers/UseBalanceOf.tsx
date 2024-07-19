@@ -1,4 +1,4 @@
-import { connectKitWagmiConfig } from '@/lib/wagmi/wagmiConfig';
+import { config } from '@/lib/wagmi/wagmiConfig';
 import { readContract } from '@wagmi/core';
 import React from 'react';
 import { Address, erc20Abi, parseAbi } from 'viem';
@@ -21,7 +21,7 @@ export const abi = [
   },
 ] as const
 
-// const balanceOf2 = readContract(connectKitWagmiConfig, { 
+// const balanceOf2 = readContract(config, { 
 //   address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
 //   abi: parseAbi(['function balanceOf(address) view returns (uint256)']),
 //   functionName: 'balanceOf',
@@ -41,7 +41,7 @@ const result = useReadContract({
     functionName: 'balanceOf',
     args: [contractAddress],
     account: accountAddress,
-    config: connectKitWagmiConfig
+    config: config
     })
     console.debug(`result = ${JSON.stringify(result,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
   return (

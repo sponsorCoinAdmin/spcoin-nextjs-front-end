@@ -5,6 +5,7 @@ import { useState } from 'react';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 import { getNetworkName } from '../network/utils';
 import { TokenContract } from "@/lib/structure/types";
+import { config } from '@/lib/wagmi/wagmiConfig'
 
 import { useChainId } from 'wagmi';
 
@@ -74,7 +75,7 @@ const resetContextNetwork = (context:ExchangeContext, network:string|number) => 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-    chainId = useChainId();
+    const chainId = useChainId({config});
     // alert(`chainId = ${chainId}`)
     const [context, setContext] = useState<ExchangeContext>(getInitialContext(chainId))
     exchangeContext = context;

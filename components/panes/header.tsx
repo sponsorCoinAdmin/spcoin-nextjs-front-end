@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import styles from "@/styles/Header.module.css"
+import { config } from '@/lib/wagmi/wagmiConfig'
 import spCoin_png from '../../public/resources/images/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -13,7 +14,7 @@ import { useChainId } from "wagmi";
 export default () => {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
   const [avatar, setAvatar] = useState<string>("/resources/images/chains/1.png");
-  let chainId = useChainId();
+  const chainId = useChainId({config});
   let network = getNetworkName(chainId)
   // ToDo Optimize this: useEffect is used to set the network and image for the set chainId when
   // the networkName async is complete.
