@@ -48,8 +48,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
-    // const [chainId, setChainId] = useState(exchangeContext.data.chainId);
-    const [networkName, setNetworkName] = useState(exchangeContext.data.networkName);
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
@@ -65,17 +63,26 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     // alert("EXCHANGE/PRICE HERE 2")
 
-    let chainId:any;
+    let chainId:number = exchangeContext.data.chainId;
+    let networkName:string = exchangeContext.data.networkName;
     let buyBalanceOf = "0";
     let sellBalanceOf = "0";
     const { chain } = useAccount();
 
     useEffect(() => {
       console.debug(`useEffect(() => chain = ${JSON.stringify(chain, null, 2)}`);
-      // if (chain != undefined) {
-      //   processNetworkChange(chain.id);
-      //   console.debug(`useEffect(() => chainId =${chain.id}`);
-      // }
+      if (chain != undefined) {
+        chainId = chain.id;
+        networkName = chain.name.toLowerCase();
+        exchangeContext.data.chainId = chainId;
+        exchangeContext.data.networkName = networkName;
+
+        console.debug(`useEffect(() => chainId =${chain.id}`);
+        console.debug("networkName = " + networkName);
+        console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
+        // setNetwork(newNetworkName);
+          // processNetworkChange(chain.id);
+      }
     }, [chain]);
 
     useEffect(() => {
@@ -152,7 +159,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
         resetContextNetwork(exchangeContext, newNetworkName)
         console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
-        setNetworkName(newNetworkName);
+        networkName = newNetworkName;
         console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
         console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellTokenContract, null, 2)}`)
         console.debug(`BEFORE sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
@@ -179,6 +186,8 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const parsedBuyAmount = buyAmount && tradeDirection === "buy"
       ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
       : undefined;
+
+    console.debug(`Initializing Fetcher with "/api/" + ${networkName} + "/0X/price"`)
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
