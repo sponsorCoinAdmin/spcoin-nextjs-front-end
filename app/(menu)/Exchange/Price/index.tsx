@@ -48,7 +48,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
-    const [chainId, setChainId] = useState(exchangeContext.data.chainId);
+    // const [chainId, setChainId] = useState(exchangeContext.data.chainId);
     const [networkName, setNetworkName] = useState(exchangeContext.data.networkName);
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
@@ -65,6 +65,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     // alert("EXCHANGE/PRICE HERE 2")
 
+    let chainId:any;
     let buyBalanceOf = "0";
     let sellBalanceOf = "0";
     const { chain } = useAccount();
