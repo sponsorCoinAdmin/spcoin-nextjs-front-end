@@ -75,19 +75,20 @@ export default function PriceView({activeAccount, price, setPrice}: {
         chainId = chain.id;
         networkName = chain.name.toLowerCase();
         exchangeContext.data.chainId = chainId;
-        exchangeContext.data.networkName = networkName;
 
         console.debug(`chainId =${chain.id}`);
-        console.debug("networkName = " + networkName);
-        console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
         // setNetwork(newNetworkName);
-          // processNetworkChange(chain.id);
-          if (exchangeContext.data.networkName !== networkName) {
-            resetContextNetwork(exchangeContext, networkName)
-            console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
-            console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
-
-          }
+        // processNetworkChange(chain.id);
+        resetContextNetwork(exchangeContext, networkName)
+        console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
+        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        setBuyTokenContract(exchangeContext.buyTokenContract);
+        setRecipientElement(exchangeContext.recipientWallet);
+        setAgentElement(exchangeContext.agentWallet);
+        setDisplayState(exchangeContext.data.displayState);
+        setState(exchangeContext.data.state);
+        setSlippage(exchangeContext.data.slippage);
+        setExchangeState(exchangeContext.data.state);
       }
     }, [chain]);
 
