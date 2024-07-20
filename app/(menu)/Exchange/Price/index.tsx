@@ -82,6 +82,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
         resetContextNetwork(exchangeContext, networkName)
         console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        setSellTokenContract(exchangeContext.sellTokenContract);
         setBuyTokenContract(exchangeContext.buyTokenContract);
         setRecipientElement(exchangeContext.recipientWallet);
         setAgentElement(exchangeContext.agentWallet);
@@ -124,8 +125,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
         console.debug("======================================================================");
       }
     };
-
-
 
     useEffect(() => {
       console.debug(`PRICE:useEffect:chainId = ${chainId}`)
