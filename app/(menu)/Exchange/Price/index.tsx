@@ -77,13 +77,54 @@ export default function PriceView({activeAccount, price, setPrice}: {
         exchangeContext.data.chainId = chainId;
         exchangeContext.data.networkName = networkName;
 
-        console.debug(`useEffect(() => chainId =${chain.id}`);
+        console.debug(`chainId =${chain.id}`);
         console.debug("networkName = " + networkName);
         console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
         // setNetwork(newNetworkName);
           // processNetworkChange(chain.id);
+          if (exchangeContext.data.networkName !== networkName) {
+            resetContextNetwork(exchangeContext, networkName)
+            console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
+            console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+
+          }
       }
     }, [chain]);
+
+    const processNetworkChange = (newChainId:number) => {
+      console.debug(`======================================================================`);
+      console.debug(`processNetworkChange:newChainId = ${JSON.stringify(newChainId,null,2)}`)
+      exchangeContext.data.chainId = newChainId;
+      let newNetworkName = getNetworkName(newChainId);
+
+      console.debug("newNetworkName = " + newNetworkName);
+      console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
+
+      // console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+      if (exchangeContext.data.networkName !== newNetworkName) {
+        resetContextNetwork(exchangeContext, newNetworkName)
+        console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
+        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        networkName = newNetworkName;
+        console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
+        console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellTokenContract, null, 2)}`)
+        console.debug(`BEFORE sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
+        setSellTokenContract(exchangeContext.sellTokenContract);
+        console.debug(`AFTER  sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
+        console.debug("------------------------ AFTER SELL TOKEN ---------------------------");
+        setBuyTokenContract(exchangeContext.buyTokenContract);
+        setRecipientElement(exchangeContext.recipientWallet);
+        setAgentElement(exchangeContext.agentWallet);
+        setDisplayState(exchangeContext.data.displayState);
+        setState(exchangeContext.data.state);
+        setSlippage(exchangeContext.data.slippage);
+        setExchangeState(exchangeContext.data.state);
+        console.debug(`sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
+        console.debug("======================================================================");
+      }
+    };
+
+
 
     useEffect(() => {
       console.debug(`PRICE:useEffect:chainId = ${chainId}`)
@@ -144,39 +185,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
         openDialog("#errorDialog");
       }
     }, [errorMessage]);
-
-    const processNetworkChange = (newChainId:number) => {
-      console.debug(`======================================================================`);
-      console.debug(`processNetworkChange:newChainId = ${JSON.stringify(newChainId,null,2)}`)
-      exchangeContext.data.chainId = newChainId;
-      let newNetworkName = getNetworkName(newChainId);
-
-      console.debug("newNetworkName = " + newNetworkName);
-      console.debug("exchangeContext.networkName = " + exchangeContext.data.networkName);
-
-      // console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
-      if (exchangeContext.data.networkName !== newNetworkName) {
-        resetContextNetwork(exchangeContext, newNetworkName)
-        console.debug("UPDATED exchangeContext.networkName = " + exchangeContext.data.networkName);
-        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
-        networkName = newNetworkName;
-        console.debug("------------------------ BEFORE SELL TOKEN --------------------------");
-        console.debug(`BEFORE exchangeContext.sellToken = ${JSON.stringify(exchangeContext.sellTokenContract, null, 2)}`)
-        console.debug(`BEFORE sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
-        setSellTokenContract(exchangeContext.sellTokenContract);
-        console.debug(`AFTER  sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
-        console.debug("------------------------ AFTER SELL TOKEN ---------------------------");
-        setBuyTokenContract(exchangeContext.buyTokenContract);
-        setRecipientElement(exchangeContext.recipientWallet);
-        setAgentElement(exchangeContext.agentWallet);
-        setDisplayState(exchangeContext.data.displayState);
-        setState(exchangeContext.data.state);
-        setSlippage(exchangeContext.data.slippage);
-        setExchangeState(exchangeContext.data.state);
-        console.debug(`sellTokenContract = ${JSON.stringify(sellTokenContract, null, 2)}`)
-        console.debug("======================================================================");
-      }
-    };
 
   // This code currently only works for sell buy will default to undefined
     const parsedSellAmount = sellAmount && tradeDirection === "sell"
