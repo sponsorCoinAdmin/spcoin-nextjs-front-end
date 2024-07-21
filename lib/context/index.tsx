@@ -1,16 +1,11 @@
 'use client'
+import { useEffect, useState } from 'react';
 import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/lib/structure/types';
-import { useState } from 'react';
-// import { isSpCoin } from '@/lib/spCoin/utils';
-import { getNetworkName } from '../network/utils';
 import { TokenContract } from "@/lib/structure/types";
 import { config } from '@/lib/wagmi/wagmiConfig'
-
-import { useChainId } from 'wagmi';
-
-// import { junkName, isSpCoin, isSpCoin2 } from '../spCoin/junk'
-// import { junkName } from '@/lib/spCoin/utils';
+import { useAccount, useChainId } from 'wagmi';
+// import { isSpCoin } from '@/lib/spCoin/utils';
 
 let chainId:number = 1;
 let exchangeContext:ExchangeContext;
@@ -20,12 +15,13 @@ const isSpCoin = (TokenContract:TokenContract) => {
     return TokenContract.symbol === "SpCoin" ? true:false
   }  
 
-const getInitialContext = (network:string|number) => {
-    const defaultNetworkSettings = getDefaultNetworkSettings(network)
+const getInitialContext = (chain:any) => {
+    const networkName = ( chain && chain.name) ?  chain.name.toLowerCase() : 1;
+    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     const defaultBuyToken = defaultNetworkSettings.defaultBuyToken
     const tokenIsSpCoin = isSpCoin(defaultBuyToken);
     let initialContext:ExchangeContext = {
-        data: getInitialDataSettings(network, isSpCoin(defaultBuyToken)),
+        data: getInitialDataSettings(networkName, isSpCoin(defaultBuyToken)),
         network: defaultNetworkSettings.networkHeader,
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
@@ -49,35 +45,37 @@ let data:TradeData = {
     return data;
 }
 
-const resetContextNetwork = (context:ExchangeContext, network:string|number) => {
-    
-    const newNetworkName:string = typeof network === "string" ? network.toLowerCase() : getNetworkName(network)
-    console.debug("resetContextNetwork: newNetworkName = " + newNetworkName);
+const resetContextNetwork = (chain:any) => {
+    const networkName = chain.name.toLowerCase();
+    console.debug("resetContextNetwork: newNetworkName = " + networkName);
     console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.data.networkName);
+    console.debug(`UPDATING NETWORK to ${networkName}`);
 
-    if (context.data.networkName !== newNetworkName) {
-        console.debug(`UPDATING NETWORK to ${newNetworkName}`);
-
-        const defaultNetworkSettings = getDefaultNetworkSettings(newNetworkName)
-        console.debug(`Loaded defaultNetworkSettings for ${newNetworkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-        context.data.networkName = newNetworkName
-        context.data.state = EXCHANGE_STATE.PRICE;
-        context.data.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
-        context.data.slippage = "0.02",
-        context.sellTokenContract = defaultNetworkSettings.defaultSellToken,
-        context.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
-        context.recipientWallet = defaultNetworkSettings.defaultRecipient,
-        context.agentWallet = defaultNetworkSettings.defaultAgent
-    }      
-    return context;
+    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
+    console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
+    exchangeContext.data.chainId = chain.id;
+    exchangeContext.data.networkName = networkName
+    exchangeContext.data.state = EXCHANGE_STATE.PRICE;
+    exchangeContext.data.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
+    exchangeContext.data.slippage = "0.02",
+    exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+    exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
+    exchangeContext.recipientWallet = defaultNetworkSettings.defaultRecipient,
+    exchangeContext.agentWallet = defaultNetworkSettings.defaultAgent
 }
 
 export function ExchangeWrapper({children} : {
     children: React.ReactNode;
 }) {
-    const chainId = useChainId({config});
-    // alert(`chainId = ${chainId}`)
-    const [context, setContext] = useState<ExchangeContext>(getInitialContext(chainId))
+    const { chain } = useAccount();
+
+    alert(`Context.Outside:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}`);
+
+    useEffect(() => {
+        alert(`Context:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}`);
+      }, [chain]);
+    
+    const [context, setContext] = useState<ExchangeContext>(getInitialContext(chain))
     exchangeContext = context;
 
     return (
