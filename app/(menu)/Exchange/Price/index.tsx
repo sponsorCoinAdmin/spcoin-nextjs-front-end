@@ -14,7 +14,7 @@ import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { erc20Abi } from 'viem' 
 import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
-import { fetcher, processError } from '@/lib/0X/fetcher';
+import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
@@ -61,7 +61,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const { chain } = useAccount();
 
     useEffect(() => {
-      alert(`Price:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}\n `);
+      // alert(`Price:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}\n `);
       if (chain != undefined && exchangeContext.data.chainId !== chain.id) {
         resetContextNetwork(chain)
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
@@ -74,6 +74,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
         setSlippage(exchangeContext.data.slippage);
         setExchangeState(exchangeContext.data.state);
       }
+      // alert(`Price:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}\n `);
     }, [chain]);
 
     useEffect(() => {
@@ -139,11 +140,24 @@ export default function PriceView({activeAccount, price, setPrice}: {
       ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
       : undefined;
 
-    console.debug(`Initializing Fetcher with "/api/" + chain?.name.toLowerCase() + "/0X/price"`)
+    console.debug(`Initializing Fetcher with "/api/" + ${chain?.name.toLowerCase()} + "/0X/price"`)
+
+    const apiCall = "http://localhost:3000/api/" + exchangeContext.data.networkName + "/0X/price";
+
+    const getPriceApiTransaction = (data:any) => {
+      let priceTransaction = `${apiCall}`
+      priceTransaction += `?sellToken=${sellTokenContract.address}`
+      priceTransaction += `&buyToken=${buyTokenContract.address}`
+      priceTransaction += `&sellAmount=${parsedSellAmount}\n`
+      // priceTransaction += `&buyAmount=${parsedBuyAmount}\n`
+      priceTransaction += `&connectedWalletAddr=${connectedWalletAddr}`
+      priceTransaction += JSON.stringify(data, null, 2)
+      return priceTransaction;
+    }
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
-        "/api/" + chain?.name.toLowerCase() + "/0X/price",
+        apiCall,
         {
           sellToken: sellTokenContract.address,
           buyToken: buyTokenContract.address,
@@ -158,9 +172,26 @@ export default function PriceView({activeAccount, price, setPrice}: {
       fetcher,
       {
         onSuccess: (data) => {
-          setPrice(data);
-          console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
-          setBuyAmount(formatUnits(data.buyAmount, buyTokenContract.decimals));
+          if (!data.code) {
+            let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
+            console.log(dataMsg)
+
+            setPrice(data);
+            console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
+            setBuyAmount(formatUnits(data.buyAmount, buyTokenContract.decimals));
+          }
+          else {
+            let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
+            // let errMsg = `ERROR: apiCall => ${apiCall}\n`
+            // errMsg += `sellToken: ${sellTokenContract.address}\n`
+            // errMsg += `buyToken: ${buyTokenContract.address}\n`
+            // errMsg += `buyAmount: ${parsedBuyAmount}\n`
+            // errMsg += `connectedWalletAddr: ${connectedWalletAddr}\n`
+            // errMsg += JSON.stringify(data, null, 2)
+ 
+            // throw {errCode: ERROR_0X_RESPONSE, errMsg: errMsg}
+            alert(errMsg)
+          }
         },
         onError: (error) => {
           processError(
@@ -171,7 +202,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
             setBuyAmount,
             setValidPriceInput
           );
-        },
+        }
       }
     );
 
