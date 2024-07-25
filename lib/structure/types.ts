@@ -69,7 +69,9 @@ type WalletElement = {
 }
 
 type TradeData = {
-  chain:any
+  connectedWalletAddr:any,
+  chainId: number;
+  networkName: string;
   sellAmount:string;
   sellBalanceOf:string;
   buyAmount:string;

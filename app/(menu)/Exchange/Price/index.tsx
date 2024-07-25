@@ -55,13 +55,18 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
     let tradeData:TradeData = exchangeContext.tradeData;
+
     // let buyBalanceOf = "0";
     // let sellBalanceOf = "0";
     const { chain } = useAccount();
 
     useEffect(() => {
+      // alert(`Price:exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+    }, []);
+
+    useEffect(() => {
       // alert(`Price:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}\n `);
-      if (chain != undefined && exchangeContext.tradeData.chain !== chain) {
+      if (chain != undefined && exchangeContext.tradeData.chainId !== chain.id) {
         resetContextNetwork(chain)
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
         setSellTokenContract(exchangeContext.sellTokenContract);
@@ -76,17 +81,17 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
     useEffect(() => {
       console.debug(`useEffect(() =>`);
-      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, sellTokenContract.address || "") || "0");
     }, [sellTokenContract.address]);
 
     useEffect(() => {
-      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, buyTokenContract.address || "") || "0");
     }, [buyTokenContract.address]);
 
     useEffect(() => {
-      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-    }, [activeAccount.address]);
+      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, buyTokenContract.address || "") || "0");
+      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, sellTokenContract.address || "") || "0");
+    }, [connectedWalletAddr]);
 
     useEffect(() => {
       console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
@@ -134,7 +139,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
     console.debug(`Initializing Fetcher with "/api/" + ${chain?.name.toLowerCase()} + "/0X/price"`)
 
-    const apiCall = "http://localhost:3000/api/" + exchangeContext.tradeData.chain.networkName + "/0X/price";
+    const apiCall = "http://localhost:3000/api/" + tradeData.networkName + "/0X/price";
 
     const getPriceApiTransaction = (data:any) => {
       let priceTransaction = `${apiCall}`

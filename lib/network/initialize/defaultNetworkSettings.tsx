@@ -9,12 +9,16 @@ import { isLowerCase } from '../utils';
  * @returns {Boolean}
  */
 
-const getDefaultNetworkSettings = (network:string|number) => {
-  if (typeof network === "string" && !isLowerCase(network)) {
-    alert("getDefaultNetworkSettings"+network )
-    network = network.toLowerCase()
+const getDefaultNetworkSettings = (chain:any) => {
+  if (typeof chain === "string" && !isLowerCase(chain)) {
+    alert("getDefaultNetworkSettings"+chain )
+    chain = chain.toLowerCase()
   }
-  switch(network)
+  else if (typeof chain !== "number" ) {
+    alert("getDefaultNetworkSettings"+chain )
+    chain = chain.id
+  }
+  switch(chain)
   {
       case 1:
       case "ethereum": return defaultEthereumSettings;

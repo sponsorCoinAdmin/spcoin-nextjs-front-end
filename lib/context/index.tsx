@@ -33,7 +33,9 @@ const getInitialContext = (chain:any) => {
 
 function getInitialDataSettings(network: string | number, ifSpCoin:boolean): TradeData {
     let tradeData:TradeData = {
-        chain: undefined,
+        connectedWalletAddr: undefined,
+        chainId: 1,
+        networkName: "ethereum",
         sellAmount: "0",
         sellBalanceOf: "0",
         buyAmount: "0",
@@ -48,12 +50,13 @@ function getInitialDataSettings(network: string | number, ifSpCoin:boolean): Tra
 const resetContextNetwork = (chain:any) => {
     const networkName = chain.name.toLowerCase();
     console.debug("resetContextNetwork: newNetworkName = " + networkName);
-    console.debug("resetContextNetwork: exchangeContext.tradeData.networkName = " + exchangeContext.tradeData.chain.networkName);
+    console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.tradeData.networkName);
     console.debug(`UPDATING NETWORK to ${networkName}`);
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-    exchangeContext.tradeData.chain = chain;
+    exchangeContext.tradeData.chainId = chain.id;
+    exchangeContext.tradeData.networkName = networkName
     exchangeContext.tradeData.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
     exchangeContext.tradeData.slippage = "0.02",
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
