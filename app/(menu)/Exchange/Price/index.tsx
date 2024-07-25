@@ -39,10 +39,10 @@ export default function PriceView({activeAccount, price, setPrice}: {
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
-  const connectedWalletAddr = activeAccount.address
 
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
+
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
@@ -54,7 +54,9 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
-    let tradeData:TradeData = exchangeContext.tradeData;
+    const tradeData:TradeData = exchangeContext.tradeData;
+    tradeData.connectedWalletAddr = activeAccount.address;
+    const connectedWalletAddr = tradeData.connectedWalletAddr
 
     // let buyBalanceOf = "0";
     // let sellBalanceOf = "0";
@@ -78,6 +80,18 @@ export default function PriceView({activeAccount, price, setPrice}: {
       }
       // alert(`Price:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}\n `);
     }, [chain]);
+
+    useEffect(() => {
+      // alert(`Price:sellAmount = ${sellAmount`)
+      tradeData.sellAmount = sellAmount;
+      // alert(`exchangeContext.tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+    }, [sellAmount]);
+
+    useEffect(() => {
+      // alert(`Price:sellAmount = ${buyAmount`)
+      tradeData.sellAmount = buyAmount;
+      // alert(`exchangeContext.tradeData.buyAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+    }, [buyAmount]);
 
     useEffect(() => {
       console.debug(`useEffect(() =>`);
@@ -244,7 +258,8 @@ export default function PriceView({activeAccount, price, setPrice}: {
             <SellContainer activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} setDisplayState={setDisplayState}/>
             <BuyContainer activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-            <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} />
+            {/* <PriceButton exchangeContext={exchangeContext} connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} /> */}
+            <PriceButton exchangeContext={exchangeContext} />
               {
                 // <QuoteButton sendTransaction={sendTransaction}/>
               }

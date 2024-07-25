@@ -1,41 +1,23 @@
-import React from 'react';
-import ApproveOrReviewButtonTEST from './ApproveOrReviewButtonTEST';
-import { EXCHANGE_STATE, TokenContract } from '@/lib/structure/types';
+import React, { useEffect } from 'react';
 import CustomConnectButton from './CustomConnectButton';
-import { Address } from 'viem';
+import ExchangeButton from './ExchangeButton';
+import { ExchangeContext } from '@/lib/structure/types';
 
 type Props = {
-    connectedWalletAddr: Address | undefined;
-    sellTokenContract: TokenContract, 
-    buyTokenContract: TokenContract,
-    sellBalance:string,
-    disabled: boolean,
-    slippage:string | null,
+    exchangeContext:ExchangeContext,
   }
 
 const PriceButton = ({
-    connectedWalletAddr,
-    sellTokenContract,
-    buyTokenContract,
-    sellBalance,
-    slippage,
-    disabled}:Props) => {
+    exchangeContext}:Props) => {
 
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
-    // alert("HERE 0")
-
   return (
     <div>
-        {!connectedWalletAddr ?
+        {!exchangeContext.tradeData.connectedWalletAddr ?
             (<CustomConnectButton />) :
-            (<ApproveOrReviewButtonTEST  />)
-                // token={sellTokenContract}
-                // connectedWalletAddr={connectedWalletAddr}
-                // sellBalance={sellBalance}
-                // disabled={disabled}
-                // setErrorMessage={setErrorMessage}/>)
+            (<ExchangeButton  exchangeContext={exchangeContext} />)
         }
     </div>
 );

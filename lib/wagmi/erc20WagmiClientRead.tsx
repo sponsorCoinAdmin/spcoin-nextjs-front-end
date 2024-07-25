@@ -22,7 +22,7 @@ const getERC20WagmiClientBalanceOfRec = (connectedWalletAddr: Address | string |
       config, 
     })
   }
-  console.debug(`getERC20WagmiClientBalanceOfRec.wagmiBalanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
+  // console.debug(`getERC20WagmiClientBalanceOfRec.wagmiBalanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
   return wagmiBalanceOfRec;
 }
 
