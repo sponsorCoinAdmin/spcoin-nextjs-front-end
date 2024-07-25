@@ -81,16 +81,16 @@ export default function QuoteView({
 
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [chainId, setChainId] = useState(exchangeContext.data.chainId);
-  const [network, setNetwork] = useState(exchangeContext.data.networkName);
-  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
-  const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
+  const [chainId, setChainId] = useState(exchangeContext.tradeData.chainId);
+  const [network, setNetwork] = useState(exchangeContext.tradeData.networkName);
+  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
-  const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
-  const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
-  const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
+  const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
+  const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.tradeData.state);
+  const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
 
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
@@ -109,23 +109,23 @@ export default function QuoteView({
   
   useEffect(() => {
     console.debug(`QUOTE: useEffect:chainId = ${chainId}`)
-    exchangeContext.data.chainId = chainId;
+    exchangeContext.tradeData.chainId = chainId;
   },[chainId]);
 
   useEffect(() => {
     console.debug(`QUOTE: setDisplayPanels(${displayState})`);
     setDisplayPanels(displayState);
-    exchangeContext.data.displayState = displayState;
+    exchangeContext.tradeData.displayState = displayState;
   },[displayState]);
 
   useEffect(() => {
     console.debug('QUOTE: slippage changed to  ' + slippage);
-    exchangeContext.data.slippage = slippage;
+    exchangeContext.tradeData.slippage = slippage;
   }, [slippage]);
 
   useEffect(() => {
     console.debug('QUOTE: state changed to  ' + state.toString);
-    exchangeContext.data.state = state;
+    exchangeContext.tradeData.state = state;
   }, [state]);
 
   useEffect(() => {

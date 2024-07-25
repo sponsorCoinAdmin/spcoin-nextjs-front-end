@@ -7,9 +7,9 @@ function swapTokens(sellTokenContract:TokenContract,
   buyTokenContract:TokenContract,
   setSellTokenContract:any,
   setBuyTokenContract:any) {
-let tmpElement: TokenContract = sellTokenContract;
-setSellTokenContract(buyTokenContract);
-setBuyTokenContract(tmpElement);
+  let tmpElement: TokenContract = sellTokenContract;
+  setSellTokenContract(buyTokenContract);
+  setBuyTokenContract(tmpElement);
 // setSellAmount(buyAmount)
 }
 
@@ -29,7 +29,7 @@ const BuySellSwapButton = (
     <div className={styles.switchButton}>
       <ArrowDownOutlined className={styles.switchArrow} onClick={() => swapTokens(
         sellTokenContract, buyTokenContract, setSellTokenContract, setBuyTokenContract)}/>
-      </div>
+    </div>
   );
 }
 

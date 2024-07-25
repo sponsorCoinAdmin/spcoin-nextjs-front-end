@@ -1,5 +1,4 @@
 import React from 'react';
-import ApproveOrReviewButton from './ApproveOrReviewButton'
 import ApproveOrReviewButtonTEST from './ApproveOrReviewButtonTEST';
 import { EXCHANGE_STATE, TokenContract } from '@/lib/structure/types';
 import CustomConnectButton from './CustomConnectButton';
@@ -29,14 +28,14 @@ const PriceButton = ({
 
   return (
     <div>
-        {connectedWalletAddr ?
-            (<ApproveOrReviewButtonTEST 
-                token={sellTokenContract}
-                connectedWalletAddr={connectedWalletAddr}
-                sellBalance={sellBalance}
-                disabled={disabled}
-                setErrorMessage={setErrorMessage}/>) :
-            (<CustomConnectButton />)
+        {!connectedWalletAddr ?
+            (<CustomConnectButton />) :
+            (<ApproveOrReviewButtonTEST  />)
+                // token={sellTokenContract}
+                // connectedWalletAddr={connectedWalletAddr}
+                // sellBalance={sellBalance}
+                // disabled={disabled}
+                // setErrorMessage={setErrorMessage}/>)
         }
     </div>
 );

@@ -4,7 +4,6 @@ import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { EXCHANGE_STATE } from "@/lib/structure/types";
-import { exchangeContext } from "@/lib/context";
 import React from 'react';
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
@@ -13,21 +12,11 @@ let exchangeState:EXCHANGE_STATE;
 export function Home() {
   
   const [price, setPrice] = useState<PriceResponse | undefined>();
-  const [quote, setQuote] = useState();
-  const [state, setState] = useState<EXCHANGE_STATE>(EXCHANGE_STATE.PRICE);
 
    // alert(`children = ${JSON.stringify(children,null,2)}`)
    const ACTIVE_ACCOUNT = useAccount()
   //  console.debug("*** Exchange:ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
 
-  const setExState = (exchangeState:EXCHANGE_STATE) => {
-    // alert(`setState = (${exchangeState})`)
-    setState(exchangeState)
-    exchangeContext.data.state = exchangeState;
-  }
-
-  setExchangeState = setExState;
-  exchangeState = state;
   // alert("HERE 1")
 
   console.debug(`EXCHANGE HERE 1\n activeAccount = ${ACTIVE_ACCOUNT} PRICE = ${price} setPrice = ${setPrice}` )

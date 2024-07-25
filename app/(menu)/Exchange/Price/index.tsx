@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { erc20Abi } from 'viem' 
-import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
+import { WalletElement, TokenContract, TradeData, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
@@ -30,7 +30,6 @@ import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
-import { setExchangeState } from '@/app/(menu)/Exchange';
 import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
@@ -44,68 +43,61 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
   try {
 // console.debug("########################### PRICE RERENDERED #####################################")
-    const [sellAmount, setSellAmount] = useState<string>(exchangeContext.data.sellAmount);
-    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.data.buyAmount);
-    const [tradeDirection, setTradeDirection] = useState(exchangeContext.data.tradeDirection);
-    const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.data.state);
-    const [slippage, setSlippage] = useState<string>(exchangeContext.data.slippage);
-    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.data.displayState);
+    const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
+    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
+    const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
+    const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
     const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
     const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
-    let buyBalanceOf = "0";
-    let sellBalanceOf = "0";
+    let tradeData:TradeData = exchangeContext.tradeData;
+    // let buyBalanceOf = "0";
+    // let sellBalanceOf = "0";
     const { chain } = useAccount();
 
     useEffect(() => {
       // alert(`Price:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}\n `);
-      if (chain != undefined && exchangeContext.data.chainId !== chain.id) {
+      if (chain != undefined && exchangeContext.tradeData.chain !== chain) {
         resetContextNetwork(chain)
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
         setSellTokenContract(exchangeContext.sellTokenContract);
         setBuyTokenContract(exchangeContext.buyTokenContract);
         setRecipientElement(exchangeContext.recipientWallet);
         setAgentElement(exchangeContext.agentWallet);
-        setDisplayState(exchangeContext.data.displayState);
-        setState(exchangeContext.data.state);
-        setSlippage(exchangeContext.data.slippage);
-        setExchangeState(exchangeContext.data.state);
+        setDisplayState(exchangeContext.tradeData.displayState);
+        setSlippage(exchangeContext.tradeData.slippage);
       }
       // alert(`Price:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}\n `);
     }, [chain]);
 
     useEffect(() => {
       console.debug(`useEffect(() =>`);
-      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
     }, [sellTokenContract.address]);
 
     useEffect(() => {
-      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
     }, [buyTokenContract.address]);
 
     useEffect(() => {
-      buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
-      sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
+      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
     }, [activeAccount.address]);
 
     useEffect(() => {
       console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
-      exchangeContext.data.displayState = displayState;
+      exchangeContext.tradeData.displayState = displayState;
     },[displayState]);
 
     useEffect(() => {
       console.debug('PRICE:useEffect slippage changed to  ' + slippage);
-      exchangeContext.data.slippage = slippage;
+      exchangeContext.tradeData.slippage = slippage;
     }, [slippage]);
-
-    useEffect(() => {
-      console.debug('PRICE:useEffect: state changed to  ' + state.toString);
-      exchangeContext.data.state = state;
-    }, [state]);
 
     useEffect(() => {
       console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
@@ -142,7 +134,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
     console.debug(`Initializing Fetcher with "/api/" + ${chain?.name.toLowerCase()} + "/0X/price"`)
 
-    const apiCall = "http://localhost:3000/api/" + exchangeContext.data.networkName + "/0X/price";
+    const apiCall = "http://localhost:3000/api/" + exchangeContext.tradeData.chain.networkName + "/0X/price";
 
     const getPriceApiTransaction = (data:any) => {
       let priceTransaction = `${apiCall}`
@@ -246,8 +238,8 @@ export default function PriceView({activeAccount, price, setPrice}: {
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} setDisplayState={setDisplayState}/>
             <BuyContainer activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
-            <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-            <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalanceOf} disabled={disabled} slippage={slippage} />
+            <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
+            <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} />
               {
                 // <QuoteButton sendTransaction={sendTransaction}/>
               }

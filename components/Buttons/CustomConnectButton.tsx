@@ -22,7 +22,7 @@ function CustomConnectButton() {
                 type="button"
                 className={styles["exchangeButton"]}
                 >
-                {isConnected ? address : "Connect Wallet"}
+                {"Connect Wallet"}
               </button>
             );
           }}

@@ -1,6 +1,11 @@
 import { Address } from "viem"
 
-enum  EXCHANGE_STATE { PRICE, QUOTE, APPROVE, PENDING }
+enum  EXCHANGE_STATE { NOT_CONNECTED,
+                       MISSING_SELL_AMOUNT,
+                       INSUFFICIENT_BALANCE,
+                       APPROVE,
+                       PENDING,
+                       SWAP }
 
 enum  DISPLAY_STATE {
   OFF, SPONSOR_SELL_ON, SPONSOR_SELL_OFF, SPONSOR_BUY, RECIPIENT, CONFIG
@@ -64,18 +69,18 @@ type WalletElement = {
 }
 
 type TradeData = {
-  chainId: number;
-  networkName: string;
+  chain:any
   sellAmount:string;
+  sellBalanceOf:string;
   buyAmount:string;
+  buyBalanceOf:string;
   tradeDirection:string
   displayState: DISPLAY_STATE;
-  state: EXCHANGE_STATE;
   slippage: string;
 }
 
 type ExchangeContext = {
-  data: TradeData;
+  tradeData: TradeData;
   network: NetworkElement;
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
