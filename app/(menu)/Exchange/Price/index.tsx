@@ -30,7 +30,6 @@ import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
-import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
 //////////// Price Code
@@ -92,20 +91,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
       tradeData.sellAmount = buyAmount;
       // alert(`exchangeContext.tradeData.buyAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     }, [buyAmount]);
-
-    useEffect(() => {
-      console.debug(`useEffect(() =>`);
-      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, sellTokenContract.address || "") || "0");
-    }, [sellTokenContract.address]);
-
-    useEffect(() => {
-      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, buyTokenContract.address || "") || "0");
-    }, [buyTokenContract.address]);
-
-    useEffect(() => {
-      tradeData.buyBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, buyTokenContract.address || "") || "0");
-      tradeData.sellBalanceOf = (getERC20WagmiClientBalanceOf(connectedWalletAddr, sellTokenContract.address || "") || "0");
-    }, [connectedWalletAddr]);
 
     useEffect(() => {
       console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
@@ -239,12 +224,11 @@ export default function PriceView({activeAccount, price, setPrice}: {
       ] 
     }) 
 
-    const disabled = result && sellAmount
-      ? parseUnits(sellAmount, sellTokenContract.decimals) > 0 // ToDo FIX This result.value
+    const disabled = result && sellAmount // ToDo FIX This result.value
+      ? parseUnits(sellAmount, sellTokenContract.decimals) > 0
       : true;
 
     try {
-        // console.debug("Price:connectedWalletAddr = " + connectedWalletAddr)
       return (
         <form autoComplete="off">
           <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
@@ -255,8 +239,8 @@ export default function PriceView({activeAccount, price, setPrice}: {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} setDisplayState={setDisplayState}/>
-            <BuyContainer activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
+            <SellContainer tradeData={tradeData} activeAccount={activeAccount} sellAmount={sellAmount} sellTokenContract={sellTokenContract} setSellAmount={setSellAmount} disabled={false} setDisplayState={setDisplayState}/>
+            <BuyContainer tradeData={tradeData} activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
             {/* <PriceButton exchangeContext={exchangeContext} connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} /> */}
             <PriceButton exchangeContext={exchangeContext} />

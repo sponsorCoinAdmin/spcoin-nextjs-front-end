@@ -1,6 +1,6 @@
 'use client'
 
-import { useChainId, useReadContract, useSwitchChain  } from 'wagmi'
+import { useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits, getAddress } from 'viem'
 import { erc20Abi } from 'viem'
@@ -8,10 +8,6 @@ import { TokenContract, ContractRecs } from '../structure/types'
 
 const getERC20WagmiClientBalanceOfRec = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
   console.debug(`getERC20WagmiClientBalanceOfRec:connectedWalletAddr = ${connectedWalletAddr}, contractAddress = ${contractAddress}`)
-  const chainId = useChainId();
-  // const chainId = useChainId();
-  console.debug(`getERC20WagmiClientBalanceOfRec:useChainId() = ${JSON.stringify(chainId, null, 2)}`);
-  // switchChain({chainId: chainId})
   let wagmiBalanceOfRec;
   if (contractAddress !== undefined && connectedWalletAddr !== undefined) {
     wagmiBalanceOfRec = useReadContract({
@@ -102,14 +98,14 @@ const getERC20WagmiClientBalanceOf = (connectedWalletAddr: Address | string, con
   try {
 
     if (connectedWalletAddr) {
-      console.debug(`Executing:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress})`);
+      console.debug(`EXECUTING:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress})`);
       eRC20WagmiClientBalanceOf = getERC20WagmiClientBalanceOfRec(connectedWalletAddr , contractAddress )?.data?.toString();
-      console.debug(`getERC20WagmiClientBalanceOf:Executing:BalanceOf = ${eRC20WagmiClientBalanceOf}`);
+      console.debug(`EXECUTED 2:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
     }
   }
   catch (err:any) {
-    console.debug(`Error: eRC20WagmiClientBalanceOf:err.msg = ${err.msg}`);
-    console.debug(`Error: eRC20WagmiClientBalanceOf = ${eRC20WagmiClientBalanceOf}`);
+    console.debug(`ERROR:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
+    console.debug(`ERROR:eRC20WagmiClientBalanceOf:err.msg = ${err.msg}`);
   }
   return eRC20WagmiClientBalanceOf;
 }
