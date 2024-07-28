@@ -10,7 +10,7 @@ import {
 } from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { formatUnits, parseUnits } from "ethers";
+import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
 import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
 import { fetcher, processError } from '@/lib/0X/fetcher';

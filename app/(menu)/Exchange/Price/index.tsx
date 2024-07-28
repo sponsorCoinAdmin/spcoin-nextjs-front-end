@@ -169,7 +169,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
       {
         onSuccess: (data) => {
           if (!data.code) {
-            let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
+            // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             console.log(dataMsg)
 
             setPrice(data);

@@ -25,8 +25,7 @@ const SellContainer = ({tradeData, activeAccount, sellAmount, sellTokenContract,
     // console.debug("SellContainer.isSpCoin = " + IsSpCoin)
     tradeData.sellBalanceOf =(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "");
     tradeData.sellDecimals = (getERC20WagmiClientDecimals(sellTokenContract.address) || 0)
-    console.debug(`SellContainer:balanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${tradeData.sellBalanceOf}`)
-    const formattedBalance = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+    tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
 
     return (
       <div className={styles.inputs}>
@@ -42,7 +41,7 @@ const SellContainer = ({tradeData, activeAccount, sellAmount, sellTokenContract,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {formattedBalance}
+          Balance: {tradeData.sellBalanceOf}
         </div>
         {IsSpCoin ?
           <>
