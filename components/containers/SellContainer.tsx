@@ -2,10 +2,11 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
+import { formatUnits } from 'ethers';
 
 type Props = {
   tradeData:TradeData,
@@ -22,9 +23,10 @@ const SellContainer = ({tradeData, activeAccount, sellAmount, sellTokenContract,
   try {
     let IsSpCoin = isSpCoin(sellTokenContract);
     // console.debug("SellContainer.isSpCoin = " + IsSpCoin)
-    const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address || "") || "0");
-    console.debug(`SellContainer:balanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
-    tradeData.sellBalanceOf = balanceOf;
+    tradeData.sellBalanceOf =(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "");
+    tradeData.sellDecimals = (getERC20WagmiClientDecimals(sellTokenContract.address) || 0)
+    console.debug(`SellContainer:balanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${tradeData.sellBalanceOf}`)
+    const formattedBalance = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
 
     return (
       <div className={styles.inputs}>
@@ -40,11 +42,11 @@ const SellContainer = ({tradeData, activeAccount, sellAmount, sellTokenContract,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {balanceOf}
+          Balance: {formattedBalance}
         </div>
         {IsSpCoin ?
           <>
-            <ManageSponsorsButton activeAccount={activeAccount} buyTokenContract={sellTokenContract} setDisplayState={setDisplayState} />
+            <ManageSponsorsButton activeAccount={activeAccount} tokenContract={sellTokenContract} setDisplayState={setDisplayState} />
             {/* <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
               Sponsored Balance: {"{ToDo}"}
               {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}

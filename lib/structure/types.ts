@@ -31,28 +31,6 @@ type TokenContract = {
   img: string | undefined;
 }
 
-/*
-type TokenContract = {
-  chainId : number | undefined,
-  address : Address | undefined,
-  name :string | undefined,
-  symbol :string | undefined,
-  decimals : any,
-  totalSupply : any
-  img: string | undefined;
-}
-
-type TokenContract = {
-  chainId: number;
-  address: Address|string;
-  name: string;
-  symbol: string;
-  decimals: number;
-  img: string;
-}
-
-*/
-
 type ContractRecs = {
     nameRec:any,
     symbolRec:any,
@@ -74,8 +52,10 @@ type TradeData = {
   networkName: string;
   sellAmount:string;
   sellBalanceOf:string;
+  sellDecimals:number;
   buyAmount:string;
   buyBalanceOf:string;
+  buyDecimals:number;
   tradeDirection:string
   displayState: DISPLAY_STATE;
   slippage: string;

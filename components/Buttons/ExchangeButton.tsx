@@ -1,6 +1,8 @@
 import React from 'react'
 import styles from '@/styles/Exchange.module.css'
 import { ExchangeContext } from '@/lib/structure/types'
+import { formatUnits, parseUnits } from "ethers";
+
 
 type Props = {
   exchangeContext:ExchangeContext,
@@ -11,7 +13,7 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
     alert(`CustomConnectButton:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
   }
 
-  const noTradingAmounts = () => {
+  const insufficientSellAmount = () => {
     let noTradingAmount:boolean = false;
     try {
     // let noTradingAmount:boolean = !( exchangeContext.tradeData.sellAmount === "0"  || exchangeContext.tradeData.buyAmount === "0" )
@@ -19,25 +21,35 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
     // console.log(`ExchangeButton => exchangeContext.tradeData.sellAmount = ${exchangeContext.tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
     // alert (validTradingAmount)
     } catch(err:any) {
-      alert(`ERROR: CustomConnectButton.noTradingAmounts: ${err.message}`)
+      alert(`ERROR: CustomConnectButton.insufficientSellAmount: ${err.message}`)
     }
     return noTradingAmount;
   }
 
-  const insufficientBalance = () => {
-    let insufficientBalance:boolean = false;
+  const insufficientSellBalance = () => {
+    let insufficientSellBalance:boolean = false;
      try {
-      console.debug(`CustomConnectButton.insufficientBalance: exchangeContext.tradeData.sellBalanceOf = "${exchangeContext.tradeData.sellBalanceOf}"\n
-        exchangeContext.tradeData.sellAmount = "${exchangeContext.tradeData.sellAmount}"`)
-      let bigIntSellBalanceOf:BigInt  = BigInt(exchangeContext.tradeData.sellBalanceOf);
-      let bigIntSellAmount:BigInt  = BigInt(exchangeContext.tradeData.sellAmount);
-      // alert(`SUCCESS: CustomConnectButton. insufficientBalance = ${insufficientBalance}`)
+      const sellAmount = exchangeContext.tradeData.sellAmount;
+      const sellDecimals = exchangeContext.tradeData.sellDecimals;
+      const sellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
+      const bigIntSellAmount = parseUnits(sellAmount, sellDecimals)
+      const bigIntSellBalanceOf = parseUnits(sellBalanceOf, sellDecimals);
+      insufficientSellBalance = bigIntSellBalanceOf <  bigIntSellAmount
 
-      insufficientBalance = bigIntSellBalanceOf <  bigIntSellAmount
+      // let bigIntSellBalanceOf:BigInt  = BigInt(exchangeContext.tradeData.sellBalanceOf);
+      // let bigIntSellAmount:BigInt  = BigInt(exchangeContext.tradeData.sellAmount);
+
+      console.debug(`CustomConnectButton.insufficientSellBalance: sellBalanceOf = "${sellBalanceOf}"`);
+      console.debug(`sellAmount              = "${sellAmount}"`);
+      console.debug(`sellDecimals            = "${sellDecimals}"`);
+      console.debug(`bigIntSellAmount        = "${bigIntSellAmount}"`);
+      console.debug(`bigIntSellBalanceOf     = "${bigIntSellBalanceOf}"`);
+      console.debug(`insufficientSellBalance = "${insufficientSellBalance}"`);
+
     } catch(err:any) {
-      alert(`ERROR: CustomConnectButton.insufficientBalance: ${err.message}`)
+      alert(`ERROR: CustomConnectButton.insufficientSellBalance: ${err.message}`)
     }
-    return insufficientBalance;
+    return insufficientSellBalance;
   }
 
   return (
@@ -48,12 +60,11 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
         type="button"
         className={styles["exchangeButton"]}
         >
-        {/* {noTradingAmounts() ? "Enter an Amount" : "Insufficient Balance"} */}
+        {/* {insufficientSellAmount() ? "Enter an Amount" : "Insufficient Balance"} */}
 
-        {noTradingAmounts() ? "Enter an Amount" : 
-        insufficientBalance() ? "Insufficient Balance" :
+        {insufficientSellAmount() ? "Enter an Amount" : 
+        insufficientSellBalance() ? "Insufficient Sell Balance" :
         "SWAP"}
-
       </button>
     </div>
   )

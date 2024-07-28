@@ -6,14 +6,14 @@ import { openDialog } from '../Dialogs/Dialogs';
 
 type Props = {
   activeAccount: any,
-  buyTokenContract: TokenContract, 
+  tokenContract: TokenContract, 
   setDisplayState:(displayState:DISPLAY_STATE) => void,
 }
 
-const ManageSponsorsButton = ({activeAccount, buyTokenContract, setDisplayState} : Props) => {
+const ManageSponsorsButton = ({activeAccount, tokenContract, setDisplayState} : Props) => {
 
   try {
-  const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address || "") || "0");
+  const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, tokenContract.address || "") || "0");
     return (
         <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog("#manageSponsorshipsDialog")}>
           <div className={styles["centerTop"]} >Manage</div>

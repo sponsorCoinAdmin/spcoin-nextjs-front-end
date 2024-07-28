@@ -21,7 +21,7 @@ useEffect(() => {
   // fetchText("https://www.youtube.com")
 
   return (
-    <div onLoad={() => alert('XXX LOADED')} id="RecipientContainer" className="mainApp"><h1>Sponsor Coin Recipient Page</h1></div>
+    <div onLoad={() => alert('LOADED')} id="RecipientContainer" className="mainApp"><h1>Sponsor Coin Recipient Page</h1></div>
   )
 }
 
