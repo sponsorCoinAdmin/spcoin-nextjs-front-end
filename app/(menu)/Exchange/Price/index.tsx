@@ -32,6 +32,7 @@ import { exchangeContext, resetContextNetwork } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { useERC20WagmiClientBalanceOf, useERC20WagmiClientBalanceOfRec, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf';
+import { BURN_ADDRESS } from '@/lib/network/utils';
 
 //////////// Price Code
 export default function PriceView({activeAccount, price, setPrice}: {
@@ -55,7 +56,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
-    // const [sellBalanceOf, setSellBalanceOf] = useState<string>(tradeData.sellBalanceOf);
+    const [sellBalanceOf, setSellBalanceOf] = useState<string>("0.0");
 
 
     // tradeData.sellBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "0");
@@ -65,15 +66,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
 
 
-    // const sellBalanceOf  = (useERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "0");
-    // const sellBalanceOf = useERC20WagmiClientBalanceOfRec(activeAccount.address, sellTokenContract.address)?.data;
-
-
-
-    // const sellDecimals = (useERC20WagmiClientDecimals(sellTokenContract.address) || 0)
-    // const buyBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || "0");
-    // const buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
-    tradeData.connectedWalletAddr = activeAccount.address;
+    tradeData.connectedWalletAddr = activeAccount.address || BURN_ADDRESS;
     const connectedWalletAddr = tradeData.connectedWalletAddr
 
     // useEffect(() => {
@@ -269,15 +262,15 @@ export default function PriceView({activeAccount, price, setPrice}: {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            {/* <SellContainer tradeData={tradeData}
+            <SellContainer tradeData={tradeData}
                            activeAccount={activeAccount}
                            sellAmount={sellAmount}
                            sellBalanceOf={sellBalanceOf}
                            sellTokenContract={sellTokenContract}
                            setSellAmount={setSellAmount}
                            disabled={false}
-                           setDisplayState={setDisplayState}/> */}
-            {/* <BuyContainer tradeData={tradeData} activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />           */}
+                           setDisplayState={setDisplayState}/>
+            <BuyContainer tradeData={tradeData} activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
             {/* <PriceButton exchangeContext={exchangeContext} connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} /> */}
             <PriceButton exchangeContext={exchangeContext} />

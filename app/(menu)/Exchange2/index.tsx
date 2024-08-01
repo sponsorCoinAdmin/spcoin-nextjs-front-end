@@ -1,6 +1,5 @@
 import { useState } from "react";
 import PriceView from "../Exchange2/Price";
-import QuoteView from "./Quote";
 import type { PriceResponse } from "@/app/api/types";
 import { useAccount } from "wagmi";
 import { EXCHANGE_STATE } from "@/lib/structure/types";
