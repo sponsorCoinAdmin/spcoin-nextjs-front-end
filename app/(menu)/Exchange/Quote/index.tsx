@@ -207,7 +207,7 @@ export default function QuoteView({
       onSuccess: (data) => {
         setQuote(data);
         console.log("quote", data);
-        console.log(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
+        // console.log(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
       },
       onError: (error) => {
         processError(
@@ -240,7 +240,7 @@ export default function QuoteView({
   }
 
   console.log("quote" + JSON.stringify(quote,null,2));
-  console.log(formatUnits(quote.sellAmount, sellTokenContract.decimals));
+  // console.log(formatUnits(quote.sellAmount, sellTokenContract.decimals));
 
   return (
     <form autoComplete="off">

@@ -261,35 +261,9 @@ export default function PriceView({activeAccount, price, setPrice}: {
     try {
       return (
         <form autoComplete="off">
-          <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
-          <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-          <ManageSponsorships connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-          <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
-          <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
-          <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
-            <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            {/* <SellContainer tradeData={tradeData}
-                           activeAccount={activeAccount}
-                           sellAmount={sellAmount}
-                           sellBalanceOf={sellBalanceOf}
-                           sellTokenContract={sellTokenContract}
-                           setSellAmount={setSellAmount}
-                           disabled={false}
-                           setDisplayState={setDisplayState}/> */}
-            {/* <BuyContainer tradeData={tradeData} activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />           */}
-            <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-            {/* <PriceButton exchangeContext={exchangeContext} connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} /> */}
-            <PriceButton exchangeContext={exchangeContext} />
-              {
-                // <QuoteButton sendTransaction={sendTransaction}/>
-              }
-            <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
-            <SponsorRateConfig setDisplayState={setDisplayState}/>
-            <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} />
+            <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT={sellTokenContract.address} />
           </div>
-          <FeeDisclosure/>
-          <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
         </form>
       );
     } catch (err:any) {

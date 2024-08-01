@@ -1,6 +1,6 @@
 import styles from '@/styles/Exchange.module.css';
 import { DISPLAY_STATE, TokenContract } from '@/lib/structure/types';
-import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { showElement } from '@/lib/spCoin/guiControl';
 import { openDialog } from '../Dialogs/Dialogs';
 
@@ -13,7 +13,7 @@ type Props = {
 const ManageSponsorsButton = ({activeAccount, tokenContract, setDisplayState} : Props) => {
 
   try {
-  const balanceOf = (getERC20WagmiClientBalanceOf(activeAccount.address, tokenContract.address || "") || "0");
+  const balanceOf = (useERC20WagmiClientBalanceOf(activeAccount.address, tokenContract.address || "") || "0");
     return (
         <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog("#manageSponsorshipsDialog")}>
           <div className={styles["centerTop"]} >Manage</div>

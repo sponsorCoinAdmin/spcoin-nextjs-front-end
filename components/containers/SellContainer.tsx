@@ -1,8 +1,9 @@
+import { useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
@@ -12,6 +13,7 @@ type Props = {
   tradeData:TradeData,
   activeAccount:any,
   sellAmount: string,
+  sellBalanceOf:string,
   sellTokenContract: TokenContract, 
   setSellAmount: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
@@ -19,14 +21,19 @@ type Props = {
 }
 
 /* Sell Token Selection Module */
-const SellContainer = ({tradeData, activeAccount, sellAmount, sellTokenContract, setSellAmount, setDisplayState, disabled} : Props) => {
-  try {
-    let IsSpCoin = isSpCoin(sellTokenContract);
-    // console.debug("SellContainer.isSpCoin = " + IsSpCoin)
-    tradeData.sellBalanceOf =(getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "");
-    tradeData.sellDecimals = (getERC20WagmiClientDecimals(sellTokenContract.address) || 0)
-    tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+const SellContainer = ({tradeData, 
+                        activeAccount,
+                        sellAmount,
+                        sellBalanceOf,
+                        sellTokenContract,
+                        setSellAmount,
+                        setDisplayState,
+                        disabled} : Props) => {
 
+  try {
+    // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
+    // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+    let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
         <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={sellAmount}
@@ -41,20 +48,20 @@ const SellContainer = ({tradeData, activeAccount, sellAmount, sellTokenContract,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {tradeData.sellBalanceOf}
+          Balance: {sellBalanceOf}
         </div>
         {IsSpCoin ?
           <>
             <ManageSponsorsButton activeAccount={activeAccount} tokenContract={sellTokenContract} setDisplayState={setDisplayState} />
             {/* <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
               Sponsored Balance: {"{ToDo}"}
-              {getERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
+              {useERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
             </div> */}
           </> : null}
       </div>
     );
   } catch (err:any) {
-    console.debug (`Sell Container Error:\n ${err.message}`)
+    console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
   }
 }
 
