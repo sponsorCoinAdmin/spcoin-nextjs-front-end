@@ -22,6 +22,7 @@ const useERC20WagmiClientBalanceOfRec = (connectedWalletAddr: Address | string |
 }
 
 const useERC20WagmiClientDecimalRec = (contractAddress:Address | string | undefined) => {
+  // alert(`useERC20WagmiClientDecimalRec:contractAddress = ${contractAddress}`)
   let wagmiDecimalsRec
   wagmiDecimalsRec = useReadContract({
     abi: erc20Abi,
@@ -29,6 +30,7 @@ const useERC20WagmiClientDecimalRec = (contractAddress:Address | string | undefi
     functionName: 'decimals',
     config, 
   })
+  // alert(`useERC20WagmiClientDecimalRec:wagmiDecimalsRec = ${JSON.stringify(wagmiDecimalsRec, null, 2)}`)
   return wagmiDecimalsRec;
 }
 
