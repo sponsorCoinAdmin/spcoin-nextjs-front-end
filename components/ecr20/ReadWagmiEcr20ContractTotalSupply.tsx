@@ -7,7 +7,7 @@ type Props = {
 }
 
 const contractTotalSupply = ({ TOKEN_CONTRACT}: Props) => {
-  let totalSupply    = useERC20WagmiClientTotalSupply(TOKEN_CONTRACT)
+  const totalSupply    = useERC20WagmiClientTotalSupply(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

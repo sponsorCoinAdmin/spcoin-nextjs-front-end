@@ -37,9 +37,7 @@ function getInitialDataSettings(network: string | number, ifSpCoin:boolean): Tra
         chainId: 1,
         networkName: "ethereum",
         sellAmount: "0",
-        sellBalanceOf: "0",
         buyAmount: "0",
-        buyBalanceOf: "0",
         tradeDirection: "sell",
         displayState: ifSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
         slippage: "0.02"

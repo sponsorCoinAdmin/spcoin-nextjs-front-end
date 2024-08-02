@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { getFormattedClientBalanceOf, useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
@@ -27,14 +27,12 @@ const SellContainer = ({tradeData,
                         setSellAmount,
                         setDisplayState,
                         disabled} : Props) => {
+  // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
+  // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+  // console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
+  const formattedBalanceOf:string = getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "")
 
   try {
-    // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
-    // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
-    // let formattedBalanceOf = getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "")
-
-    // console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${formattedBalanceOf}`)
-
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
@@ -50,7 +48,7 @@ const SellContainer = ({tradeData,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {tradeData.sellBalanceOf}
+          Balance: {formattedBalanceOf}
         </div>
         {IsSpCoin ?
           <>

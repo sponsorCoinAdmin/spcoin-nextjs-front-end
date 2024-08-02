@@ -7,7 +7,7 @@ type Props = {
 }
 
 const contractDecimals = ({ TOKEN_CONTRACT}: Props) => {
-  let decimals    = useERC20WagmiClientDecimals(TOKEN_CONTRACT)
+  const decimals    = useERC20WagmiClientDecimals(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

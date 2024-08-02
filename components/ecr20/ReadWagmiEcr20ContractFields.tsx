@@ -8,11 +8,11 @@ type Props = {
 
 const ReadWagmiEcr20ContractFields = ({ TOKEN_CONTRACT}: Props) => {
 
-  let contract    = getErc20ClientContract(TOKEN_CONTRACT)
-  let name        = contract.name
-  let symbol      = contract.symbol
-  let decimals    = contract.decimals
-  let totalSupply = contract.totalSupply
+  const contract    = getErc20ClientContract(TOKEN_CONTRACT)
+  const name        = contract.name
+  const symbol      = contract.symbol
+  const decimals    = contract.decimals
+  const totalSupply = contract.totalSupply
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

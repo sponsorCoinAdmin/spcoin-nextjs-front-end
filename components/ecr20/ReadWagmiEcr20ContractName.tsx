@@ -7,7 +7,7 @@ type Props = {
 }
 
 const ReadWagmiEcr20ContractName = ({ TOKEN_CONTRACT}: Props) => {
-  let name    = useERC20WagmiClientName(TOKEN_CONTRACT)
+  const name    = useERC20WagmiClientName(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

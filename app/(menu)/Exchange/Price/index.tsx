@@ -58,13 +58,8 @@ export default function PriceView({activeAccount, price, setPrice}: {
 
     const [sellBalanceOf, setSellBalanceOf] = useState<string>("0.0");
 
-
-    // tradeData.sellBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "0");
     // tradeData.sellDecimals = (useERC20WagmiClientDecimals(sellTokenContract.address) || 0)
-    // tradeData.buyBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || "0");
     // tradeData.buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
-
-
 
     tradeData.connectedWalletAddr = activeAccount.address || BURN_ADDRESS;
     const connectedWalletAddr = tradeData.connectedWalletAddr
@@ -75,10 +70,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
     //   // alert(`formatUnits(${tradeData.sellBalanceOf}, ${tradeData.sellDecimals}) = ${tradeData.sellBalanceOf}`)
     // }, [tradeData.sellBalanceOf]);
 
-
-    // let buyBalanceOf = "0";
-    // let sellBalanceOf = "0";
-    const { chain } = useAccount();
+   const { chain } = useAccount();
 
 
     useEffect(() => {
@@ -262,15 +254,16 @@ export default function PriceView({activeAccount, price, setPrice}: {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer tradeData={tradeData}
+            <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={activeAccount.address} TOKEN_CONTRACT={sellTokenContract.address} />
+            {/* <SellContainer tradeData={tradeData}
                            activeAccount={activeAccount}
                            sellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            setSellAmount={setSellAmount}
                            disabled={false}
-                           setDisplayState={setDisplayState}/>
-            <BuyContainer tradeData={tradeData} activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
-            <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
+                           setDisplayState={setDisplayState}/> */}
+            {/* <BuyContainer tradeData={tradeData} activeAccount={activeAccount} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />           */}
+            {/* <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} /> */}
             {/* <PriceButton exchangeContext={exchangeContext} connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} /> */}
             <PriceButton exchangeContext={exchangeContext} />
               {

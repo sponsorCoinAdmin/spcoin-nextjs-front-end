@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
-import { useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { getFormattedClientBalanceOf, useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import { formatUnits } from "ethers";
@@ -19,12 +19,17 @@ type Props = {
 }
 
 const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
-    // tradeData.buyBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || "0");
     // tradeData.buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
 
     try {
     // console.debug("BuyContainer.isSpCoin = " + IsSpCoin)
-      // tradeData.buyBalanceOf = formatUnits(tradeData.buyBalanceOf, tradeData.buyDecimals);
+
+    // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
+    // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+    // tradeData.buyBalanceOf = getFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "")
+
+    console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${buyTokenContract.address}) = ${tradeData.buyBalanceOf}`)
+
       let IsSpCoin = isSpCoin(buyTokenContract);
       return (
         <div className={styles.inputs}>
@@ -32,7 +37,7 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
                 onChange={(e) => { console.log(`BuyContainer.input:buyAmount =${buyAmount}`) }} />
         <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
         <div className={styles["buySell"]}>You receive</div>
-        <div className={styles["assetBalance"]}>Balance: {tradeData.buyBalanceOf}</div>
+        {/* <div className={styles["assetBalance"]}>Balance: {tradeData.buyBalanceOf}</div> */}
         {IsSpCoin ?
           <AddSponsorButton activeAccount={activeAccount} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
           : null}

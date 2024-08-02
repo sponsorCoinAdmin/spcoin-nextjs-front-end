@@ -7,7 +7,7 @@ type Props = {
 }
 
 const contractSymbol = ({ TOKEN_CONTRACT}: Props) => {
-  let symbol    = useERC20WagmiClientSymbol(TOKEN_CONTRACT)
+  const symbol    = useERC20WagmiClientSymbol(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

@@ -13,10 +13,10 @@ const ReadWagmiEcr20Records = ({ TOKEN_CONTRACT}: Props) => {
   const decimalRec = wagmiRecords.decimalRec
   const totalSupplyRec = wagmiRecords.totalSupplyRec
 
-  let name = nameRec.status === 'success' ? nameRec.data : null
-  let symbol = symbolRec.status === 'success' ?  symbolRec.data : null
-  let decimals = decimalRec?.status === 'success' ? decimalRec?.data : null
-  let totalSupply = totalSupplyRec.status === 'success' ? totalSupplyRec.data : null
+  const name = nameRec.status === 'success' ? nameRec.data : null
+  const symbol = symbolRec.status === 'success' ?  symbolRec.data : null
+  const decimals = decimalRec?.status === 'success' ? decimalRec?.data : null
+  const totalSupply = totalSupplyRec.status === 'success' ? totalSupplyRec.data : null
 
   return (
     <>

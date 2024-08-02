@@ -58,35 +58,15 @@ export default function PriceView({activeAccount, price, setPrice}: {
     // const [sellBalanceOf, setSellBalanceOf] = useState<string>(tradeData.sellBalanceOf);
 
 
-    // tradeData.sellBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "0");
     // tradeData.sellDecimals = (useERC20WagmiClientDecimals(sellTokenContract.address) || 0)
-    // tradeData.buyBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || "0");
     // tradeData.buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
 
-
-
-    // const sellBalanceOf  = (useERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || "0");
-    // const sellBalanceOf = useERC20WagmiClientBalanceOfRec(activeAccount.address, sellTokenContract.address)?.data;
-
-
-
     // const sellDecimals = (useERC20WagmiClientDecimals(sellTokenContract.address) || 0)
-    // const buyBalanceOf =(useERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || "0");
     // const buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
     tradeData.connectedWalletAddr = activeAccount.address;
     const connectedWalletAddr = tradeData.connectedWalletAddr
 
-    // useEffect(() => {
-    //   tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
-    //   setSellBalanceOf(tradeData.sellBalanceOf);
-    //   // alert(`formatUnits(${tradeData.sellBalanceOf}, ${tradeData.sellDecimals}) = ${tradeData.sellBalanceOf}`)
-    // }, [tradeData.sellBalanceOf]);
-
-
-    // let buyBalanceOf = "0";
-    // let sellBalanceOf = "0";
     const { chain } = useAccount();
-
 
     useEffect(() => {
       // alert(`Price:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}\n `);
