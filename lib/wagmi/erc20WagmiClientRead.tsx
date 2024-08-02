@@ -5,33 +5,30 @@ import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits, getAddress } from 'viem'
 import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '../structure/types'
+import { BURN_ADDRESS } from '@/lib/network/utils';
 
 const useERC20WagmiClientBalanceOfRec = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
   console.debug(`useERC20WagmiClientBalanceOfRec:connectedWalletAddr = ${connectedWalletAddr}, contractAddress = ${contractAddress}`)
   let wagmiBalanceOfRec;
-  if (contractAddress !== undefined && connectedWalletAddr !== undefined) {
-    wagmiBalanceOfRec = useReadContract({
-      abi: erc20Abi,
-      address: getAddress(contractAddress),
-      functionName: 'balanceOf',
-      args: [getAddress(connectedWalletAddr)],
-      config, 
-    })
-  }
+  wagmiBalanceOfRec = useReadContract({
+    abi: erc20Abi,
+    address: getAddress(contractAddress || BURN_ADDRESS),
+    functionName: 'balanceOf',
+    args: [getAddress(connectedWalletAddr || BURN_ADDRESS)],
+    config, 
+  })
   // console.debug(`useERC20WagmiClientBalanceOfRec.wagmiBalanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
   return wagmiBalanceOfRec;
 }
 
 const useERC20WagmiClientDecimalRec = (contractAddress:Address | string | undefined) => {
   let wagmiDecimalsRec
-  if (contractAddress !== undefined) {
-    wagmiDecimalsRec = useReadContract({
-      abi: erc20Abi,
-      address: getAddress(contractAddress),
-      functionName: 'decimals',
-      config, 
-    })
-  }
+  wagmiDecimalsRec = useReadContract({
+    abi: erc20Abi,
+    address: getAddress(contractAddress || BURN_ADDRESS),
+    functionName: 'decimals',
+    config, 
+  })
   return wagmiDecimalsRec;
 }
 
