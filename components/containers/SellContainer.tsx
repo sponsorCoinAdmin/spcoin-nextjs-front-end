@@ -13,7 +13,6 @@ type Props = {
   tradeData:TradeData,
   activeAccount:any,
   sellAmount: string,
-  sellBalanceOf:string,
   sellTokenContract: TokenContract, 
   setSellAmount: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
@@ -24,7 +23,6 @@ type Props = {
 const SellContainer = ({tradeData, 
                         activeAccount,
                         sellAmount,
-                        sellBalanceOf,
                         sellTokenContract,
                         setSellAmount,
                         setDisplayState,
@@ -33,6 +31,10 @@ const SellContainer = ({tradeData,
   try {
     // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
     // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+    // let formattedBalanceOf = getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "")
+
+    // console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${formattedBalanceOf}`)
+
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
@@ -48,7 +50,7 @@ const SellContainer = ({tradeData,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {sellBalanceOf}
+          Balance: {tradeData.sellBalanceOf}
         </div>
         {IsSpCoin ?
           <>

@@ -265,7 +265,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
             <SellContainer tradeData={tradeData}
                            activeAccount={activeAccount}
                            sellAmount={sellAmount}
-                           sellBalanceOf={sellBalanceOf}
                            sellTokenContract={sellTokenContract}
                            setSellAmount={setSellAmount}
                            disabled={false}
