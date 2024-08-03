@@ -1,6 +1,5 @@
 'use client';
 import styles from '@/styles/Exchange.module.css';
-import { TradeData } from '@/lib/structure/types';
 import type { PriceResponse } from "@/app/api/types";
 import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf';
 
@@ -10,8 +9,6 @@ export default function PriceView({activeAccount, price, setPrice}: {
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
-
-// console.debug("########################### PRICE RERENDERED #####################################")
 
   return (
     <form autoComplete="off">
