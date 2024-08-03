@@ -10,12 +10,11 @@ import { isLowerCase } from '../utils';
  */
 
 const getDefaultNetworkSettings = (chain:any) => {
+  // alert("getDefaultNetworkSettings"+chain )
   if (typeof chain === "string" && !isLowerCase(chain)) {
-    alert("getDefaultNetworkSettings"+chain )
     chain = chain.toLowerCase()
   }
   else if (typeof chain !== "number" ) {
-    alert("getDefaultNetworkSettings"+chain )
     chain = chain.id
   }
   switch(chain)

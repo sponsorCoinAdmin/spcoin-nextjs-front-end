@@ -1,55 +1,241 @@
 'use client';
-
-import { useEffect, useState } from 'react'
-import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
-import { Config, UseAccountReturnType } from 'wagmi'
-import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf'
-
 import styles from '@/styles/Exchange.module.css';
-import { TokenContract, TradeData } from '@/lib/structure/types';
+import {
+  openDialog
+} from '@/components/Dialogs/Dialogs';
+import useSWR from "swr";
+import { useState, useEffect } from "react";
+import { formatUnits, parseUnits } from "ethers";
+import { useReadContracts, useAccount } from 'wagmi' 
+import { erc20Abi } from 'viem' 
+import { WalletElement, TokenContract, TradeData, DISPLAY_STATE } from '@/lib/structure/types';
+import { fetcher, processError } from '@/lib/0X/fetcher';
+import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-import { exchangeContext } from "@/lib/context";
+import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
+import RecipientContainer from '@/components/containers/RecipientContainer';
+import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
+import AffiliateFee from '@/components/containers/AffiliateFee';
+import PriceButton from '@/components/Buttons/PriceButton';
+import FeeDisclosure from '@/components/containers/FeeDisclosure';
+import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
+import { exchangeContext, resetContextNetwork } from "@/lib/context";
+import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 
-const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
-const CHKN_ETHEREUM_CONTRACT:Address = '0xD55210Bb6898C021a19de1F58d27b71f095921Ee'
-const NULL_CONTRACT                  = '0x0000000000000000000000000000000000000000';
-let ACTIVE_ACCOUNT: UseAccountReturnType<Config<readonly [{ blockExplorers: { readonly default: { readonly name: "Etherscan"; readonly url: "https://etherscan.io"; readonly apiUrl: "https://api.etherscan.io/api" } }; contracts: { readonly ensRegistry: { readonly address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e" }; readonly ensUniversalResolver: { readonly address: "0xce01f8eee7E479C928F8919abD53E553a36CeF67"; readonly blockCreated: 19258213 }; readonly multicall3: { readonly address: "0xca11bde05977b3631167028862be2a173976ca11"; readonly blockCreated: 14353601 } }; id: 1; name: "Ethereum"; nativeCurrency: { readonly name: "Ether"; readonly symbol: "ETH"; readonly decimals: 18 }; rpcUrls: { readonly default: { readonly http: readonly ["https://cloudflare-eth.com"] } }; sourceId?: number | undefined; testnet?: boolean | undefined; custom?: Record<string, unknown> | undefined; formatters?: undefined; serializers?: ChainSerializers<undefined> | undefined; fees?: ChainFees<undefined> | undefined }, { blockExplorers: { readonly default: { readonly name: "PolygonScan"; readonly url: "https://polygonscan.com"; readonly apiUrl: "https://api.polygonscan.com/api" } }; contracts: { readonly multicall3: { readonly address: "0xca11bde05977b3631167028862be2a173976ca11"; readonly blockCreated: 25770160 } }; id: 137; name: "Polygon"; nativeCurrency: { readonly name: "MATIC"; readonly symbol: "MATIC"; readonly decimals: 18 }; rpcUrls: { readonly default: { readonly http: readonly ["https://polygon-rpc.com"] } }; sourceId?: number | undefined; testnet?: boolean | undefined; custom?: Record<string, unknown> | undefined; formatters?: undefined; serializers?: ChainSerializers<undefined> | undefined; fees?: ChainFees<undefined> | undefined }, { blockExplorers: { readonly default: { readonly name: "Etherscan"; readonly url: "https://sepolia.etherscan.io"; readonly apiUrl: "https://api-sepolia.etherscan.io/api" } }; contracts: { readonly multicall3: { readonly address: "0xca11bde05977b3631167028862be2a173976ca11"; readonly blockCreated: 751532 }; readonly ensRegistry: { readonly address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e" }; readonly ensUniversalResolver: { readonly address: "0xc8Af999e38273D658BE1b921b88A9Ddf005769cC"; readonly blockCreated: 5317080 } }; id: 11155111; name: "Sepolia"; nativeCurrency: { readonly name: "Sepolia Ether"; readonly symbol: "ETH"; readonly decimals: 18 }; rpcUrls: { readonly default: { readonly http: readonly ["https://rpc.sepolia.org"] } }; sourceId?: number | undefined; testnet: true; custom?: Record<string, unknown> | undefined; formatters?: undefined; serializers?: ChainSerializers<undefined> | undefined; fees?: ChainFees<undefined> | undefined }], { 1: HttpTransport; 137: HttpTransport; 11155111: HttpTransport }>>;
-
 //////////// Price Code
-export default function PriceView({activeAccount}: {
+export default function PriceView({activeAccount, price, setPrice}: {
     activeAccount: any;
     price: PriceResponse | undefined;
     setPrice: (price: PriceResponse | undefined) => void;
 }) {
-  ACTIVE_ACCOUNT = activeAccount;
-  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(NULL_CONTRACT)
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
-  const [ TOKEN_CONTRACT, setDefaultTokenContract ] = useState<Address>(NULL_CONTRACT)
-  const tradeData:TradeData = exchangeContext.tradeData;
 
-  useEffect(() => {
-    alert(`ACTIVE_ACCOUNT.chainId = ${ACTIVE_ACCOUNT.chainId}`)
-      switch(ACTIVE_ACCOUNT.chainId) {
-        case 1: setDefaultTokenContract(CHKN_ETHEREUM_CONTRACT); break;
-        case 137: setDefaultTokenContract(USDT_POLYGON_CONTRACT); break;
-        default: setDefaultTokenContract(NULL_CONTRACT); break;
+  try {
+// console.debug("########################### PRICE RERENDERED #####################################")
+
+    const tradeData:TradeData = exchangeContext.tradeData;
+    const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
+    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
+    const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
+    const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
+    const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+    const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
+    const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
+    const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+
+    const [sellBalanceOf, setSellBalanceOf] = useState<string>("0.0");
+
+    // tradeData.sellDecimals = (useERC20WagmiClientDecimals(sellTokenContract.address) || 0)
+    // tradeData.buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
+
+    tradeData.connectedWalletAddr = activeAccount.address || BURN_ADDRESS;
+    const connectedWalletAddr = tradeData.connectedWalletAddr
+
+   const { chain } = useAccount();
+
+
+    useEffect(() => {
+      if (chain != undefined && exchangeContext.tradeData.chainId !== chain.id) {
+        resetContextNetwork(chain)
+        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        setSellTokenContract(exchangeContext.sellTokenContract);
+        setBuyTokenContract(exchangeContext.buyTokenContract);
+        setRecipientElement(exchangeContext.recipientWallet);
+        setAgentElement(exchangeContext.agentWallet);
+        setDisplayState(exchangeContext.tradeData.displayState);
+        setSlippage(exchangeContext.tradeData.slippage);
+      }
+    }, [chain]);
+
+    useEffect(() => {
+      tradeData.sellAmount = sellAmount;
+    }, [sellAmount]);
+
+    useEffect(() => {
+      tradeData.sellAmount = buyAmount;
+    }, [buyAmount]);
+
+    useEffect(() => {
+      console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
+      setDisplayPanels(displayState);
+      exchangeContext.tradeData.displayState = displayState;
+    },[displayState]);
+
+    useEffect(() => {
+      console.debug('PRICE:useEffect slippage changed to  ' + slippage);
+      exchangeContext.tradeData.slippage = slippage;
+    }, [slippage]);
+
+    useEffect(() => {
+      console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
+      exchangeContext.sellTokenContract = sellTokenContract;
+    }, [sellTokenContract]);
+
+    useEffect(() => {
+      if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenContract))
+        setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
+      else if (!isSpCoin(buyTokenContract)) 
+        setDisplayState(DISPLAY_STATE.OFF)
+      exchangeContext.buyTokenContract = buyTokenContract;
+    }, [buyTokenContract]);
+
+    useEffect(() => {
+      console.debug("PRICE:useEffect:recipientWallet changed to " + recipientWallet.name);
+      exchangeContext.recipientWallet = recipientWallet;
+    }, [recipientWallet]);
+
+    useEffect(() => {
+      if (errorMessage.name !== "" && errorMessage.message !== "") {
+        openDialog("#errorDialog");
+      }
+    }, [errorMessage]);
+
+  // This code currently only works for sell buy will default to undefined
+    const parsedSellAmount = sellAmount && tradeDirection === "sell"
+      ? parseUnits(sellAmount, sellTokenContract.decimals).toString()
+      : undefined;
+
+    const parsedBuyAmount = buyAmount && tradeDirection === "buy"
+      ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
+      : undefined;
+
+    console.debug(`Initializing Fetcher with "/api/" + ${chain?.name.toLowerCase()} + "/0X/price"`)
+
+    const apiCall = "http://localhost:3000/api/" + tradeData.networkName + "/0X/price";
+
+    const getPriceApiTransaction = (data:any) => {
+      let priceTransaction = `${apiCall}`
+      priceTransaction += `?sellToken=${sellTokenContract.address}`
+      priceTransaction += `&buyToken=${buyTokenContract.address}`
+      priceTransaction += `&sellAmount=${parsedSellAmount}\n`
+      priceTransaction += `&connectedWalletAddr=${connectedWalletAddr}`
+      priceTransaction += JSON.stringify(data, null, 2)
+      return priceTransaction;
     }
-  }, [ACTIVE_ACCOUNT.chainId]);
 
-  tradeData.connectedWalletAddr = activeAccount.address || BURN_ADDRESS;
-  const connectedWalletAddr = tradeData.connectedWalletAddr;
+    const { isLoading: isLoadingPrice } = useSWR(
+      [
+        apiCall,
+        {
+          sellToken: sellTokenContract.address,
+          buyToken: buyTokenContract.address,
+          sellAmount: parsedSellAmount,
+          buyAmount: parsedBuyAmount,
+          // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
+          // slippagePercentage: slippage,
+          // expectedSlippage: slippage,
+          connectedWalletAddr
+        },
+      ],
+      fetcher,
+      {
+        onSuccess: (data) => {
+          if (!data.code) {
+            let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
+            console.log(dataMsg)
 
-    return (
-      <>
-        <div>connectedWalletAddr       = {connectedWalletAddr}</div>
-        <div>sellTokenContract.address = {sellTokenContract.address}</div>
-        <div>ACTIVE_ACCOUNT_ADDRESS    = {ACTIVE_ACCOUNT_ADDRESS}</div>
-        <div>TOKEN_CONTRACT            = {TOKEN_CONTRACT}`</div>
-        <div className={styles.tradeContainer}>
-          <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT={sellTokenContract.address} />
-          {/* <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT={sellTokenContract.address} /> */}
-        </div>
-      </>
+            setPrice(data);
+            // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
+            setBuyAmount(formatUnits(data.buyAmount, buyTokenContract.decimals));
+          }
+          else {
+            let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
+            // let errMsg = `ERROR: apiCall => ${apiCall}\n`
+            // errMsg += `sellToken: ${sellTokenContract.address}\n`
+            // errMsg += `buyToken: ${buyTokenContract.address}\n`
+            // errMsg += `buyAmount: ${parsedBuyAmount}\n`
+            // errMsg += `connectedWalletAddr: ${connectedWalletAddr}\n`
+            // errMsg += JSON.stringify(data, null, 2)
+ 
+            // throw {errCode: ERROR_0X_RESPONSE, errMsg: errMsg}
+            // alert(errMsg);
+            console.log(errMsg);
+          }
+        },
+        onError: (error) => {
+          processError(
+            error,
+            setErrorMessage,
+            buyTokenContract,
+            sellTokenContract,
+            setBuyAmount,
+            setValidPriceInput
+          );
+        }
+      }
     );
+
+    const result = useReadContracts({ 
+      allowFailure: false, 
+      contracts: [ 
+        { 
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+          abi: erc20Abi, 
+          functionName: 'balanceOf', 
+          args: ['0x4557B18E779944BFE9d78A672452331C186a9f48'], 
+        }, 
+        { 
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+          abi: erc20Abi, 
+          functionName: 'decimals', 
+        }, 
+        { 
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
+          abi: erc20Abi, 
+          functionName: 'symbol', 
+        }, 
+      ] 
+    }) 
+
+    const disabled = result && sellAmount // ToDo FIX This result.value
+      ? parseUnits(sellAmount, sellTokenContract.decimals) > 0
+      : true;
+
+    try {
+      return (
+        <form autoComplete="off">
+          <div className={styles.tradeContainer}>
+             {/* <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
+            {/* <PriceButton exchangeContext={exchangeContext} connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={tradeData.sellBalanceOf} disabled={disabled} slippage={slippage} /> */}
+            <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={activeAccount.address} TOKEN_CONTRACT_ADDRESS={sellTokenContract.address} />
+            <PriceButton exchangeContext={exchangeContext} />
+              {
+                // <QuoteButton sendTransaction={sendTransaction}/>
+              }
+            <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+            <SponsorRateConfig setDisplayState={setDisplayState}/>
+            <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} />
+          </div>
+          <FeeDisclosure/>
+          <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
+        </form>
+      );
+    } catch (err:any) {
+      console.debug (`Price Components Error:\n ${err.message}`)
+    }
+  } catch (err:any) {
+    console.debug (`Price Methods Error:\n ${err.message}`)
+  }
 }
