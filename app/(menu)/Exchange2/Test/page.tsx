@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
 import { Config, useAccount, UseAccountReturnType } from 'wagmi'
-import ProviderConfigurationStatus from '@/components/ecr20/ProviderConfigurationStatus'
 import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf'
 
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
@@ -24,15 +23,8 @@ function App() {
     }
   }, [ACTIVE_ACCOUNT.chainId]);
   
-  useEffect(() => {
-    // alert(`SETTING ACTIVE_ACCOUNT_ADDRESS = ${ACTIVE_ACCOUNT.address}`)
-    if (ACTIVE_ACCOUNT.address != undefined && ACTIVE_ACCOUNT_ADDRESS !== ACTIVE_ACCOUNT.address)
-      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
-  }, [ACTIVE_ACCOUNT.address]);
-
   return (
     <>
-      <ProviderConfigurationStatus />
       <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
     </>
   )
