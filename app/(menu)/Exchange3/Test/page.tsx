@@ -33,7 +33,7 @@ function App() {
   return (
     <>
       <ProviderConfigurationStatus />
-      <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
     </>
   )
 }

@@ -16,10 +16,11 @@ const ReadWagmiEcr20BalanceOf = ({ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRES
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>For Wallet {ACTIVE_ACCOUNT_ADDRESS} Reading Wagmi ERC20 BalanceOf {TOKEN_CONTRACT_ADDRESS}</h2>
+      <h2>For Wallet {ACTIVE_ACCOUNT_ADDRESS}</h2>
+      <h2>Reading Wagmi ERC20 Contract BalanceOf {TOKEN_CONTRACT_ADDRESS}</h2>
       BalanceOf              : {balanceOf} <br/>
       Decimals               : {decimals} <br/>
-      Formatted BalanceOf     : {formattedBalanceOf}
+      Formatted BalanceOf    : {formattedBalanceOf}
     </>
   )
 }
