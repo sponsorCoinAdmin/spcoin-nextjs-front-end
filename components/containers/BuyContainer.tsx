@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
-import { getFormattedClientBalanceOf, useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useFormattedClientBalanceOf, useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import { formatUnits } from "ethers";
@@ -26,9 +26,9 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
 
     // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
     // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
-    // tradeData.buyBalanceOf = getFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "")
+    // tradeData.buyBalanceOf = useFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "")
 
-    console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${buyTokenContract.address}) = ${tradeData.buyBalanceOf}`)
+    // console.debug(`useFormattedClientBalanceOf(${activeAccount.address}, ${buyTokenContract.address}) = ${tradeData.buyBalanceOf}`)
 
       let IsSpCoin = isSpCoin(buyTokenContract);
       return (

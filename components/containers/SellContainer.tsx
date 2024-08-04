@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { getFormattedClientBalanceOf, useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals, useFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
@@ -29,8 +29,8 @@ const SellContainer = ({tradeData,
                         disabled} : Props) => {
   // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
   // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
-  // console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
-  const formattedBalanceOf:string = getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "")
+  // console.debug(`useFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
+  const formattedBalanceOf:string = useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "")
 
   try {
     let IsSpCoin = isSpCoin(sellTokenContract);

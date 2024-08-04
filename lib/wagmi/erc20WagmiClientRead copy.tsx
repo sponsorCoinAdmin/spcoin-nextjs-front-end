@@ -131,7 +131,7 @@ const getFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
   return formatDecimals(totalSupply, decimals);
 }
 
-const getFormattedClientBalanceOf = (connectedWalletAddr: Address | string , contractAddress: Address | string ) => {
+const useFormattedClientBalanceOf = (connectedWalletAddr: Address | string , contractAddress: Address | string ) => {
   let balanceOf = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress)
   let decimals  = useERC20WagmiClientDecimals(contractAddress)
  return formatDecimals(balanceOf, decimals);
@@ -154,5 +154,5 @@ export {
   getErc20ClientContract,
   formatDecimals,
   getFormattedClientTotalSupply,
-  getFormattedClientBalanceOf
+  useFormattedClientBalanceOf
 }

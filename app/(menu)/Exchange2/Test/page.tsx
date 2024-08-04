@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
 import { Config, useAccount, UseAccountReturnType } from 'wagmi'
@@ -12,21 +11,20 @@ let ACTIVE_ACCOUNT: UseAccountReturnType<Config<readonly [{ blockExplorers: { re
 
 function App() {
   ACTIVE_ACCOUNT = useAccount()
-  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(NULL_CONTRACT)
+  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(NULL_CONTRACT)
   const [ TOKEN_CONTRACT, setDefaultTokenContract ] = useState<Address>(NULL_CONTRACT)
 
   useEffect(() => {
-      switch(ACTIVE_ACCOUNT.chainId) {
-        case 1: setDefaultTokenContract(CHKN_ETHEREUM_CONTRACT); break;
-        case 137: setDefaultTokenContract(USDT_POLYGON_CONTRACT); break;
-        default: setDefaultTokenContract(NULL_CONTRACT); break;
+    setActiveAccountAddress(ACTIVE_ACCOUNT?.address);
+    switch(ACTIVE_ACCOUNT?.chainId) {
+      case 1: setDefaultTokenContract(CHKN_ETHEREUM_CONTRACT); break;
+      case 137: setDefaultTokenContract(USDT_POLYGON_CONTRACT); break;
+      default: setDefaultTokenContract(NULL_CONTRACT); break;
     }
   }, [ACTIVE_ACCOUNT.chainId]);
   
   return (
-    <>
       <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
-    </>
   )
 }
 
