@@ -242,7 +242,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
       return (
         <form autoComplete="off">
           <div className={styles.tradeContainer}>
-            <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT={sellTokenContract.address} />
+            <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT_ADDRESS={sellTokenContract.address} />
           </div>
         </form>
       );

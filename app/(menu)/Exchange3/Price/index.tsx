@@ -47,7 +47,7 @@ export default function PriceView({activeAccount}: {
         <div>ACTIVE_ACCOUNT_ADDRESS    = {ACTIVE_ACCOUNT_ADDRESS}</div>
         <div>TOKEN_CONTRACT            = {TOKEN_CONTRACT}`</div>
         <div className={styles.tradeContainer}>
-          <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT={sellTokenContract.address} />
+          <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT_ADDRESS={sellTokenContract.address} />
           {/* <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={connectedWalletAddr} TOKEN_CONTRACT={sellTokenContract.address} /> */}
         </div>
       </>
