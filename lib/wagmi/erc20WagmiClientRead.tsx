@@ -134,23 +134,29 @@ const getFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
   return formatDecimals(totalSupply, decimals);
 }
 
+// const useFormattedClientBalanceOf = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined ) => {
+
+//   const [formattedDecimals, setFormattedDecimals] = useState<string>("0");
+
+//   // if (connectedWalletAddr && contractAddress) {
+//     const balanceOf = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress)
+//     const decimals  = useERC20WagmiClientDecimals(contractAddress)
+//   // }
+
+//   useEffect(() => {
+//     if(balanceOf && decimals) {
+//       // alert(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
+//       setFormattedDecimals(formatDecimals(balanceOf, decimals));
+//     }
+//   }, [balanceOf, decimals])
+
+//   return formattedDecimals;
+// }
+
 const useFormattedClientBalanceOf = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined ) => {
-
-  const [formattedDecimals, setFormattedDecimals] = useState<string>("0");
-
-  // if (connectedWalletAddr && contractAddress) {
-    const balanceOf = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress)
-    const decimals  = useERC20WagmiClientDecimals(contractAddress)
-  // }
-
-  useEffect(() => {
-    if(balanceOf && decimals) {
-      // alert(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
-      setFormattedDecimals(formatDecimals(balanceOf, decimals));
-    }
-  }, [balanceOf, decimals])
-
-  return formattedDecimals;
+  let balanceOf = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress)
+  let decimals  = useERC20WagmiClientDecimals(contractAddress)
+ return formatDecimals(balanceOf, decimals);
 }
 
 export {
