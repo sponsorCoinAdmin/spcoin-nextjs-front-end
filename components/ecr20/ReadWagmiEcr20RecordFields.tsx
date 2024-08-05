@@ -8,14 +8,14 @@ import {
   useERC20WagmiClientTotalSupplyRec } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  TOKEN_CONTRACT:Address
+  TOKEN_CONTRACT_ADDRESS:Address
 }
 
-const ReadWagmiEcr20RecordFields = ( { TOKEN_CONTRACT }: Props) => {
-  const nameRec = useERC20WagmiClientNameRec(TOKEN_CONTRACT)
-  const symbolRec = useERC20WagmiClientSymbolRec(TOKEN_CONTRACT)
-  const decimalRec = useERC20WagmiClientDecimalRec(TOKEN_CONTRACT)
-  const totalSupplyRec = useERC20WagmiClientTotalSupplyRec(TOKEN_CONTRACT)
+const ReadWagmiEcr20RecordFields = ( { TOKEN_CONTRACT_ADDRESS }: Props) => {
+  const nameRec = useERC20WagmiClientNameRec(TOKEN_CONTRACT_ADDRESS)
+  const symbolRec = useERC20WagmiClientSymbolRec(TOKEN_CONTRACT_ADDRESS)
+  const decimalRec = useERC20WagmiClientDecimalRec(TOKEN_CONTRACT_ADDRESS)
+  const totalSupplyRec = useERC20WagmiClientTotalSupplyRec(TOKEN_CONTRACT_ADDRESS)
 
   let name = nameRec.status === 'success' ? nameRec.data : null
   let symbol = symbolRec.status === 'success' ?  symbolRec.data : null
@@ -25,7 +25,7 @@ const ReadWagmiEcr20RecordFields = ( { TOKEN_CONTRACT }: Props) => {
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Read Wagmi ERC20 Record Fields for Token Contract({TOKEN_CONTRACT})</h2>
+      <h2>Read Wagmi ERC20 Record Fields for Token Contract({TOKEN_CONTRACT_ADDRESS})</h2>
       <div>{name === null ? null : "Token Name : " + name }</div>
       <div>{symbol === null ? null : "Symbol : " + symbol }</div>
       <div>{decimals === null ? null : "Decimals : " + decimals }</div>

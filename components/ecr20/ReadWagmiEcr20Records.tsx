@@ -3,7 +3,7 @@ import { Address } from 'viem'
 import { getERC20WagmiClientRecords, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  TOKEN_CONTRACT:Address
+  TOKEN_CONTRACT_ADDRESS:Address
 }
 
 const ReadWagmiEcr20Records = ({ TOKEN_CONTRACT}: Props) => {

@@ -31,7 +31,9 @@ export default () => {
         <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
-        <div className={styles.headerItem}><Link href="/Test">Test</Link></div>
+        <div className={styles.headerItem}><Link href="/Exchange/Test">Test</Link></div>
+        <div className={styles.headerItem}><Link href="/Exchange2/Test">Test2</Link></div>
+        <div className={styles.headerItem}><Link href="/Exchange3/Test">Test3</Link></div>
         {/* <div className={styles.headerItem}><Link href="/Recipient"></Link></div> */}
       </div>
       <div className={styles.rightH}>

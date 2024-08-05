@@ -3,7 +3,7 @@ import { Address } from 'viem'
 import { useERC20WagmiClientTotalSupply  } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  TOKEN_CONTRACT:Address
+  TOKEN_CONTRACT_ADDRESS:Address
 }
 
 const contractTotalSupply = ({ TOKEN_CONTRACT}: Props) => {

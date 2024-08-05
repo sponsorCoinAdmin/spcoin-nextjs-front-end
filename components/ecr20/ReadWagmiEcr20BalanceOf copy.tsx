@@ -4,7 +4,7 @@ import { useERC20WagmiClientBalanceOf, useFormattedClientBalanceOf } from '@/lib
 
 type Props = {
   ACTIVE_ACCOUNT_ADDRESS:Address, 
-  TOKEN_CONTRACT:Address
+  TOKEN_CONTRACT_ADDRESS:Address
 }
 
 const ReadWagmiEcr20BalanceOf = ({ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT}: Props) => {
