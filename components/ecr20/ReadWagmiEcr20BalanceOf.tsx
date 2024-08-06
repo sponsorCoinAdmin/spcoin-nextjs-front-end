@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiClientBalanceOf, useFormattedClientBalanceOf, useERC20WagmiClientDecimals, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
+import { useERC20WagmiClientBalanceOfStr, useFormattedClientBalanceOf, useERC20WagmiClientDecimals, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
   ACTIVE_ACCOUNT_ADDRESS:Address|string|undefined, 
@@ -8,7 +8,7 @@ type Props = {
 }
 
 const ReadWagmiEcr20BalanceOf = ({ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS}: Props) => {
-  const balanceOf             = useERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
+  const balanceOf             = useERC20WagmiClientBalanceOfStr(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
   const decimals              = useERC20WagmiClientDecimals(TOKEN_CONTRACT_ADDRESS)
   const formattedBalanceOf    = useFormattedClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
   console.debug(`ReadWagmiEcr20BalanceOf.decimals:TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`)

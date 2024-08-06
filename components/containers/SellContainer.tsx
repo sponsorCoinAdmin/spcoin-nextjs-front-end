@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { useERC20WagmiClientBalanceOf, useERC20WagmiClientDecimals, useFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useERC20WagmiClientBalanceOfStr, useERC20WagmiClientDecimals, useFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
@@ -57,7 +57,7 @@ const SellContainer = ({tradeData,
             <ManageSponsorsButton activeAccount={activeAccount} tokenContract={sellTokenContract} setDisplayState={setDisplayState} />
             {/* <div id="sponsoredBalance" className={styles["sponsoredBalance"]}>
               Sponsored Balance: {"{ToDo}"}
-              {useERC20WagmiClientBalanceOf('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
+              {useERC20WagmiClientBalanceOfStr('0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59', `0xc2132D05D31c914a87C6611C10748AEb04B58e8F` || "")}
             </div> */}
           </> : null}
       </div>
