@@ -24,14 +24,7 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
     try {
     // console.debug("BuyContainer.isSpCoin = " + IsSpCoin)
     const formattedBalanceOf:string = useFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "")
-
-    // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
-    // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
-    // tradeData.buyBalanceOf = useFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "")
-
-    // console.debug(`useFormattedClientBalanceOf(${activeAccount.address}, ${buyTokenContract.address}) = ${tradeData.buyBalanceOf}`)
-
-      let IsSpCoin = isSpCoin(buyTokenContract);
+    let IsSpCoin = isSpCoin(buyTokenContract);
       return (
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={parseFloat(buyAmount).toFixed(6)}
@@ -44,8 +37,8 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
         {IsSpCoin ?
           <AddSponsorButton activeAccount={activeAccount} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
           : null}
-      </div>
-    );
+        </div>
+      );
   } catch (err:any) {
     alert(`Buy Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
   }
