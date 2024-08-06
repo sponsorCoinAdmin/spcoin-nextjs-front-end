@@ -64,6 +64,7 @@ const SellContainer = ({tradeData,
     );
   } catch (err:any) {
     console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
+    // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
   }
 }
 

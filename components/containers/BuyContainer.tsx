@@ -38,7 +38,8 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
       </div>
     );
   } catch (err:any) {
-    alert(`Buy Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
+    console.log(`Buy Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
+    // alert(`Buy Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
   }
 }
 
