@@ -19,6 +19,7 @@ type Props = {
   disabled: boolean
 }
 
+
 /* Sell Token Selection Module */
 const SellContainer = ({tradeData, 
                         activeAccount,
@@ -30,9 +31,10 @@ const SellContainer = ({tradeData,
   // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
   // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
   // console.debug(`useFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
-  const formattedBalanceOf:string = useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "")
+  // const [formattedBalanceOf, setFormattedBalanceOf] = useState<string>(useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0"));
 
   try {
+    tradeData.sellFormattedBalance = useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0")
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
@@ -48,7 +50,7 @@ const SellContainer = ({tradeData,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {formattedBalanceOf}
+          Balance: {tradeData.sellFormattedBalance}
         </div>
         {IsSpCoin ?
           <>
