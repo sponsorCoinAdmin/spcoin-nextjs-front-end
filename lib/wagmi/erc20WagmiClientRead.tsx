@@ -110,17 +110,19 @@ const useERC20WagmiClientBalanceOf = (connectedWalletAddr: Address | string | un
 }
 
 const useERC20WagmiClientBalanceOfStr = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
-  const [bigIntBalanceOfStr , SetBigIntBalanceOfStr ] = useState<string>("0");
   const bigIntBalanceOf:bigint | undefined = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress);
+  // const [bigIntBalanceOfStr , SetBigIntBalanceOfStr ] = useState<string>("0");
+  // const [bigIntBalanceOfStr , SetBigIntBalanceOfStr ] = useState<string>("0");
+  // useEffect(() => {
+  //   if(bigIntBalanceOf) {
+  //     SetBigIntBalanceOfStr( bigIntBalanceOf.toString());
+  //   }
+  // }, [bigIntBalanceOf])
 
-  useEffect(() => {
-    if(bigIntBalanceOf) {
-      SetBigIntBalanceOfStr( bigIntBalanceOf.toString());
-    }
-  }, [bigIntBalanceOf])
+  // const bigIntBalanceOfStr = bigIntBalanceOf ? bigIntBalanceOf.toString(): "0";
 
   // alert(`bigIntBalanceOf = ${bigIntBalanceOf}\nbigIntBalanceOfStr = ${bigIntBalanceOfStr}`)
-  return bigIntBalanceOfStr;
+  return bigIntBalanceOf ? bigIntBalanceOf.toString() : "0";
 }
 
 const useERC20WagmiClientBalanceOfStr_JUNK = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
