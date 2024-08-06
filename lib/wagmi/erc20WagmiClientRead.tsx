@@ -154,10 +154,22 @@ const getFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
 // }
 
 const useFormattedClientBalanceOf = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined ) => {
-  let balanceOf = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress)
-  let decimals  = useERC20WagmiClientDecimals(contractAddress)
- return formatDecimals(balanceOf, decimals);
-}
+  // alert(`useFormattedClientBalanceOf(${connectedWalletAddr}, ${contractAddress} )`)
+  const [formattedBalanceOf , setFormattedBalanceOf ] = useState<string>("0");
+    const balanceOf = useERC20WagmiClientBalanceOf(connectedWalletAddr, contractAddress)
+    let decimals  = useERC20WagmiClientDecimals(contractAddress)
+    const formattedBalanceOf2 = formatDecimals(balanceOf, decimals);
+   
+    useEffect(() => {
+      if(balanceOf && decimals) {
+        // alert(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
+        setFormattedBalanceOf(formatDecimals(balanceOf, decimals));
+      }
+    }, [balanceOf, decimals])
+  
+    return formattedBalanceOf;
+  }
+
 
 export {
   type TokenContract,
