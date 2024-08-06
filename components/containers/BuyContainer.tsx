@@ -23,6 +23,7 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
 
     try {
     // console.debug("BuyContainer.isSpCoin = " + IsSpCoin)
+    const formattedBalanceOf:string = useFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "")
 
     // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
     // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
@@ -37,7 +38,9 @@ const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, se
                 onChange={(e) => { console.log(`BuyContainer.input:buyAmount =${buyAmount}`) }} />
         <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
         <div className={styles["buySell"]}>You receive</div>
-        {/* <div className={styles["assetBalance"]}>Balance: {tradeData.buyBalanceOf}</div> */}
+        <div className={styles["assetBalance"]}>
+          Balance: {formattedBalanceOf}
+        </div>
         {IsSpCoin ?
           <AddSponsorButton activeAccount={activeAccount} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
           : null}

@@ -10,7 +10,6 @@ type Props = {
 const ReadWagmiEcr20BalanceOf = ({ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS}: Props) => {
   const balanceOf             = useERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
   const decimals              = useERC20WagmiClientDecimals(TOKEN_CONTRACT_ADDRESS)
-  
   const formattedBalanceOf    = useFormattedClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
   console.debug(`ReadWagmiEcr20BalanceOf.decimals:TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`)
 
