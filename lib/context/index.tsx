@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
 import { DISPLAY_STATE, EXCHANGE_STATE, ExchangeContext, TradeData } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
-import { config } from '@/lib/wagmi/wagmiConfig'
 import { useAccount, useChainId } from 'wagmi';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 

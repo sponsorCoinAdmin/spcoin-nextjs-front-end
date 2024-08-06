@@ -93,6 +93,22 @@ const useERC20WagmiClientTotalSupply = (contractAddress:Address | undefined) => 
   return useERC20WagmiClientTotalSupplyRec(contractAddress).data;
 }
 
+const useERC20WagmiClientBalanceOfStr = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
+  let eRC20WagmiClientBalanceOf:bigint | undefined = BigInt(0);
+  try {
+    if (connectedWalletAddr && contractAddress) {
+      console.debug(`EXECUTING:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress})`);
+      eRC20WagmiClientBalanceOf = useERC20WagmiClientBalanceOfRec(connectedWalletAddr , contractAddress )?.data;
+      console.debug(`EXECUTED 2:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
+    }
+  }
+  catch (err:any) {
+    console.debug(`ERROR:eRC20WagmiClientBalanceOf(${connectedWalletAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
+    console.debug(`ERROR:eRC20WagmiClientBalanceOf:err.msg = ${err.msg}`);
+  }
+  return eRC20WagmiClientBalanceOf;
+}
+
 const useERC20WagmiClientBalanceOf = (connectedWalletAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
   let eRC20WagmiClientBalanceOf:any = "0";
   try {
