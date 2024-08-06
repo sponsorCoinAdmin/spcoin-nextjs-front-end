@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { useERC20WagmiClientBalanceOfStr, useERC20WagmiClientDecimals, useFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useERC20WagmiClientBalanceOfStr, getERC20WagmiClientDecimals, useFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
@@ -34,7 +34,7 @@ const SellContainer = ({tradeData,
   // const [formattedBalanceOf, setFormattedBalanceOf] = useState<string>(useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0"));
 
   try {
-    tradeData.sellFormattedBalance = useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0")
+    // tradeData.sellFormattedBalance = useFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0")
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>

@@ -2,10 +2,9 @@ import React, { useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
-import { useFormattedClientBalanceOf, useERC20WagmiClientBalanceOfStr, useERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useFormattedClientBalanceOf, useERC20WagmiClientBalanceOfStr, getERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin } from '@/lib/spCoin/utils';
-import { formatUnits } from "ethers";
 
 type Props = {
   tradeData:TradeData,
@@ -18,8 +17,6 @@ type Props = {
 }
 
 const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
-    // tradeData.buyDecimals = (useERC20WagmiClientDecimals(buyTokenContract.address) || 0)
-
   try {
     tradeData.buyFormattedBalance = useFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "0")
     let IsSpCoin = isSpCoin(buyTokenContract);

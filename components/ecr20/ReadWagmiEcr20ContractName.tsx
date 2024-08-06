@@ -1,13 +1,13 @@
 import React from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiClientName  } from '@/lib/wagmi/erc20WagmiClientRead'
+import { getERC20WagmiClientName  } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address
 }
 
 const ReadWagmiEcr20ContractName = ({ TOKEN_CONTRACT}: Props) => {
-  const name    = useERC20WagmiClientName(TOKEN_CONTRACT)
+  const name    = getERC20WagmiClientName(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
