@@ -17,21 +17,25 @@ const isSpCoin = (TokenContract:TokenContract) => {
 const getInitialContext = (chain:any) => {
     const networkName = ( chain && chain.name) ?  chain.name.toLowerCase() : 1;
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
-    const defaultBuyToken = defaultNetworkSettings.defaultBuyToken
-    let tradeData =  getInitialDataSettings(networkName, isSpCoin(defaultBuyToken));
+    let tradeData =  getInitialDataSettings(chain);
     let initialContext:ExchangeContext = {
         tradeData: tradeData,
         network: defaultNetworkSettings.networkHeader,
-        sellTokenContract: defaultNetworkSettings.defaultSellToken,
-        buyTokenContract: defaultNetworkSettings.defaultBuyToken,
         recipientWallet: defaultNetworkSettings.defaultRecipient,
         agentWallet: defaultNetworkSettings.defaultAgent
     }
     return initialContext;
 }
 
-function getInitialDataSettings(network: string | number, ifSpCoin:boolean): TradeData {
+function getInitialDataSettings(chain:any | number): TradeData {
+    const networkName = ( chain && chain.name) ?  chain.name.toLowerCase() : 1;
+    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
+    const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
+
     let tradeData:TradeData = {
+        sellTokenContract: defaultNetworkSettings.defaultSellToken,
+        buyTokenContract: defaultNetworkSettings.defaultBuyToken,
+
         connectedWalletAddr: undefined,
         chainId: 1,
         networkName: "ethereum",
@@ -44,7 +48,7 @@ function getInitialDataSettings(network: string | number, ifSpCoin:boolean): Tra
         buyBalanceOf: 0n,
         buyFormattedBalance: '0',
         tradeDirection: "sell",
-        displayState: ifSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
+        displayState: ifBuyTokenSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
         slippage: "0.02",
     }
     return tradeData;
@@ -62,8 +66,8 @@ const resetContextNetwork = (chain:any) => {
     exchangeContext.tradeData.networkName = networkName
     exchangeContext.tradeData.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
     exchangeContext.tradeData.slippage = "0.02",
-    exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
-    exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
+    exchangeContext.tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+    exchangeContext.tradeData.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
     exchangeContext.recipientWallet = defaultNetworkSettings.defaultRecipient,
     exchangeContext.agentWallet = defaultNetworkSettings.defaultAgent
 }

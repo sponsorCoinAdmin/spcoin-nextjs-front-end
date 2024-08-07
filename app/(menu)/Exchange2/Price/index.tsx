@@ -16,7 +16,7 @@ export default function PriceView({activeAccount, price, setPrice}: {
 }) {
 
   const tradeData:TradeData = exchangeContext.tradeData;
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
   tradeData.connectedWalletAddr = activeAccount.address || BURN_ADDRESS;
 
   // useEffect(() => {

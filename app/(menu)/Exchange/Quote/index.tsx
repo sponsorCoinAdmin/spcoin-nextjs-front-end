@@ -92,8 +92,8 @@ export default function QuoteView({
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
 
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
+  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
   const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
   const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeContext.agentWallet);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
@@ -134,7 +134,7 @@ export default function QuoteView({
 
   useEffect(() => {
     console.debug("sellTokenContract.symbol changed to " + sellTokenContract.name);
-    exchangeContext.sellTokenContract = sellTokenContract;
+    exchangeContext.tradeData.sellTokenContract = sellTokenContract;
   }, [sellTokenContract]);
 
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function QuoteView({
       setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
     else if (!isSpCoin(buyTokenContract)) 
       setDisplayState(DISPLAY_STATE.OFF)
-    exchangeContext.buyTokenContract = buyTokenContract;
+    exchangeContext.tradeData.buyTokenContract = buyTokenContract;
   }, [buyTokenContract]);
 
   useEffect(() => {

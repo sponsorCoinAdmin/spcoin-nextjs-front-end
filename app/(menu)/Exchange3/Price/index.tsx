@@ -24,7 +24,7 @@ export default function PriceView({activeAccount}: {
 }) {
   ACTIVE_ACCOUNT = activeAccount;
   const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(NULL_CONTRACT)
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
   const [ TOKEN_CONTRACT, setDefaultTokenContract ] = useState<Address>(NULL_CONTRACT)
   const tradeData:TradeData = exchangeContext.tradeData;
 
