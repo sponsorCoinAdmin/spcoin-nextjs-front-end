@@ -15,14 +15,9 @@ const isSpCoin = (TokenContract:TokenContract) => {
   }  
 
 const getInitialContext = (chain:any) => {
-    const networkName = ( chain && chain.name) ?  chain.name.toLowerCase() : 1;
-    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     let tradeData =  getInitialDataSettings(chain);
     let initialContext:ExchangeContext = {
         tradeData: tradeData,
-        network: defaultNetworkSettings.networkHeader,
-        recipientWallet: defaultNetworkSettings.defaultRecipient,
-        agentWallet: defaultNetworkSettings.defaultAgent
     }
     return initialContext;
 }
@@ -33,6 +28,12 @@ function getInitialDataSettings(chain:any | number): TradeData {
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
 
     let tradeData:TradeData = {
+
+        network: defaultNetworkSettings.networkHeader,
+
+        recipientWallet: defaultNetworkSettings.defaultRecipient,
+        agentWallet: defaultNetworkSettings.defaultAgent,
+
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
@@ -55,7 +56,7 @@ function getInitialDataSettings(chain:any | number): TradeData {
 const resetContextNetwork = (chain:any) => {
     const networkName = chain.name.toLowerCase();
     console.debug("resetContextNetwork: newNetworkName = " + networkName);
-    console.debug("resetContextNetwork: exchangeContext.networkName = " + exchangeContext.tradeData.networkName);
+    console.debug("resetContextNetwork: exchangeContext.tradeData.networkName = " + exchangeContext.tradeData.networkName);
     console.debug(`UPDATING NETWORK to ${networkName}`);
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
@@ -66,8 +67,8 @@ const resetContextNetwork = (chain:any) => {
     exchangeContext.tradeData.slippage = "0.02",
     exchangeContext.tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.tradeData.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
-    exchangeContext.recipientWallet = defaultNetworkSettings.defaultRecipient,
-    exchangeContext.agentWallet = defaultNetworkSettings.defaultAgent
+    exchangeContext.tradeData.recipientWallet = defaultNetworkSettings.defaultRecipient,
+    exchangeContext.tradeData.agentWallet = defaultNetworkSettings.defaultAgent
 }
 
 export function ExchangeWrapper({children} : {

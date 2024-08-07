@@ -48,8 +48,13 @@ type TokenContract = {
 
 type TradeData = {
 
+  network: NetworkElement;
+
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
+
+  recipientWallet: WalletElement;
+  agentWallet: WalletElement;
 
   connectedWalletAddr:any,
   chainId: number;
@@ -67,9 +72,6 @@ type TradeData = {
 
 type ExchangeContext = {
   tradeData: TradeData;
-  network: NetworkElement;
-  recipientWallet: WalletElement;
-  agentWallet: WalletElement;
 }
 
 type NetworkElement = {
