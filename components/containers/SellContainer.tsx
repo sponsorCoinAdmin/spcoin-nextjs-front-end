@@ -6,7 +6,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TradeData, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput } from '@/lib/spCoin/utils';
-import { getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure copy/types';
@@ -42,9 +42,10 @@ const SellContainer = ({activeAccount,
   // const [formattedBalanceOf, setFormattedBalanceOf] = useState<string>(getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0"));
 
   try {
+    console.debug(`SellContainer.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`);
     tradeData.sellDecimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
-    tradeData.sellFormattedBalance = getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0")
+    tradeData.sellFormattedBalance = formatDecimals(tradeData.sellBalanceOf, tradeData.sellDecimals);
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>

@@ -5,7 +5,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
-import { getFormattedClientBalanceOf, getERC20WagmiClientBalanceOfStr, getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { getFormattedClientBalanceOf, getERC20WagmiClientBalanceOfStr, getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin } from '@/lib/spCoin/utils';
 
@@ -22,9 +22,10 @@ const tradeData:TradeData = exchangeContext.tradeData;
 
 const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
   try {
+    console.debug(`BuyContainer.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`);
     tradeData.buyDecimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
     tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
-    tradeData.buyFormattedBalance = getFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "0")
+    tradeData.buyFormattedBalance = formatDecimals(tradeData.buyBalanceOf, tradeData.buyDecimals);
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>
