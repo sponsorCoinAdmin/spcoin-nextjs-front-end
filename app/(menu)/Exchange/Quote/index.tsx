@@ -88,7 +88,7 @@ export default function QuoteView({
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
   const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
-  const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.tradeData.state);
+  // const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.tradeData.state);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
 
@@ -123,10 +123,10 @@ export default function QuoteView({
     exchangeContext.tradeData.slippage = slippage;
   }, [slippage]);
 
-  useEffect(() => {
-    console.debug('QUOTE: state changed to  ' + state.toString);
-    exchangeContext.tradeData.state = state;
-  }, [state]);
+  // useEffect(() => {
+  //   console.debug('QUOTE: state changed to  ' + state.toString);
+  //   exchangeContext.tradeData.state = state;
+  // }, [state]);
 
   useEffect(() => {
     // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenContract.name});`)
@@ -251,8 +251,20 @@ export default function QuoteView({
       <ErrorDialog errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-        <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
-        <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenContract.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenContract={buyTokenContract} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>          
+        {/* <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
+        <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenContract.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenContract={buyTokenContract} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>           */}
+            <SellContainer activeAccount={ACTIVE_ACCOUNT}
+                           sellAmount={sellAmount}
+                           sellTokenContract={sellTokenContract}
+                           setSellAmount={setSellAmount}
+                           disabled={false}
+                           setDisplayState={setDisplayState}/>
+            <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
+                           buyAmount={buyAmount}
+                           buyTokenContract={buyTokenContract}
+                           setBuyAmount={setBuyAmount}
+                           disabled={false}
+                           setDisplayState={setDisplayState} />          
         {/* <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} /> */}
         {/* <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} /> */}
         <button
