@@ -54,9 +54,9 @@ export default function PriceView() {
     const connectedWalletAddr = tradeData.connectedWalletAddr
 
     // useEffect(() => {
-    //   tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+    //   tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellTokenContract.decimals);
     //   setSellBalanceOf(tradeData.sellBalanceOf);
-    //   // alert(`formatUnits(${tradeData.sellBalanceOf}, ${tradeData.sellDecimals}) = ${tradeData.sellBalanceOf}`)
+    //   // alert(`formatUnits(${tradeData.sellBalanceOf}, ${tradeData.sellTokenContract.decimals}) = ${tradeData.sellBalanceOf}`)
     // }, [tradeData.sellBalanceOf]);
 
 
@@ -75,7 +75,7 @@ export default function PriceView() {
       // alert(`Price:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}\n `);
     }, [ACTIVE_ACCOUNT.chain]);
 
-// tradeData.sellDecimals = sellDecimals
+// tradeData.sellTokenContract.decimals = sellDecimals
 
   // useEffect(() => {
   //   alert(`SellContainer:tradeData = ${JSON.stringify(tradeData, null, 2)}`)

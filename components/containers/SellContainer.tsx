@@ -37,15 +37,15 @@ const SellContainer = ({activeAccount,
                         setDisplayState,
                         disabled} : Props) => {
   // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
-  // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellDecimals);
+  // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellTokenContract.decimals);
   // console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
   // const [formattedBalanceOf, setFormattedBalanceOf] = useState<string>(getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0"));
 
   try {
     console.debug(`SellContainer.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`);
-    tradeData.sellDecimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
+    tradeData.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
-    tradeData.sellFormattedBalance = formatDecimals(tradeData.sellBalanceOf, tradeData.sellDecimals);
+    tradeData.sellFormattedBalance = formatDecimals(tradeData.sellBalanceOf, tradeData.sellTokenContract.decimals);
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>

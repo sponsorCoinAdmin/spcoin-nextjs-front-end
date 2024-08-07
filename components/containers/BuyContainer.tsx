@@ -23,9 +23,9 @@ const tradeData:TradeData = exchangeContext.tradeData;
 const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
   try {
     console.debug(`BuyContainer.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`);
-    tradeData.buyDecimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
+    tradeData.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
     tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
-    tradeData.buyFormattedBalance = formatDecimals(tradeData.buyBalanceOf, tradeData.buyDecimals);
+    tradeData.buyFormattedBalance = formatDecimals(tradeData.buyBalanceOf, tradeData.buyTokenContract.decimals);
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>

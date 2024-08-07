@@ -55,11 +55,9 @@ type TradeData = {
   chainId: number;
   networkName: string;
   sellAmount:string;
-  sellDecimals:number;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:string;
-  buyDecimals:number;
   buyBalanceOf:bigint;
   buyFormattedBalance:string;
   tradeDirection:string
