@@ -19,15 +19,7 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-type TokenContract = {
-  chainId : number | undefined,
-  address : any,
-  name :string | undefined,
-  symbol :string | undefined,
-  decimals : any,
-  totalSupply : any,
-  img: string | undefined;
-}
+
 
 type ContractRecs = {
     nameRec:any,
@@ -42,6 +34,16 @@ type WalletElement = {
   symbol: string;
   img: string;
   url: string;
+}
+
+type TokenContract = {
+  chainId : number | undefined,
+  address : any,
+  name :string | undefined,
+  symbol :string | undefined,
+  decimals : number,
+  totalSupply : any,
+  img: string | undefined;
 }
 
 type TradeData = {
