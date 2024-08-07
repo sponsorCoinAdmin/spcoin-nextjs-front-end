@@ -46,18 +46,25 @@ type TokenContract = {
   img: string | undefined;
 }
 
+type NetworkElement = {
+  chainId: number;
+  name: string;
+  symbol: string;
+  img: string;
+  url: string;
+}
+
 type TradeData = {
 
   network: NetworkElement;
 
-  sellTokenContract: TokenContract;
-  buyTokenContract: TokenContract;
-
   recipientWallet: WalletElement;
   agentWallet: WalletElement;
 
+  sellTokenContract: TokenContract;
+  buyTokenContract: TokenContract;
+
   connectedWalletAddr:any,
-  chainId: number;
   networkName: string;
   sellAmount:string;
   sellBalanceOf:bigint;
@@ -72,14 +79,6 @@ type TradeData = {
 
 type ExchangeContext = {
   tradeData: TradeData;
-}
-
-type NetworkElement = {
-  chainId: number;
-  name: string;
-  symbol: string;
-  img: string;
-  url: string;
 }
 
 export {

@@ -59,12 +59,13 @@ const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr:
       // console.debug("retResponse = " + JSON.stringify(retResponse))
       // alert(JSON.stringify(retResponse,null,2))
       let td:TokenContract = {
-          chainId: chainId,
-          address: tokenAddr,
-          symbol: retResponse.symbol,
-          img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
-          name:  retResponse.symbol,
-          decimals: retResponse.decimals
+        chainId: chainId,
+        address: tokenAddr,
+        symbol: retResponse.symbol,
+        img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
+        name: retResponse.symbol,
+        decimals: retResponse.decimals,
+        totalSupply: undefined
       }
       return td
     }
@@ -102,6 +103,10 @@ const updateBalance = async (connectedWalletAddr: Address|undefined|null, TokenC
 const isSpCoin = (TokenContract:TokenContract) => {
   // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
   return TokenContract.symbol === "SpCoin" ? true:false
+}
+
+const stringifyBigInt = (obj:any) => {
+  return JSON.stringify(obj, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)
 }
 
 const exchangeDataDump = () => {

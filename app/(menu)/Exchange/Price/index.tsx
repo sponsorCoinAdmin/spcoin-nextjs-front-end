@@ -45,8 +45,8 @@ export default function PriceView() {
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
     const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
-    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
-    const [agentWallet, setAgentElement] = useState(exchangeContext.agentWallet);
+    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.tradeData.recipientWallet);
+    const [agentWallet, setAgentElement] = useState(exchangeContext.tradeData.agentWallet);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
 
@@ -59,16 +59,15 @@ export default function PriceView() {
     //   // alert(`formatUnits(${tradeData.sellBalanceOf}, ${tradeData.sellTokenContract.decimals}) = ${tradeData.sellBalanceOf}`)
     // }, [tradeData.sellBalanceOf]);
 
-
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
-      if (chain != undefined && exchangeContext.tradeData.chainId !== chain.id) {
+      if (chain != undefined && exchangeContext.tradeData.network.chainId !== chain.id) {
         resetContextNetwork(chain)
         console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
         setSellTokenContract(exchangeContext.tradeData.sellTokenContract);
         setBuyTokenContract(exchangeContext.tradeData.buyTokenContract);
-        setRecipientElement(exchangeContext.recipientWallet);
-        setAgentElement(exchangeContext.agentWallet);
+        setRecipientElement(exchangeContext.tradeData.recipientWallet);
+        setAgentElement(exchangeContext.tradeData.agentWallet);
         setDisplayState(exchangeContext.tradeData.displayState);
         setSlippage(exchangeContext.tradeData.slippage);
       }
@@ -119,7 +118,7 @@ export default function PriceView() {
 
     useEffect(() => {
       console.debug("PRICE:useEffect:recipientWallet changed to " + recipientWallet.name);
-      exchangeContext.recipientWallet = recipientWallet;
+      exchangeContext.tradeData.recipientWallet = recipientWallet;
     }, [recipientWallet]);
 
     useEffect(() => {

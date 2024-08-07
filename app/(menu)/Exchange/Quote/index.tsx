@@ -94,8 +94,8 @@ export default function QuoteView({
 
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
-  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.recipientWallet);
-  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeContext.agentWallet);
+  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.tradeData.recipientWallet);
+  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeContext.tradeData.agentWallet);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function QuoteView({
 
   useEffect(() => {
     console.debug("recipientWallet changed to " + recipientWallet.name);
-    exchangeContext.recipientWallet = recipientWallet;
+    exchangeContext.tradeData.recipientWallet = recipientWallet;
   }, [recipientWallet]);
 
   useEffect(() => {
