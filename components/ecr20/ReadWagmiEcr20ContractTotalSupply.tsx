@@ -1,13 +1,13 @@
 import React from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiClientTotalSupply  } from '@/lib/wagmi/erc20WagmiClientRead'
+import { getERC20WagmiClientTotalSupply  } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address
 }
 
 const contractTotalSupply = ({ TOKEN_CONTRACT}: Props) => {
-  const totalSupply    = useERC20WagmiClientTotalSupply(TOKEN_CONTRACT)
+  const totalSupply    = getERC20WagmiClientTotalSupply(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

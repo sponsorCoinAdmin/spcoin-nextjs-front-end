@@ -88,8 +88,8 @@ export default function PriceView() {
     }, [sellAmount]);
 
     useEffect(() => {
-      // alert(`Price:sellAmount = ${buyAmount`)
-      tradeData.sellAmount = buyAmount;
+      // alert(`Price:buyAmount = ${buyAmount`)
+      tradeData.buyAmount = buyAmount;
       // alert(`exchangeContext.tradeData.buyAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     }, [buyAmount]);
 
@@ -137,9 +137,7 @@ export default function PriceView() {
       ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
       : undefined;
 
-    console.debug(`Initializing Fetcher with "/api/" + ${tradeData.networkName} + "/0X/price"`)
-
-    const apiCall = "http://localhost:3000/api/" + tradeData.networkName + "/0X/price";
+    // console.debug(`Initializing Fetcher with "/api/" + ${tradeData.networkName} + "/0X/price"`)
 
     const getPriceApiTransaction = (data:any) => {
       let priceTransaction = `${apiCall}`
@@ -151,6 +149,8 @@ export default function PriceView() {
       priceTransaction += JSON.stringify(data, null, 2)
       return priceTransaction;
     }
+
+    const apiCall = "http://localhost:3000/api/" + tradeData.networkName + "/0X/price";
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
@@ -170,8 +170,8 @@ export default function PriceView() {
       {
         onSuccess: (data) => {
           if (!data.code) {
-            let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
-            console.log(dataMsg)
+            // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
+            // console.log(dataMsg)
 
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
@@ -241,14 +241,18 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer tradeData={tradeData}
-                           activeAccount={ACTIVE_ACCOUNT}
+            <SellContainer activeAccount={ACTIVE_ACCOUNT}
                            sellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            setSellAmount={setSellAmount}
                            disabled={false}
                            setDisplayState={setDisplayState}/>
-            <BuyContainer tradeData={tradeData} activeAccount={ACTIVE_ACCOUNT} buyAmount={buyAmount} buyTokenContract={buyTokenContract} setBuyAmount={setBuyAmount} disabled={false} setDisplayState={setDisplayState} />          
+            <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
+                           buyAmount={buyAmount}
+                           buyTokenContract={buyTokenContract}
+                           setBuyAmount={setBuyAmount}
+                           disabled={false}
+                           setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
             <PriceButton exchangeContext={exchangeContext} />
               {

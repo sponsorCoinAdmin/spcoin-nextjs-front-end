@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react';
+
+import { exchangeContext } from "@/lib/context";
+
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
-import { useFormattedClientBalanceOf, useERC20WagmiClientBalanceOfStr, getERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { getFormattedClientBalanceOf, getERC20WagmiClientBalanceOfStr, getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin } from '@/lib/spCoin/utils';
 
 type Props = {
-  tradeData:TradeData,
   activeAccount: any,
   buyAmount: string,
   buyTokenContract: TokenContract, 
@@ -16,14 +18,18 @@ type Props = {
   disabled:boolean
 }
 
-const BuyContainer = ({tradeData, activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
+const tradeData:TradeData = exchangeContext.tradeData;
+
+const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
   try {
-    tradeData.buyFormattedBalance = useFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "0")
+    tradeData.buyDecimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
+    tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
+    tradeData.buyFormattedBalance = getFormattedClientBalanceOf(activeAccount.address, buyTokenContract.address || "0")
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>
       <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={parseFloat(buyAmount).toFixed(6)}
-              onChange={(e) => { console.log(`BuyContainer.input:buyAmount =${buyAmount}`) }} />
+              onChange={(e) => { console.debug(`BuyContainer.input:buyAmount =${buyAmount}`) }} />
       <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive</div>
       <div className={styles["assetBalance"]}>

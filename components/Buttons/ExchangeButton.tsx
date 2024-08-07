@@ -21,7 +21,7 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
     // console.log(`ExchangeButton => exchangeContext.tradeData.sellAmount = ${exchangeContext.tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
     // alert (validTradingAmount)
     } catch(err:any) {
-      alert(`ERROR: CustomConnectButton.insufficientSellAmount: ${err.message}`)
+      console.debug(`ERROR: CustomConnectButton.insufficientSellAmount: ${err.message}`)
     }
     return noTradingAmount;
   }
@@ -29,27 +29,27 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
   const insufficientSellBalance = () => {
     let insufficientSellBalance:boolean = false;
      try {
-      console.debug(`EXCHANGE_BUTTON.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData,null,2)}`);
+      console.debug(`EXCHANGE_BUTTON.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`);
       const sellAmount = exchangeContext.tradeData.sellAmount;
-      const sellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
+      const bigIntSellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
       const sellDecimals = exchangeContext.tradeData.sellDecimals;
+      const sellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
       const bigIntSellAmount = parseUnits(sellAmount, sellDecimals)
-      const bigIntSellBalanceOf = parseUnits(sellBalanceOf, sellDecimals);
       insufficientSellBalance = bigIntSellBalanceOf <  bigIntSellAmount
 
       // let bigIntSellBalanceOf:BigInt  = BigInt(exchangeContext.tradeData.sellBalanceOf);
       // let bigIntSellAmount:BigInt  = BigInt(exchangeContext.tradeData.sellAmount);
 
-      console.debug(`CustomConnectButton.insufficientSellBalance: sellBalanceOf = "${sellBalanceOf}"`);
+      console.debug(`CustomConnectButton.insufficientSellBalance: sellBalanceOf = "${bigIntSellBalanceOf}"`);
       console.debug(`sellAmount              = "${sellAmount}"`);
-      console.debug(`SellBalanceOf           = "${sellBalanceOf}"`);
       console.debug(`sellDecimals            = "${sellDecimals}"`);
+      console.debug(`sellBalanceOf           = "${sellBalanceOf}"`);
       console.debug(`bigIntSellAmount        = "${bigIntSellAmount}"`);
       console.debug(`bigIntSellBalanceOf     = "${bigIntSellBalanceOf}"`);
       console.debug(`insufficientSellBalance = "${insufficientSellBalance}"`);
 
     } catch(err:any) {
-      alert(`ERROR: CustomConnectButton.insufficientSellBalance: ${err.message}`)
+      console.debug(`ERROR: CustomConnectButton.insufficientSellBalance: ${err.message}`)
     }
     return insufficientSellBalance;
   }

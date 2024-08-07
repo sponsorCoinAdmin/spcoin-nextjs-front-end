@@ -50,9 +50,11 @@ type TradeData = {
   networkName: string;
   sellAmount:string;
   sellDecimals:number;
+  sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:string;
   buyDecimals:number;
+  buyBalanceOf:bigint;
   buyFormattedBalance:string;
   tradeDirection:string
   displayState: DISPLAY_STATE;

@@ -1,13 +1,13 @@
 import React from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiClientSymbol  } from '@/lib/wagmi/erc20WagmiClientRead'
+import { getERC20WagmiClientSymbol  } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address
 }
 
 const contractSymbol = ({ TOKEN_CONTRACT}: Props) => {
-  const symbol    = useERC20WagmiClientSymbol(TOKEN_CONTRACT)
+  const symbol    = getERC20WagmiClientSymbol(TOKEN_CONTRACT)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
