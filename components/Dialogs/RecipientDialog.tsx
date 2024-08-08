@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, WalletElement } from '@/lib/structure/types';
+import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -19,11 +19,11 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ agentWallet, setRecipientElement }: any) {
+export default function Dialog({ agentAccount, setRecipientElement }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<WalletElement| undefined>();
+    const [walletElement, setWalletElement] = useState<WalletAccount| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -58,12 +58,12 @@ export default function Dialog({ agentWallet, setRecipientElement }: any) {
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:WalletElement = {
+                let td:WalletAccount = {
                     address: recipientInput,
                     symbol: retResponse.symbol,
                     img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
-                    url: "ToDo add WalletElement URL"
+                    url: "ToDo add WalletAccount URL"
                 }
                 setWalletElement(td);
                 return true
@@ -85,16 +85,16 @@ export default function Dialog({ agentWallet, setRecipientElement }: any) {
         return true
     }
 
-    const getSelectedListElement = (listElement: WalletElement | undefined) => {
+    const getSelectedListElement = (listElement: WalletAccount | undefined) => {
         console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
-        console.debug("getSelectedListElement:agentWallet: " +JSON.stringify(agentWallet,null,2))
+        console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + recipientInput)
             return false;
         }
-        if (listElement?.address === agentWallet?.address) {
-            alert("Recipient cannot be the same as Recipient("+agentWallet.symbol+")")
-            console.log("Recipient cannot be the same as Recipient("+agentWallet.symbol+")");
+        if (listElement?.address === agentAccount?.address) {
+            alert("Recipient cannot be the same as Recipient("+agentAccount.symbol+")")
+            console.log("Recipient cannot be the same as Recipient("+agentAccount.symbol+")");
             return false;
         }
         setRecipientElement(listElement)

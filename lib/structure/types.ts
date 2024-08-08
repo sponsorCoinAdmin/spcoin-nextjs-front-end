@@ -18,19 +18,19 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-type ContractRecs = {
-    nameRec:any,
-    symbolRec:any,
-    decimalRec:any,
-    totalSupplyRec:any
-  }
-  
-type WalletElement = {
+type WalletAccount = {
   address: Address|string;
   name: string;
   symbol: string;
   img: string;
   url: string;
+}
+
+type ContractRecs = {
+  nameRec:any,
+  symbolRec:any,
+  decimalRec:any,
+  totalSupplyRec:any
 }
 
 type TokenContract = {
@@ -55,8 +55,8 @@ type TradeData = {
 
   network: NetworkElement;
 
-  recipientWallet: WalletElement;
-  agentWallet: WalletElement;
+  recipientAccount: WalletAccount;
+  agentAccount: WalletAccount;
 
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
@@ -90,5 +90,5 @@ export type {
   PriceRequestParams,
   TokenContract,
   TradeData,
-  WalletElement
+  WalletAccount
 }

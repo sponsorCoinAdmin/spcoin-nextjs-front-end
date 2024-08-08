@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { DISPLAY_STATE } from '@/lib/structure/types';
 
 type Props = {
-  recipientWallet: any,
+  recipientAccount: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
@@ -21,15 +21,15 @@ const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
   }
 };
 
-const RecipientContainer = ({recipientWallet, setDisplayState} : Props) => {
-  // alert("RecipientContainer:\n" + JSON.stringify(recipientWallet,null,2))
-  // let urlParms:string = `/Recipient?address=${recipientWallet.address}`
-  let urlParms:string = `/Recipient/${recipientWallet.address}`
-  urlParms += `?name=${recipientWallet.name}`
-  urlParms += `&symbol=${recipientWallet.symbol}`
-  urlParms += `&address=${recipientWallet.address}`
-  urlParms += `&img=${recipientWallet.img}`
-  urlParms += `&url=${recipientWallet.url}`
+const RecipientContainer = ({recipientAccount, setDisplayState} : Props) => {
+  // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
+  // let urlParms:string = `/Recipient?address=${recipientAccount.address}`
+  let urlParms:string = `/Recipient/${recipientAccount.address}`
+  urlParms += `?name=${recipientAccount.name}`
+  urlParms += `&symbol=${recipientAccount.symbol}`
+  urlParms += `&address=${recipientAccount.address}`
+  urlParms += `&img=${recipientAccount.img}`
+  urlParms += `&url=${recipientAccount.url}`
 
   // console.debug (`calling urlParms: ${urlParms}`)
   return (
@@ -39,11 +39,11 @@ const RecipientContainer = ({recipientWallet, setDisplayState} : Props) => {
         You are sponsoring:
       </div>
       <Link href={`${urlParms}`} className={styles["recipientName"]}>
-        {recipientWallet.name}
+        {recipientAccount.name}
       </Link>
       <div className={styles["recipientSelect"]}>
-        <img alt={recipientWallet.name} className="h-9 w-9 mr-2 rounded-md" src={recipientWallet.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientWallet,null,2))}/>
-        {recipientWallet.symbol} 
+        <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
+        {recipientAccount.symbol} 
         <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
       </div>
       <div>

@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, WalletElement } from '@/lib/structure/types';
+import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -19,11 +19,11 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ recipientWallet, callBackSetter }: any) {
+export default function Dialog({ recipientAccount, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<WalletElement| undefined>();
+    const [walletElement, setWalletElement] = useState<WalletAccount| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -57,7 +57,7 @@ export default function Dialog({ recipientWallet, callBackSetter }: any) {
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:WalletElement = {
+                let td:WalletAccount = {
                     address: agentInput,
                     symbol: retResponse.symbol,
                     img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
@@ -84,15 +84,15 @@ export default function Dialog({ recipientWallet, callBackSetter }: any) {
         return true
     }
 
-    const getSelectedListElement = (listElement: WalletElement | undefined) => {
+    const getSelectedListElement = (listElement: WalletAccount | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + agentInput)
             return false;
         }
-        if (listElement.address === recipientWallet.address) {
-            alert("Agent cannot be the same as Recipient("+recipientWallet.symbol+")")
-            console.log("Agent cannot be the same as Recipient("+recipientWallet.symbol+")");
+        if (listElement.address === recipientAccount.address) {
+            alert("Agent cannot be the same as Recipient("+recipientAccount.symbol+")")
+            console.log("Agent cannot be the same as Recipient("+recipientAccount.symbol+")");
             return false;
         }
         callBackSetter(listElement)

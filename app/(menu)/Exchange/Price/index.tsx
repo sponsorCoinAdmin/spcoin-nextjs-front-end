@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { erc20Abi } from 'viem' 
-import { WalletElement, TokenContract, TradeData, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE,  } from '@/lib/structure/types';
+import { WalletAccount, TokenContract, TradeData, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, stringifyBigInt, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
@@ -45,8 +45,8 @@ export default function PriceView() {
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
     const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
-    const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.tradeData.recipientWallet);
-    const [agentWallet, setAgentElement] = useState(exchangeContext.tradeData.agentWallet);
+    const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.tradeData.recipientAccount);
+    const [agentAccount, setAgentElement] = useState(exchangeContext.tradeData.agentAccount);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
 
@@ -66,8 +66,8 @@ export default function PriceView() {
         console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
         setSellTokenContract(exchangeContext.tradeData.sellTokenContract);
         setBuyTokenContract(exchangeContext.tradeData.buyTokenContract);
-        setRecipientElement(exchangeContext.tradeData.recipientWallet);
-        setAgentElement(exchangeContext.tradeData.agentWallet);
+        setRecipientElement(exchangeContext.tradeData.recipientAccount);
+        setAgentElement(exchangeContext.tradeData.agentAccount);
         setDisplayState(exchangeContext.tradeData.displayState);
         setSlippage(exchangeContext.tradeData.slippage);
       }
@@ -117,9 +117,9 @@ export default function PriceView() {
     }, [buyTokenContract]);
 
     useEffect(() => {
-      console.debug("PRICE:useEffect:recipientWallet changed to " + recipientWallet.name);
-      exchangeContext.tradeData.recipientWallet = recipientWallet;
-    }, [recipientWallet]);
+      console.debug("PRICE:useEffect:recipientAccount changed to " + recipientAccount.name);
+      exchangeContext.tradeData.recipientAccount = recipientAccount;
+    }, [recipientAccount]);
 
     useEffect(() => {
       if (errorMessage.name !== "" && errorMessage.message !== "") {
@@ -233,8 +233,8 @@ export default function PriceView() {
           <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
           <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <ManageSponsorships connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-          <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
-          <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
+          <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+          <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
@@ -255,7 +255,7 @@ export default function PriceView() {
               {
                 // <QuoteButton sendTransaction={sendTransaction}/>
               }
-            <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+            <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
             <SponsorRateConfig setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} />
           </div>

@@ -31,8 +31,8 @@ function getInitialDataSettings(chain:any | number): TradeData {
 
         network: defaultNetworkSettings.networkHeader,
 
-        recipientWallet: defaultNetworkSettings.defaultRecipient,
-        agentWallet: defaultNetworkSettings.defaultAgent,
+        recipientAccount: defaultNetworkSettings.defaultRecipient,
+        agentAccount: defaultNetworkSettings.defaultAgent,
 
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
@@ -65,8 +65,8 @@ const resetContextNetwork = (chain:any) => {
     exchangeContext.tradeData.slippage = "0.02",
     exchangeContext.tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.tradeData.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
-    exchangeContext.tradeData.recipientWallet = defaultNetworkSettings.defaultRecipient,
-    exchangeContext.tradeData.agentWallet = defaultNetworkSettings.defaultAgent
+    exchangeContext.tradeData.recipientAccount = defaultNetworkSettings.defaultRecipient,
+    exchangeContext.tradeData.agentAccount = defaultNetworkSettings.defaultAgent
 }
 
 export function ExchangeWrapper({children} : {

@@ -12,7 +12,7 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { WalletElement, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
+import { WalletAccount, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
 import { fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
@@ -52,7 +52,7 @@ import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDial
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import IsLoading from '@/components/containers/IsLoading';
-import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletElement } from '@/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletAccount } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 import { exchangeContext } from '@/lib/context';
 import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
@@ -91,8 +91,8 @@ export default function QuoteView({
 
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
-  const [recipientWallet, setRecipientElement] = useState<WalletElement>(exchangeContext.tradeData.recipientWallet);
-  const [agentWallet, setAgentElement] = useState<WalletElement>(exchangeContext.tradeData.agentWallet);
+  const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.tradeData.recipientAccount);
+  const [agentAccount, setAgentElement] = useState<WalletAccount>(exchangeContext.tradeData.agentAccount);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
@@ -144,9 +144,9 @@ export default function QuoteView({
   }, [buyTokenContract]);
 
   useEffect(() => {
-    console.debug("recipientWallet changed to " + recipientWallet.name);
-    exchangeContext.tradeData.recipientWallet = recipientWallet;
-  }, [recipientWallet]);
+    console.debug("recipientAccount changed to " + recipientAccount.name);
+    exchangeContext.tradeData.recipientAccount = recipientAccount;
+  }, [recipientAccount]);
 
   useEffect(() => {
     if (errorMessage.name !== "" && errorMessage.message !== "") {
@@ -243,8 +243,8 @@ export default function QuoteView({
     <form autoComplete="off">
       <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
       <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-      <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
-      <AgentDialog recipientWallet={recipientWallet} callBackSetter={setAgentElement} />
+      <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+      <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <ErrorDialog errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
@@ -277,7 +277,7 @@ export default function QuoteView({
   Send transaction
 </button>
         <QuoteButton sendTransaction={sendTransaction}/>
-        <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+        <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
         <SponsorRateConfig setDisplayState={setDisplayState}/>
         <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract= {buyTokenContract} />
       </div>
@@ -291,14 +291,14 @@ export default function QuoteView({
 return (
   <div className="p-3 mx-auto max-w-screen-sm ">
     <form autoComplete="off">
-    <RecipientDialog agentWallet={agentWallet} setRecipientElement={setRecipientElement} />
+    <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
       <ErrorDialog errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
         <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenContract.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenContract={buyTokenContract} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>          
         <QuoteButton sendTransaction={sendTransaction}/>
-        <RecipientContainer recipientWallet={recipientWallet} setDisplayState={setDisplayState}/>
+        <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
         <SponsorRateConfig setDisplayState={setDisplayState}/>
         <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract= {buyTokenContract} />
       </div>
