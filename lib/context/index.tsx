@@ -7,7 +7,6 @@ import { useAccount, useChainId } from 'wagmi';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
 let chainId:number = 1;
-let initialContext:ExchangeContext;
 let tradeData:TradeData;
 
 const isSpCoin = (TokenContract:TokenContract) => {
@@ -55,19 +54,19 @@ function getInitialDataSettings(chain:any | number): TradeData {
 const resetContextNetwork = (chain:any) => {
     const networkName = chain.name.toLowerCase();
     console.debug("resetContextNetwork: newNetworkName = " + networkName);
-    console.debug("resetContextNetwork: initialContext.tradeData.network.name = " + initialContext.tradeData.network.name);
+    console.debug("resetContextNetwork: tradeData.network.name = " + tradeData.network.name);
     console.debug(`UPDATING NETWORK to ${networkName}`);
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-    initialContext.tradeData.network.chainId = chain.id;
-    initialContext.tradeData.network.name = networkName
-    initialContext.tradeData.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
-    initialContext.tradeData.slippage = "0.02",
-    initialContext.tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,
-    initialContext.tradeData.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
-    initialContext.tradeData.recipientAccount = defaultNetworkSettings.defaultRecipient,
-    initialContext.tradeData.agentAccount = defaultNetworkSettings.defaultAgent
+    tradeData.network.chainId = chain.id;
+    tradeData.network.name = networkName
+    tradeData.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
+    tradeData.slippage = "0.02",
+    tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+    tradeData.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
+    tradeData.recipientAccount = defaultNetworkSettings.defaultRecipient,
+    tradeData.agentAccount = defaultNetworkSettings.defaultAgent
 }
 
 export function ExchangeWrapper({children} : {
@@ -81,8 +80,6 @@ export function ExchangeWrapper({children} : {
         alert(`Context:useEffect(() => chain = ${JSON.stringify(chain, null, 2)}`);
       }, [chain]);
     
-    const [context, setContext] = useState<ExchangeContext>(getInitialContext(chain))
-    initialContext = context;
 
     return (
         <div>
@@ -91,8 +88,7 @@ export function ExchangeWrapper({children} : {
     )
 }
 
-initialContext = getInitialContext(chainId);
-// alert(`getInitialContext:initialContext = ${initialContext}`)
+getInitialContext(chainId);
 
 export {
     resetContextNetwork,
