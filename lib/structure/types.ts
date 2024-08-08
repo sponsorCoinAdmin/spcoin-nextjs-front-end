@@ -73,10 +73,6 @@ type TradeData = {
   slippage: string;
 }
 
-type ExchangeContext = {
-  tradeData: TradeData;
-}
-
 export {
   EXCHANGE_STATE,
   DISPLAY_STATE,
@@ -85,7 +81,6 @@ export {
 
 export type {
   ContractRecs,
-  ExchangeContext,
   NetworkElement,
   PriceRequestParams,
   TokenContract,
