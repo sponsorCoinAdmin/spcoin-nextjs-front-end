@@ -8,6 +8,7 @@ import { useAccount, useChainId } from 'wagmi';
 
 let chainId:number = 1;
 let initialContext:ExchangeContext;
+let tradeData:TradeData;
 
 const isSpCoin = (TokenContract:TokenContract) => {
     // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
@@ -27,7 +28,7 @@ function getInitialDataSettings(chain:any | number): TradeData {
     const defaultNetworkSettings = getDefaultNetworkSettings(chainId)
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
 
-    let tradeData:TradeData = {
+    tradeData = {
 
         network: defaultNetworkSettings.networkHeader,
 
@@ -95,5 +96,6 @@ initialContext = getInitialContext(chainId);
 
 export {
     initialContext,
-    resetContextNetwork
+    resetContextNetwork,
+    tradeData
 }
