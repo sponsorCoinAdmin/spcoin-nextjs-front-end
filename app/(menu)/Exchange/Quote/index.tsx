@@ -86,7 +86,6 @@ export default function QuoteView({
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
   const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
-  // const [state, setState] = useState<EXCHANGE_STATE>(exchangeContext.tradeData.state);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
 
