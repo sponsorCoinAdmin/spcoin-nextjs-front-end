@@ -15,7 +15,7 @@ import { useReadContracts, useAccount } from 'wagmi'
 import { erc20Abi } from 'viem' 
 import { WalletElement, TokenContract, TradeData, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput, updateBalance } from '@/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput, stringifyBigInt, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
@@ -63,7 +63,7 @@ export default function PriceView() {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.tradeData.network.chainId !== chain.id) {
         resetContextNetwork(chain)
-        console.debug(`exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
+        console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
         setSellTokenContract(exchangeContext.tradeData.sellTokenContract);
         setBuyTokenContract(exchangeContext.tradeData.buyTokenContract);
         setRecipientElement(exchangeContext.tradeData.recipientWallet);
@@ -136,8 +136,6 @@ export default function PriceView() {
       ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
       : undefined;
 
-    // console.debug(`Initializing Fetcher with "/api/" + ${tradeData.networkName} + "/0X/price"`)
-
     const getPriceApiTransaction = (data:any) => {
       let priceTransaction = `${apiCall}`
       priceTransaction += `?sellToken=${sellTokenContract.address}`
@@ -149,7 +147,7 @@ export default function PriceView() {
       return priceTransaction;
     }
 
-    const apiCall = "http://localhost:3000/api/" + tradeData.networkName + "/0X/price";
+    const apiCall = "http://localhost:3000/api/" + tradeData.network.name + "/0X/price";
 
     const { isLoading: isLoadingPrice } = useSWR(
       [

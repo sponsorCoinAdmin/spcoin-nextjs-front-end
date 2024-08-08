@@ -56,13 +56,13 @@ function getInitialDataSettings(chain:any | number): TradeData {
 const resetContextNetwork = (chain:any) => {
     const networkName = chain.name.toLowerCase();
     console.debug("resetContextNetwork: newNetworkName = " + networkName);
-    console.debug("resetContextNetwork: exchangeContext.tradeData.networkName = " + exchangeContext.tradeData.networkName);
+    console.debug("resetContextNetwork: exchangeContext.tradeData.network.name = " + exchangeContext.tradeData.network.name);
     console.debug(`UPDATING NETWORK to ${networkName}`);
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-    exchangeContext.tradeData.chainId = chain.id;
-    exchangeContext.tradeData.networkName = networkName
+    exchangeContext.tradeData.network.chainId = chain.id;
+    exchangeContext.tradeData.network.name = networkName
     exchangeContext.tradeData.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
     exchangeContext.tradeData.slippage = "0.02",
     exchangeContext.tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,

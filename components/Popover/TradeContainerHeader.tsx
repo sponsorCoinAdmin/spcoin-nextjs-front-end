@@ -7,13 +7,13 @@ import spCoin_png from '../../public/resources/images/spCoin.png';
 import cog_png from '../../public/resources/images/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
-import { exchangeDataDump } from '@/lib/spCoin/utils';
+import { exchangeContextDump } from '@/lib/spCoin/utils';
 
 const TradeContainerHeader = ({slippage, setSlippageCallback}:any) => {
   return (
     <div className={styles.tradeContainerHeader}>
       <ConfigDialog initialSlippage={slippage} setSlippageCallback={setSlippageCallback}/>
-      <div  onClick={() => exchangeDataDump()}>
+      <div  onClick={() => exchangeContextDump()}>
         <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="SponsorCoin Logo" />
       </div>
 

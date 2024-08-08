@@ -31,7 +31,6 @@ import { exchangeContext } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { Address, parseEther } from 'viem';
 
-
 /*
 import {
   useAccount,
@@ -81,8 +80,8 @@ export default function QuoteView({
 
   // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
-  const [chainId, setChainId] = useState(exchangeContext.tradeData.chainId);
-  const [network, setNetwork] = useState(exchangeContext.tradeData.networkName);
+  const [chainId, setChainId] = useState(exchangeContext.tradeData.network.chainId);
+  const [network, setNetwork] = useState(exchangeContext.tradeData.network.name);
   const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
@@ -109,7 +108,7 @@ export default function QuoteView({
   
   useEffect(() => {
     console.debug(`QUOTE: useEffect:chainId = ${chainId}`)
-    exchangeContext.tradeData.chainId = chainId;
+    exchangeContext.tradeData.network.chainId = chainId;
   },[chainId]);
 
   useEffect(() => {
@@ -253,7 +252,7 @@ export default function QuoteView({
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         {/* <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
         <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenContract.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenContract={buyTokenContract} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>           */}
-            <SellContainer activeAccount={ACTIVE_ACCOUNT}
+            {/* <SellContainer activeAccount={ACTIVE_ACCOUNT}
                            sellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            setSellAmount={setSellAmount}
@@ -264,7 +263,7 @@ export default function QuoteView({
                            buyTokenContract={buyTokenContract}
                            setBuyAmount={setBuyAmount}
                            disabled={false}
-                           setDisplayState={setDisplayState} />          
+                           setDisplayState={setDisplayState} />           */}
         {/* <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} /> */}
         {/* <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} /> */}
         <button
