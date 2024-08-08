@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 
-import { exchangeContext } from "@/lib/context";
+import { initialContext as exchangeContext } from "@/lib/context";
+
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';

@@ -28,7 +28,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
-import { exchangeContext, resetContextNetwork } from "@/lib/context";
+import { initialContext as exchangeContext, resetContextNetwork } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 
@@ -38,15 +38,15 @@ export default function PriceView() {
   try {
     const [price, setPrice] = useState<PriceResponse | undefined>();
     const tradeData:TradeData = exchangeContext.tradeData;
-    const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
-    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
-    const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
-    const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
-    const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
-    const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
-    const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.tradeData.recipientAccount);
-    const [agentAccount, setAgentElement] = useState(exchangeContext.tradeData.agentAccount);
+    const [sellAmount, setSellAmount] = useState<string>(tradeData.sellAmount);
+    const [buyAmount, setBuyAmount] = useState<string>(tradeData.buyAmount);
+    const [tradeDirection, setTradeDirection] = useState(tradeData.tradeDirection);
+    const [slippage, setSlippage] = useState<string>(tradeData.slippage);
+    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(tradeData.displayState);
+    const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(tradeData.sellTokenContract);
+    const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(tradeData.buyTokenContract);
+    const [recipientAccount, setRecipientElement] = useState<WalletAccount>(tradeData.recipientAccount);
+    const [agentAccount, setAgentElement] = useState(tradeData.agentAccount);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
 
@@ -61,15 +61,15 @@ export default function PriceView() {
 
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
-      if (chain != undefined && exchangeContext.tradeData.network.chainId !== chain.id) {
+      if (chain != undefined && tradeData.network.chainId !== chain.id) {
         resetContextNetwork(chain)
         console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
-        setSellTokenContract(exchangeContext.tradeData.sellTokenContract);
-        setBuyTokenContract(exchangeContext.tradeData.buyTokenContract);
-        setRecipientElement(exchangeContext.tradeData.recipientAccount);
-        setAgentElement(exchangeContext.tradeData.agentAccount);
-        setDisplayState(exchangeContext.tradeData.displayState);
-        setSlippage(exchangeContext.tradeData.slippage);
+        setSellTokenContract(tradeData.sellTokenContract);
+        setBuyTokenContract(tradeData.buyTokenContract);
+        setRecipientElement(tradeData.recipientAccount);
+        setAgentElement(tradeData.agentAccount);
+        setDisplayState(tradeData.displayState);
+        setSlippage(tradeData.slippage);
       }
       // alert(`Price:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}\n `);
     }, [ACTIVE_ACCOUNT.chain]);
@@ -83,29 +83,29 @@ export default function PriceView() {
     useEffect(() => {
       // alert(`Price:sellAmount = ${sellAmount`)
       tradeData.sellAmount = sellAmount;
-      // alert(`exchangeContext.tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+      // alert(`tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     }, [sellAmount]);
 
     useEffect(() => {
       // alert(`Price:buyAmount = ${buyAmount`)
       tradeData.buyAmount = buyAmount;
-      // alert(`exchangeContext.tradeData.buyAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+      // alert(`tradeData.buyAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     }, [buyAmount]);
 
     useEffect(() => {
       console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
-      exchangeContext.tradeData.displayState = displayState;
+      tradeData.displayState = displayState;
     },[displayState]);
 
     useEffect(() => {
       console.debug('PRICE:useEffect slippage changed to  ' + slippage);
-      exchangeContext.tradeData.slippage = slippage;
+      tradeData.slippage = slippage;
     }, [slippage]);
 
     useEffect(() => {
       console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
-      exchangeContext.tradeData.sellTokenContract = sellTokenContract;
+      tradeData.sellTokenContract = sellTokenContract;
     }, [sellTokenContract]);
 
     useEffect(() => {
@@ -113,12 +113,12 @@ export default function PriceView() {
         setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
       else if (!isSpCoin(buyTokenContract)) 
         setDisplayState(DISPLAY_STATE.OFF)
-      exchangeContext.tradeData.buyTokenContract = buyTokenContract;
+      tradeData.buyTokenContract = buyTokenContract;
     }, [buyTokenContract]);
 
     useEffect(() => {
       console.debug("PRICE:useEffect:recipientAccount changed to " + recipientAccount.name);
-      exchangeContext.tradeData.recipientAccount = recipientAccount;
+      tradeData.recipientAccount = recipientAccount;
     }, [recipientAccount]);
 
     useEffect(() => {

@@ -12,7 +12,7 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { WalletAccount, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE } from '@/lib/structure/types';
+import { WalletAccount, TokenContract, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE, TradeData } from '@/lib/structure/types';
 import { fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
@@ -27,7 +27,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoading from '@/components/containers/IsLoadingPrice';
-import { exchangeContext } from "@/lib/context";
+import { initialContext as exchangeContext } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { Address, parseEther } from 'viem';
 
@@ -79,20 +79,21 @@ export default function QuoteView({
   console.debug("########################### QUOTE RERENDERED #####################################")
 
   // fetch price here
-  const [chainId, setChainId] = useState(exchangeContext.tradeData.network.chainId);
-  const [network, setNetwork] = useState(exchangeContext.tradeData.network.name);
-  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
-  const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
+  const tradeData:TradeData = exchangeContext.tradeData;
+  const [chainId, setChainId] = useState(tradeData.network.chainId);
+  const [network, setNetwork] = useState(tradeData.network.name);
+  const [sellAmount, setSellAmount] = useState<string>(tradeData.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<string>(tradeData.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
-  const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
-  const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.tradeData.displayState);
+  const [tradeDirection, setTradeDirection] = useState(tradeData.tradeDirection);
+  const [slippage, setSlippage] = useState<string>(tradeData.slippage);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(tradeData.displayState);
 
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.tradeData.sellTokenContract);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.tradeData.buyTokenContract);
-  const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.tradeData.recipientAccount);
-  const [agentAccount, setAgentElement] = useState<WalletAccount>(exchangeContext.tradeData.agentAccount);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(tradeData.sellTokenContract);
+  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(tradeData.buyTokenContract);
+  const [recipientAccount, setRecipientElement] = useState<WalletAccount>(tradeData.recipientAccount);
+  const [agentAccount, setAgentElement] = useState<WalletAccount>(tradeData.agentAccount);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
@@ -106,23 +107,23 @@ export default function QuoteView({
   
   useEffect(() => {
     console.debug(`QUOTE: useEffect:chainId = ${chainId}`)
-    exchangeContext.tradeData.network.chainId = chainId;
+    tradeData.network.chainId = chainId;
   },[chainId]);
 
   useEffect(() => {
     console.debug(`QUOTE: setDisplayPanels(${displayState})`);
     setDisplayPanels(displayState);
-    exchangeContext.tradeData.displayState = displayState;
+    tradeData.displayState = displayState;
   },[displayState]);
 
   useEffect(() => {
     console.debug('QUOTE: slippage changed to  ' + slippage);
-    exchangeContext.tradeData.slippage = slippage;
+    tradeData.slippage = slippage;
   }, [slippage]);
 
   // useEffect(() => {
   //   console.debug('QUOTE: state changed to  ' + state.toString);
-  //   exchangeContext.tradeData.state = state;
+  //   tradeData.state = state;
   // }, [state]);
 
   useEffect(() => {
@@ -131,7 +132,7 @@ export default function QuoteView({
 
   useEffect(() => {
     console.debug("sellTokenContract.symbol changed to " + sellTokenContract.name);
-    exchangeContext.tradeData.sellTokenContract = sellTokenContract;
+    tradeData.sellTokenContract = sellTokenContract;
   }, [sellTokenContract]);
 
   useEffect(() => {
@@ -140,12 +141,12 @@ export default function QuoteView({
       setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
     else if (!isSpCoin(buyTokenContract)) 
       setDisplayState(DISPLAY_STATE.OFF)
-    exchangeContext.tradeData.buyTokenContract = buyTokenContract;
+    tradeData.buyTokenContract = buyTokenContract;
   }, [buyTokenContract]);
 
   useEffect(() => {
     console.debug("recipientAccount changed to " + recipientAccount.name);
-    exchangeContext.tradeData.recipientAccount = recipientAccount;
+    tradeData.recipientAccount = recipientAccount;
   }, [recipientAccount]);
 
   useEffect(() => {

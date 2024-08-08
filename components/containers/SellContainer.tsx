@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { exchangeContext } from "@/lib/context";
+import { initialContext as exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
@@ -9,7 +9,7 @@ import { setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
-import { DISPLAY_STATE } from '@/lib/structure copy/types';
+import { DISPLAY_STATE } from '@/lib/structure/types';
 
 type Props = {
   // tradeData:TradeData,
@@ -26,7 +26,7 @@ const tradeData:TradeData = exchangeContext.tradeData;
     // useEffect(() => {
     //   // alert(`Price:sellAmount = ${sellAmount`)
     //   tradeData.sellAmount = sellAmount;
-    //   // alert(`exchangeContext.tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+    //   // alert(`tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     // }, [sellAmount]);
 
 /* Sell Token Selection Module */
@@ -42,7 +42,7 @@ const SellContainer = ({activeAccount,
   // const [formattedBalanceOf, setFormattedBalanceOf] = useState<string>(getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0"));
 
   try {
-    console.debug(`SellContainer.exchangeContext.tradeData = \n${stringifyBigInt(exchangeContext.tradeData)}`);
+    console.debug(`SellContainer.tradeData = \n${stringifyBigInt(tradeData)}`);
     tradeData.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     tradeData.sellFormattedBalance = formatDecimals(tradeData.sellBalanceOf, tradeData.sellTokenContract.decimals);
