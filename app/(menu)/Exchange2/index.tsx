@@ -14,7 +14,7 @@ export function Home() {
 
    // alert(`children = ${JSON.stringify(children,null,2)}`)
    const ACTIVE_ACCOUNT = useAccount()
-  //  console.debug("*** Exchange:ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
+  //  console.debug("*** Exchange:ACTIVE_ACCOUNT = " + stringifyBigInt(ACTIVE_ACCOUNT || "UNDEFINED"))
 
   // alert("HERE 1")
 

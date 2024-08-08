@@ -1,6 +1,7 @@
 import { readContract } from '@wagmi/core'
 import config from 'next/config';
 import { erc20Abi, getAddress, Address } from 'viem';
+import { stringifyBigInt } from '../spCoin/utils';
 
 //  *** IMPORTANT NOT WORKING MODULE ***
 // ToDo: IMPORTANT readContract is currently not working, needs a fix
@@ -28,7 +29,7 @@ const getERC20WagmiServerBalanceOfRec = async (walletAddress: Address | string |
       config, 
     })
   }
-  // console.debug(`balanceOfRec = ${JSON.stringify(wagmiBalanceOfRec, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
+  // console.debug(`balanceOfRec = ${stringifyBigInt(wagmiBalanceOfRec)}`)
   return "wagmiBalanceOfRec";
 }
 
@@ -42,6 +43,6 @@ const TOKEN_CONTRACT_ADDRESS:Address         = USDT_POLYGON_CONTRACT
 
 export const getTestName = async () => {
   console.log(`getTestName = ${getTestName}`)
-  let balanceOf = await getERC20WagmiServerBalanceOfRec(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT || "")
+  let balanceOf = await getERC20WagmiServerBalanceOfRec(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
   return `balanceOf = ${balanceOf}`
 }

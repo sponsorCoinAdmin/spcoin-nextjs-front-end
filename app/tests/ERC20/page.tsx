@@ -14,6 +14,7 @@ import ReadWagmiEcr20ContractName from '@/components/ecr20/ReadWagmiEcr20Contrac
 import ReadWagmiEcr20ContractSymbol from '@/components/ecr20/ReadWagmiEcr20ContractSymbol'
 import ReadWagmiEcr20ContractDecimals from '@/components/ecr20/ReadWagmiEcr20ContractDecimals'
 import ReadWagmiEcr20ContractTotalSupply from '@/components/ecr20/ReadWagmiEcr20ContractTotalSupply'
+import { stringifyBigInt } from '@/lib/spCoin/utils'
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
@@ -24,9 +25,9 @@ let ACTIVE_ACCOUNT: UseAccountReturnType<Config<readonly [{ blockExplorers: { re
 
 function App() {
   console.debug("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
-  console.debug("*** page:BEFORE ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
+  console.debug("*** page:BEFORE ACTIVE_ACCOUNT = " + stringifyBigInt(ACTIVE_ACCOUNT || "UNDEFINED"))
   ACTIVE_ACCOUNT = useAccount()
-  console.debug("*** page:AFTER ACTIVE_ACCOUNT = " + JSON.stringify(ACTIVE_ACCOUNT || "UNDEFINED", (_, v) => typeof v === 'bigint' ? v.toString() : v, 2))
+  console.debug("*** page:AFTER ACTIVE_ACCOUNT = " + stringifyBigInt(ACTIVE_ACCOUNT || "UNDEFINED"))
   const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(NULL_CONTRACT)
   const [ TOKEN_CONTRACT, setDefaultTokenContract ] = useState<Address>(NULL_CONTRACT)
 
@@ -48,21 +49,21 @@ function App() {
 
   // let ercContract = getErc20ClientContract(TOKEN_CONTRACT)
 
-  // console.debug(`XXXX ercContract = ${JSON.stringify(ercContract, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`)
+  // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
 
   return (
     <>
       <ProviderConfigurationStatus />
       <WagmiConnect />
-      <ReadWagmiEcr20Fields TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20RecordFields TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20Records TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20ContractFields  TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20ContractName  TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20ContractSymbol  TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20ContractDecimals  TOKEN_CONTRACT={TOKEN_CONTRACT} />
-      <ReadWagmiEcr20ContractTotalSupply  TOKEN_CONTRACT={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20ContractFields  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20ContractName  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20ContractSymbol  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20ContractDecimals  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
+      <ReadWagmiEcr20ContractTotalSupply  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT} />
     </>
   )
 }

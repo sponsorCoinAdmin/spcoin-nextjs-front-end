@@ -2,6 +2,7 @@ import React from 'react'
 import styles from '@/styles/Exchange.module.css'
 import { ExchangeContext } from '@/lib/structure/types'
 import { formatUnits, parseUnits } from "ethers";
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
 
 const CustomConnectButton = ({ exchangeContext}:Props) => {
   const show = () => {
-    alert(`CustomConnectButton:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+    alert(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
   }
 
   const insufficientSellAmount = () => {
@@ -29,7 +30,7 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
   const insufficientSellBalance = () => {
     let insufficientSellBalance:boolean = false;
      try {
-      console.debug(`EXCHANGE_BUTTON.exchangeContext.tradeData = \n${JSON.stringify(exchangeContext.tradeData, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)}`);
+      console.debug(`EXCHANGE_BUTTON.exchangeContext.tradeData = \n${stringifyBigInt(exchangeContext.tradeData)}`);
       const sellAmount = exchangeContext.tradeData.sellAmount;
       const bigIntSellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
       const sellDecimals = exchangeContext.tradeData.sellTokenContract.decimals;

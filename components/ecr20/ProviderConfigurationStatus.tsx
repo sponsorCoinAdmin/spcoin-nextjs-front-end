@@ -1,5 +1,6 @@
 import React from 'react';
 import { BLOCKCHAIN_PROVIDER } from '@/lib/wagmi/wagmiConfig';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const ProviderConfigurationStatus = () => {
   return (
@@ -7,7 +8,7 @@ const ProviderConfigurationStatus = () => {
     <h2>Provider Configuration Status</h2>
     <div>
       Blockchain Provider = {BLOCKCHAIN_PROVIDER} <br />
-      {/* TokenContract Data: {JSON.stringify(contract, (_, v) => typeof v === 'bigint' ? v.toString() : v, 2)} <br /> */}
+      {/* TokenContract Data: {stringifyBigInt("contract")} <br /> */}
     </div>
   </div>
 );

@@ -1,5 +1,4 @@
 import { config } from '@/lib/wagmi/wagmiConfig';
-import { readContract } from '@wagmi/core';
 import React from 'react';
 import { Address, erc20Abi, parseAbi } from 'viem';
 import { useReadContract } from 'wagmi';
