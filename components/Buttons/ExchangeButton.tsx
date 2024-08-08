@@ -1,25 +1,25 @@
 import React from 'react'
 import styles from '@/styles/Exchange.module.css'
-import { ExchangeContext } from '@/lib/structure/types'
+import { TradeData } from '@/lib/structure/types'
 import { formatUnits, parseUnits } from "ethers";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 
 type Props = {
-  exchangeContext:ExchangeContext,
+  tradeData:TradeData,
 }
 
-const CustomConnectButton = ({ exchangeContext}:Props) => {
+const CustomConnectButton = ({ tradeData}:Props) => {
   const show = () => {
-    alert(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+    alert(`CustomConnectButton:useEffect(() => tradeData = ${stringifyBigInt(tradeData)}`);
   }
 
   const insufficientSellAmount = () => {
     let noTradingAmount:boolean = false;
     try {
-    // let noTradingAmount:boolean = !( exchangeContext.tradeData.sellAmount === "0"  || exchangeContext.tradeData.buyAmount === "0" )
-    noTradingAmount = ( exchangeContext.tradeData.sellAmount === "0" )
-    // console.log(`ExchangeButton => exchangeContext.tradeData.sellAmount = ${exchangeContext.tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
+    // let noTradingAmount:boolean = !( tradeData.sellAmount === "0"  || tradeData.buyAmount === "0" )
+    noTradingAmount = ( tradeData.sellAmount === "0" )
+    // console.log(`ExchangeButton => tradeData.sellAmount = ${tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
     // alert (validTradingAmount)
     } catch(err:any) {
       console.debug(`ERROR: CustomConnectButton.insufficientSellAmount: ${err.message}`)
@@ -30,16 +30,16 @@ const CustomConnectButton = ({ exchangeContext}:Props) => {
   const insufficientSellBalance = () => {
     let insufficientSellBalance:boolean = false;
      try {
-      console.debug(`EXCHANGE_BUTTON.exchangeContext.tradeData = \n${stringifyBigInt(exchangeContext.tradeData)}`);
-      const sellAmount = exchangeContext.tradeData.sellAmount;
-      const bigIntSellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
-      const sellDecimals = exchangeContext.tradeData.sellTokenContract.decimals;
-      const sellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
+      console.debug(`EXCHANGE_BUTTON.tradeData = \n${stringifyBigInt(tradeData)}`);
+      const sellAmount = tradeData.sellAmount;
+      const bigIntSellBalanceOf = tradeData.sellBalanceOf;
+      const sellDecimals = tradeData.sellTokenContract.decimals;
+      const sellBalanceOf = tradeData.sellBalanceOf;
       const bigIntSellAmount = parseUnits(sellAmount, sellDecimals)
       insufficientSellBalance = bigIntSellBalanceOf <  bigIntSellAmount
 
-      // let bigIntSellBalanceOf:BigInt  = BigInt(exchangeContext.tradeData.sellBalanceOf);
-      // let bigIntSellAmount:BigInt  = BigInt(exchangeContext.tradeData.sellAmount);
+      // let bigIntSellBalanceOf:BigInt  = BigInt(tradeData.sellBalanceOf);
+      // let bigIntSellAmount:BigInt  = BigInt(tradeData.sellAmount);
 
       console.debug(`CustomConnectButton.insufficientSellBalance: sellBalanceOf = "${bigIntSellBalanceOf}"`);
       console.debug(`sellAmount              = "${sellAmount}"`);

@@ -27,7 +27,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoading from '@/components/containers/IsLoadingPrice';
-import { initialContext as exchangeContext } from "@/lib/context";
+import { tradeData } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { Address, parseEther } from 'viem';
 
@@ -54,7 +54,6 @@ import RecipientContainer from '@/components/containers/RecipientContainer';
 import IsLoading from '@/components/containers/IsLoading';
 import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletAccount } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
-import { exchangeContext } from '@/lib/context';
 import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
 import PriceButton from '@/components/Buttons/PriceButton';
 */
@@ -79,7 +78,6 @@ export default function QuoteView({
   console.debug("########################### QUOTE RERENDERED #####################################")
 
   // fetch price here
-  const tradeData:TradeData = exchangeContext.tradeData;
   const [chainId, setChainId] = useState(tradeData.network.chainId);
   const [network, setNetwork] = useState(tradeData.network.name);
   const [sellAmount, setSellAmount] = useState<string>(tradeData.sellAmount);
@@ -97,7 +95,7 @@ export default function QuoteView({
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
-    console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
+    console.debug("QUOTE:tradeData =\n" + JSON.stringify(tradeData,null,2))
     // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
     // For up to 15 seconds in half second increments set dom settings
     for(let i = 1; i <= 30; i++) {

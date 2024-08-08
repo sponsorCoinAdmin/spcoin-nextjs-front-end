@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { initialContext as exchangeContext } from "@/lib/context";
+import { tradeData } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
@@ -21,7 +21,7 @@ type Props = {
   disabled: boolean
 }
 
-const tradeData:TradeData = exchangeContext.tradeData;
+// const tradeData:TradeData = exchangeContext.tradeData;
 
     // useEffect(() => {
     //   // alert(`Price:sellAmount = ${sellAmount`)

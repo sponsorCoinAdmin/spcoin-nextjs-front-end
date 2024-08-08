@@ -1,23 +1,23 @@
 import React, { useEffect } from 'react';
 import CustomConnectButton from './CustomConnectButton';
 import ExchangeButton from './ExchangeButton';
-import { ExchangeContext } from '@/lib/structure/types';
+import { TradeData } from '@/lib/structure/types';
 
 type Props = {
-    exchangeContext:ExchangeContext,
+    tradeData:TradeData,
   }
 
 const PriceButton = ({
-    exchangeContext}:Props) => {
+    tradeData}:Props) => {
 
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
   return (
     <div>
-        {!exchangeContext.tradeData.connectedWalletAddr ?
+        {!tradeData.connectedWalletAddr ?
             (<CustomConnectButton />) :
-            (<ExchangeButton  exchangeContext={exchangeContext} />)
+            (<ExchangeButton  tradeData={tradeData} />)
         }
     </div>
 );

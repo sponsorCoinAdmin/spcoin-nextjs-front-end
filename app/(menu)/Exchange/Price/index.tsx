@@ -28,7 +28,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
-import { initialContext as exchangeContext, resetContextNetwork } from "@/lib/context";
+import { tradeData, resetContextNetwork } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 
@@ -37,7 +37,6 @@ export default function PriceView() {
 
   try {
     const [price, setPrice] = useState<PriceResponse | undefined>();
-    const tradeData:TradeData = exchangeContext.tradeData;
     const [sellAmount, setSellAmount] = useState<string>(tradeData.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(tradeData.buyAmount);
     const [tradeDirection, setTradeDirection] = useState(tradeData.tradeDirection);
@@ -63,7 +62,7 @@ export default function PriceView() {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && tradeData.network.chainId !== chain.id) {
         resetContextNetwork(chain)
-        console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
+        console.debug(`tradeData = ${stringifyBigInt(tradeData)}`)
         setSellTokenContract(tradeData.sellTokenContract);
         setBuyTokenContract(tradeData.buyTokenContract);
         setRecipientElement(tradeData.recipientAccount);
@@ -71,7 +70,6 @@ export default function PriceView() {
         setDisplayState(tradeData.displayState);
         setSlippage(tradeData.slippage);
       }
-      // alert(`Price:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}\n `);
     }, [ACTIVE_ACCOUNT.chain]);
 
 // tradeData.sellTokenContract.decimals = sellDecimals
@@ -83,13 +81,11 @@ export default function PriceView() {
     useEffect(() => {
       // alert(`Price:sellAmount = ${sellAmount`)
       tradeData.sellAmount = sellAmount;
-      // alert(`tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     }, [sellAmount]);
 
     useEffect(() => {
       // alert(`Price:buyAmount = ${buyAmount`)
       tradeData.buyAmount = buyAmount;
-      // alert(`tradeData.buyAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     }, [buyAmount]);
 
     useEffect(() => {
@@ -251,7 +247,7 @@ export default function PriceView() {
                            disabled={false}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-            <PriceButton exchangeContext={exchangeContext} />
+            <PriceButton tradeData={tradeData} />
               {
                 // <QuoteButton sendTransaction={sendTransaction}/>
               }

@@ -95,7 +95,6 @@ initialContext = getInitialContext(chainId);
 // alert(`getInitialContext:initialContext = ${initialContext}`)
 
 export {
-    initialContext,
     resetContextNetwork,
     tradeData
 }
