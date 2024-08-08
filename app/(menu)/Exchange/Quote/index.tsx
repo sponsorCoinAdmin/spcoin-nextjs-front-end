@@ -78,7 +78,6 @@ export default function QuoteView({
   // alert("EXCHANGE/QUOTE HERE 1")
   console.debug("########################### QUOTE RERENDERED #####################################")
 
-  // console.debug("chainId = "+chainId +"\nnetworkName = " + networkName)
   // fetch price here
   const [chainId, setChainId] = useState(exchangeContext.tradeData.network.chainId);
   const [network, setNetwork] = useState(exchangeContext.tradeData.network.name);

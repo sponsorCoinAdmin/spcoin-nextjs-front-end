@@ -8,7 +8,6 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
                        SWAP }
 
 enum  DISPLAY_STATE { OFF, SPONSOR_SELL_ON, SPONSOR_SELL_OFF, SPONSOR_BUY, RECIPIENT, CONFIG }
-
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 
 interface PriceRequestParams {
@@ -18,8 +17,6 @@ interface PriceRequestParams {
   sellAmount?: string;
   connectedWalletAddr?: string;
 }
-
-
 
 type ContractRecs = {
     nameRec:any,
@@ -65,7 +62,6 @@ type TradeData = {
   buyTokenContract: TokenContract;
 
   connectedWalletAddr:any,
-  networkName: string;
   sellAmount:string;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;

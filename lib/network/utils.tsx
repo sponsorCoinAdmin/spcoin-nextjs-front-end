@@ -22,10 +22,7 @@ const getChainMap = (chainList: any[]) => {
 const chainIdMap = getChainMap(chainIdList)
 
 const getNetworkName = (chainId:number) => {
-  // console.debug(`getNetworkName:chainId = (${chainId})`)
   const networkName:string = chainIdMap.get(chainId)?.name;
-  // const networkName:string = await chainIdMap?.get(chainId)?.name;
-  // console.debug(`getNetworkName:networkName = (${networkName})`)
   return networkName;
 }
 

@@ -17,6 +17,7 @@ const getDefaultNetworkSettings = (chain:any) => {
   else if (typeof chain !== "number" ) {
     chain = chain.id
   }
+  
   switch(chain)
   {
       case 1:

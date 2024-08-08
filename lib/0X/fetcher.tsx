@@ -42,7 +42,6 @@ const processError = (
   sellTokenContract:any,
   setBuyAmount:any,
   setValidPriceInput:any) => {
-  // alert(`EEEEERRRRRROOOORRRRR = ${JSON.stringify(error, null, 2)}`)
   // console.error("***AAA ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
   let errCode: number = error.errCode;
   let errMsg: string = error.errMsg;

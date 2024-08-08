@@ -44,7 +44,6 @@ type WalletElement = {
 
 type TradeData = {
   chainId: number;
-  networkName: string;
   sellAmount:string;
   buyAmount:string;
   tradeDirection:string

@@ -23,8 +23,8 @@ const getInitialContext = (chain:any) => {
 }
 
 function getInitialDataSettings(chain:any | number): TradeData {
-    const networkName = ( chain && chain.name) ?  chain.name.toLowerCase() : 1;
-    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
+    const chainId:number = chain || 1;
+    const defaultNetworkSettings = getDefaultNetworkSettings(chainId)
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
 
     let tradeData:TradeData = {
@@ -38,8 +38,6 @@ function getInitialDataSettings(chain:any | number): TradeData {
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
         connectedWalletAddr: undefined,
-        chainId: 1,
-        networkName: "ethereum",
         sellAmount: "0",
         sellBalanceOf: 0n,
         sellFormattedBalance: '0',

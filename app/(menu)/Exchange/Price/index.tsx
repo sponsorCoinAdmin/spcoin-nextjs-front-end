@@ -147,7 +147,7 @@ export default function PriceView() {
       return priceTransaction;
     }
 
-    const apiCall = "http://localhost:3000/api/" + tradeData.network.name + "/0X/price";
+    const apiCall = "http://localhost:3000/api/" + tradeData.network.name.toLowerCase() + "/0X/price";
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
