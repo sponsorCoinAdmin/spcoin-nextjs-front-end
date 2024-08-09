@@ -6,11 +6,10 @@ const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? 
 
 type Props = {
     price: PriceResponse | undefined,
-    sellTokenContract: TokenContract | undefined, 
     buyTokenContract: TokenContract | undefined, 
 }
 
-const AffiliateFee = ({price, sellTokenContract, buyTokenContract} : Props) => {
+const AffiliateFee = ({price, buyTokenContract} : Props) => {
     return (
         <div className="text-slate-400">
             {price && price.grossBuyAmount

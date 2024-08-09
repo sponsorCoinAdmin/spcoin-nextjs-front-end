@@ -278,7 +278,7 @@ export default function QuoteView({
         <QuoteButton sendTransaction={sendTransaction}/>
         <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
         <SponsorRateConfig setDisplayState={setDisplayState}/>
-        <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract= {buyTokenContract} />
+        <AffiliateFee price={price} buyTokenContract= {buyTokenContract} />
       </div>
       <FeeDisclosure/>
       <IsLoading isLoadingPrice={isLoadingPrice} />
