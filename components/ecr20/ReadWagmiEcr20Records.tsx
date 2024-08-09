@@ -6,8 +6,8 @@ type Props = {
   TOKEN_CONTRACT_ADDRESS:Address
 }
 
-const ReadWagmiEcr20Records = ({ TOKEN_CONTRACT}: Props) => {
-  const wagmiRecords = getERC20WagmiClientRecords(TOKEN_CONTRACT)
+const ReadWagmiEcr20Records = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {
+  const wagmiRecords = getERC20WagmiClientRecords(TOKEN_CONTRACT_ADDRESS)
   const nameRec = wagmiRecords.nameRec
   const symbolRec = wagmiRecords.symbolRec
   const decimalRec = wagmiRecords.decimalRec
@@ -21,7 +21,7 @@ const ReadWagmiEcr20Records = ({ TOKEN_CONTRACT}: Props) => {
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Read Wagmi ERC20 Record for Token Contract({TOKEN_CONTRACT})</h2>
+      <h2>Read Wagmi ERC20 Record for Token Contract({TOKEN_CONTRACT_ADDRESS})</h2>
       <div>{name === null ? null : "Token Name : " + name }</div>
       <div>{symbol === null ? null : "Symbol : " + symbol }</div>
       <div>{decimals === null ? null : "Decimals : " + decimals }</div>

@@ -8,10 +8,10 @@ import { useAccount, useChainId } from 'wagmi';
 
 const chainId:number = 1;
 const defaultInitialTradeData:TradeData = {
-    sellAmount: "0",
+    sellAmount: 0n,
     sellBalanceOf: 0n,
     sellFormattedBalance: '0',
-    buyAmount: "0",
+    buyAmount: 0n,
     buyBalanceOf: 0n,
     buyFormattedBalance: '0',
     tradeDirection: "sell",

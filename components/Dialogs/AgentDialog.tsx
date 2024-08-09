@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
+import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -23,7 +23,7 @@ export default function Dialog({ recipientAccount, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<WalletAccount| undefined>();
+    const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -33,7 +33,7 @@ export default function Dialog({ recipientAccount, callBackSetter }: any) {
         // alert("agentInput Changed "+agentInput)
         agentInput === "" ? hideElement('agentSelectGroup') : showElement('agentSelectGroup')
         if (isAddress(agentInput)) {
-            setWalletDetails(agentInput)
+            initAccountRecord(agentInput)
         }
         else
             setWalletSelect("Invalid Wallet Address");
@@ -50,14 +50,14 @@ export default function Dialog({ recipientAccount, callBackSetter }: any) {
         setAgentInput(event.target.value)
     }
 
-    const setWalletDetails = async(walletAddr:any) => {
+    const initAccountRecord = async(walletAddr:any) => {
         try {
             if (isAddress(walletAddr)) {
                 let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:WalletAccount = {
+                let td:AccountRecord = {
                     address: agentInput,
                     symbol: retResponse.symbol,
                     img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
@@ -69,14 +69,14 @@ export default function Dialog({ recipientAccount, callBackSetter }: any) {
             }
        // return ELEMENT_DETAILS
         } catch (e:any) {
-            alert("ERROR:setWalletDetails e.message" + e.message)
+            alert("ERROR:initAccountRecord e.message" + e.message)
         }
         return false
     }
 
     const displayElementDetail = async(elementAddress:any) => {
-        let x = setWalletDetails(elementAddress)
-         if (!(await setWalletDetails(elementAddress))) {
+        let x = initAccountRecord(elementAddress)
+         if (!(await initAccountRecord(elementAddress))) {
             alert("*** ERROR *** Invalid Wallet Address: " + agentInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
@@ -84,7 +84,7 @@ export default function Dialog({ recipientAccount, callBackSetter }: any) {
         return true
     }
 
-    const getSelectedListElement = (listElement: WalletAccount | undefined) => {
+    const getSelectedListElement = (listElement: AccountRecord | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + agentInput)

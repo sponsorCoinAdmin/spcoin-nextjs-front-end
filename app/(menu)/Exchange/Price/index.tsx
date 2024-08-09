@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { erc20Abi } from 'viem' 
-import { WalletAccount, TokenContract,  DISPLAY_STATE,  } from '@/lib/structure/types';
+import { AccountRecord, TokenContract,  DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, stringifyBigInt, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
@@ -44,7 +44,7 @@ export default function PriceView() {
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
     const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
-    const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.recipientAccount);
+    const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
     const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
@@ -247,7 +247,7 @@ export default function PriceView() {
                            disabled={false}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-            <PriceButton exchangeContext={exchangeContext} />
+            <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
               {
                 // <QuoteButton sendTransaction={sendTransaction}/>
               }

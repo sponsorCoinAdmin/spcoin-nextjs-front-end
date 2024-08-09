@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
+import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -23,7 +23,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<WalletAccount| undefined>();
+    const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -33,7 +33,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
         // alert("recipientInput Changed "+recipientInput)
         recipientInput === "" ? hideElement('recipientSelectGroup') : showElement('recipientSelectGroup')
         if (isAddress(recipientInput)) {
-            setWalletDetails(recipientInput)
+            initAccountRecord(recipientInput)
         }
         else
             setWalletSelect("Invalid Wallet Address");
@@ -50,7 +50,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
         setRecipientInput(event.target.value)
     }
 
-    const setWalletDetails = async(walletAddr:any) => {
+    const initAccountRecord = async(walletAddr:any) => {
         try {
             let chainId=1;
             if (isAddress(walletAddr)) {
@@ -58,26 +58,26 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:WalletAccount = {
+                let td:AccountRecord = {
                     address: recipientInput,
                     symbol: retResponse.symbol,
                     img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
-                    url: "ToDo add WalletAccount URL"
+                    url: "ToDo add AccountRecord URL"
                 }
                 setWalletElement(td);
                 return true
             }
        // return ELEMENT_DETAILS
         } catch (e:any) {
-            alert("ERROR:setWalletDetails e.message" + e.message)
+            alert("ERROR:initAccountRecord e.message" + e.message)
         }
         return false
     }
 
     const displayElementDetail = async(elementAddress:any) => {
-        let x = setWalletDetails(elementAddress)
-         if (!(await setWalletDetails(elementAddress))) {
+        let x = initAccountRecord(elementAddress)
+         if (!(await initAccountRecord(elementAddress))) {
             alert("*** ERROR *** Invalid Wallet Address: " + recipientInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
@@ -85,7 +85,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
         return true
     }
 
-    const getSelectedListElement = (listElement: WalletAccount | undefined) => {
+    const getSelectedListElement = (listElement: AccountRecord | undefined) => {
         console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
         console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
         if (listElement === undefined) {
