@@ -63,6 +63,7 @@ type TradeData = {
 }
 
 type ExchangeContext = {
+  [x: string]: any;
 
   network: NetworkElement;
 
