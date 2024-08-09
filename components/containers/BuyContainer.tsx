@@ -5,7 +5,7 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { DISPLAY_STATE, TokenContract, ExchangeContext } from '@/lib/structure/types';
+import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
 import { getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
@@ -21,10 +21,11 @@ type Props = {
 
 const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
   try {
+    const tradeData:TradeData = exchangeContext.tradeData;
     console.debug(`BuyContainer:exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
-    exchangeContext.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
-    exchangeContext.buyFormattedBalance = formatDecimals(exchangeContext.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
+    tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
+    tradeData.buyFormattedBalance = formatDecimals(tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>
@@ -33,7 +34,7 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
       <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive</div>
       <div className={styles["assetBalance"]}>
-        Balance: {exchangeContext.buyFormattedBalance}
+        Balance: {tradeData.buyFormattedBalance}
       </div>
       {IsSpCoin ?
         <AddSponsorButton activeAccount={activeAccount} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />

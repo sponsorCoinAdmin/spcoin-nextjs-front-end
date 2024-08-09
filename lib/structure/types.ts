@@ -18,7 +18,7 @@ interface PriceRequestParams {
   connectedWalletAddr?: string;
 }
 
-type WalletAccount = {
+type AccountRecord = {
   address: Address|string;
   name: string;
   symbol: string;
@@ -51,26 +51,31 @@ type NetworkElement = {
   url: string;
 }
 
-type ExchangeContext = {
-
-  network: NetworkElement;
-
-  recipientAccount: WalletAccount;
-  agentAccount: WalletAccount;
-
-  sellTokenContract: TokenContract;
-  buyTokenContract: TokenContract;
-
-  connectedWalletAddr:any,
+type TradeData = {
   sellAmount:string;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:string;
   buyBalanceOf:bigint;
   buyFormattedBalance:string;
-  tradeDirection:string
-  displayState: DISPLAY_STATE;
+  tradeDirection:string;
   slippage: string;
+}
+
+type ExchangeContext = {
+
+  network: NetworkElement;
+
+  recipientAccount: AccountRecord;
+  agentAccount: AccountRecord;
+
+  sellTokenContract: TokenContract;
+  buyTokenContract: TokenContract;
+
+  tradeData: TradeData;
+
+  connectedWalletAddr:any,
+  displayState: DISPLAY_STATE;
 }
 
 export {
@@ -84,6 +89,7 @@ export type {
   NetworkElement,
   PriceRequestParams,
   TokenContract,
+  TradeData,
   ExchangeContext,
-  WalletAccount
+  AccountRecord
 }
