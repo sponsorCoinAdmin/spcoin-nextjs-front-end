@@ -75,15 +75,7 @@ type ExchangeContext = {
   tradeData: TradeData;
 
   connectedWalletAddr:any,
-  sellAmount:string;
-  sellBalanceOf:bigint;
-  sellFormattedBalance:string;
-  buyAmount:string;
-  buyBalanceOf:bigint;
-  buyFormattedBalance:string;
-  tradeDirection:string
   displayState: DISPLAY_STATE;
-  slippage: string;
 }
 
 export {

@@ -51,17 +51,6 @@ type NetworkElement = {
   url: string;
 }
 
-type TradeData = {
-  sellAmount:bigint;
-  sellBalanceOf:bigint;
-  sellFormattedBalance:string;
-  buyAmount:bigint;
-  buyBalanceOf:bigint;
-  buyFormattedBalance:string;
-  tradeDirection:string;
-  slippage: string;
-}
-
 type ExchangeContext = {
 
   network: NetworkElement;
@@ -71,8 +60,6 @@ type ExchangeContext = {
 
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
-
-  tradeData: TradeData;
 
   connectedWalletAddr:any,
   sellAmount:string;
@@ -97,7 +84,6 @@ export type {
   NetworkElement,
   PriceRequestParams,
   TokenContract,
-  TradeData,
   ExchangeContext,
   AccountRecord
 }

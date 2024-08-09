@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
+import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -23,7 +23,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<WalletAccount| undefined>();
+    const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -58,12 +58,12 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:WalletAccount = {
+                let td:AccountRecord = {
                     address: recipientInput,
                     symbol: retResponse.symbol,
                     img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
-                    url: "ToDo add WalletAccount URL"
+                    url: "ToDo add AccountRecord URL"
                 }
                 setWalletElement(td);
                 return true
@@ -85,7 +85,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
         return true
     }
 
-    const getSelectedListElement = (listElement: WalletAccount | undefined) => {
+    const getSelectedListElement = (listElement: AccountRecord | undefined) => {
         console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
         console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
         if (listElement === undefined) {

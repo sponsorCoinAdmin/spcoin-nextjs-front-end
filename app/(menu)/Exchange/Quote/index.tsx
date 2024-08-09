@@ -12,7 +12,7 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { WalletAccount, TokenContract, DISPLAY_STATE, ExchangeContext } from '@/lib/structure/types';
+import { AccountRecord, TokenContract, DISPLAY_STATE, ExchangeContext } from '@/lib/structure/types';
 import { fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
@@ -52,7 +52,7 @@ import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDial
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import IsLoading from '@/components/containers/IsLoading';
-import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, WalletAccount } from '@/lib/structure/types';
+import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, AccountRecord } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
 import PriceButton from '@/components/Buttons/PriceButton';
@@ -90,8 +90,8 @@ export default function QuoteView({
 
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
-  const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.recipientAccount);
-  const [agentAccount, setAgentElement] = useState<WalletAccount>(exchangeContext.agentAccount);
+  const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
+  const [agentAccount, setAgentElement] = useState<AccountRecord>(exchangeContext.agentAccount);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
