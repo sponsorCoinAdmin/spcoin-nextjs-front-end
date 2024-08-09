@@ -12,7 +12,7 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { WalletAccount, TokenContract, DISPLAY_STATE, TradeData } from '@/lib/structure/types';
+import { WalletAccount, TokenContract, DISPLAY_STATE, ExchangeContext } from '@/lib/structure/types';
 import { fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";

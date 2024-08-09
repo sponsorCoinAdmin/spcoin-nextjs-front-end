@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import CustomConnectButton from './CustomConnectButton';
 import ExchangeButton from './ExchangeButton';
-import { TradeData } from '@/lib/structure/types';
+import { ExchangeContext } from '@/lib/structure/types';
 
 type Props = {
-    tradeData:TradeData,
+    tradeData:ExchangeContext,
   }
 
 const PriceButton = ({

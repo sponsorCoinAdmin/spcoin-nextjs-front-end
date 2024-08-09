@@ -4,7 +4,7 @@ import { tradeData } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TradeData, TokenContract } from '@/lib/structure/types';
+import { ExchangeContext, TokenContract } from '@/lib/structure/types';
 import { setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
@@ -12,7 +12,6 @@ import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure/types';
 
 type Props = {
-  // tradeData:TradeData,
   activeAccount:any,
   sellAmount: string,
   sellTokenContract: TokenContract, 
@@ -21,12 +20,12 @@ type Props = {
   disabled: boolean
 }
 
-// const tradeData:TradeData = exchangeContext.tradeData;
+// const tradeData:ExchangeContext = tradeData;
 
     // useEffect(() => {
     //   // alert(`Price:sellAmount = ${sellAmount`)
     //   tradeData.sellAmount = sellAmount;
-    //   // alert(`tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+    //   // alert(`tradeData.sellAmount:useEffect(() => tradeData = ${JSON.stringify(tradeData, null, 2)}`);
     // }, [sellAmount]);
 
 /* Sell Token Selection Module */

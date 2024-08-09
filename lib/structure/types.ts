@@ -51,7 +51,7 @@ type NetworkElement = {
   url: string;
 }
 
-type TradeData = {
+type ExchangeContext = {
 
   network: NetworkElement;
 
@@ -84,6 +84,6 @@ export type {
   NetworkElement,
   PriceRequestParams,
   TokenContract,
-  TradeData,
+  ExchangeContext,
   WalletAccount
 }

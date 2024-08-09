@@ -1,6 +1,4 @@
 import styles from '@/styles/Exchange.module.css';
-import { Popover } from 'antd';
-import Slippage from './Slippage';
 import { SettingOutlined } from "@ant-design/icons";
 import Image from 'next/image';
 import spCoin_png from '../../public/resources/images/spCoin.png';

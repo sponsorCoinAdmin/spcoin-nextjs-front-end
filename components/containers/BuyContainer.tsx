@@ -5,7 +5,7 @@ import { tradeData } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { DISPLAY_STATE, TokenContract, TradeData } from '@/lib/structure/types';
+import { DISPLAY_STATE, TokenContract, ExchangeContext } from '@/lib/structure/types';
 import { getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';

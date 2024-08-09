@@ -109,7 +109,7 @@ const stringifyBigInt = (obj:any) => {
   return JSON.stringify(obj, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)
 }
 
-const exchangeDataDump = () => {
+const exchangeContextDump = () => {
   const exchangeData = stringifyBigInt(tradeData);
   alert(exchangeData);
   toggleElement("addSponsorshipDiv")
@@ -118,7 +118,7 @@ const exchangeDataDump = () => {
 
 export { 
   fetchTokenDetails,
-  exchangeDataDump,
+  exchangeContextDump,
   getQueryVariable,
   getTokenDetails,
   isSpCoin,

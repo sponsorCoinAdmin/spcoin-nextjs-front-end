@@ -1,20 +1,20 @@
 'use client'
 import { useEffect } from 'react';
 import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, TradeData } from '@/lib/structure/types';
+import { DISPLAY_STATE, ExchangeContext } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
 import { useAccount, useChainId } from 'wagmi';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
 let chainId:number = 1;
-let tradeData:TradeData;
+let tradeData:ExchangeContext;
 
 const isSpCoin = (TokenContract:TokenContract) => {
     // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
     return TokenContract.symbol === "SpCoin" ? true:false
   }  
 
-function getInitialContext(chain:any | number): TradeData {
+function getInitialContext(chain:any | number): ExchangeContext {
     const chainId:number = chain || 1;
     const defaultNetworkSettings = getDefaultNetworkSettings(chainId)
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)

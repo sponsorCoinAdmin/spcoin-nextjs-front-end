@@ -1,12 +1,12 @@
 import React from 'react'
 import styles from '@/styles/Exchange.module.css'
-import { TradeData } from '@/lib/structure/types'
+import { ExchangeContext } from '@/lib/structure/types'
 import { formatUnits, parseUnits } from "ethers";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 
 type Props = {
-  tradeData:TradeData,
+  tradeData:ExchangeContext,
 }
 
 const CustomConnectButton = ({ tradeData}:Props) => {
