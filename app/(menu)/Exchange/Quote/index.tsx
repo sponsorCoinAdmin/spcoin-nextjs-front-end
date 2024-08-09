@@ -27,7 +27,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoading from '@/components/containers/IsLoadingPrice';
-import { tradeData } from "@/lib/context";
+import { exchangeContext } from "@/lib/context";
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { Address, parseEther } from 'viem';
 
@@ -78,24 +78,24 @@ export default function QuoteView({
   console.debug("########################### QUOTE RERENDERED #####################################")
 
   // fetch price here
-  const [chainId, setChainId] = useState(tradeData.network.chainId);
-  const [network, setNetwork] = useState(tradeData.network.name);
-  const [sellAmount, setSellAmount] = useState<string>(tradeData.sellAmount);
-  const [buyAmount, setBuyAmount] = useState<string>(tradeData.buyAmount);
+  const [chainId, setChainId] = useState(exchangeContext.network.chainId);
+  const [network, setNetwork] = useState(exchangeContext.network.name);
+  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
-  const [tradeDirection, setTradeDirection] = useState(tradeData.tradeDirection);
-  const [slippage, setSlippage] = useState<string>(tradeData.slippage);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(tradeData.displayState);
+  const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
+  const [slippage, setSlippage] = useState<string>(exchangeContext.slippage);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(tradeData.sellTokenContract);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(tradeData.buyTokenContract);
-  const [recipientAccount, setRecipientElement] = useState<WalletAccount>(tradeData.recipientAccount);
-  const [agentAccount, setAgentElement] = useState<WalletAccount>(tradeData.agentAccount);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+  const [recipientAccount, setRecipientElement] = useState<WalletAccount>(exchangeContext.recipientAccount);
+  const [agentAccount, setAgentElement] = useState<WalletAccount>(exchangeContext.agentAccount);
   const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
 
   useEffect(() => {
-    console.debug("QUOTE:tradeData =\n" + JSON.stringify(tradeData,null,2))
+    console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
     // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
     // For up to 15 seconds in half second increments set dom settings
     for(let i = 1; i <= 30; i++) {
@@ -105,23 +105,23 @@ export default function QuoteView({
   
   useEffect(() => {
     console.debug(`QUOTE: useEffect:chainId = ${chainId}`)
-    tradeData.network.chainId = chainId;
+    exchangeContext.network.chainId = chainId;
   },[chainId]);
 
   useEffect(() => {
     console.debug(`QUOTE: setDisplayPanels(${displayState})`);
     setDisplayPanels(displayState);
-    tradeData.displayState = displayState;
+    exchangeContext.displayState = displayState;
   },[displayState]);
 
   useEffect(() => {
     console.debug('QUOTE: slippage changed to  ' + slippage);
-    tradeData.slippage = slippage;
+    exchangeContext.slippage = slippage;
   }, [slippage]);
 
   // useEffect(() => {
   //   console.debug('QUOTE: state changed to  ' + state.toString);
-  //   tradeData.state = state;
+  //   exchangeContext.state = state;
   // }, [state]);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function QuoteView({
 
   useEffect(() => {
     console.debug("sellTokenContract.symbol changed to " + sellTokenContract.name);
-    tradeData.sellTokenContract = sellTokenContract;
+    exchangeContext.sellTokenContract = sellTokenContract;
   }, [sellTokenContract]);
 
   useEffect(() => {
@@ -139,12 +139,12 @@ export default function QuoteView({
       setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
     else if (!isSpCoin(buyTokenContract)) 
       setDisplayState(DISPLAY_STATE.OFF)
-    tradeData.buyTokenContract = buyTokenContract;
+    exchangeContext.buyTokenContract = buyTokenContract;
   }, [buyTokenContract]);
 
   useEffect(() => {
     console.debug("recipientAccount changed to " + recipientAccount.name);
-    tradeData.recipientAccount = recipientAccount;
+    exchangeContext.recipientAccount = recipientAccount;
   }, [recipientAccount]);
 
   useEffect(() => {

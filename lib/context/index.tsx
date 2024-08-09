@@ -7,7 +7,7 @@ import { useAccount, useChainId } from 'wagmi';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
 let chainId:number = 1;
-let tradeData:ExchangeContext;
+let exchangeContext:ExchangeContext;
 
 const isSpCoin = (TokenContract:TokenContract) => {
     // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
@@ -19,7 +19,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
     const defaultNetworkSettings = getDefaultNetworkSettings(chainId)
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
 
-    tradeData = {
+    exchangeContext = {
 
         network: defaultNetworkSettings.networkHeader,
 
@@ -40,25 +40,25 @@ function getInitialContext(chain:any | number): ExchangeContext {
         displayState: ifBuyTokenSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
         slippage: "0.02",
     }
-    return tradeData;
+    return exchangeContext;
 }
 
 const resetContextNetwork = (chain:any) => {
     const networkName = chain.name.toLowerCase();
     console.debug("resetContextNetwork: newNetworkName = " + networkName);
-    console.debug("resetContextNetwork: tradeData.network.name = " + tradeData.network.name);
+    console.debug("resetContextNetwork: exchangeContext.network.name = " + exchangeContext.network.name);
     console.debug(`UPDATING NETWORK to ${networkName}`);
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-    tradeData.network.chainId = chain.id;
-    tradeData.network.name = networkName
-    tradeData.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
-    tradeData.slippage = "0.02",
-    tradeData.sellTokenContract = defaultNetworkSettings.defaultSellToken,
-    tradeData.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
-    tradeData.recipientAccount = defaultNetworkSettings.defaultRecipient,
-    tradeData.agentAccount = defaultNetworkSettings.defaultAgent
+    exchangeContext.network.chainId = chain.id;
+    exchangeContext.network.name = networkName
+    exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
+    exchangeContext.slippage = "0.02",
+    exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+    exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
+    exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,
+    exchangeContext.agentAccount = defaultNetworkSettings.defaultAgent
 }
 
 export function ExchangeWrapper({children} : {
@@ -84,5 +84,5 @@ getInitialContext(chainId);
 
 export {
     resetContextNetwork,
-    tradeData
+    exchangeContext
 }

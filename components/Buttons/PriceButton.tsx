@@ -4,20 +4,20 @@ import ExchangeButton from './ExchangeButton';
 import { ExchangeContext } from '@/lib/structure/types';
 
 type Props = {
-    tradeData:ExchangeContext,
+    exchangeContext:ExchangeContext,
   }
 
 const PriceButton = ({
-    tradeData}:Props) => {
+    exchangeContext}:Props) => {
 
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }
   return (
     <div>
-        {!tradeData.connectedWalletAddr ?
+        {!exchangeContext.connectedWalletAddr ?
             (<CustomConnectButton />) :
-            (<ExchangeButton  tradeData={tradeData} />)
+            (<ExchangeButton  exchangeContext={exchangeContext} />)
         }
     </div>
 );

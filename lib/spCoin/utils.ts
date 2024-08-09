@@ -3,7 +3,7 @@ import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagm
 import { TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address } from "viem";
-import { tradeData } from "../context";
+import { exchangeContext } from "../context";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
@@ -110,7 +110,7 @@ const stringifyBigInt = (obj:any) => {
 }
 
 const exchangeContextDump = () => {
-  const exchangeData = stringifyBigInt(tradeData);
+  const exchangeData = stringifyBigInt(exchangeContext);
   alert(exchangeData);
   toggleElement("addSponsorshipDiv")
   console.debug(exchangeData);

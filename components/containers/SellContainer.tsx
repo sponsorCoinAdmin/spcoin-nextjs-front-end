@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { tradeData } from "@/lib/context";
+import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
@@ -20,12 +20,12 @@ type Props = {
   disabled: boolean
 }
 
-// const tradeData:ExchangeContext = tradeData;
+// const exchangeContext:ExchangeContext = exchangeContext;
 
     // useEffect(() => {
     //   // alert(`Price:sellAmount = ${sellAmount`)
-    //   tradeData.sellAmount = sellAmount;
-    //   // alert(`tradeData.sellAmount:useEffect(() => tradeData = ${JSON.stringify(tradeData, null, 2)}`);
+    //   exchangeContext.sellAmount = sellAmount;
+    //   // alert(`exchangeContext.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     // }, [sellAmount]);
 
 /* Sell Token Selection Module */
@@ -35,16 +35,16 @@ const SellContainer = ({activeAccount,
                         setSellAmount,
                         setDisplayState,
                         disabled} : Props) => {
-  // console.debug("tradeData.sellBalanceOf = " + tradeData.sellBalanceOf)
-  // tradeData.sellBalanceOf = formatUnits(tradeData.sellBalanceOf, tradeData.sellTokenContract.decimals);
+  // console.debug("exchangeContext.sellBalanceOf = " + exchangeContext.sellBalanceOf)
+  // exchangeContext.sellBalanceOf = formatUnits(exchangeContext.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
   // console.debug(`getFormattedClientBalanceOf(${activeAccount.address}, ${sellTokenContract.address}) = ${balanceOf}`)
   // const [formattedBalanceOf, setFormattedBalanceOf] = useState<string>(getFormattedClientBalanceOf(activeAccount.address, sellTokenContract.address || "0"));
 
   try {
-    console.debug(`SellContainer.tradeData = \n${stringifyBigInt(tradeData)}`);
-    tradeData.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
-    tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
-    tradeData.sellFormattedBalance = formatDecimals(tradeData.sellBalanceOf, tradeData.sellTokenContract.decimals);
+    console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
+    exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
+    exchangeContext.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
+    exchangeContext.sellFormattedBalance = formatDecimals(exchangeContext.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
@@ -60,7 +60,7 @@ const SellContainer = ({activeAccount,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {tradeData.sellFormattedBalance}
+          Balance: {exchangeContext.sellFormattedBalance}
         </div>
         {IsSpCoin ?
           <>
@@ -73,8 +73,8 @@ const SellContainer = ({activeAccount,
       </div>
     );
   } catch (err:any) {
-    console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
-    // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(tradeData,null,2)}`)
+    console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
+    // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
   }
 }
 
