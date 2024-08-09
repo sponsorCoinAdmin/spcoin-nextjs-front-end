@@ -1,12 +1,22 @@
 'use client'
 import { useEffect } from 'react';
 import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, ExchangeContext } from '@/lib/structure/types';
+import { DISPLAY_STATE, ExchangeContext, TradeData } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
 import { useAccount, useChainId } from 'wagmi';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
-let chainId:number = 1;
+const chainId:number = 1;
+const defaultInitialTradeData:TradeData = {
+    sellAmount: 0n,
+    sellBalanceOf: 0n,
+    sellFormattedBalance: '0',
+    buyAmount: 0n,
+    buyBalanceOf: 0n,
+    buyFormattedBalance: '0',
+    tradeDirection: "sell",
+    slippage: "0.02",
+};
 let exchangeContext:ExchangeContext;
 
 const isSpCoin = (TokenContract:TokenContract) => {
@@ -21,6 +31,8 @@ function getInitialContext(chain:any | number): ExchangeContext {
 
     exchangeContext = {
 
+        connectedWalletAddr: undefined,
+
         network: defaultNetworkSettings.networkHeader,
 
         recipientAccount: defaultNetworkSettings.defaultRecipient,
@@ -29,7 +41,6 @@ function getInitialContext(chain:any | number): ExchangeContext {
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
-        connectedWalletAddr: undefined,
         sellAmount: "0",
         sellBalanceOf: 0n,
         sellFormattedBalance: '0',
