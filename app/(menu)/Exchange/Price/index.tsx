@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { erc20Abi } from 'viem' 
-import { WalletAccount, TokenContract, TradeData, EXCHANGE_STATE, ExchangeContext, DISPLAY_STATE,  } from '@/lib/structure/types';
+import { WalletAccount, TokenContract,  DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, stringifyBigInt, updateBalance } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";

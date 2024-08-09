@@ -1,9 +1,9 @@
 import { isAddress } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { TokenContract } from "@/lib/structure/types";
-import { exchangeContext } from "../context";
 import { toggleElement } from "./guiControl";
 import { Address } from "viem";
+import { tradeData } from "../context";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
@@ -110,7 +110,7 @@ const stringifyBigInt = (obj:any) => {
 }
 
 const exchangeDataDump = () => {
-  const exchangeData = JSON.stringify(exchangeContext,null,2);
+  const exchangeData = stringifyBigInt(tradeData);
   alert(exchangeData);
   toggleElement("addSponsorshipDiv")
   console.debug(exchangeData);
