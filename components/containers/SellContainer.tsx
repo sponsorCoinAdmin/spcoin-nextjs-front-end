@@ -24,8 +24,8 @@ type Props = {
 
     // useEffect(() => {
     //   // alert(`Price:sellAmount = ${sellAmount`)
-    //   exchangeContext.sellAmount = sellAmount;
-    //   // alert(`exchangeContext.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+    //   exchangeContext.tradeData.sellAmount = sellAmount;
+    //   // alert(`exchangeContext.tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
     // }, [sellAmount]);
 
 /* Sell Token Selection Module */
@@ -38,10 +38,10 @@ const SellContainer = ({activeAccount,
 
   try {
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
-    exchangeContext.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
-    exchangeContext.sellFormattedBalance = formatDecimals(exchangeContext.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
+    exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
+    exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
     {
-      
+
     }
     console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     let IsSpCoin = isSpCoin(sellTokenContract);
@@ -59,7 +59,7 @@ const SellContainer = ({activeAccount,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {exchangeContext.sellFormattedBalance}
+          Balance: {exchangeContext.tradeData.sellFormattedBalance}
         </div>
         {IsSpCoin ?
           <>

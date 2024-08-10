@@ -80,7 +80,7 @@ export default function QuoteView({
   // fetch price here
   const [chainId, setChainId] = useState(exchangeContext.network.chainId);
   const [network, setNetwork] = useState(exchangeContext.network.name);
-  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.sellAmount);
+  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
