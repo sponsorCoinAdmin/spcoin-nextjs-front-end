@@ -37,9 +37,9 @@ export default function PriceView() {
 
   try {
     const [price, setPrice] = useState<PriceResponse | undefined>();
-    const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
-    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
-    const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
+    const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
+    const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
+    const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
     const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
@@ -119,11 +119,11 @@ export default function PriceView() {
 
   // This code currently only works for sell buy will default to undefined
     const parsedSellAmount = sellAmount && tradeDirection === "sell"
-      ? parseUnits(sellAmount, sellTokenContract.decimals).toString()
+      ? formatUnits(sellAmount, sellTokenContract.decimals)
       : undefined;
 
     const parsedBuyAmount = buyAmount && tradeDirection === "buy"
-      ? parseUnits(buyAmount, buyTokenContract.decimals).toString()
+      ? formatUnits(buyAmount, buyTokenContract.decimals)
       : undefined;
 
     const getPriceApiTransaction = (data:any) => {
@@ -162,7 +162,7 @@ export default function PriceView() {
 
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
-            setBuyAmount(formatUnits(data.buyAmount, buyTokenContract.decimals));
+            setBuyAmount(data.buyAmount);
           }
           else {
             let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
@@ -213,9 +213,6 @@ export default function PriceView() {
       ] 
     }) 
 
-    const disabled = result && sellAmount // ToDo FIX This result.value
-      ? parseUnits(sellAmount, sellTokenContract.decimals) > 0
-      : true;
 
     try {
       return (
@@ -242,9 +239,9 @@ export default function PriceView() {
                            setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
             <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
-              {
-                // <QuoteButton sendTransaction={sendTransaction}/>
-              }
+            {
+              // <QuoteButton sendTransaction={sendTransaction}/>
+            }
             <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
             <SponsorRateConfig setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />

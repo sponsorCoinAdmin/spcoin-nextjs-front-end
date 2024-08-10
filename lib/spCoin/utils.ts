@@ -1,4 +1,4 @@
-import { isAddress } from "ethers";
+import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
@@ -20,16 +20,18 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:string) => void ) => {
+const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
+  // alert(`1. price txt = ${txt}`)
   txt = validatePrice(txt, decimals);
   if (txt !== "")
-    setSellAmount(txt);
+    setSellAmount(parseUnits(txt,decimals));
   return txt;
 };
 
 const  validatePrice = (price:string, decimals:number) => {
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
+  // alert(`2. price = ${price}`)
   if (price === '' || re.test(price)) {
     let splitText = price.split(".");
     // Remove leading zeros
@@ -40,6 +42,7 @@ const  validatePrice = (price:string, decimals:number) => {
       // Validate Max allowed decimal size
       formattedPrice += '.' + splitText[1]?.substring(0, decimals);
     }
+    // alert(`3. formattedPrice = ${formattedPrice}`)
     return formattedPrice
   } 
   return "";

@@ -10,10 +10,11 @@ import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecima
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure/types';
+import { formatUnits } from "ethers";
 
 type Props = {
   activeAccount:any,
-  sellAmount: string,
+  sellAmount: bigint,
   sellTokenContract: TokenContract, 
   setSellAmount: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
@@ -47,7 +48,7 @@ const SellContainer = ({activeAccount,
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
-        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={sellAmount}
+        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formatUnits(sellAmount, sellTokenContract.decimals) }
           onChange={(e) => { setValidPriceInput(e.target.value, sellTokenContract.decimals || 0, setSellAmount); }} />
         <AssetSelect TokenContract={sellTokenContract} id={"sellTokenDialog"} disabled={disabled}></AssetSelect>
         {/* <div className={styles["assetSelect"]}>
