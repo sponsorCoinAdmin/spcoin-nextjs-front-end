@@ -247,13 +247,13 @@ export default function PriceView() {
                            disabled={false}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
-            <PriceButton exchangeContext={exchangeContext} />
+            <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
               {
                 // <QuoteButton sendTransaction={sendTransaction}/>
               }
             <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
             <SponsorRateConfig setDisplayState={setDisplayState}/>
-            <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} />
+            <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />

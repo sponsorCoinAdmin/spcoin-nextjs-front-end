@@ -1,15 +1,16 @@
 import React from 'react'
 import styles from '@/styles/Exchange.module.css'
-import { ExchangeContext } from '@/lib/structure/types'
+import { ExchangeContext, TradeData } from '@/lib/structure/types'
 import { formatUnits, parseUnits } from "ethers";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
-
 type Props = {
   exchangeContext:ExchangeContext,
+  tradeData:TradeData
 }
 
-const CustomConnectButton = ({ exchangeContext}:Props) => {
+const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
+
   const show = () => {
     alert(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
   }
