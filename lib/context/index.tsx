@@ -42,13 +42,6 @@ function getInitialContext(chain:any | number): ExchangeContext {
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
         tradeData: defaultInitialTradeData,
-        sellAmount: "0",
-        sellBalanceOf: 0n,
-        sellFormattedBalance: '0',
-        buyAmount: "0",
-        buyBalanceOf: 0n,
-        buyFormattedBalance: '0',
-        tradeDirection: "sell",
         displayState: ifBuyTokenSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
     }
     return exchangeContext;
@@ -65,7 +58,6 @@ const resetContextNetwork = (chain:any) => {
     exchangeContext.network.chainId = chain.id;
     exchangeContext.network.name = networkName
     exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
-    exchangeContext.tradeData.slippage = "0.02",
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
     exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,
