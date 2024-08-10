@@ -38,7 +38,7 @@ export default function PriceView() {
   try {
     const [price, setPrice] = useState<PriceResponse | undefined>();
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
-    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.buyAmount);
+    const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
     const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
@@ -79,7 +79,7 @@ export default function PriceView() {
 
     useEffect(() => {
       // alert(`Price:buyAmount = ${buyAmount`)
-      exchangeContext.buyAmount = buyAmount;
+      exchangeContext.tradeData.buyAmount = buyAmount;
     }, [buyAmount]);
 
     useEffect(() => {

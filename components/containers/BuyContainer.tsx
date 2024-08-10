@@ -23,8 +23,8 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
   try {
     console.debug(`BuyContainer:exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
-    exchangeContext.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
-    exchangeContext.buyFormattedBalance = formatDecimals(exchangeContext.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
+    exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
+    exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>
@@ -33,7 +33,7 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
       <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={disabled}></AssetSelect>
       <div className={styles["buySell"]}>You receive</div>
       <div className={styles["assetBalance"]}>
-        Balance: {exchangeContext.buyFormattedBalance}
+        Balance: {exchangeContext.tradeData.buyFormattedBalance}
       </div>
       {IsSpCoin ?
         <AddSponsorButton activeAccount={activeAccount} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
