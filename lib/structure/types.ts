@@ -83,7 +83,6 @@ type ExchangeContext = {
   buyFormattedBalance:string;
   tradeDirection:string
   displayState: DISPLAY_STATE;
-  slippage: string;
 }
 
 export {

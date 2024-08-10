@@ -39,9 +39,6 @@ const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
       const bigIntSellAmount = parseUnits(sellAmount, sellDecimals)
       insufficientSellBalance = bigIntSellBalanceOf <  bigIntSellAmount
 
-      // let bigIntSellBalanceOf:BigInt  = BigInt(exchangeContext.sellBalanceOf);
-      // let bigIntSellAmount:BigInt  = BigInt(exchangeContext.sellAmount);
-
       console.debug(`CustomConnectButton.insufficientSellBalance: sellBalanceOf = "${bigIntSellBalanceOf}"`);
       console.debug(`sellAmount              = "${sellAmount}"`);
       console.debug(`sellDecimals            = "${sellDecimals}"`);

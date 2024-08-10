@@ -40,7 +40,7 @@ export default function PriceView() {
     const [sellAmount, setSellAmount] = useState<string>(exchangeContext.sellAmount);
     const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.buyAmount);
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
-    const [slippage, setSlippage] = useState<string>(exchangeContext.slippage);
+    const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
     const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
@@ -52,12 +52,6 @@ export default function PriceView() {
     exchangeContext.connectedWalletAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
     const connectedWalletAddr = exchangeContext.connectedWalletAddr
 
-    // useEffect(() => {
-    //   exchangeContext.sellBalanceOf = formatUnits(exchangeContext.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
-    //   setSellBalanceOf(exchangeContext.sellBalanceOf);
-    //   // alert(`formatUnits(${exchangeContext.sellBalanceOf}, ${exchangeContext.sellTokenContract.decimals}) = ${exchangeContext.sellBalanceOf}`)
-    // }, [exchangeContext.sellBalanceOf]);
-
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
@@ -68,7 +62,7 @@ export default function PriceView() {
         setRecipientElement(exchangeContext.recipientAccount);
         setAgentElement(exchangeContext.agentAccount);
         setDisplayState(exchangeContext.displayState);
-        setSlippage(exchangeContext.slippage);
+        setSlippage(exchangeContext.tradeData.slippage);
       }
     }, [ACTIVE_ACCOUNT.chain]);
 
@@ -96,7 +90,7 @@ export default function PriceView() {
 
     useEffect(() => {
       console.debug('PRICE:useEffect slippage changed to  ' + slippage);
-      exchangeContext.slippage = slippage;
+      exchangeContext.tradeData.slippage = slippage;
     }, [slippage]);
 
     useEffect(() => {

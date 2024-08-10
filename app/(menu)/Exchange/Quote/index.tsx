@@ -85,7 +85,7 @@ export default function QuoteView({
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
   const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
-  const [slippage, setSlippage] = useState<string>(exchangeContext.slippage);
+  const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
@@ -116,7 +116,7 @@ export default function QuoteView({
 
   useEffect(() => {
     console.debug('QUOTE: slippage changed to  ' + slippage);
-    exchangeContext.slippage = slippage;
+    exchangeContext.tradeData.slippage = slippage;
   }, [slippage]);
 
   // useEffect(() => {
