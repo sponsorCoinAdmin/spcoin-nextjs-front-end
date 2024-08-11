@@ -42,7 +42,7 @@ const SellContainer = ({activeAccount,
 
   try {
     const tradeData:TradeData = exchangeContext.tradeData;
-    console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
+    // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
 //    exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
 //    exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);

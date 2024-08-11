@@ -20,15 +20,8 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
-  // alert(`1. price txt = ${txt}`)
-  txt = validatePrice(txt, decimals);
-  if (txt !== "")
-    setSellAmount(parseUnits(txt,decimals));
-  return txt;
-};
 
-const  validatePrice = (price:string, decimals:number) => {
+const  getValidFormattedPrice = (price:string, decimals:number) => {
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
   // alert(`2. price = ${price}`)
@@ -40,13 +33,23 @@ const  validatePrice = (price:string, decimals:number) => {
       formattedPrice = "0";
     if(splitText[1] != undefined) {
       // Validate Max allowed decimal size
-      formattedPrice += '.' + splitText[1]?.substring(0, decimals);
+      formattedPrice += '.' + splitText[1].substring(0, decimals);
+      // formattedPrice += '.' + splitText[1];
     }
     // alert(`3. formattedPrice = ${formattedPrice}`)
     return formattedPrice
   } 
   return "";
- }
+}
+
+const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
+  console.debug(`2. setValidPriceInput txt value = ${txt}`)
+  txt = getValidFormattedPrice(txt, decimals);
+  if (txt !== "")
+    setSellAmount(parseUnits(txt,decimals));
+  return txt;
+};
+
 
 const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
   let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
@@ -127,6 +130,6 @@ export {
   isSpCoin,
   setValidPriceInput,
   stringifyBigInt,
-  validatePrice,
+  getValidFormattedPrice,
   updateBalance
 }

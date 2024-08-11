@@ -43,7 +43,7 @@ const SellContainer = ({activeAccount,
     {
 
     }
-    console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
+    // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
