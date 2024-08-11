@@ -4,18 +4,16 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenContract } from '@/lib/structure/types';
-import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice } from '@/lib/spCoin/utils';
+import { ExchangeContext, TokenContract } from '@/lib/structure/types';
+import { setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure/types';
-import { formatUnits, parseUnits } from "ethers";
 
 type Props = {
   activeAccount:any,
-//OLD sellAmount: string,
-  sellAmount: bigint,
+  sellAmount: string,
   sellTokenContract: TokenContract, 
   setSellAmount: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
@@ -39,40 +37,18 @@ const SellContainer = ({activeAccount,
                         disabled} : Props) => {
 
   try {
-    const [formattedSellAmount, setFormattedSellAmount] = useState<string>("8");
-
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
- 
-    // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
-    const IsSpCoin = isSpCoin(sellTokenContract);
+    {
 
-
-
-
-    const setStringToBigIntStateValue = (stringValue:string, decimals:number|undefined, setAmount: (txt:bigint) => void) => {
-      decimals = decimals || 0;
-      stringValue = getValidFormattedPrice(stringValue, decimals);
-      if (stringValue !== "")
-      {
-        setFormattedSellAmount(stringValue);
-        const bigIntValue = parseUnits(stringValue, 18)
-        console.log(`stringValue === bigIntValue = ${sellAmount === bigIntValue}\n
-          stringValue = ${stringValue}\n
-          decimals = ${decimals}\n
-          sellAmount = ${sellAmount}\n
-          bigIntValue = ${bigIntValue}`)
-        setAmount(bigIntValue);
-      }
     }
-    
+    // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
+    let IsSpCoin = isSpCoin(sellTokenContract);
     return (
       <div className={styles.inputs}>
-        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={formattedSellAmount}
-          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, setSellAmount); }}
-          onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
-          />
+        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={sellAmount}
+          onChange={(e) => { setValidPriceInput(e.target.value, sellTokenContract.decimals || 0, setSellAmount); }} />
         <AssetSelect TokenContract={sellTokenContract} id={"sellTokenDialog"} disabled={disabled}></AssetSelect>
         {/* <div className={styles["assetSelect"]}>
             <img alt={sellTokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(sellTokenContract,null,2))}/>
