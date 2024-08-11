@@ -48,16 +48,13 @@ const SellContainer = ({activeAccount,
     // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     const IsSpCoin = isSpCoin(sellTokenContract);
 
-
-
-
     const setStringToBigIntStateValue = (stringValue:string, decimals:number|undefined, setAmount: (txt:bigint) => void) => {
       decimals = decimals || 0;
       stringValue = getValidFormattedPrice(stringValue, decimals);
       if (stringValue !== "")
       {
         setFormattedSellAmount(stringValue);
-        const bigIntValue = parseUnits(stringValue, 18)
+        const bigIntValue = parseUnits(stringValue, decimals)
         console.log(`stringValue === bigIntValue = ${sellAmount === bigIntValue}\n
           stringValue = ${stringValue}\n
           decimals = ${decimals}\n
@@ -96,7 +93,7 @@ const SellContainer = ({activeAccount,
       </div>
     );
   } catch (err:any) {
-    console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
+    console.debug (`Sell Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
     // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
   }
 }

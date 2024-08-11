@@ -21,7 +21,7 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
 }
 
 
-const  getValidFormattedPrice = (price:string, decimals:number) => {
+const  getValidFormattedPrice = (price:string, decimals:number|undefined) => {
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
   // alert(`2. price = ${price}`)
@@ -33,10 +33,9 @@ const  getValidFormattedPrice = (price:string, decimals:number) => {
       formattedPrice = "0";
     if(splitText[1] != undefined) {
       // Validate Max allowed decimal size
-      formattedPrice += '.' + splitText[1].substring(0, decimals);
-      // formattedPrice += '.' + splitText[1];
+      formattedPrice += '.' + splitText[1].substring(0, decimals || 0);
     }
-    // alert(`3. formattedPrice = ${formattedPrice}`)
+    //  alert(`3. formattedPrice = ${formattedPrice}`)
     return formattedPrice
   } 
   return "";

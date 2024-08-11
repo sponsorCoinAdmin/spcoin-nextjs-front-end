@@ -73,12 +73,12 @@ export default function PriceView() {
   // }, []);
 
     useEffect(() => {
-      // alert(`Price:sellAmount = ${sellAmount`)
+      // alert(`Price:sellAmount = ${sellAmount}`)
       exchangeContext.tradeData.sellAmount = sellAmount;
     }, [sellAmount]);
 
     useEffect(() => {
-      // alert(`Price:buyAmount = ${buyAmount`)
+      // alert(`Price:buyAmount = ${buyAmount}`)
       exchangeContext.tradeData.buyAmount = buyAmount;
     }, [buyAmount]);
 
