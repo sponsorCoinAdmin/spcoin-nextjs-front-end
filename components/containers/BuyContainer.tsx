@@ -24,6 +24,10 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
 
   try {
     const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("8");
+    exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
+    exchangeContext.tradeData.buyDecimals = exchangeContext.buyTokenContract.decimals;
+    exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
+    exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
 
     const setStringToBigIntStateValue = (stringValue:string, decimals:number|undefined, setAmount: (txt:bigint) => void) => {
       decimals = decimals || 0;
@@ -53,16 +57,12 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
     useEffect(() =>  {
       const decimals = buyTokenContract.decimals;
       setBigIntStateValue(buyAmount, decimals)
-      alert(`BuyContainer:useEffect[]:}\n
-        buyAmount = ${buyAmount}\n
-        decimals = ${decimals}\n
-        formattedBuyAmount = ${formattedBuyAmount}}`)
+      // alert(`BuyContainer:useEffect[]:}\n
+      //   buyAmount = ${buyAmount}\n
+      //   decimals = ${decimals}\n
+      //   formattedBuyAmount = ${formattedBuyAmount}}`)
     }, [buyAmount]);
 
-    // console.debug(`BuyContainer:exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
-    exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
-    exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
-    exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>

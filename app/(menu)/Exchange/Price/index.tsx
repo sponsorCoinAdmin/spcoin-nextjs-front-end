@@ -10,12 +10,11 @@ import {
 } from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { formatUnits, parseUnits } from "ethers";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { erc20Abi } from 'viem' 
 import { AccountRecord, TokenContract,  DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
-import { isSpCoin, setValidPriceInput, stringifyBigInt, updateBalance } from '@/lib/spCoin/utils';
+import { isSpCoin, setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
@@ -117,20 +116,11 @@ export default function PriceView() {
       }
     }, [errorMessage]);
 
-  // This code currently only works for sell buy will default to undefined
-    const parsedSellAmount = sellAmount && tradeDirection === "sell"
-      ? formatUnits(sellAmount, sellTokenContract.decimals)
-      : undefined;
-
-    const parsedBuyAmount = buyAmount && tradeDirection === "buy"
-      ? formatUnits(buyAmount, buyTokenContract.decimals)
-      : undefined;
-
     const getPriceApiTransaction = (data:any) => {
       let priceTransaction = `${apiCall}`
-      priceTransaction += `?sellToken=${sellTokenContract.address}`
+      priceTransaction += `sellToken=${sellTokenContract.address}`
       priceTransaction += `&buyToken=${buyTokenContract.address}`
-      priceTransaction += `&sellAmount=${parsedSellAmount}\n`
+      priceTransaction += `&sellAmount=${sellAmount?.toString()}\n`
       // priceTransaction += `&buyAmount=${parsedBuyAmount}\n`
       priceTransaction += `&connectedWalletAddr=${connectedWalletAddr}`
       priceTransaction += JSON.stringify(data, null, 2)
@@ -145,8 +135,8 @@ export default function PriceView() {
         {
           sellToken: sellTokenContract.address,
           buyToken: buyTokenContract.address,
-          sellAmount: parsedSellAmount,
-          buyAmount: parsedBuyAmount,
+          sellAmount: (tradeDirection === "sell") ? sellAmount.toString() : undefined,
+          buyAmount: (tradeDirection === "buy") ? buyAmount.toString() : undefined,
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
           // slippagePercentage: slippage,
           // expectedSlippage: slippage,
@@ -212,7 +202,6 @@ export default function PriceView() {
         }, 
       ] 
     }) 
-
 
     try {
       return (
