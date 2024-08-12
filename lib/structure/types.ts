@@ -53,9 +53,11 @@ type NetworkElement = {
 
 type TradeData = {
   sellAmount:bigint;
+  sellDecimals:number;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:bigint;
+  buyDecimals:number;
   buyBalanceOf:bigint;
   buyFormattedBalance:string;
   tradeDirection:string;
@@ -63,19 +65,13 @@ type TradeData = {
 }
 
 type ExchangeContext = {
-
   connectedWalletAddr:any,
-
   network: NetworkElement;
-
   recipientAccount: AccountRecord;
   agentAccount: AccountRecord;
-
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
-
   tradeData: TradeData;
-
   displayState: DISPLAY_STATE;
 }
 

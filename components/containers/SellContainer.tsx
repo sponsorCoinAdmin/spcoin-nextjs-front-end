@@ -42,14 +42,12 @@ const SellContainer = ({activeAccount,
     const [formattedSellAmount, setFormattedSellAmount] = useState<string>("8");
 
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
+    exchangeContext.tradeData.sellDecimals = exchangeContext.sellTokenContract.decimals;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
  
     // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     const IsSpCoin = isSpCoin(sellTokenContract);
-
-
-
 
     const setStringToBigIntStateValue = (stringValue:string, decimals:number|undefined, setAmount: (txt:bigint) => void) => {
       decimals = decimals || 0;
@@ -57,7 +55,7 @@ const SellContainer = ({activeAccount,
       if (stringValue !== "")
       {
         setFormattedSellAmount(stringValue);
-        const bigIntValue = parseUnits(stringValue, 18)
+        const bigIntValue = parseUnits(stringValue, decimals)
         console.log(`stringValue === bigIntValue = ${sellAmount === bigIntValue}\n
           stringValue = ${stringValue}\n
           decimals = ${decimals}\n
@@ -96,7 +94,7 @@ const SellContainer = ({activeAccount,
       </div>
     );
   } catch (err:any) {
-    console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
+    console.debug (`Sell Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
     // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
   }
 }

@@ -12,7 +12,8 @@ type Props = {
 const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
 
   const show = () => {
-    alert(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+    // alert(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+    console.debug(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
   }
 
   const insufficientSellAmount = () => {

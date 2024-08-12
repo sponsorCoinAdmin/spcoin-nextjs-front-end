@@ -9,13 +9,15 @@ import { useAccount, useChainId } from 'wagmi';
 const chainId:number = 1;
 const defaultInitialTradeData:TradeData = {
     sellAmount: 0n,
+    sellDecimals: 0,
     sellBalanceOf: 0n,
     sellFormattedBalance: '0',
     buyAmount: 0n,
+    buyDecimals: 0,
     buyBalanceOf: 0n,
     buyFormattedBalance: '0',
     tradeDirection: "sell",
-    slippage: "0.02",
+    slippage: "0.02"
 };
 let exchangeContext:ExchangeContext;
 

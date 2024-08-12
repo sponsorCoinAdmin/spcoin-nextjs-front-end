@@ -9,9 +9,10 @@ const ERROR_0X_RESPONSE = 500;
 
 const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   const { sellAmount, buyAmount } = params;
+  console.debug("fetcher 1")
 
   if (!sellAmount && !buyAmount) return;
-  // console.debug("fetcher")
+  console.debug("fetcher 2")
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
     throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
@@ -22,10 +23,10 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   try {
     console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    // alert(`BEFORE fetcher:${endpoint}?${query}`);
+    console.debug(`BEFORE fetcher:${endpoint}?${query}`);
     let result = fetch(`${endpoint}?${query}`).then((res) => res.json());
     // console.debug(`fetcher: ${endpoint}?${query}`);
-    // alert(`AFTER fetcher result =  + ${JSON.stringify(result,null,2)} + ]`)
+    console.debug(`AFTER fetcher result =  + ${JSON.stringify(result,null,2)} + ]`)
     // console.debug("fetcher result = " + JSON.stringify(result,null,2) + "]")
     return result
   }
