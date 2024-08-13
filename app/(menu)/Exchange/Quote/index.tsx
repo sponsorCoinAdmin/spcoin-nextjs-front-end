@@ -66,12 +66,12 @@ export default function QuoteView({
   price,
   quote,
   setQuote,
-  connectedWalletAddr,
+  connectedAccountAddr,
 }: {
   price: PriceResponse;
   quote: QuoteResponse | undefined;
   setQuote: (price: any) => void;
-  connectedWalletAddr: Address;
+  connectedAccountAddr: Address;
 }) {
 
   // alert("EXCHANGE/QUOTE HERE 1")
@@ -125,8 +125,8 @@ export default function QuoteView({
   // }, [state]);
 
   useEffect(() => {
-    // console.debug(`useEffect[connectedWalletAddr]:EXECUTING updateBuyBalance(${buyTokenContract.name});`)
-  }, [connectedWalletAddr]);
+    // console.debug(`useEffect[connectedAccountAddr]:EXECUTING updateBuyBalance(${buyTokenContract.name});`)
+  }, [connectedAccountAddr]);
 
   useEffect(() => {
     console.debug("sellTokenContract.symbol changed to " + sellTokenContract.name);
@@ -195,7 +195,7 @@ export default function QuoteView({
         // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
         // slippagePercentage: slippage,
         // expectedSlippage: slippage,
-        connectedWalletAddr,
+        connectedAccountAddr,
       },
     ],
     fetcher,
@@ -240,8 +240,8 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
-      <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+      <SellTokenDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
+      <BuyTokenDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
       <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
       <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <ErrorDialog errMsg={errorMessage} />
@@ -262,7 +262,7 @@ export default function QuoteView({
                            disabled={false}
                            setDisplayState={setDisplayState} />           */}
         {/* <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} /> */}
-        {/* <PriceButton connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} /> */}
+        {/* <PriceButton connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} /> */}
         <button
   // disabled={!Boolean(sendTransaction)} 
   // onClick={() => sendTransaction()} 

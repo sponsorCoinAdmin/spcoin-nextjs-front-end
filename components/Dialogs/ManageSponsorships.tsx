@@ -21,14 +21,14 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ connectedWalletAddr, sellTokenContract, callBackSetter }: any) {
+export default function Dialog({ connectedAccountAddr, sellTokenContract, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
     const chainId = sellTokenContract.chainId;
-    if (connectedWalletAddr === undefined) 
-        connectedWalletAddr = BURN_ADDRESS
+    if (connectedAccountAddr === undefined) 
+        connectedAccountAddr = BURN_ADDRESS
 
     useEffect(() => {
         closeDialog();
@@ -55,7 +55,7 @@ export default function Dialog({ connectedWalletAddr, sellTokenContract, callBac
     }
 
     const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(connectedWalletAddr, chainId, tokenAddr, setTokenContract)
+        return getTokenDetails(connectedAccountAddr, chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {

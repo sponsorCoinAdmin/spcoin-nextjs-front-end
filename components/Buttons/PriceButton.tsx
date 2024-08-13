@@ -15,7 +15,7 @@ const PriceButton = ({exchangeContext, tradeData}:Props) => {
     }
   return (
     <div>
-        {!exchangeContext.connectedWalletAddr ?
+        {!exchangeContext.connectedAccountAddr ?
             (<CustomConnectButton />) :
             (<ExchangeButton  exchangeContext={exchangeContext} tradeData={tradeData} />)
         }

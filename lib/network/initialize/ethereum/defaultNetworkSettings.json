@@ -17,13 +17,14 @@
   },
   "defaultBuyToken": {
     "chainId": 1,
-    "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-    "name": "Wrapped Bitcoin",
-    "symbol": "WBTC",
+    "address": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
+    "name": "TONCOIN",
+    "symbol": "TON",
     "totalSupply": null,
-    "decimals": 8,
-    "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+    "decimals": 9,
+    "img": "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
   },
+
   "defaultRecipient": {
       "img": "/resources/images/tokens/0xToDo_SpCoin.png",
       "name": "Sponsor Coin",

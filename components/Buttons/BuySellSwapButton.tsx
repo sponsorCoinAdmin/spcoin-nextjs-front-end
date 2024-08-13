@@ -10,7 +10,6 @@ function swapTokens(sellTokenContract:TokenContract,
   let tmpElement: TokenContract = sellTokenContract;
   setSellTokenContract(buyTokenContract);
   setBuyTokenContract(tmpElement);
-// setSellAmount(buyAmount)
 }
 
 type Props = {

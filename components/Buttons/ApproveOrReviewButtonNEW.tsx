@@ -59,13 +59,13 @@ function isValidNotZero (value:any) {
 
 function ApproveOrReviewButton({
     token,
-    connectedWalletAddr,
+    connectedAccountAddr,
     sellBalance,
     disabled,
     setErrorMessage
   }: {
     token:any
-    connectedWalletAddr: Address;
+    connectedAccountAddr: Address;
     sellBalance: any;
     disabled?: boolean;
     // setErrorMessage:any;
@@ -80,7 +80,7 @@ function ApproveOrReviewButton({
     // console.debug("insufficientBalance:         :" + insufficientBalance);
     // console.debug("++++++++++++++++++++++++++++++++++++++++++++++");
     if (!insufficientBalance) {
-      // console.debug("connectedWalletAddr: " + connectedWalletAddr);
+      // console.debug("connectedAccountAddr: " + connectedAccountAddr);
       // console.debug("token.address      : " + token.address);
       // console.debug("sellBalance        : " + sellBalance);
       // 1. Read from erc20, does spender (0x Exchange Proxy) have allowance?
@@ -88,7 +88,7 @@ function ApproveOrReviewButton({
         address: token.address,
         abi: erc20Abi,
         functionName: "allowance",
-        args: [connectedWalletAddr, EXCHANGE_PROXY],
+        args: [connectedAccountAddr, EXCHANGE_PROXY],
         // onError(error) {
         //   console.error('***ERROR*** useReadContract Error', error.message)
         //   // alert(error.message)

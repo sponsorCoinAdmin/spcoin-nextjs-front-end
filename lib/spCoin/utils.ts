@@ -50,14 +50,14 @@ const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:b
 };
 
 
-const getTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
-  let td:any = fetchTokenDetails(connectedWalletAddr, chainId, tokenAddr)
+const getTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
+  let td:any = fetchTokenDetails(connectedAccountAddr, chainId, tokenAddr)
   if (td !== false)
     setTokenContract(td);
   return td
 }
 
-const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr: any) => {
+const fetchTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any) => {
   try {
     if (isAddress(tokenAddr)) {
       let retResponse:any = await getWagmiBalanceOfRec (tokenAddr)
@@ -81,13 +81,13 @@ const fetchTokenDetails = async(connectedWalletAddr:any, chainId:any, tokenAddr:
   return false
 }
 
-const updateBalance = async (connectedWalletAddr: Address|undefined|null, TokenContract: TokenContract, setBalance:any) => {
+const updateBalance = async (connectedAccountAddr: Address|undefined|null, TokenContract: TokenContract, setBalance:any) => {
   let success = true;
   let balance:string = "N/A";
   let errMsg = "N/A";
   let tokenAddr = TokenContract.address;
-  console.debug("updateBalance(wallet Address = " + connectedWalletAddr + " TokenContract = " + JSON.stringify(TokenContract,null,2) + ")");
-  if (connectedWalletAddr != null && connectedWalletAddr !== undefined)
+  console.debug("updateBalance(wallet Address = " + connectedAccountAddr + " TokenContract = " + JSON.stringify(TokenContract,null,2) + ")");
+  if (connectedAccountAddr != null && connectedAccountAddr !== undefined)
   {
     let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);
 

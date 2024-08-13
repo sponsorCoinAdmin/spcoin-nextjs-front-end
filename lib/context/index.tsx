@@ -33,7 +33,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
 
     exchangeContext = {
 
-        connectedWalletAddr: undefined,
+        connectedAccountAddr: undefined,
 
         network: defaultNetworkSettings.networkHeader,
 

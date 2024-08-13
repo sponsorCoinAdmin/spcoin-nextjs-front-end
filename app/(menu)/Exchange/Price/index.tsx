@@ -11,7 +11,6 @@ import {
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
-import { erc20Abi } from 'viem' 
 import { AccountRecord, TokenContract,  DISPLAY_STATE,  } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
@@ -48,8 +47,8 @@ export default function PriceView() {
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
 
-    exchangeContext.connectedWalletAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
-    const connectedWalletAddr = exchangeContext.connectedWalletAddr
+    exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
+    const connectedAccountAddr = exchangeContext.connectedAccountAddr
 
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
@@ -121,8 +120,7 @@ export default function PriceView() {
       priceTransaction += `sellToken=${sellTokenContract.address}`
       priceTransaction += `&buyToken=${buyTokenContract.address}`
       priceTransaction += `&sellAmount=${sellAmount?.toString()}\n`
-      // priceTransaction += `&buyAmount=${parsedBuyAmount}\n`
-      priceTransaction += `&connectedWalletAddr=${connectedWalletAddr}`
+      priceTransaction += `&connectedAccountAddr=${connectedAccountAddr}`
       priceTransaction += JSON.stringify(data, null, 2)
       return priceTransaction;
     }
@@ -140,7 +138,7 @@ export default function PriceView() {
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
           // slippagePercentage: slippage,
           // expectedSlippage: slippage,
-          connectedWalletAddr
+          connectedAccountAddr
         },
       ],
       fetcher,
@@ -156,15 +154,6 @@ export default function PriceView() {
           }
           else {
             let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
-            // let errMsg = `ERROR: apiCall => ${apiCall}\n`
-            // errMsg += `sellToken: ${sellTokenContract.address}\n`
-            // errMsg += `buyToken: ${buyTokenContract.address}\n`
-            // errMsg += `buyAmount: ${parsedBuyAmount}\n`
-            // errMsg += `connectedWalletAddr: ${connectedWalletAddr}\n`
-            // errMsg += JSON.stringify(data, null, 2)
- 
-            // throw {errCode: ERROR_0X_RESPONSE, errMsg: errMsg}
-            // alert(errMsg);
             console.log(errMsg);
           }
         },
@@ -181,34 +170,12 @@ export default function PriceView() {
       }
     );
 
-    const result = useReadContracts({ 
-      allowFailure: false, 
-      contracts: [ 
-        { 
-          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
-          abi: erc20Abi, 
-          functionName: 'balanceOf', 
-          args: ['0x4557B18E779944BFE9d78A672452331C186a9f48'], 
-        }, 
-        { 
-          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
-          abi: erc20Abi, 
-          functionName: 'decimals', 
-        }, 
-        { 
-          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
-          abi: erc20Abi, 
-          functionName: 'symbol', 
-        }, 
-      ] 
-    }) 
-
     try {
       return (
         <form autoComplete="off">
-          <SellTokenDialog connectedWalletAddr={connectedWalletAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
-          <BuyTokenDialog connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-          <ManageSponsorships connectedWalletAddr={connectedWalletAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+          <SellTokenDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
+          <BuyTokenDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+          <ManageSponsorships connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
           <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
           <ErrorDialog errMsg={errorMessage} />

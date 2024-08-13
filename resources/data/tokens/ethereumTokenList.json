@@ -105,6 +105,14 @@
     },
     {
         "chainId": 1,
+        "name": "TONCOIN",
+        "symbol": "TON",
+        "address": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
+        "decimals": 9,
+        "img": "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
+    },
+    {
+        "chainId": 1,
         "name": "USD Coin Test",
         "symbol": "USDC",
         "address": "0xdAC17F958D2ee523a2206206994597C13D831ec8",

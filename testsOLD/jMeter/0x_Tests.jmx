@@ -126,7 +126,7 @@
           <collectionProp name="Arguments.arguments"/>
         </elementProp>
         <stringProp name="HTTPSampler.domain">polygon.api.0x.org</stringProp>
-        <stringProp name="HTTPSampler.path">/swap/v1/price?sellToken=0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6&amp;buyToken=0xc2132D05D31c914a87C6611C10748AEb04B58e8F&amp;sellAmount=100000000&amp;connectedWalletAddr=0x5cFa5a6086154481E7081B5E8Ea4c31548F51Bb4&amp;feeRecipient=0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917&amp;buyTokenPercentageFee=0</stringProp>
+        <stringProp name="HTTPSampler.path">/swap/v1/price?sellToken=0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6&amp;buyToken=0xc2132D05D31c914a87C6611C10748AEb04B58e8F&amp;sellAmount=100000000&amp;connectedAccountAddr=0x5cFa5a6086154481E7081B5E8Ea4c31548F51Bb4&amp;feeRecipient=0x75A94931B81d81C7a62b76DC0FcFAC77FbE1e917&amp;buyTokenPercentageFee=0</stringProp>
         <stringProp name="HTTPSampler.method">GET</stringProp>
         <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
         <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
