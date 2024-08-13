@@ -185,15 +185,18 @@ export default function PriceView() {
                            sellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            setSellAmount={setSellAmount}
-                           disabled={false}
+                           disabled={!(tradeDirection === "sell")}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
                            buyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmount={setBuyAmount}
-                           disabled={false}
+                           disabled={!(tradeDirection === "buy")}
                            setDisplayState={setDisplayState} />          
-            <BuySellSwapButton sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} />
+            <BuySellSwapButton sellTokenContract={sellTokenContract}
+                               buyTokenContract={buyTokenContract} 
+                               setSellTokenContract={setSellTokenContract} 
+                               setBuyTokenContract={setBuyTokenContract} />
             <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
             {
               // <QuoteButton sendTransaction={sendTransaction}/>

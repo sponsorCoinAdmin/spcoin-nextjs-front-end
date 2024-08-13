@@ -9,7 +9,6 @@ type Props = {
     TokenContract: TokenContract, 
     id: string,
     disabled: boolean
-    // setSellAmount: (txt: string) => void|undefined,
   }
 
 const AssetSelect = ({TokenContract, id, disabled}:Props) => {

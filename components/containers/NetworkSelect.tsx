@@ -12,7 +12,6 @@ type Props = {
     networkElement: NetworkElement, 
     id: string,
     disabled: boolean
-    // setSellAmount: (txt: string) => void|undefined,
   }
 
 const NetworkSelect = ({networkElement, id, disabled}:Props) => {

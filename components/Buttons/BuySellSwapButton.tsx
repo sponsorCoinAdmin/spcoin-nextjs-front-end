@@ -7,9 +7,9 @@ function swapTokens(sellTokenContract:TokenContract,
   buyTokenContract:TokenContract,
   setSellTokenContract:any,
   setBuyTokenContract:any) {
-  let tmpElement: TokenContract = sellTokenContract;
-  setSellTokenContract(buyTokenContract);
-  setBuyTokenContract(tmpElement);
+  let tmpElement: TokenContract = buyTokenContract;
+  setBuyTokenContract(sellTokenContract);
+  setSellTokenContract(tmpElement);
 }
 
 type Props = {
@@ -19,8 +19,8 @@ type Props = {
   setBuyTokenContract:  (TokenContract: TokenContract) => void
 }
 
-const BuySellSwapButton = (
-  {sellTokenContract, 
+const BuySellSwapButton = ({
+  sellTokenContract, 
   buyTokenContract, 
   setSellTokenContract, 
   setBuyTokenContract} : Props) => {
