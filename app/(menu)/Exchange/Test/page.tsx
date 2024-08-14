@@ -18,6 +18,7 @@ import { stringifyBigInt } from '@/lib/spCoin/utils'
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
 const CHKN_ETHEREUM_CONTRACT:Address = '0xD55210Bb6898C021a19de1F58d27b71f095921Ee'
+const TON_ETHEREUM_CONTRACT:Address = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1'
 const NULL_CONTRACT                  = '0x0000000000000000000000000000000000000000';
 let ACTIVE_ACCOUNT: UseAccountReturnType<Config>;
 
@@ -28,7 +29,7 @@ function App() {
 
   useEffect(() => {
       switch(ACTIVE_ACCOUNT.chainId) {
-        case 1: setDefaultTokenContractAddress(CHKN_ETHEREUM_CONTRACT); break;
+        case 1: setDefaultTokenContractAddress(TON_ETHEREUM_CONTRACT); break;
         case 137: setDefaultTokenContractAddress(USDT_POLYGON_CONTRACT); break;
         default: setDefaultTokenContractAddress(NULL_CONTRACT); break;
     }

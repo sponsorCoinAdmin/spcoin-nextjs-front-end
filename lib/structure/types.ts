@@ -53,11 +53,9 @@ type NetworkElement = {
 
 type TradeData = {
   sellAmount:bigint;
-  sellDecimals:number;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:bigint;
-  buyDecimals:number;
   buyBalanceOf:bigint;
   buyFormattedBalance:string;
   tradeDirection:string;

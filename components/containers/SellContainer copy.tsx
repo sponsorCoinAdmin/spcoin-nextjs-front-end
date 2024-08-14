@@ -41,7 +41,6 @@ const SellContainer = ({activeAccount,
     const [formattedSellAmount, setFormattedSellAmount] = useState<string>("8");
 
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
-    exchangeContext.tradeData.sellDecimals = exchangeContext.sellTokenContract.decimals;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
  
@@ -55,11 +54,6 @@ const SellContainer = ({activeAccount,
       {
         setFormattedSellAmount(stringValue);
         const bigIntValue = parseUnits(stringValue, decimals)
-        console.debug(`setStringToBigIntStateValue:stringValue === bigIntValue = ${sellAmount === bigIntValue}\n
-          stringValue = ${stringValue}\n
-          decimals = ${decimals}\n
-          sellAmount = ${sellAmount}\n
-          bigIntValue = ${bigIntValue}`)
         setAmount(bigIntValue);
       }
     }

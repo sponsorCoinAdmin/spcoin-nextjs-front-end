@@ -49,17 +49,15 @@ export default function PriceView() {
 
 
     
-    const setSellTokenContract = (sellTokenContract:any) => {
+    const setSellTokenContract = (sellTokenContract:TokenContract) => {
       console.debug(`*****Setting SellTokenContract to ` + sellTokenContract);
       exchangeContext.tradeData.sellAmount = sellTokenContract.sellAmount;
-      exchangeContext.tradeData.sellDecimals = sellTokenContract.sellDecimals;
       setSellTokenContract2(sellTokenContract);
     }
 
-    const setBuyTokenContract = (buyTokenContract:any) => {
+    const setBuyTokenContract = (buyTokenContract:TokenContract) => {
       console.debug(`*****Setting BuyTokenContract to ` + buyTokenContract);
       exchangeContext.tradeData.buyAmount = buyTokenContract.buyAmount;
-      exchangeContext.tradeData.buyDecimals = buyTokenContract.buyDecimals;
       setBuyTokenContract2(buyTokenContract);
     }
 
@@ -92,7 +90,6 @@ export default function PriceView() {
       }
     }, [ACTIVE_ACCOUNT.chain]);
 
-// exchangeContext.sellTokenContract.decimals = sellDecimals
 
   // useEffect(() => {
   //   alert(`SellContainer:exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`)
@@ -109,18 +106,18 @@ export default function PriceView() {
     }, [buyAmount]);
 
     useEffect(() => {
-      console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
+      // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
       exchangeContext.displayState = displayState;
     },[displayState]);
 
     useEffect(() => {
-      console.debug('PRICE:useEffect slippage changed to  ' + slippage);
+      // console.debug('PRICE:useEffect slippage changed to  ' + slippage);
       exchangeContext.tradeData.slippage = slippage;
     }, [slippage]);
 
     useEffect(() => {
-      console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
+      // console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract]);
 
@@ -133,7 +130,7 @@ export default function PriceView() {
     }, [buyTokenContract]);
 
     useEffect(() => {
-      console.debug("PRICE:useEffect:recipientAccount changed to " + recipientAccount.name);
+      // console.debug("PRICE:useEffect:recipientAccount changed to " + recipientAccount.name);
       exchangeContext.recipientAccount = recipientAccount;
     }, [recipientAccount]);
 

@@ -26,20 +26,19 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount2
 
     const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("8");
     exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
-    exchangeContext.tradeData.buyDecimals = exchangeContext.buyTokenContract.decimals;
     exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
     exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
 
     const setBigIntStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
       decimals = decimals || 0;
       let stringValue = formatUnits(bigIntValue || 0n, decimals);
-      console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
+      // console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
       stringValue = getValidFormattedPrice(stringValue, decimals);
 
       if (stringValue !== "") {
         setFormattedBuyAmount(stringValue);
       }
-      console.debug(`setBigIntStateValue:getValidFormattedPrice(${stringValue}, ${decimals}) = ${stringValue});`)
+      // console.debug(`setBigIntStateValue:getValidFormattedPrice(${stringValue}, ${decimals}) = ${stringValue});`)
     }
 
     useEffect(() =>  {

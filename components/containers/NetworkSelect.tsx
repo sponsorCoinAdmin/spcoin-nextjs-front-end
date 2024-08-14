@@ -38,10 +38,10 @@ const NetworkSelect = ({networkElement, id, disabled}:Props) => {
     let selectId = id + "Select"
     useEffect(() => {
         if (disabled) {
-            console.debug(`disabled = ${disabled} hideElement(${selectId})`)
+            // console.debug(` ${disabled} hideElement(${selectId})`)
             hideElement(selectId)
         } else {
-            console.debug(`disabled = ${disabled} showElement(${selectId})`)
+            // console.debug(`disabled = ${disabled} showElement(${selectId})`)
             showElement(selectId)
         }
     },[]);

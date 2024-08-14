@@ -34,13 +34,11 @@ const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
      try {
       // console.debug(`EXCHANGE_BUTTON.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
       const sellAmount = exchangeContext.tradeData.sellAmount;
-      const sellDecimals = exchangeContext.sellTokenContract.decimals;
       const sellBalanceOf = exchangeContext.tradeData.sellBalanceOf;
       insufficientSellBalance = sellBalanceOf <  sellAmount
 
       // console.debug(`CustomConnectButton.insufficientSellBalance: sellBalanceOf = "${sellBalanceOf}"`);
       // console.debug(`sellAmount              = "${sellAmount}"`);
-      // console.debug(`sellDecimals            = "${sellDecimals}"`);
       // console.debug(`sellBalanceOf           = "${sellBalanceOf}"`);
       // console.debug(`insufficientSellBalance = "${insufficientSellBalance}"`);
 
