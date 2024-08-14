@@ -3,12 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import { ArrowDownOutlined } from "@ant-design/icons";
 import { TokenContract } from '@/lib/structure/types';
 import { exchangeContext } from '@/lib/context';
-import { stringifyBigInt } from '@/lib/spCoin/utils';
-
-const binIntDecimalShift = (value:bigint, decimalShift:number) => {
-
-}
-
+import { bigIntDecimalShift, stringifyBigInt } from '@/lib/spCoin/utils';
 
 function swapTokens(sellTokenContract:TokenContract,
   buyTokenContract:TokenContract,
@@ -17,20 +12,9 @@ function swapTokens(sellTokenContract:TokenContract,
   setAmount:(sellAmount:bigint) => void) {
     const tradeData=exchangeContext.tradeData;
     
-    let newSellAmount:bigint = tradeData.sellAmount;
     const decimalShift:number = (buyTokenContract.decimals || 0) - (sellTokenContract.decimals || 0)
-    const shiftOperator = BigInt(10**(Math.abs(decimalShift)))
-    if (decimalShift > 0)
-      newSellAmount = tradeData.sellAmount * shiftOperator;
-    else
-      if (decimalShift < 0)
-        newSellAmount = tradeData.sellAmount / shiftOperator;
+    let newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift)
 
-    // const newSellAmount = Math.round(1234.9725)
-
-    console.debug(`BEFORE sellTokenContract = ${stringifyBigInt(sellTokenContract)}\n`)
-    console.debug(`BEFORE buyTokenContract = ${stringifyBigInt(buyTokenContract)}\n`)
-    console.debug(`BEFORE swapTokens:tradeData = ${stringifyBigInt(tradeData)}\n`)
     const tmpTokenContract: TokenContract = buyTokenContract;
     setBuyTokenContract(sellTokenContract);
     setSellTokenContract(tmpTokenContract);
@@ -42,10 +26,7 @@ function swapTokens(sellTokenContract:TokenContract,
       newSellAmount=${newSellAmount}`)
 
     setAmount(newSellAmount);
-    console.debug(`AFTER swapTokens:sellTokenContract = ${stringifyBigInt(sellTokenContract)}\n`)
-    console.debug(`AFTER swapTokens:buyTokenContract = ${stringifyBigInt(buyTokenContract)}\n`)
-    console.debug(`AFTER swapTokens:tradeData = ${stringifyBigInt(tradeData)}\n`)
-  }
+}
 
 type Props = {
   sellTokenContract:TokenContract, 
