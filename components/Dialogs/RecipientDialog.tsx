@@ -54,7 +54,7 @@ export default function Dialog({ agentAccount, setRecipientElement }: any) {
         try {
             let chainId=1;
             if (isAddress(walletAddr)) {
-                let connectedWalletAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
+                let connectedAccountAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))

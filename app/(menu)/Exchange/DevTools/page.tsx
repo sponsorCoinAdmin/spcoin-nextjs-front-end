@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
-import { Config, useAccount, UseAccountReturnType, useDisconnect } from 'wagmi'
+import { Address } from 'viem'
+import { Config, useAccount, UseAccountReturnType } from 'wagmi'
 import ReadWagmiEcr20Fields from '@/components/ecr20/ReadWagmiEcr20Fields'
 import ReadWagmiEcr20RecordFields from '@/components/ecr20/ReadWagmiEcr20RecordFields'
 import ProviderConfigurationStatus from '@/components/ecr20/ProviderConfigurationStatus'
@@ -16,9 +16,9 @@ import ReadWagmiEcr20ContractTotalSupply from '@/components/ecr20/ReadWagmiEcr20
 import { stringifyBigInt } from '@/lib/spCoin/utils'
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
+const USDT_TON_CONTRACT:Address  = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1'
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
-const CHKN_ETHEREUM_CONTRACT:Address = '0xD55210Bb6898C021a19de1F58d27b71f095921Ee'
-const TON_ETHEREUM_CONTRACT:Address = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1'
+const CHKN_ETHEREUM_CONTRACT:Address = USDT_TON_CONTRACT
 const NULL_CONTRACT                  = '0x0000000000000000000000000000000000000000';
 let ACTIVE_ACCOUNT: UseAccountReturnType<Config>;
 
@@ -29,7 +29,7 @@ function App() {
 
   useEffect(() => {
       switch(ACTIVE_ACCOUNT.chainId) {
-        case 1: setDefaultTokenContractAddress(TON_ETHEREUM_CONTRACT); break;
+        case 1: setDefaultTokenContractAddress(CHKN_ETHEREUM_CONTRACT); break;
         case 137: setDefaultTokenContractAddress(USDT_POLYGON_CONTRACT); break;
         default: setDefaultTokenContractAddress(NULL_CONTRACT); break;
     }

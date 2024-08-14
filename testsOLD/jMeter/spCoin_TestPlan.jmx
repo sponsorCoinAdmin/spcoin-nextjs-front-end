@@ -1172,11 +1172,11 @@
             <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
             <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
               <collectionProp name="Arguments.arguments">
-                <elementProp name="connectedWalletAddr" elementType="HTTPArgument">
+                <elementProp name="connectedAccountAddr" elementType="HTTPArgument">
                   <boolProp name="HTTPArgument.always_encode">false</boolProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                   <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                  <stringProp name="Argument.name">connectedWalletAddr</stringProp>
+                  <stringProp name="Argument.name">connectedAccountAddr</stringProp>
                   <stringProp name="Argument.value">0x5cFa5a6086154481E7081B5E8Ea4c31548F51Bb4</stringProp>
                 </elementProp>
                 <elementProp name="feeRecipient" elementType="HTTPArgument">
@@ -1559,11 +1559,11 @@
                 <stringProp name="Argument.name">sellAmount</stringProp>
                 <stringProp name="Argument.value">1200000000</stringProp>
               </elementProp>
-              <elementProp name="connectedWalletAddr" elementType="HTTPArgument">
+              <elementProp name="connectedAccountAddr" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">connectedWalletAddr</stringProp>
+                <stringProp name="Argument.name">connectedAccountAddr</stringProp>
                 <stringProp name="Argument.value">0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b</stringProp>
               </elementProp>
             </collectionProp>
@@ -1648,11 +1648,11 @@
                 <stringProp name="Argument.name">sellAmount</stringProp>
                 <stringProp name="Argument.value">3000000</stringProp>
               </elementProp>
-              <elementProp name="connectedWalletAddr" elementType="HTTPArgument">
+              <elementProp name="connectedAccountAddr" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">connectedWalletAddr</stringProp>
+                <stringProp name="Argument.name">connectedAccountAddr</stringProp>
                 <stringProp name="Argument.value">0x858BDEe77B06F29A3113755F14Be4B23EE6D6e59</stringProp>
               </elementProp>
               <elementProp name="feeRecipient" elementType="HTTPArgument">

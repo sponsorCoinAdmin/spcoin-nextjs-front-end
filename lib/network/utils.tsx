@@ -27,9 +27,9 @@ const getNetworkName = (chainId:number) => {
 }
 
 function getAvatarImageURL(chainId:number|string) {
-  console.debug(`getAvatarImageURL:chainId = (${chainId})`)
+  // console.debug(`getAvatarImageURL:chainId = (${chainId})`)
   let imgURL:string = imgHome+chainId + imgType;
-  console.debug(`getAvatarImageURL:imgURL = (${imgURL})`)
+  // console.debug(`getAvatarImageURL:imgURL = (${imgURL})`)
   return imgURL
 }
 

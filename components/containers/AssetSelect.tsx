@@ -9,17 +9,16 @@ type Props = {
     TokenContract: TokenContract, 
     id: string,
     disabled: boolean
-    // setSellAmount: (txt: string) => void|undefined,
   }
 
 const AssetSelect = ({TokenContract, id, disabled}:Props) => {
     let selectId = id + "Select"
     useEffect(() => {
         if (disabled) {
-            console.debug(`disabled = ${disabled} hideElement(${selectId})`)
+            // console.debug(`disabled = ${disabled} hideElement(${selectId})`)
             hideElement(selectId)
         } else {
-            console.debug(`disabled = ${disabled} showElement(${selectId})`)
+            // console.debug(`disabled = ${disabled} showElement(${selectId})`)
             showElement(selectId)
         }
       },[]);

@@ -6,7 +6,7 @@ function Slippage({initialSlippage, setSlippageCallback}:any) {
 
   const [value, setValue] = useState("0.02");
   useEffect(() => {
-    console.log (`setting Initial slippage value`+ value)
+    // console.log (`setting Initial slippage value`+ value)
     setValue(initialSlippage)
   }, []);
 

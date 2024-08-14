@@ -4,18 +4,19 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { ExchangeContext, TokenContract } from '@/lib/structure/types';
-import { setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
+import { TokenContract } from '@/lib/structure/types';
+import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice } from '@/lib/spCoin/utils';
 import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { DISPLAY_STATE } from '@/lib/structure/types';
+import { formatUnits, parseUnits } from "ethers";
 
 type Props = {
   activeAccount:any,
-  sellAmount: string,
+  sellAmount: bigint,
   sellTokenContract: TokenContract, 
-  setSellAmount: any,
+  setSellAmount2: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled: boolean
 }
@@ -32,24 +33,38 @@ type Props = {
 const SellContainer = ({activeAccount,
                         sellAmount,
                         sellTokenContract,
-                        setSellAmount,
+                        setSellAmount2,
                         setDisplayState,
                         disabled} : Props) => {
 
   try {
+    const [formattedSellAmount, setFormattedSellAmount] = useState<string>("8");
+
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
-    {
-
-    }
+ 
     // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
-    let IsSpCoin = isSpCoin(sellTokenContract);
+    const IsSpCoin = isSpCoin(sellTokenContract);
+
+    const setStringToBigIntStateValue = (stringValue:string, decimals:number|undefined, setAmount: (txt:bigint) => void) => {
+      decimals = decimals || 0;
+      stringValue = getValidFormattedPrice(stringValue, decimals);
+      if (stringValue !== "")
+      {
+        setFormattedSellAmount(stringValue);
+        const bigIntValue = parseUnits(stringValue, decimals)
+        setAmount(bigIntValue);
+      }
+    }
+    
     return (
       <div className={styles.inputs}>
-        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={sellAmount}
-          onChange={(e) => { setValidPriceInput(e.target.value, sellTokenContract.decimals || 0, setSellAmount); }} />
-        <AssetSelect TokenContract={sellTokenContract} id={"sellTokenDialog"} disabled={disabled}></AssetSelect>
+        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
+          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, setSellAmount2); }}
+          onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
+          />
+        <AssetSelect TokenContract={sellTokenContract} id={"sellTokenDialog"} disabled={false}></AssetSelect>
         {/* <div className={styles["assetSelect"]}>
             <img alt={sellTokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(sellTokenContract,null,2))}/>
             {sellTokenContract.symbol}
@@ -72,7 +87,7 @@ const SellContainer = ({activeAccount,
       </div>
     );
   } catch (err:any) {
-    console.debug (`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
+    console.debug (`Sell Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
     // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
   }
 }

@@ -40,26 +40,38 @@ export default function PriceView() {
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
     const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
+    const [sellTokenContract, setSellTokenContract2] = useState<TokenContract>(exchangeContext.sellTokenContract);
+    const [buyTokenContract, setBuyTokenContract2] = useState<TokenContract>(exchangeContext.buyTokenContract);
     const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
     const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
 
-    let sellTokenContract:TokenContract = exchangeContext.sellTokenContract;
-    let buyTokenContract:TokenContract = exchangeContext.buyTokenContract;
+
     
     const setSellTokenContract = (sellTokenContract:TokenContract) => {
       console.debug(`*****Setting SellTokenContract to ` + sellTokenContract);
-      exchangeContext.sellTokenContract = sellTokenContract;
-      // setSellAmount(sellTokenContract.sellAmount);
-      sellTokenContract = sellTokenContract;
+      exchangeContext.tradeData.sellAmount = sellTokenContract.sellAmount;
+      setSellTokenContract2(sellTokenContract);
     }
 
     const setBuyTokenContract = (buyTokenContract:TokenContract) => {
       console.debug(`*****Setting BuyTokenContract to ` + buyTokenContract);
-      exchangeContext.buyTokenContract = buyTokenContract;
-      buyTokenContract = buyTokenContract;
+      exchangeContext.tradeData.buyAmount = buyTokenContract.buyAmount;
+      setBuyTokenContract2(buyTokenContract);
     }
+
+    const setSellAmount2 = (sellAmount:any) => {
+      console.debug(`*****Setting Sell Amount to ` + sellAmount);
+      setSellAmount(sellAmount);
+    }
+
+    const setBuyAmount2 = (buyAmount:any) => {
+      console.debug(`*****Setting Buy Amount to ` + buyAmount);
+      setBuyAmount2(buyAmount);
+    }
+
+
 
     exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
     const connectedAccountAddr = exchangeContext.connectedAccountAddr
@@ -163,7 +175,7 @@ export default function PriceView() {
 
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
-            setBuyAmount(data.buyAmount);
+            setBuyAmount2(data.buyAmount);
           }
           else {
             let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
@@ -176,7 +188,7 @@ export default function PriceView() {
             setErrorMessage,
             buyTokenContract,
             sellTokenContract,
-            setBuyAmount,
+            setBuyAmount2,
             setValidPriceInput
           );
         }
@@ -197,20 +209,19 @@ export default function PriceView() {
             <SellContainer activeAccount={ACTIVE_ACCOUNT}
                            sellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
-                           setSellAmount={setSellAmount}
+                           setSellAmount={setSellAmount2}
                            disabled={!(tradeDirection === "sell")}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
                            buyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
-                           setBuyAmount={setBuyAmount}
+                           setBuyAmount={setBuyAmount2}
                            disabled={!(tradeDirection === "buy")}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract}
                                buyTokenContract={buyTokenContract} 
                                setSellTokenContract={setSellTokenContract} 
-                               setBuyTokenContract={setBuyTokenContract}
-                               setAmount={setSellAmount} />
+                               setBuyTokenContract={setBuyTokenContract} />
             <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
             {
               // <QuoteButton sendTransaction={sendTransaction}/>

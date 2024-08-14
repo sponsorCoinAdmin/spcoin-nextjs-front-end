@@ -13,9 +13,9 @@ enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 interface PriceRequestParams {
   sellToken: Address|string;
   buyToken: Address|string;
-  buyAmount?: string;
-  sellAmount?: string;
-  connectedWalletAddr?: string;
+  buyAmount: string;
+  sellAmount: string;
+  connectedAccountAddr?: string;
 }
 
 type AccountRecord = {
@@ -53,11 +53,9 @@ type NetworkElement = {
 
 type TradeData = {
   sellAmount:bigint;
-  sellDecimals:number;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:bigint;
-  buyDecimals:number;
   buyBalanceOf:bigint;
   buyFormattedBalance:string;
   tradeDirection:string;
@@ -65,7 +63,7 @@ type TradeData = {
 }
 
 type ExchangeContext = {
-  connectedWalletAddr:any,
+  connectedAccountAddr:any,
   network: NetworkElement;
   recipientAccount: AccountRecord;
   agentAccount: AccountRecord;

@@ -9,11 +9,9 @@ import { useAccount, useChainId } from 'wagmi';
 const chainId:number = 1;
 const defaultInitialTradeData:TradeData = {
     sellAmount: 0n,
-    sellDecimals: 0,
     sellBalanceOf: 0n,
     sellFormattedBalance: '0',
     buyAmount: 0n,
-    buyDecimals: 0,
     buyBalanceOf: 0n,
     buyFormattedBalance: '0',
     tradeDirection: "sell",
@@ -33,7 +31,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
 
     exchangeContext = {
 
-        connectedWalletAddr: undefined,
+        connectedAccountAddr: undefined,
 
         network: defaultNetworkSettings.networkHeader,
 

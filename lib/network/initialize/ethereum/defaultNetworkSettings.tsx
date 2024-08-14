@@ -3,11 +3,11 @@ import {  TokenContract } from '../../../structure/types'
  const defaultSellToken: TokenContract = { 
   chainId: 1,
   address: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-  name: "Wrapped Bitcoin",
-  symbol: "WBTC",
-  decimals: 8,
+  name: "TONCOIN",
+  symbol: "TON",
+  decimals: 9,
   totalSupply: null,
-  img: "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+  img: "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
  };
 
  const defaultBuyToken: TokenContract = { 

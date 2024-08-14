@@ -9,18 +9,14 @@ type Props = {
   }
 
 const PriceButton = ({exchangeContext, tradeData}:Props) => {
-
-    function setErrorMessage(msg: Error): void {
-        throw new Error('Function not implemented.');
-    }
-  return (
-    <div>
-        {!exchangeContext.connectedWalletAddr ?
-            (<CustomConnectButton />) :
-            (<ExchangeButton  exchangeContext={exchangeContext} tradeData={tradeData} />)
-        }
-    </div>
-);
+    return (
+        <div>
+            {!exchangeContext.connectedAccountAddr ?
+                (<CustomConnectButton />) :
+                (<ExchangeButton  exchangeContext={exchangeContext} tradeData={tradeData} />)
+            }
+        </div>
+    );
 }
 
 export default PriceButton;

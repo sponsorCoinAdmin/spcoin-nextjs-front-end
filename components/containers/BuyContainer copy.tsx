@@ -15,12 +15,12 @@ type Props = {
   activeAccount: any,
   buyAmount: bigint,
   buyTokenContract: TokenContract, 
-  setBuyAmount: any,
+  setBuyAmount2: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled:boolean
 }
 
-const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
+const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount2, setDisplayState, disabled} : Props) => {
 
   try {
 
@@ -33,13 +33,12 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
       decimals = decimals || 0;
       let stringValue = formatUnits(bigIntValue || 0n, decimals);
       // console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
-      // const OLD_stringValue = stringValue;
       stringValue = getValidFormattedPrice(stringValue, decimals);
 
       if (stringValue !== "") {
         setFormattedBuyAmount(stringValue);
       }
-      // console.debug(`setBigIntStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
+      // console.debug(`setBigIntStateValue:getValidFormattedPrice(${stringValue}, ${decimals}) = ${stringValue});`)
     }
 
     useEffect(() =>  {
@@ -56,7 +55,7 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
     return (
       <div className={styles.inputs}>
        <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
-          // onChange={(e) => { setStringToBigIntStateValue(e.target.value, buyTokenContract.decimals, setBuyAmount); }}
+          // onChange={(e) => { setStringToBigIntStateValue(e.target.value, buyTokenContract.decimals, setBuyAmount2); }}
           onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
           />
 

@@ -9,10 +9,8 @@ const ERROR_0X_RESPONSE = 500;
 
 const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   const { sellAmount, buyAmount } = params;
-  console.debug("fetcher 1")
 
   if (!sellAmount && !buyAmount) return;
-  console.debug("fetcher 2")
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
     throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
   }
