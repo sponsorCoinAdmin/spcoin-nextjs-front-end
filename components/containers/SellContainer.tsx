@@ -14,7 +14,6 @@ import { formatUnits, parseUnits } from "ethers";
 
 type Props = {
   activeAccount:any,
-//OLD sellAmount: string,
   sellAmount: bigint,
   sellTokenContract: TokenContract, 
   setSellAmount: any,
@@ -56,7 +55,7 @@ const SellContainer = ({activeAccount,
       {
         setFormattedSellAmount(stringValue);
         const bigIntValue = parseUnits(stringValue, decimals)
-        console.log(`stringValue === bigIntValue = ${sellAmount === bigIntValue}\n
+        console.debug(`setStringToBigIntStateValue:stringValue === bigIntValue = ${sellAmount === bigIntValue}\n
           stringValue = ${stringValue}\n
           decimals = ${decimals}\n
           sellAmount = ${sellAmount}\n
@@ -67,7 +66,7 @@ const SellContainer = ({activeAccount,
     
     return (
       <div className={styles.inputs}>
-        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={false} value={formattedSellAmount}
+        <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
           onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, setSellAmount); }}
           onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
           />

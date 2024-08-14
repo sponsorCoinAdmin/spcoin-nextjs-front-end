@@ -35,17 +35,41 @@ export default function PriceView() {
 
   try {
     const [price, setPrice] = useState<PriceResponse | undefined>();
-    const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
-    const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
+    const [sellAmount, setSellAmount2] = useState<bigint>(exchangeContext.tradeData.sellAmount);
+    const [buyAmount, setBuyAmount2] = useState<bigint>(exchangeContext.tradeData.buyAmount);
     const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeData.tradeDirection);
     const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
     const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
-    const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
-    const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+    const [sellTokenContract, setSellTokenContract2] = useState<TokenContract>(exchangeContext.sellTokenContract);
+    const [buyTokenContract, setBuyTokenContract2] = useState<TokenContract>(exchangeContext.buyTokenContract);
     const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
     const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const ACTIVE_ACCOUNT = useAccount()
+
+
+    
+    const setSellTokenContract = (sellTokenContract:any) => {
+      console.debug(`*****Setting SellTokenContract to ` + sellTokenContract);
+      setSellTokenContract2(sellTokenContract);
+    }
+
+    const setBuyTokenContract = (buyTokenContract:any) => {
+      console.debug(`*****Setting BuyTokenContract to ` + buyTokenContract);
+      setBuyTokenContract2(sellTokenContract);
+    }
+
+    const setSellAmount = (sellAmount:any) => {
+      console.debug(`*****Setting Sell Amount to ` + sellAmount);
+      setSellAmount2(sellAmount);
+    }
+
+    const setBuyAmount = (buyAmount:any) => {
+      console.debug(`*****Setting Buy Amount to ` + buyAmount);
+      setBuyAmount2(sellAmount);
+    }
+
+
 
     exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
     const connectedAccountAddr = exchangeContext.connectedAccountAddr
