@@ -80,8 +80,8 @@ export default function QuoteView({
   // fetch price here
   const [chainId, setChainId] = useState(exchangeContext.network.chainId);
   const [network, setNetwork] = useState(exchangeContext.network.name);
-  const [sellAmount, setSellAmount] = useState<string>(exchangeContext.tradeData.sellAmount);
-  const [buyAmount, setBuyAmount] = useState<string>(exchangeContext.tradeData.buyAmount);
+  const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
   const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
@@ -278,7 +278,7 @@ export default function QuoteView({
         <QuoteButton sendTransaction={sendTransaction}/>
         <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
         <SponsorRateConfig setDisplayState={setDisplayState}/>
-        <AffiliateFee price={price} sellTokenContract={sellTokenContract} buyTokenContract= {buyTokenContract} />
+        <AffiliateFee price={price} buyTokenContract= {buyTokenContract} />
       </div>
       <FeeDisclosure/>
       <IsLoading isLoadingPrice={isLoadingPrice} />

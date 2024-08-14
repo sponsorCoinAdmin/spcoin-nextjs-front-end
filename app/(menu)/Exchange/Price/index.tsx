@@ -51,12 +51,16 @@ export default function PriceView() {
     
     const setSellTokenContract = (sellTokenContract:any) => {
       console.debug(`*****Setting SellTokenContract to ` + sellTokenContract);
+      exchangeContext.tradeData.sellAmount = sellTokenContract.sellAmount;
+      exchangeContext.tradeData.sellDecimals = sellTokenContract.sellDecimals;
       setSellTokenContract2(sellTokenContract);
     }
 
     const setBuyTokenContract = (buyTokenContract:any) => {
       console.debug(`*****Setting BuyTokenContract to ` + buyTokenContract);
-      setBuyTokenContract2(sellTokenContract);
+      exchangeContext.tradeData.buyAmount = buyTokenContract.buyAmount;
+      exchangeContext.tradeData.buyDecimals = buyTokenContract.buyDecimals;
+      setBuyTokenContract2(buyTokenContract);
     }
 
     const setSellAmount = (sellAmount:any) => {
@@ -66,7 +70,7 @@ export default function PriceView() {
 
     const setBuyAmount = (buyAmount:any) => {
       console.debug(`*****Setting Buy Amount to ` + buyAmount);
-      setBuyAmount2(sellAmount);
+      setBuyAmount2(buyAmount);
     }
 
 

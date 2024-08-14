@@ -70,7 +70,7 @@ export default function PriceView() {
 
     const setBuyAmount2 = (buyAmount:any) => {
       console.debug(`*****Setting Buy Amount to ` + buyAmount);
-      setBuyAmount(sellAmount);
+      setBuyAmount2(buyAmount);
     }
 
 
@@ -212,13 +212,13 @@ export default function PriceView() {
             <SellContainer activeAccount={ACTIVE_ACCOUNT}
                            sellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
-                           setSellAmount2={setSellAmount2}
+                           setSellAmount={setSellAmount2}
                            disabled={!(tradeDirection === "sell")}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
                            buyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
-                           setBuyAmount2={setBuyAmount2}
+                           setBuyAmount={setBuyAmount2}
                            disabled={!(tradeDirection === "buy")}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapButton sellTokenContract={sellTokenContract}

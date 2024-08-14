@@ -34,12 +34,13 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
       decimals = decimals || 0;
       let stringValue = formatUnits(bigIntValue || 0n, decimals);
       console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
+const JUNK_stringValue = stringValue;
       stringValue = getValidFormattedPrice(stringValue, decimals);
 
       if (stringValue !== "") {
         setFormattedBuyAmount(stringValue);
       }
-      console.debug(`setBigIntStateValue:getValidFormattedPrice(${stringValue}, ${decimals}) = ${stringValue});`)
+      console.debug(`setBigIntStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
     }
 
     useEffect(() =>  {
