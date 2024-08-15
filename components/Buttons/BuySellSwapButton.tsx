@@ -13,19 +13,19 @@ function swapTokens(sellTokenContract:TokenContract,
     const tradeData=exchangeContext.tradeData;
     
     const decimalShift:number = (buyTokenContract.decimals || 0) - (sellTokenContract.decimals || 0)
-    let newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift)
+    // let newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift)
 
     const tmpTokenContract: TokenContract = buyTokenContract;
     setBuyTokenContract(sellTokenContract);
     setSellTokenContract(tmpTokenContract);
     
-    console.debug(`tradeData.sellAmount=${tradeData.sellAmount}\n
-      sellTokenContract.decimals=${sellTokenContract.decimals}\n
-      buyTokenContract.decimals=${buyTokenContract.decimals}\n
-      decimalShift=${decimalShift}\n
-      newSellAmount=${newSellAmount}`)
+    // console.debug(`tradeData.sellAmount=${tradeData.sellAmount}\n
+    //   sellTokenContract.decimals=${sellTokenContract.decimals}\n
+    //   buyTokenContract.decimals=${buyTokenContract.decimals}\n
+    //   decimalShift=${decimalShift}\n
+    //   newSellAmount=${newSellAmount}`)
 
-    setAmount(newSellAmount);
+    // setAmount(newSellAmount);
 }
 
 type Props = {

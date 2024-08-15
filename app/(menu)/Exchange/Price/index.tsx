@@ -43,14 +43,14 @@ export default function PriceView() {
     const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
     const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+    const [sellTokenContract, setSellTokenContract2] = useState<TokenContract>(exchangeContext.sellTokenContract);
+    const [buyTokenContract, setBuyTokenContract2] = useState<TokenContract>(exchangeContext.buyTokenContract);
     const ACTIVE_ACCOUNT = useAccount()
 
-    let sellTokenContract:TokenContract = exchangeContext.sellTokenContract;
-    let buyTokenContract:TokenContract = exchangeContext.buyTokenContract;
-    
     const setSellTokenContract = (sellTokenContract:TokenContract) => {
       console.debug(`*****Setting SellTokenContract to ` + sellTokenContract);
       exchangeContext.sellTokenContract = sellTokenContract;
+      setSellTokenContract2(sellTokenContract)
       // setSellAmount(sellTokenContract.sellAmount);
       sellTokenContract = sellTokenContract;
     }
@@ -58,7 +58,8 @@ export default function PriceView() {
     const setBuyTokenContract = (buyTokenContract:TokenContract) => {
       console.debug(`*****Setting BuyTokenContract to ` + buyTokenContract);
       exchangeContext.buyTokenContract = buyTokenContract;
-      buyTokenContract = buyTokenContract;
+      setBuyTokenContract2(buyTokenContract)
+      // buyTokenContract = buyTokenContract;
     }
 
     exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
