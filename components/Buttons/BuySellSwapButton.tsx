@@ -13,7 +13,7 @@ function swapTokens(sellTokenContract:TokenContract,
     const tradeData=exchangeContext.tradeData;
     
     const decimalShift:number = (buyTokenContract.decimals || 0) - (sellTokenContract.decimals || 0)
-    // let newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift)
+    let newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift)
 
     const tmpTokenContract: TokenContract = buyTokenContract;
     setBuyTokenContract(sellTokenContract);
