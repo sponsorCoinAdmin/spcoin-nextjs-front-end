@@ -4,8 +4,8 @@ import {
   openDialog,
   AgentDialog,
   RecipientDialog,
-  SellTokenDialog,
-  BuyTokenDialog,
+  SellTokenSelectDialog,
+  BuyTokenSelectDialog,
   ErrorDialog
 } from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
@@ -18,9 +18,6 @@ import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
-import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
-import SellContainer from '@/components/containers/SellContainer';
-import BuyContainer from '@/components/containers/BuyContainer';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import AffiliateFee from '@/components/containers/AffiliateFee';
@@ -48,13 +45,13 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setDisplayPanels, showElement } from '@/lib/spCoin/guiControl';
 import ErrorDialog from '@/components/Dialogs/ErrorDialog';
-import { AgentDialog, BuyTokenDialog, RecipientDialog, SellTokenDialog, openDialog } from '@/components/Dialogs/Dialogs';
+import { AgentDialog, BuyTokenSelectDialog, RecipientDialog, SellTokenSelectDialog, openDialog } from '@/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import IsLoading from '@/components/containers/IsLoading';
 import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, AccountRecord } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
-import BuySellSwapButton from '@/components/Buttons/BuySellSwapButton';
+import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
 */
 
@@ -84,11 +81,11 @@ export default function QuoteView({
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
-  const [tradeDirection, setTradeDirection] = useState(exchangeContext.tradeDirection);
+  const [exchangeContext.tradeData.transactionType, setexchangeContext.tradeData.transactionType] = useState(exchangeContext.tradeData..transactionType);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+  const [sellTokenContract, updateSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState<AccountRecord>(exchangeContext.agentAccount);
@@ -163,7 +160,7 @@ export default function QuoteView({
   console.debug(`********* price.buyTokenAddress: ${price.buyTokenAddress}`)
 
   console.debug(`Executing Quote:setTokenDetails (${price.sellTokenAddress}, ${sellTokenContract})`)
-  // setTokenDetails (price.sellTokenAddress, setSellTokenContract)
+  // setTokenDetails (price.sellTokenAddress, updateSellTokenContract)
 
   // console.debug("price =\n" + JSON.stringify(price,null,2))
   // const sellTokenInfo =
@@ -240,8 +237,8 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <SellTokenDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
-      <BuyTokenDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+      <SellTokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
+      <BuyTokenSelectDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
       <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
       <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <ErrorDialog errMsg={errorMessage} />
@@ -261,7 +258,7 @@ export default function QuoteView({
                            setBuyAmount={setBuyAmount}
                            disabled={false}
                            setDisplayState={setDisplayState} />           */}
-        {/* <BuySellSwapButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} setSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} /> */}
+        {/* <BuySellSwapArrowButton  sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} updateSellTokenContract={setSellTokenContract} setBuyTokenContract={setBuyTokenContract} /> */}
         {/* <PriceButton connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} buyTokenContract={buyTokenContract} sellBalance={sellBalance} disabled={disabled} slippage={slippage} /> */}
         <button
   // disabled={!Boolean(sendTransaction)} 

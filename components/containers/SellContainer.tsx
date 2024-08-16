@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenContract } from '@/lib/structure/types';
+import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice } from '@/lib/spCoin/utils';
 import { formatDecimals, getERC20WagmiClientBalanceOf, getERC20WagmiClientDecimals, getFormattedClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
@@ -47,28 +47,32 @@ const SellContainer = ({activeAccount,
     // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     const IsSpCoin = isSpCoin(sellTokenContract);
 
-    const setStringToBigIntStateValue = (stringValue:string, decimals:number|undefined, setSellAmount: (txt:bigint) => void) => {
+    const setStringToBigIntStateValue = (stringValue:string, 
+                                        decimals:number|undefined,
+                                        transactionType: TRANSACTION_TYPE,
+                                        setInputAmount: (txt:bigint) => void) => {
       decimals = decimals || 0;
       stringValue = getValidFormattedPrice(stringValue, decimals);
       if (stringValue !== "")
       {
+        exchangeContext.tradeData.transactionType = transactionType;
         setFormattedSellAmount(stringValue);
         const bigIntValue = parseUnits(stringValue, decimals)
-        setSellAmount(bigIntValue);
+        setInputAmount(bigIntValue);
       }
     }
     
     return (
       <div className={styles.inputs}>
         <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
-          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, setSellAmount); }}
+          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, TRANSACTION_TYPE.SELL, setSellAmount); }}
           onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
           />
-        <AssetSelect TokenContract={sellTokenContract} id={"sellTokenDialog"} disabled={false}></AssetSelect>
+        <AssetSelect TokenContract={sellTokenContract} id={"SellTokenSelectDialog"} disabled={false}></AssetSelect>
         {/* <div className={styles["assetSelect"]}>
             <img alt={sellTokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={sellTokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(sellTokenContract,null,2))}/>
             {sellTokenContract.symbol}
-            <DownOutlined id="downOutlinedSell2" onClick={() => openDialog("#sellTokenDialog")}/>
+            <DownOutlined id="downOutlinedSell2" onClick={() => openDialog("#SellTokenSelectDialog")}/>
         </div> */}
         <div className={styles["buySell"]}>
           You Pay

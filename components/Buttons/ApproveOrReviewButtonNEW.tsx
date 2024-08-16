@@ -22,7 +22,6 @@ function isBigInt(value:any) {
 }
 
 function isNumber(value:any) {
-  // console.debug("isNumber:Value " + value)
   return !isNaN(value)
 }
 

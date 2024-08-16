@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react';
 import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, ExchangeContext, TradeData } from '@/lib/structure/types';
+import { DISPLAY_STATE, ExchangeContext, TradeData, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
 import { useAccount, useChainId } from 'wagmi';
 // import { isSpCoin } from '@/lib/spCoin/utils';
@@ -14,7 +14,7 @@ const defaultInitialTradeData:TradeData = {
     buyAmount: 0n,
     buyBalanceOf: 0n,
     buyFormattedBalance: '0',
-    tradeDirection: "sell",
+    transactionType: TRANSACTION_TYPE.OFF,
     slippage: "0.02"
 };
 let exchangeContext:ExchangeContext;

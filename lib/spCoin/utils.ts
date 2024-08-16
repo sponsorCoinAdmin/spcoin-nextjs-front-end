@@ -122,14 +122,9 @@ const exchangeContextDump = () => {
 }
 
 const bigIntDecimalShift = (value:bigint, decimalShift:number) => {
-  const shiftOperator = BigInt(10**(Math.abs(decimalShift)))
-  let shiftedBigInt = 0n;
-  if (decimalShift > 0)
-    shiftedBigInt = value * shiftOperator;
-  else
-    if (decimalShift < 0)
-      shiftedBigInt = value / shiftOperator;
-  return shiftedBigInt;
+  return  decimalShift === 0 ? value:
+          decimalShift >= 0 ? value *= BigInt(10**(Math.abs(decimalShift))):
+          value /= BigInt(10**(Math.abs(decimalShift)));
 }
 
 export { 

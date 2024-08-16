@@ -1,42 +1,42 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
+import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
 import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
-import { getTokenDetails } from '@/lib/spCoin/utils';
+import { getTokenDetails, fetchTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 
-const TITLE_NAME = "Select a token to buy";
-const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
+const TITLE_NAME = "Select a token to sell";
+const INPUT_PLACE_HOLDER = 'Type or paste token to sell address';
 const ELEMENT_DETAILS = "This container allows for the entry selection of a valid token address.\n"+
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ connectedAccountAddr, sellTokenContract, callBackSetter }: any) {
+export default function Dialog({ connectedAccountAddr, buyTokenContract, callBackSetter }: any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = sellTokenContract.chainId;
+    const chainId = buyTokenContract.chainId;
     if (connectedAccountAddr === undefined) 
         connectedAccountAddr = BURN_ADDRESS
 
     useEffect(() => {
         closeDialog();
-    }, []);
+      }, []);
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('buySelectGroup') : showElement('buySelectGroup')
+        tokenInput === "" ? hideElement('sellSelectGroup') : showElement('sellSelectGroup')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput, setTokenContract)
         }
@@ -49,7 +49,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
         if (TokenContract?.symbol != undefined)
             setTokenSelect(TokenContract.symbol);
     }, [TokenContract]);
-    
+
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
@@ -59,42 +59,34 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
-        try {
-            if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
-                alert("*** ERROR *** Invalid Buy Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
-                return false
-            }
-            alert("displayElementDetail\n" + JSON.stringify(TokenContract, null, 2) + "\n\n" + ELEMENT_DETAILS)
-            // Validate Token through wagmi get balance call
-            await getWagmiBalanceOfRec (tokenAddr)
-            return true
-        } catch (e:any) {
-            alert("BUY_ERROR:displayElementDetail e.message" + e.message)
+         if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
+            alert("SELL_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
+            return false
         }
-        return false
+        alert("displayElementDetail\n" + JSON.stringify(TokenContract, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        return true
     }
 
-    const getSelectedListElement = async (listElement: TokenContract | undefined) => {
+    const getSelectedListElement = (listElement: TokenContract | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         try {
             if (listElement === undefined) {
-                alert("Undefined Token address")
+                alert("Invalid Token address : " + tokenInput)
                 return false;
             }
             if (!isAddress(listElement.address)) {
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === sellTokenContract.address) {
-                alert("Buy Token cannot be the same as Sell Token("+sellTokenContract.symbol+")")
-                console.log("Buy Token cannot be the same as Sell Token("+sellTokenContract.symbol+")");
+            if (listElement.address === buyTokenContract.address) {
+                alert("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")")
+                console.log("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")");
                 return false;
             }
-            await getWagmiBalanceOfRec (sellTokenContract.address)
             callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
-            alert("BUY_ERROR:getSelectedListElement e.message" + e.message)
+            alert("SELL_ERROR:getSelectedListElement e.message" + e.message)
         }
         return false
     }
@@ -102,12 +94,12 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
     const closeDialog = () => {
         setTokenInput("")
         setTokenSelect("");
-        hideElement('buySelectGroup')
+        hideElement('sellSelectGroup')
         dialogRef.current?.close()
     }
 
     const Dialog = (
-        <dialog id="buyTokenDialog" ref={dialogRef} className={styles.modalContainer}>
+        <dialog id="SellTokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
@@ -123,7 +115,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                         &nbsp;
                     </div>
                 </div>
-                    <div id="buySelectGroup" className={styles.modalInputSelect}>
+                    <div id="sellSelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />

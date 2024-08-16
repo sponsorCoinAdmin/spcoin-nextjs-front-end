@@ -1,9 +1,9 @@
 import AgentDialog from './AgentDialog';
-import BuyTokenDialog from './BuyTokenDialog';
+import BuyTokenSelectDialog from './BuyTokenSelectDialog';
 import Config from './ConfigDialog';
 import ErrorDialog from './ErrorDialog';
 import RecipientDialog from './RecipientDialog';
-import SellTokenDialog from './SellTokenDialog';
+import SellTokenSelectDialog from './SellTokenSelectDialog';
 
 // --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
 const openDialog = (dialogType:string) => {
@@ -16,7 +16,7 @@ export {
     AgentDialog,
     Config,
     RecipientDialog, 
-    SellTokenDialog,
-    BuyTokenDialog,
+    SellTokenSelectDialog,
+    BuyTokenSelectDialog,
     ErrorDialog
 }
