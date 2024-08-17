@@ -1,4 +1,3 @@
-import { TRANSACTION_TYPE } from '@/lib/structure/types';
 import styles from '@/styles/Exchange.module.css';
 import { ArrowDownOutlined } from "@ant-design/icons";
 

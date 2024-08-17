@@ -45,6 +45,7 @@ export default function PriceView() {
     const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
     const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
     const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+    const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
     useEffect(() => {
       console.debug(`*****Setting SellTokenContract to ` + stringifyBigInt(sellTokenContract));
       if (exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.NEW_SELL_CONTRACT)
@@ -72,7 +73,43 @@ export default function PriceView() {
       setSellTokenContract(tmpTokenContract);
       setBuyTokenContract(sellTokenContract);
     }
-    
+
+    function updateTradeTransaction(newTransactionContract: TokenContract, transactionType: TRANSACTION_TYPE) {
+      let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
+      msg += `newTransactionContract.name =${newTransactionContract.name}`
+      msg += `newTransactionContract.decimals =${newTransactionContract.decimals}`
+      msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}`
+  
+      switch (transactionType) {
+        case TRANSACTION_TYPE.NEW_BUY_CONTRACT:
+          msg += `buyTokenContract.name =${buyTokenContract.name}`
+          msg += `buyTokenContract.decimals =${buyTokenContract.decimals}`
+          msg += `buyTokenContract = ${stringifyBigInt(sellTokenContract)}`
+          setBuyTokenContract(newTransactionContract);
+        break;
+        case TRANSACTION_TYPE.NEW_SELL_CONTRACT:
+          msg += `sellTokenContract.name =${sellTokenContract.name}`
+          msg += `sellTokenContract.decimals =${sellTokenContract.decimals}`
+          msg += `sellTokenContract = ${stringifyBigInt(sellTokenContract)}`
+          msg += `sellAmount=${sellAmount}`
+          const decimalShift:number = (newTransactionContract.decimals || 0) - (sellTokenContract.decimals || 0);
+          const newSellAmount = bigIntDecimalShift(sellAmount , decimalShift);
+          setSellTokenContract(newTransactionContract);
+          setSellAmount(newSellAmount);
+          msg += `decimalShift=${decimalShift}`
+          msg += `newSellAmount=${newSellAmount}`
+        break;
+        case TRANSACTION_TYPE.SWAP:
+        break;
+        case TRANSACTION_TYPE.BUY:
+        break;
+        case TRANSACTION_TYPE.SELL:
+        break;
+      }
+      msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
+      alert(msg);
+    }
+
     useEffect(() => {
       console.debug(`*****Setting BuyTokenContract to ` + stringifyBigInt(buyTokenContract));
       exchangeContext.buyTokenContract = buyTokenContract;

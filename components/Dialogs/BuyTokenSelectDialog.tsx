@@ -92,7 +92,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                 return false;
             }
             await getWagmiBalanceOfRec (sellTokenContract.address)
-            callBackSetter(listElement)
+            callBackSetter(listElement, TRANSACTION_TYPE.NEW_BUY_CONTRACT)
             closeDialog()
         } catch (e:any) {
             alert("BUY_ERROR:getSelectedListElement e.message" + e.message)

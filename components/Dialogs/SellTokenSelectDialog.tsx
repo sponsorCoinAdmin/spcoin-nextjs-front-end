@@ -83,7 +83,7 @@ export default function Dialog({ connectedAccountAddr, buyTokenContract, callBac
                 console.log("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")");
                 return false;
             }
-            callBackSetter(listElement)
+            callBackSetter(listElement, TRANSACTION_TYPE.NEW_SELL_CONTRACT)
             closeDialog()
         } catch (e:any) {
             alert("SELL_ERROR:getSelectedListElement e.message" + e.message)
