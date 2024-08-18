@@ -90,7 +90,7 @@ export default function PriceView() {
         break;
       }
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-      alert(msg);
+      console.debug(msg);
     }
 
     useEffect(() => {
