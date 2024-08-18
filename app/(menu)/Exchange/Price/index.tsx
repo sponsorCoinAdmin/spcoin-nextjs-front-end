@@ -51,15 +51,6 @@ export default function PriceView() {
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract] );
 
-    function swapSellSellTokens() {
-      alert(`swapSellSellTokens:TRANSACTION_TYPE = ${exchangeContext.tradeData.transactionType}`)
-      const prevSellContract:TokenContract = exchangeContext.sellTokenContract;
-      const tradeData=exchangeContext.tradeData;
-      const decimalShift:number = (sellTokenContract.decimals || 0) - (prevSellContract.decimals || 0);
-      const newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift);
-      setSellAmount(newSellAmount);
-    }
-    
     function swapBuySellTokens() {
       const tmpTokenContract: TokenContract = buyTokenContract;
       const tradeData=exchangeContext.tradeData;
@@ -186,8 +177,8 @@ export default function PriceView() {
         {
           sellToken: sellTokenContract.address,
           buyToken: buyTokenContract.address,
-          sellAmount: (exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
-          buyAmount: (exchangeContext.tradeData.transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
+          sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
+          buyAmount: (transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
           // slippagePercentage: slippage,
           // expectedSlippage: slippage,

@@ -14,7 +14,7 @@ const defaultInitialTradeData:TradeData = {
     buyAmount: 0n,
     buyBalanceOf: 0n,
     buyFormattedBalance: '0',
-    transactionType: TRANSACTION_TYPE.OFF,
+    transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
     slippage: "0.02"
 };
 let exchangeContext:ExchangeContext;
