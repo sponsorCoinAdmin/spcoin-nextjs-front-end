@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 import { exchangeContext } from "@/lib/context";
 
-
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, ExchangeContext } from '@/lib/structure/types';
@@ -21,36 +20,35 @@ type Props = {
 }
 
 const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount, setDisplayState, disabled} : Props) => {
+  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
+  useEffect(() =>  {
+    const decimals = buyTokenContract.decimals;
+    setBigIntStateValue(buyAmount, decimals)
+
+    // alert(`BuyContainer:useEffect[]:}\n
+    //   buyAmount = ${buyAmount}\n
+    //   decimals = ${decimals}\n
+    //   formattedBuyAmount = ${formattedBuyAmount}}`)
+  }, [buyAmount]);
+
+  const setBigIntStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
+    decimals = decimals || 0;
+    let stringValue = formatUnits(bigIntValue || 0n, decimals);
+    // console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
+    // const OLD_stringValue = stringValue;
+    stringValue = getValidFormattedPrice(stringValue, decimals);
+
+    if (stringValue !== "") {
+      setFormattedBuyAmount(stringValue);
+    }
+    // console.debug(`setBigIntStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
+  }
+
 
   try {
-
-    const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("8");
     exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
     exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
     exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
-
-    const setBigIntStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
-      decimals = decimals || 0;
-      let stringValue = formatUnits(bigIntValue || 0n, decimals);
-      // console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
-      // const OLD_stringValue = stringValue;
-      stringValue = getValidFormattedPrice(stringValue, decimals);
-
-      if (stringValue !== "") {
-        setFormattedBuyAmount(stringValue);
-      }
-      // console.debug(`setBigIntStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
-    }
-
-    useEffect(() =>  {
-      const decimals = buyTokenContract.decimals;
-      setBigIntStateValue(buyAmount, decimals)
-
-      // alert(`BuyContainer:useEffect[]:}\n
-      //   buyAmount = ${buyAmount}\n
-      //   decimals = ${decimals}\n
-      //   formattedBuyAmount = ${formattedBuyAmount}}`)
-    }, [buyAmount]);
 
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
@@ -72,7 +70,7 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
     );
   } catch (err:any) {
     console.log(`Buy Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
-    // alert(`Buy Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
+    alert(`Buy Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
   }
 }
 
