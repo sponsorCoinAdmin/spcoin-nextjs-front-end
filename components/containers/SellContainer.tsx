@@ -65,7 +65,7 @@ const SellContainer = ({activeAccount,
     return (
       <div className={styles.inputs}>
         <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
-          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, TRANSACTION_TYPE.SELL, setSellAmount); }}
+          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, TRANSACTION_TYPE.SELL_EXACT_OUT, setSellAmount); }}
           onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
           />
         <AssetSelect TokenContract={sellTokenContract} id={"SellTokenSelectDialog"} disabled={false}></AssetSelect>

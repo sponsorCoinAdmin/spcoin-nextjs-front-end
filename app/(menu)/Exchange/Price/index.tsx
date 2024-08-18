@@ -11,7 +11,7 @@ import {
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
-import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, TRADE_TYPE } from '@/lib/structure/types';
 import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
 import { bigIntDecimalShift, isSpCoin, setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
@@ -48,10 +48,6 @@ export default function PriceView() {
     const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
     useEffect(() => {
       console.debug(`*****Setting SellTokenContract to ` + stringifyBigInt(sellTokenContract));
-      if (exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.NEW_SELL_CONTRACT)
-      {
-        swapSellSellTokens();
-      }
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract] );
 
@@ -74,20 +70,21 @@ export default function PriceView() {
       setBuyTokenContract(sellTokenContract);
     }
 
-    function updateTradeTransaction(newTransactionContract: TokenContract, transactionType: TRANSACTION_TYPE) {
+    function updateTradeTransaction(newTransactionContract: TokenContract, tradeType: TRADE_TYPE) {
+      setTransactionType(transactionType)
       let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
       msg += `newTransactionContract.name =${newTransactionContract.name}`
       msg += `newTransactionContract.decimals =${newTransactionContract.decimals}`
       msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}`
   
-      switch (transactionType) {
-        case TRANSACTION_TYPE.NEW_BUY_CONTRACT:
+      switch (tradeType) {
+        case TRADE_TYPE.NEW_BUY_CONTRACT:
           msg += `buyTokenContract.name =${buyTokenContract.name}`
           msg += `buyTokenContract.decimals =${buyTokenContract.decimals}`
           msg += `buyTokenContract = ${stringifyBigInt(sellTokenContract)}`
           setBuyTokenContract(newTransactionContract);
         break;
-        case TRANSACTION_TYPE.NEW_SELL_CONTRACT:
+        case TRADE_TYPE.NEW_SELL_CONTRACT:
           msg += `sellTokenContract.name =${sellTokenContract.name}`
           msg += `sellTokenContract.decimals =${sellTokenContract.decimals}`
           msg += `sellTokenContract = ${stringifyBigInt(sellTokenContract)}`
@@ -98,12 +95,6 @@ export default function PriceView() {
           setSellAmount(newSellAmount);
           msg += `decimalShift=${decimalShift}`
           msg += `newSellAmount=${newSellAmount}`
-        break;
-        case TRANSACTION_TYPE.SWAP:
-        break;
-        case TRANSACTION_TYPE.BUY:
-        break;
-        case TRANSACTION_TYPE.SELL:
         break;
       }
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
@@ -195,8 +186,8 @@ export default function PriceView() {
         {
           sellToken: sellTokenContract.address,
           buyToken: buyTokenContract.address,
-          sellAmount: (exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL) ? sellAmount.toString() : undefined,
-          buyAmount: (exchangeContext.tradeData.transactionType ===  TRANSACTION_TYPE.BUY) ? buyAmount.toString() : undefined,
+          sellAmount: (exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
+          buyAmount: (exchangeContext.tradeData.transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
           // slippagePercentage: slippage,
           // expectedSlippage: slippage,
@@ -235,8 +226,8 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          <SellTokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={setSellTokenContract} />
-          <BuyTokenSelectDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+          <SellTokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateTradeTransaction} />
+          <BuyTokenSelectDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={updateTradeTransaction} />
           <ManageSponsorships connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
           <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
