@@ -29,6 +29,7 @@ import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { BURN_ADDRESS } from '@/lib/network/utils';
+import Alert from 'antd/es/alert/Alert';
 
 //////////// Price Code
 export default function PriceView() {
@@ -100,14 +101,15 @@ export default function PriceView() {
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
-        resetContextNetwork(chain)
-        console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
-        setSellTokenContract(exchangeContext.sellTokenContract);
-        setBuyTokenContract(exchangeContext.buyTokenContract);
-        setRecipientElement(exchangeContext.recipientAccount);
-        setAgentElement(exchangeContext.agentAccount);
-        setDisplayState(exchangeContext.displayState);
-        setSlippage(exchangeContext.tradeData.slippage);
+        alert(`chain = ${stringifyBigInt(chain)}`)
+      //   resetContextNetwork(chain)
+      //   console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
+      //   setSellTokenContract(exchangeContext.sellTokenContract);
+      //   setBuyTokenContract(exchangeContext.buyTokenContract);
+      //   setRecipientElement(exchangeContext.recipientAccount);
+      //   setAgentElement(exchangeContext.agentAccount);
+      //   setDisplayState(exchangeContext.displayState);
+      //   setSlippage(exchangeContext.tradeData.slippage);
       }
     }, [ACTIVE_ACCOUNT.chain]);
 

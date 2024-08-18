@@ -21,14 +21,6 @@ type Props = {
   disabled: boolean
 }
 
-// const exchangeContext:ExchangeContext = exchangeContext;
-
-    // useEffect(() => {
-    //   // alert(`Price:sellAmount = ${sellAmount`)
-    //   exchangeContext.tradeData.sellAmount = sellAmount;
-    //   // alert(`exchangeContext.tradeData.sellAmount:useEffect(() => exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
-    // }, [sellAmount]);
-
 /* Sell Token Selection Module */
 const SellContainer = ({activeAccount,
                         sellAmount,
@@ -37,9 +29,8 @@ const SellContainer = ({activeAccount,
                         setDisplayState,
                         disabled} : Props) => {
 
+  const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   try {
-    const [formattedSellAmount, setFormattedSellAmount] = useState<string>("8");
-
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
