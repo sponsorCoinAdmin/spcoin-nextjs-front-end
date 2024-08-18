@@ -7,6 +7,8 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
                        PENDING,
                        SWAP }
 
+enum  TRADE_TYPE { NEW_SELL_CONTRACT, NEW_BUY_CONTRACT, NEW_RECIPIENT_ACCOUNT }
+enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN }
 enum  DISPLAY_STATE { OFF, SPONSOR_SELL_ON, SPONSOR_SELL_OFF, SPONSOR_BUY, RECIPIENT, CONFIG }
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 
@@ -52,13 +54,13 @@ type NetworkElement = {
 }
 
 type TradeData = {
+  transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
   sellBalanceOf:bigint;
   sellFormattedBalance:string;
   buyAmount:bigint;
   buyBalanceOf:bigint;
   buyFormattedBalance:string;
-  tradeDirection:string;
   slippage: string;
 }
 
@@ -75,6 +77,8 @@ type ExchangeContext = {
 
 export {
   EXCHANGE_STATE,
+  TRADE_TYPE,
+  TRANSACTION_TYPE,
   DISPLAY_STATE,
   FEED_TYPE
 }

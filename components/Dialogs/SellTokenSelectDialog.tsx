@@ -1,11 +1,12 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
+import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
 import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract, TRADE_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails } from '@/lib/spCoin/utils';
@@ -82,7 +83,7 @@ export default function Dialog({ connectedAccountAddr, buyTokenContract, callBac
                 console.log("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")");
                 return false;
             }
-            callBackSetter(listElement)
+            callBackSetter(listElement, TRADE_TYPE.NEW_SELL_CONTRACT)
             closeDialog()
         } catch (e:any) {
             alert("SELL_ERROR:getSelectedListElement e.message" + e.message)
@@ -98,7 +99,7 @@ export default function Dialog({ connectedAccountAddr, buyTokenContract, callBac
     }
 
     const Dialog = (
-        <dialog id="sellTokenDialog" ref={dialogRef} className={styles.modalContainer}>
+        <dialog id="SellTokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"

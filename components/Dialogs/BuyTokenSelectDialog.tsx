@@ -6,12 +6,13 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract, TRADE_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
+import { exchangeContext } from '@/lib/context';
 
 const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
@@ -91,7 +92,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                 return false;
             }
             await getWagmiBalanceOfRec (sellTokenContract.address)
-            callBackSetter(listElement)
+            callBackSetter(listElement, TRADE_TYPE.NEW_BUY_CONTRACT)
             closeDialog()
         } catch (e:any) {
             alert("BUY_ERROR:getSelectedListElement e.message" + e.message)
@@ -107,7 +108,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
     }
 
     const Dialog = (
-        <dialog id="buyTokenDialog" ref={dialogRef} className={styles.modalContainer}>
+        <dialog id="BuyTokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
@@ -138,7 +139,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType="ethereum" getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

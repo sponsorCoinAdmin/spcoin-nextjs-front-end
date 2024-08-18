@@ -60,7 +60,7 @@ const BuyContainer = ({activeAccount, buyAmount, buyTokenContract, setBuyAmount,
           onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
           />
 
-      <AssetSelect TokenContract={buyTokenContract} id={"buyTokenDialog"} disabled={false}></AssetSelect>
+      <AssetSelect TokenContract={buyTokenContract} id={"BuyTokenSelectDialog"} disabled={false}></AssetSelect>
       <div className={styles["buySell"]}>You receive</div>
       <div className={styles["assetBalance"]}>
         Balance: {exchangeContext.tradeData.buyFormattedBalance}

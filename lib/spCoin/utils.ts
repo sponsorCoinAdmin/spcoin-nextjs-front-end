@@ -121,14 +121,21 @@ const exchangeContextDump = () => {
   console.debug(exchangeData);
 }
 
+const bigIntDecimalShift = (value:bigint, decimalShift:number) => {
+  return  decimalShift === 0 ? value:
+          decimalShift >= 0 ? value *= BigInt(10**(Math.abs(decimalShift))):
+          value /= BigInt(10**(Math.abs(decimalShift)));
+}
+
 export { 
-  fetchTokenDetails,
+  bigIntDecimalShift,
   exchangeContextDump,
+  fetchTokenDetails,
+  getValidFormattedPrice,
   getQueryVariable,
   getTokenDetails,
   isSpCoin,
   setValidPriceInput,
   stringifyBigInt,
-  getValidFormattedPrice,
   updateBalance
 }
