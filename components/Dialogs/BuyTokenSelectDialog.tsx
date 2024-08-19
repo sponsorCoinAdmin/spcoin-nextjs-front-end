@@ -27,9 +27,6 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = sellTokenContract.chainId;
-    if (connectedAccountAddr === undefined) 
-        connectedAccountAddr = BURN_ADDRESS
 
     useEffect(() => {
         closeDialog();
@@ -51,6 +48,10 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
             setTokenSelect(TokenContract.symbol);
     }, [TokenContract]);
     
+    const chainId = sellTokenContract.chainId;
+    if (connectedAccountAddr === undefined) 
+        connectedAccountAddr = BURN_ADDRESS
+
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
