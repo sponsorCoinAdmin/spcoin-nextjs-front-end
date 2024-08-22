@@ -228,9 +228,9 @@ export default function PriceView() {
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer activeAccount={ACTIVE_ACCOUNT}
-                           sellAmount={sellAmount}
+                           updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
-                           setSellAmount={setSellAmount}
+                           setSellAmountCallback={setSellAmount}
                            disabled={false}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  activeAccount={ACTIVE_ACCOUNT}

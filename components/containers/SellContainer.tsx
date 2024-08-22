@@ -14,26 +14,33 @@ import { formatUnits, parseUnits } from "ethers";
 
 type Props = {
   activeAccount:any,
-  sellAmount: bigint,
+  updateSellAmount: bigint,
   sellTokenContract: TokenContract, 
-  setSellAmount: any,
+  setSellAmountCallback: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled: boolean
 }
 
 /* Sell Token Selection Module */
 const SellContainer = ({activeAccount,
-                        sellAmount,
+                        updateSellAmount,
                         sellTokenContract,
-                        setSellAmount,
+                        setSellAmountCallback,
                         setDisplayState,
                         disabled} : Props) => {
 
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   try {
+    const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
+    useEffect (() => {
+      setSellAmountCallback(sellAmount);
+    }, [sellAmount])
+
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);
+
+
  
     // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     const IsSpCoin = isSpCoin(sellTokenContract);
