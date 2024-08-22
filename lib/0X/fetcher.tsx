@@ -24,7 +24,6 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
     console.debug(`BEFORE fetcher:${endpoint}?${query}`);
     let result = fetch(`${endpoint}?${query}`).then((res) => res.json());
     // console.debug(`fetcher: ${endpoint}?${query}`);
-    console.debug(`AFTER fetcher result =  + ${JSON.stringify(result,null,2)} + ]`)
     // console.debug("fetcher result = " + JSON.stringify(result,null,2) + "]")
     return result
   }

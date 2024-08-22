@@ -114,11 +114,6 @@ export default function PriceView() {
     }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
-      console.debug(`Price:sellAmount = ${sellAmount}`)
-      exchangeContext.tradeData.sellAmount = sellAmount;
-    }, [sellAmount]);
-
-    useEffect(() => {
       // alert(`Price:buyAmount = ${buyAmount}`)
       exchangeContext.tradeData.buyAmount = buyAmount;
     }, [buyAmount]);
@@ -193,7 +188,7 @@ export default function PriceView() {
           if (!data.code) {
             // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             // console.log(dataMsg)
-
+            console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
             setBuyAmount(data.buyAmount);
