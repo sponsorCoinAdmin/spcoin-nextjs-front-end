@@ -20,7 +20,6 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-
 const  getValidFormattedPrice = (price:string, decimals:number|undefined) => {
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
@@ -38,7 +37,7 @@ const  getValidFormattedPrice = (price:string, decimals:number|undefined) => {
     //  alert(`3. formattedPrice = ${formattedPrice}`)
     return formattedPrice
   } 
-  return "";
+  return "0";
 }
 
 const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
@@ -48,7 +47,6 @@ const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:b
     setSellAmount(parseUnits(txt,decimals));
   return txt;
 };
-
 
 const getTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
   let td:any = fetchTokenDetails(connectedAccountAddr, chainId, tokenAddr)

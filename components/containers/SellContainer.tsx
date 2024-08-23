@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
@@ -45,25 +44,19 @@ const SellContainer = ({activeAccount,
     // console.debug(`SellContainer.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
     const IsSpCoin = isSpCoin(sellTokenContract);
 
-    const setStringToBigIntStateValue = (stringValue:string, 
-                                        decimals:number|undefined,
-                                        transactionType: TRANSACTION_TYPE,
-                                        setInputAmount: (txt:bigint) => void) => {
-      decimals = decimals || 0;
-      stringValue = getValidFormattedPrice(stringValue, decimals);
-      if (stringValue !== "")
-      {
-        exchangeContext.tradeData.transactionType = transactionType;
-        setFormattedSellAmount(stringValue);
-        const bigIntValue = parseUnits(stringValue, decimals)
-        setInputAmount(bigIntValue);
-      }
+    const setStringToBigIntStateValue = (stringValue:string) => {
+      exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT;
+      const decimals = sellTokenContract.decimals;
+      stringValue === getValidFormattedPrice(stringValue, decimals);
+      const bigIntValue = parseUnits(stringValue, decimals);
+      setSellAmount(bigIntValue);
+      setFormattedSellAmount(stringValue);
     }
-    
+
     return (
       <div className={styles.inputs}>
         <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
-          onChange={(e) => { setStringToBigIntStateValue(e.target.value, sellTokenContract.decimals, TRANSACTION_TYPE.SELL_EXACT_OUT, setSellAmount); }}
+          onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
           onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
           />
         <AssetSelect TokenContract={sellTokenContract} id={"SellTokenSelectDialog"} disabled={false}></AssetSelect>

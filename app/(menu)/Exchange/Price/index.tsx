@@ -114,11 +114,6 @@ export default function PriceView() {
     }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
-      // alert(`Price:buyAmount = ${buyAmount}`)
-      exchangeContext.tradeData.buyAmount = buyAmount;
-    }, [buyAmount]);
-
-    useEffect(() => {
       // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
       exchangeContext.displayState = displayState;
@@ -229,9 +224,9 @@ export default function PriceView() {
                            disabled={false}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
-                           buyAmount={buyAmount}
+                           updateButAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
-                           setBuyAmount={setBuyAmount}
+                           setBuyAmountCallback={setBuyAmount}
                            disabled={true}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
