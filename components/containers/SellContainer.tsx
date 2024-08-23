@@ -37,6 +37,13 @@ const SellContainer = ({activeAccount,
       exchangeContext.tradeData.sellAmount = sellAmount;
     }, [sellAmount])
 
+    // useEffect(() =>  {
+    //   const decimals = sellTokenContract.decimals;
+    //   setBigIntToStringStateValue(updateSellAmount, decimals)
+    //   exchangeContext.tradeData.buyAmount = updateSellAmount;
+    // }, [updateSellAmount]);
+  
+
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
     exchangeContext.tradeData.sellFormattedBalance = formatDecimals(exchangeContext.tradeData.sellBalanceOf, exchangeContext.sellTokenContract.decimals);

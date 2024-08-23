@@ -30,21 +30,21 @@ const BuyContainer = ({activeAccount, updateButAmount, buyTokenContract, setBuyA
 
   useEffect(() =>  {
     const decimals = buyTokenContract.decimals;
-    setBigIntStateValue(updateButAmount, decimals)
+    setBigIntToStringStateValue(updateButAmount, decimals)
     exchangeContext.tradeData.buyAmount = updateButAmount;
   }, [updateButAmount]);
 
-  const setBigIntStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
+  const setBigIntToStringStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
     decimals = decimals || 0;
     let stringValue = formatUnits(bigIntValue || 0n, decimals);
-    // console.debug(`setBigIntStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
+    // console.debug(`setBigIntToStringStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
     // const OLD_stringValue = stringValue;
     stringValue = getValidFormattedPrice(stringValue, decimals);
 
     if (stringValue !== "") {
       setFormattedBuyAmount(stringValue);
     }
-    // console.debug(`setBigIntStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
+    // console.debug(`setBigIntToStringStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
   }
 
   const setStringToBigIntStateValue = (stringValue:string) => {

@@ -56,9 +56,10 @@ export default function PriceView() {
       const tmpTokenContract: TokenContract = buyTokenContract;
       const tradeData=exchangeContext.tradeData;
       const decimalShift:number = (buyTokenContract.decimals || 0) - (sellTokenContract.decimals || 0);
-      const newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift);
-      setSellAmount(newSellAmount);
+      const newSellAmount:bigint = bigIntDecimalShift(tradeData.sellAmount , decimalShift);
+      console.debug(`New Sell Amount = ${newSellAmount}`)
       setSellTokenContract(tmpTokenContract);
+      setSellAmount(newSellAmount);
       setBuyTokenContract(sellTokenContract);
     }
 
@@ -183,7 +184,7 @@ export default function PriceView() {
           if (!data.code) {
             // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             // console.log(dataMsg)
-            console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
+            // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
             setBuyAmount(data.buyAmount);
