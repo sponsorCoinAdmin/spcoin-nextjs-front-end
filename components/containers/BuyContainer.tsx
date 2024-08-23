@@ -12,27 +12,31 @@ import { formatUnits, parseUnits } from "ethers";
 
 type Props = {
   activeAccount: any,
-  updateButAmount: bigint,
+  updateBuyAmount: bigint,
   buyTokenContract: TokenContract, 
   setBuyAmountCallback: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled:boolean
 }
 
-const BuyContainer = ({activeAccount, updateButAmount, buyTokenContract, setBuyAmountCallback, setDisplayState, disabled} : Props) => {
+const BuyContainer = ({activeAccount, updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState, disabled} : Props) => {
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
   useEffect (() => {
-    console.debug(`SellContainer:sellAmount = ${buyAmount}`)
+    console.debug(`BuyContainer:sellAmount = ${buyAmount}`)
     setBuyAmountCallback(buyAmount);
-    exchangeContext.tradeData.sellAmount = buyAmount;
+    exchangeContext.tradeData.buyAmount = buyAmount;
   }, [buyAmount])
 
   useEffect(() =>  {
     const decimals = buyTokenContract.decimals;
-    setBigIntToStringStateValue(updateButAmount, decimals)
-    exchangeContext.tradeData.buyAmount = updateButAmount;
-  }, [updateButAmount]);
+    setBigIntToStringStateValue(updateBuyAmount, decimals)
+    exchangeContext.tradeData.buyAmount = updateBuyAmount;
+
+    // if (updateBuyAmount) 
+    //   setBuyAmount(updateBuyAmount);
+
+  }, [updateBuyAmount]);
 
   const setBigIntToStringStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
     decimals = decimals || 0;

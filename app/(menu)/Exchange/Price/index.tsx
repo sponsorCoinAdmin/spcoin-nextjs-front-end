@@ -224,7 +224,7 @@ export default function PriceView() {
                            disabled={false}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
-                           updateButAmount={buyAmount}
+                           updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
                            disabled={true}
