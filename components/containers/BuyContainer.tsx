@@ -7,7 +7,7 @@ import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 
 type Props = {
@@ -22,34 +22,28 @@ type Props = {
 const BuyContainer = ({activeAccount, updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState, disabled} : Props) => {
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
+
   useEffect (() => {
     console.debug(`BuyContainer:sellAmount = ${buyAmount}`)
     setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
   }, [buyAmount])
 
+
+
+
   useEffect(() =>  {
     const decimals = buyTokenContract.decimals;
-    setBigIntToStringStateValue(updateBuyAmount, decimals)
-    exchangeContext.tradeData.buyAmount = updateBuyAmount;
-
-    // if (updateBuyAmount) 
-    //   setBuyAmount(updateBuyAmount);
-
-  }, [updateBuyAmount]);
-
-  const setBigIntToStringStateValue = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
-    decimals = decimals || 0;
-    let stringValue = formatUnits(bigIntValue || 0n, decimals);
-    // console.debug(`setBigIntToStringStateValue:formatUnits(${bigIntValue || 0n}, ${decimals}) = ${stringValue});`)
-    // const OLD_stringValue = stringValue;
-    stringValue = getValidFormattedPrice(stringValue, decimals);
-
+    const stringValue = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
     if (stringValue !== "") {
       setFormattedBuyAmount(stringValue);
     }
-    // console.debug(`setBigIntToStringStateValue:getValidFormattedPrice(${JUNK_stringValue}, ${decimals}) = ${stringValue});`)
-  }
+    if (updateBuyAmount) 
+      setBuyAmount(updateBuyAmount);
+  }, [updateBuyAmount]);
+
+
+
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;

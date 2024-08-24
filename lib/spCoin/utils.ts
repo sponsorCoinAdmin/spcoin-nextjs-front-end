@@ -2,7 +2,7 @@ import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
-import { Address } from "viem";
+import { Address, formatUnits } from "viem";
 import { exchangeContext } from "../context";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
@@ -20,7 +20,19 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-const  getValidFormattedPrice = (price:string, decimals:number|undefined) => {
+const getValidBigIntToFormattedPrice = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
+  decimals = decimals || 0;
+  let stringValue:string = formatUnits(bigIntValue || 0n, decimals);
+  stringValue = getValidFormattedPrice(stringValue, decimals);
+  return stringValue;
+}
+
+const  getValidFormattedPrice = (value:any, decimals:number|undefined) => {
+  decimals = decimals || 0;
+  const price:string = (typeof value === "string") ? value : 
+                       (typeof value === "bigint") ? formatUnits(value || 0n, decimals) : 
+                       "0";
+ 
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
   // alert(`2. price = ${price}`)
@@ -129,6 +141,7 @@ export {
   bigIntDecimalShift,
   exchangeContextDump,
   fetchTokenDetails,
+  getValidBigIntToFormattedPrice,
   getValidFormattedPrice,
   getQueryVariable,
   getTokenDetails,

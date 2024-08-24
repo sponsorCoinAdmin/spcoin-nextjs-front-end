@@ -31,6 +31,13 @@ const SellContainer = ({activeAccount,
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   try {
     const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
+
+
+
+
+
+
+
     useEffect (() => {
       console.debug(`SellContainer:sellAmount = ${sellAmount}`)
       setSellAmountCallback(sellAmount);
@@ -41,6 +48,12 @@ const SellContainer = ({activeAccount,
       if (updateSellAmount) 
         setSellAmount(updateSellAmount);
     }, [updateSellAmount]);
+
+
+
+
+
+
   
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(sellTokenContract.address) || 0;
     exchangeContext.tradeData.sellBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, sellTokenContract.address) || 0n;
