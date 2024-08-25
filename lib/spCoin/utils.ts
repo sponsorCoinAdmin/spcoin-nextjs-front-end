@@ -20,14 +20,34 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-const getValidBigIntToFormattedPrice = (bigIntValue:bigint | undefined, decimals:number|undefined) => {
+// const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
+//   let msg = `BEFORE value = ${value}\n`;
+//   msg += `typeof value = ${typeof value}\n`;
+//   decimals = decimals || 0;
+
+//   const price:string = (typeof value == "string") ? `string value = ${value}` : 
+//                        (typeof value == "bigint") ? `bigint value = ${formatUnits(value || 0n, decimals)}` : 
+//                        `default value = 0`;
+
+//   msg += `price = ${price}\n`
+//   let stringValue:string = formatUnits(value || 0n, decimals);
+//   msg += `stringValue = ${stringValue}`;
+//   alert(msg);
+
+//   stringValue = getValidFormattedPrice(stringValue, decimals);
+//   return stringValue;
+// }
+
+const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
   decimals = decimals || 0;
-  let stringValue:string = formatUnits(bigIntValue || 0n, decimals);
+
+  let stringValue:string = formatUnits(value || 0n, decimals);
+
   stringValue = getValidFormattedPrice(stringValue, decimals);
   return stringValue;
 }
 
-const  getValidFormattedPrice = (value:any, decimals:number|undefined) => {
+const  getValidFormattedPrice = (value:string|bigint, decimals:number|undefined) => {
   decimals = decimals || 0;
   const price:string = (typeof value === "string") ? value : 
                        (typeof value === "bigint") ? formatUnits(value || 0n, decimals) : 

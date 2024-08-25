@@ -9,25 +9,43 @@ import { getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf, formatDecima
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
+import { useAccount } from 'wagmi';
 
 type Props = {
-  activeAccount: any,
   updateBuyAmount: bigint,
   buyTokenContract: TokenContract, 
-  setBuyAmountCallback: any,
+  setBuyAmountCallback: (buyAmount:bigint) => void,
   setDisplayState:(displayState:DISPLAY_STATE) => void,
   disabled:boolean
 }
 
-const BuyContainer = ({activeAccount, updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState, disabled} : Props) => {
+const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState, disabled} : Props) => {
+  const ACTIVE_ACCOUNT = useAccount();
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
+  const [balanceOf, setBalanceOf] = useState<bigint>(exchangeContext.tradeData.buyBalanceOf);
+
+  useEffect (() => {
+    console.debug(`SellContainer:sellAmount = ${buyAmount}`)
+    setBuyAmountCallback(buyAmount);
+    exchangeContext.tradeData.sellAmount = buyAmount;
+  }, [buyAmount])
+
+  useEffect(() =>  {
+    if (updateBuyAmount) 
+      setBuyAmount(updateBuyAmount);
+  }, [updateBuyAmount]);
 
   useEffect (() => {
     console.debug(`BuyContainer:sellAmount = ${buyAmount}`)
     setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
   }, [buyAmount])
+
+  useEffect(() =>  {
+    alert(`ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
+    exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
+  }, [ACTIVE_ACCOUNT.address]);
 
 
 
@@ -56,7 +74,7 @@ const BuyContainer = ({activeAccount, updateBuyAmount, buyTokenContract, setBuyA
 
   try {
     exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
-    exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(activeAccount.address, buyTokenContract.address) || 0n;
+    // exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
     exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
 
     let IsSpCoin = isSpCoin(buyTokenContract);
@@ -72,7 +90,7 @@ const BuyContainer = ({activeAccount, updateBuyAmount, buyTokenContract, setBuyA
         Balance: {exchangeContext.tradeData.buyFormattedBalance}
       </div>
       {IsSpCoin ?
-        <AddSponsorButton activeAccount={activeAccount} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
+        <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
         : null}
       </div>
     );

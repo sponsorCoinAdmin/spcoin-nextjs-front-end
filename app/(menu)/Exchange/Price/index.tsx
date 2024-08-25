@@ -98,20 +98,20 @@ export default function PriceView() {
       exchangeContext.buyTokenContract = buyTokenContract;
     }, [buyTokenContract] );
 
-    useEffect(() => {
-      const chain = ACTIVE_ACCOUNT.chain;
-      if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
-        alert(`chain = ${stringifyBigInt(chain)}`)
-      //   resetContextNetwork(chain)
-      //   console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
-      //   setSellTokenContract(exchangeContext.sellTokenContract);
-      //   setBuyTokenContract(exchangeContext.buyTokenContract);
-      //   setRecipientElement(exchangeContext.recipientAccount);
-      //   setAgentElement(exchangeContext.agentAccount);
-      //   setDisplayState(exchangeContext.displayState);
-      //   setSlippage(exchangeContext.tradeData.slippage);
-      }
-    }, [ACTIVE_ACCOUNT.chain]);
+    // useEffect(() => {
+    //   const chain = ACTIVE_ACCOUNT.chain;
+    //   if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
+    //     alert(`chain = ${stringifyBigInt(chain)}`)
+    //     resetContextNetwork(chain)
+    //     console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
+    //     setSellTokenContract(exchangeContext.sellTokenContract);
+    //     setBuyTokenContract(exchangeContext.buyTokenContract);
+    //     setRecipientElement(exchangeContext.recipientAccount);
+    //     setAgentElement(exchangeContext.agentAccount);
+    //     setDisplayState(exchangeContext.displayState);
+    //     setSlippage(exchangeContext.tradeData.slippage);
+    //   }
+    // }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
       // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
@@ -125,7 +125,7 @@ export default function PriceView() {
     }, [slippage]);
 
     useEffect(() => {
-      // console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
+      alert("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract]);
 
@@ -152,7 +152,8 @@ export default function PriceView() {
     const connectedAccountAddr = exchangeContext.connectedAccountAddr
 
     const getPriceApiTransaction = (data:any) => {
-      let priceTransaction = `${apiCall}`
+      let priceTransaction =  process.env.NEXT_PUBLIC_API_SERVER
+      priceTransaction += `${apiCall}`
       priceTransaction += `sellToken=${sellTokenContract.address}`
       priceTransaction += `&buyToken=${buyTokenContract.address}`
       priceTransaction += `&sellAmount=${sellAmount?.toString()}\n`
@@ -161,7 +162,7 @@ export default function PriceView() {
       return priceTransaction;
     }
 
-    const apiCall = "http://localhost:3000/api/" + exchangeContext.network.name.toLowerCase() + "/0X/price";
+    const apiCall =exchangeContext.network.name.toLowerCase() + "/0X/price";
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
@@ -174,7 +175,7 @@ export default function PriceView() {
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
           // slippagePercentage: slippage,
           // expectedSlippage: slippage,
-          connectedAccountAddr
+          // connectedAccountAddr
         },
       ],
       fetcher,
@@ -217,14 +218,12 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer activeAccount={ACTIVE_ACCOUNT}
-                           updateSellAmount={sellAmount}
+            <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            setSellAmountCallback={setSellAmount}
                            disabled={false}
                            setDisplayState={setDisplayState}/>
-            <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
-                           updateBuyAmount={buyAmount}
+            <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
                            disabled={true}

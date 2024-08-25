@@ -1,3 +1,4 @@
+// 'use server'
 import { PriceRequestParams } from '@/lib/structure/types'
 import qs from "qs";
 
@@ -7,7 +8,10 @@ const SELL_AMOUNT_ZERO = 300;
 const BUY_AMOUNT_ZERO = 400;
 const ERROR_0X_RESPONSE = 500;
 
+const NEXT_PUBLIC_API_SERVER:string|undefined = process.env.NEXT_PUBLIC_API_SERVER
+
 const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
+  endpoint = NEXT_PUBLIC_API_SERVER + endpoint
   const { sellAmount, buyAmount } = params;
 
   if (!sellAmount && !buyAmount) return;
