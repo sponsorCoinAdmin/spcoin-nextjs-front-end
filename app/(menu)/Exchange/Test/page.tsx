@@ -13,7 +13,6 @@ import ReadWagmiEcr20ContractName from '@/components/ecr20/ReadWagmiEcr20Contrac
 import ReadWagmiEcr20ContractSymbol from '@/components/ecr20/ReadWagmiEcr20ContractSymbol'
 import ReadWagmiEcr20ContractDecimals from '@/components/ecr20/ReadWagmiEcr20ContractDecimals'
 import ReadWagmiEcr20ContractTotalSupply from '@/components/ecr20/ReadWagmiEcr20ContractTotalSupply'
-import { stringifyBigInt } from '@/lib/spCoin/utils'
 import { BURN_ADDRESS } from '@/lib/network/utils'
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;

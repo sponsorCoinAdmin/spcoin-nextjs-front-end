@@ -12,7 +12,8 @@ import { DISPLAY_STATE } from '@/lib/structure/types';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 
-import ReadWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
+import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf'
+import useWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 
@@ -34,7 +35,7 @@ const SellContainer = ({updateSellAmount,
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
-  const [balanceOf, setBalanceOf] = useState<bigint>(exchangeContext.tradeData.sellBalanceOf);
+  // const [balanceOf, setBalanceOf] = useState<bigint>(exchangeContext.tradeData.sellBalanceOf);
   let disabled = false;
 
   useEffect(() =>  {
@@ -44,11 +45,10 @@ const SellContainer = ({updateSellAmount,
   }, []);
 
   useEffect(() =>  {
-    const balanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n;
-    alert(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}\n
-    getERC20WagmiClientBalanceOf(${ACTIVE_ACCOUNT.address}, ${tokenContract.address}) = balanceOf = ${balanceOf}`)
+    // const balanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n;
+    console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
     exchangeContext.sellTokenContract = tokenContract;
-    setBalanceOf(balanceOf);
+    // setBalanceOf(balanceOf);
   }, [tokenContract]);
 
   useEffect(() =>  {
@@ -62,14 +62,14 @@ const SellContainer = ({updateSellAmount,
     exchangeContext.tradeData.sellAmount = sellAmount;
   }, [sellAmount])
 
-  useEffect(() => {
-    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
-    exchangeContext.tradeData.sellBalanceOf = balanceOf;
-  }, [balanceOf]);
+  // useEffect(() => {
+  //   // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
+  //   exchangeContext.tradeData.sellBalanceOf = balanceOf;
+  // }, [balanceOf]);
 
   useEffect(() => {
     console.debug(`SellContainer.useEffect():ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
-    setBalanceOf(getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n);
+    // setBalanceOf(getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n);
     if (ACTIVE_ACCOUNT.address != undefined && ACTIVE_ACCOUNT_ADDRESS !== ACTIVE_ACCOUNT.address)
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
@@ -93,6 +93,9 @@ const SellContainer = ({updateSellAmount,
     }
     const TON_ETHEREUM_CONTRACT:Address = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1';
     const TOKEN_CONTRACT_ADDRESS:Address = TON_ETHEREUM_CONTRACT;
+
+    const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
+    // alert (stringifyBigInt({balanceOf, decimals, formattedBalanceOf}))
 
     return (
       <div className={styles.inputs}>
