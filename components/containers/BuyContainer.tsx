@@ -15,15 +15,15 @@ type Props = {
   updateBuyAmount: bigint,
   buyTokenContract: TokenContract, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
-  setDisplayState:(displayState:DISPLAY_STATE) => void,
-  disabled:boolean
+  setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
-const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState, disabled} : Props) => {
+const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
   const [balanceOf, setBalanceOf] = useState<bigint>(exchangeContext.tradeData.buyBalanceOf);
+  let disabled = true;
 
   useEffect (() => {
     console.debug(`SellContainer:sellAmount = ${buyAmount}`)
@@ -43,7 +43,7 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   }, [buyAmount])
 
   useEffect(() =>  {
-    alert(`ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
+    console.debug(`ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
     exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
   }, [ACTIVE_ACCOUNT.address]);
 

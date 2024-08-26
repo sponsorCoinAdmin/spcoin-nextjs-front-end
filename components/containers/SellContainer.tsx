@@ -12,36 +12,49 @@ import { DISPLAY_STATE } from '@/lib/structure/types';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 
+import ReadWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
+import { Address } from 'viem';
+import { BURN_ADDRESS } from '@/lib/network/utils';
+
+
 type Props = {
   updateSellAmount: bigint,
   sellTokenContract: TokenContract, 
   setSellAmountCallback: (sellAmount:bigint) => void,
-  setDisplayState:(displayState:DISPLAY_STATE) => void,
-  disabled: boolean
+  setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
 /* Sell Token Selection Module */
 const SellContainer = ({updateSellAmount,
                         sellTokenContract,
                         setSellAmountCallback,
-                        setDisplayState,
-                        disabled} : Props) => {
+                        setDisplayState} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
+  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [balanceOf, setBalanceOf] = useState<bigint>(exchangeContext.tradeData.sellBalanceOf);
+  let disabled = false;
 
   useEffect(() =>  {
-    alert(`SellContainer.useEffect([]):tokenContract = ${tokenContract.name}`)
+    console.debug(`SellContainer.useEffect([]):tokenContract = ${tokenContract.name}`)
     if (updateSellAmount) 
       setSellAmount(updateSellAmount);
   }, []);
 
   useEffect(() =>  {
-    alert(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
-    setBalanceOf(getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n);
+    const balanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n;
+    alert(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}\n
+    getERC20WagmiClientBalanceOf(${ACTIVE_ACCOUNT.address}, ${tokenContract.address}) = balanceOf = ${balanceOf}`)
+    exchangeContext.sellTokenContract = tokenContract;
+    setBalanceOf(balanceOf);
   }, [tokenContract]);
+
+  useEffect(() =>  {
+    // alert (`setTokenContract(${sellTokenContract})`)
+    setTokenContract(sellTokenContract)
+  }, [sellTokenContract]);
 
   useEffect (() => {
     // alert(`SellContainer.useEffect():sellAmount = ${sellAmount}`)
@@ -50,14 +63,18 @@ const SellContainer = ({updateSellAmount,
   }, [sellAmount])
 
   useEffect(() => {
-    alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
+    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
     exchangeContext.tradeData.sellBalanceOf = balanceOf;
   }, [balanceOf]);
 
   useEffect(() => {
-    alert(`SellContainer.useEffect():ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
+    console.debug(`SellContainer.useEffect():ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
     setBalanceOf(getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, tokenContract.address) || 0n);
+    if (ACTIVE_ACCOUNT.address != undefined && ACTIVE_ACCOUNT_ADDRESS !== ACTIVE_ACCOUNT.address)
+      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
+
+  
 
   try {  
     exchangeContext.sellTokenContract.decimals = getERC20WagmiClientDecimals(tokenContract.address) || 0;
@@ -74,6 +91,8 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(bigIntValue);
       setFormattedSellAmount(stringValue);
     }
+    const TON_ETHEREUM_CONTRACT:Address = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1';
+    const TOKEN_CONTRACT_ADDRESS:Address = TON_ETHEREUM_CONTRACT;
 
     return (
       <div className={styles.inputs}>
@@ -85,6 +104,8 @@ const SellContainer = ({updateSellAmount,
         <div className={styles["buySell"]}>
           You Pay
         </div>
+        {/* <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT.address} TOKEN_CONTRACT_ADDRESS={tokenContract.address} /> */}
+        <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={tokenContract.address} />
         <div className={styles["assetBalance"]}>
           Balance: {balanceOf}
         </div>

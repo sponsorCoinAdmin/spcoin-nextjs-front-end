@@ -125,7 +125,7 @@ export default function PriceView() {
     }, [slippage]);
 
     useEffect(() => {
-      alert("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
+      // alert("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract]);
 
@@ -221,12 +221,10 @@ export default function PriceView() {
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            setSellAmountCallback={setSellAmount}
-                           disabled={false}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
-                           disabled={true}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
             <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
