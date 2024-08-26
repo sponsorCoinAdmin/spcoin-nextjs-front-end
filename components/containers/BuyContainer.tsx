@@ -43,7 +43,7 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   }, [buyAmount])
 
   useEffect(() =>  {
-    alert(`ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
+    console.debug(`ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
     exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
   }, [ACTIVE_ACCOUNT.address]);
 
