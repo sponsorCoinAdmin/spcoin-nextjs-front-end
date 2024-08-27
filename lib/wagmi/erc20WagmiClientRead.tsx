@@ -104,9 +104,9 @@ const getERC20WagmiClientBalanceOf = (connectedAccountAddr: Address | string | u
   }
   catch (err:any) {
     console.error(`ERROR:eRC20WagmiClientBalanceOf(${connectedAccountAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
-    console.error(`ERROR:eRC20WagmiClientBalanceOf:err.msg = ${err.msg}`);
+    console.error(`ERROR: = ${stringifyBigInt(err)}`);
   }
-  return eRC20WagmiClientBalanceOf;
+  return eRC20WagmiClientBalanceOf || 0n;
 }
 
 const getERC20WagmiClientBalanceOfStr = (connectedAccountAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {

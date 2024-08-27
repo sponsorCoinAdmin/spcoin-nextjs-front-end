@@ -2,7 +2,7 @@ import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
-import { Address } from "viem";
+import { Address, formatUnits } from "viem";
 import { exchangeContext } from "../context";
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
@@ -20,8 +20,39 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
+// const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
+//   let msg = `BEFORE value = ${value}\n`;
+//   msg += `typeof value = ${typeof value}\n`;
+//   decimals = decimals || 0;
 
-const  getValidFormattedPrice = (price:string, decimals:number|undefined) => {
+//   const price:string = (typeof value == "string") ? `string value = ${value}` : 
+//                        (typeof value == "bigint") ? `bigint value = ${formatUnits(value || 0n, decimals)}` : 
+//                        `default value = 0`;
+
+//   msg += `price = ${price}\n`
+//   let stringValue:string = formatUnits(value || 0n, decimals);
+//   msg += `stringValue = ${stringValue}`;
+//   alert(msg);
+
+//   stringValue = getValidFormattedPrice(stringValue, decimals);
+//   return stringValue;
+// }
+
+const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
+  decimals = decimals || 0;
+
+  let stringValue:string = formatUnits(value || 0n, decimals);
+
+  stringValue = getValidFormattedPrice(stringValue, decimals);
+  return stringValue;
+}
+
+const  getValidFormattedPrice = (value:string|bigint, decimals:number|undefined) => {
+  decimals = decimals || 0;
+  const price:string = (typeof value === "string") ? value : 
+                       (typeof value === "bigint") ? formatUnits(value || 0n, decimals) : 
+                       "0";
+ 
   // Allow only numbers and '.'
   const re = /^-?\d+(?:[.,]\d*?)?$/;
   // alert(`2. price = ${price}`)
@@ -38,7 +69,7 @@ const  getValidFormattedPrice = (price:string, decimals:number|undefined) => {
     //  alert(`3. formattedPrice = ${formattedPrice}`)
     return formattedPrice
   } 
-  return "";
+  return "0";
 }
 
 const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
@@ -48,7 +79,6 @@ const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:b
     setSellAmount(parseUnits(txt,decimals));
   return txt;
 };
-
 
 const getTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
   let td:any = fetchTokenDetails(connectedAccountAddr, chainId, tokenAddr)
@@ -122,15 +152,16 @@ const exchangeContextDump = () => {
 }
 
 const bigIntDecimalShift = (value:bigint, decimalShift:number) => {
-  return  decimalShift === 0 ? value:
-          decimalShift >= 0 ? value *= BigInt(10**(Math.abs(decimalShift))):
-          value /= BigInt(10**(Math.abs(decimalShift)));
+  return  decimalShift === 0 ? BigInt(value) :
+          decimalShift >= 0 ? BigInt(value) * BigInt(10**(Math.abs(decimalShift))) :
+          BigInt(value) / BigInt(10**(Math.abs(decimalShift)));
 }
 
 export { 
   bigIntDecimalShift,
   exchangeContextDump,
   fetchTokenDetails,
+  getValidBigIntToFormattedPrice,
   getValidFormattedPrice,
   getQueryVariable,
   getTokenDetails,

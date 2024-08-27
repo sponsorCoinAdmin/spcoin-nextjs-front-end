@@ -29,7 +29,6 @@ import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetContextNetwork } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import Alert from 'antd/es/alert/Alert';
 
 //////////// Price Code
 export default function PriceView() {
@@ -56,9 +55,10 @@ export default function PriceView() {
       const tmpTokenContract: TokenContract = buyTokenContract;
       const tradeData=exchangeContext.tradeData;
       const decimalShift:number = (buyTokenContract.decimals || 0) - (sellTokenContract.decimals || 0);
-      const newSellAmount = bigIntDecimalShift(tradeData.sellAmount , decimalShift);
-      setSellAmount(newSellAmount);
+      const newSellAmount:bigint = bigIntDecimalShift(tradeData.sellAmount , decimalShift);
+      console.debug(`New Sell Amount = ${newSellAmount}`)
       setSellTokenContract(tmpTokenContract);
+      setSellAmount(newSellAmount);
       setBuyTokenContract(sellTokenContract);
     }
 
@@ -90,7 +90,7 @@ export default function PriceView() {
         break;
       }
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-      alert(msg);
+      console.debug(msg);
     }
 
     useEffect(() => {
@@ -98,30 +98,20 @@ export default function PriceView() {
       exchangeContext.buyTokenContract = buyTokenContract;
     }, [buyTokenContract] );
 
-    useEffect(() => {
-      const chain = ACTIVE_ACCOUNT.chain;
-      if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
-        alert(`chain = ${stringifyBigInt(chain)}`)
-      //   resetContextNetwork(chain)
-      //   console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
-      //   setSellTokenContract(exchangeContext.sellTokenContract);
-      //   setBuyTokenContract(exchangeContext.buyTokenContract);
-      //   setRecipientElement(exchangeContext.recipientAccount);
-      //   setAgentElement(exchangeContext.agentAccount);
-      //   setDisplayState(exchangeContext.displayState);
-      //   setSlippage(exchangeContext.tradeData.slippage);
-      }
-    }, [ACTIVE_ACCOUNT.chain]);
-
-    useEffect(() => {
-      console.debug(`Price:sellAmount = ${sellAmount}`)
-      exchangeContext.tradeData.sellAmount = sellAmount;
-    }, [sellAmount]);
-
-    useEffect(() => {
-      // alert(`Price:buyAmount = ${buyAmount}`)
-      exchangeContext.tradeData.buyAmount = buyAmount;
-    }, [buyAmount]);
+    // useEffect(() => {
+    //   const chain = ACTIVE_ACCOUNT.chain;
+    //   if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
+    //     alert(`chain = ${stringifyBigInt(chain)}`)
+    //     resetContextNetwork(chain)
+    //     console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
+    //     setSellTokenContract(exchangeContext.sellTokenContract);
+    //     setBuyTokenContract(exchangeContext.buyTokenContract);
+    //     setRecipientElement(exchangeContext.recipientAccount);
+    //     setAgentElement(exchangeContext.agentAccount);
+    //     setDisplayState(exchangeContext.displayState);
+    //     setSlippage(exchangeContext.tradeData.slippage);
+    //   }
+    // }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
       // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
@@ -135,7 +125,7 @@ export default function PriceView() {
     }, [slippage]);
 
     useEffect(() => {
-      // console.debug("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
+      // alert("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
       exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract]);
 
@@ -162,7 +152,8 @@ export default function PriceView() {
     const connectedAccountAddr = exchangeContext.connectedAccountAddr
 
     const getPriceApiTransaction = (data:any) => {
-      let priceTransaction = `${apiCall}`
+      let priceTransaction =  process.env.NEXT_PUBLIC_API_SERVER
+      priceTransaction += `${apiCall}`
       priceTransaction += `sellToken=${sellTokenContract.address}`
       priceTransaction += `&buyToken=${buyTokenContract.address}`
       priceTransaction += `&sellAmount=${sellAmount?.toString()}\n`
@@ -171,7 +162,7 @@ export default function PriceView() {
       return priceTransaction;
     }
 
-    const apiCall = "http://localhost:3000/api/" + exchangeContext.network.name.toLowerCase() + "/0X/price";
+    const apiCall =exchangeContext.network.name.toLowerCase() + "/0X/price";
 
     const { isLoading: isLoadingPrice } = useSWR(
       [
@@ -184,7 +175,7 @@ export default function PriceView() {
           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
           // slippagePercentage: slippage,
           // expectedSlippage: slippage,
-          connectedAccountAddr
+          // connectedAccountAddr
         },
       ],
       fetcher,
@@ -193,7 +184,7 @@ export default function PriceView() {
           if (!data.code) {
             // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             // console.log(dataMsg)
-
+            // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
             setBuyAmount(data.buyAmount);
@@ -227,17 +218,14 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer activeAccount={ACTIVE_ACCOUNT}
-                           sellAmount={sellAmount}
+            <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
-                           setSellAmount={setSellAmount}
-                           disabled={false}
-                           setDisplayState={setDisplayState}/>
-            <BuyContainer  activeAccount={ACTIVE_ACCOUNT}
-                           buyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
-                           setBuyAmount={setBuyAmount}
-                           disabled={true}
+                           setSellAmountCallback={setSellAmount}
+                           setDisplayState={setDisplayState}/>
+            <BuyContainer  updateBuyAmount={buyAmount}
+                           buyTokenContract={buyTokenContract}
+                           setBuyAmountCallback={setBuyAmount}
                            setDisplayState={setDisplayState} />          
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
             <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
