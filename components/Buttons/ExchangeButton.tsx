@@ -12,7 +12,7 @@ type Props = {
 const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
 
   const show = () => {
-    // alert(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+    // alert(`show:CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
     console.debug(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
   }
 
@@ -20,7 +20,8 @@ const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
     let noTradingAmount:boolean = false;
     try {
     // let noTradingAmount:boolean = !( exchangeContext.tradeData.sellAmount === "0"  || exchangeContext.tradeData.buyAmount === "0" )
-    noTradingAmount = ( exchangeContext.tradeData.sellAmount === 0n )
+    noTradingAmount = ( exchangeContext.tradeData.sellAmount.toString() === "0" )
+
     // console.log(`ExchangeButton => exchangeContext.tradeData.sellAmount = ${exchangeContext.tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
     // alert (validTradingAmount)
     } catch(err:any) {

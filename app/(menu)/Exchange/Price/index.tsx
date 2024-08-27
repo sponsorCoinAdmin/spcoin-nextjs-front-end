@@ -220,6 +220,7 @@ export default function PriceView() {
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
+                           buyTokenContract={buyTokenContract}
                            setSellAmountCallback={setSellAmount}
                            setDisplayState={setDisplayState}/>
             <BuyContainer  updateBuyAmount={buyAmount}

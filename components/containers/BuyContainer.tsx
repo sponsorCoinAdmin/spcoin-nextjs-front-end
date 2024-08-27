@@ -10,6 +10,9 @@ import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
+import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
+import { Address } from 'viem';
+import { BURN_ADDRESS } from '@/lib/network/utils';
 
 type Props = {
   updateBuyAmount: bigint,
@@ -20,10 +23,16 @@ type Props = {
 
 const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
+  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
-  const [balanceOf, setBalanceOf] = useState<bigint>(exchangeContext.tradeData.buyBalanceOf);
-  let disabled = true;
+  const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
+
+  useEffect(() =>  {
+    // alert (`setTokenContract(${sellTokenContract})`)
+    setTokenContract(buyTokenContract)
+  }, [buyTokenContract]);
 
   useEffect (() => {
     console.debug(`SellContainer:sellAmount = ${buyAmount}`)
@@ -47,6 +56,10 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
     exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
   }, [ACTIVE_ACCOUNT.address]);
 
+  useEffect(() => {
+    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
+    exchangeContext.tradeData.buyBalanceOf = balanceOf;
+  }, [balanceOf]);
 
 
 
@@ -60,8 +73,13 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
       setBuyAmount(updateBuyAmount);
   }, [updateBuyAmount]);
 
+  useEffect(() => {
+    // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
+    if (ACTIVE_ACCOUNT.address)
+      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
+  }, [ACTIVE_ACCOUNT.address]);
 
-
+  let disabled = true;
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
@@ -73,9 +91,8 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   }
 
   try {
-    exchangeContext.buyTokenContract.decimals = getERC20WagmiClientDecimals(buyTokenContract.address) || 0;
-    // exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
-    exchangeContext.tradeData.buyFormattedBalance = formatDecimals(exchangeContext.tradeData.buyBalanceOf, exchangeContext.buyTokenContract.decimals);
+    exchangeContext.sellTokenContract.decimals = decimals ||0;;
+    exchangeContext.tradeData.buyFormattedBalance = formattedBalanceOf;
 
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
@@ -87,7 +104,7 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
         <AssetSelect TokenContract={buyTokenContract} id={"BuyTokenSelectDialog"} disabled={false}></AssetSelect>
       <div className={styles["buySell"]}>You receive</div>
       <div className={styles["assetBalance"]}>
-        Balance: {exchangeContext.tradeData.buyFormattedBalance}
+        Balance: {formattedBalanceOf}
       </div>
       {IsSpCoin ?
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
