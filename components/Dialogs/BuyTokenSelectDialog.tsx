@@ -6,13 +6,13 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract, TRADE_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import { exchangeContext } from '@/lib/context';
+import { useAccount } from 'wagmi';
 
 const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Type or paste token to buy address';
@@ -22,11 +22,14 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ connectedAccountAddr, sellTokenContract, callBackSetter }: any) {
+export default function Dialog({sellTokenContract, callBackSetter }: any) {
+    const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
+    const chainId = sellTokenContract.chainId;
+    const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         closeDialog();
@@ -48,10 +51,6 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
             setTokenSelect(TokenContract.symbol);
     }, [TokenContract]);
     
-    const chainId = sellTokenContract.chainId;
-    if (connectedAccountAddr === undefined) 
-        connectedAccountAddr = BURN_ADDRESS
-
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
@@ -93,7 +92,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                 return false;
             }
             await getWagmiBalanceOfRec (sellTokenContract.address)
-            callBackSetter(listElement, TRADE_TYPE.NEW_BUY_CONTRACT)
+            callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
             alert("BUY_ERROR:getSelectedListElement e.message" + e.message)

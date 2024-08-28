@@ -25,37 +25,6 @@ type Props = {
   setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
-function updateTradeTransaction(newTransactionContract: TokenContract, tradeType: TRADE_TYPE) {
-  // setTransactionType(transactionType)
-  // let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
-  // msg += `newTransactionContract.name =${newTransactionContract.name}`
-  // msg += `newTransactionContract.decimals =${newTransactionContract.decimals}`
-  // msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}`
-
-  // switch (tradeType) {
-  //   case TRADE_TYPE.NEW_BUY_CONTRACT:
-  //     msg += `buyTokenContract.name =${buyTokenContract.name}`
-  //     msg += `buyTokenContract.decimals =${buyTokenContract.decimals}`
-  //     msg += `buyTokenContract = ${stringifyBigInt(sellTokenContract)}`
-  //     setBuyTokenContract(newTransactionContract);
-  //   break;
-  //   case TRADE_TYPE.NEW_SELL_CONTRACT:
-  //     msg += `sellTokenContract.name =${sellTokenContract.name}`
-  //     msg += `sellTokenContract.decimals =${sellTokenContract.decimals}`
-  //     msg += `sellTokenContract = ${stringifyBigInt(sellTokenContract)}`
-  //     msg += `sellAmount=${sellAmount}`
-  //     const decimalShift:number = (newTransactionContract.decimals || 0) - (sellTokenContract.decimals || 0);
-  //     const newSellAmount = bigIntDecimalShift(sellAmount , decimalShift);
-  //     setSellTokenContract(newTransactionContract);
-  //     setSellAmount(newSellAmount);
-  //     msg += `decimalShift=${decimalShift}`
-  //     msg += `newSellAmount=${newSellAmount}`
-  //   break;
-  // }
-  // msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-  // console.debug(msg);
-}
-
 
 /* Sell Token Selection Module */
 const SellContainer = ({updateSellAmount,
@@ -105,6 +74,21 @@ const SellContainer = ({updateSellAmount,
 
   let disabled = false;
 
+  function updateTradeTransaction(newTransactionContract: TokenContract) {
+    alert (`updateTradeTransaction(sellContainer:${newTransactionContract.name})`)
+    setTokenContract(newTransactionContract)
+    let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
+    msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
+    msg += `sellTokenContract = ${stringifyBigInt(sellTokenContract)}\n`
+    msg += `sellAmount=${sellAmount}\n`
+    const decimalShift:number = (newTransactionContract.decimals || 0) - (sellTokenContract.decimals || 0);
+    const newSellAmount = bigIntDecimalShift(sellAmount , decimalShift);
+    msg += `decimalShift=${decimalShift}\n`
+    msg += `newSellAmount=${newSellAmount}\n`
+    msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
+    setSellAmount(newSellAmount);
+  }
+  
   try {  
     exchangeContext.sellTokenContract.decimals = decimals ||0;;
     exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
@@ -125,7 +109,7 @@ const SellContainer = ({updateSellAmount,
 
     return (
       <>
-        {/* <SellTokenSelectDialog connectedAccountAddr={ACTIVE_ACCOUNT.address} buyTokenContract={buyTokenContract} callBackSetter={updateTradeTransaction} /> */}
+        {/* <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateTradeTransaction} /> */}
         <div className={styles.inputs}>
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
@@ -144,7 +128,7 @@ const SellContainer = ({updateSellAmount,
             </> : null}
         </div>
       </>
-    );
+    )
   } catch (err:any) {
     console.debug (`Sell Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
     // alert(`Sell Container Error:\n ${err.message}\n${JSON.stringify(exchangeContext,null,2)}`)
