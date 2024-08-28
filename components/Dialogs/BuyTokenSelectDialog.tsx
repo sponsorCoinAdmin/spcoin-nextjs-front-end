@@ -125,7 +125,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                         &nbsp;
                     </div>
                 </div>
-                    <div id="buySelectGroup" className={styles.modalInputSelect}>
+                <div id="buySelectGroup" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
@@ -140,7 +140,7 @@ export default function Dialog({ connectedAccountAddr, sellTokenContract, callBa
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType="ethereum" getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

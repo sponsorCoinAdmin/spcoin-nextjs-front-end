@@ -47,10 +47,44 @@ function getInitialContext(chain:any | number): ExchangeContext {
     return exchangeContext;
 }
 
-const resetContextNetwork = (chain:any) => {
+const resetNetworkContext = (chain:any) => {
     const networkName = chain.name.toLowerCase();
-    console.debug("resetContextNetwork: newNetworkName = " + networkName);
-    console.debug("resetContextNetwork: exchangeContext.network.name = " + exchangeContext.network.name);
+    console.debug("resetNetworkContext: newNetworkName = " + networkName);
+    console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
+    console.debug(`UPDATING NETWORK to ${networkName}`);
+
+    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
+    console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
+    exchangeContext.network.chainId = chain.id;
+    exchangeContext.network.name = networkName
+    exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
+    exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+    exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
+    exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,
+    exchangeContext.agentAccount = defaultNetworkSettings.defaultAgent
+}
+
+const resetSellNetworkContext = (chain:any) => {
+    const networkName = chain.name.toLowerCase();
+    console.debug("resetNetworkContext: newNetworkName = " + networkName);
+    console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
+    console.debug(`UPDATING NETWORK to ${networkName}`);
+
+    const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
+    console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
+    exchangeContext.network.chainId = chain.id;
+    exchangeContext.network.name = networkName
+    exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
+    exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
+    exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
+    exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,
+    exchangeContext.agentAccount = defaultNetworkSettings.defaultAgent
+}
+
+const resetBuyNetworkContext = (chain:any) => {
+    const networkName = chain.name.toLowerCase();
+    console.debug("resetNetworkContext: newNetworkName = " + networkName);
+    console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
     console.debug(`UPDATING NETWORK to ${networkName}`);
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
@@ -86,6 +120,6 @@ export function ExchangeWrapper({children} : {
 getInitialContext(chainId);
 
 export {
-    resetContextNetwork,
+    resetNetworkContext,
     exchangeContext
 }

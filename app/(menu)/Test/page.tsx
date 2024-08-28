@@ -5,7 +5,6 @@ import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
 import { Config, useAccount, UseAccountReturnType, useDisconnect } from 'wagmi'
 import ReadWagmiEcr20Fields from '@/components/ecr20/ReadWagmiEcr20Fields'
 import ReadWagmiEcr20RecordFields from '@/components/ecr20/ReadWagmiEcr20RecordFields'
-import WagmiConnect from '@/components/ecr20/WagmiConnect'
 import ProviderConfigurationStatus from '@/components/ecr20/ProviderConfigurationStatus'
 import ReadWagmiEcr20Records from '@/components/ecr20/ReadWagmiEcr20Records'
 import ReadWagmiEcr20ContractFields from '@/components/ecr20/ReadWagmiEcr20ContractFields'
@@ -50,7 +49,6 @@ function App() {
   return (
     <>
       <ProviderConfigurationStatus />
-      {/* <WagmiConnect /> */}
       <ReadWagmiEcr20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiEcr20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiEcr20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />

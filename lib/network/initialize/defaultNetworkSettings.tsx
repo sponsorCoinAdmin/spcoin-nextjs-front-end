@@ -2,6 +2,9 @@ import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
 import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
+import { useAccount } from 'wagmi';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
+
 
 /**
  * Determine whether the given `input` is a string in lowercase.
@@ -10,26 +13,31 @@ import { isLowerCase } from '../utils';
  */
 
 const getDefaultNetworkSettings = (chain:any) => {
-  // alert("getDefaultNetworkSettings"+chain )
+    // alert("getDefaultNetworkSettings"+chain )
   if (typeof chain === "string" && !isLowerCase(chain)) {
     chain = chain.toLowerCase()
   }
-  else if (typeof chain !== "number" ) {
+  else if (typeof chain !== "number" && typeof chain !== "string") {
     chain = chain.id
   }
   
+  console.debug(`getDefaultNetworkSettings:chain = ${chain}`);
   switch(chain)
   {
       case 1:
-      case "ethereum": return defaultEthereumSettings;
+      case "ethereum": //alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultEthereumSettings;
       case 137:
-      case "polygon": return defaultPolygonSettings;
+      case "polygon":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultPolygonSettings;
       case 11155111:
-      case "sepolia": return defaultSoliditySettings;
-      default: return defaultEthereumSettings;
+      case "sepolia":  //alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultSoliditySettings;
+      default: alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultEthereumSettings;
   }
 }
 
-export { 
-    getDefaultNetworkSettings
+export {
+  getDefaultNetworkSettings
  };
