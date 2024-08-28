@@ -29,7 +29,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
     const chainId = buyTokenContract.chainId;
-    const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESSclear;
+    const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         closeDialog();
