@@ -26,31 +26,31 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
-import { exchangeContext, resetContextNetwork } from "@/lib/context";
+import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 
 //////////// Price Code
 export default function PriceView() {
 
-  try {
-    const ACTIVE_ACCOUNT = useAccount()
-    const [price, setPrice] = useState<PriceResponse | undefined>();
-    const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
-    const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-    const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-    const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
-    const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
-    const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
-    const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
-    const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
-    const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
-    const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
-    useEffect(() => {
-      console.debug(`*****Setting SellTokenContract to ` + stringifyBigInt(sellTokenContract));
-      exchangeContext.sellTokenContract = sellTokenContract;
-    }, [sellTokenContract] );
+  const ACTIVE_ACCOUNT = useAccount()
+  const [price, setPrice] = useState<PriceResponse | undefined>();
+  const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
+  const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
+  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
+  const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
+  const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
+  const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+  const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
+  useEffect(() => {
+    console.debug(`*****Setting SellTokenContract to ` + stringifyBigInt(sellTokenContract));
+    exchangeContext.sellTokenContract = sellTokenContract;
+  }, [sellTokenContract] );
 
+  try {
     function swapBuySellTokens() {
       const tmpTokenContract: TokenContract = buyTokenContract;
       const tradeData=exchangeContext.tradeData;
@@ -98,20 +98,20 @@ export default function PriceView() {
       exchangeContext.buyTokenContract = buyTokenContract;
     }, [buyTokenContract] );
 
-    // useEffect(() => {
-    //   const chain = ACTIVE_ACCOUNT.chain;
-    //   if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
-    //     alert(`chain = ${stringifyBigInt(chain)}`)
-    //     resetContextNetwork(chain)
-    //     console.debug(`exchangeContext = ${stringifyBigInt(exchangeContext)}`)
-    //     setSellTokenContract(exchangeContext.sellTokenContract);
-    //     setBuyTokenContract(exchangeContext.buyTokenContract);
-    //     setRecipientElement(exchangeContext.recipientAccount);
-    //     setAgentElement(exchangeContext.agentAccount);
-    //     setDisplayState(exchangeContext.displayState);
-    //     setSlippage(exchangeContext.tradeData.slippage);
-    //   }
-    // }, [ACTIVE_ACCOUNT.chain]);
+    useEffect(() => {
+      const chain = ACTIVE_ACCOUNT.chain;
+      if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
+        // alert(`chain = ${stringifyBigInt(chain)}`)
+        resetNetworkContext(chain)
+        console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
+        setSellTokenContract(exchangeContext.sellTokenContract);
+        setBuyTokenContract(exchangeContext.buyTokenContract);
+        setRecipientElement(exchangeContext.recipientAccount);
+        setAgentElement(exchangeContext.agentAccount);
+        setDisplayState(exchangeContext.displayState);
+        setSlippage(exchangeContext.tradeData.slippage);
+      }
+    }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
       // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);

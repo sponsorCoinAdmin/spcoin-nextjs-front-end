@@ -48,7 +48,6 @@ function App() {
   return (
     <>
       <ProviderConfigurationStatus />
-      {/* <WagmiConnect /> */}
       <ReadWagmiEcr20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiEcr20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiEcr20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
@@ -63,4 +62,3 @@ function App() {
 }
 
 export default App
-// export { ACTIVE_ACCOUNT }

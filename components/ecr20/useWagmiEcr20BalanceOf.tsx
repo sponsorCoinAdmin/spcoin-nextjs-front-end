@@ -10,3 +10,4 @@ const useWagmiEcr20BalanceOf      = (ACTIVE_ACCOUNT_ADDRESS: string | undefined,
 }
 
 export default useWagmiEcr20BalanceOf
+
