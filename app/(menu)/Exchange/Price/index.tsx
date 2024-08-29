@@ -45,17 +45,8 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
-  useEffect(() => {
-    console.debug(`*****Setting SellTokenContract to ` + stringifyBigInt(sellTokenContract));
-    exchangeContext.sellTokenContract = sellTokenContract;
-  }, [sellTokenContract] );
 
   try {
-    useEffect(() => {
-      console.debug(`*****Setting BuyTokenContract to ` + stringifyBigInt(buyTokenContract));
-      exchangeContext.buyTokenContract = buyTokenContract;
-    }, [buyTokenContract] );
-
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
@@ -81,11 +72,6 @@ export default function PriceView() {
       // console.debug('PRICE:useEffect slippage changed to  ' + slippage);
       exchangeContext.tradeData.slippage = slippage;
     }, [slippage]);
-
-    useEffect(() => {
-      // alert("PRICE:useEffect:sellTokenContract.symbol changed to " + sellTokenContract.name);
-      exchangeContext.sellTokenContract = sellTokenContract;
-    }, [sellTokenContract]);
 
     useEffect(() => {
       if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenContract))
@@ -210,8 +196,7 @@ export default function PriceView() {
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            buyTokenContract={buyTokenContract}
-                           setSellAmountCallback={setSellAmount}
-                           setDisplayState={setDisplayState}/>
+                           setSellAmountCallback={setSellAmount}/>
             <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}

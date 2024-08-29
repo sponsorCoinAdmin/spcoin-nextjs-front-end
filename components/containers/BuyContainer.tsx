@@ -13,6 +13,7 @@ import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
+import { setDisplayPanels } from '@/lib/spCoin/guiControl';
 
 type Props = {
   updateBuyAmount: bigint,
@@ -28,10 +29,12 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
+  // const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
   useEffect(() =>  {
     // alert (`setTokenContract(${sellTokenContract})`)
     setTokenContract(buyTokenContract)
+    exchangeContext.buyTokenContract = tokenContract;
   }, [buyTokenContract]);
 
   useEffect (() => {
@@ -60,8 +63,6 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
     // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
     exchangeContext.tradeData.buyBalanceOf = balanceOf;
   }, [balanceOf]);
-
-
 
   useEffect(() =>  {
     const decimals = buyTokenContract.decimals;

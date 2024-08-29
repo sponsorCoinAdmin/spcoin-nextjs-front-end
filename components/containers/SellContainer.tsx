@@ -21,8 +21,7 @@ type Props = {
   updateSellAmount: bigint,
   sellTokenContract: TokenContract, 
   buyTokenContract: TokenContract, 
-  setSellAmountCallback: (sellAmount:bigint) => void,
-  setDisplayState:(displayState:DISPLAY_STATE) => void
+  setSellAmountCallback: (sellAmount:bigint) => void
 }
 
 
@@ -30,8 +29,7 @@ type Props = {
 const SellContainer = ({updateSellAmount,
                         sellTokenContract,
                         buyTokenContract,
-                        setSellAmountCallback,
-                        setDisplayState} : Props) => {
+                        setSellAmountCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
@@ -52,7 +50,7 @@ const SellContainer = ({updateSellAmount,
 
   useEffect(() =>  {
     // alert (`setTokenContract(${sellTokenContract})`)
-    setTokenContract(sellTokenContract)
+    exchangeContext.sellTokenContract = sellTokenContract;
   }, [sellTokenContract]);
 
   useEffect (() => {
@@ -124,7 +122,7 @@ const SellContainer = ({updateSellAmount,
           </div>
           {IsSpCoin ?
             <>
-              <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} setDisplayState={setDisplayState} />
+              <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} />
             </> : null}
         </div>
       </>

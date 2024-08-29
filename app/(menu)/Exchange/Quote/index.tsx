@@ -81,7 +81,6 @@ export default function QuoteView({
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
-  const [exchangeContext.tradeData.transactionType, setexchangeContext.tradeData.transactionType] = useState(exchangeContext.tradeData..transactionType);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
