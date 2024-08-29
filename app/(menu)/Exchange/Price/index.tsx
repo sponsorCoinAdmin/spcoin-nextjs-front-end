@@ -28,7 +28,6 @@ import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
-import { BURN_ADDRESS } from '@/lib/network/utils';
 
 //////////// Price Code
 export default function PriceView() {
@@ -53,8 +52,6 @@ export default function PriceView() {
         // alert(`chain = ${stringifyBigInt(chain)}`)
         resetNetworkContext(chain)
         console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
-        setSellTokenContract(exchangeContext.sellTokenContract);
-        setBuyTokenContract(exchangeContext.buyTokenContract);
         setRecipientElement(exchangeContext.recipientAccount);
         setAgentElement(exchangeContext.agentAccount);
         setDisplayState(exchangeContext.displayState);
@@ -67,6 +64,19 @@ export default function PriceView() {
       setDisplayPanels(displayState);
       exchangeContext.displayState = displayState;
     },[displayState]);
+
+    useEffect(() => {
+      alert(`Price:sellAmount = ${sellAmount}`)
+    },[sellAmount]);
+
+    useEffect(() => {
+      alert(`Price:buyAmount = ${buyAmount}`)
+    },[buyAmount]);
+
+    useEffect(() => {
+      // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
+
+    },[sellTokenContract]);
 
     useEffect(() => {
       // console.debug('PRICE:useEffect slippage changed to  ' + slippage);
@@ -93,14 +103,9 @@ export default function PriceView() {
     }, [errorMessage]);
 
     function swapBuySellTokens() {
-      const tmpTokenContract: TokenContract = buyTokenContract;
-      const tradeData=exchangeContext.tradeData;
-      const decimalShift:number = (buyTokenContract.decimals || 0) - (sellTokenContract.decimals || 0);
-      const newSellAmount:bigint = bigIntDecimalShift(tradeData.sellAmount , decimalShift);
-      console.debug(`New Sell Amount = ${newSellAmount}`)
+      const tmpTokenContract: TokenContract = exchangeContext.buyTokenContract;
+      setBuyTokenContract(exchangeContext.sellTokenContract);
       setSellTokenContract(tmpTokenContract);
-      setSellAmount(newSellAmount);
-      setBuyTokenContract(sellTokenContract);
     }
 
     function updateSellTransaction(newTransactionContract: TokenContract) {
@@ -160,6 +165,7 @@ export default function PriceView() {
             // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             // console.log(dataMsg)
             // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
+            alert(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
             setBuyAmount(data.buyAmount);
@@ -185,7 +191,7 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateSellTransaction} />
+          {/* <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateSellTransaction} /> */}
           <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} />
           <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
@@ -200,8 +206,8 @@ export default function PriceView() {
             <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
-                           setDisplayState={setDisplayState} />          
-            <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
+                           setDisplayState={setDisplayState}/>
+            <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
             {
               // <QuoteButton sendTransaction={sendTransaction}/>

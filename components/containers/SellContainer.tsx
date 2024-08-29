@@ -24,7 +24,6 @@ type Props = {
   setSellAmountCallback: (sellAmount:bigint) => void
 }
 
-
 /* Sell Token Selection Module */
 const SellContainer = ({updateSellAmount,
                         sellTokenContract,
@@ -44,6 +43,7 @@ const SellContainer = ({updateSellAmount,
   }, []);
 
   useEffect(() =>  {
+    // alert (`tokenContract(${stringifyBigInt(sellTokenContract)})`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
     exchangeContext.sellTokenContract = tokenContract;
   }, [tokenContract]);
@@ -51,6 +51,7 @@ const SellContainer = ({updateSellAmount,
   useEffect(() =>  {
     // alert (`setTokenContract(${sellTokenContract})`)
     exchangeContext.sellTokenContract = sellTokenContract;
+    updateTradeTransaction(sellTokenContract);
   }, [sellTokenContract]);
 
   useEffect (() => {
@@ -73,7 +74,7 @@ const SellContainer = ({updateSellAmount,
   let disabled = false;
 
   function updateTradeTransaction(newTransactionContract: TokenContract) {
-    alert (`updateTradeTransaction(sellContainer:${newTransactionContract.name})`)
+    console.debug(`updateTradeTransaction(sellContainer:${newTransactionContract.name})`)
     setTokenContract(newTransactionContract)
     let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
     msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
@@ -107,7 +108,7 @@ const SellContainer = ({updateSellAmount,
 
     return (
       <>
-        {/* <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateTradeTransaction} /> */}
+        <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateTradeTransaction} />
         <div className={styles.inputs}>
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
