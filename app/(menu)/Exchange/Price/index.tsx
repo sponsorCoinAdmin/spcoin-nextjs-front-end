@@ -66,11 +66,11 @@ export default function PriceView() {
     },[displayState]);
 
     useEffect(() => {
-      alert(`Price:sellAmount = ${sellAmount}`)
+      // alert(`Price:sellAmount = ${sellAmount}`)
     },[sellAmount]);
 
     useEffect(() => {
-      alert(`Price:buyAmount = ${buyAmount}`)
+      // alert(`Price:buyAmount = ${buyAmount}`)
     },[buyAmount]);
 
     useEffect(() => {
