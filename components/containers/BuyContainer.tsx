@@ -64,6 +64,11 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
     exchangeContext.tradeData.buyBalanceOf = balanceOf;
   }, [balanceOf]);
 
+  useEffect(() => {
+    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
+    exchangeContext.tradeData.buyFormattedBalance = formattedBalanceOf;
+  }, [formattedBalanceOf]);
+
   useEffect(() =>  {
     const decimals = buyTokenContract.decimals;
     const stringValue = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
@@ -92,8 +97,8 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   }
 
   try {
-    exchangeContext.sellTokenContract.decimals = decimals ||0;;
-    exchangeContext.tradeData.buyFormattedBalance = formattedBalanceOf;
+    // exchangeContext.sellTokenContract.decimals = decimals ||0;;
+    // exchangeContext.tradeData.buyFormattedBalance = formattedBalanceOf;
 
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (

@@ -1,37 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import CustomConnectButton from './CustomConnectButton';
 import ExchangeButton from './ExchangeButton';
-import { ExchangeContext, TradeData } from '@/lib/structure/types'
+import { exchangeContext } from "@/lib/context";
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import styles from '@/styles/Exchange.module.css'
 import { stringifyBigInt } from '@/lib/spCoin/utils';
+import DumpContextButton from './DumpContextButton';
 
 type Props = {
-    exchangeContext:ExchangeContext,
-    tradeData:TradeData
+    connectedAccountAddr:any
   }
 
-const PriceButton = ({exchangeContext, tradeData}:Props) => {
-    
-    const show = () => {
-        // alert(`show:CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-        console.debug(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-      }
-    
+const PriceButton = ({connectedAccountAddr}:Props) => {    
+    const [ displayDumpContextButton, setDisplayDumpContextButton ] = useState<boolean>(exchangeContext.test.dumpContextButton)
+    useEffect(() => {
+        setDisplayDumpContextButton(exchangeContext.test.dumpContextButton)
+        // alert(`exchangeContext.test.dumpContextButton = ${exchangeContext.test.dumpContextButton}`)
+    }, [exchangeContext.test.dumpContextButton])
+
     return (
         <div>
-            {!exchangeContext.connectedAccountAddr || exchangeContext.connectedAccountAddr === BURN_ADDRESS?
+            {!connectedAccountAddr || connectedAccountAddr === BURN_ADDRESS?
                 (<CustomConnectButton />) :
-                (<ExchangeButton  exchangeContext={exchangeContext} tradeData={tradeData} />)
+                (<ExchangeButton />)
             }
-            <button
-                onClick={show}
-                // disabled={true}
-                type="button"
-                className={styles["exchangeButton"]}
-                >
-                Dump Context
-            </button>
+            {!displayDumpContextButton || <DumpContextButton />}
         </div>
     );
 }

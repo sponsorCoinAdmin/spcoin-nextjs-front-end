@@ -50,7 +50,7 @@ export default function PriceView() {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
         // alert(`chain = ${stringifyBigInt(chain)}`)
-        resetNetworkContext(chain)
+        resetNetworkContext(chain, ACTIVE_ACCOUNT.address)
         console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
         setRecipientElement(exchangeContext.recipientAccount);
         setAgentElement(exchangeContext.agentAccount);
@@ -58,6 +58,10 @@ export default function PriceView() {
         setSlippage(exchangeContext.tradeData.slippage);
       }
     }, [ACTIVE_ACCOUNT.chain]);
+
+    useEffect(() => {
+      exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address;
+    }, [ACTIVE_ACCOUNT.address]);
 
     useEffect(() => {
       // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
@@ -165,7 +169,7 @@ export default function PriceView() {
             // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             // console.log(dataMsg)
             // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
-            alert(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
+            console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
             setBuyAmount(data.buyAmount);
@@ -208,7 +212,7 @@ export default function PriceView() {
                            setBuyAmountCallback={setBuyAmount}
                            setDisplayState={setDisplayState}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-            <PriceButton exchangeContext={exchangeContext} tradeData={exchangeContext.tradeData} />
+            <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />
             {
               // <QuoteButton sendTransaction={sendTransaction}/>
             }

@@ -14,10 +14,10 @@ import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const getDefaultNetworkSettings = (chain:any) => {
     // alert("getDefaultNetworkSettings"+chain )
-  if (typeof chain === "string" && !isLowerCase(chain)) {
+  if (chain && typeof chain === "string" && !isLowerCase(chain)) {
     chain = chain.toLowerCase()
   }
-  else if (typeof chain !== "number" && typeof chain !== "string") {
+  else if (chain && typeof chain !== "number" && typeof chain !== "string") {
     chain = chain.id
   }
   
@@ -33,7 +33,7 @@ const getDefaultNetworkSettings = (chain:any) => {
       case 11155111:
       case "sepolia":  //alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
       return defaultSoliditySettings;
-      default: alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      default: // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
       return defaultEthereumSettings;
   }
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import styles from '@/styles/Exchange.module.css'
 import { ConnectKitButton } from "connectkit";
 
-function CustomConnectButton() {
+const CustomConnectButton = () => {    
   return (
     <div>
       { (

@@ -66,10 +66,21 @@ const SellContainer = ({updateSellAmount,
   }, [balanceOf]);
 
   useEffect(() => {
+    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
+    exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
+  }, [formattedBalanceOf]);
+
+
+  useEffect(() => {
     // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
     if (ACTIVE_ACCOUNT.address)
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
+
+  useEffect(() => {
+    // alert("exchangeContext.sellTokenContract " + stringifyBigInt(exchangeContext.sellTokenContract))
+  }, [exchangeContext.sellTokenContract]);
+
 
   let disabled = false;
 
@@ -89,8 +100,8 @@ const SellContainer = ({updateSellAmount,
   }
   
   try {  
-    exchangeContext.sellTokenContract.decimals = decimals ||0;;
-    exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
+    // exchangeContext.sellTokenContract.decimals = decimals || 0;;
+    // exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
 
     const IsSpCoin = isSpCoin(tokenContract);
 
