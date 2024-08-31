@@ -44,7 +44,7 @@ const SellContainer = ({updateSellAmount,
   }, []);
 
   useEffect(() =>  {
-    alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
+    // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
     exchangeContext.sellTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
