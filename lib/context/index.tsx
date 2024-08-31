@@ -45,7 +45,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
 
         tradeData: defaultInitialTradeData,
         displayState: ifBuyTokenSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
-        test : {dumpContextButton:false}
+        test : {dumpContextButton:true}
     }
     // alert(`***Context.getInitialContext:sellTokenContract: ${JSON.stringify(defaultNetworkSettings.defaultSellToken,null,2)}`)
     // alert(`***Context.getInitialContext: ${JSON.stringify(defaultNetworkSettings,null,2)}`)

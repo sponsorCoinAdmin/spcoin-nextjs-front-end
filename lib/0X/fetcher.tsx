@@ -25,10 +25,11 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   try {
     console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    console.debug(`BEFORE fetcher:${endpoint}?${query}`);
-    let result = fetch(`${endpoint}?${query}`).then((res) => res.json());
+    const apiCall = endpoint + '?' + query;
+    console.debug(`BEFORE fetcher.apiCall:${apiCall}`);
+    let result = fetch(`${apiCall}`).then((res) => res.json());
     // console.debug(`fetcher: ${endpoint}?${query}`);
-    // console.debug("fetcher result = " + JSON.stringify(result,null,2) + "]")
+    // alert("fetcher result = " + JSON.stringify(result,null,2) + "]")
     return result
   }
   catch (e) {

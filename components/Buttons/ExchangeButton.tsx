@@ -16,11 +16,8 @@ const ExchangeButton = () => {
   const insufficientSellAmount = () => {
     let noTradingAmount:boolean = false;
     try {
-    // let noTradingAmount:boolean = !( exchangeContext.tradeData.sellAmount === "0"  || exchangeContext.tradeData.buyAmount === "0" )
     noTradingAmount = ( exchangeContext.tradeData.sellAmount.toString() === "0" )
 
-    // console.log(`ExchangeButton => exchangeContext.tradeData.sellAmount = ${exchangeContext.tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
-    // alert (validTradingAmount)
     } catch(err:any) {
       console.debug(`ERROR: CustomConnectButton.insufficientSellAmount: ${err.message}`)
     }

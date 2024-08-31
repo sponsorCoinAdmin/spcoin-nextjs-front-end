@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, TRADE_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, bigIntDecimalShift } from '@/lib/spCoin/utils';
+import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, bigIntDecimalShift, adjustTokenPriceAmount } from '@/lib/spCoin/utils';
 import { formatDecimals, getERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
@@ -21,37 +21,39 @@ type Props = {
   updateSellAmount: bigint,
   sellTokenContract: TokenContract, 
   buyTokenContract: TokenContract, 
-  setSellAmountCallback: (sellAmount:bigint) => void
+  setSellAmountCallback: (sellAmount:bigint) => void,
+  setTokenContractCallback: (tokenContract:TokenContract) => void,
 }
 
 /* Sell Token Selection Module */
 const SellContainer = ({updateSellAmount,
                         sellTokenContract,
                         buyTokenContract,
-                        setSellAmountCallback} : Props) => {
+                        setSellAmountCallback,
+                        setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
+  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
-  const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
+  const [tokenContract, setTokenContract] = useState<TokenContract>(sellTokenContract);
   const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
 
   useEffect(() =>  {
-    console.debug(`SellContainer.useEffect([]):tokenContract = ${tokenContract.name}`)
     if (updateSellAmount) 
       setSellAmount(updateSellAmount);
   }, []);
 
   useEffect(() =>  {
-    // alert (`tokenContract(${stringifyBigInt(sellTokenContract)})`)
+    alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
     exchangeContext.sellTokenContract = tokenContract;
+    setTokenContractCallback(tokenContract);
   }, [tokenContract]);
 
   useEffect(() =>  {
-    // alert (`setTokenContract(${sellTokenContract})`)
-    exchangeContext.sellTokenContract = sellTokenContract;
-    updateTradeTransaction(sellTokenContract);
+    // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
+    console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
+    updateTradeTransaction(sellTokenContract)
   }, [sellTokenContract]);
 
   useEffect (() => {
@@ -70,39 +72,22 @@ const SellContainer = ({updateSellAmount,
     exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
   }, [formattedBalanceOf]);
 
-
   useEffect(() => {
     // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
     if (ACTIVE_ACCOUNT.address)
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  useEffect(() => {
-    // alert("exchangeContext.sellTokenContract " + stringifyBigInt(exchangeContext.sellTokenContract))
-  }, [exchangeContext.sellTokenContract]);
-
-
   let disabled = false;
 
-  function updateTradeTransaction(newTransactionContract: TokenContract) {
-    console.debug(`updateTradeTransaction(sellContainer:${newTransactionContract.name})`)
-    setTokenContract(newTransactionContract)
-    let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
-    msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
-    msg += `sellTokenContract = ${stringifyBigInt(sellTokenContract)}\n`
-    msg += `sellAmount=${sellAmount}\n`
-    const decimalShift:number = (newTransactionContract.decimals || 0) - (sellTokenContract.decimals || 0);
-    const newSellAmount = bigIntDecimalShift(sellAmount , decimalShift);
-    msg += `decimalShift=${decimalShift}\n`
-    msg += `newSellAmount=${newSellAmount}\n`
-    msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-    setSellAmount(newSellAmount);
+  function updateTradeTransaction(newTokenContract: TokenContract) {
+    console.debug(`updateTradeTransaction(sellContainer:${newTokenContract.name})`)
+    const adjustedSellAmount:bigint = adjustTokenPriceAmount(sellAmount, newTokenContract, tokenContract);
+    setSellAmount(adjustedSellAmount);
+    setTokenContract(newTokenContract)
   }
   
-  try {  
-    // exchangeContext.sellTokenContract.decimals = decimals || 0;;
-    // exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
-
+  try {
     const IsSpCoin = isSpCoin(tokenContract);
 
     const setStringToBigIntStateValue = (stringValue:string) => {

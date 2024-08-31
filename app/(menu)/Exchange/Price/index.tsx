@@ -112,22 +112,6 @@ export default function PriceView() {
       setSellTokenContract(tmpTokenContract);
     }
 
-    function updateSellTransaction(newTransactionContract: TokenContract) {
-      alert (`updateTradeTransaction(sellContainer:${newTransactionContract.name})`)
-      setSellTokenContract(newTransactionContract);
-      let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
-      msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
-      msg += `sellTokenContract = ${stringifyBigInt(sellTokenContract)}\n`
-      msg += `sellAmount=${sellAmount}\n`
-      const decimalShift:number = (newTransactionContract.decimals || 0) - (sellTokenContract.decimals || 0);
-      const newSellAmount = bigIntDecimalShift(sellAmount , decimalShift);
-      msg += `decimalShift=${decimalShift}\n`
-      msg += `newSellAmount=${newSellAmount}\n`
-      msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-      console.debug(msg);
-      setSellAmount(newSellAmount);
-    }
-
     function updateBuyTransaction(newTransactionContract: TokenContract) {
       setBuyTokenContract(newTransactionContract);
       let msg = `>>>>>>>>>>>> updateTradeTransaction:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
@@ -169,7 +153,6 @@ export default function PriceView() {
             // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
             // console.log(dataMsg)
             // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
-            console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
             setPrice(data);
             // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
             setBuyAmount(data.buyAmount);
@@ -192,6 +175,10 @@ export default function PriceView() {
       }
     );
 
+    const setSellTokenContractCallback = (sellTokenContract:TokenContract) => {
+      setSellTokenContract(sellTokenContract);
+    }
+
     try {
       return (
         <form autoComplete="off">
@@ -206,8 +193,9 @@ export default function PriceView() {
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            buyTokenContract={buyTokenContract}
-                           setSellAmountCallback={setSellAmount}/>
-            <BuyContainer  updateBuyAmount={buyAmount}
+                           setSellAmountCallback={setSellAmount}
+                           setTokenContractCallback={setSellTokenContractCallback}/>
+                           <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
                            setDisplayState={setDisplayState}/>
