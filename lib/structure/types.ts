@@ -73,6 +73,7 @@ type ExchangeContext = {
   buyTokenContract: TokenContract;
   tradeData: TradeData;
   displayState: DISPLAY_STATE;
+  test : {dumpContextButton:boolean};
 }
 
 export {

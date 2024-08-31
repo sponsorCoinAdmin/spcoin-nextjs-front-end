@@ -12,6 +12,7 @@ import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
+import { useAccount } from 'wagmi';
 
 const TITLE_NAME = "Select a token to sell";
 const INPUT_PLACE_HOLDER = 'Type or paste token to sell address';
@@ -21,14 +22,14 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ connectedAccountAddr, buyTokenContract, callBackSetter }: any) {
+export default function Dialog({buyTokenContract, callBackSetter }: any) {
+    const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
     const chainId = buyTokenContract.chainId;
-    if (connectedAccountAddr === undefined) 
-        connectedAccountAddr = BURN_ADDRESS
+    const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         closeDialog();

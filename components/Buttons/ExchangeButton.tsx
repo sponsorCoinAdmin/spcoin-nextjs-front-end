@@ -1,15 +1,12 @@
 import React from 'react'
 import styles from '@/styles/Exchange.module.css'
-import { ExchangeContext, TradeData } from '@/lib/structure/types'
+import { exchangeContext } from "@/lib/context";
 import { formatUnits, parseUnits } from "ethers";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
-type Props = {
-  exchangeContext:ExchangeContext,
-  tradeData:TradeData
-}
+const ExchangeButton = () => {
 
-const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
+  const tradeData = exchangeContext.tradeData;
 
   const show = () => {
     // alert(`show:CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
@@ -19,11 +16,8 @@ const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
   const insufficientSellAmount = () => {
     let noTradingAmount:boolean = false;
     try {
-    // let noTradingAmount:boolean = !( exchangeContext.tradeData.sellAmount === "0"  || exchangeContext.tradeData.buyAmount === "0" )
     noTradingAmount = ( exchangeContext.tradeData.sellAmount.toString() === "0" )
 
-    // console.log(`ExchangeButton => exchangeContext.tradeData.sellAmount = ${exchangeContext.tradeData.sellAmount}\noTradingAmount = ${noTradingAmount}`);
-    // alert (validTradingAmount)
     } catch(err:any) {
       console.debug(`ERROR: CustomConnectButton.insufficientSellAmount: ${err.message}`)
     }
@@ -67,4 +61,4 @@ const CustomConnectButton = ({ exchangeContext, tradeData}:Props) => {
   )
 }
 
-export default CustomConnectButton
+export default ExchangeButton

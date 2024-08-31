@@ -6,11 +6,10 @@ import { openDialog } from '../Dialogs/Dialogs';
 
 type Props = {
   activeAccount: any,
-  tokenContract: TokenContract, 
-  setDisplayState:(displayState:DISPLAY_STATE) => void,
+  tokenContract: TokenContract
 }
 
-const ManageSponsorsButton = ({activeAccount, tokenContract, setDisplayState} : Props) => {
+const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {
 
   try {
   const balanceOf = (getERC20WagmiClientBalanceOfStr(activeAccount.address, tokenContract.address || "") || "0");
