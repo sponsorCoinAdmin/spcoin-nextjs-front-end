@@ -64,8 +64,8 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   }, [formattedBalanceOf]);
 
   useEffect(() =>  {
-    const decimals = buyTokenContract.decimals;
-    const stringValue = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
+    const decimals:number = buyTokenContract.decimals || 0;
+    const stringValue:string = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
     if (stringValue !== "") {
       setFormattedBuyAmount(stringValue);
     }

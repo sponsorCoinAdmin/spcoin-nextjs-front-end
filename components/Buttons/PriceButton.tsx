@@ -14,6 +14,9 @@ const PriceButton = ({connectedAccountAddr}:Props) => {
     const [ displayDumpContextButton, setDisplayDumpContextButton ] = useState<boolean>(exchangeContext.test.dumpContextButton)
     useEffect(() => {
         setDisplayDumpContextButton(exchangeContext.test.dumpContextButton)
+    }, [exchangeContext.test.dumpContextButton])
+    useEffect(() => {
+        setDisplayDumpContextButton(exchangeContext.test.dumpContextButton)
         // alert(`exchangeContext.test.dumpContextButton = ${exchangeContext.test.dumpContextButton}`)
     }, [exchangeContext.test.dumpContextButton])
 

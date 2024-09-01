@@ -39,7 +39,6 @@ function getInitialContext(chain:any | number): ExchangeContext {
 
         recipientAccount: defaultNetworkSettings.defaultRecipient,
         agentAccount: defaultNetworkSettings.defaultAgent,
-
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
