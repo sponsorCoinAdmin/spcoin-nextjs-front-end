@@ -12,10 +12,10 @@ const chainId:number = 1;
 const defaultInitialTradeData:TradeData = {
     sellAmount: 0n,
     sellBalanceOf: 0n,
-    sellFormattedBalance: '0',
+    formattedSellAmount: '0',
     buyAmount: 0n,
     buyBalanceOf: 0n,
-    buyFormattedBalance: '0',
+    formattedBuyAmount: '0',
     transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
     slippage: "0.02"
 };

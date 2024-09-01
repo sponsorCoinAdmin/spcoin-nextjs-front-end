@@ -20,24 +20,6 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
    return "";
 }
 
-// const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
-//   let msg = `BEFORE value = ${value}\n`;
-//   msg += `typeof value = ${typeof value}\n`;
-//   decimals = decimals || 0;
-
-//   const price:string = (typeof value == "string") ? `string value = ${value}` : 
-//                        (typeof value == "bigint") ? `bigint value = ${formatUnits(value || 0n, decimals)}` : 
-//                        `default value = 0`;
-
-//   msg += `price = ${price}\n`
-//   let stringValue:string = formatUnits(value || 0n, decimals);
-//   msg += `stringValue = ${stringValue}`;
-//   alert(msg);
-
-//   stringValue = getValidFormattedPrice(stringValue, decimals);
-//   return stringValue;
-// }
-
 const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
   decimals = decimals || 0;
 
@@ -157,7 +139,7 @@ function adjustTokenPriceAmount(amount:bigint, newTokenContract: TokenContract, 
   msg += `prevTokenContract = ${stringifyBigInt(prevTokenContract)}\n`
   msg += `amount=${amount}\n`
   const decimalShift:number = (newTokenContract.decimals || 0) - (prevTokenContract.decimals || 0);
-  const adjustedAmount = bigIntDecimalShift(amount , decimalShift);
+  const adjustedAmount:bigint = bigIntDecimalShift(amount , decimalShift);
   msg += `decimalShift=${decimalShift}\n`
   msg += `adjustedAmount=${adjustedAmount}\n`
   msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`

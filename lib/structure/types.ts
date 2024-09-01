@@ -57,10 +57,10 @@ type TradeData = {
   transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
   sellBalanceOf:bigint;
-  sellFormattedBalance:string;
+  formattedSellAmount:string;
   buyAmount:bigint;
   buyBalanceOf:bigint;
-  buyFormattedBalance:string;
+  formattedBuyAmount:string;
   slippage: string;
 }
 

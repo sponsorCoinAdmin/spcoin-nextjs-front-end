@@ -4,8 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, TRADE_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, adjustTokenPriceAmount, getValidBigIntToFormattedPrice } from '@/lib/spCoin/utils';
-import { formatDecimals, getERC20WagmiClientDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, adjustTokenPriceAmount, getValidBigIntToFormattedPrice, bigIntDecimalShift } from '@/lib/spCoin/utils';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { formatUnits, parseUnits } from "ethers";
@@ -39,8 +38,8 @@ const SellContainer = ({updateSellAmount,
   let disabled = false;
 
   useEffect(() =>  {
-  //   if (updateSellAmount) 
-  //     setSellAmount(updateSellAmount);
+    const formattedSellAmount = getValidFormattedPrice(sellAmount, sellTokenContract.decimals);
+    setFormattedSellAmount(formattedSellAmount)
   }, []);
 
 
@@ -50,6 +49,10 @@ const SellContainer = ({updateSellAmount,
     exchangeContext.sellTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
+
+  useEffect(() =>  {
+    exchangeContext.tradeData.formattedSellAmount = formattedSellAmount;
+  },[formattedSellAmount]);
 
   useEffect(() =>  {
     // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
@@ -70,7 +73,7 @@ const SellContainer = ({updateSellAmount,
 
   useEffect(() => {
     // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
-    exchangeContext.tradeData.sellFormattedBalance = formattedBalanceOf;
+    exchangeContext.tradeData.formattedSellAmount = formattedBalanceOf;
   }, [formattedBalanceOf]);
 
   useEffect(() => {
@@ -87,15 +90,8 @@ const SellContainer = ({updateSellAmount,
   }
 
   useEffect(() =>  {
-    alert (`useEffect() updateSellAmount = ${updateSellAmount}`)
-    if (updateSellAmount) {
-      const decimals = tokenContract.decimals;
-      const stringValue = getValidBigIntToFormattedPrice(updateSellAmount, decimals)
-      if (stringValue !== "") {
-        setFormattedSellAmount(stringValue);
-      }
-        setSellAmount(updateSellAmount);
-    }
+    if (updateSellAmount) 
+      setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
   

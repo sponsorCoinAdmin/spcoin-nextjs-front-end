@@ -5,7 +5,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { DISPLAY_STATE, TokenContract, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { getERC20WagmiClientDecimals, getERC20WagmiClientBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead';
+import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
@@ -26,16 +26,25 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   const ACTIVE_ACCOUNT = useAccount();
   const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>("0");
+  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
   // const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
+
+  useEffect(() =>  {
+    const formattedSellAmount = getValidFormattedPrice(buyAmount, buyTokenContract.decimals);
+    setFormattedBuyAmount(formattedSellAmount)
+  }, []);
 
   useEffect(() =>  {
     // alert (`setTokenContract(${sellTokenContract})`)
     setTokenContract(buyTokenContract)
     exchangeContext.buyTokenContract = tokenContract;
   }, [buyTokenContract]);
+
+  useEffect(() =>  {
+    exchangeContext.tradeData.formattedBuyAmount = formattedBuyAmount;
+  },[formattedBuyAmount]);
 
   useEffect(() =>  {
     if (updateBuyAmount) 
@@ -60,7 +69,7 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
 
   useEffect(() => {
     // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
-    exchangeContext.tradeData.buyFormattedBalance = formattedBalanceOf;
+    exchangeContext.tradeData.formattedBuyAmount = formattedBalanceOf;
   }, [formattedBalanceOf]);
 
   useEffect(() =>  {
@@ -91,9 +100,6 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   }
 
   try {
-    // exchangeContext.sellTokenContract.decimals = decimals ||0;;
-    // exchangeContext.tradeData.buyFormattedBalance = formattedBalanceOf;
-
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <div className={styles.inputs}>
