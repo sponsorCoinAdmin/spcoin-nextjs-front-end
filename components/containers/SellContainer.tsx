@@ -94,7 +94,6 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
-  
   try {
     const IsSpCoin = isSpCoin(tokenContract);
 

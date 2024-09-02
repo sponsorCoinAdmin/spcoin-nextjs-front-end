@@ -76,6 +76,12 @@ type ExchangeContext = {
   test : {dumpContextButton:boolean};
 }
 
+type ErrorMessage ={ 
+  source:string,
+  errorCode:number,
+  message:string 
+}
+
 export {
   EXCHANGE_STATE,
   TRADE_TYPE,
@@ -85,11 +91,13 @@ export {
 }
 
 export type {
+  AccountRecord,
   ContractRecs,
+  ErrorMessage,
+  ExchangeContext,
   NetworkElement,
   PriceRequestParams,
   TokenContract,
   TradeData,
-  ExchangeContext,
-  AccountRecord
 }
+

@@ -1,4 +1,5 @@
 "use client"
+import { ErrorMessage } from '@/lib/structure/types';
 import styles from './Resources/styles/Modal.module.css';
 
 import { useEffect, useRef, useState } from 'react'
@@ -12,7 +13,7 @@ type ErrorType = {
 
 export default function Dialog({errMsg}:any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
-    // const [errorMessage, setErrorMessage] = useState<Error>({name:"", message:""});
+    const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errorCode:0, message:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))
@@ -33,9 +34,12 @@ export default function Dialog({errMsg}:any) {
 
             <div className={styles.modalBox}>
                 <div className={styles.modalScrollBar}>
-                    <h1>{errMsg.name}</h1>
+                    <h1>SourceCode:{errMsg.source}</h1>
                     <div>
-                        {errMsg.message}
+                        ErrorMessage:{errMsg.errorCode}
+                    </div>
+                    <div>
+                        ErrorMessage:{errMsg.message}
                     </div>
                 </div>
             </div>

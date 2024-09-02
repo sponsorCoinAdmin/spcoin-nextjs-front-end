@@ -12,8 +12,8 @@ import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { AccountRecord, TokenContract, DISPLAY_STATE, ExchangeContext } from '@/lib/structure/types';
-import { fetcher, processError } from '@/lib/0X/fetcher';
+import { AccountRecord, TokenContract, DISPLAY_STATE, ExchangeContext, ErrorMessage } from '@/lib/structure/types';
+import { fetcher } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
@@ -88,7 +88,7 @@ export default function QuoteView({
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState<AccountRecord>(exchangeContext.agentAccount);
-  const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errorCode:0, message: "" });
 
   useEffect(() => {
     console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
@@ -144,13 +144,13 @@ export default function QuoteView({
   }, [recipientAccount]);
 
   useEffect(() => {
-    if (errorMessage.name !== "" && errorMessage.message !== "") {
+    if (errorMessage.source !== "" && errorMessage.message !== "") {
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
 
   useEffect(() => {
-    if (errorMessage.name !== "" && errorMessage.message !== "") {
+    if (errorMessage.source !== "" && errorMessage.message !== "") {
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
@@ -201,16 +201,16 @@ export default function QuoteView({
         console.log("quote", data);
         // console.log(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
       },
-      onError: (error) => {
-        processError(
-          error,
-          setErrorMessage,
-          buyTokenContract,
-          sellTokenContract,
-          setBuyAmount,
-          setValidPriceInput
-        );
-      },
+      // onError: (error) => {
+      //   processError(
+      //     error,
+      //     setErrorMessage,
+      //     buyTokenContract,
+      //     sellTokenContract,
+      //     setBuyAmount,
+      //     setValidPriceInput
+      //   );
+      // },
     }
   );
 

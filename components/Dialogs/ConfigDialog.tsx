@@ -6,7 +6,7 @@ import Slippage from '../Popover/Slippage';
 export default function Dialog({slippage, setSlippageCallback}:any) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     // 
-    // const [errorMessage, setErrorMessage] = useState<Error>({name:"", message:""});
+    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({name:"", message:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))

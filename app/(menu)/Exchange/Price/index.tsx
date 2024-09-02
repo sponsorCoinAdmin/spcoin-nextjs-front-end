@@ -4,16 +4,14 @@ import {
   openDialog,
   AgentDialog,
   RecipientDialog,
-  SellTokenSelectDialog,
   BuyTokenSelectDialog,
   ErrorDialog
 } from '@/components/Dialogs/Dialogs';
-import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
-import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, TRADE_TYPE } from '@/lib/structure/types';
-import { ERROR_0X_RESPONSE, fetcher, processError } from '@/lib/0X/fetcher';
-import { bigIntDecimalShift, isSpCoin, setValidPriceInput, stringifyBigInt } from '@/lib/spCoin/utils';
+import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, TRADE_TYPE, ErrorMessage } from '@/lib/structure/types';
+import { PriceAPI } from '@/lib/0X/fetcher';
+import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
@@ -40,7 +38,7 @@ export default function PriceView() {
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
-  const [errorMessage, setErrorMessage] = useState<Error>({ name: "", message: "" });
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errorCode:0, message: "" });
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
@@ -70,11 +68,17 @@ export default function PriceView() {
     },[displayState]);
 
     useEffect(() => {
-      // alert(`Price:sellAmount = ${sellAmount}`)
+      exchangeContext.tradeData.sellAmount = sellAmount;
+      if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+        setBuyAmount(0n);
+      }
     },[sellAmount]);
 
     useEffect(() => {
-      // alert(`Price:buyAmount = ${buyAmount}`)
+      exchangeContext.tradeData.buyAmount = buyAmount; 
+      if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+        setSellAmount(0n);
+      }
     },[buyAmount]);
 
     useEffect(() => {
@@ -101,12 +105,27 @@ export default function PriceView() {
     }, [recipientAccount]);
 
     useEffect(() => {
-      if (errorMessage.name !== "" && errorMessage.message !== "") {
+      if ( errorMessage && errorMessage.source !== "" && errorMessage.message !== "") {
         openDialog("#errorDialog");
       }
-    }, [errorMessage]);
+    }, [errorMessage.errorCode]);
 
-    function swapBuySellTokens() {
+    const { isLoading: isLoadingPrice, data:Data, error:PriceError } = PriceAPI({
+      sellTokenContract, 
+      buyTokenContract,
+      transactionType,
+      sellAmount,
+      buyAmount,
+      setPrice,
+      setBuyAmount});
+
+    useEffect(() => {
+      if(PriceError) {
+         setErrorMessage({ source: "PriceError: ", errorCode: PriceError.errCode, message: PriceError.errMsg });
+      }
+    }, [PriceError]);
+
+   function swapBuySellTokens() {
       const tmpTokenContract: TokenContract = exchangeContext.buyTokenContract;
       setBuyTokenContract(exchangeContext.sellTokenContract);
       setSellTokenContract(tmpTokenContract);
@@ -121,60 +140,6 @@ export default function PriceView() {
       console.debug(msg);
     }
 
-    const getPriceApiTransaction = (data:any) => {
-      let priceTransaction =  process.env.NEXT_PUBLIC_API_SERVER
-      priceTransaction += `${apiCall}`
-      priceTransaction += `sellToken=${sellTokenContract.address}`
-      priceTransaction += `&buyToken=${buyTokenContract.address}`
-      priceTransaction += `&sellAmount=${sellAmount?.toString()}\n`
-      priceTransaction += JSON.stringify(data, null, 2)
-      return priceTransaction;
-    }
-
-    const apiCall =exchangeContext.network.name.toLowerCase() + "/0X/price";
-
-    const { isLoading: isLoadingPrice } = useSWR(
-      [
-        apiCall,
-        {
-          sellToken: sellTokenContract.address,
-          buyToken: buyTokenContract.address,
-          sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
-          buyAmount: (transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
-          // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
-          // slippagePercentage: slippage,
-          // expectedSlippage: slippage
-        },
-      ],
-      fetcher,
-      {
-        onSuccess: (data) => {
-          if (!data.code) {
-            // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
-            // console.log(dataMsg)
-            // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
-            setPrice(data);
-            // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
-            setBuyAmount(data.buyAmount);
-          }
-          else {
-            let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
-            console.log(errMsg);
-          }
-        },
-        onError: (error) => {
-          processError(
-            error,
-            setErrorMessage,
-            buyTokenContract,
-            sellTokenContract,
-            setBuyAmount,
-            setValidPriceInput
-          );
-        }
-      }
-    );
-
     const setSellTokenContractCallback = (sellTokenContract:TokenContract) => {
       setSellTokenContract(sellTokenContract);
     }
@@ -182,7 +147,6 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          {/* <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateSellTransaction} /> */}
           <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} />
           <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
@@ -195,7 +159,7 @@ export default function PriceView() {
                            buyTokenContract={buyTokenContract}
                            setSellAmountCallback={setSellAmount}
                            setTokenContractCallback={setSellTokenContractCallback}/>
-                           <BuyContainer  updateBuyAmount={buyAmount}
+            <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
                            setDisplayState={setDisplayState}/>
