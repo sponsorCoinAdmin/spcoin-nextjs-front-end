@@ -38,7 +38,7 @@ export default function PriceView() {
   const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errorCode:0, message: "" });
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errCode:0, msg: "" });
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
@@ -58,16 +58,18 @@ export default function PriceView() {
     }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
+      console.debug(`PRICE.useEffect[ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}])`);
       exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address;
     }, [ACTIVE_ACCOUNT.address]);
 
     useEffect(() => {
-      // console.debug(`PRICE:useEffect:setDisplayPanels(${displayState})`);
+      console.debug(`PRICE.useEffect:setDisplayPanels(${displayState})`);
       setDisplayPanels(displayState);
       exchangeContext.displayState = displayState;
     },[displayState]);
 
     useEffect(() => {
+      console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
       exchangeContext.tradeData.sellAmount = sellAmount;
       if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
         setBuyAmount(0n);
@@ -75,6 +77,7 @@ export default function PriceView() {
     },[sellAmount]);
 
     useEffect(() => {
+      console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
       exchangeContext.tradeData.buyAmount = buyAmount; 
       if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
         setSellAmount(0n);
@@ -83,15 +86,15 @@ export default function PriceView() {
 
     useEffect(() => {
       // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
-
     },[sellTokenContract]);
 
     useEffect(() => {
-      // console.debug('PRICE:useEffect slippage changed to  ' + slippage);
+      console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
       exchangeContext.tradeData.slippage = slippage;
     }, [slippage]);
 
     useEffect(() => {
+      console.debug(`PRICE.useEffect[buyTokenContract = ${buyTokenContract}])`);
       if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenContract))
         setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
       else if (!isSpCoin(buyTokenContract)) 
@@ -100,15 +103,16 @@ export default function PriceView() {
     }, [buyTokenContract]);
 
     useEffect(() => {
-      // console.debug("PRICE:useEffect:recipientAccount changed to " + recipientAccount.name);
+      console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
       exchangeContext.recipientAccount = recipientAccount;
     }, [recipientAccount]);
 
     useEffect(() => {
-      if ( errorMessage && errorMessage.source !== "" && errorMessage.message !== "") {
+      console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
+      if ( errorMessage && errorMessage.source !== "" && errorMessage.msg !== "") {
         openDialog("#errorDialog");
       }
-    }, [errorMessage.errorCode]);
+    }, [errorMessage.errCode]);
 
     const { isLoading: isLoadingPrice, data:Data, error:PriceError } = PriceAPI({
       sellTokenContract, 
@@ -117,11 +121,12 @@ export default function PriceView() {
       sellAmount,
       buyAmount,
       setPrice,
-      setBuyAmount});
+      setBuyAmount,
+      setErrorMessage});
 
     useEffect(() => {
       if(PriceError) {
-         setErrorMessage({ source: "PriceError: ", errorCode: PriceError.errCode, message: PriceError.errMsg });
+         setErrorMessage({ source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
       }
     }, [PriceError]);
 

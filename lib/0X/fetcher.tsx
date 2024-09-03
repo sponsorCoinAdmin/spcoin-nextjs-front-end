@@ -1,8 +1,8 @@
 // 'use server'
-import { PriceRequestParams, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types'
+import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
-import { setValidPriceInput } from '../spCoin/utils';
+import { setValidPriceInput, stringifyBigInt } from '../spCoin/utils';
 import { exchangeContext } from '../context';
 
 const SELL_AMOUNT_UNDEFINED = 100;
@@ -53,6 +53,7 @@ type Props = {
   buyAmount:bigint,
   setPrice: (data:any) => void,
   setBuyAmount: (data:any) => void
+  setErrorMessage: (errMsg:ErrorMessage) => void
 }
 
 function PriceAPI({
@@ -62,16 +63,18 @@ function PriceAPI({
   sellAmount,
   buyAmount,
   setPrice,
-  setBuyAmount}:Props) {
+  setBuyAmount,
+  setErrorMessage
+}:Props) {
 
   const getPriceApiTransaction = (data:any) => {
-    let priceTransaction =  process.env.NEXT_PUBLIC_API_SERVER
-    priceTransaction += `${apiCall}`
-    priceTransaction += `sellToken=${sellTokenContract.address}`
-    priceTransaction += `&buyToken=${buyTokenContract.address}`
-    priceTransaction += `&sellAmount=${sellAmount?.toString()}\n`
-    priceTransaction += JSON.stringify(data, null, 2)
-    return priceTransaction;
+    let priceTransaction:string = `Server     : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
+              priceTransaction += `apiCall    : ${apiCall}\n`
+              priceTransaction += `sellToken  : ${sellTokenContract.address}\n`
+              priceTransaction += `buyToken   : ${buyTokenContract.address}\n`
+              priceTransaction += `sellAmount : ${sellAmount?.toString()}\n`
+              priceTransaction += `data       : ${JSON.stringify(data, null, 2)}`
+              return priceTransaction;
   }
 
   let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
@@ -104,8 +107,16 @@ function PriceAPI({
           setBuyAmount(data.buyAmount);
         }
         else {
-          let errMsg = `ERROR: apiCall => ${getPriceApiTransaction(data)}`
-          console.log(errMsg);
+          const errMsg:ErrorMessage = {
+            source: "getPriceApiTransaction.priceApiCall.fetcher",
+            errCode: data.code,
+            msg: "No Error Message",
+            // msgArr: undefined,
+            // msgObj: undefined
+          };
+          console.log(`errMsg:ErrorMessage = ${stringifyBigInt(errMsg)}`);
+          alert(`${getPriceApiTransaction(data)}`);
+          // setErrorMessage(errMsg);
         }
       },
       // onError: (error) => {

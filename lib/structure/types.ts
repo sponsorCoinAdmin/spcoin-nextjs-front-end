@@ -78,8 +78,10 @@ type ExchangeContext = {
 
 type ErrorMessage ={ 
   source:string,
-  errorCode:number,
-  message:string 
+  errCode:number,
+  msg:string | undefined
+  // msgArr:string[] | undefined
+  // msgObj:{} | undefined
 }
 
 export {

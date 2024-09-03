@@ -46,13 +46,8 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
     exchangeContext.tradeData.formattedBuyAmount = formattedBuyAmount;
   },[formattedBuyAmount]);
 
-  useEffect(() =>  {
-    if (updateBuyAmount) 
-      setBuyAmount(updateBuyAmount);
-  }, [updateBuyAmount]);
-
   useEffect (() => {
-    console.debug(`BuyContainer:sellAmount = ${buyAmount}`)
+    console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
     setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
   }, [buyAmount])

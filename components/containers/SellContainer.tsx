@@ -42,7 +42,6 @@ const SellContainer = ({updateSellAmount,
     setFormattedSellAmount(formattedSellAmount)
   }, []);
 
-
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
@@ -61,8 +60,8 @@ const SellContainer = ({updateSellAmount,
   }, [sellTokenContract]);
 
   useEffect (() => {
-    // alert(`SellContainer.useEffect():sellAmount = ${sellAmount}`)
-    setSellAmountCallback(sellAmount);
+    console.debug(`%%%% SellContainer.useEffect[sellAmount = ${sellAmount}])`);
+
     exchangeContext.tradeData.sellAmount = sellAmount;
   }, [sellAmount])
 
@@ -84,12 +83,16 @@ const SellContainer = ({updateSellAmount,
 
   function updateTradeTransaction(newTokenContract: TokenContract) {
     console.debug(`updateTradeTransaction(sellContainer:${newTokenContract.name})`)
+    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const adjustedSellAmount:bigint = adjustTokenPriceAmount(sellAmount, newTokenContract, tokenContract);
+    console.debug(`$$$$$$$$$$ updateTradeTransaction(sellContainer:${adjustedSellAmount})`)
     setSellAmount(adjustedSellAmount);
+    setSellAmountCallback(adjustedSellAmount)
     setTokenContract(newTokenContract)
   }
 
   useEffect(() =>  {
+    console.debug(`$$$$$$$$$$ PRICE.useEffect[updateSellAmount = ${updateSellAmount}])`);
     if (updateSellAmount) 
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
@@ -105,7 +108,10 @@ const SellContainer = ({updateSellAmount,
         alert('SellContainer: StringContainer is ""')
       }
       const bigIntValue = parseUnits(stringValue, decimals);
+
+      console.debug(`$$$$$$$$$$ SellContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
       setSellAmount(bigIntValue);
+      setSellAmountCallback(bigIntValue)
       setFormattedSellAmount(stringValue);
     }
 

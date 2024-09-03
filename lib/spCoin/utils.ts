@@ -55,7 +55,7 @@ const  getValidFormattedPrice = (value:string|bigint, decimals:number|undefined)
 }
 
 const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
-  console.debug(`2. setValidPriceInput txt value = ${txt}`)
+  console.debug(`$$$$$$$$$$$ 2. setValidPriceInput txt value = ${txt}`)
   txt = getValidFormattedPrice(txt, decimals);
   if (txt !== "")
     setSellAmount(parseUnits(txt,decimals));
