@@ -68,13 +68,14 @@ function PriceAPI({
 }:Props) {
 
   const getPriceApiTransaction = (data:any) => {
-    let priceTransaction:string = `Server     : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
+    let priceTransaction:string = `ERROR      : API Call\n`
+              priceTransaction += `Server     : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
               priceTransaction += `apiCall    : ${apiCall}\n`
               priceTransaction += `sellToken  : ${sellTokenContract.address}\n`
               priceTransaction += `buyToken   : ${buyTokenContract.address}\n`
               priceTransaction += `sellAmount : ${sellAmount?.toString()}\n`
               priceTransaction += `data       : ${JSON.stringify(data, null, 2)}`
-              return priceTransaction;
+    return priceTransaction;
   }
 
   let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
