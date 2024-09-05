@@ -100,11 +100,11 @@ const BuyContainer = ({ updateBuyAmount,
     setFormattedBuyAmount(stringValue);
   }
 
-  function updateTradeTransaction(newTokenContract: TokenContract) {
-    console.debug(`updateTradeTransaction(buyContainer:${newTokenContract.name})`)
+  function reloadNewTokenContract(newTokenContract: TokenContract) {
+    console.debug(`reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
     const adjustedBuyAmount:bigint = adjustTokenPriceAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ updateTradeTransaction(buyContainer:${adjustedBuyAmount})`)
+    console.debug(`$$$$$$$$$$ reloadNewTokenContract(buyContainer:${adjustedBuyAmount})`)
     setBuyAmount(adjustedBuyAmount);
     setBuyAmountCallback(adjustedBuyAmount)
     setTokenContract(newTokenContract)
@@ -114,7 +114,7 @@ const BuyContainer = ({ updateBuyAmount,
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
-        <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateTradeTransaction} />
+        <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} />
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
             // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}

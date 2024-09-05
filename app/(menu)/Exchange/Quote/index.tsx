@@ -4,7 +4,7 @@ import {
   openDialog,
   AgentDialog,
   RecipientDialog,
-  SellTokenSelectDialog,
+  TokenSelectDialog,
   BuyTokenSelectDialog,
   ErrorDialog
 } from '@/components/Dialogs/Dialogs';
@@ -45,7 +45,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import QuoteButton from '@/components/Buttons/QuoteButton';
 import { setDisplayPanels, showElement } from '@/lib/spCoin/guiControl';
 import ErrorDialog from '@/components/Dialogs/ErrorDialog';
-import { AgentDialog, BuyTokenSelectDialog, RecipientDialog, SellTokenSelectDialog, openDialog } from '@/components/Dialogs/Dialogs';
+import { AgentDialog, BuyTokenSelectDialog, RecipientDialog, TokenSelectDialog, openDialog } from '@/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import IsLoading from '@/components/containers/IsLoading';
@@ -236,7 +236,7 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <SellTokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
+      <TokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
       <BuyTokenSelectDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
       <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
       <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />

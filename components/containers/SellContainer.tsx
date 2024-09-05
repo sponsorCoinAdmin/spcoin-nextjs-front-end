@@ -13,7 +13,7 @@ import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import SellTokenSelectDialog from '../Dialogs/SellTokenSelectDialog';
+import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
 
 type Props = {
   updateSellAmount: bigint,
@@ -56,7 +56,7 @@ const SellContainer = ({updateSellAmount,
   useEffect(() =>  {
     // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
     console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
-    updateTradeTransaction(sellTokenContract)
+    reloadNewTokenContract(sellTokenContract)
   }, [sellTokenContract]);
 
   useEffect (() => {
@@ -87,11 +87,11 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
-  function updateTradeTransaction(newTokenContract: TokenContract) {
-    console.debug(`updateTradeTransaction(sellContainer:${newTokenContract.name})`)
+  function reloadNewTokenContract(newTokenContract: TokenContract) {
+    console.debug(`reloadNewTokenContract(sellContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const adjustedSellAmount:bigint = adjustTokenPriceAmount(sellAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ updateTradeTransaction(sellContainer:${adjustedSellAmount})`)
+    console.debug(`$$$$$$$$$$ reloadNewTokenContract(sellContainer:${adjustedSellAmount})`)
     setSellAmount(adjustedSellAmount);
     setSellAmountCallback(adjustedSellAmount)
     setTokenContract(newTokenContract)
@@ -117,13 +117,13 @@ const SellContainer = ({updateSellAmount,
 
     return (
       <>
-        <SellTokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={updateTradeTransaction} />
+        <TokenSelectDialog buyTokenContract={buyTokenContract} callBackSetter={reloadNewTokenContract} />
         <div className={styles.inputs}>
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
             />
-          <AssetSelect TokenContract={tokenContract} id={"SellTokenSelectDialog"} disabled={false}></AssetSelect>
+          <AssetSelect TokenContract={tokenContract} id={"TokenSelectDialog"} disabled={false}></AssetSelect>
           <div className={styles["buySell"]}>
             You Pay
           </div>

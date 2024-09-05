@@ -14,8 +14,8 @@ import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import { useAccount } from 'wagmi';
 
-const TITLE_NAME = "Select a token to sell";
-const INPUT_PLACE_HOLDER = 'Type or paste token to sell address';
+const TITLE_NAME = "Select a token to select";
+const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
 const ELEMENT_DETAILS = "This container allows for the entry selection of a valid token address.\n"+
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
@@ -37,7 +37,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('sellSelectGroup') : showElement('sellSelectGroup')
+        tokenInput === "" ? hideElement('selectTokenDialog_ID') : showElement('selectTokenDialog_ID')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput, setTokenContract)
         }
@@ -61,7 +61,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
 
     const displayElementDetail = async(tokenAddr:any) => {
          if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
-            alert("SELL_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
+            alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
         alert("displayElementDetail\n" + JSON.stringify(TokenContract, null, 2) + "\n\n" + ELEMENT_DETAILS)
@@ -87,7 +87,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
             callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
-            alert("SELL_ERROR:getSelectedListElement e.message" + e.message)
+            alert("SELECT_ERROR:getSelectedListElement e.message" + e.message)
         }
         return false
     }
@@ -95,7 +95,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
     const closeDialog = () => {
         setTokenInput("")
         setTokenSelect("");
-        hideElement('sellSelectGroup')
+        hideElement('selectTokenDialog_ID')
         dialogRef.current?.close()
     }
 
@@ -116,7 +116,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
                         &nbsp;
                     </div>
                 </div>
-                    <div id="sellSelectGroup" className={styles.modalInputSelect}>
+                    <div id="selectTokenDialog_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
