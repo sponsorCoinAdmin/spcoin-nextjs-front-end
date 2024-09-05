@@ -4,7 +4,7 @@ import {
   openDialog,
   AgentDialog,
   RecipientDialog,
-  BuyTokenSelectDialog,
+  TokenSelectDialog,
   ErrorDialog
 } from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
@@ -168,7 +168,7 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          {/* <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} /> */}
+          {/* <TokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} /> */}
           <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
           <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />

@@ -1,5 +1,4 @@
 import AgentDialog from './AgentDialog';
-import BuyTokenSelectDialog from './BuyTokenSelectDialog';
 import Config from './ConfigDialog';
 import ErrorDialog from './ErrorDialog';
 import RecipientDialog from './RecipientDialog';
@@ -17,6 +16,5 @@ export {
     Config,
     RecipientDialog, 
     TokenSelectDialog,
-    BuyTokenSelectDialog,
     ErrorDialog
 }
