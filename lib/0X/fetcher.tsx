@@ -2,16 +2,18 @@
 import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
-import { setValidPriceInput, stringifyBigInt } from '../spCoin/utils';
 import { exchangeContext } from '../context';
 
-const SELL_AMOUNT_UNDEFINED = 100;
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
 const BUY_AMOUNT_ZERO = 400;
 const ERROR_0X_RESPONSE = 500;
 
 const NEXT_PUBLIC_API_SERVER:string|undefined = process.env.NEXT_PUBLIC_API_SERVER
+
+const apiPriceBase = "/0X/price";
+const apiQuoteBase = "/0X/quote";
+let apiCall:string;
 
 const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint
@@ -28,7 +30,7 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   try {
     console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    const apiCall = endpoint + '?' + query;
+    apiCall = endpoint + '?' + query;
     console.debug(`BEFORE fetcher.apiCall:${apiCall}`);
     let result = fetch(`${apiCall}`).then((res) => res.json());
     // console.debug(`fetcher: ${endpoint}?${query}`);
@@ -41,9 +43,6 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 };
 
-const apiCall = exchangeContext.network.name.toLowerCase() + "/0X/price";
-// const apiCall = undefined;
-
 
 type Props = {
   sellTokenContract:TokenContract,
@@ -53,7 +52,8 @@ type Props = {
   buyAmount:bigint,
   setPrice: (data:any) => void,
   setBuyAmount: (data:any) => void
-  setErrorMessage: (errMsg:ErrorMessage) => void
+  // setErrorMessage: (errMsg:ErrorMessage) => void
+  apiErrorCallBack: (apiErrorObj:any) => void
 }
 
 function PriceAPI({
@@ -64,17 +64,19 @@ function PriceAPI({
   buyAmount,
   setPrice,
   setBuyAmount,
-  setErrorMessage
+  apiErrorCallBack
 }:Props) {
 
-  const getPriceApiTransaction = (data:any) => {
-    let priceTransaction:string = `ERROR      : API Call\n`
-              priceTransaction += `Server     : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
-              priceTransaction += `apiCall    : ${apiCall}\n`
-              priceTransaction += `sellToken  : ${sellTokenContract.address}\n`
-              priceTransaction += `buyToken   : ${buyTokenContract.address}\n`
-              priceTransaction += `sellAmount : ${sellAmount?.toString()}\n`
-              priceTransaction += `data       : ${JSON.stringify(data, null, 2)}`
+  const getApiErrorTransactionData = (data:any) => {
+    let priceTransaction:string = `ERROR        : API Call\n`
+              priceTransaction += `Server       : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
+              priceTransaction += `netWork      : ${exchangeContext.network.name.toLowerCase()}\n`
+              priceTransaction += `apiPriceBase : ${apiPriceBase}\n`
+              priceTransaction += `sellToken    : ${sellTokenContract.address}\n`
+              priceTransaction += `buyToken     : ${buyTokenContract.address}\n`
+              priceTransaction += `sellAmount   : ${sellAmount?.toString()}\n`
+              priceTransaction += `apiCall      : ${apiCall}\n`
+              priceTransaction += `response data: ${JSON.stringify(data, null, 2)}`
     return priceTransaction;
   }
 
@@ -82,7 +84,7 @@ function PriceAPI({
                      (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)? 
                       undefined :
                       [
-                        apiCall,
+                        exchangeContext.network.name.toLowerCase() + apiPriceBase,
                         {
                           sellToken: sellTokenContract.address,
                           buyToken: buyTokenContract.address,
@@ -100,7 +102,7 @@ function PriceAPI({
     {
       onSuccess: (data) => {
         if (!data.code) {
-          // let dataMsg = `SUCCESS: apiCall => ${getPriceApiTransaction(data)}`
+          // let dataMsg = `SUCCESS: apiCall => ${getApiErrorTransactionData(data)}`
           // console.log(dataMsg)
           // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
           setPrice(data);
@@ -108,16 +110,8 @@ function PriceAPI({
           setBuyAmount(data.buyAmount);
         }
         else {
-          const errMsg:ErrorMessage = {
-            source: "getPriceApiTransaction.priceApiCall.fetcher",
-            errCode: data.code,
-            msg: "No Error Message",
-            // msgArr: undefined,
-            // msgObj: undefined
-          };
-          console.log(`errMsg:ErrorMessage = ${stringifyBigInt(errMsg)}`);
-          alert(`${getPriceApiTransaction(data)}`);
-          // setErrorMessage(errMsg);
+          const apiErrorObj = getApiErrorTransactionData(data)
+          apiErrorCallBack(apiErrorObj);
         }
       },
       // onError: (error) => {
@@ -134,52 +128,10 @@ function PriceAPI({
   );
 }
 
-// const processError = (
-//   error: any, 
-//   setErrorMessage:any,
-//   buyTokenContract:any,
-//   sellTokenContract:any,
-//   setBuyAmount:any,
-//   setValidPriceInput:any) => {
-//   // console.error("***AAA ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-//   let errCode: number = error.errCode;
-//   let errMsg: string = error.errMsg;
-//   if (errCode !== undefined && error !== null) {
-//     switch (errCode) {
-//       case SELL_AMOUNT_ZERO: setBuyAmount("0");
-//       // console.error("***ZZZ ERROR = " + error + "\n" + JSON.stringify(error, null, 2));
-
-//         break;
-//       case BUY_AMOUNT_ZERO: setValidPriceInput("0", buyTokenContract.decimals);
-//         break;
-//       case ERROR_0X_RESPONSE:
-//         setErrorMessage({ name: "ERROR_0X_RESPONSE: " + errCode, message: errMsg });
-//         console.error("ERROR_0X_RESPONSE: OX Response errCode = " + errCode + "\nerrMsg = " + errMsg);
-//         break;
-//       case SELL_AMOUNT_UNDEFINED:
-//         setErrorMessage({ name: "SELL_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
-//         console.error("SELL_AMOUNT_UNDEFINED: errCode = " + errCode + "\nerrMsg = " + errMsg);
-//         setValidPriceInput("0", sellTokenContract.decimals);
-//         break;
-//       case BUY_AMOUNT_UNDEFINED:
-//         setErrorMessage({ name: "BUY_AMOUNT_UNDEFINED: " + errCode, message: errMsg });
-//         console.error("BUY_AMOUNT_UNDEFINED: errCode = " + errCode + "\nerrMsg = " + errMsg);
-//         setBuyAmount("0");
-//         break;
-//       default: {
-//         setErrorMessage({ name: "DEFAULT ERROR CODE: " + errCode, message: errMsg });
-//         console.error("ERROR: errCode = " + errCode + "\nerrMsg = " + errMsg);
-//         break;
-//       }
-//     }
-//   }
-// };
-
 export {
     fetcher,
     // processError,
     PriceAPI,
-    SELL_AMOUNT_UNDEFINED,
     BUY_AMOUNT_UNDEFINED,
     SELL_AMOUNT_ZERO,
     BUY_AMOUNT_ZERO,

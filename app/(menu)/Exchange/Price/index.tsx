@@ -29,7 +29,6 @@ import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
 //////////// Price Code
 export default function PriceView() {
-
   const ACTIVE_ACCOUNT = useAccount()
   const [price, setPrice] = useState<PriceResponse | undefined>();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
@@ -54,6 +53,8 @@ export default function PriceView() {
         setAgentElement(exchangeContext.agentAccount);
         setDisplayState(exchangeContext.displayState);
         setSlippage(exchangeContext.tradeData.slippage);
+        setSellTokenContract(exchangeContext.sellTokenContract);
+        setBuyTokenContract(exchangeContext.buyTokenContract);
       }
     }, [ACTIVE_ACCOUNT.chain]);
 
@@ -114,6 +115,17 @@ export default function PriceView() {
       }
     }, [errorMessage.errCode]);
 
+    const apiErrorCallBack = (apiErrorObj:any) => {
+      if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+        setBuyAmount(0n);
+      }
+      else if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+        setSellAmount(0n);
+      }
+      // alert(`${apiErrorObj}`);
+      console.debug(`${apiErrorObj}`);
+    }
+  
     const { isLoading: isLoadingPrice, data:Data, error:PriceError } = PriceAPI({
       sellTokenContract, 
       buyTokenContract,
@@ -122,7 +134,7 @@ export default function PriceView() {
       buyAmount,
       setPrice,
       setBuyAmount,
-      setErrorMessage});
+      apiErrorCallBack});
 
     useEffect(() => {
       if(PriceError) {

@@ -23,6 +23,21 @@ type Props = {
   setTokenContractCallback: (tokenContract:TokenContract) => void,
 }
 
+// const setStringToBigIntStateValue = (stringValue:string) => {
+//   exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT;
+//   const decimals = tokenContract.decimals;
+//   stringValue = getValidFormattedPrice(stringValue, decimals);
+//   if (stringValue === "") {
+//     alert('SellContainer: StringContainer is ""')
+//   }
+//   const bigIntValue = parseUnits(stringValue, decimals);
+
+//   console.debug(`$$$$$$$$$$ SellContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
+//   setSellAmount(bigIntValue);
+//   setSellAmountCallback(bigIntValue)
+//   setFormattedSellAmount(stringValue);
+// }
+
 /* Sell Token Selection Module */
 const SellContainer = ({updateSellAmount,
                         sellTokenContract,

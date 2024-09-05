@@ -52,11 +52,6 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
     exchangeContext.tradeData.buyAmount = buyAmount;
   }, [buyAmount])
 
-  useEffect(() =>  {
-    console.debug(`ACTIVE_ACCOUNT.address ${ACTIVE_ACCOUNT.address} changed`);
-    exchangeContext.tradeData.buyBalanceOf = getERC20WagmiClientBalanceOf(ACTIVE_ACCOUNT.address, buyTokenContract.address) || 0n;
-  }, [ACTIVE_ACCOUNT.address]);
-
   useEffect(() => {
     // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
     exchangeContext.tradeData.buyBalanceOf = balanceOf;
