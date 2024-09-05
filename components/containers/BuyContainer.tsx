@@ -114,7 +114,7 @@ const BuyContainer = ({ updateBuyAmount,
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
-        <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} />
+        <BuyTokenSelectDialog altTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} />
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
             // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}

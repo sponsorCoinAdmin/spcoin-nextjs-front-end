@@ -22,13 +22,13 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({buyTokenContract, callBackSetter }: any) {
+export default function Dialog({altTokenContract, callBackSetter }: any) {
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = buyTokenContract.chainId;
+    const chainId = altTokenContract.chainId;
     const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
@@ -79,9 +79,9 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === buyTokenContract.address) {
-                alert("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")")
-                console.log("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")");
+            if (listElement.address === altTokenContract.address) {
+                alert("Sell Token cannot be the same as Buy Token("+altTokenContract.symbol+")")
+                console.log("Sell Token cannot be the same as Buy Token("+altTokenContract.symbol+")");
                 return false;
             }
             callBackSetter(listElement)
