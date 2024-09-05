@@ -9,7 +9,7 @@ import {
 } from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
-import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, TRADE_TYPE, ErrorMessage } from '@/lib/structure/types';
+import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
 import { PriceAPI } from '@/lib/0X/fetcher';
 import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
@@ -157,6 +157,10 @@ export default function PriceView() {
       console.debug(msg);
     }
 
+    const setBuyTokenContractCallback = (buyTokenContract:TokenContract) => {
+      setBuyTokenContract(buyTokenContract);
+    }
+
     const setSellTokenContractCallback = (sellTokenContract:TokenContract) => {
       setSellTokenContract(sellTokenContract);
     }
@@ -164,7 +168,7 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} />
+          {/* <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} /> */}
           <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
           <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
@@ -178,7 +182,9 @@ export default function PriceView() {
                            setTokenContractCallback={setSellTokenContractCallback}/>
             <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
+                           sellTokenContract={sellTokenContract}
                            setBuyAmountCallback={setBuyAmount}
+                           setTokenContractCallback={setBuyTokenContractCallback}
                            setDisplayState={setDisplayState}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />

@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract, TRADE_TYPE } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/utils';
@@ -92,7 +92,7 @@ export default function Dialog({ sellTokenContract, callBackSetter }: any) {
                 return false;
             }
             await getWagmiBalanceOfRec (sellTokenContract.address)
-            callBackSetter(listElement, TRADE_TYPE.NEW_RECIPIENT_ACCOUNT)
+            callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
             alert("BUY_ERROR:getSelectedListElement e.message" + e.message)

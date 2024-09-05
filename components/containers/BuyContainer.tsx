@@ -1,30 +1,35 @@
-import React, { useEffect, useState } from 'react';
-
+import { useEffect, useState } from 'react';
 import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { DISPLAY_STATE, TokenContract, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { getERC20WagmiClientBalanceOf } from '@/lib/wagmi/erc20WagmiClientRead';
+import { TokenContract, DISPLAY_STATE, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { adjustTokenPriceAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import { setDisplayPanels } from '@/lib/spCoin/guiControl';
+import BuyTokenSelectDialog from '../Dialogs/BuyTokenSelectDialog';
 
 type Props = {
   updateBuyAmount: bigint,
+  sellTokenContract: TokenContract,
   buyTokenContract: TokenContract, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
+  setTokenContractCallback: (tokenContract:TokenContract) => void,
   setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
-const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, setDisplayState} : Props) => {
+const BuyContainer = ({ updateBuyAmount, 
+                        sellTokenContract, 
+                        buyTokenContract,
+                        setBuyAmountCallback,
+                        setTokenContractCallback,
+                        setDisplayState} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
+  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
@@ -32,12 +37,19 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
   // const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
   useEffect(() =>  {
-    const formattedSellAmount = getValidFormattedPrice(buyAmount, buyTokenContract.decimals);
-    setFormattedBuyAmount(formattedSellAmount)
+    const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract.decimals);
+    setFormattedBuyAmount(formattedBuyAmount)
   }, []);
 
   useEffect(() =>  {
-    // alert (`setTokenContract(${sellTokenContract})`)
+    // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
+    console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
+    exchangeContext.buyTokenContract = tokenContract;
+    setTokenContractCallback(tokenContract);
+  }, [tokenContract]);
+
+  useEffect(() =>  {
+    // alert (`setTokenContract(${buyTokenContract})`)
     setTokenContract(buyTokenContract)
     exchangeContext.buyTokenContract = tokenContract;
   }, [buyTokenContract]);
@@ -48,17 +60,16 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
 
   useEffect (() => {
     console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
-    setBuyAmountCallback(buyAmount);
+    // setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
   }, [buyAmount])
 
   useEffect(() => {
-    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
+    // alert(`BuyContainer.useEffect():balanceOf = ${balanceOf}`);
     exchangeContext.tradeData.buyBalanceOf = balanceOf;
   }, [balanceOf]);
 
   useEffect(() => {
-    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
     exchangeContext.tradeData.formattedBuyAmount = formattedBalanceOf;
   }, [formattedBalanceOf]);
 
@@ -89,23 +100,36 @@ const BuyContainer = ({updateBuyAmount, buyTokenContract, setBuyAmountCallback, 
     setFormattedBuyAmount(stringValue);
   }
 
+  function updateTradeTransaction(newTokenContract: TokenContract) {
+    console.debug(`updateTradeTransaction(buyContainer:${newTokenContract.name})`)
+    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
+    const adjustedBuyAmount:bigint = adjustTokenPriceAmount(buyAmount, newTokenContract, tokenContract);
+    console.debug(`$$$$$$$$$$ updateTradeTransaction(buyContainer:${adjustedBuyAmount})`)
+    setBuyAmount(adjustedBuyAmount);
+    setBuyAmountCallback(adjustedBuyAmount)
+    setTokenContract(newTokenContract)
+  }
+
   try {
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
-      <div className={styles.inputs}>
-       <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
-          // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
-          onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
-          />
-        <AssetSelect TokenContract={buyTokenContract} id={"BuyTokenSelectDialog"} disabled={false}></AssetSelect>
-      <div className={styles["buySell"]}>You receive</div>
-      <div className={styles["assetBalance"]}>
-        Balance: {formattedBalanceOf}
-      </div>
-      {IsSpCoin ?
-        <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
-        : null}
-      </div>
+      <>
+        <BuyTokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateTradeTransaction} />
+        <div className={styles.inputs}>
+        <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
+            // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
+            onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
+            />
+          <AssetSelect TokenContract={buyTokenContract} id={"BuyTokenSelectDialog"} disabled={false}></AssetSelect>
+        <div className={styles["buySell"]}>You receive</div>
+        <div className={styles["assetBalance"]}>
+          Balance: {formattedBalanceOf}
+        </div>
+        {IsSpCoin ?
+          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
+          : null}
+        </div>
+      </>
     );
   } catch (err:any) {
     console.log(`Buy Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)

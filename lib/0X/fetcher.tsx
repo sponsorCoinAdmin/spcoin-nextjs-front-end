@@ -43,7 +43,6 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 };
 
-
 type Props = {
   sellTokenContract:TokenContract,
   buyTokenContract:TokenContract,

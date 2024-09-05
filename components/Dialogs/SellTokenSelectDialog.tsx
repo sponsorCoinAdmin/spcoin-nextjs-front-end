@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract, TRADE_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails } from '@/lib/spCoin/utils';
@@ -84,7 +84,7 @@ export default function Dialog({buyTokenContract, callBackSetter }: any) {
                 console.log("Sell Token cannot be the same as Buy Token("+buyTokenContract.symbol+")");
                 return false;
             }
-            callBackSetter(listElement, TRADE_TYPE.NEW_SELL_CONTRACT)
+            callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
             alert("SELL_ERROR:getSelectedListElement e.message" + e.message)
