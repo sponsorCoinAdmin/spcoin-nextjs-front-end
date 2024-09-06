@@ -181,6 +181,7 @@ export default function PriceView() {
                            setTokenContractCallback={setBuyTokenContractCallback}
                            setDisplayState={setDisplayState}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
+            <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />
             <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
