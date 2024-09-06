@@ -1,6 +1,6 @@
 'use client';
 import styles from '@/styles/Exchange.module.css';
-import { openDialog,  AgentDialog,  RecipientDialog,  ErrorDialog} from '@/components/Dialogs/Dialogs';
+import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
@@ -18,7 +18,6 @@ import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
-import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
 //////////// Price Code
 export default function PriceView() {
@@ -97,11 +96,6 @@ export default function PriceView() {
     }, [buyTokenContract]);
 
     useEffect(() => {
-      console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
-      exchangeContext.recipientAccount = recipientAccount;
-    }, [recipientAccount]);
-
-    useEffect(() => {
       console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
       if ( errorMessage && errorMessage.source !== "" && errorMessage.msg !== "") {
         openDialog("#errorDialog");
@@ -163,9 +157,6 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-          <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-          <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
           <ErrorDialog errMsg={errorMessage} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
@@ -182,7 +173,6 @@ export default function PriceView() {
                            setDisplayState={setDisplayState}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />
-            <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
           <FeeDisclosure/>

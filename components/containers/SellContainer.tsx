@@ -14,6 +14,7 @@ import useWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
+import ManageSponsorships from '../Dialogs/ManageSponsorships';
 
 type Props = {
   updateSellAmount: bigint,
@@ -116,8 +117,13 @@ const SellContainer = ({updateSellAmount,
       setFormattedSellAmount(stringValue);
     }
 
+    const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {
+
+    }
+
     return (
       <>
+        <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={junkManageSponsorshipCallback} />
         {/* <TokenSelectDialog altTokenContract={buyTokenContract} callBackSetter={reloadNewTokenContract} /> */}
         <div className={styles.inputs}>
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}

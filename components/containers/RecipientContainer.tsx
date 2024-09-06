@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { openDialog } from '../Dialogs/Dialogs';
+import { AgentDialog, openDialog, RecipientDialog } from '../Dialogs/Dialogs';
 import Image from 'next/image';
 import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../public/resources/images/miscellaneous/cog.png';
 import Link from 'next/link'
-import { DISPLAY_STATE } from '@/lib/structure/types';
+import { AccountRecord, DISPLAY_STATE } from '@/lib/structure/types';
 import SponsorRateConfig from './SponsorRateConfig';
+import { exchangeContext } from '@/lib/context';
 
 type Props = {
-  recipientAccount: any,
   setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
@@ -22,9 +22,16 @@ const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
   }
 };
 
-const RecipientContainer = ({recipientAccount, setDisplayState} : Props) => {
+const RecipientContainer = ({setDisplayState} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
   // let urlParms:string = `/Recipient?address=${recipientAccount.address}`
+  const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
+  const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
+  useEffect(() => {
+    console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
+    exchangeContext.recipientAccount = recipientAccount;
+  }, [recipientAccount]);
+
   let urlParms:string = `/Recipient/${recipientAccount.address}`
   urlParms += `?name=${recipientAccount.name}`
   urlParms += `&symbol=${recipientAccount.symbol}`
@@ -35,6 +42,8 @@ const RecipientContainer = ({recipientAccount, setDisplayState} : Props) => {
   // console.debug (`calling urlParms: ${urlParms}`)
   return (
     <>
+      <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+      <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
         <div id="recipient-id" className={styles.sponsorCoinContainer}/>
         <div className={styles["yourRecipient"]}>
