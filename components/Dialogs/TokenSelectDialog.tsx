@@ -1,6 +1,5 @@
 "use client"
 import styles from './Resources/styles/Modal.module.css';
-import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
 import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlassGrey.png'
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
@@ -9,7 +8,7 @@ import Image from 'next/image'
 import { FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
-import { getTokenDetails, fetchTokenDetails } from '@/lib/spCoin/utils';
+import { getTokenDetails, fetchTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import { useAccount } from 'wagmi';
@@ -21,8 +20,19 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
 
+type Props = {
+    // title: string,
+    // onClose: () => void,
+    // onOk: () => void,
+    showDialog:boolean,
+    setShowDialog:(bool:boolean) => void,
+    altTokenContract: TokenContract,
+    callBackSetter: (tokenContract:TokenContract) => void,
+    // children: React.ReactNode,
+}
+
 // ToDo Read in data List remotely
-export default function Dialog({altTokenContract, callBackSetter }: any) {
+export default function Dialog({showDialog, setShowDialog, altTokenContract, callBackSetter }: Props) {
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
@@ -32,8 +42,16 @@ export default function Dialog({altTokenContract, callBackSetter }: any) {
     const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
-        closeDialog();
+        // alert(`Dialog.altTokenContract = ${stringifyBigInt(altTokenContract)}`)
       }, []);
+
+      useEffect(() => {
+        if (showDialog === true) {
+            dialogRef.current?.showModal()
+        } else {
+            dialogRef.current?.close()
+        }
+    }, [showDialog])
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
@@ -51,6 +69,16 @@ export default function Dialog({altTokenContract, callBackSetter }: any) {
             setTokenSelect(TokenContract.symbol);
     }, [TokenContract]);
 
+    const closeDialog = () => {
+        setTokenInput("")
+        setTokenSelect("");
+        setShowDialog(false);
+    //     hideElement('selectTokenDialog_ID')
+    //     dialogRef.current?.close()
+    }
+
+
+
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
@@ -60,11 +88,11 @@ export default function Dialog({altTokenContract, callBackSetter }: any) {
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
-         if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
+        if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
             alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        alert("displayElementDetail\n" + JSON.stringify(TokenContract, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        // alert("displayElementDetail\n" + JSON.stringify(tokenInput, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
@@ -90,13 +118,6 @@ export default function Dialog({altTokenContract, callBackSetter }: any) {
             alert("SELECT_ERROR:getSelectedListElement e.message" + e.message)
         }
         return false
-    }
-
-    const closeDialog = () => {
-        setTokenInput("")
-        setTokenSelect("");
-        hideElement('selectTokenDialog_ID')
-        dialogRef.current?.close()
     }
 
     const Dialog = (

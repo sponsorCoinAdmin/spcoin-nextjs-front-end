@@ -5,7 +5,6 @@ import {
   AgentDialog,
   RecipientDialog,
   TokenSelectDialog,
-  TokenSelectDialog,
   ErrorDialog
 } from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";

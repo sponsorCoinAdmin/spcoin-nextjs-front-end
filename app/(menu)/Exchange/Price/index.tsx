@@ -1,12 +1,6 @@
 'use client';
 import styles from '@/styles/Exchange.module.css';
-import {
-  openDialog,
-  AgentDialog,
-  RecipientDialog,
-  TokenSelectDialog,
-  ErrorDialog
-} from '@/components/Dialogs/Dialogs';
+import { openDialog,  AgentDialog,  RecipientDialog,  ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
@@ -19,7 +13,6 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import SellContainer from '@/components/containers/SellContainer';
 import BuyContainer from '@/components/containers/BuyContainer';
 import RecipientContainer from '@/components/containers/RecipientContainer';
-import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
@@ -156,19 +149,20 @@ export default function PriceView() {
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
       console.debug(msg);
     }
+    const setSellTokenContractCallback = (sellTokenContract:TokenContract) => {
+      setSellTokenContract(sellTokenContract);
+      // alert("setSellTokenContract")
+    }
 
     const setBuyTokenContractCallback = (buyTokenContract:TokenContract) => {
+      // alert("setBuyTokenContract")
       setBuyTokenContract(buyTokenContract);
     }
 
-    const setSellTokenContractCallback = (sellTokenContract:TokenContract) => {
-      setSellTokenContract(sellTokenContract);
-    }
 
     try {
       return (
         <form autoComplete="off">
-          {/* <TokenSelectDialog sellTokenContract={sellTokenContract} callBackSetter={updateBuyTransaction} /> */}
           <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
           <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
           <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
@@ -187,12 +181,7 @@ export default function PriceView() {
                            setTokenContractCallback={setBuyTokenContractCallback}
                            setDisplayState={setDisplayState}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-            <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />
-            {
-              // <QuoteButton sendTransaction={sendTransaction}/>
-            }
             <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
-            <SponsorRateConfig setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
           <FeeDisclosure/>

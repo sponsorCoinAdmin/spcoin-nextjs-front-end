@@ -88,6 +88,7 @@ const SellContainer = ({updateSellAmount,
   }, [updateSellAmount]);
 
   function reloadNewTokenContract(newTokenContract: TokenContract) {
+    // alert(`SellContainer.reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
     console.debug(`reloadNewTokenContract(sellContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const adjustedSellAmount:bigint = adjustTokenPriceAmount(sellAmount, newTokenContract, tokenContract);
@@ -117,13 +118,16 @@ const SellContainer = ({updateSellAmount,
 
     return (
       <>
-        <TokenSelectDialog altTokenContract={buyTokenContract} callBackSetter={reloadNewTokenContract} />
+        {/* <TokenSelectDialog altTokenContract={buyTokenContract} callBackSetter={reloadNewTokenContract} /> */}
         <div className={styles.inputs}>
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
             />
-          <AssetSelect TokenContract={tokenContract} id={"TokenSelectDialog"} disabled={false}></AssetSelect>
+          <AssetSelect tokenContract={tokenContract} 
+                       altTokenContract={buyTokenContract} 
+                       reloadNewTokenContract={reloadNewTokenContract}>
+          </AssetSelect>
           <div className={styles["buySell"]}>
             You Pay
           </div>

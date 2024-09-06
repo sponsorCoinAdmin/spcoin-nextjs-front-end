@@ -1,34 +1,27 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { openDialog } from '../Dialogs/Dialogs';
+import { openDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { TokenContract } from '@/lib/structure/types';
-import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
-    TokenContract: TokenContract, 
-    id: string,
-    disabled: boolean
+    tokenContract: TokenContract, 
+    altTokenContract: TokenContract 
+    reloadNewTokenContract: (tokenContract:TokenContract) => void,
   }
 
-const AssetSelect = ({TokenContract, id, disabled}:Props) => {
-    let selectId = id + "Select"
-    useEffect(() => {
-        if (disabled) {
-            // console.debug(`disabled = ${disabled} hideElement(${selectId})`)
-            hideElement(selectId)
-        } else {
-            // console.debug(`disabled = ${disabled} showElement(${selectId})`)
-            showElement(selectId)
-        }
-      },[]);
-  
+const AssetSelect = ({tokenContract, altTokenContract, reloadNewTokenContract}:Props) => {
+    const [showDialog, setShowDialog ] = useState<boolean>(false)
+
     return (
-        <div className={styles["assetSelect"]}>
-            <img alt={TokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={TokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(TokenContract,null,2))}/>
-            {TokenContract.symbol}
-            <DownOutlined id={selectId} onClick={() => openDialog("#"+id)}/>
-        </div>
+        <>
+            <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={reloadNewTokenContract} />
+            <div className={styles["assetSelect"]}>
+                <img alt={tokenContract.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={tokenContract.img} onClick={() => alert("sellTokenContract " + JSON.stringify(tokenContract,null,2))}/>
+                {tokenContract.symbol}
+                <DownOutlined onClick={() => setShowDialog(true)}/>
+            </div>
+        </>
     );
 }
 

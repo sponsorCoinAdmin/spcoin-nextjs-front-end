@@ -6,6 +6,7 @@ import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../public/resources/images/miscellaneous/cog.png';
 import Link from 'next/link'
 import { DISPLAY_STATE } from '@/lib/structure/types';
+import SponsorRateConfig from './SponsorRateConfig';
 
 type Props = {
   recipientAccount: any,
@@ -33,27 +34,30 @@ const RecipientContainer = ({recipientAccount, setDisplayState} : Props) => {
 
   // console.debug (`calling urlParms: ${urlParms}`)
   return (
-    <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
-      <div id="recipient-id" className={styles.sponsorCoinContainer}/>
-      <div className={styles["yourRecipient"]}>
-        You are sponsoring:
+    <>
+      <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
+        <div id="recipient-id" className={styles.sponsorCoinContainer}/>
+        <div className={styles["yourRecipient"]}>
+          You are sponsoring:
+        </div>
+        <Link href={`${urlParms}`} className={styles["recipientName"]}>
+          {recipientAccount.name}
+        </Link>
+        <div className={styles["recipientSelect"]}>
+          <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
+          {recipientAccount.symbol} 
+          <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
+        </div>
+        <div>
+          <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
+          onClick={() => toggleConfig(setDisplayState)}/>
+        </div>
+        <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON)}>
+          X
+        </div>
       </div>
-      <Link href={`${urlParms}`} className={styles["recipientName"]}>
-        {recipientAccount.name}
-      </Link>
-      <div className={styles["recipientSelect"]}>
-        <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
-        {recipientAccount.symbol} 
-        <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
-      </div>
-      <div>
-        <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
-        onClick={() => toggleConfig(setDisplayState)}/>
-      </div>
-      <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON)}>
-        X
-      </div>
-    </div>
+      <SponsorRateConfig setDisplayState={setDisplayState}/>
+    </>
   );
 }
 

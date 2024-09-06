@@ -12,6 +12,7 @@ import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
+import RecipientContainer from './RecipientContainer';
 
 type Props = {
   updateBuyAmount: bigint,
@@ -42,7 +43,7 @@ const BuyContainer = ({ updateBuyAmount,
   }, []);
 
   useEffect(() =>  {
-    // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
+    // alert (`BuyContainer.useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
     exchangeContext.buyTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
@@ -101,6 +102,7 @@ const BuyContainer = ({ updateBuyAmount,
   }
 
   function reloadNewTokenContract(newTokenContract: TokenContract) {
+    // alert(`BuyContainer.reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
     console.debug(`reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
     const adjustedBuyAmount:bigint = adjustTokenPriceAmount(buyAmount, newTokenContract, tokenContract);
@@ -114,13 +116,16 @@ const BuyContainer = ({ updateBuyAmount,
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
-        <TokenSelectDialog altTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} />
+        {/* <TokenSelectDialog altTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} /> */}
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
             // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
             />
-          <AssetSelect TokenContract={buyTokenContract} id={"TokenSelectDialog"} disabled={false}></AssetSelect>
+        <AssetSelect  tokenContract={tokenContract} 
+                      altTokenContract={sellTokenContract} 
+                      reloadNewTokenContract={reloadNewTokenContract}>
+        </AssetSelect>
         <div className={styles["buySell"]}>You receive</div>
         <div className={styles["assetBalance"]}>
           Balance: {formattedBalanceOf}
@@ -129,6 +134,7 @@ const BuyContainer = ({ updateBuyAmount,
           <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
           : null}
         </div>
+        {/* <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/> */}
       </>
     );
   } catch (err:any) {
