@@ -10,6 +10,7 @@ import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
+import { Account } from 'viem';
 
 const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
@@ -19,7 +20,12 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ agentAccount, setRecipientElement }: any) {
+type Props = {
+    agentAccount: any,
+    setRecipientElement: () => void
+}
+
+export default function Dialog({ agentAccount, setRecipientElement }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");

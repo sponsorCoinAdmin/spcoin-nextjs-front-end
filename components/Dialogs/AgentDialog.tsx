@@ -19,7 +19,12 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ recipientAccount, callBackSetter }: any) {
+type Props = {
+    recipientAccount:any,
+    callBackSetter: () => void
+}
+
+export default function Dialog({ recipientAccount, callBackSetter }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");

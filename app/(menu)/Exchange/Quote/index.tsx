@@ -87,7 +87,7 @@ export default function QuoteView({
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState<AccountRecord>(exchangeContext.agentAccount);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errorCode:0, message: "" });
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
   useEffect(() => {
     console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))

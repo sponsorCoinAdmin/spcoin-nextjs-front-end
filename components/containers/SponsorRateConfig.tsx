@@ -31,7 +31,7 @@ const SponsorRateConfig = ({setDisplayState}:Props) => {
     <div className={styles["inputs"]}>
       <div id="recipient-config" className={styles.rateRatioContainer2}/>
       <div className={styles["lineDivider"]}>
-      -------------------------------------------------------
+      -------------------------------------------------------------------
       </div>
       <div className={styles["rewardRatio"]}>
         Staking Reward Ratio:

@@ -45,8 +45,11 @@ const RecipientContainer = ({setDisplayState} : Props) => {
       <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
       <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
-        <div id="recipient-id" className={styles.sponsorCoinContainer}/>
-        <div className={styles["yourRecipient"]}>
+      <div id="recipient-id" className={styles.sponsorCoinContainer}/>
+      {/* <div className={styles["lineDivider3"]}>
+      -------------------------------------------------------------------
+      </div> */}
+         <div className={styles["yourRecipient"]}>
           You are sponsoring:
         </div>
         <Link href={`${urlParms}`} className={styles["recipientName"]}>

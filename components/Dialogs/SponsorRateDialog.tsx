@@ -3,9 +3,13 @@ import styles from './Resources/styles/Modal.module.css';
 
 import { useEffect, useRef, useState } from 'react'
 
-export default function Dialog({errMsg}:any) {
+type Props = {
+    errMsg: any
+}
+
+export default function Dialog({errMsg}:Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
-    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({name:"", message:""});
+    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))

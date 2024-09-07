@@ -39,7 +39,7 @@ const SellContainer = ({updateSellAmount,
   let disabled = false;
 
   useEffect(() =>  {
-    const formattedSellAmount = getValidFormattedPrice(sellAmount, sellTokenContract.decimals);
+    const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract.decimals);
     setFormattedSellAmount(formattedSellAmount)
   }, []);
 
@@ -54,11 +54,11 @@ const SellContainer = ({updateSellAmount,
     exchangeContext.tradeData.formattedSellAmount = formattedSellAmount;
   },[formattedSellAmount]);
 
-  useEffect(() =>  {
-    // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
-    console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
-    reloadNewTokenContract(sellTokenContract)
-  }, [sellTokenContract]);
+  // useEffect(() =>  {
+  //   // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
+  //   console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
+  //   reloadNewTokenContract(sellTokenContract)
+  // }, [sellTokenContract]);
 
   useEffect (() => {
     console.debug(`%%%% SellContainer.useEffect[sellAmount = ${sellAmount}])`);
@@ -117,19 +117,13 @@ const SellContainer = ({updateSellAmount,
       setFormattedSellAmount(stringValue);
     }
 
-    const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {
-
-    }
-
     return (
       <>
-        <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={junkManageSponsorshipCallback} />
-        {/* <TokenSelectDialog altTokenContract={buyTokenContract} callBackSetter={reloadNewTokenContract} /> */}
         <div className={styles.inputs}>
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
-            />
+          />
           <AssetSelect tokenContract={tokenContract} 
                        altTokenContract={buyTokenContract} 
                        reloadNewTokenContract={reloadNewTokenContract}>
@@ -140,10 +134,7 @@ const SellContainer = ({updateSellAmount,
           <div className={styles["assetBalance"]}>
             Balance: {formattedBalanceOf}
           </div>
-          {IsSpCoin ?
-            <>
-              <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} />
-            </> : null}
+          {IsSpCoin ? <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
         </div>
       </>
     )

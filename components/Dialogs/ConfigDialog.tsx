@@ -3,10 +3,15 @@ import { useRef } from 'react';
 import styles from './Resources/styles/Modal.module.css';
 import Slippage from '../Popover/Slippage';
 
-export default function Dialog({slippage, setSlippageCallback}:any) {
+type Props = {
+    slippage:number,
+    setSlippageCallback: () => void
+}
+
+export default function Dialog({slippage, setSlippageCallback}:Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     // 
-    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({name:"", message:""});
+    // const [errorMessage, setErrorMessage] = uuseState<ErrorMessage>({source:"", errCode:0, msg:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))
