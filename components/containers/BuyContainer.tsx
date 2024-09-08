@@ -3,16 +3,15 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenContract, DISPLAY_STATE, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
-import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { TokenContract, DISPLAY_STATE, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
 import RecipientContainer from './RecipientContainer';
+import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
   updateBuyAmount: bigint,
@@ -79,7 +78,7 @@ const BuyContainer = ({ updateBuyAmount,
   useEffect(() =>  {
     const decimals:number = buyTokenContract.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
-    if (stringValue !== "") {
+    if (!stringValue && stringValue !== "") {
       setFormattedBuyAmount(stringValue);
     }
     if (updateBuyAmount) 
@@ -95,10 +94,10 @@ const BuyContainer = ({ updateBuyAmount,
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
     // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
     console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
-    const adjustedBuyAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ setDecimalAdjustedContract(buyContainer:${adjustedBuyAmount})`)
-    setBuyAmount(adjustedBuyAmount);
+    console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
+    const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
+    console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
+    setBuyAmount(decimalAdjustedAmount);
     setTokenContract(newTokenContract)
   }
 
