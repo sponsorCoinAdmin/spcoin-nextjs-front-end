@@ -4,16 +4,14 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, bigIntDecimalShift } from '@/lib/spCoin/utils';
-import { isSpCoin } from '@/lib/spCoin/utils';
-import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 
 import useWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
+import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
 type Props = {
   updateSellAmount: bigint,
@@ -81,7 +79,7 @@ const SellContainer = ({updateSellAmount,
   }, [ACTIVE_ACCOUNT.address]);
 
   useEffect(() =>  {
-    console.debug(`$$$$$$$$$$ PRICE.useEffect[updateSellAmount = ${updateSellAmount}])`);
+    console.debug(`PRICE.useEffect[updateSellAmount = ${updateSellAmount}])`);
     if (updateSellAmount) 
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
@@ -91,7 +89,7 @@ const SellContainer = ({updateSellAmount,
     console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(sellAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
+    console.debug(`setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
     setSellAmount(decimalAdjustedAmount);
     setTokenContract(newTokenContract);
   }
@@ -101,7 +99,7 @@ const SellContainer = ({updateSellAmount,
     const decimals = tokenContract.decimals;
     stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
-    console.debug(`$$$$$$$$$$ SellContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
+    console.debug(`SellContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
     setSellAmount(bigIntValue);
     setFormattedSellAmount(stringValue);
   }
