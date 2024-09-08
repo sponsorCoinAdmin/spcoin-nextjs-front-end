@@ -48,7 +48,6 @@ const BuyContainer = ({ updateBuyAmount,
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
 
-
   useEffect(() =>  {
     // alert (`setTokenContract(${buyTokenContract})`)
     setTokenContract(buyTokenContract)

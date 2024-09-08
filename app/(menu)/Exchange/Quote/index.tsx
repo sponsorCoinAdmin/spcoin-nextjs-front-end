@@ -143,13 +143,13 @@ export default function QuoteView({
   }, [recipientAccount]);
 
   useEffect(() => {
-    if (errorMessage.source !== "" && errorMessage.message !== "") {
+    if (errorMessage.source !== "" && errorMessage.msg !== "") {
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
 
   useEffect(() => {
-    if (errorMessage.source !== "" && errorMessage.message !== "") {
+    if (errorMessage.source !== "" && errorMessage.msg !== "") {
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
@@ -235,11 +235,11 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <TokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
-      <TokenSelectDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-      <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-      <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
-      <ErrorDialog errMsg={errorMessage} />
+      <TokenSelectDialog showDialog={true} connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
+      <TokenSelectDialog showDialog={true} connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
+      <RecipientDialog showDialog={true} agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+      <AgentDialog showDialog={true} recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
+      <ErrorDialog showDialog={true} errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         {/* <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>

@@ -22,10 +22,11 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 // ToDo Read in data List remotely
 type Props = {
     agentAccount: any,
-    setRecipientElement: (accountRecord:AccountRecord) => void
+    setRecipientElement: (accountRecord:AccountRecord) => void,
+    showDialog:boolean
 }
 
-export default function Dialog({ agentAccount, setRecipientElement }: Props) {
+export default function Dialog({showDialog, agentAccount, setRecipientElement }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
@@ -34,6 +35,10 @@ export default function Dialog({ agentAccount, setRecipientElement }: Props) {
     useEffect(() => {
         closeDialog();
     }, []);
+
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showDialog])
 
     useEffect( () => {
         // alert("recipientInput Changed "+recipientInput)

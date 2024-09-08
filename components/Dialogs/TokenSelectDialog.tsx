@@ -44,12 +44,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         // alert(`Dialog.altTokenContract = ${stringifyBigInt(altTokenContract)}`)
       }, []);
 
-      useEffect(() => {
-        if (showDialog === true) {
-            dialogRef.current?.showModal()
-        } else {
-            dialogRef.current?.close()
-        }
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
     }, [showDialog])
 
     useEffect( () => {

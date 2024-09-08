@@ -42,8 +42,8 @@ const RecipientContainer = ({setDisplayState} : Props) => {
   // console.debug (`calling urlParms: ${urlParms}`)
   return (
     <>
-      <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-      <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
+      <RecipientDialog  showDialog={true} agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+      <AgentDialog  showDialog={true} recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
       <div id="recipient-id" className={styles.sponsorCoinContainer}/>
       {/* <div className={styles["lineDivider3"]}>

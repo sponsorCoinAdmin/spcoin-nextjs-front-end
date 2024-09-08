@@ -4,23 +4,29 @@ import { getERC20WagmiClientBalanceOfStr } from '@/lib/wagmi/erc20WagmiClientRea
 import { showElement } from '@/lib/spCoin/guiControl';
 import { openDialog } from '../Dialogs/Dialogs';
 import ManageSponsorships from '../Dialogs/ManageSponsorships';
+import { useState } from 'react';
 
 type Props = {
   activeAccount: any,
-  tokenContract: TokenContract
+  tokenContract: TokenContract,
 }
 
 const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {
+  const [showDialog, setShowDialog ] = useState<boolean>(false)
+  const openDialog2 = () => {
+      setShowDialog(true)
+      openDialog("#manageSponsorshipsDialog")
+  }
+
   const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {
     return null;
   }
 
   try {
-  const balanceOf = (getERC20WagmiClientBalanceOfStr(activeAccount.address, tokenContract.address || "") || "0");
     return (
       <>
-        <ManageSponsorships tokenContract={tokenContract} callBackSetter={junkManageSponsorshipCallback}  />
-        <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog("#manageSponsorshipsDialog")}>
+        <ManageSponsorships showDialog={showDialog} tokenContract={tokenContract} callBackSetter={junkManageSponsorshipCallback}  />
+        <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog2()}>
           <div className={styles["centerTop"]} >Manage</div>
           <div className={styles["centerBottom"]} >Sponsorships</div>
         </div>

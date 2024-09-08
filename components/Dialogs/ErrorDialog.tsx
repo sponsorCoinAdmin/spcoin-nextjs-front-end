@@ -12,10 +12,15 @@ type ErrorType = {
 }
 
 type Props = {
-    errMsg: any
+    errMsg: any,
+    showDialog:boolean
 }
 
-export default function Dialog({errMsg}:Props) {
+export default function Dialog({showDialog, errMsg}:Props) {
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showDialog])
+
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
