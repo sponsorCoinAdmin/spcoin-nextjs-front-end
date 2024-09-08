@@ -8,7 +8,6 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
                        SWAP }
 
 enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN }
-enum  DISPLAY_STATE { OFF, SPONSOR_SELL_ON, SPONSOR_SELL_OFF, SPONSOR_BUY, RECIPIENT, CONFIG }
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 
 interface PriceRequestParams {
@@ -71,7 +70,6 @@ type ExchangeContext = {
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
   tradeData: TradeData;
-  displayState: DISPLAY_STATE;
   test : {dumpContextButton:boolean};
 }
 
@@ -86,7 +84,6 @@ type ErrorMessage ={
 export {
   EXCHANGE_STATE,
   TRANSACTION_TYPE,
-  DISPLAY_STATE,
   FEED_TYPE
 }
 

@@ -3,7 +3,7 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenContract, DISPLAY_STATE, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
@@ -19,22 +19,19 @@ type Props = {
   buyTokenContract: TokenContract, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract) => void,
-  setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
 const BuyContainer = ({ updateBuyAmount, 
                         sellTokenContract, 
                         buyTokenContract,
                         setBuyAmountCallback,
-                        setTokenContractCallback,
-                        setDisplayState} : Props) => {
+                        setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
-  // const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract.decimals);
@@ -128,10 +125,10 @@ const BuyContainer = ({ updateBuyAmount,
           Balance: {formattedBalanceOf}
         </div>
         {IsSpCoin ?
-          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
+          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
           : null}
         </div>
-        <RecipientContainer showContainer={false} setDisplayState={setDisplayState}/>
+        <RecipientContainer showContainer={false}/>
       </>
     );
   } catch (err:any) {

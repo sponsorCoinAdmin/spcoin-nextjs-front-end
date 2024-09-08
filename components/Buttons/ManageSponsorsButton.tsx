@@ -1,5 +1,5 @@
 import styles from '@/styles/Exchange.module.css';
-import { DISPLAY_STATE, TokenContract } from '@/lib/structure/types';
+import { TokenContract } from '@/lib/structure/types';
 import { getERC20WagmiClientBalanceOfStr } from '@/lib/wagmi/erc20WagmiClientRead';
 import { showElement } from '@/lib/spCoin/guiControl';
 import { openDialog } from '../Dialogs/Dialogs';

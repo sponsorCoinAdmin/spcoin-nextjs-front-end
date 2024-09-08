@@ -5,36 +5,29 @@ import Image from 'next/image';
 import { DownOutlined } from "@ant-design/icons";
 import cog_png from '../../public/resources/images/miscellaneous/cog.png';
 import Link from 'next/link'
-import { AccountRecord, DISPLAY_STATE } from '@/lib/structure/types';
+import { AccountRecord } from '@/lib/structure/types';
 import SponsorRateConfig from './SponsorRateConfig';
 import { exchangeContext } from '@/lib/context';
 import { showElement, hideElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
-  setDisplayState:(displayState:DISPLAY_STATE) => void,
   showContainer:boolean
 }
 
-const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
+const toggleConfig = () => {
   const el = document.getElementById('recipientConfigDiv');
   if (el != null) {
     el.style.display === 'block' ? 
-      setDisplayState(DISPLAY_STATE.RECIPIENT) :
-      setDisplayState(DISPLAY_STATE.CONFIG);
+      alert(`toggleConfig: block`): alert(`toggleConfig !block`)
   }
 };
 
-const RecipientContainer = ({showContainer, setDisplayState} : Props) => {
+const RecipientContainer = ({showContainer} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
   // let urlParms:string = `/Recipient?address=${recipientAccount.address}`
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [showComponent, setShowComponent ] = useState<boolean>(false)
-  const openRecipientConfig = () => {
-    alert("ZZZZZZZZZZZZZZ")
-    showElement("recipientConfigDiv")
-    // setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON
- }
 
   useEffect(() => {
     console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
@@ -71,15 +64,14 @@ const RecipientContainer = ({showContainer, setDisplayState} : Props) => {
         </div>
         <div>
           <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
-          onClick={() => toggleConfig(setDisplayState)}/>
+          onClick={() => toggleConfig()}/>
         </div>
         <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => alert("AAAAAAAAAAAAAAAAAAA")}>
           X
         </div>
       </div>
-      <SponsorRateConfig setDisplayState={setDisplayState}/>
-    </>
-  );
+      <SponsorRateConfig />
+    </>  );
 }
 
 export default RecipientContainer;

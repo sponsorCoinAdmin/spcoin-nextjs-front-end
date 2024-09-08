@@ -45,18 +45,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
       }, []);
 
     useEffect(() => {
-        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+        showDialog ? dialogRef.current?.showModal() : closeDialog()
     }, [showDialog])
-
-    useEffect( () => {
-        // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('selectTokenDialog_ID') : showElement('selectTokenDialog_ID')
-        if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput, setTokenContract)
-        }
-        else
-            setTokenSelect("Invalid Token Address");
-    }, [tokenInput]);
 
     useEffect( () => {
         // alert("TokenContract Changed "+tokenInput)
@@ -68,8 +58,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         setTokenInput("")
         setTokenSelect("");
         setShowDialog(false);
-    //     hideElement('selectTokenDialog_ID')
-    //     dialogRef.current?.close()
+        dialogRef.current?.close()
     }
 
     const setTokenInputField = (event:any) => {
@@ -130,7 +119,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                         &nbsp;
                     </div>
                 </div>
-                    <div id="selectTokenDialog_ID" className={styles.modalInputSelect}>
+                    <div className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
