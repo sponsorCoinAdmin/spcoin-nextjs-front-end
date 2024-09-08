@@ -1,24 +1,21 @@
 'use client';
 import styles from '@/styles/Exchange.module.css';
-import { openDialog,  AgentDialog,  RecipientDialog,  ErrorDialog} from '@/components/Dialogs/Dialogs';
+import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
-import { AccountRecord, TokenContract,  DISPLAY_STATE, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
+import { AccountRecord, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
 import { PriceAPI } from '@/lib/0X/fetcher';
 import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import SellContainer from '@/components/containers/SellContainer';
 import BuyContainer from '@/components/containers/BuyContainer';
-import RecipientContainer from '@/components/containers/RecipientContainer';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
-import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 
 //////////// Price Code
 export default function PriceView() {
@@ -27,7 +24,6 @@ export default function PriceView() {
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errCode:0, msg: "" });
@@ -44,7 +40,6 @@ export default function PriceView() {
         console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
         setRecipientElement(exchangeContext.recipientAccount);
         setAgentElement(exchangeContext.agentAccount);
-        setDisplayState(exchangeContext.displayState);
         setSlippage(exchangeContext.tradeData.slippage);
         setSellTokenContract(exchangeContext.sellTokenContract);
         setBuyTokenContract(exchangeContext.buyTokenContract);
@@ -55,12 +50,6 @@ export default function PriceView() {
       console.debug(`PRICE.useEffect[ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}])`);
       exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address;
     }, [ACTIVE_ACCOUNT.address]);
-
-    useEffect(() => {
-      console.debug(`PRICE.useEffect:setDisplayPanels(${displayState})`);
-      setDisplayPanels(displayState);
-      exchangeContext.displayState = displayState;
-    },[displayState]);
 
     useEffect(() => {
       console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
@@ -89,17 +78,8 @@ export default function PriceView() {
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[buyTokenContract = ${buyTokenContract}])`);
-      if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenContract))
-        setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
-      else if (!isSpCoin(buyTokenContract)) 
-        setDisplayState(DISPLAY_STATE.OFF)
       exchangeContext.buyTokenContract = buyTokenContract;
     }, [buyTokenContract]);
-
-    useEffect(() => {
-      console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
-      exchangeContext.recipientAccount = recipientAccount;
-    }, [recipientAccount]);
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
@@ -143,7 +123,7 @@ export default function PriceView() {
 
     function updateBuyTransaction(newTransactionContract: TokenContract) {
       setBuyTokenContract(newTransactionContract);
-      let msg = `>>>>>>>>>>>> reloadNewTokenContract:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
+      let msg = `>>>>>>>>>>>> setDecimalAdjustedContract:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
       msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
       msg += `buyTokenContract = ${stringifyBigInt(buyTokenContract)}\n`
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
@@ -163,10 +143,7 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          <ManageSponsorships sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-          <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-          <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
-          <ErrorDialog errMsg={errorMessage} />
+          <ErrorDialog errMsg={errorMessage} showDialog={false} />
           <div className={styles.tradeContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer updateSellAmount={sellAmount}
@@ -178,11 +155,9 @@ export default function PriceView() {
                            buyTokenContract={buyTokenContract}
                            sellTokenContract={sellTokenContract}
                            setBuyAmountCallback={setBuyAmount}
-                           setTokenContractCallback={setBuyTokenContractCallback}
-                           setDisplayState={setDisplayState}/>
+                           setTokenContractCallback={setBuyTokenContractCallback}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />
-            <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
           <FeeDisclosure/>

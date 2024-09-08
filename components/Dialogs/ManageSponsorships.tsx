@@ -22,18 +22,29 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 // ToDo Read in data List remotely
-export default function Dialog({ sellTokenContract, callBackSetter }: any) {
+
+type Props = {
+    tokenContract: TokenContract,
+    callBackSetter: (listElement:TokenContract) => null,
+    showDialog:boolean
+}
+
+export default function Dialog({showDialog, tokenContract, callBackSetter }: Props) {
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = sellTokenContract.chainId;
+    const chainId = ACTIVE_ACCOUNT.chainId;
     const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         closeDialog();
     }, []);
+
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showDialog])
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
@@ -86,12 +97,12 @@ export default function Dialog({ sellTokenContract, callBackSetter }: any) {
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === sellTokenContract.address) {
-                alert("Buy Token cannot be the same as Sell Token("+sellTokenContract.symbol+")")
-                console.log("Buy Token cannot be the same as Sell Token("+sellTokenContract.symbol+")");
+            if (listElement.address === tokenContract.address) {
+                alert("Buy Token cannot be the same as Sell Token("+tokenContract.symbol+")")
+                console.log("Buy Token cannot be the same as Sell Token("+tokenContract.symbol+")");
                 return false;
             }
-            await getWagmiBalanceOfRec (sellTokenContract.address)
+            await getWagmiBalanceOfRec (tokenContract.address)
             callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {

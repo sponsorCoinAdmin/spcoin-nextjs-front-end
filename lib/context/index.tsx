@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react';
 import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetworkSettings';
-import { DISPLAY_STATE, ExchangeContext, TradeData, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { ExchangeContext, TradeData, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
 import { useAccount, useChainId } from 'wagmi';
 import { Address } from 'viem';
@@ -43,7 +43,6 @@ function getInitialContext(chain:any | number): ExchangeContext {
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
         tradeData: defaultInitialTradeData,
-        displayState: ifBuyTokenSpCoin ? DISPLAY_STATE.SPONSOR_SELL_ON : DISPLAY_STATE.OFF,
         test : {dumpContextButton:true}
     }
     // alert(`***Context.getInitialContext:sellTokenContract: ${JSON.stringify(defaultNetworkSettings.defaultSellToken,null,2)}`)
@@ -63,7 +62,6 @@ const resetNetworkContext = (chain:any, connectedAccountAddr:any) => {
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
     exchangeContext.connectedAccountAddr = connectedAccountAddr;
     exchangeContext.network.name = networkName
-    exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
     exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,
@@ -81,7 +79,6 @@ const resetSellNetworkContext = (chain:any) => {
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
     exchangeContext.network.chainId = chain?.id;
     exchangeContext.network.name = networkName
-    exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
     exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,
@@ -98,7 +95,6 @@ const resetBuyNetworkContext = (chain:any) => {
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
     exchangeContext.network.chainId = chain?.id;
     exchangeContext.network.name = networkName
-    exchangeContext.displayState = isSpCoin(defaultNetworkSettings.defaultBuyToken) ? DISPLAY_STATE.SPONSOR_SELL_ON:DISPLAY_STATE.OFF,
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
     exchangeContext.recipientAccount = defaultNetworkSettings.defaultRecipient,

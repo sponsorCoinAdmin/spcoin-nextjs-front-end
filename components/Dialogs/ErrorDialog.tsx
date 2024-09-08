@@ -11,9 +11,18 @@ type ErrorType = {
     stack?: string;
 }
 
-export default function Dialog({errMsg}:any) {
+type Props = {
+    errMsg: any,
+    showDialog:boolean
+}
+
+export default function Dialog({showDialog, errMsg}:Props) {
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showDialog])
+
     const dialogRef = useRef<null | HTMLDialogElement>(null)
-    const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errorCode:0, message:""});
+    const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))

@@ -1,23 +1,36 @@
 import styles from '@/styles/Exchange.module.css';
-import { DISPLAY_STATE, TokenContract } from '@/lib/structure/types';
+import { TokenContract } from '@/lib/structure/types';
 import { getERC20WagmiClientBalanceOfStr } from '@/lib/wagmi/erc20WagmiClientRead';
 import { showElement } from '@/lib/spCoin/guiControl';
 import { openDialog } from '../Dialogs/Dialogs';
+import ManageSponsorships from '../Dialogs/ManageSponsorships';
+import { useState } from 'react';
 
 type Props = {
   activeAccount: any,
-  tokenContract: TokenContract
+  tokenContract: TokenContract,
 }
 
 const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {
+  const [showDialog, setShowDialog ] = useState<boolean>(false)
+  const openDialog2 = () => {
+      setShowDialog(true)
+      openDialog("#manageSponsorshipsDialog")
+  }
+
+  const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {
+    return null;
+  }
 
   try {
-  const balanceOf = (getERC20WagmiClientBalanceOfStr(activeAccount.address, tokenContract.address || "") || "0");
     return (
-        <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog("#manageSponsorshipsDialog")}>
+      <>
+        <ManageSponsorships showDialog={showDialog} tokenContract={tokenContract} callBackSetter={junkManageSponsorshipCallback}  />
+        <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog2()}>
           <div className={styles["centerTop"]} >Manage</div>
           <div className={styles["centerBottom"]} >Sponsorships</div>
         </div>
+      </>
     );
   } catch (err:any) {
     console.debug (`Sell Container Error:\n ${err.message}`)

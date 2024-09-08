@@ -1,12 +1,22 @@
 "use client"
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import styles from './Resources/styles/Modal.module.css';
 import Slippage from '../Popover/Slippage';
 
-export default function Dialog({slippage, setSlippageCallback}:any) {
+type Props = {
+    slippage:number,
+    setSlippageCallback: () => void,
+    showDialog:boolean
+}
+
+export default function Dialog({showDialog, slippage, setSlippageCallback}:Props) {
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showDialog])
+
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     // 
-    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({name:"", message:""});
+    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))

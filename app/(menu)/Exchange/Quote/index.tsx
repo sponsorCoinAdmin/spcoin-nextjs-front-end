@@ -9,13 +9,11 @@ import {
 } from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
-import { AccountRecord, TokenContract, DISPLAY_STATE, ExchangeContext, ErrorMessage } from '@/lib/structure/types';
+import { AccountRecord, TokenContract, ExchangeContext, ErrorMessage } from '@/lib/structure/types';
 import { fetcher } from '@/lib/0X/fetcher';
 import { isSpCoin, setValidPriceInput } from '@/lib/spCoin/utils';
 import type { PriceResponse, QuoteResponse } from "@/app/api/types";
-import {setDisplayPanels,} from '@/lib/spCoin/guiControl';
 import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
@@ -42,13 +40,12 @@ import BuyContainer from '@/components/containers/BuyContainer';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import QuoteButton from '@/components/Buttons/QuoteButton';
-import { setDisplayPanels, showElement } from '@/lib/spCoin/guiControl';
 import ErrorDialog from '@/components/Dialogs/ErrorDialog';
 import { AgentDialog, TokenSelectDialog, RecipientDialog, TokenSelectDialog, openDialog } from '@/components/Dialogs/Dialogs';
 import SponsorRateConfig from '@/components/containers/SponsorRateConfig';
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import IsLoading from '@/components/containers/IsLoading';
-import { DISPLAY_STATE, EXCHANGE_STATE, TokenContract, AccountRecord } from '@/lib/structure/types';
+import { EXCHANGE_STATE, TokenContract, AccountRecord } from '@/lib/structure/types';
 import { PriceResponse, QuoteResponse } from '@/app/api/types';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
@@ -81,33 +78,18 @@ export default function QuoteView({
   const [sellBalance, setSellBalance] = useState<string>("0");
   const [buyBalance, setBuyBalance] = useState<string>("0");
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-  const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
   const [sellTokenContract, updateSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState<AccountRecord>(exchangeContext.agentAccount);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errorCode:0, message: "" });
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
-  useEffect(() => {
-    console.debug("QUOTE:exchangeContext =\n" + JSON.stringify(exchangeContext,null,2))
-    // ToDo Fix this makeshift, "Do TimeOut to Ensure Dom is loaded.""
-    // For up to 15 seconds in half second increments set dom settings
-    for(let i = 1; i <= 30; i++) {
-      setTimeout(() => setDisplayPanels(displayState),i*500)
-    }
-  },[]);
   
   useEffect(() => {
     console.debug(`QUOTE: useEffect:chainId = ${chainId}`)
     exchangeContext.network.chainId = chainId;
   },[chainId]);
-
-  useEffect(() => {
-    console.debug(`QUOTE: setDisplayPanels(${displayState})`);
-    setDisplayPanels(displayState);
-    exchangeContext.displayState = displayState;
-  },[displayState]);
 
   useEffect(() => {
     console.debug('QUOTE: slippage changed to  ' + slippage);
@@ -130,10 +112,6 @@ export default function QuoteView({
 
   useEffect(() => {
     // alert(`useEffect[buyTokenContract]:EXECUTING updateBuyBalance(${buyTokenContract.name});`)
-    if (displayState === DISPLAY_STATE.OFF && isSpCoin(buyTokenContract))
-      setDisplayState(DISPLAY_STATE.SPONSOR_BUY) 
-    else if (!isSpCoin(buyTokenContract)) 
-      setDisplayState(DISPLAY_STATE.OFF)
     exchangeContext.buyTokenContract = buyTokenContract;
   }, [buyTokenContract]);
 
@@ -143,13 +121,13 @@ export default function QuoteView({
   }, [recipientAccount]);
 
   useEffect(() => {
-    if (errorMessage.source !== "" && errorMessage.message !== "") {
+    if (errorMessage.source !== "" && errorMessage.msg !== "") {
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
 
   useEffect(() => {
-    if (errorMessage.source !== "" && errorMessage.message !== "") {
+    if (errorMessage.source !== "" && errorMessage.msg !== "") {
       openDialog("#errorDialog");
     }
   }, [errorMessage]);
@@ -235,11 +213,6 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <TokenSelectDialog connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
-      <TokenSelectDialog connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-      <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-      <AgentDialog recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
-      <ErrorDialog errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         {/* <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
@@ -271,8 +244,6 @@ export default function QuoteView({
   Send transaction
 </button>
         <QuoteButton sendTransaction={sendTransaction}/>
-        <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
-        <SponsorRateConfig setDisplayState={setDisplayState}/>
         <AffiliateFee price={price} buyTokenContract= {buyTokenContract} />
       </div>
       <FeeDisclosure/>

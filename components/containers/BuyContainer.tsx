@@ -3,16 +3,15 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenContract, DISPLAY_STATE, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
-import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { adjustTokenPriceAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
 import RecipientContainer from './RecipientContainer';
+import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
   updateBuyAmount: bigint,
@@ -20,22 +19,19 @@ type Props = {
   buyTokenContract: TokenContract, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract) => void,
-  setDisplayState:(displayState:DISPLAY_STATE) => void
 }
 
 const BuyContainer = ({ updateBuyAmount, 
                         sellTokenContract, 
                         buyTokenContract,
                         setBuyAmountCallback,
-                        setTokenContractCallback,
-                        setDisplayState} : Props) => {
+                        setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
-  // const [displayState, setDisplayState] = useState<DISPLAY_STATE>(exchangeContext.displayState);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract.decimals);
@@ -52,7 +48,7 @@ const BuyContainer = ({ updateBuyAmount,
   useEffect(() =>  {
     // alert (`setTokenContract(${buyTokenContract})`)
     setTokenContract(buyTokenContract)
-    exchangeContext.buyTokenContract = tokenContract;
+    setDecimalAdjustedContract(buyTokenContract)
   }, [buyTokenContract]);
 
   useEffect(() =>  {
@@ -63,6 +59,7 @@ const BuyContainer = ({ updateBuyAmount,
     console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
     // setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
+    setBuyAmountCallback(buyAmount)
   }, [buyAmount])
 
   useEffect(() => {
@@ -90,7 +87,15 @@ const BuyContainer = ({ updateBuyAmount,
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  let disabled = true;
+  const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
+    // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
+    const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
+    console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
+    setBuyAmount(decimalAdjustedAmount);
+    setTokenContract(newTokenContract)
+  }
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
@@ -101,40 +106,29 @@ const BuyContainer = ({ updateBuyAmount,
     setFormattedBuyAmount(stringValue);
   }
 
-  function reloadNewTokenContract(newTokenContract: TokenContract) {
-    // alert(`BuyContainer.reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
-    const adjustedBuyAmount:bigint = adjustTokenPriceAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ reloadNewTokenContract(buyContainer:${adjustedBuyAmount})`)
-    setBuyAmount(adjustedBuyAmount);
-    setBuyAmountCallback(adjustedBuyAmount)
-    setTokenContract(newTokenContract)
-  }
-
+  let disabled = true;
   try {
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
-        {/* <TokenSelectDialog altTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} /> */}
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
-            // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
+            onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
             />
         <AssetSelect  tokenContract={tokenContract} 
                       altTokenContract={sellTokenContract} 
-                      reloadNewTokenContract={reloadNewTokenContract}>
+                      setDecimalAdjustedContract={setDecimalAdjustedContract}>
         </AssetSelect>
         <div className={styles["buySell"]}>You receive</div>
         <div className={styles["assetBalance"]}>
           Balance: {formattedBalanceOf}
         </div>
         {IsSpCoin ?
-          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
+          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
           : null}
         </div>
-        {/* <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/> */}
+        <RecipientContainer showContainer={false}/>
       </>
     );
   } catch (err:any) {

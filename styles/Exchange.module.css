@@ -287,7 +287,6 @@
   font-size: 14px;
 }
 
-
 .manageSponsorshipsDiv {
   /* display: none; */
   position: absolute;
@@ -303,6 +302,11 @@
   /* gap: 5px; */
   font-size: 12px;
   border-radius: 12px !important;
+}
+
+.manageSponsorshipsDiv:hover {
+  cursor: pointer;
+  color: green
 }
 
 .modal {

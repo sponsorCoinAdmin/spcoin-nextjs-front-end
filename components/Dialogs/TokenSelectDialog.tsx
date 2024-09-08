@@ -38,30 +38,15 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = altTokenContract.chainId;
     const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         // alert(`Dialog.altTokenContract = ${stringifyBigInt(altTokenContract)}`)
       }, []);
 
-      useEffect(() => {
-        if (showDialog === true) {
-            dialogRef.current?.showModal()
-        } else {
-            dialogRef.current?.close()
-        }
+    useEffect(() => {
+        showDialog ? dialogRef.current?.showModal() : closeDialog()
     }, [showDialog])
-
-    useEffect( () => {
-        // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('selectTokenDialog_ID') : showElement('selectTokenDialog_ID')
-        if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput, setTokenContract)
-        }
-        else
-            setTokenSelect("Invalid Token Address");
-    }, [tokenInput]);
 
     useEffect( () => {
         // alert("TokenContract Changed "+tokenInput)
@@ -73,18 +58,15 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         setTokenInput("")
         setTokenSelect("");
         setShowDialog(false);
-    //     hideElement('selectTokenDialog_ID')
-    //     dialogRef.current?.close()
+        dialogRef.current?.close()
     }
-
-
 
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
 
     const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(connectedAccountAddr, chainId, tokenAddr, setTokenContract)
+        return getTokenDetails(connectedAccountAddr, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
@@ -137,7 +119,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                         &nbsp;
                     </div>
                 </div>
-                    <div id="selectTokenDialog_ID" className={styles.modalInputSelect}>
+                    <div className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
