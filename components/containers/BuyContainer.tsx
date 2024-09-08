@@ -78,7 +78,7 @@ const BuyContainer = ({ updateBuyAmount,
   useEffect(() =>  {
     const decimals:number = buyTokenContract.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
-    if (!stringValue && stringValue !== "") {
+    if (stringValue !== "") {
       setFormattedBuyAmount(stringValue);
     }
     if (updateBuyAmount) 
