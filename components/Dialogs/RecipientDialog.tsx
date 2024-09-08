@@ -22,7 +22,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 // ToDo Read in data List remotely
 type Props = {
     agentAccount: any,
-    setRecipientElement: () => void
+    setRecipientElement: (accountRecord:AccountRecord) => void
 }
 
 export default function Dialog({ agentAccount, setRecipientElement }: Props) {

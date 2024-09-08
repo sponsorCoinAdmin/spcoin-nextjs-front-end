@@ -21,7 +21,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 // ToDo Read in data List remotely
 type Props = {
     recipientAccount:any,
-    callBackSetter: () => void
+    callBackSetter: (agentAccount: AccountRecord) => void
 }
 
 export default function Dialog({ recipientAccount, callBackSetter }: Props) {
