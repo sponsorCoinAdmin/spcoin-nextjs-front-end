@@ -64,6 +64,7 @@ const BuyContainer = ({ updateBuyAmount,
     console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
     // setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
+    setBuyAmountCallback(buyAmount)
   }, [buyAmount])
 
   useEffect(() => {
@@ -91,7 +92,15 @@ const BuyContainer = ({ updateBuyAmount,
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  let disabled = true;
+  const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
+    // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
+    const adjustedBuyAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
+    console.debug(`$$$$$$$$$$ setDecimalAdjustedContract(buyContainer:${adjustedBuyAmount})`)
+    setBuyAmount(adjustedBuyAmount);
+    setTokenContract(newTokenContract)
+  }
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
@@ -102,24 +111,14 @@ const BuyContainer = ({ updateBuyAmount,
     setFormattedBuyAmount(stringValue);
   }
 
-  function setDecimalAdjustedContract(newTokenContract: TokenContract) {
-    // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
-    const adjustedBuyAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ setDecimalAdjustedContract(buyContainer:${adjustedBuyAmount})`)
-    setBuyAmount(adjustedBuyAmount);
-    setBuyAmountCallback(adjustedBuyAmount)
-    setTokenContract(newTokenContract)
-  }
-
+  let disabled = true;
   try {
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
-            // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
+            onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
             />
         <AssetSelect  tokenContract={tokenContract} 
