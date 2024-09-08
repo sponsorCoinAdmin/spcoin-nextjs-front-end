@@ -21,34 +21,34 @@ const showElement = (element: string) => {
 const setDisplayPanels = (displayState:DISPLAY_STATE) => {
   // alert(`guiControl.setDisplayState(${getDisplayStateString(displayState)})`)
   switch(displayState) {
-    case DISPLAY_STATE.OFF:
-      hideElement("addSponsorshipDiv")
-      hideElement("recipientSelectDiv")
-      hideElement("recipientConfigDiv")
-    break
-    case DISPLAY_STATE.SPONSOR_SELL_ON:
-      showElement("addSponsorshipDiv")
-      hideElement("recipientSelectDiv")
-      hideElement("recipientConfigDiv")
-    break;
-    case DISPLAY_STATE.SPONSOR_SELL_OFF:
-      hideElement("addSponsorshipDiv")
-     break;
-    case DISPLAY_STATE.SPONSOR_BUY:
-      showElement("addSponsorshipDiv")
-      hideElement("recipientSelectDiv")
-      hideElement("recipientConfigDiv")
-    break
-    case DISPLAY_STATE.RECIPIENT:
-      hideElement("addSponsorshipDiv")
-      showElement("recipientSelectDiv")
-      hideElement("recipientConfigDiv")
-    break
-    case DISPLAY_STATE.CONFIG:
-      hideElement("addSponsorshipDiv")
-      showElement("recipientSelectDiv")
-      showElement("recipientConfigDiv")
-    break
+    // case DISPLAY_STATE.OFF:
+    //   hideElement("addSponsorshipDiv")
+    //   hideElement("recipientSelectDiv")
+    //   hideElement("recipientConfigDiv")
+    // break
+    // case DISPLAY_STATE.SPONSOR_SELL_ON:
+    //   showElement("addSponsorshipDiv")
+    //   hideElement("recipientSelectDiv")
+    //   hideElement("recipientConfigDiv")
+    // break;
+    // case DISPLAY_STATE.SPONSOR_SELL_OFF:
+    //   hideElement("addSponsorshipDiv")
+    //  break;
+    // case DISPLAY_STATE.SPONSOR_BUY:
+    //   showElement("addSponsorshipDiv")
+    //   hideElement("recipientSelectDiv")
+    //   hideElement("recipientConfigDiv")
+    // break
+    // case DISPLAY_STATE.RECIPIENT:
+    //   hideElement("addSponsorshipDiv")
+    //   showElement("recipientSelectDiv")
+    //   hideElement("recipientConfigDiv")
+    // break
+    // case DISPLAY_STATE.CONFIG:
+    //   hideElement("addSponsorshipDiv")
+    //   showElement("recipientSelectDiv")
+    //   showElement("recipientConfigDiv")
+    // break
   }
 }
 

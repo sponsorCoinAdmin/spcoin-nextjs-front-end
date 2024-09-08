@@ -131,7 +131,7 @@ const BuyContainer = ({ updateBuyAmount,
           <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract} setDisplayState={setDisplayState} />
           : null}
         </div>
-        <RecipientContainer setDisplayState={setDisplayState}/>
+        <RecipientContainer showContainer={false} setDisplayState={setDisplayState}/>
       </>
     );
   } catch (err:any) {

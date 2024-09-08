@@ -8,9 +8,11 @@ import Link from 'next/link'
 import { AccountRecord, DISPLAY_STATE } from '@/lib/structure/types';
 import SponsorRateConfig from './SponsorRateConfig';
 import { exchangeContext } from '@/lib/context';
+import { showElement, hideElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
-  setDisplayState:(displayState:DISPLAY_STATE) => void
+  setDisplayState:(displayState:DISPLAY_STATE) => void,
+  showContainer:boolean
 }
 
 const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
@@ -22,11 +24,18 @@ const toggleConfig = (setDisplayState:(displayState:DISPLAY_STATE) => void) => {
   }
 };
 
-const RecipientContainer = ({setDisplayState} : Props) => {
+const RecipientContainer = ({showContainer, setDisplayState} : Props) => {
   // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
   // let urlParms:string = `/Recipient?address=${recipientAccount.address}`
   const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
+  const [showComponent, setShowComponent ] = useState<boolean>(false)
+  const openRecipientConfig = () => {
+    alert("ZZZZZZZZZZZZZZ")
+    showElement("recipientConfigDiv")
+    // setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON
+ }
+
   useEffect(() => {
     console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
     exchangeContext.recipientAccount = recipientAccount;
@@ -42,8 +51,8 @@ const RecipientContainer = ({setDisplayState} : Props) => {
   // console.debug (`calling urlParms: ${urlParms}`)
   return (
     <>
-      <RecipientDialog  showDialog={true} agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-      <AgentDialog  showDialog={true} recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
+      <RecipientDialog  showDialog={false} agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+      <AgentDialog  showDialog={false} recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
       <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
       <div id="recipient-id" className={styles.sponsorCoinContainer}/>
       {/* <div className={styles["lineDivider3"]}>
@@ -64,7 +73,7 @@ const RecipientContainer = ({setDisplayState} : Props) => {
           <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
           onClick={() => toggleConfig(setDisplayState)}/>
         </div>
-        <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON)}>
+        <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => alert("AAAAAAAAAAAAAAAAAAA")}>
           X
         </div>
       </div>

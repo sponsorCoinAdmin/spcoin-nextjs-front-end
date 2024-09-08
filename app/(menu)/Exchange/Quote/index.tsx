@@ -9,7 +9,6 @@ import {
 } from '@/components/Dialogs/Dialogs';
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { formatUnits } from "ethers";
 import { useEstimateGas, useSendTransaction } from 'wagmi' 
 import { AccountRecord, TokenContract, DISPLAY_STATE, ExchangeContext, ErrorMessage } from '@/lib/structure/types';
 import { fetcher } from '@/lib/0X/fetcher';
@@ -235,11 +234,6 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <TokenSelectDialog showDialog={true} connectedAccountAddr={connectedAccountAddr} buyTokenContract={buyTokenContract} callBackSetter={updateSellTokenContract} />
-      <TokenSelectDialog showDialog={true} connectedAccountAddr={connectedAccountAddr} sellTokenContract={sellTokenContract} callBackSetter={setBuyTokenContract} />
-      <RecipientDialog showDialog={true} agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
-      <AgentDialog showDialog={true} recipientAccount={recipientAccount} callBackSetter={setAgentElement} />
-      <ErrorDialog showDialog={true} errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         {/* <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
@@ -271,7 +265,7 @@ export default function QuoteView({
   Send transaction
 </button>
         <QuoteButton sendTransaction={sendTransaction}/>
-        <RecipientContainer recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
+        <RecipientContainer showContainer={false} recipientAccount={recipientAccount} setDisplayState={setDisplayState}/>
         <SponsorRateConfig setDisplayState={setDisplayState}/>
         <AffiliateFee price={price} buyTokenContract= {buyTokenContract} />
       </div>
