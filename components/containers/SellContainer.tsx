@@ -78,11 +78,23 @@ const SellContainer = ({updateSellAmount,
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
+//  useEffect(() =>  {
+//    console.debug(`PRICE.useEffect[updateSellAmount = ${updateSellAmount}])`);
+//    if (updateSellAmount) 
+//      setSellAmount(updateSellAmount);
+//  }, [updateSellAmount]);
+
   useEffect(() =>  {
-    console.debug(`PRICE.useEffect[updateSellAmount = ${updateSellAmount}])`);
+    const decimals:number = sellTokenContract.decimals || 0;
+    const stringValue:string = getValidBigIntToFormattedPrice(updateSellAmount, decimals)
+    if (!stringValue && stringValue !== "") {
+      setFormattedSellAmount(stringValue);
+    }
     if (updateSellAmount) 
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
+
+
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
     // alert(`SellContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
