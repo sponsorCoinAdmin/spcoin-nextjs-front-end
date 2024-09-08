@@ -5,7 +5,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, DISPLAY_STATE, ExchangeContext, TRANSACTION_TYPE } from '@/lib/structure/types';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { adjustTokenPriceAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
@@ -49,10 +49,11 @@ const BuyContainer = ({ updateBuyAmount,
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
 
+
   useEffect(() =>  {
     // alert (`setTokenContract(${buyTokenContract})`)
     setTokenContract(buyTokenContract)
-    exchangeContext.buyTokenContract = tokenContract;
+    setDecimalAdjustedContract(buyTokenContract)
   }, [buyTokenContract]);
 
   useEffect(() =>  {
@@ -101,12 +102,12 @@ const BuyContainer = ({ updateBuyAmount,
     setFormattedBuyAmount(stringValue);
   }
 
-  function reloadNewTokenContract(newTokenContract: TokenContract) {
-    // alert(`BuyContainer.reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
+  function setDecimalAdjustedContract(newTokenContract: TokenContract) {
+    // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST buyAmount = ${buyAmount})`)
-    const adjustedBuyAmount:bigint = adjustTokenPriceAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ reloadNewTokenContract(buyContainer:${adjustedBuyAmount})`)
+    const adjustedBuyAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
+    console.debug(`$$$$$$$$$$ setDecimalAdjustedContract(buyContainer:${adjustedBuyAmount})`)
     setBuyAmount(adjustedBuyAmount);
     setBuyAmountCallback(adjustedBuyAmount)
     setTokenContract(newTokenContract)
@@ -116,7 +117,6 @@ const BuyContainer = ({ updateBuyAmount,
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
-        {/* <TokenSelectDialog altTokenContract={sellTokenContract} callBackSetter={reloadNewTokenContract} /> */}
         <div className={styles.inputs}>
         <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
             // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
@@ -124,7 +124,7 @@ const BuyContainer = ({ updateBuyAmount,
             />
         <AssetSelect  tokenContract={tokenContract} 
                       altTokenContract={sellTokenContract} 
-                      reloadNewTokenContract={reloadNewTokenContract}>
+                      setDecimalAdjustedContract={setDecimalAdjustedContract}>
         </AssetSelect>
         <div className={styles["buySell"]}>You receive</div>
         <div className={styles["assetBalance"]}>

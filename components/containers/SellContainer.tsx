@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, adjustTokenPriceAmount, getValidBigIntToFormattedPrice, bigIntDecimalShift } from '@/lib/spCoin/utils';
+import { setValidPriceInput, stringifyBigInt, getValidFormattedPrice, decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, bigIntDecimalShift } from '@/lib/spCoin/utils';
 import { isSpCoin } from '@/lib/spCoin/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import { formatUnits, parseUnits } from "ethers";
@@ -14,7 +14,6 @@ import useWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import TokenSelectDialog from '../Dialogs/TokenSelectDialog';
-import ManageSponsorships from '../Dialogs/ManageSponsorships';
 
 type Props = {
   updateSellAmount: bigint,
@@ -51,14 +50,14 @@ const SellContainer = ({updateSellAmount,
   }, [tokenContract]);
 
   useEffect(() =>  {
+    // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
+    console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
+    setDecimalAdjustedContract(sellTokenContract)
+  }, [sellTokenContract]);
+
+  useEffect(() =>  {
     exchangeContext.tradeData.formattedSellAmount = formattedSellAmount;
   },[formattedSellAmount]);
-
-  // useEffect(() =>  {
-  //   // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
-  //   console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
-  //   reloadNewTokenContract(sellTokenContract)
-  // }, [sellTokenContract]);
 
   useEffect (() => {
     console.debug(`%%%% SellContainer.useEffect[sellAmount = ${sellAmount}])`);
@@ -88,14 +87,14 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
-  function reloadNewTokenContract(newTokenContract: TokenContract) {
-    // alert(`SellContainer.reloadNewTokenContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`reloadNewTokenContract(sellContainer:${newTokenContract.name})`)
+  function setDecimalAdjustedContract(newTokenContract: TokenContract) {
+    // alert(`SellContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
-    const adjustedSellAmount:bigint = adjustTokenPriceAmount(sellAmount, newTokenContract, tokenContract);
-    console.debug(`$$$$$$$$$$ reloadNewTokenContract(sellContainer:${adjustedSellAmount})`)
-    setSellAmount(adjustedSellAmount);
-    setSellAmountCallback(adjustedSellAmount)
+    const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(sellAmount, newTokenContract, tokenContract);
+    console.debug(`$$$$$$$$$$ setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
+    setSellAmount(decimalAdjustedAmount);
+    setSellAmountCallback(decimalAdjustedAmount)
     setTokenContract(newTokenContract)
   }
 
@@ -123,10 +122,10 @@ const SellContainer = ({updateSellAmount,
           <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
-          />
+            />
           <AssetSelect tokenContract={tokenContract} 
                        altTokenContract={buyTokenContract} 
-                       reloadNewTokenContract={reloadNewTokenContract}>
+                       setDecimalAdjustedContract={setDecimalAdjustedContract}>
           </AssetSelect>
           <div className={styles["buySell"]}>
             You Pay
@@ -134,7 +133,10 @@ const SellContainer = ({updateSellAmount,
           <div className={styles["assetBalance"]}>
             Balance: {formattedBalanceOf}
           </div>
-          {IsSpCoin ? <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
+          {IsSpCoin ?
+            <>
+              <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} />
+            </> : null}
         </div>
       </>
     )

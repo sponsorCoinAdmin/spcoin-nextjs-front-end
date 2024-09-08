@@ -38,7 +38,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = altTokenContract.chainId;
     const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
@@ -77,14 +76,12 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     //     dialogRef.current?.close()
     }
 
-
-
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
 
     const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(connectedAccountAddr, chainId, tokenAddr, setTokenContract)
+        return getTokenDetails(connectedAccountAddr, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {

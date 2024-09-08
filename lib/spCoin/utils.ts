@@ -133,8 +133,8 @@ const exchangeContextDump = () => {
   console.debug(exchangeData);
 }
 
-function adjustTokenPriceAmount(amount:bigint, newTokenContract: TokenContract, prevTokenContract: TokenContract) {
-  let msg = `>>>>>>>>>>>> adjustTokenPriceAmount:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
+function decimalAdjustTokenAmount(amount:bigint, newTokenContract: TokenContract, prevTokenContract: TokenContract) {
+  let msg = `>>>>>>>>>>>> decimalAdjustTokenAmount:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
   msg += `newTokenContract = ${stringifyBigInt(newTokenContract)}\n`
   msg += `prevTokenContract = ${stringifyBigInt(prevTokenContract)}\n`
   msg += `amount=${amount}\n`
@@ -155,7 +155,7 @@ const bigIntDecimalShift = (value:bigint, decimalShift:number) => {
 }
 
 export {
-  adjustTokenPriceAmount,
+  decimalAdjustTokenAmount,
   bigIntDecimalShift,
   exchangeContextDump,
   fetchTokenDetails,

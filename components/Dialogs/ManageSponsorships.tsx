@@ -34,7 +34,7 @@ export default function Dialog({ tokenContract, callBackSetter }: Props) {
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const chainId = tokenContract.chainId;
+    const chainId = ACTIVE_ACCOUNT.chainId;
     const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {

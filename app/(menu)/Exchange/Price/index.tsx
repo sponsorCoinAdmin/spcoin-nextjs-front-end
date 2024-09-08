@@ -137,7 +137,7 @@ export default function PriceView() {
 
     function updateBuyTransaction(newTransactionContract: TokenContract) {
       setBuyTokenContract(newTransactionContract);
-      let msg = `>>>>>>>>>>>> reloadNewTokenContract:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
+      let msg = `>>>>>>>>>>>> setDecimalAdjustedContract:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
       msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
       msg += `buyTokenContract = ${stringifyBigInt(buyTokenContract)}\n`
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
