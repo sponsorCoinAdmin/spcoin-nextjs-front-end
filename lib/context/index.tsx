@@ -43,7 +43,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
 
         tradeData: defaultInitialTradeData,
-        test : {dumpContextButton:true}
+        test : {dumpContextButton:false}
     }
     // alert(`***Context.getInitialContext:sellTokenContract: ${JSON.stringify(defaultNetworkSettings.defaultSellToken,null,2)}`)
     // alert(`***Context.getInitialContext: ${JSON.stringify(defaultNetworkSettings,null,2)}`)

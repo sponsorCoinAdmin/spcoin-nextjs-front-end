@@ -33,6 +33,11 @@ function App() {
   const [ DISPLAY_CONTEXT_BUTTON, setContextButton ] = useState<boolean>(false)
 
   useEffect(() => {
+    // alert(`DISPLAY_CONTEXT_BUTTON = ${DISPLAY_CONTEXT_BUTTON}`)
+    setContextButton(DISPLAY_CONTEXT_BUTTON)
+  }, [DISPLAY_CONTEXT_BUTTON]);
+  
+  useEffect(() => {
     // alert(`ACTIVE_ACCOUNT.chainId = ${ACTIVE_ACCOUNT.chainId}`)
       switch(ACTIVE_ACCOUNT.chainId) {
         case 1: setDefaultTokenContractAddress(USDT_ETHEREUM_CONTRACT); break;
