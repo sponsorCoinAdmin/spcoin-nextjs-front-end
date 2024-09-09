@@ -95,7 +95,7 @@ export default function PriceView() {
       else if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
         setSellAmount(0n);
       }
-      // alert(`${apiErrorObj}`);
+      alert(`${apiErrorObj}`);
       console.debug(`${apiErrorObj}`);
     }
   

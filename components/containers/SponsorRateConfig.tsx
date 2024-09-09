@@ -54,7 +54,6 @@ const SponsorRateConfig = ({}:Props) => {
       onChange={(e) => setRateRatios((e.target.value))}></input>
     </div>
   </div>
-
   );
 }
 

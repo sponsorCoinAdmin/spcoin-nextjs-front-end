@@ -30,7 +30,7 @@
 
 .agentRateFee {
   position: relative;
-  top: -46px;
+  top: -5px;
   left: 12px;
   color: #94a3b8; 
   font-size: 14px;
@@ -538,7 +538,7 @@
 }
 
 .tradeContainer {
-  transform: translate(0px, -20px);
+  transform: translate(0px, -10px);
   font-weight: bold;
   width: 520px;
   background-color: #0E111B;
