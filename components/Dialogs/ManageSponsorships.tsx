@@ -48,7 +48,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)
-        tokenInput === "" ? hideElement('buySelectGroup') : showElement('buySelectGroup')
+        tokenInput === "" ? hideElement('buySelectGroup_ID') : showElement('buySelectGroup_ID')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput, setTokenContract)
         }
@@ -114,7 +114,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
     const closeDialog = () => {
         setTokenInput("")
         setTokenSelect("");
-        hideElement('buySelectGroup')
+        hideElement('buySelectGroup_ID')
         dialogRef.current?.close()
     }
 
@@ -135,7 +135,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
                         &nbsp;
                     </div>
                 </div>
-                    <div id="buySelectGroup" className={styles.modalInputSelect}>
+                    <div id="buySelectGroup_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />

@@ -16,17 +16,16 @@ const showElement = (element: string) => {
 };
 
 const hideSponsorRecipientConfig = () => {
-  hideElement("recipientSelectDiv")
+  hideElement("recipientContainerDiv_ID")
   hideElement("SponsorRateConfig_ID")
   hideElement("agent");
-  showElement("addSponsorshipDiv")
+  showElement("addSponsorshipDiv_ID_ID")
 }
 
 const showSponsorRecipientConfig = () => {
-  hideElement("addSponsorshipDiv")
-  showElement("recipientSelectDiv")
-  // hideElement("SponsorRateConfig_ID")
-  // showElement("agent");
+  hideElement("addSponsorshipDiv_ID")
+  showElement("recipientContainerDiv_ID")
+
 }
 
 const toggleElement = (element: any) => {

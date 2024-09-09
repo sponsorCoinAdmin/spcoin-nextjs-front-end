@@ -32,14 +32,14 @@ const RecipientContainer = ({showContainer} : Props) => {
   }, [recipientAccount]);
 
   const closeRecipientSelect = () => {
-    hideElement('recipientSelectDiv');
+    hideElement('recipientContainerDiv_ID');
     hideElement('SponsorRateConfig_ID');
   }
 
   return (
     <>
-      <div id="recipientSelectDiv" className={styles["inputs"] + " " + styles["hidden"]}>
-      <div id="recipient-id" className={styles.sponsorCoinContainer}/>
+      <div id="recipientContainerDiv_ID" className={styles["inputs"] + " " + styles["hidden"]}>
+      <div className={styles.sponsorCoinContainer}/>
       {/* <div className={styles["lineDivider3"]}>
       -------------------------------------------------------------------
       </div> */}

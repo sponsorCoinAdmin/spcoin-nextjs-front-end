@@ -11,13 +11,13 @@ type Props = {
 const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
   const [showComponent, setShowComponent ] = useState<boolean>(false)
   const openComponent = () => {
-    showElement("recipientSelectDiv")
+    showElement("recipientContainerDiv_ID")
     hideElement("SponsorRateConfig_ID")
   }
 
   try {
     return (
-      <div id="addSponsorshipDiv" className={styles[`addSponsorshipDiv`]} onClick={() => openComponent()}>
+      <div id="addSponsorshipDiv_ID" className={styles[`addSponsorshipDiv`]} onClick={() => openComponent()}>
         <div className={styles["centerTop"]} >Add</div>
         <div className={styles["centerBottom"]} >Sponsorship</div>
       </div>

@@ -52,7 +52,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
 
     useEffect( () => {
         // alert("recipientInput Changed to "+recipientInput)
-        recipientInput === "" ? hideElement('recipientSelectGroup') : showElement('recipientSelectGroup')
+        recipientInput === "" ? hideElement('recipientSelectGroup_ID') : showElement('recipientSelectGroup_ID')
         if (isAddress(recipientInput)) {
             setWalletDetails(recipientInput)
         }
@@ -142,7 +142,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
                         &nbsp;
                     </div>
                 </div>
-                    <div id="recipientSelectGroup" className={styles.modalInputSelect}>
+                    <div id="recipientSelectGroup_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
