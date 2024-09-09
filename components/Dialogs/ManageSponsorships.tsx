@@ -36,7 +36,6 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
     const chainId = ACTIVE_ACCOUNT.chainId;
-    const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         closeDialog();
@@ -67,7 +66,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
     }
 
     const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(connectedAccountAddr, chainId, tokenAddr, setTokenContract)
+        return getTokenDetails(ACTIVE_ACCOUNT.address, chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {

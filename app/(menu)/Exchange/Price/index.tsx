@@ -47,11 +47,6 @@ export default function PriceView() {
     }, [ACTIVE_ACCOUNT.chain]);
 
     useEffect(() => {
-      console.debug(`PRICE.useEffect[ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}])`);
-      exchangeContext.connectedAccountAddr = ACTIVE_ACCOUNT.address;
-    }, [ACTIVE_ACCOUNT.address]);
-
-    useEffect(() => {
       console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
       exchangeContext.tradeData.sellAmount = sellAmount;
       if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
@@ -139,7 +134,6 @@ export default function PriceView() {
       setBuyTokenContract(buyTokenContract);
     }
 
-
     try {
       return (
         <form autoComplete="off">
@@ -157,7 +151,7 @@ export default function PriceView() {
                            setBuyAmountCallback={setBuyAmount}
                            setTokenContractCallback={setBuyTokenContractCallback}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-            <PriceButton connectedAccountAddr={exchangeContext.connectedAccountAddr} />
+            <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
           <FeeDisclosure/>

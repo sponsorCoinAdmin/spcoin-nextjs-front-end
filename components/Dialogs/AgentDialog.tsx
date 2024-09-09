@@ -63,7 +63,6 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
     const setWalletDetails = async(walletAddr:any) => {
         try {
             if (isAddress(walletAddr)) {
-                let connectedAccountAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))

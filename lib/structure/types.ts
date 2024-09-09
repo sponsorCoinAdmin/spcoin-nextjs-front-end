@@ -63,7 +63,6 @@ type TradeData = {
 }
 
 type ExchangeContext = {
-  connectedAccountAddr:any,
   network: NetworkElement;
   recipientAccount: AccountRecord;
   agentAccount: AccountRecord;

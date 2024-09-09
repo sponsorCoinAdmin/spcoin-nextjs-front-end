@@ -32,9 +32,6 @@ function getInitialContext(chain:any | number): ExchangeContext {
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
 
     exchangeContext = {
-
-        connectedAccountAddr: undefined,
-
         network: defaultNetworkSettings.networkHeader,
 
         recipientAccount: defaultNetworkSettings.defaultRecipient,
@@ -50,7 +47,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
     return exchangeContext;
 }
 
-const resetNetworkContext = (chain:any, connectedAccountAddr:any) => {
+const resetNetworkContext = (chain:any) => {
     const networkName = chain?.name.toLowerCase();
     console.debug("resetNetworkContext: newNetworkName = " + networkName);
     console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
@@ -60,7 +57,6 @@ const resetNetworkContext = (chain:any, connectedAccountAddr:any) => {
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-    exchangeContext.connectedAccountAddr = connectedAccountAddr;
     exchangeContext.network.name = networkName
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,

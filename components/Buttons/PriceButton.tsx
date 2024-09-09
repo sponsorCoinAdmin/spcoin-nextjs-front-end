@@ -5,12 +5,10 @@ import { exchangeContext } from "@/lib/context";
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import DumpContextButton from './DumpContextButton';
+import { useAccount } from 'wagmi';
 
-type Props = {
-    connectedAccountAddr:any
-  }
-
-const PriceButton = ({connectedAccountAddr}:Props) => {    
+const PriceButton = () => {    
+    const ACTIVE_ACCOUNT = useAccount()
     const [ displayDumpContextButton, setDisplayDumpContextButton ] = useState<boolean>(exchangeContext.test.dumpContextButton)
     useEffect(() => {
         setDisplayDumpContextButton(exchangeContext.test.dumpContextButton)
@@ -22,7 +20,7 @@ const PriceButton = ({connectedAccountAddr}:Props) => {
 
     return (
         <div>
-            {!connectedAccountAddr || connectedAccountAddr === BURN_ADDRESS?
+            {!ACTIVE_ACCOUNT?.address?
                 (<CustomConnectButton />) :
                 (<ExchangeButton />)
             }

@@ -38,7 +38,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
-    const connectedAccountAddr = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
 
     useEffect(() => {
         // alert(`Dialog.altTokenContract = ${stringifyBigInt(altTokenContract)}`)
@@ -66,7 +65,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }
 
     const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(connectedAccountAddr, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
+        return getTokenDetails(ACTIVE_ACCOUNT.address, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
