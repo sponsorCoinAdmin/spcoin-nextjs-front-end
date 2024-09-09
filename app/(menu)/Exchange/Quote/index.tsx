@@ -81,7 +81,7 @@ export default function QuoteView({
 
   const [sellTokenContract, updateSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
-  const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
+  const [recipientAccount, callBackRecipientAccount] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState<AccountRecord>(exchangeContext.agentAccount);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
@@ -256,7 +256,7 @@ export default function QuoteView({
 return (
   <div className="p-3 mx-auto max-w-screen-sm ">
     <form autoComplete="off">
-    <RecipientDialog agentAccount={agentAccount} setRecipientElement={setRecipientElement} />
+    <RecipientDialog agentAccount={agentAccount} callBackRecipientAccount={callBackRecipientAccount} />
       <ErrorDialog errMsg={errorMessage} />
       <div className={styles.tradeContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>

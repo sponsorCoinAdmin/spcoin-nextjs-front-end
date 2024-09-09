@@ -24,7 +24,7 @@ export default function PriceView() {
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-  const [recipientAccount, setRecipientElement] = useState<AccountRecord>(exchangeContext.recipientAccount);
+  const [recipientAccount, callBackRecipientAccount] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errCode:0, msg: "" });
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
@@ -38,7 +38,7 @@ export default function PriceView() {
         // alert(`chain = ${stringifyBigInt(chain)}`)
         resetNetworkContext(chain, ACTIVE_ACCOUNT.address)
         console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
-        setRecipientElement(exchangeContext.recipientAccount);
+        callBackRecipientAccount(exchangeContext.recipientAccount);
         setAgentElement(exchangeContext.agentAccount);
         setSlippage(exchangeContext.tradeData.slippage);
         setSellTokenContract(exchangeContext.sellTokenContract);
