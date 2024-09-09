@@ -11,6 +11,7 @@ import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { Account } from 'viem';
+import { exchangeContext } from '@/lib/context';
 
 const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
@@ -21,16 +22,17 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 
 // ToDo Read in data List remotely
 type Props = {
-    agentAccount: any,
-    setRecipientElement: (accountRecord:AccountRecord) => void,
+    callBackRecipientAccount: (accountRecord:AccountRecord) => void,
     showDialog:boolean
 }
 
-export default function Dialog({showDialog, agentAccount, setRecipientElement }: Props) {
+export default function Dialog({showDialog, callBackRecipientAccount }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
     const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
+    const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
+
 
     useEffect(() => {
         closeDialog();
@@ -108,7 +110,11 @@ export default function Dialog({showDialog, agentAccount, setRecipientElement }:
             console.log("Recipient cannot be the same as Recipient("+agentAccount.symbol+")");
             return false;
         }
-        setRecipientElement(listElement)
+        let urlParms:string = `/Recipient/${listElement.address}`
+
+        listElement.url = `/Recipient/${listElement.address}?url=${listElement.url}`
+
+        callBackRecipientAccount(listElement)
         closeDialog()
     }
 
