@@ -7,17 +7,17 @@ import { AccountRecord } from '@/lib/structure/types';
 import SponsorRateConfig from './SponsorRateConfig';
 import { exchangeContext } from '@/lib/context';
 import RecipientSelect from './RecipientSelect';
-import { hideElement } from '@/lib/spCoin/guiControl';
+import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
   showContainer:boolean
 }
 
 const toggleConfig = () => {
-  const el = document.getElementById('recipientConfigDiv');
+  const el = document.getElementById('SponsorRateConfig_ID');
   if (el != null) {
     el.style.display === 'block' ? 
-      alert(`toggleConfig: block`): alert(`toggleConfig !block`)
+      hideElement('SponsorRateConfig_ID'): showElement('SponsorRateConfig_ID')
   }
 };
 
@@ -30,6 +30,11 @@ const RecipientContainer = ({showContainer} : Props) => {
     console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
     exchangeContext.recipientAccount = recipientAccount;
   }, [recipientAccount]);
+
+  const closeRecipientSelect = () => {
+    hideElement('recipientSelectDiv');
+    hideElement('SponsorRateConfig_ID');
+  }
 
   return (
     <>
@@ -49,7 +54,7 @@ const RecipientContainer = ({showContainer} : Props) => {
           <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
           onClick={() => toggleConfig()}/>
         </div>
-        <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={() => hideElement('recipientSelectDiv')}>
+        <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={closeRecipientSelect}>
           X
         </div>
       </div>

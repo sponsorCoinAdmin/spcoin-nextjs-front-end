@@ -17,7 +17,7 @@ const showElement = (element: string) => {
 
 const hideSponsorRecipientConfig = () => {
   hideElement("recipientSelectDiv")
-  hideElement("recipientConfigDiv")
+  hideElement("SponsorRateConfig_ID")
   hideElement("agent");
   showElement("addSponsorshipDiv")
 }
@@ -25,7 +25,7 @@ const hideSponsorRecipientConfig = () => {
 const showSponsorRecipientConfig = () => {
   hideElement("addSponsorshipDiv")
   showElement("recipientSelectDiv")
-  // hideElement("recipientConfigDiv")
+  // hideElement("SponsorRateConfig_ID")
   // showElement("agent");
 }
 

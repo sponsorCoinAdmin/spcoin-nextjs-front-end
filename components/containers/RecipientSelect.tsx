@@ -17,8 +17,7 @@ const RecipientSelect = ({recipientAccount, callBackRecipientAccount}:Props) => 
     
     return (
         <>
-            {/* <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} /> */}
-            <RecipientDialog showDialog={showDialog} callBackRecipientAccount={callBackRecipientAccount} />
+            <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackRecipientAccount={callBackRecipientAccount} />
             <div className={styles["recipientSelect"]}>
               <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
               {recipientAccount.symbol} 
