@@ -537,7 +537,7 @@
   cursor: pointer;
 }
 
-.tradeContainer {
+.mainContainer {
   transform: translate(0px, -10px);
   font-weight: bold;
   width: 520px;

@@ -213,7 +213,7 @@ export default function QuoteView({
 
   return (
     <form autoComplete="off">
-      <div className={styles.tradeContainer}>
+      <div className={styles.mainContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         {/* <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
         <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenContract.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenContract={buyTokenContract} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>           */}
@@ -258,7 +258,7 @@ return (
     <form autoComplete="off">
     <RecipientDialog agentAccount={agentAccount} callBackRecipientAccount={callBackRecipientAccount} />
       <ErrorDialog errMsg={errorMessage} />
-      <div className={styles.tradeContainer}>
+      <div className={styles.mainContainer}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
         <SellContainer sellAmount={formatUnits(quote.sellAmount, sellTokenContract.decimals)} sellBalance={"ToDo: sellBalance"} sellTokenContract={sellTokenContract} setSellAmount={undefined} disabled={true}/>
         <BuyContainer buyAmount={formatUnits(quote.buyAmount, buyTokenContract.decimals)} buyBalance={"ToDo: sellBalance"} buyTokenContract={buyTokenContract} setBuyAmount={undefined} disabled={true} setDisplayState={setDisplayState}/>          

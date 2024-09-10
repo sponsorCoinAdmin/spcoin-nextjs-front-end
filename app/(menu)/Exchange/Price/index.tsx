@@ -7,7 +7,8 @@ import { AccountRecord, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/
 import { PriceAPI } from '@/lib/0X/fetcher';
 import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
-import TradeContainerHeader from '@/components/Popover/TradeContainerHeader';
+import RecipientSelectHeader from '@/components/Headers/RecipientSelectHeader';
+import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import SellContainer from '@/components/containers/SellContainer';
 import BuyContainer from '@/components/containers/BuyContainer';
@@ -138,8 +139,24 @@ export default function PriceView() {
       return (
         <form autoComplete="off">
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
-          <div className={styles.tradeContainer}>
+          <div className={styles.mainContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
+            <SellContainer updateSellAmount={sellAmount}
+                           sellTokenContract={sellTokenContract}
+                           buyTokenContract={buyTokenContract}
+                           setSellAmountCallback={setSellAmount}
+                           setTokenContractCallback={setSellTokenContractCallback}/>
+            <BuyContainer  updateBuyAmount={buyAmount}
+                           buyTokenContract={buyTokenContract}
+                           sellTokenContract={sellTokenContract}
+                           setBuyAmountCallback={setBuyAmount}
+                           setTokenContractCallback={setBuyTokenContractCallback}/>
+            <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
+            <PriceButton/>
+            <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
+          </div>
+          <div className={styles.mainContainer}>
+            <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
                            buyTokenContract={buyTokenContract}
