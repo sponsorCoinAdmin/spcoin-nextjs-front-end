@@ -139,7 +139,7 @@ export default function PriceView() {
       return (
         <form autoComplete="off">
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
-          <div className={styles.mainContainer}>
+          <div id="SwapContainer_ID" className={styles.mainContainer}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
@@ -155,19 +155,13 @@ export default function PriceView() {
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
-          <div className={styles.mainContainer}>
+          <div id="RecipientSelect_ID" className={styles.mainContainer}>
             <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer updateSellAmount={sellAmount}
-                           sellTokenContract={sellTokenContract}
-                           buyTokenContract={buyTokenContract}
-                           setSellAmountCallback={setSellAmount}
-                           setTokenContractCallback={setSellTokenContractCallback}/>
             <BuyContainer  updateBuyAmount={buyAmount}
                            buyTokenContract={buyTokenContract}
                            sellTokenContract={sellTokenContract}
                            setBuyAmountCallback={setBuyAmount}
                            setTokenContractCallback={setBuyTokenContractCallback}/>
-            <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>

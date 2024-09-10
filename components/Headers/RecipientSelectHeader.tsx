@@ -19,8 +19,10 @@ const RecipientSelectHeader = ({slippage, setSlippageCallback, closeDialog}:any)
       <dialog  title="Settings" >
         <SettingOutlined className={styles.cog} />
       </dialog>
-      <div className={styles["XClose"]}  onClick={closeDialog}>
-        X 
+      <div>
+        <div className={styles["XClose"]}  onClick={closeDialog}>
+          X 
+        </div>
       </div>
     </div>
   );

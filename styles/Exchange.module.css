@@ -191,6 +191,24 @@
   right: 12px;
 }
 
+.XClose {
+  position: absolute;
+  font-size: 22px;
+  object-fit: contain;
+  color: #51586f;
+  top: 4px;
+  right: 12px;
+}
+
+/* .XClose {
+  position: absolute;
+  font-size: 22px;
+  object-fit: contain;
+  color: #51586f;
+  top: 4px;
+  right: 12px;
+} */
+
 .elementLogo {
   height: 20px;
   width: 20px;
