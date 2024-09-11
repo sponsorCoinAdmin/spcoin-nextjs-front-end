@@ -69,6 +69,7 @@ type ExchangeContext = {
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
   tradeData: TradeData;
+  activeContainerId:string;
   test : {dumpContextButton:boolean};
 }
 

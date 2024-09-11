@@ -132,7 +132,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
                         &nbsp;
                     </div>
                 </div>
-                    <div id="recipientContainerDiv_ID" className={styles.modalInputSelect}>
+                <div id="agentContainerDiv_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />

@@ -15,19 +15,6 @@ const showElement = (element: string) => {
   }
 };
 
-const hideSponsorRecipientConfig = () => {
-  hideElement("recipientContainerDiv_ID")
-  hideElement("SponsorRateConfig_ID")
-  hideElement("agent");
-  showElement("addSponsorshipDiv_ID_ID")
-}
-
-const showSponsorRecipientConfig = () => {
-  hideElement("addSponsorshipDiv_ID")
-  showElement("recipientContainerDiv_ID")
-
-}
-
 const toggleElement = (element: any) => {
   const el = document.getElementById(element);
   if (el != null) {
@@ -38,7 +25,5 @@ const toggleElement = (element: any) => {
 export {
   hideElement,
   showElement,
-  hideSponsorRecipientConfig,
-  showSponsorRecipientConfig,
   toggleElement
 }

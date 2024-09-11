@@ -10,7 +10,8 @@ import RecipientSelect from './RecipientSelect';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 
 type Props = {
-  showContainer:boolean
+  // accountRecord:AccountRecord;
+  setRecipientCallBack: (accountRecord:AccountRecord) => void;
 }
 
 const toggleConfig = () => {
@@ -21,8 +22,9 @@ const toggleConfig = () => {
   }
 };
 
-const RecipientContainer = ({showContainer} : Props) => {
-  // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
+const RecipientContainer = ({setRecipientCallBack} : Props) => {
+  // const RecipientContainer = ({setRecipientCallBack} : Props) => {
+    // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
   // let urlParms:string = `/Recipient?address=${recipientAccount.address}`
   const [recipientAccount, setRecipientAccount] = useState<AccountRecord>(exchangeContext.recipientAccount);
 
@@ -38,7 +40,7 @@ const RecipientContainer = ({showContainer} : Props) => {
 
   return (
     <>
-      <div id="recipientContainerDiv_ID" className={styles["inputs"] + " " + styles["hidden"]}>
+      <div id="recipientContainerDiv_ID" className={styles["inputs"]}>
       <div className={styles.sponsorCoinContainer}/>
       {/* <div className={styles["lineDivider3"]}>
       -------------------------------------------------------------------

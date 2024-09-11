@@ -4,8 +4,6 @@ import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetwo
 import { ExchangeContext, TradeData, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
 import { useAccount, useChainId } from 'wagmi';
-import { Address } from 'viem';
-import { stringifyBigInt } from '../spCoin/utils';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
 const chainId:number = 1;
@@ -38,7 +36,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
         agentAccount: defaultNetworkSettings.defaultAgent,
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
-
+        activeContainerId: "SwapContainer_ID",
         tradeData: defaultInitialTradeData,
         test : {dumpContextButton:false}
     }

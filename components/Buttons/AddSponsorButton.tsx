@@ -11,8 +11,8 @@ type Props = {
 const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
   const [showComponent, setShowComponent ] = useState<boolean>(false)
   const openComponent = () => {
-    showElement("recipientContainerDiv_ID")
-    hideElement("SponsorRateConfig_ID")
+    showElement("RecipientSelect_ID")
+    hideElement("SwapContainer_ID")
   }
 
   try {

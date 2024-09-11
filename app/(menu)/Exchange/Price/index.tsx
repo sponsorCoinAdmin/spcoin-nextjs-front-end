@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useReadContracts, useAccount } from 'wagmi' 
 import { AccountRecord, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
 import { PriceAPI } from '@/lib/0X/fetcher';
-import { isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import type { PriceResponse } from "@/app/api/types";
 import RecipientSelectHeader from '@/components/Headers/RecipientSelectHeader';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -17,6 +16,9 @@ import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
+import RecipientContainer from '@/components/containers/RecipientContainer';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
+import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 
 //////////// Price Code
 export default function PriceView() {
@@ -31,19 +33,20 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
+  const [activeContainerId, setActiveContainerId] = useState<string>(exchangeContext.activeContainerId);
 
   try {
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
         // alert(`chain = ${stringifyBigInt(chain)}`)
-        resetNetworkContext(chain, ACTIVE_ACCOUNT.address)
+        resetNetworkContext(chain)
         console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
-        callBackRecipientAccount(exchangeContext.recipientAccount);
         setAgentElement(exchangeContext.agentAccount);
         setSlippage(exchangeContext.tradeData.slippage);
         setSellTokenContract(exchangeContext.sellTokenContract);
         setBuyTokenContract(exchangeContext.buyTokenContract);
+        setActiveContainerId("SwapContainer_ID");
       }
     }, [ACTIVE_ACCOUNT.chain]);
 
@@ -66,6 +69,20 @@ export default function PriceView() {
     useEffect(() => {
       // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
     },[sellTokenContract]);
+
+    useEffect(() => {
+      // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
+      switch (activeContainerId) {
+        case "RecipientSelect_ID":
+            showElement("RecipientSelect_ID");
+            hideElement("SwapContainer_ID");
+        break;
+        case "SwapContainer_ID":
+          showElement("SwapContainer_ID");
+          hideElement("RecipientSelect_ID");
+        break;
+      }
+    },[activeContainerId]);
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
@@ -157,11 +174,9 @@ export default function PriceView() {
           </div>
           <div id="RecipientSelect_ID" className={styles.mainContainer}>
             <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <BuyContainer  updateBuyAmount={buyAmount}
-                           buyTokenContract={buyTokenContract}
-                           sellTokenContract={sellTokenContract}
-                           setBuyAmountCallback={setBuyAmount}
-                           setTokenContractCallback={setBuyTokenContractCallback}/>
+            <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
+              throw new Error('Function not implemented.');
+            } }/>
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
