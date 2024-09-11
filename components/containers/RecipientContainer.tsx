@@ -34,14 +34,15 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
   }, [recipientAccount]);
 
   const closeRecipientSelect = () => {
-    hideElement('recipientContainerDiv_ID');
+    showElement('recipientContainerDiv_ID');
     hideElement('SponsorRateConfig_ID');
   }
 
   return (
     <>
-      <div id="recipientContainerDiv_ID" className={styles["inputs"]}>
-      <div className={styles.sponsorCoinContainer}/>
+    
+    <div id="recipientContainerDiv_ID" className={styles["inputs"] }>
+    <div className={styles.sponsorCoinContainer}/>
       {/* <div className={styles["lineDivider3"]}>
       -------------------------------------------------------------------
       </div> */}
@@ -52,13 +53,6 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
           {recipientAccount.name}
         </Link>
         <RecipientSelect recipientAccount={recipientAccount} callBackRecipientAccount={setRecipientAccount}/>
-        <div>
-          <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
-          onClick={() => toggleConfig()}/>
-        </div>
-        <div id="closeSponsorSelect" className={styles["closeSponsorSelect"]} onClick={closeRecipientSelect}>
-          X
-        </div>
       </div>
       <SponsorRateConfig />
     </>);

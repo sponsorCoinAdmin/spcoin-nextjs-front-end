@@ -6,6 +6,7 @@ import cog_png from '../../public/resources/images/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/utils';
+import { toggleElement } from '@/lib/spCoin/guiControl';
 
 const RecipientSelectHeader = ({slippage, setSlippageCallback, closeDialog}:any) => {
   return (
@@ -20,8 +21,12 @@ const RecipientSelectHeader = ({slippage, setSlippageCallback, closeDialog}:any)
         <SettingOutlined className={styles.cog} />
       </dialog>
       <div>
-        <div className={styles["XClose"]}  onClick={closeDialog}>
+        {/* <div className={styles["XClose"]}  onClick={closeDialog}>
           X 
+        </div> */}
+        <div>
+          <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  
+              onClick={() => toggleElement("SponsorRateConfig_ID")}/>
         </div>
       </div>
     </div>

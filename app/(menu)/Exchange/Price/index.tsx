@@ -19,6 +19,7 @@ import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import RecipientContainer from '@/components/containers/RecipientContainer';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
+import SelectRecipientButton from '@/components/Buttons/SelectRecipientButton';
 
 //////////// Price Code
 export default function PriceView() {
@@ -46,7 +47,7 @@ export default function PriceView() {
         setSlippage(exchangeContext.tradeData.slippage);
         setSellTokenContract(exchangeContext.sellTokenContract);
         setBuyTokenContract(exchangeContext.buyTokenContract);
-        setActiveContainerId("SwapContainer_ID");
+        setActiveContainerId(exchangeContext.activeContainerId);
       }
     }, [ACTIVE_ACCOUNT.chain]);
 
@@ -71,18 +72,20 @@ export default function PriceView() {
     },[sellTokenContract]);
 
     useEffect(() => {
-      // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
+      // alert (`Price:useEffect(${[activeContainerId]})`)
       switch (activeContainerId) {
         case "RecipientSelect_ID":
             showElement("RecipientSelect_ID");
             hideElement("SwapContainer_ID");
+            exchangeContext.activeContainerId = activeContainerId;
         break;
         case "SwapContainer_ID":
           showElement("SwapContainer_ID");
           hideElement("RecipientSelect_ID");
-        break;
+          exchangeContext.activeContainerId = activeContainerId;
+          break;
       }
-    },[activeContainerId]);
+    },[exchangeContext.activeContainerId]);
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
@@ -156,7 +159,7 @@ export default function PriceView() {
       return (
         <form autoComplete="off">
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
-          <div id="SwapContainer_ID" className={styles.mainContainer}>
+          <div id="SwapContainer_ID" className={styles["mainContainer"] + " " + styles["hidden"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
@@ -172,13 +175,12 @@ export default function PriceView() {
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
           </div>
-          <div id="RecipientSelect_ID" className={styles.mainContainer}>
+          <div id="RecipientSelect_ID" className={styles["mainContainer"] + " " + styles["hidden"]}>
             <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
               throw new Error('Function not implemented.');
             } }/>
-            <PriceButton/>
-            <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
+            <SelectRecipientButton/>
           </div>
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />

@@ -20,8 +20,8 @@ const TradeContainerHeader = ({slippage, setSlippageCallback}:any) => {
         <SettingOutlined className={styles.cog} />
       </dialog>
       <div>
-      <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  
-          onClick={() => openDialog("#configDialog")}/>
+        <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  
+            onClick={() => openDialog("#configDialog")}/>
       </div>
       {/* 
       <Popover content={<Slippage initialSlippage={slippage} setSlippageCallback={setSlippageCallback}/>} title="Settings" trigger="click" placement="bottomLeft">
