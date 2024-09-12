@@ -10,28 +10,23 @@ type Props = {
 }
 
 const RecipientSelect = ({recipientAccount, callBackRecipientAccount}:Props) => {
-    const [showDialog, setShowDialog ] = useState<boolean>(false)
-    const openDialog = () => {
-      setShowDialog(true)
-    }
-    
-    return (
-        <>
-            <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackRecipientAccount={callBackRecipientAccount} />
-            <div className={styles["recipientSelect"]}>
-              <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
-              {recipientAccount.symbol} 
-              <DownOutlined onClick={() => openDialog()}/>
-            </div>
-        </>
-    );
+  const [showDialog, setShowDialog ] = useState<boolean>(false)
+  const openDialog = () => { setShowDialog(true) }
+  
+  return (
+    <>
+      <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackRecipientAccount={callBackRecipientAccount} />
+      <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
+      {recipientAccount.symbol} 
+      <DownOutlined onClick={() => openDialog()}/>
+    </>
+  );
 }
 
 export default RecipientSelect;
 
-
-       {/* <div className={styles["recipientSelect"]}>
-          <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
-          {recipientAccount.symbol} 
-          <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
-        </div> */}
+{/* <div className={styles["recipientSelect"]}>
+  <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
+  {recipientAccount.symbol} 
+  <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
+</div> */}

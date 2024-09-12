@@ -15,6 +15,7 @@ const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {
   const openDialog2 = () => {
       setShowDialog(true)
       openDialog("#manageSponsorshipsDialog")
+      openDialog("#recipientContainerDiv_ID")
   }
 
   const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {

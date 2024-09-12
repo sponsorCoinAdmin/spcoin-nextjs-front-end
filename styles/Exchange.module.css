@@ -413,20 +413,6 @@
   border-radius: 12px !important;
 }
 
-.recipientName {
-  position: absolute;
-  display: flex;
-  top: 52px;
-  left: 11px;
-  min-width: 50px;
-  height: 10px;
-  color: #94a3b8; 
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-size: 25px;
-  padding-right: 8px;
-}
 
 .recipientName:hover {
   cursor: pointer;
@@ -444,10 +430,25 @@
   background-color: orange;
 }
 
+.recipientName {
+  position: absolute;
+  display: flex;
+  top: 60px;
+  left: 10px;
+  min-width: 50px;
+  height: 10px;
+  color: #94a3b8; 
+  justify-content: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-size: 25px;
+  padding-right: 8px;
+}
+
 .recipientSelect {
   position: absolute;
-  top: 10px;
-  left: 300px;
+  top: 12px;
+  left: 160px;
   min-width: 50px;
   height: 25px;
   border-radius: 100px;
@@ -504,6 +505,7 @@
 }
 
 .sponsorCoinContainer {
+  top: -23px;
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;

@@ -173,15 +173,15 @@ export default function PriceView() {
                            setTokenContractCallback={setBuyTokenContractCallback}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton/>
-            <AffiliateFee price={price} buyTokenContract={buyTokenContract} />
+            <AffiliateFee price={price} buyTokenContract={buyTokenContract}/>
           </div>
-          <div id="RecipientSelect_ID" className={styles["mainContainer"] + " " + styles["hidden"]}>
+          {/* <div id="RecipientSelect_ID" className={styles["mainContainer"] + " " + styles["hidden"]}>
             <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
               throw new Error('Function not implemented.');
             } }/>
             <SelectRecipientButton/>
-          </div>
+          </div> */}
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
         </form>

@@ -41,18 +41,16 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
   return (
     <>
     
-    <div id="recipientContainerDiv_ID" className={styles["inputs"] }>
-    <div className={styles.sponsorCoinContainer}/>
-      {/* <div className={styles["lineDivider3"]}>
-      -------------------------------------------------------------------
-      </div> */}
-         <div className={styles["yourRecipient"]}>
+      <div id="recipientContainerDiv_ID" className={styles["inputs"] + " " + styles["sponsorCoinContainer"]}>
+        <div className={styles["yourRecipient"]}>
           You are sponsoring:
         </div>
         <Link href={`${recipientAccount.url}`} className={styles["recipientName"]}>
           {recipientAccount.name}
         </Link>
-        <RecipientSelect recipientAccount={recipientAccount} callBackRecipientAccount={setRecipientAccount}/>
+        <div className={styles["recipientSelect"]}>
+          <RecipientSelect recipientAccount={recipientAccount} callBackRecipientAccount={setRecipientAccount}/>
+        </div>
       </div>
       <SponsorRateConfig />
     </>);
