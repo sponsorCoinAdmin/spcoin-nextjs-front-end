@@ -14,11 +14,11 @@ type Props = {
   setRecipientCallBack: (accountRecord:AccountRecord) => void;
 }
 
-const toggleConfig = (element:string) => {
-  const el = document.getElementById(element);
+const toggleConfig = () => {
+  const el = document.getElementById('SponsorRateConfig_ID');
   if (el != null) {
     el.style.display === 'block' ? 
-      hideElement(element): showElement(element)
+      hideElement('SponsorRateConfig_ID'): showElement('SponsorRateConfig_ID')
   }
 };
 
@@ -34,17 +34,14 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
   }, [recipientAccount]);
 
   const closeRecipientSelect = () => {
-    showElement('AddSponsorshipButton_ID');
-    hideElement('RecipientSelect_ID');
+    showElement('recipientContainerDiv_ID');
+    hideElement('SponsorRateConfig_ID');
   }
 
   return (
     <>
     
       <div id="recipientContainerDiv_ID" className={styles["inputs"] + " " + styles["RecipientContainer"]}>
-        <div className={styles["lineDivider"]}>
-            -------------------------------------------------------------------
-        </div>
         <div className={styles["yourRecipient"]}>
           You are sponsoring:
         </div>
@@ -53,19 +50,13 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
         </Link>
         <div className={styles["recipientSelect"]}>
           <RecipientSelect recipientAccount={recipientAccount} callBackRecipientAccount={setRecipientAccount}/>
-        </div>
         <div>
           <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  
-          onClick={() => toggleConfig('SponsorRateConfig_ID')}/>
+          onClick={() => toggleConfig(setDisplayState)}/>
         </div>
-        <div id="clearSponsorSelect" className={styles["clearSponsorSelect"]} onClick={closeRecipientSelect}>
-          <div className={styles["assetSelect"] + " " + styles["clearSponsor"]}>
-          Clear X
-          {/* <div id="clearSponsor">
-            X
-          </div> */}
-      </div>
-
+        <div id="clearSponsorSelect" className={styles["clearSponsorSelect"]} onClick={() => setDisplayState(DISPLAY_STATE.SPONSOR_SELL_ON)}>
+          X
+        </div>
         </div>
       </div>
       <SponsorRateConfig />

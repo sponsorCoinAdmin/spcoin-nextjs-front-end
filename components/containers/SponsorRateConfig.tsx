@@ -26,10 +26,11 @@ type Props = {
 const SponsorRateConfig = ({}:Props) => {
   return (
     <div id="SponsorRateConfig_ID" className={styles.rateRatioContainer}>
-    <div className={styles["inputs"]}>
-      <div id="recipient-config" className={styles.rateRatioContainer2}/>
+      {/* <div id="SponsorRateConfig_ID"> */}
+      <div className={styles["inputs"]}>
+      <div id="recipient-config"/>
       <div className={styles["lineDivider"]}>
-      -------------------------------------------------------------------
+          -------------------------------------------------------------------
       </div>
       <div className={styles["rewardRatio"]}>
         Staking Reward Ratio:

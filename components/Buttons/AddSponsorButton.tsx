@@ -16,20 +16,21 @@ const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
   const [showComponent, setShowComponent ] = useState<boolean>(false)
   const openComponent = () => {
     showElement("RecipientSelect_ID")
-    hideElement("addSponsorshipDiv_ID")
+    hideElement("AddSponsorshipButton_ID")
     exchangeContext.activeContainerId = "RecipientSelect_ID";
   }
 
   try {
     return (
       <>
-        <div id="addSponsorshipDiv_ID" className={styles[`addSponsorshipDiv`]} onClick={() => openComponent()}>
+        <div id="AddSponsorshipButton_ID" className={styles[`addSponsorshipDiv`]} onClick={() => openComponent()}>
           <div className={styles["centerTop"]} >Add</div>
           <div className={styles["centerBottom"]} >Sponsorship</div>
         </div>
+        <div id="RecipientSelect_ID" className={styles[`hidden`]}>
         <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
-              throw new Error('Function not implemented.');
-            } }/>
+            throw new Error('Function not implemented.'); } }/>
+        </div>
       </>
   );
   } catch (err:any) {

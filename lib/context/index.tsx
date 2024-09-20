@@ -36,7 +36,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
         agentAccount: defaultNetworkSettings.defaultAgent,
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
-        activeContainerId: "SwapContainer_ID",
+        activeContainerId: "MainSwapContainer_ID",
         tradeData: defaultInitialTradeData,
         test : {dumpContextButton:false}
     }

@@ -16,7 +16,6 @@ import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
-import RecipientContainer from '@/components/containers/RecipientContainer';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import SelectRecipientButton from '@/components/Buttons/SelectRecipientButton';
@@ -76,11 +75,11 @@ export default function PriceView() {
       switch (activeContainerId) {
         case "RecipientSelect_ID":
             showElement("RecipientSelect_ID");
-            hideElement("SwapContainer_ID");
+            hideElement("MainSwapContainer_ID");
             exchangeContext.activeContainerId = activeContainerId;
         break;
-        case "SwapContainer_ID":
-          showElement("SwapContainer_ID");
+        case "MainSwapContainer_ID":
+          showElement("MainSwapContainer_ID");
           hideElement("RecipientSelect_ID");
           exchangeContext.activeContainerId = activeContainerId;
           break;
@@ -159,7 +158,7 @@ export default function PriceView() {
       return (
         <form autoComplete="off">
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
-          <div id="SwapContainer_ID" className={styles["mainContainer"] + " " + styles["hidden"]}>
+          <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <SellContainer updateSellAmount={sellAmount}
                            sellTokenContract={sellTokenContract}
@@ -175,7 +174,7 @@ export default function PriceView() {
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract}/>
           </div>
-          {/* <div id="RecipientSelect_ID" className={styles["mainContainer"] + " " + styles["hidden"]}>
+          {/* <div id="RecipientSelect_ID" className={styles["mainSwapContainer"] + " " + styles["hidden"]}>
             <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
               throw new Error('Function not implemented.');

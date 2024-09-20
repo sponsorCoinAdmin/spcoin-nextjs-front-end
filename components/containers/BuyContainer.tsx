@@ -111,22 +111,23 @@ const BuyContainer = ({ updateBuyAmount,
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
       <>
-        <div className={styles.inputs}>
-        <input id="buy-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedBuyAmount}
-            onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
-            onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
+      <div className={styles["inputs"] + " " + styles["buyContainer"]}>
+        <input id="BuyAmount_ID" className={styles["priceInput"]} placeholder="0" disabled={disabled} value={formattedBuyAmount}
+        // <input id="BuyAmount_ID" placeholder="0" disabled={disabled} value={formattedBuyAmount}
+          onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
+              onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
             />
-        <AssetSelect  tokenContract={tokenContract} 
-                      altTokenContract={sellTokenContract} 
-                      setDecimalAdjustedContract={setDecimalAdjustedContract}>
-        </AssetSelect>
-        <div className={styles["buySell"]}>You receive</div>
-        <div className={styles["assetBalance"]}>
-          Balance: {formattedBalanceOf}
-        </div>
-        {IsSpCoin ?
-          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
-          : null}
+          <AssetSelect  tokenContract={tokenContract} 
+                        altTokenContract={sellTokenContract} 
+                        setDecimalAdjustedContract={setDecimalAdjustedContract}>
+          </AssetSelect>
+          <div className={styles["buySell"]}>You receive</div>
+          <div className={styles["assetBalance"]}>
+            Balance: {formattedBalanceOf}
+          </div>
+          {IsSpCoin ?
+            <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
+            : null}
         </div>
         {/* <RecipientContainer showContainer={false}/> */}
       </>
