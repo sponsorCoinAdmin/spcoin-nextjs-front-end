@@ -98,12 +98,34 @@
 
 .clearSponsorSelect {
   position: absolute;
+  top: -4px;
+  right: 15px;
+  color: #94a3b8; 
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* NEW
+.clearSponsorSelect {
+  position: absolute;
   top: 35px;
   right: 11px;
   color: #94a3b8; 
   font-size: 20px;
   cursor: pointer;
 }
+*/
+
+/* OLD
+.clearSponsorSelect {
+  position: absolute;
+  top: 7px;
+  right: 15px;
+  color: #94a3b8; 
+  font-size: 20px;
+  cursor: pointer;
+}   
+*/
 
 .closeSponsorConfig {
   position: absolute;
@@ -166,7 +188,8 @@
   object-fit: contain;
   color: #51586f;
   transition: 0.3s;
-  right: 20px;
+/*  top: 12px; */
+  right: 39px;
 }
 
 .cogImg:hover {
@@ -180,7 +203,7 @@
   object-fit: contain;
   color: #51586f;
   transition: 0.3s;
-  top: 12px;
+/*  top: 12px; */
   right: 12px;
 }
 
@@ -429,6 +452,7 @@
   font-weight: bold;
   font-size: 17px;
   padding-right: 8px;
+  color: white;
   background-color: #b09e18;
   background-color: #111c7d;
   background-color: #243056;

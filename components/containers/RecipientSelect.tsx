@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import styles from '@/styles/Exchange.module.css';
 import { openDialog, RecipientDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { AccountRecord, TokenContract } from '@/lib/structure/types';
@@ -16,8 +15,8 @@ const RecipientSelect = ({recipientAccount, callBackRecipientAccount}:Props) => 
   return (
     <>
       <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackRecipientAccount={callBackRecipientAccount} />
-      <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
-      {recipientAccount.symbol} 
+      <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md  cursor-pointer text-white" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
+      {recipientAccount.symbol}
       <DownOutlined onClick={() => openDialog()}/>
     </>
   );

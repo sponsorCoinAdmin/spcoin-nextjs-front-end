@@ -36,6 +36,7 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
   const closeRecipientSelect = () => {
     showElement('AddSponsorshipButton_ID');
     hideElement('RecipientSelect_ID');
+    hideElement('SponsorRateConfig_ID');
   }
 
   return (
@@ -59,13 +60,7 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
           onClick={() => toggleConfig('SponsorRateConfig_ID')}/>
         </div>
         <div id="clearSponsorSelect" className={styles["clearSponsorSelect"]} onClick={closeRecipientSelect}>
-          <div className={styles["assetSelect"] + " " + styles["clearSponsor"]}>
-          Clear X
-          {/* <div id="clearSponsor">
-            X
-          </div> */}
-      </div>
-
+          X
         </div>
       </div>
       <SponsorRateConfig />

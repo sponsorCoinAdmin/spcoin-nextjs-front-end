@@ -3,7 +3,6 @@ import styles from '@/styles/Exchange.module.css';
 import { AccountRecord, TokenContract } from '@/lib/structure/types';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { exchangeContext } from '@/lib/context';
-import RecipientSelect from '../containers/RecipientSelect';
 import RecipientContainer from '../containers/RecipientContainer';
 
 type Props = {
@@ -12,8 +11,6 @@ type Props = {
 }
 
 const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
-  const [recipientAccount, setRecipientAccount] = useState<AccountRecord>(exchangeContext.recipientAccount);
-  const [showComponent, setShowComponent ] = useState<boolean>(false)
   const openComponent = () => {
     showElement("RecipientSelect_ID")
     hideElement("AddSponsorshipButton_ID")
