@@ -94,10 +94,8 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
-
-
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
-    // alert(`SellContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    // alert(`SellContainer.setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
     console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(sellAmount, newTokenContract, tokenContract);
@@ -122,7 +120,7 @@ const SellContainer = ({updateSellAmount,
     return (
       <>
         <div className={styles.inputs}>
-          <input id="sell-amount-id" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
+          <input id="SellBuyAmount_ID" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
             onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
             onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
           />

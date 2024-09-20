@@ -30,7 +30,7 @@
 
 .agentRateFee {
   position: relative;
-  top: -46px;
+  top: -5px;
   left: 12px;
   color: #94a3b8; 
   font-size: 14px;
@@ -96,18 +96,40 @@
   padding-right: 8px;
 }
 
-.closeSponsorSelect {
+.clearSponsorSelect {
   position: absolute;
-  top: 7px;
+  top: -4px;
   right: 15px;
   color: #94a3b8; 
   font-size: 20px;
   cursor: pointer;
 }
 
+/* NEW
+.clearSponsorSelect {
+  position: absolute;
+  top: 35px;
+  right: 11px;
+  color: #94a3b8; 
+  font-size: 20px;
+  cursor: pointer;
+}
+*/
+
+/* OLD
+.clearSponsorSelect {
+  position: absolute;
+  top: 7px;
+  right: 15px;
+  color: #94a3b8; 
+  font-size: 20px;
+  cursor: pointer;
+}   
+*/
+
 .closeSponsorConfig {
   position: absolute;
-  top: -10px;
+  top: 0px;
   right: 15px;
   color: #94a3b8; 
   font-size: 20px;
@@ -166,7 +188,7 @@
   object-fit: contain;
   color: #51586f;
   transition: 0.3s;
-  top: 12px;
+/*  top: 12px; */
   right: 39px;
 }
 
@@ -176,19 +198,28 @@
   cursor: pointer;
 }
 
+.cogImg2 {
+  position: absolute;
+  object-fit: contain;
+  color: #51586f;
+  transition: 0.3s;
+/*  top: 12px; */
+  right: 12px;
+}
+
 .cogImg2:hover {
   color: red;
   rotate: 360deg;
   cursor: pointer;
 }
 
-.cogImg2 {
+.XClose {
   position: absolute;
+  font-size: 22px;
   object-fit: contain;
   color: #51586f;
-  transition: 0.3s;
-  top: 12px;
-  right: 12px;
+  top: 324px;
+  right: 11px;
 }
 
 .elementLogo {
@@ -222,7 +253,6 @@
   font-weight: bold;
   transition: 0.3s;
   margin-bottom: 5px;
-  margin-top: 0px;
 }
 
 .exchangeButton:hover {
@@ -263,7 +293,7 @@
 
 .infoImg {
   position: absolute;
-  top: 0px;
+  top: 5px;
   left: 167px;
   cursor: pointer;
 }
@@ -280,7 +310,7 @@
 
 .lineDivider {
   position: absolute;
-  top: -24px;
+  top: -23px;
   left: 11px;
   color: #94a3b8;
   opacity: 0.1; 
@@ -334,25 +364,10 @@
   background-color: #0e111b !important;
 }
 
-.priceInput {
-  width: 100%;
-  text-indent: 10px;
-  height: 106px !important;
-  margin-bottom: 5px;
-  background-color: #1f2639 !important;
-  color: #94a3b8 !important;
-  border-width: 0px !important;
-  font-size: 25px;
-  border-radius: 12px !important;
-}
-
-.priceInput:focus{
-  outline: none;
-}
 
 .range-slider {
   position: absolute;
-  top: 58px;
+  top: 65px;
   left: 11px;
   margin-top: -20.5px;
   border: 0px;
@@ -366,8 +381,8 @@
 
 .recipientRatio {
   position: absolute;
-  top: 26px;
-  right: 40px;
+  top: 30px;
+  right: 70px;
   min-width: 50px;
   height: 24px;
   border-radius: 100px;
@@ -392,23 +407,22 @@
   border-radius: 12px !important;
 }
 
-.rateRatioContainer2 {
-  position: relative;
-  top: -24px;
-  background-color: #1f2639 !important;
-  color: #94a3b8 !important;
-  border-width: 0px !important;
-  height: 80px !important;
-  margin-bottom: 5px;
-  font-size: 25px;
-  border-radius: 12px !important;
+.recipientPosition {
+  position: absolute;
+  justify-content: flex-start;
+  top: 0px;
+  left: 265px;
+  background-color: #b09e18;
+  background-color: #111c7d;
+  background-color: #243056;
+  background-color: orange;
 }
 
 .recipientName {
   position: absolute;
   display: flex;
-  top: 52px;
-  left: 11px;
+  top: 47px;
+  left: 10px;
   min-width: 50px;
   height: 10px;
   color: #94a3b8; 
@@ -424,21 +438,10 @@
   color: orange
 }
 
-.recipientPosition {
-  position: absolute;
-  justify-content: flex-start;
-  top: 0px;
-  left: 265px;
-  background-color: #b09e18;
-  background-color: #111c7d;
-  background-color: #243056;
-  background-color: orange;
-}
-
 .recipientSelect {
   position: absolute;
-  top: 10px;
-  left: 247px;
+  /* top: 12px; */
+  left: 160px;
   min-width: 50px;
   height: 25px;
   border-radius: 100px;
@@ -449,6 +452,7 @@
   font-weight: bold;
   font-size: 17px;
   padding-right: 8px;
+  color: white;
   background-color: #b09e18;
   background-color: #111c7d;
   background-color: #243056;
@@ -457,7 +461,7 @@
 
 .rewardRatio {
   position: absolute;
-  top: 0px;
+  top: 5px;
   left: 10px;
   color: #94a3b8; 
   font-size: 14px;
@@ -494,12 +498,13 @@
   padding-right: 8px;
 }
 
-.sponsorCoinContainer {
+.RecipientContainer {
+  /* top: 100px; */
+
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;
   height: 90px !important;
-  margin-bottom: 5px;
   font-size: 25px;
   border-radius: 12px !important;
 }
@@ -537,8 +542,8 @@
   cursor: pointer;
 }
 
-.tradeContainer {
-  transform: translate(0px, -50px);
+.mainSwapContainer {
+  transform: translate(0px, -10px);
   font-weight: bold;
   width: 520px;
   background-color: #0E111B;
@@ -548,6 +553,34 @@
   padding-left: 30px;
   padding-right: 30px;
   margin: auto;
+}
+
+.buyContainer {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  /* transform: translate(0px, -10px); */
+
+  font-weight: bold;
+  background-color: #1f2639 !important;
+  /* border: 2px solid #21273a; */
+  min-height: 106px !important;
+  border-radius: 15px;
+}
+
+.priceInput {
+  width: 100%;
+  text-indent: 10px;
+  height: 106px !important;
+  /* margin-bottom: 5px; */
+  background-color: #1f2639 !important;
+  color: #94a3b8 !important;
+  border-width: 0px !important;
+  font-size: 25px;
+  border-radius: 12px !important;
+}
+
+.priceInput:focus{
+  outline: none;
 }
 
 .tradeContainerHeader {
@@ -562,15 +595,30 @@
 
 .sponsorRatio {
   position: absolute;
-  top: -10px;
-  right: 40px;
+  top: 0px;
+  right: 70px;
   min-width: 50px;
   height: 28px;
   border-radius: 100px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 5px;
+  /* gap: 5px; */
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.clearSponsor {
+  position: absolute;
+  top: 0px;
+  right: 10px;
+  min-width: 190px;
+  height: 28px;
+  border-radius: 100px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  /* gap: 5px; */
   font-weight: bold;
   font-size: 17px;
 }
@@ -581,7 +629,7 @@
 
 .yourRecipient {
   position: absolute;
-  top: 13px;
+  top: 0px;
   left: 11px;
   font-size: 14px;
   color: #94a3b8; 

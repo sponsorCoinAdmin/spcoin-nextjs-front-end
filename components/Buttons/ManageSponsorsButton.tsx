@@ -1,7 +1,6 @@
 import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure/types';
 import { getERC20WagmiClientBalanceOfStr } from '@/lib/wagmi/erc20WagmiClientRead';
-import { showElement } from '@/lib/spCoin/guiControl';
 import { openDialog } from '../Dialogs/Dialogs';
 import ManageSponsorships from '../Dialogs/ManageSponsorships';
 import { useState } from 'react';
@@ -16,6 +15,7 @@ const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {
   const openDialog2 = () => {
       setShowDialog(true)
       openDialog("#manageSponsorshipsDialog")
+      openDialog("#recipientContainerDiv_ID")
   }
 
   const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {

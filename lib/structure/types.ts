@@ -63,13 +63,13 @@ type TradeData = {
 }
 
 type ExchangeContext = {
-  connectedAccountAddr:any,
   network: NetworkElement;
   recipientAccount: AccountRecord;
   agentAccount: AccountRecord;
   sellTokenContract: TokenContract;
   buyTokenContract: TokenContract;
   tradeData: TradeData;
+  activeContainerId:string;
   test : {dumpContextButton:boolean};
 }
 

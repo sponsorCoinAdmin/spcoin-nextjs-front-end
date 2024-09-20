@@ -23,28 +23,36 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 // ToDo Read in data List remotely
 type Props = {
     callBackRecipientAccount: (accountRecord:AccountRecord) => void,
+    setShowDialog: (showDialog:boolean) => void,
     showDialog:boolean
 }
 
-export default function Dialog({showDialog, callBackRecipientAccount }: Props) {
-    const dialogRef = useRef<null | HTMLDialogElement>(null)
+export default function Dialog({showDialog, setShowDialog, callBackRecipientAccount }: Props) {
+    const dialogRef = useRef<null | HTMLDialogElement>(null);
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
     const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
-    const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
-
-
-    useEffect(() => {
-        closeDialog();
-    }, []);
+    const agentAccount = exchangeContext.agentAccount;
 
     useEffect(() => {
-        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
+        showDialog ? openDialog() : closeDialog();
     }, [showDialog])
 
+    const closeDialog = () => {
+        setRecipientInput("")
+        setWalletSelect("");
+        setShowDialog(false);
+        dialogRef.current?.close();
+    }
+
+    const openDialog = () => {
+        setShowDialog(true);
+        dialogRef.current?.showModal();
+    }
+
     useEffect( () => {
-        // alert("recipientInput Changed "+recipientInput)
-        recipientInput === "" ? hideElement('recipientSelectGroup') : showElement('recipientSelectGroup')
+        // alert("recipientInput Changed to "+recipientInput)
+        recipientInput === "" ? hideElement('recipientSelectGroup_ID') : showElement('recipientSelectGroup_ID')
         if (isAddress(recipientInput)) {
             setWalletDetails(recipientInput)
         }
@@ -53,12 +61,11 @@ export default function Dialog({showDialog, callBackRecipientAccount }: Props) {
     }, [recipientInput]);
 
     useEffect( () => {
-        // alert("walletElement Changed "+recipientInput)
+        // alert("walletElement Changed to "+recipientInput)
         if (walletElement?.symbol != undefined)
             setWalletSelect(walletElement.symbol);
     }, [walletElement]);
     
-
     const setRecipientInputField = (event:any) => {
         setRecipientInput(event.target.value)
     }
@@ -67,7 +74,6 @@ export default function Dialog({showDialog, callBackRecipientAccount }: Props) {
         try {
             let chainId=1;
             if (isAddress(walletAddr)) {
-                let connectedAccountAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
@@ -118,14 +124,7 @@ export default function Dialog({showDialog, callBackRecipientAccount }: Props) {
         closeDialog()
     }
 
-    const closeDialog = () => {
-        setRecipientInput("")
-        setWalletSelect("");
-        hideElement('recipientSelectGroup')
-        dialogRef.current?.close()
-    }
-
-    const Dialog = (
+     const Dialog = (
         <dialog id="recipientDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
                 <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
@@ -142,7 +141,7 @@ export default function Dialog({showDialog, callBackRecipientAccount }: Props) {
                         &nbsp;
                     </div>
                 </div>
-                    <div id="recipientSelectGroup" className={styles.modalInputSelect}>
+                    <div id="recipientSelectGroup_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />

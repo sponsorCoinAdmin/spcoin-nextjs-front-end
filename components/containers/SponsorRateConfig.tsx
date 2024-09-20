@@ -25,11 +25,12 @@ type Props = {
 
 const SponsorRateConfig = ({}:Props) => {
   return (
-    <div id="recipientConfigDiv" className={styles.rateRatioContainer}>
-    <div className={styles["inputs"]}>
-      <div id="recipient-config" className={styles.rateRatioContainer2}/>
+    <div id="SponsorRateConfig_ID" className={styles.rateRatioContainer}>
+      {/* <div id="SponsorRateConfig_ID"> */}
+      <div className={styles["inputs"]}>
+      <div id="recipient-config"/>
       <div className={styles["lineDivider"]}>
-      -------------------------------------------------------------------
+          -------------------------------------------------------------------
       </div>
       <div className={styles["rewardRatio"]}>
         Staking Reward Ratio:
@@ -41,7 +42,7 @@ const SponsorRateConfig = ({}:Props) => {
           50%
         </div>
       </div>
-      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => alert(`setDisplayState(RECIPIENT)`)}>
+      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => hideElement('SponsorRateConfig_ID')}>
         X
       </div>
       <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>
@@ -54,7 +55,6 @@ const SponsorRateConfig = ({}:Props) => {
       onChange={(e) => setRateRatios((e.target.value))}></input>
     </div>
   </div>
-
   );
 }
 

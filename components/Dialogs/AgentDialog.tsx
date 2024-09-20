@@ -41,7 +41,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
 
     useEffect( () => {
         // alert("agentInput Changed "+agentInput)
-        agentInput === "" ? hideElement('agentSelectGroup') : showElement('agentSelectGroup')
+        agentInput === "" ? hideElement('agentSelectGroup_ID') : showElement('recipientContainerDiv_ID')
         if (isAddress(agentInput)) {
             setWalletDetails(agentInput)
         }
@@ -63,7 +63,6 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
     const setWalletDetails = async(walletAddr:any) => {
         try {
             if (isAddress(walletAddr)) {
-                let connectedAccountAddr = '0xbaF66C94CcD3daF358BB2084bDa7Ee10B0c8fb8b' // address 1
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
@@ -112,7 +111,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
     const closeDialog = () => {
         setAgentInput("")
         setWalletSelect("");
-        hideElement('agentSelectGroup')
+        hideElement('recipientContainerDiv_ID')
         dialogRef.current?.close()
     }
 
@@ -133,7 +132,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
                         &nbsp;
                     </div>
                 </div>
-                    <div id="agentSelectGroup" className={styles.modalInputSelect}>
+                <div id="agentContainerDiv_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />

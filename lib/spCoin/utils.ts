@@ -129,7 +129,7 @@ const stringifyBigInt = (obj:any) => {
 const exchangeContextDump = () => {
   const exchangeData = stringifyBigInt(exchangeContext);
   alert(exchangeData);
-  toggleElement("addSponsorshipDiv")
+  toggleElement("AddSponsorshipButton_ID");
   console.debug(exchangeData);
 }
 

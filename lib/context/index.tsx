@@ -4,8 +4,6 @@ import { getDefaultNetworkSettings } from '@/lib/network/initialize/defaultNetwo
 import { ExchangeContext, TradeData, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { TokenContract } from "@/lib/structure/types";
 import { useAccount, useChainId } from 'wagmi';
-import { Address } from 'viem';
-import { stringifyBigInt } from '../spCoin/utils';
 // import { isSpCoin } from '@/lib/spCoin/utils';
 
 const chainId:number = 1;
@@ -32,25 +30,22 @@ function getInitialContext(chain:any | number): ExchangeContext {
     const ifBuyTokenSpCoin = isSpCoin(defaultNetworkSettings.defaultBuyToken)
 
     exchangeContext = {
-
-        connectedAccountAddr: undefined,
-
         network: defaultNetworkSettings.networkHeader,
 
         recipientAccount: defaultNetworkSettings.defaultRecipient,
         agentAccount: defaultNetworkSettings.defaultAgent,
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,
-
+        activeContainerId: "MainSwapContainer_ID",
         tradeData: defaultInitialTradeData,
-        test : {dumpContextButton:true}
+        test : {dumpContextButton:false}
     }
     // alert(`***Context.getInitialContext:sellTokenContract: ${JSON.stringify(defaultNetworkSettings.defaultSellToken,null,2)}`)
     // alert(`***Context.getInitialContext: ${JSON.stringify(defaultNetworkSettings,null,2)}`)
     return exchangeContext;
 }
 
-const resetNetworkContext = (chain:any, connectedAccountAddr:any) => {
+const resetNetworkContext = (chain:any) => {
     const networkName = chain?.name.toLowerCase();
     console.debug("resetNetworkContext: newNetworkName = " + networkName);
     console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
@@ -60,7 +55,6 @@ const resetNetworkContext = (chain:any, connectedAccountAddr:any) => {
 
     const defaultNetworkSettings = getDefaultNetworkSettings(networkName)
     console.debug(`Loaded defaultNetworkSettings for ${networkName}: ${JSON.stringify(defaultNetworkSettings,null,2)}`);
-    exchangeContext.connectedAccountAddr = connectedAccountAddr;
     exchangeContext.network.name = networkName
     exchangeContext.sellTokenContract = defaultNetworkSettings.defaultSellToken,
     exchangeContext.buyTokenContract = defaultNetworkSettings.defaultBuyToken,
