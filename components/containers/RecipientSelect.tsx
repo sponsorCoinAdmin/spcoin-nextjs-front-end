@@ -26,8 +26,6 @@ const RecipientSelect = ({recipientAccount, callBackRecipientAccount}:Props) => 
     </> :
     <>
       <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackRecipientAccount={callBackRecipientAccount} />
-      {/* <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-      <img alt={"N/A"} className="h-9 w-9 mr-2 rounded-md  cursor-pointer text-white" src={"/resources/images/SearchMagGlassWhite.png"} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/> */}
       &nbsp; Select Recipient:
       <DownOutlined onClick={() => openDialog()}/>
     </>

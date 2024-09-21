@@ -15,16 +15,6 @@
     "totalSupply": null,
     "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
   },
-  "defaultBuyToken": {
-    "chainId": 1,
-    "address": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
-    "name": "TONCOIN",
-    "symbol": "TON",
-    "totalSupply": null,
-    "decimals": 9,
-    "img": "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
-  },
-
   "defaultAgent": {
     "symbol": "Wilma",
     "name": "Wilma Flintstone",

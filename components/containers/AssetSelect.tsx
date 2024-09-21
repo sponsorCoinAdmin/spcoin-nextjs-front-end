@@ -17,11 +17,19 @@ const AssetSelect = ({tokenContract, altTokenContract, setDecimalAdjustedContrac
       }
     
     return (
+        tokenContract?
         <>
             <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} />
             <div className={styles["assetSelect"]}>
                 <img alt={tokenContract?.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={tokenContract?.img} onClick={() => alert("sellTokenContract " + JSON.stringify(tokenContract,null,2))}/>
                 {tokenContract?.symbol}
+                <DownOutlined onClick={() => openDialog()}/>
+            </div>
+        </> :
+        <>
+            <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} />
+            <div className={styles["assetSelect"]}>
+                &nbsp; Select Token:
                 <DownOutlined onClick={() => openDialog()}/>
             </div>
         </>

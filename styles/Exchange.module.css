@@ -203,7 +203,7 @@
   object-fit: contain;
   color: #51586f;
   transition: 0.3s;
-/*  top: 12px; */
+  top: 12px;
   right: 12px;
 }
 
