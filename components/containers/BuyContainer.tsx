@@ -10,15 +10,14 @@ import { useAccount } from 'wagmi';
 import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import RecipientContainer from './RecipientContainer';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
   updateBuyAmount: bigint,
-  sellTokenContract: TokenContract,
-  buyTokenContract: TokenContract, 
+  sellTokenContract: TokenContract|undefined,
+  buyTokenContract: TokenContract|undefined, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
-  setTokenContractCallback: (tokenContract:TokenContract) => void,
+  setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
 const BuyContainer = ({ updateBuyAmount, 
@@ -30,17 +29,17 @@ const BuyContainer = ({ updateBuyAmount,
   const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
-  const [tokenContract, setTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
+  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
+  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
-    const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract.decimals);
+    const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
     setFormattedBuyAmount(formattedBuyAmount)
   }, []);
 
   useEffect(() =>  {
     // alert (`BuyContainer.useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
+    console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.buyTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
@@ -72,7 +71,7 @@ const BuyContainer = ({ updateBuyAmount,
   }, [formattedBalanceOf]);
 
   useEffect(() =>  {
-    const decimals:number = buyTokenContract.decimals || 0;
+    const decimals:number = buyTokenContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateBuyAmount, decimals)
     if (stringValue !== "") {
       setFormattedBuyAmount(stringValue);
@@ -87,9 +86,9 @@ const BuyContainer = ({ updateBuyAmount,
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
+  const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
     console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
     console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
@@ -99,7 +98,7 @@ const BuyContainer = ({ updateBuyAmount,
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
-    const decimals = buyTokenContract.decimals;
+    const decimals = buyTokenContract?.decimals;
     stringValue === getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
     setBuyAmount(bigIntValue);

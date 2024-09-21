@@ -21,7 +21,7 @@ let exchangeContext:ExchangeContext;
 
 const isSpCoin = (TokenContract:TokenContract) => {
     // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
-    return TokenContract.symbol === "SpCoin" ? true:false
+    return TokenContract?.symbol === "SpCoin" ? true:false
 }  
 
 function getInitialContext(chain:any | number): ExchangeContext {
@@ -32,7 +32,7 @@ function getInitialContext(chain:any | number): ExchangeContext {
     exchangeContext = {
         network: defaultNetworkSettings.networkHeader,
 
-        recipientAccount: defaultNetworkSettings.defaultRecipient,
+        recipientAccount: defaultNetworkSettings?.defaultRecipient,
         agentAccount: defaultNetworkSettings.defaultAgent,
         sellTokenContract: defaultNetworkSettings.defaultSellToken,
         buyTokenContract: defaultNetworkSettings.defaultBuyToken,

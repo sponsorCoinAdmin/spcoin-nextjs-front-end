@@ -15,10 +15,10 @@ import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
 type Props = {
   updateSellAmount: bigint,
-  sellTokenContract: TokenContract, 
-  buyTokenContract: TokenContract, 
+  sellTokenContract: TokenContract | undefined, 
+  buyTokenContract: TokenContract | undefined, 
   setSellAmountCallback: (sellAmount:bigint) => void,
-  setTokenContractCallback: (tokenContract:TokenContract) => void,
+  setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
 /* Sell Token Selection Module */
@@ -31,24 +31,24 @@ const SellContainer = ({updateSellAmount,
   const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
-  const [tokenContract, setTokenContract] = useState<TokenContract>(sellTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract.address);
+  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
+  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
-    const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract.decimals);
+    const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
     setFormattedSellAmount(formattedSellAmount)
   }, []);
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract.name}`)
+    console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.sellTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
 
   useEffect(() =>  {
     // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
-    console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract.name}`)
+    console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract?.name}`)
     setDecimalAdjustedContract(sellTokenContract)
   }, [sellTokenContract]);
 
@@ -85,7 +85,7 @@ const SellContainer = ({updateSellAmount,
 //  }, [updateSellAmount]);
 
   useEffect(() =>  {
-    const decimals:number = sellTokenContract.decimals || 0;
+    const decimals:number = sellTokenContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateSellAmount, decimals)
     if (!stringValue && stringValue !== "") {
       setFormattedSellAmount(stringValue);
@@ -94,9 +94,9 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
-  const  setDecimalAdjustedContract = (newTokenContract: TokenContract) => {
+  const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     // alert(`SellContainer.setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
-    console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
+    console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(sellAmount, newTokenContract, tokenContract);
     console.debug(`setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
@@ -106,7 +106,7 @@ const SellContainer = ({updateSellAmount,
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT;
-    const decimals = tokenContract.decimals;
+    const decimals = tokenContract?.decimals;
     stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
     console.debug(`SellContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);

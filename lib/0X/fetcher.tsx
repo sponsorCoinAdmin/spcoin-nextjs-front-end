@@ -44,8 +44,8 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
 };
 
 type Props = {
-  sellTokenContract:TokenContract,
-  buyTokenContract:TokenContract,
+  sellTokenContract:TokenContract|undefined,
+  buyTokenContract:TokenContract|undefined,
   transactionType:TRANSACTION_TYPE,
   sellAmount:bigint,
   buyAmount:bigint,
@@ -71,8 +71,8 @@ function PriceAPI({
               priceTransaction += `Server       : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
               priceTransaction += `netWork      : ${exchangeContext.network.name.toLowerCase()}\n`
               priceTransaction += `apiPriceBase : ${apiPriceBase}\n`
-              priceTransaction += `sellToken    : ${sellTokenContract.address}\n`
-              priceTransaction += `buyToken     : ${buyTokenContract.address}\n`
+              priceTransaction += `sellToken    : ${sellTokenContract?.address}\n`
+              priceTransaction += `buyToken     : ${buyTokenContract?.address}\n`
               priceTransaction += `sellAmount   : ${sellAmount?.toString()}\n`
               priceTransaction += `apiCall      : ${apiCall}\n`
               priceTransaction += `response data: ${JSON.stringify(data, null, 2)}`

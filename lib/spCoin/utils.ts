@@ -117,9 +117,9 @@ const updateBalance = async (connectedAccountAddr: Address|undefined|null, Token
   return {success, errMsg, balance} ;
 };
 
-const isSpCoin = (TokenContract:TokenContract) => {
+const isSpCoin = (TokenContract:TokenContract|undefined) => {
   // alert(`isSpCoin = ${JSON.stringify(TokenContract,null,2)}`)
-  return TokenContract.symbol === "SpCoin" ? true:false
+  return TokenContract?.symbol === "SpCoin" ? true:false
 }
 
 const stringifyBigInt = (obj:any) => {
@@ -133,12 +133,12 @@ const exchangeContextDump = () => {
   console.debug(exchangeData);
 }
 
-function decimalAdjustTokenAmount(amount:bigint, newTokenContract: TokenContract, prevTokenContract: TokenContract) {
+function decimalAdjustTokenAmount(amount:bigint, newTokenContract: TokenContract|undefined, prevTokenContract: TokenContract|undefined) {
   let msg = `>>>>>>>>>>>> decimalAdjustTokenAmount:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
   msg += `newTokenContract = ${stringifyBigInt(newTokenContract)}\n`
   msg += `prevTokenContract = ${stringifyBigInt(prevTokenContract)}\n`
   msg += `amount=${amount}\n`
-  const decimalShift:number = (newTokenContract.decimals || 0) - (prevTokenContract.decimals || 0);
+  const decimalShift:number = (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0);
   const adjustedAmount:bigint = bigIntDecimalShift(amount , decimalShift);
   msg += `decimalShift=${decimalShift}\n`
   msg += `adjustedAmount=${adjustedAmount}\n`

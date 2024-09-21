@@ -18,7 +18,6 @@ import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
-import SelectRecipientButton from '@/components/Buttons/SelectRecipientButton';
 
 //////////// Price Code
 export default function PriceView() {
@@ -27,11 +26,10 @@ export default function PriceView() {
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
-  const [recipientAccount, callBackRecipientAccount] = useState<AccountRecord>(exchangeContext.recipientAccount);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errCode:0, msg: "" });
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract>(exchangeContext.sellTokenContract);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract>(exchangeContext.buyTokenContract);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
+  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
   const [activeContainerId, setActiveContainerId] = useState<string>(exchangeContext.activeContainerId);
 
@@ -131,7 +129,7 @@ export default function PriceView() {
     }, [PriceError]);
 
    function swapBuySellTokens() {
-      const tmpTokenContract: TokenContract = exchangeContext.buyTokenContract;
+      const tmpTokenContract: TokenContract|undefined = exchangeContext.buyTokenContract;
       setBuyTokenContract(exchangeContext.sellTokenContract);
       setSellTokenContract(tmpTokenContract);
     }
@@ -144,12 +142,12 @@ export default function PriceView() {
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
       console.debug(msg);
     }
-    const setSellTokenContractCallback = (sellTokenContract:TokenContract) => {
+    const setSellTokenContractCallback = (sellTokenContract:TokenContract|undefined) => {
       setSellTokenContract(sellTokenContract);
       // alert("setSellTokenContract")
     }
 
-    const setBuyTokenContractCallback = (buyTokenContract:TokenContract) => {
+    const setBuyTokenContractCallback = (buyTokenContract:TokenContract|undefined) => {
       // alert("setBuyTokenContract")
       setBuyTokenContract(buyTokenContract);
     }
@@ -166,21 +164,14 @@ export default function PriceView() {
                            setSellAmountCallback={setSellAmount}
                            setTokenContractCallback={setSellTokenContractCallback}/>
             <BuyContainer  updateBuyAmount={buyAmount}
-                           buyTokenContract={buyTokenContract}
                            sellTokenContract={sellTokenContract}
+                           buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
                            setTokenContractCallback={setBuyTokenContractCallback}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract}/>
           </div>
-          {/* <div id="RecipientSelect_ID" className={styles["mainSwapContainer"] + " " + styles["hidden"]}>
-            <RecipientSelectHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
-              throw new Error('Function not implemented.');
-            } }/>
-            <SelectRecipientButton/>
-          </div> */}
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
         </form>

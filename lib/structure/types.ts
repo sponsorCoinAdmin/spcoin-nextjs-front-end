@@ -64,10 +64,10 @@ type TradeData = {
 
 type ExchangeContext = {
   network: NetworkElement;
-  recipientAccount: AccountRecord;
-  agentAccount: AccountRecord;
-  sellTokenContract: TokenContract;
-  buyTokenContract: TokenContract;
+  recipientAccount: AccountRecord|undefined;
+  agentAccount: AccountRecord|undefined;
+  sellTokenContract: TokenContract|undefined;
+  buyTokenContract: TokenContract|undefined;
   tradeData: TradeData;
   activeContainerId:string;
   test : {dumpContextButton:boolean};

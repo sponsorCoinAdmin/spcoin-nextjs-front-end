@@ -26,7 +26,7 @@ type Props = {
     // onOk: () => void,
     showDialog:boolean,
     setShowDialog:(bool:boolean) => void,
-    altTokenContract: TokenContract,
+    altTokenContract: TokenContract|undefined,
     callBackSetter: (tokenContract:TokenContract) => void,
     // children: React.ReactNode,
 }
@@ -88,9 +88,9 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === altTokenContract.address) {
-                alert("Sell Token cannot be the same as Buy Token("+altTokenContract.symbol+")")
-                console.log("Sell Token cannot be the same as Buy Token("+altTokenContract.symbol+")");
+            if (listElement.address === altTokenContract?.address) {
+                alert("Sell Token cannot be the same as Buy Token("+altTokenContract?.symbol+")")
+                console.log("Sell Token cannot be the same as Buy Token("+altTokenContract?.symbol+")");
                 return false;
             }
             callBackSetter(listElement)

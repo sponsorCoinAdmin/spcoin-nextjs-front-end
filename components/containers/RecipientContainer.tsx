@@ -25,8 +25,8 @@ const toggleConfig = (element:string) => {
 const RecipientContainer = ({setRecipientCallBack} : Props) => {
   // const RecipientContainer = ({setRecipientCallBack} : Props) => {
     // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
-  // let urlParms:string = `/Recipient?address=${recipientAccount.address}`
-  const [recipientAccount, setRecipientAccount] = useState<AccountRecord>(exchangeContext.recipientAccount);
+  // let urlParms:string = `/Recipient?address=${recipientAccount?.address}`
+  const [recipientAccount, setRecipientAccount] = useState<AccountRecord|undefined>(exchangeContext.recipientAccount);
 
   useEffect(() => {
     console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
@@ -37,6 +37,7 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
     showElement('AddSponsorshipButton_ID');
     hideElement('RecipientSelect_ID');
     hideElement('SponsorRateConfig_ID');
+    setRecipientAccount(undefined);
   }
 
   return (
@@ -49,10 +50,11 @@ const RecipientContainer = ({setRecipientCallBack} : Props) => {
         <div className={styles["yourRecipient"]}>
           You are sponsoring:
         </div>
-        <Link href={`${recipientAccount.url}`} className={styles["recipientName"]}>
-          {recipientAccount.name}
+        <Link href={`${recipientAccount?.url}`} className={styles["recipientName"]}>
+          {recipientAccount?.name}
         </Link>
         <div className={styles["recipientSelect"]}>
+          {/* <RecipientSelect recipientAccount={undefined} callBackRecipientAccount={setRecipientAccount}/> */}
           <RecipientSelect recipientAccount={recipientAccount} callBackRecipientAccount={setRecipientAccount}/>
         </div>
         <div>

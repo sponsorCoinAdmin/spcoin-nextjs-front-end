@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { AccountRecord, TokenContract } from '@/lib/structure/types';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -7,7 +6,7 @@ import RecipientContainer from '../containers/RecipientContainer';
 
 type Props = {
   activeAccount: any,
-  buyTokenContract: TokenContract,
+  buyTokenContract: TokenContract|undefined,
 }
 
 const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
