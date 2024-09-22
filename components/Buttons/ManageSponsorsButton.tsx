@@ -1,6 +1,6 @@
 import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure/types';
-import { getERC20WagmiClientBalanceOfStr } from '@/lib/wagmi/erc20WagmiClientRead';
+import { useERC20WagmiClientBalanceOfStr } from '@/lib/wagmi/erc20WagmiClientRead';
 import { openDialog } from '../Dialogs/Dialogs';
 import ManageSponsorships from '../Dialogs/ManageSponsorships';
 import { useState } from 'react';

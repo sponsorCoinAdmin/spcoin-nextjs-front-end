@@ -7,7 +7,7 @@ import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
-import useWagmiEcr20BalanceOf from '../ecr20/useWagmiEcr20BalanceOf';
+import useWagmiERC20BalanceOf from '../ERC20/useWagmiERC20BalanceOf';
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
@@ -15,7 +15,7 @@ import AddSponsorButton from '../Buttons/AddSponsorButton';
 type Props = {
   updateBuyAmount: bigint,
   sellTokenContract: TokenContract|undefined,
-  buyTokenContract: TokenContract|undefined, 
+  buyTokenContract: any, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
@@ -26,11 +26,11 @@ const BuyContainer = ({ updateBuyAmount,
                         setBuyAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
+  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(ACTIVE_ACCOUNT?.address)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
-  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
+  const {balanceOf, decimals, formattedBalanceOf} = useWagmiERC20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);

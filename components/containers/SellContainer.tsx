@@ -8,7 +8,7 @@ import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidForma
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 
-import useWagmiEcr20BalanceOf from '@/components/ecr20/useWagmiEcr20BalanceOf'
+import useWagmiERC20BalanceOf from '@/components/ERC20/useWagmiERC20BalanceOf'
 import { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
@@ -32,7 +32,7 @@ const SellContainer = ({updateSellAmount,
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiEcr20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {balanceOf, decimals, formattedBalanceOf} = useWagmiERC20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
     const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);

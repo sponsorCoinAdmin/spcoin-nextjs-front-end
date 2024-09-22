@@ -3,22 +3,22 @@
 import { useEffect, useState } from 'react'
 import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
 import { Config, useAccount, UseAccountReturnType, useDisconnect } from 'wagmi'
-import ReadWagmiEcr20Fields from '@/components/ecr20/ReadWagmiEcr20Fields'
-import ReadWagmiEcr20RecordFields from '@/components/ecr20/ReadWagmiEcr20RecordFields'
-import ProviderConfigurationStatus from '@/components/ecr20/ProviderConfigurationStatus'
-import ReadWagmiEcr20Records from '@/components/ecr20/ReadWagmiEcr20Records'
-import ReadWagmiEcr20ContractFields from '@/components/ecr20/ReadWagmiEcr20ContractFields'
-import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf'
-import ReadWagmiEcr20ContractName from '@/components/ecr20/ReadWagmiEcr20ContractName'
-import ReadWagmiEcr20ContractSymbol from '@/components/ecr20/ReadWagmiEcr20ContractSymbol'
-import ReadWagmiEcr20ContractDecimals from '@/components/ecr20/ReadWagmiEcr20ContractDecimals'
-import ReadWagmiEcr20ContractTotalSupply from '@/components/ecr20/ReadWagmiEcr20ContractTotalSupply'
+import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields'
+import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields'
+import ProviderConfigurationStatus from '@/components/ERC20/ProviderConfigurationStatus'
+import ReadWagmiERC20Records from '@/components/ERC20/ReadWagmiERC20Records'
+import ReadWagmiERC20ContractFields from '@/components/ERC20/ReadWagmiERC20ContractFields'
+import ReadWagmiERC20BalanceOf from '@/components/ERC20/ReadWagmiERC20BalanceOf'
+import ReadWagmiERC20ContractName from '@/components/ERC20/ReadWagmiERC20ContractName'
+import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20ContractSymbol'
+import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals'
+import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
 import { stringifyBigInt } from '@/lib/spCoin/utils'
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
-const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
-const CHKN_ETHEREUM_CONTRACT:Address = '0xD55210Bb6898C021a19de1F58d27b71f095921Ee'
-const NULL_CONTRACT                  = '0x0000000000000000000000000000000000000000';
+const USDT_POLYGON_CONTRACT:Address|undefined  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
+const CHKN_ETHEREUM_CONTRACT:Address|undefined = undefined //'0xD55210Bb6898C021a19de1F58d27b71f095921Ee'
+const NULL_CONTRACT                            = '0x0000000000000000000000000000000000000000';
 let ACTIVE_ACCOUNT: UseAccountReturnType<Config<readonly [{ blockExplorers: { readonly default: { readonly name: "Etherscan"; readonly url: "https://etherscan.io"; readonly apiUrl: "https://api.etherscan.io/api" } }; contracts: { readonly ensRegistry: { readonly address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e" }; readonly ensUniversalResolver: { readonly address: "0xce01f8eee7E479C928F8919abD53E553a36CeF67"; readonly blockCreated: 19258213 }; readonly multicall3: { readonly address: "0xca11bde05977b3631167028862be2a173976ca11"; readonly blockCreated: 14353601 } }; id: 1; name: "Ethereum"; nativeCurrency: { readonly name: "Ether"; readonly symbol: "ETH"; readonly decimals: 18 }; rpcUrls: { readonly default: { readonly http: readonly ["https://cloudflare-eth.com"] } }; sourceId?: number | undefined; testnet?: boolean | undefined; custom?: Record<string, unknown> | undefined; formatters?: undefined; serializers?: ChainSerializers<undefined> | undefined; fees?: ChainFees<undefined> | undefined }, { blockExplorers: { readonly default: { readonly name: "PolygonScan"; readonly url: "https://polygonscan.com"; readonly apiUrl: "https://api.polygonscan.com/api" } }; contracts: { readonly multicall3: { readonly address: "0xca11bde05977b3631167028862be2a173976ca11"; readonly blockCreated: 25770160 } }; id: 137; name: "Polygon"; nativeCurrency: { readonly name: "MATIC"; readonly symbol: "MATIC"; readonly decimals: 18 }; rpcUrls: { readonly default: { readonly http: readonly ["https://polygon-rpc.com"] } }; sourceId?: number | undefined; testnet?: boolean | undefined; custom?: Record<string, unknown> | undefined; formatters?: undefined; serializers?: ChainSerializers<undefined> | undefined; fees?: ChainFees<undefined> | undefined }, { blockExplorers: { readonly default: { readonly name: "Etherscan"; readonly url: "https://sepolia.etherscan.io"; readonly apiUrl: "https://api-sepolia.etherscan.io/api" } }; contracts: { readonly multicall3: { readonly address: "0xca11bde05977b3631167028862be2a173976ca11"; readonly blockCreated: 751532 }; readonly ensRegistry: { readonly address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e" }; readonly ensUniversalResolver: { readonly address: "0xc8Af999e38273D658BE1b921b88A9Ddf005769cC"; readonly blockCreated: 5317080 } }; id: 11155111; name: "Sepolia"; nativeCurrency: { readonly name: "Sepolia Ether"; readonly symbol: "ETH"; readonly decimals: 18 }; rpcUrls: { readonly default: { readonly http: readonly ["https://rpc.sepolia.org"] } }; sourceId?: number | undefined; testnet: true; custom?: Record<string, unknown> | undefined; formatters?: undefined; serializers?: ChainSerializers<undefined> | undefined; fees?: ChainFees<undefined> | undefined }], { 1: HttpTransport; 137: HttpTransport; 11155111: HttpTransport }>>;
 
 function App() {
@@ -42,22 +42,22 @@ function App() {
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  // let ercContract = getErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
+  // let ercContract = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
 
   // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
 
   return (
     <>
       <ProviderConfigurationStatus />
-      <ReadWagmiEcr20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractFields  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractName  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractSymbol  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractDecimals  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractTotalSupply  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractFields  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractName  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractSymbol  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractDecimals  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractTotalSupply  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
     </>
   )
 }

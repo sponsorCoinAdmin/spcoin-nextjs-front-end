@@ -38,7 +38,7 @@ type TokenContract = {
   address : any,
   name :string | undefined,
   symbol :string | undefined,
-  decimals : number | undefined,
+  decimals : number | undefined | unknown,
   totalSupply : any,
   img: string | undefined;
 }

@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react'
 import { Address } from 'viem'
 import { Config, useAccount, UseAccountReturnType } from 'wagmi'
-import ReadWagmiEcr20Fields from '@/components/ecr20/ReadWagmiEcr20Fields'
-import ReadWagmiEcr20RecordFields from '@/components/ecr20/ReadWagmiEcr20RecordFields'
-import ProviderConfigurationStatus from '@/components/ecr20/ProviderConfigurationStatus'
-import ReadWagmiEcr20Records from '@/components/ecr20/ReadWagmiEcr20Records'
-import ReadWagmiEcr20ContractFields from '@/components/ecr20/ReadWagmiEcr20ContractFields'
-import ReadWagmiEcr20BalanceOf from '@/components/ecr20/ReadWagmiEcr20BalanceOf'
-import ReadWagmiEcr20ContractName from '@/components/ecr20/ReadWagmiEcr20ContractName'
-import ReadWagmiEcr20ContractSymbol from '@/components/ecr20/ReadWagmiEcr20ContractSymbol'
-import ReadWagmiEcr20ContractDecimals from '@/components/ecr20/ReadWagmiEcr20ContractDecimals'
-import ReadWagmiEcr20ContractTotalSupply from '@/components/ecr20/ReadWagmiEcr20ContractTotalSupply'
+import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields'
+import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields'
+import ProviderConfigurationStatus from '@/components/ERC20/ProviderConfigurationStatus'
+import ReadWagmiERC20Records from '@/components/ERC20/ReadWagmiERC20Records'
+import ReadWagmiERC20ContractFields from '@/components/ERC20/ReadWagmiERC20ContractFields'
+import ReadWagmiERC20BalanceOf from '@/components/ERC20/ReadWagmiERC20BalanceOf'
+import ReadWagmiERC20ContractName from '@/components/ERC20/ReadWagmiERC20ContractName'
+import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20ContractSymbol'
+import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals'
+import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
 import { stringifyBigInt } from '@/lib/spCoin/utils'
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
@@ -41,7 +41,7 @@ function App() {
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  // let ercContract = getErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
+  // let ercContract = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
 
   // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
 
@@ -49,15 +49,15 @@ function App() {
     <>
       <ProviderConfigurationStatus />
       {/* <WagmiConnect /> */}
-      <ReadWagmiEcr20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractFields  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractName  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractSymbol  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractDecimals  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiEcr20ContractTotalSupply  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractFields  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractName  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractSymbol  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractDecimals  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20ContractTotalSupply  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
     </>
   )
 }

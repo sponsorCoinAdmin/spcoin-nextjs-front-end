@@ -1,14 +1,14 @@
 import React from 'react'
 import { Address } from 'viem'
-import { getErc20ClientContract  } from '@/lib/wagmi/erc20WagmiClientRead'
+import { useErc20ClientContract  } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address
 }
 
-const ReadWagmiEcr20ContractFields = ({ TOKEN_CONTRACT}: Props) => {
+const ReadWagmiERC20ContractFields = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {
 
-  const contract    = getErc20ClientContract(TOKEN_CONTRACT)
+  const contract    = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
   const name        = contract.name
   const symbol      = contract.symbol
   const decimals    = contract.decimals
@@ -16,7 +16,7 @@ const ReadWagmiEcr20ContractFields = ({ TOKEN_CONTRACT}: Props) => {
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Reading Wagmi ERC20 Fields for Token Contract({TOKEN_CONTRACT})</h2>
+      <h2>Reading Wagmi ERC20 Fields for Token Contract({TOKEN_CONTRACT_ADDRESS})</h2>
       Token Name   : {name} <br/>
       Symbol       : {symbol} <br/>
       Decimals     : {decimals} <br/>
@@ -25,4 +25,4 @@ const ReadWagmiEcr20ContractFields = ({ TOKEN_CONTRACT}: Props) => {
   )
 }
 
-export default ReadWagmiEcr20ContractFields
+export default ReadWagmiERC20ContractFields
