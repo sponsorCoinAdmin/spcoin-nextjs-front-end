@@ -6,15 +6,6 @@
     "img": "/resources/images/eth.png",
     "url": "https://etherscan.io/"
   },
-  "defaultSellToken":  {
-    "chainId": 1,
-    "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    "name": "USD Coin",
-    "symbol": "USDC",
-    "decimals": 6,
-    "totalSupply": null,
-    "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
-  },
   "defaultAgent": {
     "symbol": "Wilma",
     "name": "Wilma Flintstone",
