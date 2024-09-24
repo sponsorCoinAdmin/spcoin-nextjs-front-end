@@ -23,8 +23,8 @@ const useERC20WagmiClientBalanceOfRec = (connectedAccountAddr: Address | string 
 }
 
 const useERC20WagmiClientDecimalRec = (contractAddress:Address | string | undefined) => {
-  let wagmiDecimalsRec
-  wagmiDecimalsRec = useReadContract({
+  contractAddress = contractAddress || BURN_ADDRESS;
+  let wagmiDecimalsRec = useReadContract({
     abi: erc20Abi,
     address: getAddress(contractAddress || BURN_ADDRESS),
     functionName: 'decimals',
@@ -76,8 +76,7 @@ const useERC20WagmiClientRecords = (contractAddress:Address | undefined) => {
 
 ////////////////////////////////////////////////////////////////////////////
 const useERC20WagmiClientDecimals = (contractAddress:Address | string | undefined) => {
-  console.log(`EEEEEEE useERC20WagmiClientDecimals(${contractAddress})`)
-  return useERC20WagmiClientDecimalRec(contractAddress)?.data;
+  return useERC20WagmiClientDecimalRec(contractAddress || BURN_ADDRESS)?.data;
 }
 
 const useERC20WagmiClientName = (contractAddress:Address | undefined) => {
@@ -94,17 +93,7 @@ const useERC20WagmiClientTotalSupply = (contractAddress:Address | undefined) => 
 
 const useERC20WagmiClientBalanceOf = (connectedAccountAddr: Address | string | undefined, contractAddress: Address | string | undefined) => {
   let eRC20WagmiClientBalanceOf:bigint | undefined = BigInt(0);
-  try {
-    if (connectedAccountAddr && contractAddress) {
-      // console.debug(`EXECUTING:eRC20WagmiClientBalanceOf(${connectedAccountAddr} , ${contractAddress})`);
-      eRC20WagmiClientBalanceOf = useERC20WagmiClientBalanceOfRec(connectedAccountAddr , contractAddress )?.data;
-      // console.debug(`EXECUTED 2:eRC20WagmiClientBalanceOf(${connectedAccountAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
-    }
-  }
-  catch (err:any) {
-    console.error(`ERROR:eRC20WagmiClientBalanceOf(${connectedAccountAddr} , ${contractAddress}) = ${eRC20WagmiClientBalanceOf}`);
-    console.error(`ERROR: = ${stringifyBigInt(err)}`);
-  }
+  eRC20WagmiClientBalanceOf = useERC20WagmiClientBalanceOfRec(connectedAccountAddr , contractAddress )?.data;
   return eRC20WagmiClientBalanceOf || 0n;
 }
 

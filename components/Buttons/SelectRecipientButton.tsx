@@ -6,8 +6,9 @@ import { showElement, hideElement } from '@/lib/spCoin/guiControl';
 const SelectRecipientButton = () => {
 
   const show = () => {
-    showElement("MainSwapContainer_ID")
-    hideElement("RecipientSelect_ID")
+    alert("SelectRecipientButton:HIDE RecipientSelect_ID")
+    // showElement("MainSwapContainer_ID")
+    // hideElement("RecipientSelect_ID")
     exchangeContext.activeContainerId = "RecipientSelect_ID";
   }
 

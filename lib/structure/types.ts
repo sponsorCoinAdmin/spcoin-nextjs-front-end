@@ -9,6 +9,7 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
 
 enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN }
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
+enum  SP_COIN_DISPLAY { SELECT_BUTTON, RECIPIENT_CONTAINER, SPONSOR_RATE_CONFIG }
 
 interface PriceRequestParams {
   sellToken: Address|string;
@@ -38,7 +39,7 @@ type TokenContract = {
   address : any,
   name :string | undefined,
   symbol :string | undefined,
-  decimals : number | undefined | unknown,
+  decimals : number | undefined,
   totalSupply : any,
   img: string | undefined;
 }
@@ -70,6 +71,7 @@ type ExchangeContext = {
   buyTokenContract: TokenContract|undefined;
   tradeData: TradeData;
   activeContainerId:string;
+  spCoinPanels:SP_COIN_DISPLAY;
   test : {dumpContextButton:boolean};
 }
 
@@ -84,7 +86,8 @@ type ErrorMessage ={
 export {
   EXCHANGE_STATE,
   TRANSACTION_TYPE,
-  FEED_TYPE
+  FEED_TYPE,
+  SP_COIN_DISPLAY
 }
 
 export type {

@@ -68,21 +68,23 @@ export default function PriceView() {
       // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
     },[sellTokenContract]);
 
-    useEffect(() => {
-      // alert (`Price:useEffect(${[activeContainerId]})`)
-      switch (activeContainerId) {
-        case "RecipientSelect_ID":
-            showElement("RecipientSelect_ID");
-            hideElement("MainSwapContainer_ID");
-            exchangeContext.activeContainerId = activeContainerId;
-        break;
-        case "MainSwapContainer_ID":
-          showElement("MainSwapContainer_ID");
-          hideElement("RecipientSelect_ID");
-          exchangeContext.activeContainerId = activeContainerId;
-          break;
-      }
-    },[exchangeContext.activeContainerId]);
+    // useEffect(() => {
+    //   alert (`Price:useEffect(${[activeContainerId]})`)
+    //   switch (activeContainerId) {
+    //     case "RecipientSelect_ID":
+    //       console.log("Price:SHOW RecipientSelect_ID")
+    //         showElement("RecipientSelect_ID");
+    //         hideElement("MainSwapContainer_ID");
+    //         exchangeContext.activeContainerId = activeContainerId;
+    //     break;
+    //     case "MainSwapContainer_ID":
+    //       console.log("Price:HIDE RecipientSelect_ID")
+    //       showElement("MainSwapContainer_ID");
+    //       hideElement("RecipientSelect_ID");
+    //       exchangeContext.activeContainerId = activeContainerId;
+    //       break;
+    //   }
+    // }, [exchangeContext.activeContainerId]);
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[slippage = ${slippage}])`);

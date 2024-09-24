@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 type Props = {
   activeAccount: any,
-  tokenContract: TokenContract,
+  tokenContract: TokenContract|undefined,
 }
 
 const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {

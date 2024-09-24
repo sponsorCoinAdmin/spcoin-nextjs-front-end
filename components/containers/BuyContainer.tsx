@@ -26,7 +26,7 @@ const BuyContainer = ({ updateBuyAmount,
                         setBuyAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(ACTIVE_ACCOUNT?.address)
+  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT?.address)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);

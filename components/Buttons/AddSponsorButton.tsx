@@ -1,6 +1,6 @@
 import styles from '@/styles/Exchange.module.css';
-import { AccountRecord, TokenContract } from '@/lib/structure/types';
-import { hideElement, showElement } from '@/lib/spCoin/guiControl';
+import { AccountRecord, SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
+import { displaySpCoinContainers, hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { exchangeContext } from '@/lib/context';
 import RecipientContainer from '../containers/RecipientContainer';
 
@@ -11,8 +11,10 @@ type Props = {
 
 const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
   const openComponent = () => {
-    showElement("RecipientSelect_ID")
-    hideElement("AddSponsorshipButton_ID")
+    console.log("AddSponsorButton:SHOW RecipientSelect_ID")
+    displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER);
+    // showElement("RecipientSelect_ID")
+    // hideElement("AddSponsorshipButton_ID")
     exchangeContext.activeContainerId = "RecipientSelect_ID";
   }
 

@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import styles from '@/components/Dialogs/Resources/styles/Modal.module.css';
 import { openDialog, RecipientDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { AccountRecord, TokenContract } from '@/lib/structure/types';
-import Image from 'next/image'
-import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlassGrey.png'
-
 
 type Props = {
   recipientAccount: AccountRecord| undefined
@@ -33,9 +29,3 @@ const RecipientSelect = ({recipientAccount, callBackRecipientAccount}:Props) => 
 }
 
 export default RecipientSelect;
-
-{/* <div className={styles["recipientSelect"]}>
-  <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
-  {recipientAccount.symbol} 
-  <DownOutlined onClick={() => openDialog("#recipientDialog")}/>
-</div> */}
