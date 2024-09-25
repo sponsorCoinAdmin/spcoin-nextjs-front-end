@@ -2,11 +2,10 @@
 import styles from '@/styles/Exchange.module.css';
 import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
-import { useReadContracts, useAccount } from 'wagmi' 
+import { useAccount } from 'wagmi' 
 import { AccountRecord, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
 import { PriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
-import RecipientSelectHeader from '@/components/Headers/RecipientSelectHeader';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import SellContainer from '@/components/containers/SellContainer';
@@ -17,7 +16,7 @@ import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
-import { hideElement, showElement } from '@/lib/spCoin/guiControl';
+import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 
 //////////// Price Code
 export default function PriceView() {
@@ -34,6 +33,10 @@ export default function PriceView() {
   const [activeContainerId, setActiveContainerId] = useState<string>(exchangeContext.activeContainerId);
 
   try {
+    useEffect(() => {
+      displaySpCoinContainers(exchangeContext.spCoinPanels)
+    }, [])
+  
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
@@ -67,24 +70,6 @@ export default function PriceView() {
     useEffect(() => {
       // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
     },[sellTokenContract]);
-
-    // useEffect(() => {
-    //   alert (`Price:useEffect(${[activeContainerId]})`)
-    //   switch (activeContainerId) {
-    //     case "RecipientSelect_ID":
-    //       console.log("Price:SHOW RecipientSelect_ID")
-    //         showElement("RecipientSelect_ID");
-    //         hideElement("MainSwapContainer_ID");
-    //         exchangeContext.activeContainerId = activeContainerId;
-    //     break;
-    //     case "MainSwapContainer_ID":
-    //       console.log("Price:HIDE RecipientSelect_ID")
-    //       showElement("MainSwapContainer_ID");
-    //       hideElement("RecipientSelect_ID");
-    //       exchangeContext.activeContainerId = activeContainerId;
-    //       break;
-    //   }
-    // }, [exchangeContext.activeContainerId]);
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[slippage = ${slippage}])`);

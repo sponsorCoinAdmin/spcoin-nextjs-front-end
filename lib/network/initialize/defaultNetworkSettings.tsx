@@ -2,18 +2,14 @@ import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
 import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
-import { useAccount } from 'wagmi';
-import { stringifyBigInt } from '@/lib/spCoin/utils';
 
-
-/**
- * Determine whether the given `input` is a string in lowercase.
- * @param {*} input
- * @returns {Boolean}
- */
+function getInitialContextMap(chain:any) {
+  const initialNetworkContext = getDefaultNetworkSettings(chain);
+  return new Map(Object.entries(initialNetworkContext));
+}
 
 const getDefaultNetworkSettings = (chain:any) => {
-    // alert("getDefaultNetworkSettings"+chain )
+  // alert("getDefaultNetworkSettings"+chain )
   if (chain && typeof chain === "string" && !isLowerCase(chain)) {
     chain = chain.toLowerCase()
   }
@@ -39,5 +35,7 @@ const getDefaultNetworkSettings = (chain:any) => {
 }
 
 export {
-  getDefaultNetworkSettings
+  getDefaultNetworkSettings,
+  getInitialContextMap
+  // getDefaultNetworkSettingsMap
  };

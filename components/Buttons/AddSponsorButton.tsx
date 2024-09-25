@@ -11,7 +11,7 @@ type Props = {
 
 const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
   const openComponent = () => {
-    console.log("AddSponsorButton:SHOW RecipientSelect_ID")
+    console.debug("AddSponsorshipButton:SHOW RecipientSelect_ID")
     displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER);
     // showElement("RecipientSelect_ID")
     // hideElement("AddSponsorshipButton_ID")
@@ -26,7 +26,7 @@ const AddSponsorshipButton = ({activeAccount, buyTokenContract} : Props) => {
           <div className={styles["centerBottom"]} >Sponsorship</div>
         </div>
         <div id="RecipientSelect_ID" className={styles[`hidden`]}>
-        <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
+          <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
             throw new Error('Function not implemented.'); } }/>
         </div>
       </>

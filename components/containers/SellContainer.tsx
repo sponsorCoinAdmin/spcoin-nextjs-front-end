@@ -10,7 +10,6 @@ import { useAccount } from 'wagmi';
 
 import useWagmiERC20BalanceOf from '@/components/ERC20/useWagmiERC20BalanceOf'
 import { Address } from 'viem';
-import { BURN_ADDRESS } from '@/lib/network/utils';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
 type Props = {

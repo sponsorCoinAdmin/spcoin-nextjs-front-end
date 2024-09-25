@@ -9,7 +9,6 @@ import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import useWagmiERC20BalanceOf from '../ERC20/useWagmiERC20BalanceOf';
 import { Address } from 'viem';
-import { BURN_ADDRESS } from '@/lib/network/utils';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
