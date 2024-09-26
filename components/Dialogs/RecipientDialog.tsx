@@ -72,7 +72,6 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
 
     const setWalletDetails = async(walletAddr:any) => {
         try {
-            let chainId=1;
             if (isAddress(walletAddr)) {
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
@@ -141,7 +140,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
                         &nbsp;
                     </div>
                 </div>
-                    <div id="recipientSelectGroup_ID" className={styles.modalInputSelect}>
+                <div id="recipientSelectGroup_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />

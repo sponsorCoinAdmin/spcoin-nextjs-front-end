@@ -62,10 +62,10 @@ const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:b
   return txt;
 };
 
-const getTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any, setTokenContract:any) => {
+const getTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any, setTokenCallback:any) => {
   let td:any = fetchTokenDetails(connectedAccountAddr, chainId, tokenAddr)
   if (td !== false)
-    setTokenContract(td);
+    setTokenCallback(td);
   return td
 }
 

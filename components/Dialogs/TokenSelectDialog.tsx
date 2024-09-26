@@ -5,13 +5,14 @@ import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlass
 import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { AccountRecord, FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import { useAccount } from 'wagmi';
+import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -39,19 +40,9 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenSelect, setTokenSelect] = useState("");
     const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
 
-    useEffect(() => {
-        // alert(`Dialog.altTokenContract = ${stringifyBigInt(altTokenContract)}`)
-      }, []);
-
-    useEffect(() => {
-        showDialog ? dialogRef.current?.showModal() : closeDialog()
+     useEffect(() => {
+        showDialog ? openDialog() : closeDialog()
     }, [showDialog])
-
-    useEffect( () => {
-        // alert("TokenContract Changed "+tokenInput)
-        if (TokenContract?.symbol != undefined)
-            setTokenSelect(TokenContract.symbol);
-    }, [TokenContract]);
 
     const closeDialog = () => {
         setTokenInput("")
@@ -60,22 +51,65 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         dialogRef.current?.close()
     }
 
+    const openDialog = () => {
+        setShowDialog(true);
+        dialogRef.current?.showModal();
+    }
+
+    useEffect( () => {
+        tokenInput === "" ? hideElement('inputSelectGroup_ID') : showElement('inputSelectGroup_ID')
+        if (isAddress(tokenInput)) {
+            setTokenDetails(tokenInput)
+        }
+        else
+            setTokenSelect("Invalid Wallet Address");
+    }, [tokenInput]);
+
+    useEffect( () => {
+        // alert("TokenContract Changed "+tokenInput)
+        if (TokenContract?.symbol != undefined)
+            setTokenSelect(TokenContract.symbol);
+    }, [TokenContract]);
+
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
 
-    const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(ACTIVE_ACCOUNT.address, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
-    }
-
-    const displayElementDetail = async(tokenAddr:any) => {
-        if (!(await setTokenDetails(tokenAddr, setTokenContract))) {
+     const displayElementDetail = async(tokenAddr:any) => {
+        if (!(await setTokenDetails(tokenAddr))) {
             alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
         // alert("displayElementDetail\n" + JSON.stringify(tokenInput, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
+
+    const setTokenDetails = async(tokenAddr: any) => {
+        return getTokenDetails(ACTIVE_ACCOUNT.address, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
+    }
+
+    // const setTokenDetails = async(walletAddr:any) => {
+    //     try {
+    //         if (isAddress(walletAddr)) {
+    //             let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
+    //             // console.debug("retResponse = " + JSON.stringify(retResponse))
+    //             // alert(JSON.stringify(retResponse,null,2))
+    //             let td:AccountRecord = {
+    //                 address: recipientInput,
+    //                 symbol: retResponse.symbol,
+    //                 img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
+    //                 name: '',
+    //                 url: "ToDo add AccountRecord URL"
+    //             }
+    //             tokenSelect(td);
+    //             return true
+    //         }
+    //    // return ELEMENT_DETAILS
+    //     } catch (e:any) {
+    //         alert("ERROR:setTokenDetails e.message" + e.message)
+    //     }
+    //     return false
+    // }
 
     const getSelectedListElement = (listElement: TokenContract | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
@@ -118,7 +152,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                         &nbsp;
                     </div>
                 </div>
-                    <div className={styles.modalInputSelect}>
+                <div id="inputSelectGroup_ID"className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
                             <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
