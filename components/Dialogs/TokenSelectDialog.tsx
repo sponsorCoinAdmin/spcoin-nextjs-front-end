@@ -6,13 +6,11 @@ import customUnknownImage_png from '../../public/resources/images/miscellaneous/
 import info_png from '../../public/resources/images/info1.png'
 import Image from 'next/image'
 import { AccountRecord, FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { isAddress } from 'ethers'; // ethers v6
+import { isAddress } from 'ethers';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
-import { BURN_ADDRESS } from '@/lib/network/utils';
 import { useAccount } from 'wagmi';
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -22,9 +20,6 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 type Props = {
-    // title: string,
-    // onClose: () => void,
-    // onOk: () => void,
     showDialog:boolean,
     setShowDialog:(bool:boolean) => void,
     altTokenContract: TokenContract|undefined,
@@ -38,7 +33,9 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
     const [tokenSelect, setTokenSelect] = useState("");
-    const [TokenContract, setTokenContract] = useState<TokenContract| undefined>();
+    const [tokenContract, setTokenContract] = useState<TokenContract>();
+
+    // alert(`Dialog:parent = ${parent}`)
 
      useEffect(() => {
         showDialog ? openDialog() : closeDialog()
@@ -57,25 +54,30 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }
 
     useEffect( () => {
-        tokenInput === "" ? hideElement('inputSelectGroup_ID') : showElement('inputSelectGroup_ID')
+        // alert(`ZZZZZZZZZZZZZZZZZZZ tokenInput = "${tokenInput}"`)
+
+        // tokenInput === "" ? hideElement('inputSelectGroup_ID') : showElement('inputSelectGroup_ID')
         if (isAddress(tokenInput)) {
             setTokenDetails(tokenInput)
         }
         else
-            setTokenSelect("Invalid Wallet Address");
+            if (tokenInput)
+                setTokenSelect("Invalid Token Address");
+            else
+                setTokenSelect("")
     }, [tokenInput]);
 
     useEffect( () => {
         // alert("TokenContract Changed "+tokenInput)
-        if (TokenContract?.symbol != undefined)
-            setTokenSelect(TokenContract.symbol);
-    }, [TokenContract]);
+        if (tokenContract?.symbol != undefined)
+            setTokenSelect(tokenContract.symbol);
+    }, [tokenContract]);
 
     const setTokenInputField = (event:any) => {
         setTokenInput(event.target.value)
     }
 
-     const displayElementDetail = async(tokenAddr:any) => {
+    const displayElementDetail = async(tokenAddr:any) => {
         if (!(await setTokenDetails(tokenAddr))) {
             alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
             return false
@@ -85,10 +87,12 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }
 
     const setTokenDetails = async(tokenAddr: any) => {
-        return getTokenDetails(ACTIVE_ACCOUNT.address, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
+        const tokenDetails = getTokenDetails(ACTIVE_ACCOUNT.address, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
+        console.debug(`tokenDetails = ${tokenDetails}`);
+        return tokenDetails
     }
 
-    // const setTokenDetails = async(walletAddr:any) => {
+    // const 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9 = async(walletAddr:any) => {
     //     try {
     //         if (isAddress(walletAddr)) {
     //             let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
@@ -152,20 +156,24 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                         &nbsp;
                     </div>
                 </div>
-                <div id="inputSelectGroup_ID"className={styles.modalInputSelect}>
-                    <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(TokenContract)} >
-                            <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
-                            <div>
-                                <div className={styles.elementName}>{tokenSelect}</div>
-                                <div className={styles.elementSymbol}>{"User Specified Token"}</div> 
+
+                {(tokenSelect !== "" && 
+                    <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
+                        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
+                            <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenContract)} >
+                                <Image id="tokenImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
+                                <div>
+                                    <div className={styles.elementName}>{tokenSelect}</div>
+                                    <div className={styles.elementSymbol}>{"User Specified Token"}</div> 
+                                </div>
+                            </div>
+                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenInput)}>
+                                <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                             </div>
                         </div>
-                        <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenInput)}>
-                            <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
-                        </div>
                     </div>
-                </div>
+                )}
+
                 <div className={styles.modalScrollBar}>
                     <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
                 </div>
