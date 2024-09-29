@@ -3,14 +3,14 @@ import { Address } from 'viem'
 import { useERC20WagmiClientBalanceOfStr, useFormattedClientBalanceOf, useERC20WagmiClientDecimals, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  ACTIVE_ACCOUNT_ADDRESS:Address|string|undefined, 
+  ACTIVE_ACCOUNT_ADDRESS:Address|undefined, 
   TOKEN_CONTRACT_ADDRESS:Address|undefined
 }
 
 const ReadWagmiERC20BalanceOf = ({ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS}: Props) => {
-  const balanceOf             = useERC20WagmiClientBalanceOfStr(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
+  const balanceOf             = useERC20WagmiClientBalanceOfStr(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS)
   const decimals              = useERC20WagmiClientDecimals(TOKEN_CONTRACT_ADDRESS)
-  const formattedBalanceOf    = useFormattedClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS || "")
+  const formattedBalanceOf    = useFormattedClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS)
   // console.debug(`ReadWagmiERC20BalanceOf.decimals:TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`)
 
   return (
