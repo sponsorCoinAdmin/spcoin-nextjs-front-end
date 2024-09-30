@@ -1,8 +1,7 @@
-import { config } from '@/lib/wagmi/wagmiConfig';
 import React from 'react';
+import { config } from '@/lib/wagmi/wagmiConfig';
 import { Address, erc20Abi, parseAbi } from 'viem';
 import { useReadContract } from 'wagmi';
-import { mainnet, polygon } from 'wagmi/chains' 
 export const abi = [
   {
     type: 'function',

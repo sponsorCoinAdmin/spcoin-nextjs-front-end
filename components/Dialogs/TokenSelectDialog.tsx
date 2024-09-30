@@ -1,16 +1,16 @@
 "use client"
-import styles from './Resources/styles/Modal.module.css';
+import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlassGrey.png'
-import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
-import info_png from '../../public/resources/images/info1.png'
+import customUnknownImage_png from '@/public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { AccountRecord, FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails, fetchTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
+import InputSelect from '../panes/InputSelect';
+import { Address } from 'viem';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -24,25 +24,22 @@ type Props = {
     setShowDialog:(bool:boolean) => void,
     altTokenContract: TokenContract|undefined,
     callBackSetter: (tokenContract:TokenContract) => void,
-    // children: React.ReactNode,
 }
 
 // ToDo Read in data List remotely
 export default function Dialog({showDialog, setShowDialog, altTokenContract, callBackSetter }: Props) {
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
-    const [tokenInput, setTokenInput] = useState("");
+    const [tokenInput, setTokenInput] = useState<Address>();
     const [tokenSelect, setTokenSelect] = useState("");
     const [tokenContract, setTokenContract] = useState<TokenContract>();
-
-    // alert(`Dialog:parent = ${parent}`)
 
      useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])
 
     const closeDialog = () => {
-        setTokenInput("")
+        setTokenInput(undefined)
         setTokenSelect("");
         setShowDialog(false);
         dialogRef.current?.close()
@@ -73,10 +70,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             setTokenSelect(tokenContract.symbol);
     }, [tokenContract]);
 
-    const setTokenInputField = (event:any) => {
-        setTokenInput(event.target.value)
-    }
-
     const displayElementDetail = async(tokenAddr:any) => {
         if (!(await setTokenDetails(tokenAddr))) {
             alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
@@ -92,30 +85,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         return tokenDetails
     }
 
-    // const 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9 = async(walletAddr:any) => {
-    //     try {
-    //         if (isAddress(walletAddr)) {
-    //             let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
-    //             // console.debug("retResponse = " + JSON.stringify(retResponse))
-    //             // alert(JSON.stringify(retResponse,null,2))
-    //             let td:AccountRecord = {
-    //                 address: recipientInput,
-    //                 symbol: retResponse.symbol,
-    //                 img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
-    //                 name: '',
-    //                 url: "ToDo add AccountRecord URL"
-    //             }
-    //             tokenSelect(td);
-    //             return true
-    //         }
-    //    // return ELEMENT_DETAILS
-    //     } catch (e:any) {
-    //         alert("ERROR:setTokenDetails e.message" + e.message)
-    //     }
-    //     return false
-    // }
-
-    const getSelectedListElement = (listElement: TokenContract | undefined) => {
+     const getSelectedListElement = (listElement: TokenContract | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         try {
             if (listElement === undefined) {
@@ -149,13 +119,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             </div>
 
             <div className={styles.modalBox} >
-                <div className={styles.modalElementSelect}>
-                    <div className={styles.leftH}>
-                        <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-                        <input id="tokenInput" className={styles.modalElementSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={tokenInput}/>
-                        &nbsp;
-                    </div>
-                </div>
+                <InputSelect placeHolder={INPUT_PLACE_HOLDER} setTokenInput={setTokenInput} textInputField={tokenInput}/>
 
                 {(tokenSelect !== "" && 
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>

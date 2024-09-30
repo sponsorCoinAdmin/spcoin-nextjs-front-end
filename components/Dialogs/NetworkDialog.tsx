@@ -1,5 +1,5 @@
 "use client"
-import styles from './Resources/styles/Modal.module.css';
+import styles from '@/styles/Modal.module.css';
 
 import { useEffect, useRef, useState } from 'react'
 

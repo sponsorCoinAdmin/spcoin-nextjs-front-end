@@ -1,9 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import styles from '@/components/Dialogs/Resources/styles/Modal.module.css';
-import searchMagGlassGrey_png from '../../../../public/resources/images/SearchMagGlassGrey.png'
-import Image from 'next/image'
 import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
 import { Config, useAccount, UseAccountReturnType, useDisconnect } from 'wagmi'
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields'
@@ -20,6 +17,7 @@ import { BURN_ADDRESS } from '@/lib/network/utils'
 import DumpContextButton from '@/components/Buttons/DumpContextButton'
 import { stringifyBigInt } from '@/lib/spCoin/utils'
 import { exchangeContext } from '@/lib/context'
+import InputSelect from '@/components/panes/InputSelect';
 
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
 const USDT_POLYGON_CONTRACT:Address = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
@@ -35,7 +33,7 @@ function App() {
   const [ TOKEN_CONTRACT_ADDRESS, setDefaultTokenContractAddress ] = useState<Address>(BURN_ADDRESS)
   const [ EXCHANGE_CONTEXT, setExchangeContext ] = useState<String>("")
   const [ DISPLAY_CONTEXT_BUTTON, setContextButton ] = useState<boolean>(false)
-  const [ textInputField, setTokenInput ] = useState(TON_ETHEREUM_CONTRACT);
+  const [ textInputField, setTokenInput ] = useState<Address>(TON_ETHEREUM_CONTRACT);
 
   useEffect(() => {
     // alert(`DISPLAY_CONTEXT_BUTTON = ${DISPLAY_CONTEXT_BUTTON}`)
@@ -76,12 +74,7 @@ function App() {
     // alert(`exchangeContext.test.dumpContextButton = ${exchangeContext.test.dumpContextButton}`)
   }
 
-  const setTokenInputField = (event:any) => {
-    setTokenInput(event.target.value)
-    // const tokenContract:TokenContract;
-  }
-
-  return (
+   return (
     <>
       <ProviderConfigurationStatus />
 
@@ -111,23 +104,17 @@ function App() {
 
       <DumpContextButton />
 
-      <div className={styles.modalElementSelect}>
-        <div className={styles.leftH}>
-          <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-          <input id="textInputField" className={styles.modalElementSelect} autoComplete="off" placeholder={INPUT_PLACE_HOLDER} onChange={setTokenInputField} value={textInputField}/>
-          &nbsp;
-        </div>
-      </div>
+      <InputSelect placeHolder={INPUT_PLACE_HOLDER} setTokenInput={setTokenInput} textInputField={textInputField}/>
 
       <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={textInputField} />
       <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={textInputField} />
       <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={textInputField} />
-      <ReadWagmiERC20ContractFields  TOKEN_CONTRACT_ADDRESS={textInputField} />
-      <ReadWagmiERC20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={textInputField} />
-      <ReadWagmiERC20ContractName  TOKEN_CONTRACT_ADDRESS={textInputField} />
-      <ReadWagmiERC20ContractSymbol  TOKEN_CONTRACT_ADDRESS={textInputField} />
-      <ReadWagmiERC20ContractDecimals  TOKEN_CONTRACT_ADDRESS={textInputField} />
-      <ReadWagmiERC20ContractTotalSupply  TOKEN_CONTRACT_ADDRESS={textInputField} />
+      <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={textInputField} />
+      <ReadWagmiERC20BalanceOf ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={textInputField} />
+      <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={textInputField} />
+      <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={textInputField} />
+      <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={textInputField} />
+      <ReadWagmiERC20ContractTotalSupply TOKEN_CONTRACT_ADDRESS={textInputField} />
     </>
   )
 }

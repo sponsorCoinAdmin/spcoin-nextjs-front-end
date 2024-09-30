@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
@@ -117,25 +117,22 @@ const SellContainer = ({updateSellAmount,
   try {
     const IsSpCoin = isSpCoin(tokenContract);
     return (
-      <>
-        <div className={styles.inputs}>
-          <input id="SellBuyAmount_ID" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
-            onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
-            onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
-          />
-          <AssetSelect tokenContract={tokenContract} 
-                       altTokenContract={buyTokenContract} 
-                       setDecimalAdjustedContract={setDecimalAdjustedContract}>
-          </AssetSelect>
-          <div className={styles["buySell"]}>
-            You Pay
-          </div>
-          <div className={styles["assetBalance"]}>
-            Balance: {formattedBalanceOf}
-          </div>
-          {IsSpCoin ? <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
+      <div className={styles.inputs}>
+        <input id="SellBuyAmount_ID" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
+          onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
+          onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
+        />
+        <AssetSelect tokenContract={tokenContract} 
+                      altTokenContract={buyTokenContract} 
+                      setDecimalAdjustedContract={setDecimalAdjustedContract} />
+        <div className={styles["buySell"]}>
+          You Pay
         </div>
-      </>
+        <div className={styles["assetBalance"]}>
+          Balance: {formattedBalanceOf}
+        </div>
+        {IsSpCoin ? <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
+      </div>
     )
   } catch (err:any) {
     console.debug (`Sell Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)

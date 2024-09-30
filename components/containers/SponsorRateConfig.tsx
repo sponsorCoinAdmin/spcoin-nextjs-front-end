@@ -2,7 +2,7 @@ import React from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { displaySpCoinContainers, hideElement } from '@/lib/spCoin/guiControl';
 import Image from 'next/image';
-import info_png from '../../public/resources/images/info1.png';
+import info_png from '@/public/resources/images/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure/types';
 
 function setRateRatios(newRate: string) {

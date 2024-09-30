@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useRef } from 'react';
-import styles from './Resources/styles/Modal.module.css';
+import styles from '@/styles/Modal.module.css';
 import Slippage from '../Popover/Slippage';
 
 type Props = {

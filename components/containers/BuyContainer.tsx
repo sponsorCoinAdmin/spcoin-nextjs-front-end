@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
@@ -108,27 +108,23 @@ const BuyContainer = ({ updateBuyAmount,
   try {
     let IsSpCoin = isSpCoin(buyTokenContract);
     return (
-      <>
       <div className={styles["inputs"] + " " + styles["buyContainer"]}>
         <input id="BuyAmount_ID" className={styles["priceInput"]} placeholder="0" disabled={disabled} value={formattedBuyAmount}
         // <input id="BuyAmount_ID" placeholder="0" disabled={disabled} value={formattedBuyAmount}
           onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
               onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
-            />
-          <AssetSelect  tokenContract={tokenContract} 
-                        altTokenContract={sellTokenContract} 
-                        setDecimalAdjustedContract={setDecimalAdjustedContract}>
-          </AssetSelect>
-          <div className={styles["buySell"]}>You receive</div>
-          <div className={styles["assetBalance"]}>
-            Balance: {formattedBalanceOf}
-          </div>
-          {IsSpCoin ?
-            <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
-            : null}
+        />
+        <AssetSelect  tokenContract={tokenContract} 
+                      altTokenContract={sellTokenContract} 
+                      setDecimalAdjustedContract={setDecimalAdjustedContract} />
+        <div className={styles["buySell"]}>You receive</div>
+        <div className={styles["assetBalance"]}>
+          Balance: {formattedBalanceOf}
         </div>
-        {/* <RecipientContainer showContainer={false}/> */}
-      </>
+        {IsSpCoin ?
+          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
+          : null}
+      </div>
     );
   } catch (err:any) {
     console.log(`Buy Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)

@@ -3,10 +3,10 @@
 import React, { useEffect, useState } from "react";
 import styles from "@/styles/Header.module.css"
 import { config } from '@/lib/wagmi/wagmiConfig'
-import spCoin_png from '../../public/resources/images/spCoin.png'
+import spCoin_png from '@/public/resources/images/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
-import ConnectButton from "./ConnectButton"
+import ConnectButton from "../Buttons/ConnectButton"
 import { getNetworkName, getAvatarImageURL } from "@/lib/network/utils";
 
 import { useChainId } from "wagmi";

@@ -1,10 +1,10 @@
 "use client"
-import styles from './Resources/styles/Modal.module.css';
+import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
-import searchMagGlassGrey_png from '../../public/resources/images/SearchMagGlassGrey.png'
-import customUnknownImage_png from '../../public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
-import info_png from '../../public/resources/images/info1.png'
+import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
+import customUnknownImage_png from '@/public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
