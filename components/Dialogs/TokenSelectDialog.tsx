@@ -6,7 +6,7 @@ import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { AccountRecord, FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { getTokenDetails, fetchTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
+import { getTokenDetails, fetchTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
@@ -30,16 +30,41 @@ type Props = {
 export default function Dialog({showDialog, setShowDialog, altTokenContract, callBackSetter }: Props) {
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
-    const [tokenInput, setTokenInput] = useState<Address>();
-    const [tokenSelect, setTokenSelect] = useState("");
-    const [tokenContract, setTokenContract] = useState<TokenContract>();
+    const [tokenAddress, setTokenAddress] = useState<Address|undefined>();
+    const [tokenSelect, setTokenSelect] = useState<string|undefined>();
+    let tokenContract:TokenContract|undefined;
+    // const [tokenContract, setTokenContract] = useState<TokenContract|undefined>();
 
      useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])
 
+     useEffect( () => {
+        // alert(`ZZZZZZZZZZZZZZZZZZZ tokenAddress = "${tokenAddress}"`)
+
+        // tokenAddress === "" ? hideElement('inputSelectGroup_ID') : showElement('inputSelectGroup_ID')
+        if (isAddress(tokenAddress)) {
+            setTokenDetails(tokenAddress)
+        }
+        else
+            if (tokenAddress)
+                setTokenSelect("Invalid Token Address");
+            else
+                setTokenSelect("")
+    }, [tokenAddress]);
+
+    useEffect( () => {
+        // alert("TokenContract Changed "+tokenAddress)
+        setTokenSelect(tokenContract?.symbol);
+    }, [tokenContract]);
+
+    const setTokenContract = (_tokenContract:TokenContract) => {
+        tokenContract = _tokenContract;
+        setTokenAddress(tokenContract.address)
+    }
+
     const closeDialog = () => {
-        setTokenInput(undefined)
+        setTokenAddress(undefined)
         setTokenSelect("");
         setShowDialog(false);
         dialogRef.current?.close()
@@ -50,32 +75,13 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         dialogRef.current?.showModal();
     }
 
-    useEffect( () => {
-        // alert(`ZZZZZZZZZZZZZZZZZZZ tokenInput = "${tokenInput}"`)
-
-        // tokenInput === "" ? hideElement('inputSelectGroup_ID') : showElement('inputSelectGroup_ID')
-        if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput)
-        }
-        else
-            if (tokenInput)
-                setTokenSelect("Invalid Token Address");
-            else
-                setTokenSelect("")
-    }, [tokenInput]);
-
-    useEffect( () => {
-        // alert("TokenContract Changed "+tokenInput)
-        if (tokenContract?.symbol != undefined)
-            setTokenSelect(tokenContract.symbol);
-    }, [tokenContract]);
 
     const displayElementDetail = async(tokenAddr:any) => {
         if (!(await setTokenDetails(tokenAddr))) {
-            alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenInput + "\n\n" + ELEMENT_DETAILS)
+            alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + tokenAddress + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        // alert("displayElementDetail\n" + JSON.stringify(tokenInput, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        // alert("displayElementDetail\n" + JSON.stringify(tokenAddress, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
@@ -89,7 +95,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         try {
             if (listElement === undefined) {
-                alert("Invalid Token address : " + tokenInput)
+                alert("Invalid Token address : " + tokenAddress)
                 return false;
             }
             if (!isAddress(listElement.address)) {
@@ -109,6 +115,10 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         return false
     }
 
+    const setTokenContractCallBack = (tokenContract:TokenContract) => {
+        setTokenContract(tokenContract);
+    }
+
     const Dialog = (
         <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
@@ -119,7 +129,9 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             </div>
 
             <div className={styles.modalBox} >
-                <InputSelect placeHolder={INPUT_PLACE_HOLDER} setTokenInput={setTokenInput} textInputField={tokenInput}/>
+                <InputSelect placeHolder={INPUT_PLACE_HOLDER}
+                             textInputField={tokenAddress}
+                             setTokenContractCallBack={setTokenContractCallBack}/>
 
                 {(tokenSelect !== "" && 
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
@@ -131,7 +143,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                                     <div className={styles.elementSymbol}>{"User Specified Token"}</div> 
                                 </div>
                             </div>
-                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenInput)}>
+                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(tokenAddress)}>
                                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                             </div>
                         </div>
