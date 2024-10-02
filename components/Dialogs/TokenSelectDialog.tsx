@@ -71,7 +71,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }
 
     const openDialog = () => {
-        // alert(`tokenSymbol = ${tokenSymbol}`)
+        // alert(`openDialog:tokenSymbol = ${tokenSymbol}`)
         setShowDialog(true);
         dialogRef.current?.showModal();
     }
