@@ -12,7 +12,6 @@ import Image from 'next/image'
 import { TokenContract } from '@/lib/structure/types';
 import { Address } from "viem";
 import { useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
-// import ConnectButton from "./ConnectButton";
 
 type Props = {
   placeHolder:string,
@@ -21,11 +20,15 @@ type Props = {
 }
 
 function InputSelect({ placeHolder, textInputField, setTokenContractCallBack }:Props) {
-  const [ inputField, setInputField ] = useState<Address|undefined>(textInputField);
+  const [ inputField, setInputField ] = useState<Address|undefined>();
   const tokenContract = useErc20ClientContract(inputField)
- 
   useEffect(() => {
-    // alert(`InputSelect.useEffect.[tokenContract]`)
+    setInputField(textInputField)
+  }, [textInputField])
+    
+  useEffect(() => {
+    // alert(`InputSelect.tokenContract = ${stringifyBigInt(tokenContract)}`)
+
     setTokenContractCallBack(tokenContract)
   }, [tokenContract])
   
@@ -37,7 +40,12 @@ function InputSelect({ placeHolder, textInputField, setTokenContractCallBack }:P
     <div className={styles.modalElementSelect}>
       <div className={styles.leftH}>
         <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search Image Grey" />
-        <input className={styles.modalElementSelect} autoComplete="off" placeholder={placeHolder} value={inputField} onChange={setTokenInputField}/>
+        <input className={styles.modalElementSelect} 
+               autoComplete="off" 
+               placeholder={placeHolder} 
+               value={inputField} 
+               onChange={setTokenInputField}/>
+               {/* onChange={ (e) => setInputField(e.target.value) }/> */}
       </div>
     </div>
   );

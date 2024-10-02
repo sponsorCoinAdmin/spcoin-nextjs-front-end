@@ -77,7 +77,7 @@ function App() {
   }
 
   const setTokenContractCallBack = (tokenContract:TokenContract) => {
-    // alert(`setTokenContractCallBack.tokenContract.address = ${tokenContract.address}`)
+    alert(`Test.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
     setTokenInput(tokenContract.address);
   }
 

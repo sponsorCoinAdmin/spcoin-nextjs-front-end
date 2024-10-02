@@ -27,7 +27,7 @@ const AssetSelect = ({tokenContract, altTokenContract, setDecimalAdjustedContrac
             </div>
         </> :
         <>
-            <TokenSelectDialog parent={parent} showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} />
+            <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} />
             <div className={styles["assetSelect"]}>
                 &nbsp; Select Token:
                 <DownOutlined onClick={() => openDialog()}/>

@@ -106,7 +106,6 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
   const symbol = useERC20WagmiClientSymbol(contractAddress);
   const decimals = useERC20WagmiClientDecimals(contractAddress);
   const totalSupply = useERC20WagmiClientTotalSupply(contractAddress);
-
   let contractResponse:TokenContract =
   {
     address:contractAddress,
@@ -115,8 +114,9 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
     symbol:symbol,
     decimals:decimals,
     totalSupply:totalSupply,
-    img:undefined
+    img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
   }
+  // alert(`useErc20ClientContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
   return contractResponse
 }
 
