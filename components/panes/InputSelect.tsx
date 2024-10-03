@@ -15,20 +15,19 @@ import { useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
 
 type Props = {
   placeHolder:string,
-  textInputField:Address|undefined,
+  textInputField:any,
   setTokenContractCallBack:(tokenContract:TokenContract) => void 
 }
 
 function InputSelect({ placeHolder, textInputField, setTokenContractCallBack }:Props) {
-  const [ inputField, setInputField ] = useState<Address|undefined>();
+  const [ inputField, setInputField ] = useState<any>();
   const tokenContract = useErc20ClientContract(inputField)
-  useEffect(() => {
-    setInputField(textInputField)
-  }, [textInputField])
-    
-  useEffect(() => {
-    // alert(`InputSelect.tokenContract = ${stringifyBigInt(tokenContract)}`)
 
+  useEffect(() => {
+    setInputField(textInputField || "")
+  }, [textInputField])
+  
+  useEffect(() => {
     setTokenContractCallBack(tokenContract)
   }, [tokenContract])
   

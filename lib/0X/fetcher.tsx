@@ -85,8 +85,8 @@ function PriceAPI({
                       [
                         exchangeContext.network.name.toLowerCase() + apiPriceBase,
                         {
-                          sellToken: sellTokenContract.address,
-                          buyToken: buyTokenContract.address,
+                          sellToken: sellTokenContract?.address,
+                          buyToken: buyTokenContract?.address,
                           sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
                           buyAmount: (transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
                           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here

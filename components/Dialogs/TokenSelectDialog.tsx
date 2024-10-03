@@ -12,6 +12,7 @@ import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
 import { Address } from 'viem';
 
+
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
 const ELEMENT_DETAILS = "This container allows for the entry selection of a valid token address.\n"+
@@ -33,11 +34,32 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenAddress, setTokenAddress] = useState<Address|undefined>();
     const [tokenName, setTokenName] = useState<string|undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
+    const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
+    const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
     let tokenContract:TokenContract|undefined;
 
      useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])
+
+    useEffect(() => {
+        alert(`tokenAddress = ${tokenAddress}`)
+        fetchIconResource(tokenAddress)
+    }, [tokenAddress])
+
+    useEffect(() => {
+        alert(`tokenIconPath = ${tokenIconPath}`)
+    }, [tokenIconPath])
+
+    async function fetchIconResource(tokenAddress:string|undefined) {
+        const tokenImageDir = `/resources/images/tokens/${tokenAddress}.png`
+        const res = await fetch(tokenImageDir)
+        if (!res.ok) {
+            setTokenIconPath(defaultMissingImage)
+        }
+        else
+           setTokenIconPath(tokenImageDir)
+    }
 
     const setTokenContract = (_tokenContract:TokenContract) => {
         tokenContract = _tokenContract;
@@ -65,7 +87,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
 
     const closeDialog = () => {
         setTokenAddress(undefined)
-        setTokenSymbol(undefined);
         setShowDialog(false);
         dialogRef.current?.close()
     }
@@ -115,6 +136,14 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         return false
     }
 
+    const getIconResourceURL = (tokenAddress:string) => {
+        const tokenImageDir = `/resources/images/tokens/${tokenAddress}.png`
+        console.log(`tokenImageDir = ${tokenImageDir}`)
+        return tokenImageDir;
+    }
+       
+    // fetchIconResource(getIconResourceURL(tokenAddress || ""), defaultMissingImage)
+
     const Dialog = (
         <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
@@ -125,7 +154,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             </div>
             <div className={styles.modalBox} >
                 <InputSelect placeHolder={INPUT_PLACE_HOLDER}
-                             textInputField={tokenAddress}
+                             textInputField={tokenAddress || ""}
                              setTokenContractCallBack={setTokenContractCallBack}/>
 
                 {(tokenSymbol && 
@@ -133,7 +162,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                             <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenContract)} >
                                 <Image id="tokenImage" 
-                                       src='/resources/images/miscellaneous/QuestionWhiteOnBlue.png' 
+                                       src={tokenIconPath || defaultMissingImage }
                                        height={40}
                                        width={40}
                                        alt="Search Image" />

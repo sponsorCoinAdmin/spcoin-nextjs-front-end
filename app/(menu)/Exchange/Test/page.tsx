@@ -19,7 +19,6 @@ import { stringifyBigInt } from '@/lib/spCoin/utils'
 import { exchangeContext } from '@/lib/context'
 import InputSelect from '@/components/panes/InputSelect';
 import { TokenContract } from '@/lib/structure/types'
-import { useErc20ClientContract } from '@/lib/wagmi/erc20WagmiClientRead'
 
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
 const USDT_POLYGON_CONTRACT:Address = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
