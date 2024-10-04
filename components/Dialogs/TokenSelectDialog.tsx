@@ -1,17 +1,15 @@
 "use client"
 import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
-import customUnknownImage_png from '/public/resources/images/miscellaneous/QuestionWhiteOnBlue.png'
 import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { getTokenDetails, fetchTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
+import { getTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
 import { Address } from 'viem';
-
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -43,29 +41,24 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }, [showDialog])
 
     useEffect(() => {
-        alert(`tokenAddress = ${tokenAddress}`)
-        fetchIconResource(tokenAddress)
+        // alert(`tokenAddress = ${tokenAddress}`)
+        // fetchIconResource(tokenAddress)
     }, [tokenAddress])
 
     useEffect(() => {
-        alert(`tokenIconPath = ${tokenIconPath}`)
+        // alert(`tokenIconPath = ${tokenIconPath}`)
+        if (tokenContract) tokenContract.img=tokenIconPath;
     }, [tokenIconPath])
 
-    async function fetchIconResource(tokenAddress:string|undefined) {
-        const tokenImageDir = `/resources/images/tokens/${tokenAddress}.png`
-        const res = await fetch(tokenImageDir)
-        if (!res.ok) {
-            setTokenIconPath(defaultMissingImage)
-        }
-        else
-           setTokenIconPath(tokenImageDir)
-    }
+    useEffect(() => {
+        alert(`TokenSelectDialog.useEffect[${tokenContract?.name}] = ${stringifyBigInt(tokenContract)}`)
+    }, [tokenContract])
 
     const setTokenContract = (_tokenContract:TokenContract) => {
         tokenContract = _tokenContract;
         setTokenAddress(tokenContract.address)
         if (isAddress(tokenContract.address)) {
-            // alert(`TokenSelectDialog.tokenContract = ${stringifyBigInt(tokenContract)}`)
+            alert(`TokenSelectDialog.setTokenContract(${tokenContract.name}) = ${stringifyBigInt(tokenContract)}`)
             setTokenName(tokenContract.name);
             setTokenSymbol(tokenContract.symbol);
         }
@@ -81,6 +74,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }
 
     const setTokenContractCallBack = (_tokenContract:TokenContract) => {
+        setTokenIconPath(_tokenContract.img)
         // alert(`TestSelectDialog.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
         setTokenContract(_tokenContract);
     }
@@ -112,26 +106,26 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         return tokenDetails
     }
 
-     const getSelectedListElement = (listElement: TokenContract | undefined) => {
-        // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
+     const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
+        alert(`updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
         try {
-            if (listElement === undefined) {
-                alert("SELECT_ERROR: Invalid Token address : " + tokenAddress)
+            if (!tokenContract) {
+                alert("SELECT_ERROR: Invalid Token address : " + tokenAddress);
                 return false;
             }
-            if (!isAddress(listElement.address)) {
-                alert(`SELECT_ERROR: ${listElement.name} has invalid token address : ${listElement.address}`)
+            if (!isAddress(tokenContract.address)) {
+                alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address : ${tokenContract.address}`);
                 return false;
             }
-            if (listElement.address === altTokenContract?.address) {
+            if (tokenContract.address === altTokenContract?.address) {
                 alert("SELECT_ERROR: Sell Token cannot be the same as Buy Token("+altTokenContract?.symbol+")")
                 console.log("ERROR: Sell Token cannot be the same as Buy Token("+altTokenContract?.symbol+")");
                 return false;
             }
-            callBackSetter(listElement)
+            callBackSetter(tokenContract)
             closeDialog()
         } catch (e:any) {
-            alert("SELECT_ERROR:getSelectedListElement e.message" + e.message)
+            alert("SELECT_ERROR:updateTokenCallback e.message" + e.message)
         }
         return false
     }
@@ -160,7 +154,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                 {(tokenSymbol && 
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
                         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                            <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(tokenContract)} >
+                            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >
                                 <Image id="tokenImage" 
                                        src={tokenIconPath || defaultMissingImage }
                                        height={40}
@@ -179,7 +173,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                     </div>
                 )}
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} updateTokenCallback={updateTokenCallback}/>
                 </div>
             </div>
         </dialog>
