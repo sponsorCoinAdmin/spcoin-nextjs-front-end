@@ -33,73 +33,40 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenName, setTokenName] = useState<string|undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
-    const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
-    // let tokenContract:TokenContract|undefined;
     const tokenContract = useErc20ClientContract(inputField)
+    const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
 
      useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])
-
+   
     useEffect(() => {
-        alert(inputField)
-        if (!isAddress(inputField)) {
+        alert(`updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
+        // alert(`tokenContract.name = ${tokenContract.name}`)
+        if (isAddress(tokenContract.address)) {
+            fetchIconResource(tokenContract.address);
+            setTokenName(tokenContract.name);
+            setTokenSymbol(tokenContract.symbol);
+            tokenContract.img = tokenIconPath;
+        }
+        else{
             setTokenName("Invalid Token Address");
             setTokenSymbol("Please Enter Valid Token Address");
         }
-    }, [inputField])
-    
-    useEffect(() => {
-        if (!isAddress(tokenContract.address)) {
-            setTokenName(tokenContract.name);
-            setTokenSymbol(tokenContract.symbol);
-        }
-    }, [tokenContract.name, tokenContract.symbol])
-
-    useEffect(() => {
-        // alert(`tokenIconPath = ${tokenIconPath}`)
-        if (tokenContract) tokenContract.img=tokenIconPath;
-    }, [tokenIconPath])
-
-    // useEffect(() => {
-    //     alert(`TokenSelectDialog.useEffect[${tokenContract?.name}] = ${stringifyBigInt(tokenContract)}`)
-    // }, [tokenContract])
-
-    // useEffect(() => {
-    //     // alert(`TokenSelectDialog.useEffect[${tokenContract?.name}] = ${stringifyBigInt(tokenContract)}`)
-    //     setInputField(tokenContract?.address)
-    //     setTokenName(tokenContract?.name)
-    //     setTokenSymbol(tokenContract?.symbol)
-    //     setTokenIconPath(tokenContract?.img)
-    //     if (isAddress(tokenContract?.address)) {
-    //         setTokenName(tokenContract.name);
-    //         setTokenSymbol(tokenContract.symbol);
-    //     }
-    //     else
-    //         if (inputField) {
-    //             setTokenName("Invalid Token Address");
-    //             setTokenSymbol("Please Enter Valid Token Address");
-    //         }
-    //         else {
-    //             setTokenName("AAA")
-    //             setTokenSymbol(undefined)
-    //         }
-
-    // }, [tokenContract])
+    }, [tokenContract.address, tokenContract.name, tokenContract.symbol])
 
     async function fetchIconResource(tokenAddress:string|undefined) {
         // alert(`InputSelect:fetchIconResource(${tokenAddress})`)
-        const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
         if(tokenAddress) {
-          const tokenImageDir = `/resources/images/tokens/${tokenAddress}.png`
+        const tokenImageDir = `/resources/images/tokens/${tokenAddress}.png`
           const res = await fetch(tokenImageDir)
           if (res.ok) {
             setTokenIconPath(tokenImageDir)
           } 
           else
-            setTokenIconPath(defaultMissingImage)
+            setTokenIconPath(undefined)
         }
-      }    
+    }    
 
     const closeDialog = () => {
         // alert(`closeDialog()`)
@@ -167,7 +134,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                              inputField={inputField || ""}
                              setInputField={setInputField}/>
 
-                {(inputField && 
+                {(inputField &&
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
                         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
                             <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >

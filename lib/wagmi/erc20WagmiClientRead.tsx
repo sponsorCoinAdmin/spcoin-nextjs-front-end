@@ -6,6 +6,7 @@ import { Address, formatUnits, getAddress } from 'viem'
 import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '../structure/types'
 import { BURN_ADDRESS } from '@/lib/network/utils';
+import { useState } from 'react'
 
 const useERC20WagmiClientBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useERC20WagmiClientBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
@@ -107,6 +108,8 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
   const symbol = useERC20WagmiClientSymbol(contractAddress);
   const decimals = useERC20WagmiClientDecimals(contractAddress);
   const totalSupply = useERC20WagmiClientTotalSupply(contractAddress);
+  const tokenIconPath = `/resources/images/tokens/${contractAddress}.png`;
+
   let tokenContract:TokenContract =
   {
     address:contractAddress,
@@ -115,7 +118,7 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
     symbol:symbol,
     decimals:decimals,
     totalSupply:totalSupply,
-    img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+    img:tokenIconPath
   }
   // alert(`useErc20ClientContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
   return tokenContract
