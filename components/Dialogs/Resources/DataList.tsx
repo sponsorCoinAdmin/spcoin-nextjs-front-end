@@ -60,15 +60,15 @@ function displayElementDetail (le: any) {
 
 type Props = {
     dataFeedType: any,
-    getSelectedListElement:  (listElement: any) => void,
+    updateTokenCallback:  (listElement: any) => void,
 }
 
-function DataList({dataFeedType, getSelectedListElement} : Props) {
+function DataList({dataFeedType, updateTokenCallback} : Props) {
     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
     // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
     const tList = dataFeedList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
-            <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(dataFeedList[i])} >
+            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])} >
                 <img src={e.img} alt={e.symbol} className={styles.elementLogo} />
                 <div>
                     <div className={styles.elementName}>{e.name}</div>

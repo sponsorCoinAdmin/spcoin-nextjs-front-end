@@ -101,12 +101,13 @@ const useERC20WagmiClientBalanceOfStr = (connectedAccountAddr: Address | undefin
 }
 
 const useErc20ClientContract = (contractAddress:Address | undefined) => {
+  console.debug(`useErc20ClientContract = (contractAddress:${contractAddress}`)
   const chainId = useChainId();
   const name = useERC20WagmiClientName(contractAddress);
   const symbol = useERC20WagmiClientSymbol(contractAddress);
   const decimals = useERC20WagmiClientDecimals(contractAddress);
   const totalSupply = useERC20WagmiClientTotalSupply(contractAddress);
-  let contractResponse:TokenContract =
+  let tokenContract:TokenContract =
   {
     address:contractAddress,
     chainId: chainId,
@@ -117,7 +118,7 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
     img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
   }
   // alert(`useErc20ClientContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
-  return contractResponse
+  return tokenContract
 }
 
 const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
