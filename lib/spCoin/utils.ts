@@ -2,8 +2,10 @@ import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
-import { Address, formatUnits } from "viem";
+import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
+
+const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
@@ -22,9 +24,7 @@ function getQueryVariable(_urlParams:string, _searchParam:string)
 
 const getValidBigIntToFormattedPrice = (value:bigint | undefined, decimals:number|undefined) => {
   decimals = decimals || 0;
-
   let stringValue:string = formatUnits(value || 0n, decimals);
-
   stringValue = getValidFormattedPrice(stringValue, decimals);
   return stringValue;
 }
@@ -62,35 +62,36 @@ const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:b
   return txt;
 };
 
-const getTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any, setTokenCallback:any) => {
-  let td:any = fetchTokenDetails(connectedAccountAddr, chainId, tokenAddr)
-  if (td !== false)
-    setTokenCallback(td);
-  return td
+const getTokenDetails = async(chainId:any, tokenAddr: any, setTokenCallback:any) => {
+  let tokenContract:any = fetchTokenDetails(chainId, tokenAddr)
+  if (tokenContract)
+    setTokenCallback(tokenContract);
+  return tokenContract
 }
 
-const fetchTokenDetails = async(connectedAccountAddr:any, chainId:any, tokenAddr: any) => {
+const fetchTokenDetails = async(chainId:any, tokenAddr: any) => {
+  const tokenIconPath = `/resources/images/tokens/${tokenAddr}.png`;
+  let tokenContract:TokenContract|undefined;
   try {
     if (isAddress(tokenAddr)) {
-      let retResponse:any = await getWagmiBalanceOfRec (tokenAddr)
+      let retResponse:any = await getWagmiBalanceOfRec (tokenAddr).then()
       // console.debug("retResponse = " + JSON.stringify(retResponse))
       // alert(JSON.stringify(retResponse,null,2))
-      let td:TokenContract = {
+      tokenContract = {
         chainId: chainId,
         address: tokenAddr,
+        name: retResponse.name,
         symbol: retResponse.symbol,
-        img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
-        name: retResponse.symbol,
         decimals: retResponse.decimals,
-        totalSupply: undefined
+        totalSupply: undefined,
+        img: tokenIconPath
       }
-      return td
     }
- // return ELEMENT_DETAILS
+  // return ELEMENT_DETAILS
   } catch (e:any) {
       console.debug("SELL_ERROR:setTokenDetails e.message" + e.message)
   }
-  return false
+  return tokenContract
 }
 
 const updateBalance = async (connectedAccountAddr: Address|undefined|null, TokenContract: TokenContract, setBalance:any) => {
@@ -154,11 +155,39 @@ const bigIntDecimalShift = (value:bigint, decimalShift:number) => {
           BigInt(value) / BigInt(10**(Math.abs(decimalShift)));
 }
 
+const getValidAddress = (addrType:any, chainId?:number) => {
+  try {
+      return getAddress(addrType, chainId)
+  }
+  catch (err:any) {
+      console.debug(`ERROR: getAddress(${addrType})`)
+      console.debug(err.message)
+      // alert(err.message)
+      return undefined
+  }
+}
+
+async function fetchIconResource(contractAddress:Address | undefined,
+  setTokenIconPath:(iconPath:string) => void) {
+  const tokenIconPath = `/resources/images/tokens/${contractAddress}.png`
+  // alert(`BEFORE: TokenSelectDialog:fetchIconResource(${tokenIconPath})`)
+  const res = await fetch(tokenIconPath || "")
+  if (res.ok) {
+      setTokenIconPath(tokenIconPath)
+  } 
+  else {
+      setTokenIconPath(defaultMissingImage)
+  }
+}
+
 export {
   decimalAdjustTokenAmount,
+  defaultMissingImage,
   bigIntDecimalShift,
   exchangeContextDump,
+  fetchIconResource,
   fetchTokenDetails,
+  getValidAddress,
   getValidBigIntToFormattedPrice,
   getValidFormattedPrice,
   getQueryVariable,

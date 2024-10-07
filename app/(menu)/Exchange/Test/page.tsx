@@ -56,8 +56,6 @@ function App() {
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  // let ercContract = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
-
   // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
 
   const show = () => {
@@ -79,8 +77,6 @@ function App() {
     alert(`Test.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
     setTokenInput(tokenContract.address);
   }
-
-  // const tokenContract = useErc20ClientContract(textInputField)
 
   return (
     <>

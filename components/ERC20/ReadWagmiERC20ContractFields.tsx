@@ -7,15 +7,15 @@ type Props = {
 }
 
 const ReadWagmiERC20ContractFields = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {
-  const contract:TokenContract = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
+  const tokenContract:TokenContract|undefined = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
    return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>
       <h2>Reading Wagmi ERC20 Fields for Token Contract({TOKEN_CONTRACT_ADDRESS})</h2>
-      Token Name   : {contract.name} <br/>
-      Symbol       : {contract.symbol} <br/>
-      Decimals     : {contract.decimals} <br/>
-      Total Supply : {contract.totalSupply?.toString()}
+      Token Name   : {tokenContract?.name} <br/>
+      Symbol       : {tokenContract?.symbol} <br/>
+      Decimals     : {tokenContract?.decimals} <br/>
+      Total Supply : {tokenContract?.totalSupply?.toString()}
     </>
   )
 }

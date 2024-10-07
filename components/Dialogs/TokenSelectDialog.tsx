@@ -5,11 +5,12 @@ import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { getTokenDetails, stringifyBigInt } from '@/lib/spCoin/utils';
+import { fetchIconResource, getTokenDetails, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
 import { useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
+import { Address, getAddress } from 'viem';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -30,43 +31,47 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [inputField, setInputField] = useState<any>();
+    const [validAddress, setValidAddress] = useState<Address>();
     const [tokenName, setTokenName] = useState<string|undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
-    const tokenContract = useErc20ClientContract(inputField)
-    const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
+    // const [tokenContract, setTokenContract] = useState()
+    const tokenContract = useErc20ClientContract(validAddress);
 
-     useEffect(() => {
-        showDialog ? openDialog() : closeDialog()
-    }, [showDialog])
-   
     useEffect(() => {
-        alert(`updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
-        // alert(`tokenContract.name = ${tokenContract.name}`)
-        if (isAddress(tokenContract.address)) {
-            fetchIconResource(tokenContract.address);
+        if (tokenContract) {
+            // alert(`TokenSelectDialog:useEffect[tokenContract] = ${stringifyBigInt(tokenContract)}`)
             setTokenName(tokenContract.name);
             setTokenSymbol(tokenContract.symbol);
             tokenContract.img = tokenIconPath;
+        }
+    }, [tokenContract])
+
+    useEffect(() => {
+        if (tokenContract && tokenIconPath) {
+            // alert(`TokenSelectDialog:useEffect:tokenIconPath = (${tokenIconPath})`)
+            tokenContract.img = tokenIconPath;
+        }
+    }, [tokenIconPath])
+
+    useEffect(() => {
+        showDialog ? openDialog() : closeDialog()
+    }, [showDialog])
+
+    useEffect(() => {
+        // alert(`BEFORE: TokenSelectDialog:useEffect[inputField] = ${inputField}`)
+        let chainId:number|undefined = ACTIVE_ACCOUNT.chainId;
+        const contractAddress:Address|undefined = getValidAddress(inputField, chainId);
+        // alert(`AFTER:  TokenSelectDialog:useEffect[contractAddress] = ${contractAddress}`)
+        if (contractAddress) {
+            fetchIconResource(contractAddress, setTokenIconPath);
+            setValidAddress(contractAddress)
         }
         else{
             setTokenName("Invalid Token Address");
             setTokenSymbol("Please Enter Valid Token Address");
         }
-    }, [tokenContract.address, tokenContract.name, tokenContract.symbol])
-
-    async function fetchIconResource(tokenAddress:string|undefined) {
-        // alert(`InputSelect:fetchIconResource(${tokenAddress})`)
-        if(tokenAddress) {
-        const tokenImageDir = `/resources/images/tokens/${tokenAddress}.png`
-          const res = await fetch(tokenImageDir)
-          if (res.ok) {
-            setTokenIconPath(tokenImageDir)
-          } 
-          else
-            setTokenIconPath(undefined)
-        }
-    }    
+    }, [inputField])
 
     const closeDialog = () => {
         // alert(`closeDialog()`)
@@ -82,23 +87,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         dialogRef.current?.showModal();
     }
 
-    const displayElementDetail = async(tokenAddr:any) => {
-        if (!(await setTokenDetails(tokenAddr))) {
-            alert("SELECT_ERROR:displayElementDetail Invalid Token Address: " + inputField + "\n\n" + ELEMENT_DETAILS)
-            return false
-        }
-        // alert("displayElementDetail\n" + JSON.stringify(inputField, null, 2) + "\n\n" + ELEMENT_DETAILS)
-        return true
-    }
-
-    const setTokenDetails = async(tokenAddr: any) => {
-        const tokenDetails = getTokenDetails(ACTIVE_ACCOUNT.address, ACTIVE_ACCOUNT.chainId, tokenAddr, setTokenContract)
-        console.debug(`tokenDetails = ${tokenDetails}`);
-        return tokenDetails
-    }
-
-     const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
-        // alert(`updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
+    const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
+        // alert(`**************updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
         try {
             if (!tokenContract) {
                 alert("SELECT_ERROR: Invalid Token address : " + inputField);
@@ -137,9 +127,10 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                 {(inputField &&
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
                         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >
-                                <Image id="tokenImage" 
-                                       src={tokenIconPath || defaultMissingImage }
+                        {/* <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} > */}
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >
+                        <Image id="tokenImage" 
+                                       src={tokenIconPath}
                                        height={40}
                                        width={40}
                                        alt="Search Image" />
@@ -149,12 +140,16 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                                     <div className={styles.elementSymbol}>{tokenSymbol}</div> 
                                 </div>
                             </div>
-                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(inputField)}>
+                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => alert(stringifyBigInt(tokenContract))}>
                                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                             </div>
                         </div>
                     </div>
                 )}
+                {/* <div>FTM 0x4e15361fd6b4bb609fa63c81a2be19d873717870</div>
+                <div>FLOK 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E</div>
+                <div>AAVI 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9</div>
+                <div>CHKN 0xD55210Bb6898C021a19de1F58d27b71f095921Ee</div> */}
                 <div className={styles.modalScrollBar}>
                     <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} updateTokenCallback={updateTokenCallback}/>
                 </div>

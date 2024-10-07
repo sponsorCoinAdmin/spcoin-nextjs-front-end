@@ -66,7 +66,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
     }
 
     const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(ACTIVE_ACCOUNT.address, chainId, tokenAddr, setTokenContract)
+        return getTokenDetails(chainId, tokenAddr, setTokenContract)
     }
 
     const displayElementDetail = async(tokenAddr:any) => {
