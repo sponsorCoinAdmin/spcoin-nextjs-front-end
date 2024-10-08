@@ -18,8 +18,8 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
-    const INVALID_TOKEN_NAME = "Invalid Token Address";
-    const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
+const INVALID_TOKEN_NAME = "Invalid Token Address";
+const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
 
 type Props = {
     showDialog:boolean,
