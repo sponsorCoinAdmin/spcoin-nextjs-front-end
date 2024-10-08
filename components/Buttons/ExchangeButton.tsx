@@ -1,7 +1,7 @@
+'use client'
 import React from 'react'
 import styles from '@/styles/Exchange.module.css'
 import { exchangeContext } from "@/lib/context";
-import { formatUnits, parseUnits } from "ethers";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const ExchangeButton = () => {
