@@ -44,21 +44,11 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }, [showDialog])
 
     useEffect(() => {
-        if (tokenContract) {
-            // alert(`TokenSelectDialog:useEffect[tokenContract] = ${stringifyBigInt(tokenContract)}`)
-            setTokenName(tokenContract.name || INVALID_TOKEN_NAME);
-            setTokenSymbol(tokenContract.symbol || INVALID_TOKEN_SYMBOL);
-            tokenContract.img = tokenIconPath;
-        }
-    }, [tokenContract])
-
-    useEffect(() => {
         if (tokenContract && tokenIconPath) {
             // alert(`TokenSelectDialog:useEffect:tokenIconPath = (${tokenIconPath})`)
             tokenContract.img = tokenIconPath;
         }
     }, [tokenIconPath])
-
 
     useEffect(() => {
         // alert(`BEFORE: TokenSelectDialog:useEffect[inputField] = ${inputField}`)
@@ -74,6 +64,15 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             setTokenSymbol(INVALID_TOKEN_SYMBOL);
         }
     }, [inputField])
+
+    useEffect(() => {
+        if (tokenContract) {
+            // alert(`TokenSelectDialog:useEffect[tokenContract] = ${stringifyBigInt(tokenContract)}`)
+            setTokenName(tokenContract.name || INVALID_TOKEN_NAME);
+            setTokenSymbol(tokenContract.symbol || INVALID_TOKEN_SYMBOL);
+            tokenContract.img = tokenIconPath;
+        }
+    }, [tokenContract])
 
     const closeDialog = () => {
         setInputField(undefined)
@@ -127,10 +126,9 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                 {(inputField &&
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
                         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                        {/* <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} > */}
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >
-                        <Image id="tokenImage" 
-                                       src={tokenIconPath || defaultMissingImage}
+                            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >
+                                <Image id="tokenImage" 
+                                       src={tokenIconPath || defaultMissingImage }
                                        height={40}
                                        width={40}
                                        alt="Search Image" />
