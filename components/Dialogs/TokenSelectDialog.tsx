@@ -37,7 +37,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenName, setTokenName] = useState<string|undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
-    const tokenContract = useErc20ClientContract(validAddress);
+    let tokenContract:TokenContract|undefined;
 
     useEffect(() => {
         showDialog ? openDialog() : closeDialog()
@@ -51,28 +51,33 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }, [tokenIconPath])
 
     useEffect(() => {
-        // alert(`BEFORE: TokenSelectDialog:useEffect[inputField] = ${inputField}`)
-        let chainId:number|undefined = ACTIVE_ACCOUNT.chainId;
-        const contractAddress:Address|undefined = getValidAddress(inputField, chainId);
-        // alert(`AFTER:  TokenSelectDialog:useEffect[contractAddress] = ${contractAddress}`)
-        if (contractAddress) {
-            fetchIconResource(contractAddress, setTokenIconPath);
-            setValidAddress(contractAddress)
-        }
-        else{
-            setTokenName(INVALID_TOKEN_NAME);
-            setTokenSymbol(INVALID_TOKEN_SYMBOL);
-        }
+        // alert(`inputField = ${inputField}`)
+        fetchIconResource(inputField, setTokenIconPath)
     }, [inputField])
 
-    useEffect(() => {
-        if (tokenContract) {
-            // alert(`TokenSelectDialog:useEffect[tokenContract] = ${stringifyBigInt(tokenContract)}`)
-            setTokenName(tokenContract.name || INVALID_TOKEN_NAME);
-            setTokenSymbol(tokenContract.symbol || INVALID_TOKEN_SYMBOL);
-            tokenContract.img = tokenIconPath;
+    const setTokenContract = (_tokenContract:TokenContract) => {
+        tokenContract = _tokenContract;
+        setInputField(tokenContract.address)
+        if (isAddress(tokenContract.address)) {
+            // alert(`TokenSelectDialog.tokenContract = ${stringifyBigInt(tokenContract)}`)
+            setTokenName(tokenContract.name);
+            setTokenSymbol(tokenContract.symbol);
         }
-    }, [tokenContract])
+        else
+            if (inputField) {
+                setTokenName("Invalid Token Address");
+                setTokenSymbol("Please Enter Valid Token Address");
+            }
+            else {
+                setTokenName(undefined)
+                setTokenSymbol(undefined)
+            }
+    }
+
+    const setTokenContractCallBack = (_tokenContract:TokenContract) => {
+        // alert(`TestSelectDialog.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
+        setTokenContract(_tokenContract);
+    }
 
     const closeDialog = () => {
         setInputField(undefined)
@@ -120,8 +125,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             </div>
             <div className={styles.modalBox} >
                 <InputSelect placeHolder={INPUT_PLACE_HOLDER}
-                             inputField={inputField || ""}
-                             setInputField={setInputField}/>
+                             textInputField={inputField || ""}
+                             setTokenContractCallBack={setTokenContractCallBack}/>
 
                 {(inputField &&
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
