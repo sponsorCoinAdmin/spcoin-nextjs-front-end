@@ -157,7 +157,7 @@ const bigIntDecimalShift = (value:bigint, decimalShift:number) => {
 
 const getValidAddress = (addrType:any, chainId?:number) => {
   try {
-      return getAddress(addrType, chainId)
+      return getAddress(addrType.trim(), chainId)
   }
   catch (err:any) {
       console.debug(`ERROR: getAddress(${addrType})`)

@@ -5,7 +5,7 @@ import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { fetchIconResource, getTokenDetails, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
+import { defaultMissingImage, fetchIconResource, getTokenDetails, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
@@ -18,6 +18,8 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
+    const INVALID_TOKEN_NAME = "Invalid Token Address";
+    const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
 
 type Props = {
     showDialog:boolean,
@@ -41,8 +43,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     useEffect(() => {
         if (tokenContract) {
             // alert(`TokenSelectDialog:useEffect[tokenContract] = ${stringifyBigInt(tokenContract)}`)
-            setTokenName(tokenContract.name);
-            setTokenSymbol(tokenContract.symbol);
+            setTokenName(tokenContract.name || INVALID_TOKEN_NAME);
+            setTokenSymbol(tokenContract.symbol || INVALID_TOKEN_SYMBOL);
             tokenContract.img = tokenIconPath;
         }
     }, [tokenContract])
@@ -68,8 +70,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             setValidAddress(contractAddress)
         }
         else{
-            setTokenName("Invalid Token Address");
-            setTokenSymbol("Please Enter Valid Token Address");
+            setTokenName(INVALID_TOKEN_NAME);
+            setTokenSymbol(INVALID_TOKEN_SYMBOL);
         }
     }, [inputField])
 
@@ -130,7 +132,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                         {/* <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} > */}
                         <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)} >
                         <Image id="tokenImage" 
-                                       src={tokenIconPath}
+                                       src={tokenIconPath || defaultMissingImage}
                                        height={40}
                                        width={40}
                                        alt="Search Image" />
