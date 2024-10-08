@@ -9,8 +9,8 @@ import { defaultMissingImage, fetchIconResource, getTokenDetails, getValidAddres
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
-import { useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
 import { Address, getAddress } from 'viem';
+import { useErc20ClientContract } from '@/lib/wagmi/erc20WagmiClientRead';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -37,8 +37,11 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenName, setTokenName] = useState<string|undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
-    // const [tokenContract, setTokenContract] = useState()
     const tokenContract = useErc20ClientContract(validAddress);
+
+    useEffect(() => {
+        showDialog ? openDialog() : closeDialog()
+    }, [showDialog])
 
     useEffect(() => {
         if (tokenContract) {
@@ -56,9 +59,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         }
     }, [tokenIconPath])
 
-    useEffect(() => {
-        showDialog ? openDialog() : closeDialog()
-    }, [showDialog])
 
     useEffect(() => {
         // alert(`BEFORE: TokenSelectDialog:useEffect[inputField] = ${inputField}`)
@@ -76,15 +76,13 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }, [inputField])
 
     const closeDialog = () => {
-        // alert(`closeDialog()`)
-        setInputField("")
+        setInputField(undefined)
         setShowDialog(false);
         dialogRef.current?.close()
     }
 
     const openDialog = () => {
         // alert(`openDialog:tokenSymbol = ${tokenSymbol}`)
-        setInputField(undefined)
         setShowDialog(true);
         dialogRef.current?.showModal();
     }
