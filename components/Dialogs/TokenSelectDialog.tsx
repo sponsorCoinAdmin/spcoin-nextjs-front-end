@@ -5,12 +5,9 @@ import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { defaultMissingImage, fetchIconResource, getTokenDetails, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
+import { defaultMissingImage, getTokenDetails, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
-import { useAccount } from 'wagmi';
 import InputSelect from '../panes/InputSelect';
-import { Address, getAddress } from 'viem';
-import { useErc20ClientContract } from '@/lib/wagmi/erc20WagmiClientRead';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -30,14 +27,13 @@ type Props = {
 
 // ToDo Read in data List remotely
 export default function Dialog({showDialog, setShowDialog, altTokenContract, callBackSetter }: Props) {
-    const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [inputField, setInputField] = useState<any>();
-    const [validAddress, setValidAddress] = useState<Address>();
     const [tokenName, setTokenName] = useState<string|undefined>();
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
-    let tokenContract:TokenContract|undefined;
+    const [tokenContract, setTokenContract] = useState<TokenContract|undefined>()
+    // let tokenContract:TokenContract|undefined;
 
     useEffect(() => {
         showDialog ? openDialog() : closeDialog()
@@ -51,33 +47,22 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     }, [tokenIconPath])
 
     useEffect(() => {
-        // alert(`inputField = ${inputField}`)
-        fetchIconResource(inputField, setTokenIconPath)
-    }, [inputField])
-
-    const setTokenContract = (_tokenContract:TokenContract) => {
-        tokenContract = _tokenContract;
-        setInputField(tokenContract.address)
-        if (isAddress(tokenContract.address)) {
-            // alert(`TokenSelectDialog.tokenContract = ${stringifyBigInt(tokenContract)}`)
-            setTokenName(tokenContract.name);
-            setTokenSymbol(tokenContract.symbol);
-        }
-        else
-            if (inputField) {
-                setTokenName("Invalid Token Address");
-                setTokenSymbol("Please Enter Valid Token Address");
-            }
-            else {
+        if (tokenContract) {
+            setInputField(tokenContract.address)
+            if (isAddress(tokenContract.address)) {
+                // alert(`TokenSelectDialog.tokenContract = ${stringifyBigInt(tokenContract)}`)
+                setTokenName(tokenContract.name);
+                setTokenSymbol(tokenContract.symbol);
+                setTokenIconPath(tokenContract.img);
+            } else if (inputField) {
+                setTokenName(INVALID_TOKEN_NAME);
+                setTokenSymbol(INVALID_TOKEN_SYMBOL);
+            } else {
                 setTokenName(undefined)
                 setTokenSymbol(undefined)
             }
-    }
-
-    const setTokenContractCallBack = (_tokenContract:TokenContract) => {
-        // alert(`TestSelectDialog.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
-        setTokenContract(_tokenContract);
-    }
+        }
+    }, [tokenContract])
 
     const closeDialog = () => {
         setInputField(undefined)
@@ -95,7 +80,7 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         // alert(`**************updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
         try {
             if (!tokenContract) {
-                alert("SELECT_ERROR: Invalid Token address : " + inputField);
+                alert("SELECT_ERROR: Invalid Token contract : " + inputField);
                 return false;
             }
             if (!isAddress(tokenContract.address)) {
@@ -125,8 +110,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
             </div>
             <div className={styles.modalBox} >
                 <InputSelect placeHolder={INPUT_PLACE_HOLDER}
-                             textInputField={inputField || ""}
-                             setTokenContractCallBack={setTokenContractCallBack}/>
+                             passedInputField={inputField || ""}
+                             setTokenContractCallBack={setTokenContract}/>
 
                 {(inputField &&
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
@@ -137,7 +122,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                                        height={40}
                                        width={40}
                                        alt="Search Image" />
-                                    {/* className={styles.elementLogo}  */}
                                 <div>
                                     <div className={styles.elementName}>{tokenName}</div>
                                     <div className={styles.elementSymbol}>{tokenSymbol}</div> 

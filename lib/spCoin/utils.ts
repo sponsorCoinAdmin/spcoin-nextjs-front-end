@@ -167,18 +167,35 @@ const getValidAddress = (addrType:any, chainId?:number) => {
   }
 }
 
-async function fetchIconResource(contractAddress:Address | undefined,
-  setTokenIconPath:(iconPath:string) => void) {
-  const tokenIconPath = `/resources/images/tokens/${contractAddress}.png`
+async function fetchIconResource(tokenContract:TokenContract,
+  setTokenContractCallBack:(tokenContract:TokenContract) => void) {
+  const tokenIconPath = `/resources/images/tokens/${tokenContract.address}.png`
   // alert(`BEFORE: TokenSelectDialog:fetchIconResource(${tokenIconPath})`)
   const res = await fetch(tokenIconPath || "")
   if (res.ok) {
-      setTokenIconPath(tokenIconPath)
+    tokenContract.img = tokenIconPath;
+    setTokenContractCallBack(tokenContract)
   } 
   else {
-      setTokenIconPath(defaultMissingImage)
+    // alert(`ERROR: fetchIconResource(${contractAddress})`)
+    tokenContract.img = defaultMissingImage;
+    setTokenContractCallBack(tokenContract)
   }
 }
+
+// async function fetchIconResource(contractAddress:Address | undefined,
+//   setTokenIconPathCallBack:(iconPath:string) => void) {
+//   const tokenIconPath = `/resources/images/tokens/${contractAddress}.png`
+//   // alert(`BEFORE: TokenSelectDialog:fetchIconResource(${tokenIconPath})`)
+//   const res = await fetch(tokenIconPath || "")
+//   if (res.ok) {
+//     setTokenIconPathCallBack(tokenIconPath)
+//   } 
+//   else {
+//     // alert(`ERROR: fetchIconResource(${contractAddress})`)
+//     setTokenIconPathCallBack(defaultMissingImage)
+//   }
+// }
 
 export {
   decimalAdjustTokenAmount,
