@@ -6,7 +6,7 @@ import { Address, formatUnits, getAddress } from 'viem'
 import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '../structure/types'
 import { BURN_ADDRESS } from '@/lib/network/utils';
-import { defaultMissingImage, stringifyBigInt } from '../spCoin/utils'
+import { stringifyBigInt } from '../spCoin/utils'
 
 const useERC20WagmiClientBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useERC20WagmiClientBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
@@ -102,16 +102,12 @@ const useERC20WagmiClientBalanceOfStr = (connectedAccountAddr: Address | undefin
 }
 
 const useErc20ClientContract = (contractAddress:Address | undefined) => {
-  console.debug(`useErc20ClientContract = (contractAddress:${contractAddress}`)
   const chainId = useChainId();
   const name = useERC20WagmiClientName(contractAddress);
   const symbol = useERC20WagmiClientSymbol(contractAddress);
   const decimals = useERC20WagmiClientDecimals(contractAddress);
   const totalSupply = useERC20WagmiClientTotalSupply(contractAddress);
-  // const tokenIconPath = `/resources/images/tokens/${contractAddress}.png`;
-  const tokenIconPath = defaultMissingImage;
-
-  const tokenContract:TokenContract|undefined = !contractAddress ? contractAddress :
+  let contractResponse:TokenContract =
   {
     address:contractAddress,
     chainId: chainId,
@@ -119,10 +115,10 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
     symbol:symbol,
     decimals:decimals,
     totalSupply:totalSupply,
-    img:tokenIconPath
+    img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
   }
-  console.debug(`useErc20ClientContract.contractResponse = ${stringifyBigInt(tokenContract)}`)
-  return tokenContract
+  console.debug(`useErc20ClientContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
+  return contractResponse
 }
 
 const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
