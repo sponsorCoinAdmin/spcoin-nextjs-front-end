@@ -94,7 +94,7 @@ const SellContainer = ({updateSellAmount,
   }, [updateSellAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    // alert(`SellContainer.setDecimalAdjustedContract(sellContainer:${newTokenContract.name})`)
+    // alert(`SellContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
     console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
     console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(sellAmount, newTokenContract, tokenContract);

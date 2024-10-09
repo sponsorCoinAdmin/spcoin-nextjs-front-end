@@ -18,6 +18,7 @@ import DumpContextButton from '@/components/Buttons/DumpContextButton'
 import { stringifyBigInt } from '@/lib/spCoin/utils'
 import { exchangeContext } from '@/lib/context'
 import InputSelect from '@/components/panes/InputSelect';
+import { TokenContract } from '@/lib/structure/types'
 
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
 const USDT_POLYGON_CONTRACT:Address = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
@@ -33,7 +34,7 @@ function App() {
   const [ TOKEN_CONTRACT_ADDRESS, setDefaultTokenContractAddress ] = useState<Address>(BURN_ADDRESS)
   const [ EXCHANGE_CONTEXT, setExchangeContext ] = useState<String>("")
   const [ DISPLAY_CONTEXT_BUTTON, setContextButton ] = useState<boolean>(false)
-  const [ textInputField, setTokenInput ] = useState<Address>(TON_ETHEREUM_CONTRACT);
+  const [ textInputField, setTokenInput ] = useState<Address|undefined>(TON_ETHEREUM_CONTRACT);
 
   useEffect(() => {
     // alert(`DISPLAY_CONTEXT_BUTTON = ${DISPLAY_CONTEXT_BUTTON}`)
@@ -55,8 +56,6 @@ function App() {
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  // let ercContract = useErc20ClientContract(TOKEN_CONTRACT_ADDRESS)
-
   // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
 
   const show = () => {
@@ -74,7 +73,12 @@ function App() {
     // alert(`exchangeContext.test.dumpContextButton = ${exchangeContext.test.dumpContextButton}`)
   }
 
-   return (
+  const setTokenContractCallBack = (tokenContract:TokenContract) => {
+    alert(`Test.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
+    setTokenInput(tokenContract.address);
+  }
+
+  return (
     <>
       <ProviderConfigurationStatus />
 
@@ -104,7 +108,9 @@ function App() {
 
       <DumpContextButton />
 
-      <InputSelect placeHolder={INPUT_PLACE_HOLDER} setTokenInput={setTokenInput} textInputField={textInputField}/>
+      <InputSelect  placeHolder={INPUT_PLACE_HOLDER}
+                    textInputField={textInputField}
+                    setTokenContractCallBack={setTokenContractCallBack}/>
 
       <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={textInputField} />
       <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={textInputField} />

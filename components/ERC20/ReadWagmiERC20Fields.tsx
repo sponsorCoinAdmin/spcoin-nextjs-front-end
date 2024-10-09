@@ -8,7 +8,7 @@ import {
     useFormattedClientTotalSupply } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  TOKEN_CONTRACT_ADDRESS:Address
+  TOKEN_CONTRACT_ADDRESS:Address|undefined
 }
 
 const ReadWagmiERC20Fields = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {

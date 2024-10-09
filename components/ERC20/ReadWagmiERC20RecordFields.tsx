@@ -8,7 +8,7 @@ import {
   useERC20WagmiClientTotalSupplyRec } from '@/lib/wagmi/erc20WagmiClientRead'
 
 type Props = {
-  TOKEN_CONTRACT_ADDRESS:Address
+  TOKEN_CONTRACT_ADDRESS:Address|undefined
 }
 
 const ReadWagmiERC20RecordFields = ( { TOKEN_CONTRACT_ADDRESS }: Props) => {
@@ -17,10 +17,10 @@ const ReadWagmiERC20RecordFields = ( { TOKEN_CONTRACT_ADDRESS }: Props) => {
   const decimalRec = useERC20WagmiClientDecimalRec(TOKEN_CONTRACT_ADDRESS)
   const totalSupplyRec = useERC20WagmiClientTotalSupplyRec(TOKEN_CONTRACT_ADDRESS)
 
-  let name = nameRec.status === 'success' ? nameRec.data : null
-  let symbol = symbolRec.status === 'success' ?  symbolRec.data : null
-  let decimals = decimalRec?.status === 'success' ? decimalRec?.data : null
-  let totalSupply = totalSupplyRec.status === 'success' ? totalSupplyRec.data : null
+  let name = nameRec.status === 'success' ? nameRec.data : `ERROR name: ${nameRec.status}`
+  let symbol = symbolRec.status === 'success' ?  symbolRec.data : `ERROR: ${symbolRec.status}`
+  let decimals = decimalRec?.status === 'success' ? decimalRec?.data : `ERROR decimals: ${decimalRec.status}`
+  let totalSupply = totalSupplyRec.status === 'success' ? totalSupplyRec.data : `ERROR totalSupply: ${totalSupplyRec.status}`
 
   return (
     <>
