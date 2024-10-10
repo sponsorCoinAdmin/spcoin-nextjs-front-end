@@ -7,7 +7,7 @@ import styles from '@/styles/Modal.module.css';
 // import searchMagGlassWhite_png from './Resources/images/searchMagGlassWhite.png'
 // import searchMagGlassGrey_png from '../../../resources/images/SearchMagGlassGrey.png'
 // import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
-import { defaultMissingImage, fetchIconResource, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
+import { defaultMissingImage, fetchIconResource, getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
 import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
 import Image from 'next/image'
 import { TokenContract, useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
@@ -30,42 +30,21 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     setTextInputField(passedInputField)
   }, [passedInputField])
 
-  const invalidTokenContract = (textInputField:any) => {
-    const INVALID_TOKEN_NAME = "Invalid Token Address";
-    const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
-    
-  const invalidToken:TokenContract|undefined = (!textInputField) ? undefined :
-    {
-      chainId: chainId,
-      address:textInputField,
-      name:INVALID_TOKEN_NAME,
-      symbol:INVALID_TOKEN_SYMBOL,
-      decimals:undefined,
-      totalSupply:undefined,
-      img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
-    }
-    return invalidToken;
-  }
-
   useEffect(() => {
     if (tokenContract.name) {
       // alert(`tokenContract = ${stringifyBigInt(tokenContract)}`)
       fetchIconResource(tokenContract, setTokenContractCallBack)
     }
-  }, [tokenContract.name,
-      tokenContract.symbol,
-      tokenContract.decimals,
-      tokenContract.totalSupply])
+  }, [tokenContract.name, tokenContract.symbol, tokenContract.decimals, tokenContract.totalSupply])
 
   useEffect(() => {
     const validAddress = getValidAddress(textInputField);
     setValidAddress(validAddress)
     if (!validAddress) {
-      const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField)
+      const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField, chainId)
       setTokenContractCallBack(invalidToken);
     }
   }, [textInputField])
-
 
   return (
     <div className={styles.modalElementSelect}>

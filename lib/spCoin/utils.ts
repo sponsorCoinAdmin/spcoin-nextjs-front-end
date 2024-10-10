@@ -183,19 +183,21 @@ async function fetchIconResource(tokenContract:TokenContract,
   }
 }
 
-// async function fetchIconResource(contractAddress:Address | undefined,
-//   setTokenIconPathCallBack:(iconPath:string) => void) {
-//   const tokenIconPath = `/resources/images/tokens/${contractAddress}.png`
-//   // alert(`BEFORE: TokenSelectDialog:fetchIconResource(${tokenIconPath})`)
-//   const res = await fetch(tokenIconPath || "")
-//   if (res.ok) {
-//     setTokenIconPathCallBack(tokenIconPath)
-//   } 
-//   else {
-//     // alert(`ERROR: fetchIconResource(${contractAddress})`)
-//     setTokenIconPathCallBack(defaultMissingImage)
-//   }
-// }
+const invalidTokenContract = (textInputField:string|undefined, chainId:any) => {
+  const INVALID_TOKEN_NAME = "Invalid Token Address";
+  const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
+  const invalidToken:TokenContract|undefined = (!textInputField) ? undefined :
+                                               {
+                                                 chainId: chainId,
+                                                 address:textInputField,
+                                                 name:INVALID_TOKEN_NAME,
+                                                 symbol:INVALID_TOKEN_SYMBOL,
+                                                 decimals:undefined,
+                                                 totalSupply:undefined,
+                                                 img:defaultMissingImage
+                                               }
+  return invalidToken;
+}
 
 export {
   decimalAdjustTokenAmount,
@@ -209,6 +211,7 @@ export {
   getValidFormattedPrice,
   getQueryVariable,
   getTokenDetails,
+  invalidTokenContract,
   isSpCoin,
   setValidPriceInput,
   stringifyBigInt,
