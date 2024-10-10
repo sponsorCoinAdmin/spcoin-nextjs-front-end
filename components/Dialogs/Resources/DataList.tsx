@@ -55,7 +55,8 @@ const getDataFeedListElement = (dataFeedList: any, addressKey:any) => {
 }
 
 function displayElementDetail (le: any) {
-    alert("displayElementDetail\n" + JSON.stringify(le,null,2))
+    // alert("displayElementDetail\n" + stringifyBigInt(le,null,2))
+    alert(`${le?.name} Token Address = ${le?.address}`)
 }
 
 type Props = {

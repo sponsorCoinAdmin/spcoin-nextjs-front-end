@@ -109,8 +109,8 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
   const totalSupply = useERC20WagmiClientTotalSupply(contractAddress);
   let contractResponse:TokenContract =
   {
-    address:contractAddress,
     chainId: chainId,
+    address:contractAddress,
     name:name,
     symbol:symbol,
     decimals:decimals,

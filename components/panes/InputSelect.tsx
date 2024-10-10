@@ -12,14 +12,16 @@ import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey
 import Image from 'next/image'
 import { TokenContract, useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
 import { Address } from "viem";
+import { useChainId } from "wagmi";
 
 type Props = {
   placeHolder:string,
   passedInputField:any,
-  setTokenContractCallBack:(tokenContract:TokenContract) => void 
+  setTokenContractCallBack:(tokenContract:TokenContract|undefined) => void 
 }
 
 function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }:Props) {
+  const chainId = useChainId();
   const [ textInputField, setTextInputField ] = useState<any>();
   const [ validAddress, setValidAddress ] = useState<Address>();
   const tokenContract = useErc20ClientContract(validAddress);
@@ -27,6 +29,23 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   useEffect(() => {
     setTextInputField(passedInputField)
   }, [passedInputField])
+
+  const invalidTokenContract = (textInputField:any) => {
+    const INVALID_TOKEN_NAME = "Invalid Token Address";
+    const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
+    
+  const invalidToken:TokenContract|undefined = (!textInputField) ? undefined :
+    {
+      chainId: chainId,
+      address:textInputField,
+      name:INVALID_TOKEN_NAME,
+      symbol:INVALID_TOKEN_SYMBOL,
+      decimals:undefined,
+      totalSupply:undefined,
+      img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+    }
+    return invalidToken;
+  }
 
   useEffect(() => {
     if (tokenContract.name) {
@@ -40,17 +59,13 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
 
   useEffect(() => {
     const validAddress = getValidAddress(textInputField);
-    if (validAddress) {
-      // alert(`Setting validAddress = ${validAddress}`)
-      setValidAddress(validAddress)
+    setValidAddress(validAddress)
+    if (!validAddress) {
+      const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField)
+      setTokenContractCallBack(invalidToken);
     }
   }, [textInputField])
 
-  useEffect(() => {
-    // if (validAddress) {
-    //   alert(`validAddress = ${validAddress}`)
-    // }
-  }, [validAddress])
 
   return (
     <div className={styles.modalElementSelect}>
@@ -61,7 +76,6 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
                placeholder={placeHolder} 
                value={textInputField} 
                onChange={(e) => setTextInputField(e.target.value) }/>
-               {/* onChange={ (e) => setTextInputField(e.target.value) }/> */}
       </div>
     </div>
   );

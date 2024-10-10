@@ -70,7 +70,6 @@ type ExchangeContext = {
   sellTokenContract: TokenContract|undefined;
   buyTokenContract: TokenContract|undefined;
   tradeData: TradeData;
-  activeContainerId:string;
   spCoinPanels:SP_COIN_DISPLAY;
   test : {dumpContextButton:boolean};
 }
