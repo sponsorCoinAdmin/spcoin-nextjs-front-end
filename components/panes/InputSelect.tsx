@@ -24,7 +24,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const chainId = useChainId();
   const [ textInputField, setTextInputField ] = useState<any>();
   const [ validAddress, setValidAddress ] = useState<Address|undefined>();
-  const tokenContract = useErc20ClientContract(validAddress);
+  const tokenContract:TokenContract|undefined = useErc20ClientContract(validAddress);
 
   useEffect(() => {
     setTextInputField(passedInputField)
@@ -46,7 +46,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   useEffect(() => {
     const validAddress = getValidAddress(textInputField);
     if (validAddress) {
-      setValidAddress(validAddress)
+      returnTokenContract(validAddress)
       console.debug(`HERE 4 Valid Token  textInputField = ${textInputField}`)
     } else {
       const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField, chainId)
@@ -54,6 +54,14 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
       console.debug(`HERE 3 Invalid Token  textInputField = ${stringifyBigInt(invalidToken)}`)
     }
   }, [textInputField])
+
+  const returnTokenContract = ( passedValidAddress:Address|undefined ) => {
+    if (passedValidAddress === validAddress) {
+      setTokenContractCallBack(tokenContract);
+    } else {
+      setValidAddress(passedValidAddress)
+    }
+  }
 
   return (
     <div className={styles.modalElementSelect}>
