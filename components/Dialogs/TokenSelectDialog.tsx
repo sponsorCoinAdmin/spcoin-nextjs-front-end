@@ -31,33 +31,25 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
     const [tokenContract, setTokenContract] = useState<TokenContract|undefined>()
-    // let tokenContract:TokenContract|undefined;
 
     useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])
 
     useEffect(() => {
-        if (tokenContract && tokenIconPath) {
-            // alert(`TokenSelectDialog:useEffect:tokenIconPath = (${tokenIconPath})`)
-            tokenContract.img = tokenIconPath;
-        }
-    }, [tokenIconPath])
-
-    useEffect(() => {
         if (tokenContract) {
             setInputField(tokenContract.address)
-                setTokenName(tokenContract.name);
-                setTokenSymbol(tokenContract.symbol);
-                setTokenIconPath(tokenContract.img);
+            setTokenName(tokenContract.name);
+            setTokenSymbol(tokenContract.symbol);
+            setTokenIconPath(tokenContract.img);
         }
         else {
-            setTokenContract(undefined)
+            // setTokenContract(undefined)
             setInputField(undefined)
             setTokenName(undefined)
             setTokenSymbol(undefined)
         }
-    }, [tokenContract?.address])
+    }, [tokenContract])
 
     const closeDialog = () => {
         setInputField(undefined)

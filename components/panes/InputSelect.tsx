@@ -7,7 +7,7 @@ import styles from '@/styles/Modal.module.css';
 // import searchMagGlassWhite_png from './Resources/images/searchMagGlassWhite.png'
 // import searchMagGlassGrey_png from '../../../resources/images/SearchMagGlassGrey.png'
 // import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
-import { defaultMissingImage, fetchIconResource, getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
+import { fetchIconResource, getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
 import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
 import Image from 'next/image'
 import { TokenContract, useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
@@ -23,7 +23,7 @@ type Props = {
 function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }:Props) {
   const chainId = useChainId();
   const [ textInputField, setTextInputField ] = useState<any>();
-  const [ validAddress, setValidAddress ] = useState<Address>();
+  const [ validAddress, setValidAddress ] = useState<Address|undefined>();
   const tokenContract = useErc20ClientContract(validAddress);
 
   useEffect(() => {
@@ -31,18 +31,27 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   }, [passedInputField])
 
   useEffect(() => {
-    if (tokenContract.name) {
+    if (tokenContract?.address) {
       // alert(`tokenContract = ${stringifyBigInt(tokenContract)}`)
       fetchIconResource(tokenContract, setTokenContractCallBack)
+      console.debug(`HERE 1 tokenContract = ${stringifyBigInt(tokenContract)}`)
     }
-  }, [tokenContract.name, tokenContract.symbol, tokenContract.decimals, tokenContract.totalSupply])
+    else {
+      setTokenContractCallBack(tokenContract);
+      console.debug(`HERE 2 tokenContract = ${stringifyBigInt(tokenContract)}`)
+      // alert (`Empty Contract(${stringifyBigInt(tokenContract)})`)
+    }
+  }, [tokenContract?.name, tokenContract?.symbol, tokenContract?.decimals, tokenContract?.totalSupply])
 
   useEffect(() => {
     const validAddress = getValidAddress(textInputField);
-    setValidAddress(validAddress)
-    if (!validAddress) {
+    if (validAddress) {
+      setValidAddress(validAddress)
+      console.debug(`HERE 4 Valid Token  textInputField = ${textInputField}`)
+    } else {
       const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField, chainId)
       setTokenContractCallBack(invalidToken);
+      console.debug(`HERE 3 Invalid Token  textInputField = ${stringifyBigInt(invalidToken)}`)
     }
   }, [textInputField])
 
@@ -54,7 +63,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
                autoComplete="off" 
                placeholder={placeHolder} 
                value={textInputField} 
-               onChange={(e) => setTextInputField(e.target.value) }/>
+               onChange={(e) => setTextInputField(e.target.value)}/>
       </div>
     </div>
   );
