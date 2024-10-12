@@ -5,9 +5,10 @@ import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
-import { defaultMissingImage, getTokenDetails, getValidAddress, stringifyBigInt } from '@/lib/spCoin/utils';
+import { defaultMissingImage, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import InputSelect from '../panes/InputSelect';
+import { useAccount } from 'wagmi';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -15,8 +16,6 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "When the address entry is completed and selected, "+
     "this address will be verified prior to entry acceptance.\n"+
     "Currently, there is no image token lookup, but that is to come."
-const INVALID_TOKEN_NAME = "Invalid Token Address";
-const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
 
 type Props = {
     showDialog:boolean,
@@ -33,34 +32,27 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
     const [tokenContract, setTokenContract] = useState<TokenContract|undefined>()
-    // let tokenContract:TokenContract|undefined;
+    // const ACTIVE_ACCOUNT = useAccount();
+    // const walletAddress = ACTIVE_ACCOUNT.address;
+    // console.debug(`walletAddress = ${walletAddress}`)
+
 
     useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])
 
     useEffect(() => {
-        if (tokenContract && tokenIconPath) {
-            // alert(`TokenSelectDialog:useEffect:tokenIconPath = (${tokenIconPath})`)
-            tokenContract.img = tokenIconPath;
-        }
-    }, [tokenIconPath])
-
-    useEffect(() => {
         if (tokenContract) {
             setInputField(tokenContract.address)
-            if (isAddress(tokenContract.address)) {
-                // alert(`TokenSelectDialog.tokenContract = ${stringifyBigInt(tokenContract)}`)
-                setTokenName(tokenContract.name);
-                setTokenSymbol(tokenContract.symbol);
-                setTokenIconPath(tokenContract.img);
-            } else if (inputField) {
-                setTokenName(INVALID_TOKEN_NAME);
-                setTokenSymbol(INVALID_TOKEN_SYMBOL);
-            } else {
-                setTokenName(undefined)
-                setTokenSymbol(undefined)
-            }
+            setTokenName(tokenContract.name);
+            setTokenSymbol(tokenContract.symbol);
+            setTokenIconPath(tokenContract.img);
+        }
+        else {
+            // setTokenContract(undefined)
+            setInputField(undefined)
+            setTokenName(undefined)
+            setTokenSymbol(undefined)
         }
     }, [tokenContract])
 
@@ -127,7 +119,8 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                                     <div className={styles.elementSymbol}>{tokenSymbol}</div> 
                                 </div>
                             </div>
-                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => alert(stringifyBigInt(tokenContract))}>
+                            {/* <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => alert(stringifyBigInt(tokenContract))}> */}
+                            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
                                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
                             </div>
                         </div>

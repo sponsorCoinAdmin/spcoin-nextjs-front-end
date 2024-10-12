@@ -107,15 +107,18 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
   const symbol = useERC20WagmiClientSymbol(contractAddress);
   const decimals = useERC20WagmiClientDecimals(contractAddress);
   const totalSupply = useERC20WagmiClientTotalSupply(contractAddress);
-  let contractResponse:TokenContract =
-  {
-    address:contractAddress,
-    chainId: chainId,
-    name:name,
-    symbol:symbol,
-    decimals:decimals,
-    totalSupply:totalSupply,
-    img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+  let contractResponse:TokenContract|undefined;
+  if ( contractAddress ) {
+    contractResponse =
+    {
+      chainId: chainId,
+      address:contractAddress,
+      name:name || "CONTRACT NOT FOUND AT ADDRESS",
+      symbol:symbol,
+      decimals:decimals,
+      totalSupply:totalSupply,
+      img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+    }
   }
   console.debug(`useErc20ClientContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
   return contractResponse

@@ -32,7 +32,6 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
       agentAccount: initialContextMap.get("defaultAgent") as AccountRecord | undefined,
       sellTokenContract: initialContextMap.get("defaultSellToken") as TokenContract | undefined,
       buyTokenContract: initialContextMap.get("defaultBuyToken") as TokenContract | undefined,
-      activeContainerId: "MainSwapContainer_ID",
       tradeData: defaultInitialTradeData,
       spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
       test : {dumpContextButton:false}
@@ -41,7 +40,6 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
   // alert(`***Context.getInitialContext: ${JSON.stringify(defaultNetworkSettings,null,2)}`)
   return initialContext;
 }
-
 
 function getInitialContextMap(chain:any) {
   const initialNetworkContext = getDefaultNetworkSettings(chain);

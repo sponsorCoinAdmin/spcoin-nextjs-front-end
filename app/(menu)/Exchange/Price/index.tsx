@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
-import { AccountRecord, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
+import { TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
 import { PriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -30,7 +30,6 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
-  const [activeContainerId, setActiveContainerId] = useState<string>(exchangeContext.activeContainerId);
 
   try {
     useEffect(() => {
@@ -47,7 +46,6 @@ export default function PriceView() {
         setSlippage(exchangeContext.tradeData.slippage);
         setSellTokenContract(exchangeContext.sellTokenContract);
         setBuyTokenContract(exchangeContext.buyTokenContract);
-        setActiveContainerId(exchangeContext.activeContainerId);
       }
     }, [ACTIVE_ACCOUNT.chain]);
 
@@ -129,16 +127,6 @@ export default function PriceView() {
       msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
       console.debug(msg);
     }
-    const setSellTokenContractCallback = (sellTokenContract:TokenContract|undefined) => {
-      setSellTokenContract(sellTokenContract);
-      // alert("setSellTokenContract")
-    }
-
-    const setBuyTokenContractCallback = (buyTokenContract:TokenContract|undefined) => {
-      // alert("setBuyTokenContract")
-      setBuyTokenContract(buyTokenContract);
-    }
-
     try {
       return (
         <form autoComplete="off">
@@ -149,12 +137,12 @@ export default function PriceView() {
                            sellTokenContract={sellTokenContract}
                            buyTokenContract={buyTokenContract}
                            setSellAmountCallback={setSellAmount}
-                           setTokenContractCallback={setSellTokenContractCallback}/>
+                           setTokenContractCallback={setSellTokenContract}/>
             <BuyContainer  updateBuyAmount={buyAmount}
                            sellTokenContract={sellTokenContract}
                            buyTokenContract={buyTokenContract}
                            setBuyAmountCallback={setBuyAmount}
-                           setTokenContractCallback={setBuyTokenContractCallback}/>
+                           setTokenContractCallback={setBuyTokenContract}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton/>
             <AffiliateFee price={price} buyTokenContract={buyTokenContract}/>
@@ -162,7 +150,6 @@ export default function PriceView() {
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
 
-          
           <div>Current Branch 2024-10-08.FixSelectDialogInput12</div>
           <div>FTM  0x4e15361fd6b4bb609fa63c81a2be19d873717870</div>
           <div>FLOK 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E</div>
