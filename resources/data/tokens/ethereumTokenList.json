@@ -1,6 +1,14 @@
 [
     {
         "chainId": 1,
+        "address": "0x0000000000000000000000000000000000000000",
+        "name": "Ethereum",
+        "symbol": "ETH",
+        "decimals": 18,
+        "img": "/resources/images/eth.png"
+    },
+    {
+        "chainId": 1,
         "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
         "name": "Sponsor Coin",
         "symbol": "SpCoin",

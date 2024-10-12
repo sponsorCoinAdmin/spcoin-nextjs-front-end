@@ -7,10 +7,34 @@ import sepoliaTokenList from '@/resources/data/Tokens/sepoliaTokenList.json';
 import ethereumTokenList from '@/resources/data/Tokens/ethereumTokenList.json';
 import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import { FEED_TYPE, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { useChainId } from "wagmi";
+import { FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { useAccount, useChainId } from "wagmi";
+import { BURN_ADDRESS } from '@/lib/network/utils';
 
-const getDataFeedList = (feedType: any, network:string|number) => {
+const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
+    const network:number = useChainId();
+    const walletAddress = useAccount().address;
+    let address = dataFeedList.address;
+    if (walletAddress && (address === BURN_ADDRESS.toString())) {
+        address = walletAddress;
+        dataFeedList.address = address;
+    }
+
+    // switch (feedType) {
+    //     case FEED_TYPE.TOKEN_LIST:
+    //         switch(network) {
+    //             case 1: return ethereumTokenList;
+    //             case 137: return polygonTokenList;
+    //             case 11155111: return sepoliaTokenList;
+    //             default: return ethereumTokenList;
+    //         }
+    //     default: return address;
+    // }
+
+    return address;
+}
+
+const getDataFeedList = (feedType: FEED_TYPE, network:string|number) => {
     if (typeof network === "string")
       network = network.toLowerCase()
     // console.debug("NETWORK network = " + network)
@@ -68,7 +92,7 @@ function DataList({dataFeedType, updateTokenCallback} : Props) {
     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
     // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
     const tList = dataFeedList?.map((e: any, i: number) => (
-        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={e.address}>
+        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={getDataKey( dataFeedType, e)}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])} >
                 <img src={e.img} alt={e.symbol} className={styles.elementLogo} />
                 <div>
