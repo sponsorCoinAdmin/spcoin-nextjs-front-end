@@ -40,7 +40,7 @@ const SellContainer = ({updateSellAmount,
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    alert (` balanceOf = ${balance}\formattedNetWorkBalance = ${stringifyBigInt(balance)}`)
+    // alert (` balance = ${balance}\formattedNetWorkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.sellTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);

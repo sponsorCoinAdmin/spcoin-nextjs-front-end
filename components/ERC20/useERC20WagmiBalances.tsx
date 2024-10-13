@@ -7,12 +7,12 @@ const useERC20WagmiBalances = (ACTIVE_ACCOUNT_ADDRESS: Address | undefined, TOKE
   const balanceOf:bigint|undefined               = useERC20WagmiTokenBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS)
   const decimals:number|undefined                = useERC20WagmiTokenDecimals(TOKEN_CONTRACT_ADDRESS)
   const useBalanceNetworkObj                     = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
-  const networkBalance                           = useBalanceNetworkObj?.data?.value;
-  const networkDecimals                          = useBalanceNetworkObj?.data?.decimals;
+  const networkBalance:bigint|undefined          = useBalanceNetworkObj?.data?.value;
+  const networkDecimals:number|undefined         = useBalanceNetworkObj?.data?.decimals;
   const formattedBalanceOf:string|undefined      = formatDecimals(balanceOf, decimals);
   const formattedNetWorkBalance:string|undefined = formatDecimals(networkBalance, networkDecimals);
-  const balance = isNetworkCoin ? networkBalance : balanceOf;
-  const formattedBalance = isNetworkCoin ? formattedNetWorkBalance : formattedBalanceOf;
+  const balance:bigint|undefined                 = isNetworkCoin ? networkBalance : balanceOf;
+  const formattedBalance:string|undefined        = isNetworkCoin ? formattedNetWorkBalance : formattedBalanceOf;
   return { balance, formattedBalance, networkBalance, formattedNetWorkBalance, balanceOf, formattedBalanceOf }
 }
 

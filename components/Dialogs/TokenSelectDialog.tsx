@@ -8,7 +8,6 @@ import { isAddress } from 'ethers';
 import { defaultMissingImage, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import InputSelect from '../panes/InputSelect';
-import { useAccount } from 'wagmi';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
