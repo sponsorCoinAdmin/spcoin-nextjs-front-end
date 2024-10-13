@@ -1,6 +1,6 @@
 'use client'
 
-import { useChainId, useReadContract } from 'wagmi'
+import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits, getAddress } from 'viem'
 import { erc20Abi } from 'viem'
@@ -10,20 +10,20 @@ import { stringifyBigInt } from '../spCoin/utils'
 
 const useERC20WagmiClientBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useERC20WagmiClientBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
-  let wagmiBalanceOfRec;
-  wagmiBalanceOfRec = useReadContract({
+  const wagmiBalanceOfRec = useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'balanceOf',
     args: [connectedAccountAddr || BURN_ADDRESS],
     config: config, 
   })
+
   // console.debug(`useERC20WagmiClientBalanceOfRec.wagmiBalanceOfRec = ${stringifyBigInt(wagmiBalanceOfRec)}`)
   return wagmiBalanceOfRec;
 }
 
 const useERC20WagmiClientDecimalRec = (contractAddress:Address | undefined) => {
-  let wagmiDecimalsRec = useReadContract({
+  const wagmiDecimalsRec = useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'decimals',
@@ -33,7 +33,7 @@ const useERC20WagmiClientDecimalRec = (contractAddress:Address | undefined) => {
 }
 
 const useERC20WagmiClientNameRec = (contractAddress:Address | undefined) => {
-  let wagmiNameRec = useReadContract({
+  const wagmiNameRec = useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'name',
@@ -43,7 +43,7 @@ const useERC20WagmiClientNameRec = (contractAddress:Address | undefined) => {
 }
 
 const useERC20WagmiClientSymbolRec = (contractAddress:Address | undefined) => {
-  let wagmiSymbolRec = useReadContract({
+  const wagmiSymbolRec = useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'symbol',
@@ -53,7 +53,7 @@ const useERC20WagmiClientSymbolRec = (contractAddress:Address | undefined) => {
 }
 
 const useERC20WagmiClientTotalSupplyRec = (contractAddress:Address | undefined) => {
-  let wagmiTotalSupplyRec = useReadContract({
+  const wagmiTotalSupplyRec = useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'totalSupply',
@@ -64,7 +64,7 @@ const useERC20WagmiClientTotalSupplyRec = (contractAddress:Address | undefined) 
 }
 
 const useERC20WagmiClientRecords = (contractAddress:Address | undefined) => {
-  let contractRecs:ContractRecs = {
+  const contractRecs:ContractRecs = {
     nameRec:useERC20WagmiClientNameRec(contractAddress),
     symbolRec:useERC20WagmiClientSymbolRec(contractAddress),
     decimalRec:useERC20WagmiClientDecimalRec(contractAddress),

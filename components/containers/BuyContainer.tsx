@@ -7,7 +7,7 @@ import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
-import useWagmiERC20BalanceOf from '../ERC20/useWagmiERC20BalanceOf';
+import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
 import { Address } from 'viem';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
@@ -29,7 +29,7 @@ const BuyContainer = ({ updateBuyAmount,
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiERC20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {balanceOf, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);

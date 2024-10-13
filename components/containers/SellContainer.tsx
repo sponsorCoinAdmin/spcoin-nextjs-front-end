@@ -6,9 +6,9 @@ import AssetSelect from './AssetSelect';
 import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 
-import useWagmiERC20BalanceOf from '@/components/ERC20/useWagmiERC20BalanceOf'
+import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
 import { Address } from 'viem';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
@@ -27,11 +27,12 @@ const SellContainer = ({updateSellAmount,
                         setSellAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT?.address)
+  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT.address)
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiERC20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {balanceOf, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const balance = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
 
   useEffect(() =>  {
     const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
