@@ -7,7 +7,7 @@ import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { formatUnits, parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
-import useWagmiERC20BalanceOf from '../ERC20/useWagmiERC20BalanceOf';
+import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
 import { Address } from 'viem';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
@@ -27,9 +27,9 @@ const BuyContainer = ({ updateBuyAmount,
   const ACTIVE_ACCOUNT = useAccount();
   const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT?.address)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string>(exchangeContext.tradeData.formattedBuyAmount);
+  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>(exchangeContext.tradeData.formattedBuyAmount);
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
-  const {balanceOf, decimals, formattedBalanceOf} = useWagmiERC20BalanceOf( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {networkBalance, balanceOf, formattedNetWorkBalance, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
@@ -119,7 +119,7 @@ const BuyContainer = ({ updateBuyAmount,
                       setDecimalAdjustedContract={setDecimalAdjustedContract} />
         <div className={styles["buySell"]}>You receive</div>
         <div className={styles["assetBalance"]}>
-          Balance: {formattedBalanceOf}
+          Balance: {formattedBalanceOf || "0.0"}
         </div>
         {IsSpCoin ?
           <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>

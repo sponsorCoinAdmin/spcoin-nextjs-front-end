@@ -55,11 +55,11 @@ type NetworkElement = {
 type TradeData = {
   transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
-  sellBalanceOf:bigint;
-  formattedSellAmount:string;
+  sellBalanceOf:bigint|undefined;
+  formattedSellAmount:string|undefined;
   buyAmount:bigint;
-  buyBalanceOf:bigint;
-  formattedBuyAmount:string;
+  buyBalanceOf:bigint|undefined;
+  formattedBuyAmount:string|undefined;
   slippage: string;
 }
 
