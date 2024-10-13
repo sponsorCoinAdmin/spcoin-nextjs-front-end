@@ -36,7 +36,6 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
     // const walletAddress = ACTIVE_ACCOUNT.address;
     // console.debug(`walletAddress = ${walletAddress}`)
 
-
     useEffect(() => {
         showDialog ? openDialog() : closeDialog()
     }, [showDialog])

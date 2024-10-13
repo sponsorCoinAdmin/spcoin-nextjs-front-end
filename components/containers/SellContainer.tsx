@@ -31,7 +31,7 @@ const SellContainer = ({updateSellAmount,
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
-  const {networkBalance, balanceOf, formattedNetWorkBalance, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {balance, formattedBalance} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
     const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
@@ -40,7 +40,7 @@ const SellContainer = ({updateSellAmount,
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    alert (` balanceOf = ${balanceOf}\nnetworkBalance = ${stringifyBigInt(networkBalance)}`)
+    alert (` balanceOf = ${balance}\formattedNetWorkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.sellTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
@@ -52,10 +52,6 @@ const SellContainer = ({updateSellAmount,
     setDecimalAdjustedContract(sellTokenContract)
   }, [sellTokenContract]);
 
-  useEffect(() =>  {
-    exchangeContext.tradeData.formattedSellAmount = formattedSellAmount;
-  },[formattedSellAmount]);
-
   useEffect (() => {
     console.debug(`%%%% SellContainer.useEffect[sellAmount = ${sellAmount}])`);
     exchangeContext.tradeData.sellAmount = sellAmount;
@@ -63,26 +59,10 @@ const SellContainer = ({updateSellAmount,
   }, [sellAmount])
 
   useEffect(() => {
-    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
-    exchangeContext.tradeData.sellBalanceOf = balanceOf;
-  }, [balanceOf]);
-
-  useEffect(() => {
-    // alert(`SellContainer.useEffect():balanceOf = ${balanceOf}`);
-    exchangeContext.tradeData.formattedSellAmount = formattedBalanceOf;
-  }, [formattedBalanceOf]);
-
-  useEffect(() => {
     // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
     if (ACTIVE_ACCOUNT.address)
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
-
-//  useEffect(() =>  {
-//    console.debug(`PRICE.useEffect[updateSellAmount = ${updateSellAmount}])`);
-//    if (updateSellAmount) 
-//      setSellAmount(updateSellAmount);
-//  }, [updateSellAmount]);
 
   useEffect(() =>  {
     const decimals:number = sellTokenContract?.decimals || 0;
@@ -130,11 +110,8 @@ const SellContainer = ({updateSellAmount,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {formattedBalanceOf || networkBalance?.data?.formatted}
+          Balance: {formattedBalance || "0.0"}
         </div>
-        {/* <div>
-          NetWork Balance: {networkBalance?.data?.formatted}
-        </div> */}
         {IsSpCoin ? <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
       </div>
     )
