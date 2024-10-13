@@ -5,8 +5,8 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
-import { formatUnits, parseUnits } from "ethers";
-import { useAccount, useBalance } from 'wagmi';
+import { parseUnits } from "ethers";
+import { useAccount } from 'wagmi';
 
 import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
 import { Address } from 'viem';
@@ -31,8 +31,7 @@ const SellContainer = ({updateSellAmount,
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
-  const {balanceOf, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
-  const balance = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
+  const {networkBalance, balanceOf, formattedNetWorkBalance, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
 
   useEffect(() =>  {
     const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
@@ -41,6 +40,7 @@ const SellContainer = ({updateSellAmount,
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
+    alert (` balanceOf = ${balanceOf}\nnetworkBalance = ${stringifyBigInt(networkBalance)}`)
     console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.sellTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
@@ -130,8 +130,11 @@ const SellContainer = ({updateSellAmount,
           You Pay
         </div>
         <div className={styles["assetBalance"]}>
-          Balance: {formattedBalanceOf}
+          Balance: {formattedBalanceOf || networkBalance?.data?.formatted}
         </div>
+        {/* <div>
+          NetWork Balance: {networkBalance?.data?.formatted}
+        </div> */}
         {IsSpCoin ? <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
       </div>
     )
