@@ -15,6 +15,7 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     const network:number = useChainId();
     const walletAddress = useAccount().address;
     let address = dataFeedList.address;
+    // alert(`zzzzzz walletAddress = ${walletAddress}`)
     if (walletAddress && (address === BURN_ADDRESS.toString())) {
         address = walletAddress;
         dataFeedList.address = address;
@@ -30,6 +31,7 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     //         }
     //     default: return address;
     // }
+    // alert(`address = ${address}`)
 
     return address;
 }

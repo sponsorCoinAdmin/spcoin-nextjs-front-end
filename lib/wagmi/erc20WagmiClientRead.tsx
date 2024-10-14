@@ -1,11 +1,11 @@
 'use client'
 
-import { useChainId, useReadContract } from 'wagmi'
+import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
-import { Address, formatUnits, getAddress } from 'viem'
+import { Address, formatUnits } from 'viem'
 import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '../structure/types'
-import { BURN_ADDRESS } from '@/lib/network/utils';
+import { BURN_ADDRESS, getNetworkName } from '@/lib/network/utils';
 import { stringifyBigInt } from '../spCoin/utils'
 
 const useERC20WagmiTokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
@@ -101,18 +101,18 @@ const useERC20WagmiTokenBalanceOfStr = (connectedAccountAddr: Address | undefine
   return bigIntBalanceOf ? bigIntBalanceOf.toString() : "0";
 }
 
-const useErc20ClientContract = (contractAddress:Address | undefined) => {
+const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
   const chainId = useChainId();
-  const name = useERC20WagmiTokenName(contractAddress);
-  const symbol = useERC20WagmiTokenSymbol(contractAddress);
-  const decimals = useERC20WagmiTokenDecimals(contractAddress);
-  const totalSupply = useERC20WagmiTokenTotalSupply(contractAddress);
+  const name = useERC20WagmiTokenName(TOKEN_CONTRACT_ADDRESS);
+  const symbol = useERC20WagmiTokenSymbol(TOKEN_CONTRACT_ADDRESS);
+  const decimals = useERC20WagmiTokenDecimals(TOKEN_CONTRACT_ADDRESS);
+  const totalSupply = useERC20WagmiTokenTotalSupply(TOKEN_CONTRACT_ADDRESS);
   let contractResponse:TokenContract|undefined;
-  if ( contractAddress ) {
+  if ( TOKEN_CONTRACT_ADDRESS ) {
     contractResponse =
     {
       chainId: chainId,
-      address:contractAddress,
+      address:TOKEN_CONTRACT_ADDRESS,
       name:name || "CONTRACT NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
@@ -120,9 +120,34 @@ const useErc20ClientContract = (contractAddress:Address | undefined) => {
       img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
-  console.debug(`useErc20ClientContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
+  console.debug(`useErc20TokenContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
   return contractResponse
 }
+
+const useErc20NetworkContract = (ACTIVE_ACCOUNT_ADDRESS:Address | undefined) => {
+  const useBalanceNetworkObj      = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
+  const chainId:number            = useChainId();
+  const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
+  const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
+  const name                      = getNetworkName(chainId);
+
+  let networkResponse:TokenContract|undefined;
+  if ( ACTIVE_ACCOUNT_ADDRESS ) {
+    networkResponse =
+    {
+      chainId: chainId,
+      address:ACTIVE_ACCOUNT_ADDRESS,
+      name:name || "NETWORK NOT FOUND AT ADDRESS",
+      symbol:symbol,
+      decimals:decimals,
+      totalSupply:undefined,
+      img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+    }
+  }
+  console.debug(`useErc20TokenContract.networkResponse = ${stringifyBigInt(networkResponse)}`)
+  return networkResponse
+}
+
 
 const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
   if (val === undefined) return undefined;
@@ -174,6 +199,7 @@ const useFormattedClientBalanceOf = (connectedAccountAddr: Address | undefined, 
 export {
   type TokenContract,
   type ContractRecs,
+  useErc20NetworkContract,
   useERC20WagmiTokenBalanceOfRec, 
   useERC20WagmiTokenDecimalRec,
   useERC20WagmiTokenNameRec, 
@@ -186,8 +212,12 @@ export {
   useERC20WagmiTokenName, 
   useERC20WagmiTokenSymbol, 
   useERC20WagmiTokenTotalSupply,
-  useErc20ClientContract,
+  useErc20TokenContract,
   formatDecimals,
   useFormattedClientTotalSupply,
   useFormattedClientBalanceOf
 }
+function useNetwork(): { chain: any; chains: any } {
+  throw new Error('Function not implemented.')
+}
+

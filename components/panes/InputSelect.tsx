@@ -10,9 +10,9 @@ import styles from '@/styles/Modal.module.css';
 import { fetchIconResource, getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
 import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
 import Image from 'next/image'
-import { TokenContract, useErc20ClientContract } from "@/lib/wagmi/erc20WagmiClientRead";
+import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@/lib/wagmi/erc20WagmiClientRead";
 import { Address } from "viem";
-import { useChainId } from "wagmi";
+import { useAccount, useChainId } from "wagmi";
 
 type Props = {
   placeHolder:string,
@@ -24,8 +24,20 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const chainId = useChainId();
   const [ textInputField, setTextInputField ] = useState<any>();
   const [ validAddress, setValidAddress ] = useState<Address|undefined>();
-  const tokenContract:TokenContract|undefined = useErc20ClientContract(validAddress);
+  const [ tokenAddress, setTokenAddress ] = useState<Address|undefined>();
+  const [ networkAddress, setNetworkAddress ] = useState<Address|undefined>();
+  const tokenContract:TokenContract|undefined = useErc20TokenContract(tokenAddress);
+  const networkContract:TokenContract|undefined = useErc20NetworkContract(networkAddress);
+  const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
 
+  const getActiveAccountAddress = () => {
+    return ACTIVE_ACCOUNT_ADDRESS;
+  }
+  
+  const isActiveNetworkAddress = (address:Address|undefined) => {
+    return (address === getActiveAccountAddress());
+  }
+    
   useEffect(() => {
     setTextInputField(passedInputField)
   }, [passedInputField])
@@ -44,9 +56,23 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   }, [tokenContract?.name, tokenContract?.symbol, tokenContract?.decimals, tokenContract?.totalSupply])
 
   useEffect(() => {
+    if (networkContract?.address) {
+      // alert(`networkContract = ${stringifyBigInt(networkContract)}`)
+      fetchIconResource(networkContract, setTokenContractCallBack)
+      console.debug(`HERE 1 networkContract = ${stringifyBigInt(networkContract)}`)
+    }
+    else {
+      setTokenContractCallBack(networkContract);
+      console.debug(`HERE 2 networkContract = ${stringifyBigInt(networkContract)}`)
+      // alert (`Empty Contract(${stringifyBigInt(networkContract)})`)
+    }
+  }, [networkContract?.name, networkContract?.symbol, networkContract?.decimals, networkContract?.totalSupply])
+
+  useEffect(() => {
     const validAddress = getValidAddress(textInputField);
+
     if (validAddress) {
-      returnTokenContract(validAddress)
+      setContractType(validAddress)
       console.debug(`HERE 4 Valid Token  textInputField = ${textInputField}`)
     } else {
       const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField, chainId)
@@ -55,11 +81,20 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     }
   }, [textInputField])
 
-  const returnTokenContract = ( passedValidAddress:Address|undefined ) => {
-    if (passedValidAddress === validAddress) {
-      setTokenContractCallBack(tokenContract);
-    } else {
-      setValidAddress(passedValidAddress)
+    useEffect(() => {
+    if (validAddress) {
+      isActiveNetworkAddress(validAddress) ? setNetworkAddress(validAddress) : setTokenAddress(validAddress);
+    }
+  }, [validAddress])
+
+
+  const setContractType = ( passedValidAddress:Address | undefined ) => {
+    if (!isActiveNetworkAddress(validAddress)) {
+      if (passedValidAddress === validAddress) {
+        setTokenContractCallBack(tokenContract);
+      } else {
+        setValidAddress(passedValidAddress)
+      }
     }
   }
 

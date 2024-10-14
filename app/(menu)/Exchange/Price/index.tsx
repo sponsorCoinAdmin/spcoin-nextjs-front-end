@@ -150,7 +150,7 @@ export default function PriceView() {
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
 
-          <div>Current Branch 2024-10-08.FixSelectDialogInput12</div>
+          <div>ETH NETWORK 0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63</div>
           <div>FTM  0x4e15361fd6b4bb609fa63c81a2be19d873717870</div>
           <div>FLOK 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E</div>
           <div>AAVI 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9</div>
