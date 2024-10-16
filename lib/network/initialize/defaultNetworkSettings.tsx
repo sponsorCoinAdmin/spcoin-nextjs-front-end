@@ -6,11 +6,7 @@ import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRe
 
 const defaultInitialTradeData:TradeData = {
   sellAmount: 0n,
-  sellBalanceOf: 0n,
-  formattedSellAmount: '0',
   buyAmount: 0n,
-  buyBalanceOf: 0n,
-  formattedBuyAmount: '0',
   transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
   slippage: "0.02"
 };

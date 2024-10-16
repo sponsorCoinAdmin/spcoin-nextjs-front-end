@@ -9,7 +9,6 @@ import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 
 import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
-import { Address } from 'viem';
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
 type Props = {
@@ -27,11 +26,10 @@ const SellContainer = ({updateSellAmount,
                         setSellAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT.address)
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
-  const {balance, formattedBalance} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {formattedBalance} = useERC20WagmiBalances("***SellContainer", tokenContract?.address);
 
   useEffect(() =>  {
     const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
@@ -40,11 +38,12 @@ const SellContainer = ({updateSellAmount,
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    // alert (` balance = ${balance}\formattedNetWorkBalance = ${stringifyBigInt(balance)}`)
-    console.debug(`SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
+    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.sellTokenContract = tokenContract;
+    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
-  }, [tokenContract]);
+  }, [tokenContract?.address]);
 
   useEffect(() =>  {
     // alert (`useEffect(() => sellTokenContract(${stringifyBigInt(sellTokenContract)})`)
@@ -58,12 +57,6 @@ const SellContainer = ({updateSellAmount,
     setSellAmountCallback(sellAmount);
   }, [sellAmount])
 
-  useEffect(() => {
-    // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
-    if (ACTIVE_ACCOUNT.address)
-      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
-  }, [ACTIVE_ACCOUNT.address]);
-
   useEffect(() =>  {
     const decimals:number = sellTokenContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateSellAmount, decimals)
@@ -75,12 +68,13 @@ const SellContainer = ({updateSellAmount,
   }, [updateSellAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    // alert(`SellContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
-    console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
-    console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
+    console.debug(`SellContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
+    // console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
+    // console.debug(`!!!!!!!!!!!!!!!! BEFORE ADJUST sellAmount = ${sellAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(sellAmount, newTokenContract, tokenContract);
-    console.debug(`setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
+    // console.debug(`setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
     setSellAmount(decimalAdjustedAmount);
+    // console.debug(`***SellContainer.newTokenContract = ${stringifyBigInt(newTokenContract)}`)
     setTokenContract(newTokenContract);
   }
 

@@ -148,7 +148,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} updateTokenCallback={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

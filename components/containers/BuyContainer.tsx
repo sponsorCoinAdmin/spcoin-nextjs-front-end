@@ -25,11 +25,10 @@ const BuyContainer = ({ updateBuyAmount,
                         setBuyAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT?.address)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
-  const {balance, formattedBalance} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
@@ -38,7 +37,7 @@ const BuyContainer = ({ updateBuyAmount,
 
   useEffect(() =>  {
     // alert (`BuyContainer.useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    // console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.buyTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
@@ -50,7 +49,7 @@ const BuyContainer = ({ updateBuyAmount,
   }, [buyTokenContract]);
 
   useEffect (() => {
-    console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
+    // console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
     // setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
     setBuyAmountCallback(buyAmount)
@@ -66,18 +65,12 @@ const BuyContainer = ({ updateBuyAmount,
       setBuyAmount(updateBuyAmount);
   }, [updateBuyAmount]);
 
-  useEffect(() => {
-    // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
-    if (ACTIVE_ACCOUNT.address)
-      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
-  }, [ACTIVE_ACCOUNT.address]);
-
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
-    console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
+    // console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
+    // console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
+    // console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
     setBuyAmount(decimalAdjustedAmount);
     setTokenContract(newTokenContract)
   }

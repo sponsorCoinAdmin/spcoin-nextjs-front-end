@@ -120,23 +120,24 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
-  console.debug(`useErc20TokenContract.contractResponse = ${stringifyBigInt(contractResponse)}`)
+  if (TOKEN_CONTRACT_ADDRESS)
+    console.debug(`****useErc20TokenContract.contractResponse(${TOKEN_CONTRACT_ADDRESS}) = ${stringifyBigInt(contractResponse)}`)
   return contractResponse
 }
 
-const useErc20NetworkContract = (ACTIVE_ACCOUNT_ADDRESS:Address | undefined) => {
-  const useBalanceNetworkObj      = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
+const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => {
+  const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
   const chainId:number            = useChainId();
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
   const name                      = getNetworkName(chainId);
 
   let networkResponse:TokenContract|undefined;
-  if ( ACTIVE_ACCOUNT_ADDRESS ) {
+  if ( ACTIVE_NETWORK_ADDRESS ) {
     networkResponse =
     {
       chainId: chainId,
-      address:ACTIVE_ACCOUNT_ADDRESS,
+      address:ACTIVE_NETWORK_ADDRESS,
       name:name || "NETWORK NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
@@ -144,10 +145,11 @@ const useErc20NetworkContract = (ACTIVE_ACCOUNT_ADDRESS:Address | undefined) => 
       img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
-  console.debug(`useErc20TokenContract.networkResponse = ${stringifyBigInt(networkResponse)}`)
+
+  if (ACTIVE_NETWORK_ADDRESS)
+    console.debug(`****useErc20TokenContract.networkResponse = ${stringifyBigInt(networkResponse)}`)
   return networkResponse
 }
-
 
 const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
   if (val === undefined) return undefined;

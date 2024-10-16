@@ -3,6 +3,7 @@ import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage } fro
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
+import { isNetworkProtocolAddress } from '../network/utils';
 
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
@@ -15,23 +16,35 @@ const apiPriceBase = "/0X/price";
 const apiQuoteBase = "/0X/quote";
 let apiCall:string;
 
+const WRAPPED_ETHEREUM_TOKEN ="0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+
+function validTokenOrNetworkCoin(sellAmount: any): any {
+  if (isNetworkProtocolAddress(sellAmount)){
+    return WRAPPED_ETHEREUM_TOKEN;
+  } else
+    return sellAmount;
+}
+
 const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint
-  const { sellAmount, buyAmount } = params;
+  let { sellAmount, buyAmount } = params;
 
   if (!sellAmount && !buyAmount) return;
-  if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
-    throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
-  }
+
+
   if (!sellAmount && buyAmount === "0") {
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
   }
 
-  try {
-    console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
+  if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
+    throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
+  }
+
+try {
+    // console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
     apiCall = endpoint + '?' + query;
-    console.debug(`BEFORE fetcher.apiCall:${apiCall}`);
+    // console.debug(`BEFORE fetcher.apiCall:${apiCall}`);
     let result = fetch(`${apiCall}`).then((res) => res.json());
     // console.debug(`fetcher: ${endpoint}?${query}`);
     // alert("fetcher result = " + JSON.stringify(result,null,2) + "]")
@@ -85,8 +98,8 @@ function PriceAPI({
                       [
                         exchangeContext.network.name.toLowerCase() + apiPriceBase,
                         {
-                          sellToken: sellTokenContract?.address,
-                          buyToken: buyTokenContract?.address,
+                          sellToken: validTokenOrNetworkCoin(sellTokenContract?.address),
+                          buyToken: validTokenOrNetworkCoin(buyTokenContract?.address),
                           sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
                           buyAmount: (transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
                           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
