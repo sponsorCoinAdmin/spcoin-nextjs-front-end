@@ -3,14 +3,25 @@ import { defaultNetworkSettings as defaultEthereumSettings } from './initialize/
 import { defaultNetworkSettings as defaultPolygonSettings } from './initialize/polygon/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/sepolia/defaultNetworkSettings'
 import { Address } from 'viem';
+import { TokenContract } from '../structure/types';
 // This is duplicate code found in Datalist.tsx.  Put in Library call
 /////////////////////////////////////////////////////////////
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
+const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
+// const NETWORK_PROTOCOL_CRYPTO = "NETWORK PROTOCOL CRYPTO"
 
 // This should work
 const imgHome = "/resources/images/chains/"
 // const imgHome = "../../resources/images/chains"
 const imgType = ".png"
+
+const isNetworkProtocolToken = (tokenContract:TokenContract) => {
+  return isNetworkProtocolAddress(tokenContract.address);
+}
+
+const isNetworkProtocolAddress = (address:any) => {
+  return address === NETWORK_PROTOCOL_CRYPTO;
+}
 
 const getChainMap = (chainList: any[]) => {
     const chainMap = new Map();
@@ -50,5 +61,14 @@ function isLowerCase (input:string) {
   return input === String(input).toLowerCase()
 }
 
-export { BURN_ADDRESS, getNetworkName, createNetworkJsonList, getAvatarImageURL, isLowerCase }
+export {
+  BURN_ADDRESS,
+  NETWORK_PROTOCOL_CRYPTO,
+  getNetworkName,
+  createNetworkJsonList,
+  getAvatarImageURL,
+  isLowerCase,
+  isNetworkProtocolAddress,
+  isNetworkProtocolToken
+}
   

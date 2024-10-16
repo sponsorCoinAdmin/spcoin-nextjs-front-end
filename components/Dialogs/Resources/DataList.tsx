@@ -2,23 +2,23 @@ import React from 'react'
 import styles from '@/styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '@/public/resources/images/info1.png'
-import polygonTokenList from '@/resources/data/Tokens/polygonTokenList.json';
-import sepoliaTokenList from '@/resources/data/Tokens/sepoliaTokenList.json';
-import ethereumTokenList from '@/resources/data/Tokens/ethereumTokenList.json';
+import polygonTokenList from '@/resources/data/tokens/polygonTokenList.json';
+import sepoliaTokenList from '@/resources/data/tokens/sepoliaTokenList.json';
+import ethereumTokenList from '@/resources/data/tokens/ethereumTokenList.json';
 import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import { FEED_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { useAccount, useChainId } from "wagmi";
-import { BURN_ADDRESS } from '@/lib/network/utils';
+import { FEED_TYPE } from '@/lib/structure/types';
+import { useChainId } from "wagmi";
+// import { isNetworkProtocolAddress, NETWORK_PROTOCOL_CRYPTO } from '@/lib/network/utils';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
-    const network:number = useChainId();
-    const walletAddress = useAccount().address;
     let address = dataFeedList.address;
-    if (walletAddress && (address === BURN_ADDRESS.toString())) {
-        address = walletAddress;
-        dataFeedList.address = address;
-    }
+    // const walletAddress = useAccount().address;
+    // // alert(`zzzzzz walletAddress = ${walletAddress}`)
+    // if (walletAddress && isNetworkProtocolAddress(address)) {
+    //     address = walletAddress;
+    //     dataFeedList.address = address;
+    // }
 
     // switch (feedType) {
     //     case FEED_TYPE.TOKEN_LIST:
@@ -30,6 +30,7 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     //         }
     //     default: return address;
     // }
+    // alert(`address = ${address}`)
 
     return address;
 }

@@ -4,6 +4,7 @@ import { TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
+import { useAccount } from "wagmi";
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
 
@@ -183,8 +184,8 @@ async function fetchIconResource(tokenContract:TokenContract,
   }
 }
 
-const invalidTokenContract = (textInputField:string|undefined, chainId:any) => {
-  const INVALID_TOKEN_NAME = "Invalid Token Address";
+const invalidTokenContract   = (textInputField:string|undefined, chainId:any) => {
+  const INVALID_TOKEN_NAME   = "Invalid Network/Token Address";
   const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
   const invalidToken:TokenContract|undefined = (!textInputField) ? undefined :
                                                {
@@ -199,6 +200,16 @@ const invalidTokenContract = (textInputField:string|undefined, chainId:any) => {
   return invalidToken;
 }
 
+// const useActiveAccountAddress = () => {
+//   const activeAccountAddress = useAccount().address;
+//   return activeAccountAddress;
+// }
+
+// const isActiveNetworkAddress = (address:Address|undefined) => {
+//   const activeAccountAddress = useAccount().address;
+//   return (address === activeAccountAddress);
+// }
+
 export {
   decimalAdjustTokenAmount,
   defaultMissingImage,
@@ -206,12 +217,14 @@ export {
   exchangeContextDump,
   fetchIconResource,
   fetchTokenDetails,
+  // useActiveAccountAddress,
   getValidAddress,
   getValidBigIntToFormattedPrice,
   getValidFormattedPrice,
   getQueryVariable,
   getTokenDetails,
   invalidTokenContract,
+  // isActiveNetworkAddress,
   isSpCoin,
   setValidPriceInput,
   stringifyBigInt,

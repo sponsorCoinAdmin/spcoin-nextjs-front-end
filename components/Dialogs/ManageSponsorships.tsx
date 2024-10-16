@@ -11,7 +11,6 @@ import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
-import { BURN_ADDRESS } from '@/lib/network/utils';
 import { useAccount } from 'wagmi';
 
 const TITLE_NAME = "Select a token to buy";
@@ -24,7 +23,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 // ToDo Read in data List remotely
 
 type Props = {
-    tokenContract: TokenContract,
+    tokenContract: TokenContract|undefined,
     callBackSetter: (listElement:TokenContract) => null,
     showDialog:boolean
 }
@@ -96,12 +95,12 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
                 alert(`${listElement.name} has invalid token address : ${listElement.address}`)
                 return false;
             }
-            if (listElement.address === tokenContract.address) {
+            if (listElement.address === tokenContract?.address) {
                 alert("Buy Token cannot be the same as Sell Token("+tokenContract.symbol+")")
                 console.log("Buy Token cannot be the same as Sell Token("+tokenContract.symbol+")");
                 return false;
             }
-            await getWagmiBalanceOfRec (tokenContract.address)
+            await getWagmiBalanceOfRec (tokenContract?.address)
             callBackSetter(listElement)
             closeDialog()
         } catch (e:any) {
@@ -149,7 +148,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} updateTokenCallback={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

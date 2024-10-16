@@ -3,7 +3,7 @@
     "chainId": 1,
     "name": "Ethereum",
     "symbol": "ETH",
-    "img": "/resources/images/eth.png",
+    "img": "/resources/images/networks/1.png",
     "url": "https://etherscan.io/"
   },
   "defaultSellToken":  {

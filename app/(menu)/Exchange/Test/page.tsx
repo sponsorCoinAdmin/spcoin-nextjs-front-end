@@ -73,9 +73,9 @@ function App() {
     // alert(`exchangeContext.test.dumpContextButton = ${exchangeContext.test.dumpContextButton}`)
   }
 
-  const setTokenContractCallBack = (tokenContract:TokenContract) => {
+  const setTokenContractCallBack = (tokenContract:TokenContract|undefined) => {
     alert(`Test.setTokenContractCallBack = ${stringifyBigInt(tokenContract)}`)
-    setTokenInput(tokenContract.address);
+    setTokenInput(tokenContract?.address);
   }
 
   return (
@@ -109,7 +109,7 @@ function App() {
       <DumpContextButton />
 
       <InputSelect  placeHolder={INPUT_PLACE_HOLDER}
-                    textInputField={textInputField}
+                    passedInputField={textInputField}
                     setTokenContractCallBack={setTokenContractCallBack}/>
 
       <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={textInputField} />

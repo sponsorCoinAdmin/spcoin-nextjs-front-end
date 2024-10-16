@@ -1,1 +1,0 @@
-Token Image Logo's

@@ -5,7 +5,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
-import { formatUnits, parseUnits } from "ethers";
+import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
 import { Address } from 'viem';
@@ -25,11 +25,10 @@ const BuyContainer = ({ updateBuyAmount,
                         setBuyAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address|undefined>(ACTIVE_ACCOUNT?.address)
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>(exchangeContext.tradeData.formattedBuyAmount);
+  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
-  const {networkBalance, balanceOf, formattedNetWorkBalance, formattedBalanceOf} = useERC20WagmiBalances( ACTIVE_ACCOUNT_ADDRESS, tokenContract?.address);
+  const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
@@ -38,7 +37,7 @@ const BuyContainer = ({ updateBuyAmount,
 
   useEffect(() =>  {
     // alert (`BuyContainer.useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    // console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.buyTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
   }, [tokenContract]);
@@ -49,25 +48,12 @@ const BuyContainer = ({ updateBuyAmount,
     setDecimalAdjustedContract(buyTokenContract)
   }, [buyTokenContract]);
 
-  useEffect(() =>  {
-    exchangeContext.tradeData.formattedBuyAmount = formattedBuyAmount;
-  },[formattedBuyAmount]);
-
   useEffect (() => {
-    console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
+    // console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
     // setBuyAmountCallback(buyAmount);
     exchangeContext.tradeData.buyAmount = buyAmount;
     setBuyAmountCallback(buyAmount)
   }, [buyAmount])
-
-  useEffect(() => {
-    // alert(`BuyContainer.useEffect():balanceOf = ${balanceOf}`);
-    exchangeContext.tradeData.buyBalanceOf = balanceOf;
-  }, [balanceOf]);
-
-  useEffect(() => {
-    exchangeContext.tradeData.formattedBuyAmount = formattedBalanceOf;
-  }, [formattedBalanceOf]);
 
   useEffect(() =>  {
     const decimals:number = buyTokenContract?.decimals || 0;
@@ -79,18 +65,12 @@ const BuyContainer = ({ updateBuyAmount,
       setBuyAmount(updateBuyAmount);
   }, [updateBuyAmount]);
 
-  useEffect(() => {
-    // alert(`ACTIVE_ACCOUNT.address = ${ACTIVE_ACCOUNT.address}`);
-    if (ACTIVE_ACCOUNT.address)
-      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
-  }, [ACTIVE_ACCOUNT.address]);
-
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
-    console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
-    console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
+    // console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
+    // console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
-    console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
+    // console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
     setBuyAmount(decimalAdjustedAmount);
     setTokenContract(newTokenContract)
   }
@@ -119,7 +99,7 @@ const BuyContainer = ({ updateBuyAmount,
                       setDecimalAdjustedContract={setDecimalAdjustedContract} />
         <div className={styles["buySell"]}>You receive</div>
         <div className={styles["assetBalance"]}>
-          Balance: {formattedBalanceOf || "0.0"}
+          Balance: {formattedBalance || "0.0"}
         </div>
         {IsSpCoin ?
           <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>

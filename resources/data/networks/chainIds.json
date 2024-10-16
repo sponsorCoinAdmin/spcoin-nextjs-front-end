@@ -592,6 +592,10 @@
         "name": "Chain Name"
     },
     {
+        "chainId": 8453,
+        "name": "BASE"
+    },
+    {
         "chainId": 11155111,
         "name": "Sepolia"
     }

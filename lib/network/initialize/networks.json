@@ -3,7 +3,7 @@
     "name": "Ethereum",
     "chainId": 1,
     "symbol": "ETH",
-    "img": "/resources/images/eth.png",
+    "img": "/resources/images/networks/1.png",
     "url": "https://etherscan.io/"
   },
   {
@@ -17,7 +17,7 @@
     "name": "Sepolia",
     "chainId": 11155111,
     "symbol": "ETH",
-    "img": "/resources/images/eth.png",
+    "img": "/resources/images/networks/11155111.png",
     "url": "https://sepolia.etherscan.io/"
   }    
 ] 

@@ -5,7 +5,7 @@
         "name": "Ethereum",
         "symbol": "ETH",
         "decimals": 18,
-        "img": "/resources/images/eth.png"
+        "img": "/resources/images/networks/1.png"
     },
     {
         "chainId": 1,

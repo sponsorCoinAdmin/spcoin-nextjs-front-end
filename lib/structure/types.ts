@@ -10,6 +10,7 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
 enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN }
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 enum  SP_COIN_DISPLAY { SELECT_BUTTON, RECIPIENT_CONTAINER, SPONSOR_RATE_CONFIG }
+enum  BUTTON_TYPE { UNDEFINED, CONNECT, ZERO_AMOUNT, INSUFFICIENT_BALANCE, SWAP }
 
 interface PriceRequestParams {
   sellToken: Address|string;
@@ -55,11 +56,7 @@ type NetworkElement = {
 type TradeData = {
   transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
-  sellBalanceOf:bigint|undefined;
-  formattedSellAmount:string|undefined;
   buyAmount:bigint;
-  buyBalanceOf:bigint|undefined;
-  formattedBuyAmount:string|undefined;
   slippage: string;
 }
 
@@ -83,6 +80,7 @@ type ErrorMessage ={
 }
 
 export {
+  BUTTON_TYPE,
   EXCHANGE_STATE,
   TRANSACTION_TYPE,
   FEED_TYPE,
