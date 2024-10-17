@@ -16,11 +16,11 @@ const apiPriceBase = "/0X/price";
 const apiQuoteBase = "/0X/quote";
 let apiCall:string;
 
-const WRAPPED_ETHEREUM_TOKEN ="0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+const WRAPPED_ETHEREUM_ADDRESS ="0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
 function validTokenOrNetworkCoin(sellAmount: any): any {
   if (isNetworkProtocolAddress(sellAmount)){
-    return WRAPPED_ETHEREUM_TOKEN;
+    return WRAPPED_ETHEREUM_ADDRESS;
   } else
     return sellAmount;
 }
@@ -68,30 +68,20 @@ type Props = {
   apiErrorCallBack: (apiErrorObj:any) => void
 }
 
-function PriceAPI({
-  sellTokenContract, 
-  buyTokenContract,
-  transactionType,
-  sellAmount,
-  buyAmount,
-  setPrice,
-  setBuyAmount,
-  apiErrorCallBack
-}:Props) {
+const getApiErrorTransactionData = (sellTokenContract:any, buyTokenContract:any, sellAmount:any, data:any) => {
+  let priceTransaction:string = `ERROR         : API Call\n`
+            priceTransaction += `Server        : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
+            priceTransaction += `netWork       : ${exchangeContext.network.name.toLowerCase()}\n`
+            priceTransaction += `apiPriceBase  : ${apiPriceBase}\n`
+            priceTransaction += `sellToken     : ${sellTokenContract?.address}\n`
+            priceTransaction += `buyToken      : ${buyTokenContract?.address}\n`
+            priceTransaction += `sellAmount    : ${sellAmount?.toString()}\n`
+            priceTransaction += `apiCall       : ${apiCall}\n`
+            priceTransaction += `response data : ${JSON.stringify(data, null, 2)}`
+  return priceTransaction;
+}
 
-  const getApiErrorTransactionData = (data:any) => {
-    let priceTransaction:string = `ERROR        : API Call\n`
-              priceTransaction += `Server       : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
-              priceTransaction += `netWork      : ${exchangeContext.network.name.toLowerCase()}\n`
-              priceTransaction += `apiPriceBase : ${apiPriceBase}\n`
-              priceTransaction += `sellToken    : ${sellTokenContract?.address}\n`
-              priceTransaction += `buyToken     : ${buyTokenContract?.address}\n`
-              priceTransaction += `sellAmount   : ${sellAmount?.toString()}\n`
-              priceTransaction += `apiCall      : ${apiCall}\n`
-              priceTransaction += `response data: ${JSON.stringify(data, null, 2)}`
-    return priceTransaction;
-  }
-
+const getPriceApiCall = (sellTokenContract:any, buyTokenContract:any, sellAmount:any, buyAmount:any, transactionType:any) => {
   let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
                      (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)? 
                       undefined :
@@ -107,14 +97,27 @@ function PriceAPI({
                           // expectedSlippage: slippage
                         },
                       ];
+  return priceApiCall;
+}
+
+function PriceAPI({
+  sellTokenContract, 
+  buyTokenContract,
+  transactionType,
+  sellAmount,
+  buyAmount,
+  setPrice,
+  setBuyAmount,
+  apiErrorCallBack
+}:Props) {
                         
   return useSWR(
-    priceApiCall,
+    getPriceApiCall(sellTokenContract, buyTokenContract, sellAmount, buyAmount, transactionType),
     fetcher,
     {
       onSuccess: (data) => {
         if (!data.code) {
-          // let dataMsg = `SUCCESS: apiCall => ${getApiErrorTransactionData(data)}`
+          // let dataMsg = `SUCCESS: apiCall => ${getApiErrorTransactionData(data, sellTokenContract, buyTokenContract, sellAmount)}`
           // console.log(dataMsg)
           // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
           setPrice(data);
@@ -122,7 +125,7 @@ function PriceAPI({
           setBuyAmount(data.buyAmount);
         }
         else {
-          const apiErrorObj = getApiErrorTransactionData(data)
+          const apiErrorObj = getApiErrorTransactionData(data, sellTokenContract, buyTokenContract, sellAmount)
           apiErrorCallBack(apiErrorObj);
         }
       },
