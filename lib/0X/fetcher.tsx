@@ -1,9 +1,10 @@
 // 'use server'
-import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
+import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage, WRAPPING_TYPE } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { isNetworkProtocolAddress } from '../network/utils';
+import { isNetworkProtocolAddress, NETWORK_PROTOCOL_CRYPTO } from '../network/utils';
+import { Address } from 'viem';
 
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
@@ -18,11 +19,11 @@ let apiCall:string;
 
 const WRAPPED_ETHEREUM_ADDRESS ="0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
-function validTokenOrNetworkCoin(sellAmount: any): any {
-  if (isNetworkProtocolAddress(sellAmount)){
+function validTokenOrNetworkCoin(address: any): any {
+  if (isNetworkProtocolAddress(address)){
     return WRAPPED_ETHEREUM_ADDRESS;
   } else
-    return sellAmount;
+    return address;
 }
 
 const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
@@ -56,40 +57,28 @@ try {
   }
 };
 
-type Props = {
-  sellTokenContract:TokenContract|undefined,
-  buyTokenContract:TokenContract|undefined,
-  transactionType:TRANSACTION_TYPE,
-  sellAmount:bigint,
-  buyAmount:bigint,
-  setPrice: (data:any) => void,
-  setBuyAmount: (data:any) => void
-  // setErrorMessage: (errMsg:ErrorMessage) => void
-  apiErrorCallBack: (apiErrorObj:any) => void
-}
-
-const getApiErrorTransactionData = (sellTokenContract:any, buyTokenContract:any, sellAmount:any, data:any) => {
+const getApiErrorTransactionData = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, data:any) => {
   let priceTransaction:string = `ERROR         : API Call\n`
             priceTransaction += `Server        : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
             priceTransaction += `netWork       : ${exchangeContext.network.name.toLowerCase()}\n`
             priceTransaction += `apiPriceBase  : ${apiPriceBase}\n`
-            priceTransaction += `sellToken     : ${sellTokenContract?.address}\n`
-            priceTransaction += `buyToken      : ${buyTokenContract?.address}\n`
+            priceTransaction += `sellToken     : ${sellTokenAddress}\n`
+            priceTransaction += `buyToken      : ${buyTokenAddress}\n`
             priceTransaction += `sellAmount    : ${sellAmount?.toString()}\n`
             priceTransaction += `apiCall       : ${apiCall}\n`
             priceTransaction += `response data : ${JSON.stringify(data, null, 2)}`
   return priceTransaction;
 }
 
-const getPriceApiCall = (sellTokenContract:any, buyTokenContract:any, sellAmount:any, buyAmount:any, transactionType:any) => {
+const getPriceApiCall = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any, transactionType:any) => {
   let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
                      (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)? 
                       undefined :
                       [
                         exchangeContext.network.name.toLowerCase() + apiPriceBase,
                         {
-                          sellToken: validTokenOrNetworkCoin(sellTokenContract?.address),
-                          buyToken: validTokenOrNetworkCoin(buyTokenContract?.address),
+                          sellToken: validTokenOrNetworkCoin(sellTokenAddress),
+                          buyToken: validTokenOrNetworkCoin(buyTokenAddress),
                           sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
                           buyAmount: (transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
                           // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
@@ -100,19 +89,56 @@ const getPriceApiCall = (sellTokenContract:any, buyTokenContract:any, sellAmount
   return priceApiCall;
 }
 
-function PriceAPI({
-  sellTokenContract, 
-  buyTokenContract,
+
+
+// ToDo This is to turn on off mandatory fetching
+const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
+  return true;
+}
+
+type Props = {
+  sellTokenAddress:Address|undefined,
+  buyTokenAddress:Address|undefined,
+  transactionType:TRANSACTION_TYPE,
+  sellAmount:bigint,
+  buyAmount:bigint,
+  setPrice: (data:any) => void,
+  setBuyAmount: (data:any) => void
+  // setErrorMessage: (errMsg:ErrorMessage) => void
+  apiErrorCallBack: (apiErrorObj:any) => void
+}
+
+const WETH = `0xae740d42e4ff0c5086b2b5b5d149eb2f9e1a754f`;
+
+// const getRequiredWrapping = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, amount:number)  => {
+//   if (!isNetworkProtocolAddress(sellTokenAddress)) {
+//     if (!isNetworkProtocolAddress(buyTokenAddress)) {
+//       swap(sellTokenAddress, buyTokenAddress, amount)
+//     } else if (sellTokenAddress !== WETH)) {
+//       swap(sellTokenAddress, WETH, amount)
+//       unWrap(WETH, amount)
+//     } else {
+//       wrap(sellTokenAddress, amount)
+//       if (buyTokenAddress !== WETH)) {
+//         swap(WETH, buyTokenAddress, amount)
+//       }
+//     }
+//   }
+
+function usePriceAPI({
+  sellTokenAddress, 
+  buyTokenAddress,
   transactionType,
   sellAmount,
   buyAmount,
   setPrice,
   setBuyAmount,
+  setSellAmount,
   apiErrorCallBack
 }:Props) {
                         
   return useSWR(
-    getPriceApiCall(sellTokenContract, buyTokenContract, sellAmount, buyAmount, transactionType),
+    () => shouldFetch(sellTokenAddress, buyTokenAddress) ? getPriceApiCall(sellTokenAddress, buyTokenAddress, sellAmount, buyAmount, transactionType) : null,
     fetcher,
     {
       onSuccess: (data) => {
@@ -125,7 +151,16 @@ function PriceAPI({
           setBuyAmount(data.buyAmount);
         }
         else {
-          const apiErrorObj = getApiErrorTransactionData(data, sellTokenContract, buyTokenContract, sellAmount)
+          if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
+            alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
+              if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
+                setBuyAmount(sellAmount|| sellAmount.toString());
+              else
+              setSellAmount(sellAmount|| sellAmount.toString());
+            }
+
+          setBuyAmount(data.buyAmount);
+          const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
           apiErrorCallBack(apiErrorObj);
         }
       },
@@ -146,9 +181,56 @@ function PriceAPI({
 export {
     fetcher,
     // processError,
-    PriceAPI,
+    usePriceAPI,
     BUY_AMOUNT_UNDEFINED,
     SELL_AMOUNT_ZERO,
     BUY_AMOUNT_ZERO,
     ERROR_0X_RESPONSE
 }
+
+
+//   let wrappingType:WRAPPING_TYPE = WRAPPING_TYPE.NO_WRAP_REQUIRED;
+//   if (sellTokenAddress && buyTokenAddress) {
+//     alert(`sellTokenAddress = ${sellTokenAddress}, buyTokenAddress = ${buyTokenAddress}`)
+//     if (sellTokenAddress !== buyTokenAddress) {
+//       const transactionType = exchangeContext.tradeData.transactionType;
+//       alert(`transactionType = ${transactionType}`)
+//       if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+//         if (validTokenOrNetworkCoin(sellTokenAddress) === buyTokenAddress) {
+//           alert("HERE 1")
+//           wrappingType = WRAPPING_TYPE.WRAP_SELL_TOKEN;
+//         } else if (validTokenOrNetworkCoin(buyTokenAddress) === sellTokenAddress) {
+//           alert("HERE 2")
+//           wrappingType = WRAPPING_TYPE.UNWRAP_SELL_TOKEN
+//         }
+//       } else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+//         if (validTokenOrNetworkCoin(buyTokenAddress) === sellTokenAddress) {
+//           alert("HERE 3")
+//           wrappingType = WRAPPING_TYPE.WRAP_BUY_TOKEN
+//         } else if (validTokenOrNetworkCoin(sellTokenAddress) === buyTokenAddress) {
+//           alert("HERE 4")
+//           wrappingType = WRAPPING_TYPE.UNWRAP_BUY_TOKEN
+//         }
+//       }
+//     }
+//   }
+// return wrappingType;
+// }
+
+// const getEnumWrappingTypeText = (wrappingType:WRAPPING_TYPE) => {
+//   switch(wrappingType) {
+//     case WRAPPING_TYPE.WRAP_SELL_TOKEN   : return "WRAP_SELL_TOKEN";
+//     case WRAPPING_TYPE.UNWRAP_SELL_TOKEN : return "UNWRAP_SELL_TOKEN";
+//     case WRAPPING_TYPE.WRAP_BUY_TOKEN    : return "WRAP_BUY_TOKEN";
+//     case WRAPPING_TYPE.UNWRAP_BUY_TOKEN  : return "UNWRAP_BUY_TOKEN";
+//     case WRAPPING_TYPE.NO_WRAP_REQUIRED  :
+//     default                              : return "NO_WRAP_REQUIRED";
+//   }
+// }
+
+// const isWrapRequired = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined) => {
+//   const requiredWrapping = getRequiredWrapping(sellTokenAddress, buyTokenAddress);
+//   if (requiredWrapping !== WRAPPING_TYPE.NO_WRAP_REQUIRED )
+//     alert(`WRAPPING REQUIRED = ${getEnumWrappingTypeText(requiredWrapping)}`);
+//   return requiredWrapping === WRAPPING_TYPE.UNWRAP_BUY_TOKEN ? true : false;
+// }
