@@ -26,14 +26,14 @@ const PriceInputContainer = ({containerType,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
-  const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
+  const [formattedAmount, setFormattedAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
   const {formattedBalance} = useERC20WagmiBalances("***SellContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(sellAmount);
 
   useEffect(() =>  {
-    const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
-    setFormattedSellAmount(formattedSellAmount)
+    const formattedAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
+    setFormattedAmount(formattedAmount)
   }, []);
 
   useEffect(() =>  {
@@ -64,7 +64,7 @@ const PriceInputContainer = ({containerType,
     const decimals:number = activeContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
     if (!stringValue && stringValue !== "") {
-      setFormattedSellAmount(stringValue);
+      setFormattedAmount(stringValue);
     }
     if (updateAmount) 
       setSellAmount(updateAmount);
@@ -85,7 +85,7 @@ const PriceInputContainer = ({containerType,
     stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
     console.debug(`SellContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
-    setFormattedSellAmount(stringValue);
+    setFormattedAmount(stringValue);
     setSellAmount(bigIntValue);
   }
 
@@ -94,16 +94,16 @@ const PriceInputContainer = ({containerType,
     const IsSpCoin = isSpCoin(tokenContract);
     return (
       <div className={styles.inputs}>
-        <input id="SellBuyAmount_ID" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
+        <input id="SellBuyAmount_ID" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedAmount}
           // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
           onChange={(e) => { setStringToBigIntStateValue(e.target.value) }}
-          onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()) }}
+          onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
         />
 
         {/* ToDo */}
         {/* <InputSelect placeHolder={"0"}
-              passedInputField={formattedSellAmount}
-              setTokenContractCallBack={setFormattedSellAmount}/> */}
+              passedInputField={formattedAmount}
+              setTokenContractCallBack={setFormattedAmount}/> */}
 
         <AssetSelect  containerType={containerType}
                       tokenContract={tokenContract} 

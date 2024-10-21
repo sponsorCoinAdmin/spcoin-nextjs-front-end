@@ -19,22 +19,21 @@ type Props = {
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
-const PriceInputContainer = ({ containerType, 
-                        updateAmount,
-                        activeContract,
-                        setCallbackAmount,
-                        setTokenContractCallback} : Props) => {
-  const buyTokenContract = activeContract
+const PriceInputContainer = ({containerType, 
+                              updateAmount,
+                              activeContract,
+                              setCallbackAmount,
+                              setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-  const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
+  const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
   const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(buyAmount);
 
   useEffect(() =>  {
-    const formattedBuyAmount = getValidFormattedPrice(buyAmount, tokenContract?.decimals);
-    setFormattedBuyAmount(formattedBuyAmount)
+    const formattedAmount = getValidFormattedPrice(buyAmount, tokenContract?.decimals);
+    setFormattedAmount(formattedAmount)
   }, []);
 
   useEffect(() =>  {
@@ -65,7 +64,7 @@ const PriceInputContainer = ({ containerType,
     const decimals:number = activeContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
     if (stringValue !== "") {
-      setFormattedBuyAmount(stringValue);
+      setFormattedAmount(stringValue);
     }
     if (updateAmount) 
       setBuyAmount(updateAmount);
@@ -87,18 +86,18 @@ const PriceInputContainer = ({ containerType,
     const bigIntValue = parseUnits(stringValue, decimals);
     console.debug(`BuyContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
     setBuyAmount(bigIntValue);
-    setFormattedBuyAmount(stringValue);
+    setFormattedAmount(stringValue);
   }
 
   let disabled = true;
   try {
-    let IsSpCoin = isSpCoin(buyTokenContract);
+    let IsSpCoin = isSpCoin(activeContract);
     return (
       <div className={styles["inputs"] + " " + styles["buyContainer"]}>
-        <input id="BuyAmount_ID" className={styles["priceInput"]} placeholder="0" disabled={disabled} value={formattedBuyAmount}
-        // <input id="BuyAmount_ID" placeholder="0" disabled={disabled} value={formattedBuyAmount}
+        <input id="BuyAmount_ID" className={styles["priceInput"]} placeholder="0" disabled={disabled} value={formattedAmount}
+        // <input id="BuyAmount_ID" placeholder="0" disabled={disabled} value={formattedAmount}
           onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
-              onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
+              onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()); }}
         />
 
         {/* ToDo */}
@@ -113,7 +112,7 @@ const PriceInputContainer = ({ containerType,
         <div className={styles["assetBalance"]}>
           Balance: {formattedBalance || "0.0"}
         </div>
-        {IsSpCoin ?  <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/> : null}
+        {IsSpCoin ?  <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={activeContract}/> : null}
       </div>
     )
   } catch (err:any) {
