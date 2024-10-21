@@ -14,7 +14,7 @@ import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 type Props = {
   containerType: CONTAINER_TYPE,
   updateAmount: bigint,
-  sellTokenContract: TokenContract | undefined, 
+  activeContract: TokenContract | undefined, 
   setCallbackAmount: (sellAmount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
@@ -22,9 +22,11 @@ type Props = {
 /* Sell Token Selection Module */
 const SellContainer = ({containerType,
                         updateAmount,
-                        sellTokenContract,
+                        activeContract,
                         setCallbackAmount,
                         setTokenContractCallback} : Props) => {
+
+  const sellTokenContract = activeContract;
   const ACTIVE_ACCOUNT = useAccount();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
@@ -41,13 +43,17 @@ const SellContainer = ({containerType,
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    exchangeContext.sellTokenContract = tokenContract;
+    containerType === CONTAINER_TYPE.SELL ?
+      exchangeContext.sellTokenContract = tokenContract :
+      exchangeContext.buyTokenContract = tokenContract;
     console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract?.name}`)
+    containerType === CONTAINER_TYPE.SELL ?
+      console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract?.name}`) :
+      console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${sellTokenContract?.name}`)
     setDecimalAdjustedContract(sellTokenContract)
   }, [sellTokenContract]);
 
