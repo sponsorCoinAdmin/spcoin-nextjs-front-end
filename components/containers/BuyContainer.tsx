@@ -7,18 +7,19 @@ import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
-import { Address } from 'viem';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
   updateBuyAmount: bigint,
   sellTokenContract: TokenContract|undefined,
-  buyTokenContract: any, 
+  buyTokenContract: TokenContract | undefined, 
   setBuyAmountCallback: (buyAmount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
+/* Sell Token Selection Module */
 const BuyContainer = ({ updateBuyAmount, 
                         sellTokenContract, 
                         buyTokenContract,
@@ -29,6 +30,7 @@ const BuyContainer = ({ updateBuyAmount,
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
   const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
+  const debouncedBuyAmount = useDebounce(buyAmount);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
@@ -38,22 +40,22 @@ const BuyContainer = ({ updateBuyAmount,
   useEffect(() =>  {
     // alert (`BuyContainer.useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    console.debug(`***BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     exchangeContext.buyTokenContract = tokenContract;
+    console.debug(`***BuyContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
-  }, [tokenContract]);
+  }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    // alert (`setTokenContract(${buyTokenContract})`)
-    setTokenContract(buyTokenContract)
+    console.debug(`BuyContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract?.name}`)
     setDecimalAdjustedContract(buyTokenContract)
   }, [buyTokenContract]);
 
   useEffect (() => {
-    // console.debug(`BuyContainer:buyAmount = ${buyAmount}`)
-    // setBuyAmountCallback(buyAmount);
-    exchangeContext.tradeData.buyAmount = buyAmount;
-    setBuyAmountCallback(buyAmount)
-  }, [buyAmount])
+    console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedBuyAmount}])`);
+    exchangeContext.tradeData.buyAmount = debouncedBuyAmount;
+    setBuyAmountCallback(debouncedBuyAmount)
+  }, [debouncedBuyAmount])
 
   useEffect(() =>  {
     const decimals:number = buyTokenContract?.decimals || 0;
@@ -66,9 +68,8 @@ const BuyContainer = ({ updateBuyAmount,
   }, [updateBuyAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    // alert(`BuyContainer.setDecimalAdjustedContract(buyContainer:${newTokenContract.name})`)
+    console.debug(`BuyContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
     // console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
-    // console.debug(`BEFORE ADJUST buyAmount = ${buyAmount})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
     // console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
     setBuyAmount(decimalAdjustedAmount);
@@ -80,6 +81,7 @@ const BuyContainer = ({ updateBuyAmount,
     const decimals = buyTokenContract?.decimals;
     stringValue === getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
+    console.debug(`BuyContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
     setBuyAmount(bigIntValue);
     setFormattedBuyAmount(stringValue);
   }
@@ -94,6 +96,12 @@ const BuyContainer = ({ updateBuyAmount,
           onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
               onBlur={(e) => { setFormattedBuyAmount(parseFloat(e.target.value).toString()); }}
         />
+
+        {/* ToDo */}
+        {/* <InputSelect placeHolder={"0"}
+              passedInputField={formattedSellAmount}
+              setTokenContractCallBack={setFormattedSellAmount}/> */}
+
         <AssetSelect  tokenContract={tokenContract} 
                       altTokenContract={sellTokenContract} 
                       setDecimalAdjustedContract={setDecimalAdjustedContract} />
@@ -101,11 +109,9 @@ const BuyContainer = ({ updateBuyAmount,
         <div className={styles["assetBalance"]}>
           Balance: {formattedBalance || "0.0"}
         </div>
-        {IsSpCoin ?
-          <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/>
-          : null}
+        {IsSpCoin ?  <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} buyTokenContract={buyTokenContract}/> : null}
       </div>
-    );
+    )
   } catch (err:any) {
     console.log(`Buy Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
     alert(`Buy Container Error:\n ${err.message}\n${stringifyBigInt(exchangeContext)}`)
