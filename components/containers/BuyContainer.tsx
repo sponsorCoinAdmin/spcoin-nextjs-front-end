@@ -62,7 +62,7 @@ const PriceInputContainer = ({ containerType,
   }, [debouncedAmount])
 
   useEffect(() =>  {
-    const decimals:number = buyTokenContract?.decimals || 0;
+    const decimals:number = activeContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
     if (stringValue !== "") {
       setFormattedBuyAmount(stringValue);
@@ -82,7 +82,7 @@ const PriceInputContainer = ({ containerType,
 
   const setStringToBigIntStateValue = (stringValue:string) => {
     exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
-    const decimals = buyTokenContract?.decimals;
+    const decimals = activeContract?.decimals;
     stringValue === getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
     console.debug(`BuyContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
