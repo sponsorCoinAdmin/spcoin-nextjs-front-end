@@ -61,12 +61,25 @@ function isLowerCase (input:string) {
   return input === String(input).toLowerCase()
 }
 
+
+// This code is not used anywhere but is implemented for future use
+async function catchPromiseError<T>(promise: Promise<T>): Promise<[undefined, T] | [Error]> {
+  return promise
+    .then(data => {
+      return [undefined, data] as [undefined, T]
+    })
+    .catch(error => {
+      return [error]
+    })
+}
+
 export {
   BURN_ADDRESS,
   NETWORK_PROTOCOL_CRYPTO,
-  getNetworkName,
+  catchPromiseError,
   createNetworkJsonList,
   getAvatarImageURL,
+  getNetworkName,
   isLowerCase,
   isNetworkProtocolAddress,
   isNetworkProtocolToken

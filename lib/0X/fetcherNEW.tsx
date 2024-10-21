@@ -55,7 +55,7 @@ try {
     alert("fetcher Error: "+JSON.stringify(e, null, 2))
     throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
   }
-}
+};
 
 const getApiErrorTransactionData = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, data:any) => {
   let priceTransaction:string = `ERROR         : API Call\n`
@@ -152,18 +152,15 @@ function usePriceAPI({
           setBuyAmount(data.buyAmount);
         }
         else {
-          // alert(data?.code)
           if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
             // alert(`ERROR:sellTokenAddress = ${sellTokenaddress}\nbuyTokenAddress = ${buyTokenaddress}\nsellAmount = ${sellAmount}`)
-            if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
-              setBuyAmount(sellAmount);
-            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
-              setSellAmount(buyAmount);
-          }
-          // else {
-          //   const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
-          //   apiErrorCallBack(apiErrorObj);
-          // }
+              if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
+                setBuyAmount(sellAmount);
+              else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+                setSellAmount(buyAmount);
+            }
+          const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
+          apiErrorCallBack(apiErrorObj);
         }
       },
       // onError: (error) => {

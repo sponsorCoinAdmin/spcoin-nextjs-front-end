@@ -31,6 +31,7 @@ export default function PriceView() {
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
 
+
   try {
     useEffect(() => {
       displaySpCoinContainers(exchangeContext.spCoinPanels)
@@ -107,6 +108,7 @@ export default function PriceView() {
       buyAmount,
       setPrice,
       setBuyAmount,
+      setSellAmount,
       apiErrorCallBack});
 
     useEffect(() => {

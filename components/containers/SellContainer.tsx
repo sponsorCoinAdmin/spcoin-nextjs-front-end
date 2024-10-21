@@ -10,6 +10,7 @@ import { useAccount } from 'wagmi';
 
 import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 
 type Props = {
   updateSellAmount: bigint,
@@ -26,10 +27,12 @@ const SellContainer = ({updateSellAmount,
                         setSellAmountCallback,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
+  const [ textInputField, setTextInputField ] = useState<any>();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
   const {formattedBalance} = useERC20WagmiBalances("***SellContainer", tokenContract?.address);
+  const debouncedText = useDebounce(textInputField);
 
   useEffect(() =>  {
     const formattedSellAmount = getValidFormattedPrice(sellAmount, tokenContract?.decimals);
@@ -67,6 +70,10 @@ const SellContainer = ({updateSellAmount,
       setSellAmount(updateSellAmount);
   }, [updateSellAmount]);
 
+  useEffect(() => {
+    setStringToBigIntStateValue(debouncedText);
+  }, [debouncedText])
+
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     console.debug(`SellContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
     // console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
@@ -94,9 +101,16 @@ const SellContainer = ({updateSellAmount,
     return (
       <div className={styles.inputs}>
         <input id="SellBuyAmount_ID" className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedSellAmount}
-          onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
-          onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()); }}
+          // onChange={(e) => { setStringToBigIntStateValue(e.target.value); }}
+          onChange={(e) => { setTextInputField(e.target.value); }}
+          onBlur={(e) => { setFormattedSellAmount(parseFloat(e.target.value).toString()) }}
         />
+
+        {/* ToDo */}
+                        {/* <InputSelect placeHolder={"0"}
+                             passedInputField={formattedSellAmount}
+                             setTokenContractCallBack={setFormattedSellAmount}/> */}
+
         <AssetSelect tokenContract={tokenContract} 
                       altTokenContract={buyTokenContract} 
                       setDecimalAdjustedContract={setDecimalAdjustedContract} />

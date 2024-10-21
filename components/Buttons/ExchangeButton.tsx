@@ -1,5 +1,4 @@
 'use client'
-import React, { useEffect, useState } from 'react'
 import styles from '@/styles/Exchange.module.css'
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
