@@ -24,7 +24,7 @@ const PriceInputContainer = ({ containerType,
                         activeContract,
                         setCallbackAmount,
                         setTokenContractCallback} : Props) => {
-  // const buyTokenContract = activeContract
+  const buyTokenContract = activeContract
 
   const ACTIVE_ACCOUNT = useAccount();
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
