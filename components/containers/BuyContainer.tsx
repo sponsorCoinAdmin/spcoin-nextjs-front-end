@@ -25,7 +25,6 @@ const PriceInputContainer = ({ containerType,
                         setCallbackAmount,
                         setTokenContractCallback} : Props) => {
   const buyTokenContract = activeContract
-
   const ACTIVE_ACCOUNT = useAccount();
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
@@ -39,18 +38,22 @@ const PriceInputContainer = ({ containerType,
   }, []);
 
   useEffect(() =>  {
-    // alert (`BuyContainer.useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    // console.debug(`BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    console.debug(`***BuyContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    exchangeContext.buyTokenContract = tokenContract;
-    console.debug(`***BuyContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
+    // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
+    // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
+    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    containerType === CONTAINER_TYPE.SELL ?
+      exchangeContext.sellTokenContract = tokenContract :
+      exchangeContext.buyTokenContract = tokenContract;
+    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${buyTokenContract?.name}`)
-    setDecimalAdjustedContract(buyTokenContract)
-  }, [buyTokenContract]);
+    containerType === CONTAINER_TYPE.SELL ?
+      console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
+      console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
+    setDecimalAdjustedContract(activeContract)
+  }, [activeContract]);
 
   useEffect (() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
