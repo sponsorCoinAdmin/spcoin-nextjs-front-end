@@ -25,14 +25,17 @@ const PriceInputContainer = ({containerType,
                               setCallbackAmount,
                               setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
+  const initialAmount:bigint|undefined = containerType === CONTAINER_TYPE.SELL ? 
+                                         exchangeContext?.tradeData?.sellAmount :
+                                         exchangeContext?.tradeData?.buyAmount;
+  const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
   const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
-  const debouncedAmount = useDebounce(buyAmount);
+  const debouncedAmount = useDebounce(amount);
 
   useEffect(() =>  {
-    const formattedAmount = getValidFormattedPrice(buyAmount, tokenContract?.decimals);
+    const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
     setFormattedAmount(formattedAmount)
   }, []);
 
@@ -56,7 +59,9 @@ const PriceInputContainer = ({containerType,
 
   useEffect (() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
-    exchangeContext.tradeData.buyAmount = debouncedAmount;
+    containerType === CONTAINER_TYPE.SELL ? 
+    exchangeContext.tradeData.sellAmount = debouncedAmount :
+    exchangeContext.tradeData.buyAmount = debouncedAmount ;
     setCallbackAmount(debouncedAmount)
   }, [debouncedAmount])
 
@@ -67,15 +72,15 @@ const PriceInputContainer = ({containerType,
       setFormattedAmount(stringValue);
     }
     if (updateAmount) 
-      setBuyAmount(updateAmount);
+      setAmount(updateAmount);
   }, [updateAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     console.debug(`BuyContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
     // console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
-    const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(buyAmount, newTokenContract, tokenContract);
+    const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
     // console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
-    setBuyAmount(decimalAdjustedAmount);
+    setAmount(decimalAdjustedAmount);
     setTokenContract(newTokenContract)
   }
 
@@ -85,7 +90,7 @@ const PriceInputContainer = ({containerType,
     stringValue === getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
     console.debug(`BuyContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
-    setBuyAmount(bigIntValue);
+    setAmount(bigIntValue);
     setFormattedAmount(stringValue);
   }
 
