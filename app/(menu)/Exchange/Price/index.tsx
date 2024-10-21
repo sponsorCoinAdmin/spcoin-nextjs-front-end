@@ -4,7 +4,7 @@ import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
 import { TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
-import { PriceAPI } from '@/lib/0X/fetcher';
+import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
@@ -30,6 +30,7 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
+
 
   try {
     useEffect(() => {
@@ -97,14 +98,17 @@ export default function PriceView() {
       console.debug(`${apiErrorObj}`);
     }
   
-    const { isLoading: isLoadingPrice, data:Data, error:PriceError } = PriceAPI({
-      sellTokenContract, 
-      buyTokenContract,
+    const sellTokenAddress = sellTokenContract?.address;
+    const buyTokenAddress = buyTokenContract?.address;
+    const { isLoading: isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
+      sellTokenAddress, 
+      buyTokenAddress,
       transactionType,
       sellAmount,
       buyAmount,
       setPrice,
       setBuyAmount,
+      setSellAmount,
       apiErrorCallBack});
 
     useEffect(() => {

@@ -13,6 +13,7 @@ import Image from 'next/image'
 import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@/lib/wagmi/erc20WagmiClientRead";
 import { Address } from "viem";
 import { useAccount, useChainId } from "wagmi";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 type Props = {
   placeHolder:string,
@@ -29,6 +30,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const tokenContract:TokenContract|undefined = useErc20TokenContract(tokenAddress);
   const networkContract:TokenContract|undefined = useErc20NetworkContract(networkAddress);
   const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
+  const debouncedText = useDebounce(textInputField);
 
   const getActiveAccountAddress = () => {
     return ACTIVE_ACCOUNT_ADDRESS;
@@ -69,24 +71,23 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   }, [networkContract?.name, networkContract?.symbol, networkContract?.decimals, networkContract?.totalSupply])
 
   useEffect(() => {
-    const validAddress = getValidAddress(textInputField);
+    const validAddress = getValidAddress(debouncedText);
 
     if (validAddress) {
       setContractType(validAddress)
-      console.debug(`HERE 4 Valid Token  textInputField = ${textInputField}`)
+      console.debug(`HERE 4 Valid Token  debouncedText = ${debouncedText}`)
     } else {
-      const invalidToken:TokenContract|undefined = invalidTokenContract(textInputField, chainId)
+      const invalidToken:TokenContract|undefined = invalidTokenContract(debouncedText, chainId)
       setTokenContractCallBack(invalidToken);
-      console.debug(`HERE 3 Invalid Token  textInputField = ${stringifyBigInt(invalidToken)}`)
+      console.debug(`HERE 3 Invalid Token  debouncedText = ${stringifyBigInt(invalidToken)}`)
     }
-  }, [textInputField])
+  }, [debouncedText])
 
-    useEffect(() => {
+  useEffect(() => {
     if (validAddress) {
       isActiveNetworkAddress(validAddress) ? setNetworkAddress(validAddress) : setTokenAddress(validAddress);
     }
   }, [validAddress])
-
 
   const setContractType = ( passedValidAddress:Address | undefined ) => {
     if (!isActiveNetworkAddress(validAddress)) {
