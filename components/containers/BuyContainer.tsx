@@ -30,7 +30,7 @@ const BuyContainer = ({ updateBuyAmount,
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
   const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
-  const debouncedBuyAmount = useDebounce(buyAmount);
+  const debouncedAmount = useDebounce(buyAmount);
 
   useEffect(() =>  {
     const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
@@ -52,10 +52,10 @@ const BuyContainer = ({ updateBuyAmount,
   }, [buyTokenContract]);
 
   useEffect (() => {
-    console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedBuyAmount}])`);
-    exchangeContext.tradeData.buyAmount = debouncedBuyAmount;
-    setBuyAmountCallback(debouncedBuyAmount)
-  }, [debouncedBuyAmount])
+    console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
+    exchangeContext.tradeData.buyAmount = debouncedAmount;
+    setBuyAmountCallback(debouncedAmount)
+  }, [debouncedAmount])
 
   useEffect(() =>  {
     const decimals:number = buyTokenContract?.decimals || 0;

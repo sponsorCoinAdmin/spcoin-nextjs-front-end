@@ -32,7 +32,6 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
   const debouncedText = useDebounce(textInputField);
 
-
   const getActiveAccountAddress = () => {
     return ACTIVE_ACCOUNT_ADDRESS;
   }
