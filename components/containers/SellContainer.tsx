@@ -15,22 +15,19 @@ type Props = {
   containerType: CONTAINER_TYPE,
   updateAmount: bigint,
   activeContract: TokenContract | undefined, 
-  setCallbackAmount: (sellAmount:bigint) => void,
+  setCallbackAmount: (amount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
-/* Sell Token Selection Module */
-const SellContainer = ({containerType,
+const PriceInputContainer = ({containerType,
                         updateAmount,
                         activeContract,
                         setCallbackAmount,
                         setTokenContractCallback} : Props) => {
-
-  const sellTokenContract = activeContract;
   const ACTIVE_ACCOUNT = useAccount();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [formattedSellAmount, setFormattedSellAmount] = useState<string>("0");
-  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(sellTokenContract);
+  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
   const {formattedBalance} = useERC20WagmiBalances("***SellContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(sellAmount);
 
@@ -52,10 +49,10 @@ const SellContainer = ({containerType,
 
   useEffect(() =>  {
     containerType === CONTAINER_TYPE.SELL ?
-      console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${sellTokenContract?.name}`) :
-      console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${sellTokenContract?.name}`)
-    setDecimalAdjustedContract(sellTokenContract)
-  }, [sellTokenContract]);
+      console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
+      console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
+    setDecimalAdjustedContract(activeContract)
+  }, [activeContract]);
 
   useEffect (() => {
     console.debug(`%%%% SellContainer.useEffect[sellAmount = ${debouncedAmount}])`);
@@ -64,7 +61,7 @@ const SellContainer = ({containerType,
   }, [debouncedAmount])
 
   useEffect(() =>  {
-    const decimals:number = sellTokenContract?.decimals || 0;
+    const decimals:number = activeContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
     if (!stringValue && stringValue !== "") {
       setFormattedSellAmount(stringValue);
@@ -124,4 +121,4 @@ const SellContainer = ({containerType,
   }
 }
 
-export default SellContainer;
+export default PriceInputContainer;

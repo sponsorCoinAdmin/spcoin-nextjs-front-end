@@ -14,26 +14,27 @@ import AddSponsorButton from '../Buttons/AddSponsorButton';
 type Props = {
   containerType: CONTAINER_TYPE,
   updateAmount: bigint,
-  buyTokenContract: TokenContract | undefined, 
-  setCallbackAmount: (buyAmount:bigint) => void,
+  activeContract: TokenContract | undefined, 
+  setCallbackAmount: (amount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
-/* Sell Token Selection Module */
-const BuyContainer = ({ containerType, 
+const PriceInputContainer = ({ containerType, 
                         updateAmount,
-                        buyTokenContract,
+                        activeContract,
                         setCallbackAmount,
                         setTokenContractCallback} : Props) => {
+  // const buyTokenContract = activeContract
+
   const ACTIVE_ACCOUNT = useAccount();
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [formattedBuyAmount, setFormattedBuyAmount] = useState<string|undefined>();
-  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(exchangeContext?.buyTokenContract);
+  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
   const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(buyAmount);
 
   useEffect(() =>  {
-    const formattedBuyAmount = getValidFormattedPrice(buyAmount, buyTokenContract?.decimals);
+    const formattedBuyAmount = getValidFormattedPrice(buyAmount, tokenContract?.decimals);
     setFormattedBuyAmount(formattedBuyAmount)
   }, []);
 
@@ -118,4 +119,4 @@ const BuyContainer = ({ containerType,
   }
 }
 
-export default BuyContainer;
+export default PriceInputContainer;

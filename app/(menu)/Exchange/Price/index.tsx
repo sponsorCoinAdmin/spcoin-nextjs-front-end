@@ -144,7 +144,7 @@ export default function PriceView() {
                            setTokenContractCallback={setSellTokenContract}/>
             <BuyContainer  containerType={CONTAINER_TYPE.BUY}
                            updateAmount={buyAmount}
-                           buyTokenContract={buyTokenContract}
+                           activeContract={buyTokenContract}
                            setCallbackAmount={setBuyAmount}
                            setTokenContractCallback={setBuyTokenContract}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
