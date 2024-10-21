@@ -3,7 +3,7 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
@@ -12,18 +12,18 @@ import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
 type Props = {
-  updateSellAmount: bigint,
+  containerType: CONTAINER_TYPE,
+  updateAmount: bigint,
   sellTokenContract: TokenContract | undefined, 
-  buyTokenContract: TokenContract | undefined, 
-  setSellAmountCallback: (sellAmount:bigint) => void,
+  setCallbackAmount: (sellAmount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
 /* Sell Token Selection Module */
-const SellContainer = ({updateSellAmount,
+const SellContainer = ({containerType,
+                        updateAmount,
                         sellTokenContract,
-                        buyTokenContract,
-                        setSellAmountCallback,
+                        setCallbackAmount,
                         setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
@@ -54,18 +54,18 @@ const SellContainer = ({updateSellAmount,
   useEffect (() => {
     console.debug(`%%%% SellContainer.useEffect[sellAmount = ${debouncedAmount}])`);
     exchangeContext.tradeData.sellAmount = debouncedAmount;
-    setSellAmountCallback(debouncedAmount);
+    setCallbackAmount(debouncedAmount);
   }, [debouncedAmount])
 
   useEffect(() =>  {
     const decimals:number = sellTokenContract?.decimals || 0;
-    const stringValue:string = getValidBigIntToFormattedPrice(updateSellAmount, decimals)
+    const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
     if (!stringValue && stringValue !== "") {
       setFormattedSellAmount(stringValue);
     }
-    if (updateSellAmount) 
-      setSellAmount(updateSellAmount);
-  }, [updateSellAmount]);
+    if (updateAmount) 
+      setSellAmount(updateAmount);
+  }, [updateAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     // console.debug(`SellContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
@@ -102,8 +102,8 @@ const SellContainer = ({updateSellAmount,
               passedInputField={formattedSellAmount}
               setTokenContractCallBack={setFormattedSellAmount}/> */}
 
-        <AssetSelect tokenContract={tokenContract} 
-                      altTokenContract={buyTokenContract} 
+        <AssetSelect  containerType={containerType}
+                      tokenContract={tokenContract} 
                       setDecimalAdjustedContract={setDecimalAdjustedContract} />
         <div className={styles["buySell"]}>You Pay</div>
         <div className={styles["assetBalance"]}>
