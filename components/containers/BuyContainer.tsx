@@ -43,11 +43,11 @@ const PriceInputContainer = ({containerType,
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
-    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    console.debug(`***PriceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     containerType === CONTAINER_TYPE.SELL ?
       exchangeContext.sellTokenContract = tokenContract :
       exchangeContext.buyTokenContract = tokenContract;
-    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
+    console.debug(`***PriceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);
 
@@ -77,8 +77,8 @@ const PriceInputContainer = ({containerType,
   }, [updateAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    console.debug(`BuyContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
-    // console.debug(`setDecimalAdjustedContract(buyContainer:${newTokenContract?.name})`)
+    // console.debug(`PriceInputContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
+    // console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
     // console.debug(`setDecimalAdjustedContract(buyContainer:${decimalAdjustedAmount})`)
     setAmount(decimalAdjustedAmount);
