@@ -8,7 +8,7 @@ import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
-import SellContainer from '@/components/containers/SellContainer';
+import PriceInputContainer from '@/components/containers/priceInputContainer';
 import BuyContainer from '@/components/containers/BuyContainer';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
@@ -137,12 +137,12 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
           <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer containerType={CONTAINER_TYPE.SELL}
+            <PriceInputContainer containerType={CONTAINER_TYPE.SELL}
                            updateAmount={sellAmount}
                            activeContract={sellTokenContract}
                            setCallbackAmount={setSellAmount}
                            setTokenContractCallback={setSellTokenContract}/>
-            <BuyContainer  containerType={CONTAINER_TYPE.BUY}
+            <PriceInputContainer  containerType={CONTAINER_TYPE.BUY}
                            updateAmount={buyAmount}
                            activeContract={buyTokenContract}
                            setCallbackAmount={setBuyAmount}
