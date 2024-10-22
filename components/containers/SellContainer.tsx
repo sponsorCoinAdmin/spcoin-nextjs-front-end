@@ -10,6 +10,7 @@ import { useAccount } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
+import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
   containerType: CONTAINER_TYPE,
@@ -20,16 +21,16 @@ type Props = {
 }
 
 const PriceInputContainer = ({containerType,
-                        updateAmount,
-                        activeContract,
-                        setCallbackAmount,
-                        setTokenContractCallback} : Props) => {
+                              updateAmount,
+                              activeContract,
+                              setCallbackAmount,
+                              setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const initialAmount:bigint|undefined = containerType === CONTAINER_TYPE.SELL ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
   const [amount, setAmount] = useState<bigint>(initialAmount);
-  const [formattedAmount, setFormattedAmount] = useState<string>("0");
+  const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
   const {formattedBalance} = useERC20WagmiBalances("***SellContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);

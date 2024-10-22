@@ -8,7 +8,8 @@ import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToForma
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
+import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
+import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
@@ -19,7 +20,7 @@ type Props = {
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
-const PriceInputContainer = ({containerType, 
+const PriceInputContainer = ({containerType,
                               updateAmount,
                               activeContract,
                               setCallbackAmount,
