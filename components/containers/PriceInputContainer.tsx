@@ -96,12 +96,11 @@ const priceInputContainer = ({containerType,
     setFormattedAmount(stringValue);
     setAmount(bigIntValue);
   }
-
-  let disabled = false;
+  
   const IsSpCoin = isSpCoin(tokenContract);
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
-      <input className={styles.priceInput} placeholder="0" disabled={disabled} value={formattedAmount}
+      <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount}
         onChange={(e) => { setStringToBigIntStateValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />

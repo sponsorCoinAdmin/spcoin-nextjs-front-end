@@ -8,8 +8,6 @@ import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
-import PriceInputContainer from '@/components/containers/priceInputContainer';
-import BuyContainer from '@/components/containers/BuyContainer';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
@@ -17,6 +15,7 @@ import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
+import PriceInputContainer from '@/components/containers/PriceInputContainer';
 
 //////////// Price Code
 export default function PriceView() {
