@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -32,7 +32,7 @@ const PriceInputContainer = ({containerType,
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
-  const {formattedBalance} = useERC20WagmiBalances("BuyContainer", tokenContract?.address);
+  const {formattedBalance} = useERC20WagmiBalances("***PriceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() =>  {
