@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { decimalAdjustTokenAmount, getValidFormattedPrice, getValidBigIntToFormattedPrice, isSpCoin, stringifyBigInt } from '@/lib/spCoin/utils';
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -32,7 +32,7 @@ const PriceInputContainer = ({containerType,
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
-  const {formattedBalance} = useERC20WagmiBalances("***SellContainer", tokenContract?.address);
+  const {formattedBalance} = useERC20WagmiBalances("***PriceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() =>  {
@@ -43,11 +43,11 @@ const PriceInputContainer = ({containerType,
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
-    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    console.debug(`***PriceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     containerType === CONTAINER_TYPE.SELL ?
       exchangeContext.sellTokenContract = tokenContract :
       exchangeContext.buyTokenContract = tokenContract;
-    console.debug(`***SellContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
+    console.debug(`***PriceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);
 
@@ -77,7 +77,7 @@ const PriceInputContainer = ({containerType,
   }, [updateAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    // console.debug(`SellContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
+    // console.debug(`PriceInputContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
     // console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
     // console.debug(`setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
@@ -86,11 +86,13 @@ const PriceInputContainer = ({containerType,
   }
 
   const setStringToBigIntStateValue = (stringValue:string) => {
-    exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT;
+    containerType === CONTAINER_TYPE.SELL ?
+      exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
+      exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
     const decimals = tokenContract?.decimals;
     stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
-    console.debug(`SellContainer.setStringToBigIntStateValue setAmount(${bigIntValue})`);
+    console.debug(`PriceInputContainer.setStringToBigIntStateValue setAmount(${bigIntValue})`);
     setFormattedAmount(stringValue);
     setAmount(bigIntValue);
   }
