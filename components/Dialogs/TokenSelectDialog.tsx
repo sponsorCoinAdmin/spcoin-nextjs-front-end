@@ -1,13 +1,15 @@
 "use client"
 import styles from '@/styles/Modal.module.css';
+import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
 import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
 import { defaultMissingImage, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import InputSelect from '../panes/InputSelect';
+import { Address } from 'viem';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -17,14 +19,14 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 type Props = {
+    containerType: CONTAINER_TYPE,
     showDialog:boolean,
     setShowDialog:(bool:boolean) => void,
-    altTokenContract: TokenContract|undefined,
     callBackSetter: (tokenContract:TokenContract) => void,
 }
 
 // ToDo Read in data List remotely
-export default function Dialog({showDialog, setShowDialog, altTokenContract, callBackSetter }: Props) {
+export default function Dialog({containerType, showDialog, setShowDialog, callBackSetter }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [inputField, setInputField] = useState<any>();
     const [tokenName, setTokenName] = useState<string|undefined>();
@@ -66,6 +68,21 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
         dialogRef.current?.showModal();
     }
 
+    const duplicateToken = (tokenAddress:any|undefined):boolean => {
+        const isDuplicateToken = containerType === CONTAINER_TYPE.SELL ? 
+                exchangeContext?.buyTokenContract?.address === tokenAddress :
+                exchangeContext?.sellTokenContract?.address === tokenAddress;
+
+        // const msg = `containerType = ${containerType === 0 ?"SELL":"BUY"}\n`+
+        //         `tokenAddress = ${tokenAddress}\n` +
+        //         `sellTokenAddress = ${exchangeContext?.sellTokenContract?.address}\n` +
+        //         `buyTokenAddress = ${exchangeContext?.buyTokenContract?.address}\n` +
+        //         `isDuplicateToken = ${isDuplicateToken}`
+        // alert(msg);
+
+        return isDuplicateToken;
+    }
+
     const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
         // alert(`**************updateTokenCallback(tokenContract) = ${stringifyBigInt(tokenContract)}`)
         try {
@@ -77,9 +94,9 @@ export default function Dialog({showDialog, setShowDialog, altTokenContract, cal
                 alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address : ${tokenContract.address}`);
                 return false;
             }
-            if (tokenContract.address === altTokenContract?.address) {
-                alert("SELECT_ERROR: Sell Token cannot be the same as Buy Token("+altTokenContract?.symbol+")")
-                console.log("ERROR: Sell Token cannot be the same as Buy Token("+altTokenContract?.symbol+")");
+            if (duplicateToken(tokenContract.address)) {
+                    alert("SELECT_ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")")
+                console.log("ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")");
                 return false;
             }
             callBackSetter(tokenContract)

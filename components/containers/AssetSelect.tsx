@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { openDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { TokenContract } from '@/lib/structure/types';
+import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
 
 type Props = {
+    containerType: CONTAINER_TYPE,
     tokenContract: TokenContract|undefined, 
-    altTokenContract: TokenContract|undefined, 
     setDecimalAdjustedContract: (tokenContract:TokenContract) => void,
   }
 
-const AssetSelect = ({tokenContract, altTokenContract, setDecimalAdjustedContract}:Props) => {
+const AssetSelect = ({containerType, tokenContract, setDecimalAdjustedContract}:Props) => {
     const [showDialog, setShowDialog ] = useState<boolean>(false)
     const openDialog = () => {
         setShowDialog(true)
@@ -19,7 +19,7 @@ const AssetSelect = ({tokenContract, altTokenContract, setDecimalAdjustedContrac
     return (
         tokenContract?
         <>
-            <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} />
+            <TokenSelectDialog containerType={containerType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
             <div className={styles["assetSelect"]}>
                 <img alt={tokenContract?.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={tokenContract?.img} onClick={() => alert("sellTokenContract " + JSON.stringify(tokenContract,null,2))}/>
                 {tokenContract?.symbol}
@@ -27,7 +27,7 @@ const AssetSelect = ({tokenContract, altTokenContract, setDecimalAdjustedContrac
             </div>
         </> :
         <>
-            <TokenSelectDialog showDialog={showDialog} setShowDialog={setShowDialog} altTokenContract={altTokenContract} callBackSetter={setDecimalAdjustedContract} />
+            <TokenSelectDialog containerType={containerType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
             <div className={styles["assetSelect"]}>
                 &nbsp; Select Token:
                 <DownOutlined onClick={() => openDialog()}/>

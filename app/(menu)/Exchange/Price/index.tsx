@@ -3,13 +3,11 @@ import styles from '@/styles/Exchange.module.css';
 import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
-import { TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types';
+import { TokenContract, TRANSACTION_TYPE, ErrorMessage, CONTAINER_TYPE } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
-import SellContainer from '@/components/containers/SellContainer';
-import BuyContainer from '@/components/containers/BuyContainer';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
@@ -17,6 +15,7 @@ import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
+import PriceInputContainer from '@/components/containers/PriceInputContainer';
 
 //////////// Price Code
 export default function PriceView() {
@@ -137,15 +136,15 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
           <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <SellContainer updateSellAmount={sellAmount}
-                           sellTokenContract={sellTokenContract}
-                           buyTokenContract={buyTokenContract}
-                           setSellAmountCallback={setSellAmount}
+            <PriceInputContainer containerType={CONTAINER_TYPE.SELL}
+                           updateAmount={sellAmount}
+                           activeContract={sellTokenContract}
+                           setCallbackAmount={setSellAmount}
                            setTokenContractCallback={setSellTokenContract}/>
-            <BuyContainer  updateBuyAmount={buyAmount}
-                           sellTokenContract={sellTokenContract}
-                           buyTokenContract={buyTokenContract}
-                           setBuyAmountCallback={setBuyAmount}
+            <PriceInputContainer  containerType={CONTAINER_TYPE.BUY}
+                           updateAmount={buyAmount}
+                           activeContract={buyTokenContract}
+                           setCallbackAmount={setBuyAmount}
                            setTokenContractCallback={setBuyTokenContract}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton/>
