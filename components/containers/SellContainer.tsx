@@ -77,12 +77,12 @@ const priceInputContainer = ({containerType,
   }, [updateAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    // console.debug(`priceInputContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
-    // console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
+    // console.debug(`priceInputContainer.setDecimalAdjustedContract(priceInputContainer:${stringifyBigInt(newTokenContract)})`)
+    // console.debug(`setDecimalAdjustedContract(priceInputContainer:${newTokenContract?.name})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
-    // console.debug(`setDecimalAdjustedContract(sellContainer:${decimalAdjustedAmount})`)
+    // console.debug(`setDecimalAdjustedContract(priceInputContainer:${decimalAdjustedAmount})`)
     setAmount(decimalAdjustedAmount);
-    setTokenContract(newTokenContract);
+    setTokenContract(newTokenContract)
   }
 
   const setStringToBigIntStateValue = (stringValue:string) => {

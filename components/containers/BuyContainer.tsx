@@ -77,8 +77,8 @@ const priceInputContainer = ({containerType,
   }, [updateAmount]);
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
-    // console.debug(`priceInputContainer.setDecimalAdjustedContract(sellContainer:${stringifyBigInt(newTokenContract)})`)
-    // console.debug(`setDecimalAdjustedContract(sellContainer:${newTokenContract?.name})`)
+    // console.debug(`priceInputContainer.setDecimalAdjustedContract(priceInputContainer:${stringifyBigInt(newTokenContract)})`)
+    // console.debug(`setDecimalAdjustedContract(priceInputContainer:${newTokenContract?.name})`)
     const decimalAdjustedAmount:bigint = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
     // console.debug(`setDecimalAdjustedContract(priceInputContainer:${decimalAdjustedAmount})`)
     setAmount(decimalAdjustedAmount);
@@ -86,13 +86,15 @@ const priceInputContainer = ({containerType,
   }
 
   const setStringToBigIntStateValue = (stringValue:string) => {
-    exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
-    const decimals = activeContract?.decimals;
-    stringValue === getValidFormattedPrice(stringValue, decimals);
+    containerType === CONTAINER_TYPE.SELL ?
+      exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
+      exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
+    const decimals = tokenContract?.decimals;
+    stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
-    console.debug(`BuyContainer.setStringToBigIntStateValue setSellAmount(${bigIntValue})`);
-    setAmount(bigIntValue);
+    console.debug(`priceInputContainer.setStringToBigIntStateValue setAmount(${bigIntValue})`);
     setFormattedAmount(stringValue);
+    setAmount(bigIntValue);
   }
 
   let disabled = true;
