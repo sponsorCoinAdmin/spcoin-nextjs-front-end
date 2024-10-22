@@ -11,7 +11,7 @@ import { displaySpCoinContainers, toggleSponsorRateConfig } from '@/lib/spCoin/g
 
 type Props = {
   // accountRecord:AccountRecord;
-  setRecipientCallBack: (accountRecord:AccountRecord) => void;
+  setRecipientCallBack: (accountRecord:AccountRecord) => void;rm 
 }
 
 const RecipientContainer = ({setRecipientCallBack} : Props) => {

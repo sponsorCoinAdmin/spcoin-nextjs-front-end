@@ -117,9 +117,8 @@ const priceInputContainer = ({containerType,
       <div className={styles["assetBalance"]}>
         Balance: {formattedBalance || "0.0"}
       </div>
-      {IsSpCoin && containerType === CONTAINER_TYPE.SELL ? 
-        <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> : null}
-      {IsSpCoin && containerType === CONTAINER_TYPE.BUY  ? 
+      {IsSpCoin ? containerType === CONTAINER_TYPE.SELL ? 
+        <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
     </div>
   )
