@@ -97,7 +97,7 @@ const priceInputContainer = ({containerType,
     setAmount(bigIntValue);
   }
 
-  let disabled = true;
+  let disabled = false;
   try {
     let IsSpCoin = isSpCoin(activeContract);
     return (
@@ -110,8 +110,8 @@ const priceInputContainer = ({containerType,
 
         {/* ToDo */}
         {/* <InputSelect placeHolder={"0"}
-              passedInputField={formattedSellAmount}
-              setTokenContractCallBack={setFormattedSellAmount}/> */}
+              passedInputField={formattedAmount}
+              setTokenContractCallBack={setFormattedAmount}/> */}
 
         <AssetSelect  containerType={containerType}
                       tokenContract={tokenContract} 
