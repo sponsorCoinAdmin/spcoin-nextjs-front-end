@@ -69,7 +69,7 @@ const PriceInputContainer = ({containerType,
   useEffect(() =>  {
     const decimals:number = activeContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
-    if (stringValue !== "") {
+    if (!stringValue && stringValue !== "") {
       setFormattedAmount(stringValue);
     }
     if (updateAmount) 
