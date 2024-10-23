@@ -16,7 +16,7 @@ type Props = {
 
 const RecipientContainer = ({setRecipientCallBack} : Props) => {
   // const RecipientContainer = ({setRecipientCallBack} : Props) => {
-  // alert("RecipientContainer:\n" + JSON.stringify(recipientAccount,null,2))
+  alert("RecipientContainer:\n" + JSON.stringify(exchangeContext.recipientAccount,null,2))
   // let urlParms:string = `/Recipient?address=${recipientAccount?.address}`
   const [recipientAccount, setRecipientAccount] = useState<AccountRecord|undefined>(exchangeContext.recipientAccount);
 
