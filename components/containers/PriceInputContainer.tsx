@@ -3,7 +3,7 @@ import { exchangeContext } from "@/lib/context";
 
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
-import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
+import { TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
@@ -13,20 +13,20 @@ import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
-  containerType: CONTAINER_TYPE,
+  transActionType: TRANSACTION_TYPE,
   updateAmount: bigint,
   activeContract: TokenContract | undefined, 
   setCallbackAmount: (amount:bigint) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
-const priceInputContainer = ({containerType,
+const priceInputContainer = ({transActionType,
                               updateAmount,
                               activeContract,
                               setCallbackAmount,
                               setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const initialAmount:bigint|undefined = containerType === CONTAINER_TYPE.SELL ? 
+  const initialAmount:bigint|undefined = transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
   const [amount, setAmount] = useState<bigint>(initialAmount);
@@ -44,7 +44,7 @@ const priceInputContainer = ({containerType,
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    containerType === CONTAINER_TYPE.SELL ?
+    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       exchangeContext.sellTokenContract = tokenContract :
       exchangeContext.buyTokenContract = tokenContract;
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
@@ -52,7 +52,7 @@ const priceInputContainer = ({containerType,
   }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    containerType === CONTAINER_TYPE.SELL ?
+    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
       console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
     setDecimalAdjustedContract(activeContract)
@@ -60,7 +60,7 @@ const priceInputContainer = ({containerType,
 
   useEffect (() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
-    containerType === CONTAINER_TYPE.SELL ? 
+    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
     exchangeContext.tradeData.sellAmount = debouncedAmount :
     exchangeContext.tradeData.buyAmount = debouncedAmount ;
     setCallbackAmount(debouncedAmount)
@@ -86,7 +86,7 @@ const priceInputContainer = ({containerType,
   }
 
   const setStringToBigIntStateValue = (stringValue:string) => {
-    containerType === CONTAINER_TYPE.SELL ?
+    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
     const decimals = tokenContract?.decimals;
@@ -104,12 +104,12 @@ const priceInputContainer = ({containerType,
         onChange={(e) => { setStringToBigIntStateValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
-      <AssetSelect  containerType={containerType}
+      <AssetSelect  transActionType={transActionType}
                     tokenContract={tokenContract} 
                     setDecimalAdjustedContract={setDecimalAdjustedContract} />
-      <div className={styles["buySell"]}>{containerType === CONTAINER_TYPE.SELL ? "You Pay": "You Receive"}</div>
+      <div className={styles["buySell"]}>{transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? "You Pay": "You Receive"}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
-      {IsSpCoin ? containerType === CONTAINER_TYPE.SELL ? 
+      {IsSpCoin ? transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
     </div>

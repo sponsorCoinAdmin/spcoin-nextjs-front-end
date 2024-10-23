@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { openDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
+import { TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
 
 type Props = {
-    containerType: CONTAINER_TYPE,
+    transActionType: TRANSACTION_TYPE,
     tokenContract: TokenContract|undefined, 
     setDecimalAdjustedContract: (tokenContract:TokenContract) => void,
   }
 
-const AssetSelect = ({containerType, tokenContract, setDecimalAdjustedContract}:Props) => {
+const AssetSelect = ({transActionType, tokenContract, setDecimalAdjustedContract}:Props) => {
     const [showDialog, setShowDialog ] = useState<boolean>(false)
     const openDialog = () => {
         setShowDialog(true)
@@ -18,7 +18,7 @@ const AssetSelect = ({containerType, tokenContract, setDecimalAdjustedContract}:
     
     return (
         <>
-            <TokenSelectDialog containerType={containerType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
+            <TokenSelectDialog transActionType={transActionType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
             {tokenContract?
             <>
                 <div className={styles["assetSelect"]}>

@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
 import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
-import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { TRANSACTION_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
 import { defaultMissingImage, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
@@ -19,14 +19,14 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 type Props = {
-    containerType: CONTAINER_TYPE,
+    transActionType: TRANSACTION_TYPE,
     showDialog:boolean,
     setShowDialog:(bool:boolean) => void,
     callBackSetter: (tokenContract:TokenContract) => void,
 }
 
 // ToDo Read in data List remotely
-export default function Dialog({containerType, showDialog, setShowDialog, callBackSetter }: Props) {
+export default function Dialog({transActionType, showDialog, setShowDialog, callBackSetter }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [inputField, setInputField] = useState<any>();
     const [tokenName, setTokenName] = useState<string|undefined>();
@@ -69,11 +69,11 @@ export default function Dialog({containerType, showDialog, setShowDialog, callBa
     }
 
     const duplicateToken = (tokenAddress:any|undefined):boolean => {
-        const isDuplicateToken = containerType === CONTAINER_TYPE.SELL ? 
+        const isDuplicateToken = transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
                 exchangeContext?.buyTokenContract?.address === tokenAddress :
                 exchangeContext?.sellTokenContract?.address === tokenAddress;
 
-        // const msg = `containerType = ${containerType === 0 ?"SELL":"BUY"}\n`+
+        // const msg = `transActionType = ${transActionType === 0 ?"SELL":"BUY"}\n`+
         //         `tokenAddress = ${tokenAddress}\n` +
         //         `sellTokenAddress = ${exchangeContext?.sellTokenContract?.address}\n` +
         //         `buyTokenAddress = ${exchangeContext?.buyTokenContract?.address}\n` +

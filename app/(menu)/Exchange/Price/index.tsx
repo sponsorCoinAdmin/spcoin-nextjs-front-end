@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
-import { TokenContract, TRANSACTION_TYPE, ErrorMessage, CONTAINER_TYPE } from '@/lib/structure/types';
+import { TokenContract, ErrorMessage, TRANSACTION_TYPE } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -136,12 +136,12 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
           <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <PriceInputContainer containerType={CONTAINER_TYPE.SELL}
+            <PriceInputContainer transActionType={TRANSACTION_TYPE.SELL_EXACT_OUT}
                            updateAmount={sellAmount}
                            activeContract={sellTokenContract}
                            setCallbackAmount={setSellAmount}
                            setTokenContractCallback={setSellTokenContract}/>
-            <PriceInputContainer  containerType={CONTAINER_TYPE.BUY}
+            <PriceInputContainer  transActionType={TRANSACTION_TYPE.BUY_EXACT_IN}
                            updateAmount={buyAmount}
                            activeContract={buyTokenContract}
                            setCallbackAmount={setBuyAmount}
