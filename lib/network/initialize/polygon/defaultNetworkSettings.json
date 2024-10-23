@@ -5,37 +5,5 @@
     "symbol": "MATIC",
     "url": "https://polygonscan.com/",
     "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"
-  },
-  "defaultSellToken": {
-    "chainId": 137,
-    "address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-    "name": "USD Coin Staked",
-    "symbol": "USDC",
-    "totalSupply": null,
-    "decimals": 6,
-    "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
-  },
-  "defaultBuyToken": {
-    "chainId": 137,
-    "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
-    "name": "Sponsor Coin",
-    "symbol": "SpCoin",
-    "totalSupply": null,
-    "decimals": 18,
-    "img": "/resources/images/tokens/0xToDo_SpCoin.png"
-},
-  "defaultRecipient": {
-    "address": "Save The Trees Wallet Address",
-    "name": "Save The Trees",
-    "symbol": "Trees",
-    "url": "ToDo N/A",
-    "img": "/resources/images/recipients/SaveTheTrees.png"
-  },
-  "defaultAgent": {
-    "address": "TweetyBird's Wallet Address",
-    "name": "Tweety Bird",
-    "symbol": "Tweety",
-    "url": "ToDo N/A",
-    "img": "/resources/images/agents/TweetyBird.png"
   }
 }

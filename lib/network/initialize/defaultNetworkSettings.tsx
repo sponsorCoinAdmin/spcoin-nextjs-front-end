@@ -56,7 +56,7 @@ const getDefaultNetworkSettings = (chain:any) => {
   switch(chain)
   {
       case 1:
-      case "ethereum": alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      case "ethereum": // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
       return defaultEthereumSettings;
       case 137:
       case "polygon":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
