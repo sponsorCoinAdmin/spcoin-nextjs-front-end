@@ -155,7 +155,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.RECIPIENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.RECIPIENT_WALLETS} updateTokenCallback={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>
