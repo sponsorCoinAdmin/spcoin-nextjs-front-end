@@ -106,7 +106,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
         <input className={styles.modalElementSelect} 
                autoComplete="off" 
                placeholder={placeHolder} 
-               value={textInputField} 
+               value={textInputField || ""} 
                onChange={(e) => setTextInputField(e.target.value)}/>
       </div>
     </div>

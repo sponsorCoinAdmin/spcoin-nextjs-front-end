@@ -119,7 +119,6 @@ export default function Dialog({containerType, showDialog, setShowDialog, callBa
                 <InputSelect placeHolder={INPUT_PLACE_HOLDER}
                              passedInputField={inputField || ""}
                              setTokenContractCallBack={setTokenContract}/>
-
                 {(inputField &&
                     <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
                         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >

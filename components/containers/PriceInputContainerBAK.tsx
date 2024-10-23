@@ -100,15 +100,23 @@ const priceInputContainer = ({containerType,
   const IsSpCoin = isSpCoin(tokenContract);
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
-      <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""}
+      <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount}
         onChange={(e) => { setStringToBigIntStateValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
+
+      {/* ToDo */}
+      {/* <InputSelect placeHolder={"0"}
+            passedInputField={formattedAmount}
+            setTokenContractCallBack={setFormattedAmount}/> */}
+
       <AssetSelect  containerType={containerType}
                     tokenContract={tokenContract} 
                     setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{containerType === CONTAINER_TYPE.SELL ? "You Pay": "You Receive"}</div>
-      <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
+      <div className={styles["assetBalance"]}>
+        Balance: {formattedBalance || "0.0"}
+      </div>
       {IsSpCoin ? containerType === CONTAINER_TYPE.SELL ? 
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
