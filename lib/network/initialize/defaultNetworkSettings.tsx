@@ -3,6 +3,7 @@ import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
 import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const defaultInitialTradeData:TradeData = {
   sellAmount: 0n,
@@ -55,7 +56,7 @@ const getDefaultNetworkSettings = (chain:any) => {
   switch(chain)
   {
       case 1:
-      case "ethereum": //alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      case "ethereum": alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
       return defaultEthereumSettings;
       case 137:
       case "polygon":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
