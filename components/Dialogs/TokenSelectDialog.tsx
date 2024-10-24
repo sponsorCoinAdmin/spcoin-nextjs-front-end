@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
 import info_png from '@/public/resources/images/info1.png'
 import Image from 'next/image'
-import { TRANSACTION_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { TRANSACTION_TYPE, FEED_TYPE, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers';
 import { defaultMissingImage, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
@@ -19,7 +19,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 type Props = {
-    priceInputContainType: TRANSACTION_TYPE,
+    priceInputContainType: CONTAINER_TYPE,
     showDialog:boolean,
     setShowDialog:(bool:boolean) => void,
     callBackSetter: (tokenContract:TokenContract) => void,
@@ -69,7 +69,7 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
     }
 
     const duplicateToken = (tokenAddress:any|undefined):boolean => {
-        const isDuplicateToken = priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+        const isDuplicateToken = priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? 
                 exchangeContext?.buyTokenContract?.address === tokenAddress :
                 exchangeContext?.sellTokenContract?.address === tokenAddress;
 

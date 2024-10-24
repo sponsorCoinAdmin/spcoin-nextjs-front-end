@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { openDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
+import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
 
 type Props = {
-    priceInputContainType: TRANSACTION_TYPE,
+    priceInputContainType: CONTAINER_TYPE,
     tokenContract: TokenContract|undefined, 
     setDecimalAdjustedContract: (tokenContract:TokenContract) => void,
   }
