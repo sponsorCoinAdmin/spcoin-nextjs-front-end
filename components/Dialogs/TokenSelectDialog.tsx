@@ -69,7 +69,7 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
     }
 
     const duplicateToken = (tokenAddress:any|undefined):boolean => {
-        const isDuplicateToken = priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? 
+        const isDuplicateToken = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                 exchangeContext?.buyTokenContract?.address === tokenAddress :
                 exchangeContext?.sellTokenContract?.address === tokenAddress;
 

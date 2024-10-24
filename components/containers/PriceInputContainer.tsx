@@ -28,7 +28,7 @@ const priceInputContainer = ({priceInputContainType,
                               setTransactionType,
                               setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? 
+  const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
   const [amount, setAmount] = useState<bigint>(initialAmount);
@@ -46,7 +46,7 @@ const priceInputContainer = ({priceInputContainType,
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ?
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       exchangeContext.sellTokenContract = tokenContract :
       exchangeContext.buyTokenContract = tokenContract;
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
@@ -54,7 +54,7 @@ const priceInputContainer = ({priceInputContainType,
   }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ?
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
       console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
     setDecimalAdjustedContract(activeContract)
@@ -62,7 +62,7 @@ const priceInputContainer = ({priceInputContainType,
 
   useEffect (() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
-    priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? 
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
     exchangeContext.tradeData.sellAmount = debouncedAmount :
     exchangeContext.tradeData.buyAmount = debouncedAmount ;
     setCallbackAmount(debouncedAmount)
@@ -89,14 +89,14 @@ const priceInputContainer = ({priceInputContainType,
 
   const setTextInputValue = (stringValue:string) => {
     setStringToBigIntStateValue(stringValue)
-    setTransactionType(priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? 
+    setTransactionType(priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                                                  TRANSACTION_TYPE.SELL_EXACT_OUT :
                                                  TRANSACTION_TYPE.BUY_EXACT_IN)
   }
 
 
   const setStringToBigIntStateValue = (stringValue:string) => {
-    priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ?
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
     const decimals = tokenContract?.decimals;
@@ -108,8 +108,8 @@ const priceInputContainer = ({priceInputContainType,
   }
 
   const buySellText = exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-    priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? "You Exactly Pay": "You Receive +-2%" :
-    priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? "You Pay +-2%"        : "You Exactly Receive"
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay": "You Receive +-2%" :
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Pay +-2%"        : "You Exactly Receive"
   
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
@@ -122,7 +122,7 @@ const priceInputContainer = ({priceInputContainType,
                     setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
-      {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.PRICE_SELL_INPUT ? 
+      {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
     </div>
