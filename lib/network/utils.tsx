@@ -2,10 +2,10 @@ import chainIdList from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultEthereumSettings } from './initialize/ethereum/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultPolygonSettings } from './initialize/polygon/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/sepolia/defaultNetworkSettings'
+import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import { TokenContract } from '../structure/types';
-// This is duplicate code found in Datalist.tsx.  Put in Library call
-/////////////////////////////////////////////////////////////
+
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
 const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
 // const NETWORK_PROTOCOL_CRYPTO = "NETWORK PROTOCOL CRYPTO"
@@ -19,17 +19,34 @@ const isNetworkProtocolToken = (tokenContract:TokenContract) => {
   return isNetworkProtocolAddress(tokenContract.address);
 }
 
-const isNetworkProtocolAddress = (address:any) => {
+const isNetworkProtocolAddress = (address:Address|undefined) : boolean => {
   return address === NETWORK_PROTOCOL_CRYPTO;
 }
 
+const isActiveWalletAccount = (address:Address|undefined) : boolean => {
+  alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
+  return address === exchangeContext.activeWalletAccount;
+}
+
+const isNetworkOrWalletAccountAddress = (address:Address|undefined) : boolean => {
+  return isNetworkProtocolAddress(address) || isActiveWalletAccount(address)
+}
+
+const isTransaction_A_Wrap = () : boolean => {
+  const buyTokenAddress = exchangeContext.buyTokenContract?.address;
+  const sellTokenAddress = exchangeContext.sellTokenContract?.address;
+  return  buyTokenAddress && sellTokenAddress && (buyTokenAddress !== sellTokenAddress) ? 
+          isNetworkOrWalletAccountAddress(sellTokenAddress) && isNetworkOrWalletAccountAddress(buyTokenAddress) :
+          false
+}
+
 const getChainMap = (chainList: any[]) => {
-    const chainMap = new Map();
-    const tList = chainList.map((e: any, i: number) => {
-        chainMap.set(chainList[i].chainId,chainList[i])
-    })
-    return chainMap
-  }
+  const chainMap = new Map();
+  const tList = chainList.map((e: any, i: number) => {
+      chainMap.set(chainList[i].chainId,chainList[i])
+  })
+  return chainMap
+}
 
 const chainIdMap = getChainMap(chainIdList)
 
@@ -82,6 +99,7 @@ export {
   getNetworkName,
   isLowerCase,
   isNetworkProtocolAddress,
-  isNetworkProtocolToken
+  isNetworkProtocolToken,
+  isTransaction_A_Wrap
 }
   

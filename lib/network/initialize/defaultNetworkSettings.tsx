@@ -24,6 +24,7 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
   const chainId:number = chain || 1;
   const initialContextMap = getInitialContextMap(chainId);
   const initialContext = {
+      activeWalletAccount : undefined,
       network: initialContextMap.get("networkHeader") as NetworkElement,
       recipientAccount: initialContextMap.get("defaultRecipient") as AccountRecord | undefined,
       agentAccount: initialContextMap.get("defaultAgent") as AccountRecord | undefined,

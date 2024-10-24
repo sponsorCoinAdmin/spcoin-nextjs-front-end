@@ -11,6 +11,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
+import { isTransaction_A_Wrap } from '@/lib/network/utils';
 
 type Props = {
   priceInputContainType: CONTAINER_TYPE,
@@ -28,6 +29,7 @@ const priceInputContainer = ({priceInputContainType,
                               setTransactionType,
                               setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
+  const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
   const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
@@ -107,9 +109,11 @@ const priceInputContainer = ({priceInputContainType,
     setAmount(bigIntValue);
   }
 
-  const buySellText = exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay": "You Receive +-2%" :
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Pay +-2%"        : "You Exactly Receive"
+  const buySellText = isTransaction_A_Wrap() ? 
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
+      exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Receive +-2%" :
+        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Pay +-2%"    : "You Exactly Receive"
   
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>

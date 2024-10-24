@@ -16,6 +16,7 @@ import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import PriceInputContainer from '@/components/containers/PriceInputContainer';
+import { Address } from 'viem';
 
 //////////// Price Code
 export default function PriceView() {
@@ -34,7 +35,15 @@ export default function PriceView() {
     useEffect(() => {
       displaySpCoinContainers(exchangeContext.spCoinPanels)
     }, [])
-  
+
+  useEffect(() => {
+    exchangeContext.buyTokenContract = buyTokenContract;
+    }, [buyTokenContract])
+
+  useEffect(() => {
+    exchangeContext.sellTokenContract = sellTokenContract;
+    }, [sellTokenContract])
+
     useEffect(() => {
       const chain = ACTIVE_ACCOUNT.chain;
       if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
@@ -47,6 +56,10 @@ export default function PriceView() {
         setBuyTokenContract(exchangeContext.buyTokenContract);
       }
     }, [ACTIVE_ACCOUNT.chain]);
+
+    useEffect(() => {
+      exchangeContext.activeWalletAccount = ACTIVE_ACCOUNT.address as Address;
+    }, [ACTIVE_ACCOUNT.address]);
 
     useEffect(() => {
       console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);

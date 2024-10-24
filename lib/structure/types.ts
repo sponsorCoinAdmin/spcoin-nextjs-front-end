@@ -1,4 +1,4 @@
-import { Address } from "viem"
+import { Account, Address } from "viem"
 
 enum  EXCHANGE_STATE { NOT_CONNECTED,
                        MISSING_SELL_AMOUNT,
@@ -63,6 +63,7 @@ type TradeData = {
 }
 
 type ExchangeContext = {
+  activeWalletAccount: `0x${string}`|Account|undefined;
   network: NetworkElement;
   recipientAccount: AccountRecord|undefined;
   agentAccount: AccountRecord|undefined;
