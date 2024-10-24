@@ -5,16 +5,16 @@ import React from 'react';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 type Props = {
-    price: PriceResponse | undefined,
+    priceResponse: PriceResponse | undefined,
     buyTokenContract: TokenContract | undefined, 
 }
 
-const AffiliateFee = ({price, buyTokenContract} : Props) => {
+const AffiliateFee = ({priceResponse, buyTokenContract} : Props) => {
     return (
         <div className="text-slate-400">
-            {price && price.grossBuyAmount
+            {priceResponse?.grossBuyAmount
             ? "Affiliate Fee: " +
-            Number(formatUnits(BigInt(price.grossBuyAmount), buyTokenContract?.decimals)) *
+            Number(formatUnits(BigInt(priceResponse.grossBuyAmount), buyTokenContract?.decimals)) *
             AFFILIATE_FEE + " " + buyTokenContract?.symbol
             : null}
         </div>

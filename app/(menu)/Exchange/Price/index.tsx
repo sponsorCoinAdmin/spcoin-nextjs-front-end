@@ -20,7 +20,7 @@ import PriceInputContainer from '@/components/containers/PriceInputContainer';
 //////////// Price Code
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount()
-  const [price, setPrice] = useState<PriceResponse | undefined>();
+  const [priceResponse, setPriceResponse] = useState<PriceResponse | undefined>();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
   const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
@@ -29,7 +29,6 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
-
 
   try {
     useEffect(() => {
@@ -66,10 +65,6 @@ export default function PriceView() {
     },[buyAmount]);
 
     useEffect(() => {
-      // alert (`Price:tokenContract(${stringifyBigInt(sellTokenContract)})`)
-    },[sellTokenContract]);
-
-    useEffect(() => {
       console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
       exchangeContext.tradeData.slippage = slippage;
     }, [slippage]);
@@ -78,6 +73,11 @@ export default function PriceView() {
       console.debug(`PRICE.useEffect[buyTokenContract = ${buyTokenContract}])`);
       exchangeContext.buyTokenContract = buyTokenContract;
     }, [buyTokenContract]);
+
+    useEffect(() => {
+      console.debug(`PRICE.useEffect[transactionType = ${transactionType}])`);
+      exchangeContext.tradeData.transactionType = transactionType;
+    }, [transactionType]);
 
     useEffect(() => {
       console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
@@ -100,12 +100,12 @@ export default function PriceView() {
     const sellTokenAddress = sellTokenContract?.address;
     const buyTokenAddress = buyTokenContract?.address;
     const { isLoading: isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
+      transactionType,
       sellTokenAddress, 
       buyTokenAddress,
-      transactionType,
       sellAmount,
       buyAmount,
-      setPrice,
+      setPriceResponse,
       setBuyAmount,
       setSellAmount,
       apiErrorCallBack});
@@ -136,19 +136,21 @@ export default function PriceView() {
           <ErrorDialog errMsg={errorMessage} showDialog={false} />
           <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <PriceInputContainer transActionType={TRANSACTION_TYPE.SELL_EXACT_OUT}
-                           updateAmount={sellAmount}
-                           activeContract={sellTokenContract}
-                           setCallbackAmount={setSellAmount}
-                           setTokenContractCallback={setSellTokenContract}/>
-            <PriceInputContainer  transActionType={TRANSACTION_TYPE.BUY_EXACT_IN}
-                           updateAmount={buyAmount}
-                           activeContract={buyTokenContract}
-                           setCallbackAmount={setBuyAmount}
-                           setTokenContractCallback={setBuyTokenContract}/>
+            <PriceInputContainer  priceInputContainType={TRANSACTION_TYPE.SELL_EXACT_OUT}
+                                  updateAmount={sellAmount}
+                                  activeContract={sellTokenContract}
+                                  setCallbackAmount={setSellAmount}
+                                  setTransactionType={setTransactionType}
+                                  setTokenContractCallback={setSellTokenContract}/>
+            <PriceInputContainer  priceInputContainType={TRANSACTION_TYPE.BUY_EXACT_IN}
+                                  updateAmount={buyAmount}
+                                  activeContract={buyTokenContract}
+                                  setCallbackAmount={setBuyAmount}
+                                  setTransactionType={setTransactionType}
+                                  setTokenContractCallback={setBuyTokenContract}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
             <PriceButton/>
-            <AffiliateFee price={price} buyTokenContract={buyTokenContract}/>
+            <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
           </div>
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />

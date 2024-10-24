@@ -13,20 +13,22 @@ import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 
 type Props = {
-  transActionType: TRANSACTION_TYPE,
+  priceInputContainType: TRANSACTION_TYPE,
   updateAmount: bigint,
   activeContract: TokenContract | undefined, 
   setCallbackAmount: (amount:bigint) => void,
+  setTransactionType:(transactionType:TRANSACTION_TYPE) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
 }
 
-const priceInputContainer = ({transActionType,
+const priceInputContainer = ({priceInputContainType,
                               updateAmount,
                               activeContract,
                               setCallbackAmount,
+                              setTransactionType,
                               setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const initialAmount:bigint|undefined = transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+  const initialAmount:bigint|undefined = priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
   const [amount, setAmount] = useState<bigint>(initialAmount);
@@ -44,7 +46,7 @@ const priceInputContainer = ({transActionType,
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+    priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       exchangeContext.sellTokenContract = tokenContract :
       exchangeContext.buyTokenContract = tokenContract;
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
@@ -52,7 +54,7 @@ const priceInputContainer = ({transActionType,
   }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+    priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
       console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
     setDecimalAdjustedContract(activeContract)
@@ -60,7 +62,7 @@ const priceInputContainer = ({transActionType,
 
   useEffect (() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
-    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+    priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
     exchangeContext.tradeData.sellAmount = debouncedAmount :
     exchangeContext.tradeData.buyAmount = debouncedAmount ;
     setCallbackAmount(debouncedAmount)
@@ -85,8 +87,14 @@ const priceInputContainer = ({transActionType,
     setTokenContract(newTokenContract)
   }
 
+  const setTextInputValue = (stringValue:string) => {
+    setStringToBigIntStateValue(stringValue)
+    setTransactionType(priceInputContainType)
+  }
+
+
   const setStringToBigIntStateValue = (stringValue:string) => {
-    transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+    priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
     const decimals = tokenContract?.decimals;
@@ -96,20 +104,25 @@ const priceInputContainer = ({transActionType,
     setFormattedAmount(stringValue);
     setAmount(bigIntValue);
   }
+
+  const buySellText = exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+    priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? "You Exactly Pay": "You Receive" :
+    priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? "You Pay"        : "You Exactly Receive"
+
+  // const buySellText = priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? "You Pay": "You Receive"
   
-  const IsSpCoin = isSpCoin(tokenContract);
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
       <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""}
         onChange={(e) => { setStringToBigIntStateValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
-      <AssetSelect  transActionType={transActionType}
+      <AssetSelect  priceInputContainType={priceInputContainType}
                     tokenContract={tokenContract} 
                     setDecimalAdjustedContract={setDecimalAdjustedContract} />
-      <div className={styles["buySell"]}>{transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? "You Pay": "You Receive"}</div>
+      <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
-      {IsSpCoin ? transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+      {isSpCoin(tokenContract) ? priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
     </div>

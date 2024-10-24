@@ -102,7 +102,7 @@ type Props = {
   transactionType:TRANSACTION_TYPE,
   sellAmount:bigint,
   buyAmount:bigint,
-  setPrice: (data:any) => void,
+  setPriceResponse: (data:any) => void,
   setSellAmount: (sellAmount:bigint) => void,
   setBuyAmount: (buyAmount:bigint) => void,
   // setErrorMessage: (errMsg:ErrorMessage) => void
@@ -132,7 +132,7 @@ function usePriceAPI({
   transactionType,
   sellAmount,
   buyAmount,
-  setPrice,
+  setPriceResponse,
   setSellAmount,
   setBuyAmount,
   apiErrorCallBack
@@ -147,7 +147,7 @@ function usePriceAPI({
           // let dataMsg = `SUCCESS: apiCall => ${getApiErrorTransactionData(data, sellTokenContract, buyTokenContract, sellAmount)}`
           // console.log(dataMsg)
           // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
-          setPrice(data);
+          setPriceResponse(data);
           // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
           setBuyAmount(data.buyAmount);
         }

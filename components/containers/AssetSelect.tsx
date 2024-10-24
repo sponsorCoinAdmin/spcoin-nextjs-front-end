@@ -5,12 +5,12 @@ import { DownOutlined } from "@ant-design/icons";
 import { TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
 
 type Props = {
-    transActionType: TRANSACTION_TYPE,
+    priceInputContainType: TRANSACTION_TYPE,
     tokenContract: TokenContract|undefined, 
     setDecimalAdjustedContract: (tokenContract:TokenContract) => void,
   }
 
-const AssetSelect = ({transActionType, tokenContract, setDecimalAdjustedContract}:Props) => {
+const AssetSelect = ({priceInputContainType, tokenContract, setDecimalAdjustedContract}:Props) => {
     const [showDialog, setShowDialog ] = useState<boolean>(false)
     const openDialog = () => {
         setShowDialog(true)
@@ -18,7 +18,7 @@ const AssetSelect = ({transActionType, tokenContract, setDecimalAdjustedContract
     
     return (
         <>
-            <TokenSelectDialog transActionType={transActionType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
+            <TokenSelectDialog priceInputContainType={priceInputContainType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
             {tokenContract?
             <>
                 <div className={styles["assetSelect"]}>

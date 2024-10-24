@@ -19,14 +19,14 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
     "Currently, there is no image token lookup, but that is to come."
 
 type Props = {
-    transActionType: TRANSACTION_TYPE,
+    priceInputContainType: TRANSACTION_TYPE,
     showDialog:boolean,
     setShowDialog:(bool:boolean) => void,
     callBackSetter: (tokenContract:TokenContract) => void,
 }
 
 // ToDo Read in data List remotely
-export default function Dialog({transActionType, showDialog, setShowDialog, callBackSetter }: Props) {
+export default function Dialog({priceInputContainType, showDialog, setShowDialog, callBackSetter }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [inputField, setInputField] = useState<any>();
     const [tokenName, setTokenName] = useState<string|undefined>();
@@ -69,11 +69,11 @@ export default function Dialog({transActionType, showDialog, setShowDialog, call
     }
 
     const duplicateToken = (tokenAddress:any|undefined):boolean => {
-        const isDuplicateToken = transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+        const isDuplicateToken = priceInputContainType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
                 exchangeContext?.buyTokenContract?.address === tokenAddress :
                 exchangeContext?.sellTokenContract?.address === tokenAddress;
 
-        // const msg = `transActionType = ${transActionType === 0 ?"SELL":"BUY"}\n`+
+        // const msg = `priceInputContainType = ${priceInputContainType === 0 ?"SELL":"BUY"}\n`+
         //         `tokenAddress = ${tokenAddress}\n` +
         //         `sellTokenAddress = ${exchangeContext?.sellTokenContract?.address}\n` +
         //         `buyTokenAddress = ${exchangeContext?.buyTokenContract?.address}\n` +
