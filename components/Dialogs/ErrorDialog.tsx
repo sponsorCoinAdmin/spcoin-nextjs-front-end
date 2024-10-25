@@ -4,15 +4,8 @@ import styles from '@/styles/Modal.module.css';
 
 import { useEffect, useRef, useState } from 'react'
 
-type ErrorType = {
-    name: string;
-    message: string;
-    errorId?: number;
-    stack?: string;
-}
-
 type Props = {
-    errMsg: any,
+    errMsg: ErrorMessage|undefined,
     showDialog:boolean
 }
 
@@ -22,7 +15,6 @@ export default function Dialog({showDialog, errMsg}:Props) {
     }, [showDialog])
 
     const dialogRef = useRef<null | HTMLDialogElement>(null)
-    const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))
@@ -35,7 +27,7 @@ export default function Dialog({showDialog, errMsg}:Props) {
     const Dialog = (
         <dialog id="errorDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-                <h1 className="text-sm indent-9 mt-1">{errMsg.name}</h1>
+                <h1 className="text-sm indent-9 mt-1">{errMsg?.source}</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
                     onClick={closeDialog}
                 >X</div>
@@ -43,12 +35,12 @@ export default function Dialog({showDialog, errMsg}:Props) {
 
             <div className={styles.modalBox}>
                 <div className={styles.modalScrollBar}>
-                    <h1>SourceCode:{errMsg.source}</h1>
+                    <h1>SourceCode:{errMsg?.source}</h1>
                     <div>
-                        ErrorMessage:{errMsg.errorCode}
+                        ErrorMessage:{errMsg?.errCode}
                     </div>
                     <div>
-                        ErrorMessage:{errMsg.message}
+                        ErrorMessage:{errMsg?.msg}
                     </div>
                 </div>
             </div>

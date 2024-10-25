@@ -1,10 +1,11 @@
 // 'use server'
-import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage, WRAPPING_TYPE } from '@/lib/structure/types'
+import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { isNetworkProtocolAddress, NETWORK_PROTOCOL_CRYPTO } from '../network/utils';
+import { isNetworkProtocolAddress, isTransaction_A_Wrap, NETWORK_PROTOCOL_CRYPTO } from '../network/utils';
 import { Address } from 'viem';
+import { stringifyBigInt } from '../spCoin/utils';
 
 const BUY_AMOUNT_UNDEFINED = 200;
 const SELL_AMOUNT_ZERO = 300;
@@ -57,17 +58,23 @@ try {
   }
 }
 
-const getApiErrorTransactionData = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, data:any) => {
-  let priceTransaction:string = `ERROR         : API Call\n`
-            priceTransaction += `Server        : ${process.env.NEXT_PUBLIC_API_SERVER}\n`
-            priceTransaction += `netWork       : ${exchangeContext.network.name.toLowerCase()}\n`
-            priceTransaction += `apiPriceBase  : ${apiPriceBase}\n`
-            priceTransaction += `sellToken     : ${sellTokenAddress}\n`
-            priceTransaction += `buyToken      : ${buyTokenAddress}\n`
-            priceTransaction += `sellAmount    : ${sellAmount?.toString()}\n`
-            priceTransaction += `apiCall       : ${apiCall}\n`
-            priceTransaction += `response data : ${JSON.stringify(data, null, 2)}`
-  return priceTransaction;
+const getApiErrorTransactionData = (
+  sellTokenAddress:Address|undefined,
+  buyTokenAddress:Address|undefined,
+  sellAmount:any,
+  data:any) => {
+
+  let errObj:any = {};
+    errObj.ERROR         = `API Call`;
+    errObj.Server        = `${process.env.NEXT_PUBLIC_API_SERVER}`
+    errObj.netWork       = `${exchangeContext.network.name.toLowerCase()}`
+    errObj.apiPriceBase  = `${apiPriceBase}`
+    errObj.sellToken     = `${sellTokenAddress}`
+    errObj.buyToken      = `${buyTokenAddress}`
+    errObj.sellAmount    = `${sellAmount?.toString()}`
+    errObj.apiCall       = `${apiCall}`
+    errObj.response_data = `$data}`
+  return errObj;
 }
 
 const getPriceApiCall = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any, transactionType:any) => {
@@ -109,23 +116,6 @@ type Props = {
   apiErrorCallBack: (apiErrorObj:any) => void
 }
 
-const WETH = `0xae740d42e4ff0c5086b2b5b5d149eb2f9e1a754f`;
-
-// const getRequiredWrapping = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, amount:number)  => {
-//   if (!isNetworkProtocolAddress(sellTokenAddress)) {
-//     if (!isNetworkProtocolAddress(buyTokenAddress)) {
-//       swap(sellTokenAddress, buyTokenAddress, amount)
-//     } else if (sellTokenAddress !== WETH)) {
-//       swap(sellTokenAddress, WETH, amount)
-//       unWrap(WETH, amount)
-//     } else {
-//       wrap(sellTokenAddress, amount)
-//       if (buyTokenAddress !== WETH)) {
-//         swap(WETH, buyTokenAddress, amount)
-//       }
-//     }
-//   }
-
 function usePriceAPI({
   sellTokenAddress, 
   buyTokenAddress,
@@ -152,13 +142,20 @@ function usePriceAPI({
           setBuyAmount(data.buyAmount);
         }
         else {
-          // alert(data?.code)
-          if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
-            // alert(`ERROR:sellTokenAddress = ${sellTokenaddress}\nbuyTokenAddress = ${buyTokenaddress}\nsellAmount = ${sellAmount}`)
+          // if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
+            if (isTransaction_A_Wrap()) {
+            // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
             if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
               setBuyAmount(sellAmount);
             else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
               setSellAmount(buyAmount);
+            }
+            else {if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
+                setBuyAmount(0n);
+              else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+                setSellAmount(BigInt(0));
+            const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
+            apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
           }
           // else {
           //   const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
@@ -189,50 +186,3 @@ export {
     BUY_AMOUNT_ZERO,
     ERROR_0X_RESPONSE
 }
-
-
-//   let wrappingType:WRAPPING_TYPE = WRAPPING_TYPE.NO_WRAP_REQUIRED;
-//   if (sellTokenAddress && buyTokenAddress) {
-//     alert(`sellTokenAddress = ${sellTokenAddress}, buyTokenAddress = ${buyTokenAddress}`)
-//     if (sellTokenAddress !== buyTokenAddress) {
-//       const transactionType = exchangeContext.tradeData.transactionType;
-//       alert(`transactionType = ${transactionType}`)
-//       if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-//         if (validTokenOrNetworkCoin(sellTokenAddress) === buyTokenAddress) {
-//           alert("HERE 1")
-//           wrappingType = WRAPPING_TYPE.WRAP_SELL_TOKEN;
-//         } else if (validTokenOrNetworkCoin(buyTokenAddress) === sellTokenAddress) {
-//           alert("HERE 2")
-//           wrappingType = WRAPPING_TYPE.UNWRAP_SELL_TOKEN
-//         }
-//       } else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-//         if (validTokenOrNetworkCoin(buyTokenAddress) === sellTokenAddress) {
-//           alert("HERE 3")
-//           wrappingType = WRAPPING_TYPE.WRAP_BUY_TOKEN
-//         } else if (validTokenOrNetworkCoin(sellTokenAddress) === buyTokenAddress) {
-//           alert("HERE 4")
-//           wrappingType = WRAPPING_TYPE.UNWRAP_BUY_TOKEN
-//         }
-//       }
-//     }
-//   }
-// return wrappingType;
-// }
-
-// const getEnumWrappingTypeText = (wrappingType:WRAPPING_TYPE) => {
-//   switch(wrappingType) {
-//     case WRAPPING_TYPE.WRAP_SELL_TOKEN   : return "WRAP_SELL_TOKEN";
-//     case WRAPPING_TYPE.UNWRAP_SELL_TOKEN : return "UNWRAP_SELL_TOKEN";
-//     case WRAPPING_TYPE.WRAP_BUY_TOKEN    : return "WRAP_BUY_TOKEN";
-//     case WRAPPING_TYPE.UNWRAP_BUY_TOKEN  : return "UNWRAP_BUY_TOKEN";
-//     case WRAPPING_TYPE.NO_WRAP_REQUIRED  :
-//     default                              : return "NO_WRAP_REQUIRED";
-//   }
-// }
-
-// const isWrapRequired = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined) => {
-//   const requiredWrapping = getRequiredWrapping(sellTokenAddress, buyTokenAddress);
-//   if (requiredWrapping !== WRAPPING_TYPE.NO_WRAP_REQUIRED )
-//     alert(`WRAPPING REQUIRED = ${getEnumWrappingTypeText(requiredWrapping)}`);
-//   return requiredWrapping === WRAPPING_TYPE.UNWRAP_BUY_TOKEN ? true : false;
-// }

@@ -63,18 +63,34 @@ const ExchangeButton = () => {
       BUTTON_TYPE.SWAP;
     return buttonType;
   }
+  const getSwapType = () => {
+    return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+    "EXACT OUT SWAP" : "EXACT IN SWAP";
+  }
 
-  const getButtonText = () => {
-    let buttonType:BUTTON_TYPE = getButtonType()
+  const getButtonText = (buttonType: BUTTON_TYPE) => {
     switch(buttonType) {
       case BUTTON_TYPE.ZERO_AMOUNT: 
         return "Enter an Amount";
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-        return "Insufficient Sell Balance";
+        return `Insufficient ${exchangeContext.sellTokenContract?.symbol} Balance`;
       case BUTTON_TYPE.SWAP:
-        return "SWAP";
+        return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+        "EXACT OUT SWAP" : "EXACT IN SWAP";
       default:
         return "Button Type Undefined";
+    }
+  }
+
+  const getButtonColor = (buttonType: BUTTON_TYPE) => {
+    switch(buttonType) {
+      case BUTTON_TYPE.ZERO_AMOUNT: 
+        return "standardColor";
+      case BUTTON_TYPE.SWAP:
+        return "executeColor";
+        case BUTTON_TYPE.INSUFFICIENT_BALANCE:
+        default:
+          return "errorColor";
     }
   }
 
@@ -97,14 +113,17 @@ const ExchangeButton = () => {
     alert("Doing the Swap");
   }
 
+  const  buttonColor = "errorColor"
+  const buttonType:BUTTON_TYPE = getButtonType()
+
   return (
     <div>
       <button
         onClick={buttonClick}
         // disabled={true}
         type="button"
-        className={styles["exchangeButton"]}>
-        {getButtonText()}
+        className={styles["exchangeButton"] + " " + styles[getButtonColor(buttonType)]}>
+        {getButtonText(buttonType)}
       </button>
     </div>
   )

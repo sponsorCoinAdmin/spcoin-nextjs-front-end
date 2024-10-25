@@ -15,6 +15,7 @@ const PriceButton = () => {
     useEffect(() => {
         setDisplayDumpContextButton(exchangeContext.test.dumpContextButton)
     }, [exchangeContext.test.dumpContextButton])
+    
     useEffect(() => {
         setWalletAccount(ACTIVE_ACCOUNT?.address)
         // alert(`exchangeContext.test.dumpContextButton = ${exchangeContext.test.dumpContextButton}`)

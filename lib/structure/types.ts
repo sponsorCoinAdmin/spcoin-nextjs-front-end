@@ -8,7 +8,6 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
                        SWAP }
 
 enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN }
-enum  WRAPPING_TYPE { WRAP_SELL_TOKEN, UNWRAP_SELL_TOKEN, WRAP_BUY_TOKEN, UNWRAP_BUY_TOKEN, NO_WRAP_REQUIRED }
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 enum  SP_COIN_DISPLAY { SELECT_BUTTON, RECIPIENT_CONTAINER, SPONSOR_RATE_CONFIG }
 enum  BUTTON_TYPE { UNDEFINED, CONNECT, ZERO_AMOUNT, INSUFFICIENT_BALANCE, SWAP }
@@ -59,7 +58,7 @@ type TradeData = {
   transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
   buyAmount:bigint;
-  slippage: string;
+  slippage: number;
 }
 
 type ExchangeContext = {
@@ -77,7 +76,7 @@ type ExchangeContext = {
 type ErrorMessage ={ 
   source:string,
   errCode:number,
-  msg:string | undefined
+  msg:any
   // msgArr:string[] | undefined
   // msgObj:{} | undefined
 }
@@ -88,8 +87,7 @@ export {
   EXCHANGE_STATE,
   FEED_TYPE,
   SP_COIN_DISPLAY,
-  TRANSACTION_TYPE,
-  WRAPPING_TYPE
+  TRANSACTION_TYPE
 }
 
 export type {

@@ -17,6 +17,7 @@ type Props = {
   priceInputContainType: CONTAINER_TYPE,
   updateAmount: bigint,
   activeContract: TokenContract | undefined, 
+  slippage:number,
   setCallbackAmount: (amount:bigint) => void,
   setTransactionType:(transactionType:TRANSACTION_TYPE) => void,
   setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
@@ -26,6 +27,7 @@ const priceInputContainer = ({priceInputContainType,
                               updateAmount,
                               activeContract,
                               setCallbackAmount,
+                              slippage,
                               setTransactionType,
                               setTokenContractCallback} : Props) => {
   const ACTIVE_ACCOUNT = useAccount();
@@ -112,8 +114,8 @@ const priceInputContainer = ({priceInputContainType,
   const buySellText = isTransaction_A_Wrap() ? 
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
       exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Receive +-2%" :
-        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Pay +-2%"    : "You Exactly Receive"
+        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage*100}%` :
+        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippage*100}%`    : "You Exactly Receive"
   
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>

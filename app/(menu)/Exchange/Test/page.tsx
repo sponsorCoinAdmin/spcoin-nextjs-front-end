@@ -81,7 +81,6 @@ function App() {
   return (
     <>
       <ProviderConfigurationStatus />
-
       <div>
         <button
           onClick={show}

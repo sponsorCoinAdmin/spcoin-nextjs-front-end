@@ -1,6 +1,5 @@
 import React from 'react';
 import { BLOCKCHAIN_PROVIDER } from '@/lib/wagmi/wagmiConfig';
-import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const ProviderConfigurationStatus = () => {
   return (

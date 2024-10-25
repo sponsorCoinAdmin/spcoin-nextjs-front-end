@@ -24,7 +24,7 @@ const isNetworkProtocolAddress = (address:Address|undefined) : boolean => {
 }
 
 const isActiveWalletAccount = (address:Address|undefined) : boolean => {
-  alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
+  // alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
   return address === exchangeContext.activeWalletAccount;
 }
 
@@ -32,11 +32,30 @@ const isNetworkOrWalletAccountAddress = (address:Address|undefined) : boolean =>
   return isNetworkProtocolAddress(address) || isActiveWalletAccount(address)
 }
 
+// *** WARNING To be fixed for other networks
+const getNetworkToken = (chainId:number):Address|undefined => {
+  const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+  switch(chainId) {
+    case 1: return WETH;
+    default: return undefined;
+  }
+}
+
+// *** WARNING To be fixed for other networks
+const isNetworkTokenAddress = (address:Address|undefined) : boolean => {
+  const chainId:number = 1;
+  return address === getNetworkToken(chainId);
+}
+
+const isNetworkToken = (address:Address|undefined) : boolean => {
+  return isNetworkTokenAddress(address) || isNetworkOrWalletAccountAddress(address);
+}
+
 const isTransaction_A_Wrap = () : boolean => {
-  const buyTokenAddress = exchangeContext.buyTokenContract?.address;
   const sellTokenAddress = exchangeContext.sellTokenContract?.address;
+  const buyTokenAddress = exchangeContext.buyTokenContract?.address;
   return  buyTokenAddress && sellTokenAddress && (buyTokenAddress !== sellTokenAddress) ? 
-          isNetworkOrWalletAccountAddress(sellTokenAddress) && isNetworkOrWalletAccountAddress(buyTokenAddress) :
+    isNetworkToken(sellTokenAddress) && isNetworkToken(buyTokenAddress) :
           false
 }
 
@@ -77,7 +96,6 @@ const createNetworkJsonList = () => {
 function isLowerCase (input:string) {  
   return input === String(input).toLowerCase()
 }
-
 
 // This code is not used anywhere but is implemented for future use
 async function catchPromiseError<T>(promise: Promise<T>): Promise<[undefined, T] | [Error]> {

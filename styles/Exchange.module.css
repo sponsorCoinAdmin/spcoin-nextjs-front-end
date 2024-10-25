@@ -255,6 +255,21 @@
   margin-bottom: 5px;
 }
 
+.errorColor {
+  color: #5981F3;
+  background-color: #501505; 
+}
+
+.standardColor {
+  color: #5981F3;
+  background-color: #243056; 
+}
+
+.executeColor {
+  color: #5981F3;
+  background-color: #1f3e1d; 
+}
+
 .exchangeButton:hover {
   cursor: pointer;
   color: green

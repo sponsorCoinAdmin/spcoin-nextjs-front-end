@@ -24,16 +24,25 @@ export default function PriceView() {
   const [priceResponse, setPriceResponse] = useState<PriceResponse | undefined>();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-  const [slippage, setSlippage] = useState<string>(exchangeContext.tradeData.slippage);
+  const [slippage, setSlippage] = useState<number>(exchangeContext.tradeData.slippage);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({ source: "", errCode:0, msg: "" });
+  const [showError, setShowError] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
+  let errorMessage:ErrorMessage|undefined = undefined;
+
+  const setErrorMessage = (errMsg:ErrorMessage|undefined) => {
+    errorMessage = errMsg;
+  }
 
   try {
     useEffect(() => {
       displaySpCoinContainers(exchangeContext.spCoinPanels)
+    }, [])
+
+    useEffect(() => {
+      exchangeContext.test.dumpContextButton = true
     }, [])
 
   useEffect(() => {
@@ -92,22 +101,19 @@ export default function PriceView() {
       exchangeContext.tradeData.transactionType = transactionType;
     }, [transactionType]);
 
-    useEffect(() => {
-      console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
-      if ( errorMessage && errorMessage.source !== "" && errorMessage.msg !== "") {
-        openDialog("#errorDialog");
-      }
-    }, [errorMessage.errCode]);
+    // useEffect(() => {
+    //   console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
+    //   if ( errorMessage && errorMessage.source !== "" && errorMessage.msg !== "") {
+    //     openDialog("#errorDialog");
+    //   }
+    // }, [errorMessage.errCode]);
 
-    const apiErrorCallBack = (apiErrorObj:any) => {
-      if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-        setBuyAmount(0n);
-      }
-      else if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-        setSellAmount(0n);
-      }
-      alert(`${apiErrorObj}`);
-      console.debug(`${apiErrorObj}`);
+    const apiErrorCallBack = (apiErrorObj:ErrorMessage) => {
+      alert(`${stringifyBigInt(apiErrorObj)}`);
+      setErrorMessage({ source: apiErrorObj.source, errCode: apiErrorObj.errCode, msg: apiErrorObj.msg });
+      setShowError(false);
+      setShowError(true);
+      // console.debug(`${stringifyBigInt(apiErrorObj)}`);
     }
   
     const sellTokenAddress = sellTokenContract?.address;
@@ -146,19 +152,21 @@ export default function PriceView() {
     try {
       return (
         <form autoComplete="off">
-          <ErrorDialog errMsg={errorMessage} showDialog={false} />
+          <ErrorDialog errMsg={errorMessage} showDialog={showError} />
           <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
             <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
             <PriceInputContainer  priceInputContainType={CONTAINER_TYPE.INPUT_SELL_PRICE}
                                   updateAmount={sellAmount}
                                   activeContract={sellTokenContract}
                                   setCallbackAmount={setSellAmount}
+                                  slippage={slippage}
                                   setTransactionType={setTransactionType}
                                   setTokenContractCallback={setSellTokenContract}/>
             <PriceInputContainer  priceInputContainType={CONTAINER_TYPE.INPUT_BUY_PRICE}
                                   updateAmount={buyAmount}
                                   activeContract={buyTokenContract}
                                   setCallbackAmount={setBuyAmount}
+                                  slippage={slippage}
                                   setTransactionType={setTransactionType}
                                   setTokenContractCallback={setBuyTokenContract}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
@@ -168,11 +176,11 @@ export default function PriceView() {
           <FeeDisclosure/>
           <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
 
-          <div>ETH NETWORK 0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63</div>
+          {/* <div>ETH NETWORK 0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63</div>
           <div>FTM  0x4e15361fd6b4bb609fa63c81a2be19d873717870</div>
           <div>FLOK 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E</div>
           <div>AAVI 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9</div>
-          <div>CHKN	0xD55210Bb6898C021a19de1F58d27b71f095921Ee</div>
+          <div>CHKN	0xD55210Bb6898C021a19de1F58d27b71f095921Ee</div> */}
         </form>
       );
     } catch (err:any) {
