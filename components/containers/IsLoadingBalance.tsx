@@ -5,7 +5,7 @@ type Props = {
     isLoadingBalance: boolean
   }
 
-const IsLoadingBalance = ({isLoadingBalance} : Props) => {
+const IsLoadingBalance = ({isLoadingBalance}:Props) => {
   return (
     <div className={styles["agentRateFee"]}>
         {isLoadingBalance && (<div className="text-center mt-2">Fetching the best Balance...</div>)}

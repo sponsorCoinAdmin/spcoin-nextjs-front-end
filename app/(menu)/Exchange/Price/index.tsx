@@ -1,6 +1,6 @@
 'use client';
 import styles from '@/styles/Exchange.module.css';
-import { openDialog, ErrorDialog} from '@/components/Dialogs/Dialogs';
+import { ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
 import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE } from '@/lib/structure/types';
@@ -111,14 +111,13 @@ export default function PriceView() {
     const apiErrorCallBack = (apiErrorObj:ErrorMessage) => {
       alert(`${stringifyBigInt(apiErrorObj)}`);
       setErrorMessage({ source: apiErrorObj.source, errCode: apiErrorObj.errCode, msg: apiErrorObj.msg });
-      setShowError(false);
-      setShowError(true);
+      // setShowError(true);
       // console.debug(`${stringifyBigInt(apiErrorObj)}`);
     }
   
     const sellTokenAddress = sellTokenContract?.address;
     const buyTokenAddress = buyTokenContract?.address;
-    const { isLoading: isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
+    const { isLoading:isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
       transactionType,
       sellTokenAddress, 
       buyTokenAddress,

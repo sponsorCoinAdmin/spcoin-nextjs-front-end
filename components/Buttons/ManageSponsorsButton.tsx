@@ -10,7 +10,7 @@ type Props = {
   tokenContract: TokenContract|undefined,
 }
 
-const ManageSponsorsButton = ({activeAccount, tokenContract} : Props) => {
+const ManageSponsorsButton = ({activeAccount, tokenContract}:Props) => {
   const [showDialog, setShowDialog ] = useState<boolean>(false)
   const openDialog2 = () => {
       setShowDialog(true)

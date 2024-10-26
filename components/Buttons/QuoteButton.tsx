@@ -6,7 +6,7 @@ type Props = {
   }
 
 const PlaceOrder = ({
-    sendTransaction } : Props) => {
+    sendTransaction }:Props) => {
     function setErrorMessage(msg: Error): void {
         throw new Error('Function not implemented.');
     }

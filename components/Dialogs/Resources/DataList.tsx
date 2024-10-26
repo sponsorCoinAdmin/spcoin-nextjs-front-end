@@ -89,7 +89,7 @@ type Props = {
     updateTokenCallback:  (listElement: any) => void,
 }
 
-function DataList({dataFeedType, updateTokenCallback} : Props) {
+function DataList({dataFeedType, updateTokenCallback}:Props) {
     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
     // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
     const tList = dataFeedList?.map((e: any, i: number) => (

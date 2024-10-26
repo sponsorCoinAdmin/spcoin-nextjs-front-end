@@ -9,7 +9,7 @@ type Props = {
     buyTokenContract: TokenContract | undefined, 
 }
 
-const AffiliateFee = ({priceResponse, buyTokenContract} : Props) => {
+const AffiliateFee = ({priceResponse, buyTokenContract}:Props) => {
     return (
         <div className="text-slate-400">
             {priceResponse?.grossBuyAmount

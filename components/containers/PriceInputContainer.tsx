@@ -29,7 +29,7 @@ const priceInputContainer = ({priceInputContainType,
                               setCallbackAmount,
                               slippage,
                               setTransactionType,
-                              setTokenContractCallback} : Props) => {
+                              setTokenContractCallback}:Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
   const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
@@ -96,13 +96,13 @@ const priceInputContainer = ({priceInputContainType,
     setTransactionType(priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                                                  TRANSACTION_TYPE.SELL_EXACT_OUT :
                                                  TRANSACTION_TYPE.BUY_EXACT_IN)
-  }
-
-
-  const setStringToBigIntStateValue = (stringValue:string) => {
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
+                                           
+  }
+
+  const setStringToBigIntStateValue = (stringValue:string) => {
     const decimals = tokenContract?.decimals;
     stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
@@ -120,7 +120,7 @@ const priceInputContainer = ({priceInputContainType,
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
       <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""}
-        onChange={(e) => { setStringToBigIntStateValue(e.target.value) }}
+        onChange={(e) => { setTextInputValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
       <AssetSelect  priceInputContainType={priceInputContainType}

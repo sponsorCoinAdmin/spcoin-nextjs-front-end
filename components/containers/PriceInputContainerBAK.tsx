@@ -24,7 +24,7 @@ const priceInputContainer = ({transActionType,
                               updateAmount,
                               activeContract,
                               setCallbackAmount,
-                              setTokenContractCallback} : Props) => {
+                              setTokenContractCallback}:Props) => {
   const ACTIVE_ACCOUNT = useAccount();
   const initialAmount:bigint|undefined = transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
                                          exchangeContext?.tradeData?.sellAmount :

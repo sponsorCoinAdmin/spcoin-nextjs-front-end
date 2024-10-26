@@ -1,16 +1,15 @@
 // 'use server'
-import { PriceRequestParams, TokenContract, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
+import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { isNetworkProtocolAddress, isTransaction_A_Wrap, NETWORK_PROTOCOL_CRYPTO } from '../network/utils';
+import { isNetworkProtocolAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
 import { stringifyBigInt } from '../spCoin/utils';
 
-const BUY_AMOUNT_UNDEFINED = 200;
-const SELL_AMOUNT_ZERO = 300;
-const BUY_AMOUNT_ZERO = 400;
-const ERROR_0X_RESPONSE = 500;
+const SELL_AMOUNT_ZERO = 100;
+const BUY_AMOUNT_ZERO = 200;
+const ERROR_0X_RESPONSE = 300;
 
 const NEXT_PUBLIC_API_SERVER:string|undefined = process.env.NEXT_PUBLIC_API_SERVER
 
@@ -32,7 +31,6 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   let { sellAmount, buyAmount } = params;
 
   if (!sellAmount && !buyAmount) return;
-
 
   if (!sellAmount && buyAmount === "0") {
     throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
@@ -73,11 +71,11 @@ const getApiErrorTransactionData = (
     errObj.buyToken      = `${buyTokenAddress}`
     errObj.sellAmount    = `${sellAmount?.toString()}`
     errObj.apiCall       = `${apiCall}`
-    errObj.response_data = `$data}`
+    errObj.response_data = `${data}`
   return errObj;
 }
 
-const getPriceApiCall = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any, transactionType:any) => {
+const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any) => {
   let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
                      (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)? 
                       undefined :
@@ -93,10 +91,19 @@ const getPriceApiCall = (sellTokenAddress:Address|undefined, buyTokenAddress:Add
                           // expectedSlippage: slippage
                         },
                       ];
+  // if(priceApiCall) {
+  //   const apiDataResponse = {
+  //     transactionType:(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? `SELL_EXACT_OUT` : `BUY_EXACT_IN`,
+  //     sellTokenAddress:sellTokenAddress,
+  //     buyTokenAddress:buyTokenAddress,
+  //     sellAmount:sellAmount,
+  //     buyAmount:buyAmount,
+  //     priceApiCall:priceApiCall
+  //   }
+  //   alert(`priceApiCall = ${stringifyBigInt(apiDataResponse)}`)
+  // }
   return priceApiCall;
 }
-
-
 
 // ToDo This is to turn on off mandatory fetching
 const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
@@ -117,19 +124,19 @@ type Props = {
 }
 
 function usePriceAPI({
-  sellTokenAddress, 
-  buyTokenAddress,
-  transactionType,
-  sellAmount,
-  buyAmount,
-  setPriceResponse,
-  setSellAmount,
-  setBuyAmount,
-  apiErrorCallBack
-}:Props) {
+    sellTokenAddress, 
+    buyTokenAddress,
+    transactionType,
+    sellAmount,
+    buyAmount,
+    setPriceResponse,
+    setSellAmount,
+    setBuyAmount,
+    apiErrorCallBack
+  }:Props) {
                         
   return useSWR(
-    () => shouldFetch(sellTokenAddress, buyTokenAddress) ? getPriceApiCall(sellTokenAddress, buyTokenAddress, sellAmount, buyAmount, transactionType) : null,
+    () => shouldFetch(sellTokenAddress, buyTokenAddress) ? getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
     fetcher,
     {
       onSuccess: (data) => {
@@ -139,7 +146,9 @@ function usePriceAPI({
           // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
           setPriceResponse(data);
           // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
-          setBuyAmount(data.buyAmount);
+          // alert(`useSWR:TRANSACTION_TYPE = ${transactionType}\n amount = ${data.buyAmount}`)
+          transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+          setBuyAmount(data.buyAmount || 0) : setSellAmount(data.sellAmount || 0);
         }
         else {
           // if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
@@ -157,10 +166,6 @@ function usePriceAPI({
             const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
             apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
           }
-          // else {
-          //   const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
-          //   apiErrorCallBack(apiErrorObj);
-          // }
         }
       },
       // onError: (error) => {
@@ -178,11 +183,6 @@ function usePriceAPI({
 }
 
 export {
-    fetcher,
-    // processError,
-    usePriceAPI,
-    BUY_AMOUNT_UNDEFINED,
-    SELL_AMOUNT_ZERO,
-    BUY_AMOUNT_ZERO,
-    ERROR_0X_RESPONSE
+  fetcher,
+  usePriceAPI
 }

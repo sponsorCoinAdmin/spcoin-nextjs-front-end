@@ -8,7 +8,7 @@ type Props = {
   tokenContract: TokenContract|undefined,
 }
 
-const AddSponsorshipButton = ({activeAccount, tokenContract} : Props) => {
+const AddSponsorshipButton = ({activeAccount, tokenContract}:Props) => {
   const openComponent = () => {
     console.debug("AddSponsorshipButton:SHOW RecipientSelect_ID")
     displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER);
