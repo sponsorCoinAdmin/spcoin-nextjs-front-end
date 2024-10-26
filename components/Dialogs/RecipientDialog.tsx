@@ -104,8 +104,8 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
     }
 
     const getSelectedListElement = (listElement: AccountRecord | undefined) => {
-        console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
-        console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
+        // console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
+        // console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + recipientInput)
             return false;

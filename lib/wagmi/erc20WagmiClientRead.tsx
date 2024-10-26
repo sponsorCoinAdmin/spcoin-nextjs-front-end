@@ -120,8 +120,8 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
-  if (TOKEN_CONTRACT_ADDRESS)
-    console.debug(`****useErc20TokenContract.contractResponse(${TOKEN_CONTRACT_ADDRESS}) = ${stringifyBigInt(contractResponse)}`)
+  // if (TOKEN_CONTRACT_ADDRESS)
+  //   console.debug(`****useErc20TokenContract.contractResponse(${TOKEN_CONTRACT_ADDRESS}) = ${stringifyBigInt(contractResponse)}`)
   return contractResponse
 }
 
@@ -146,8 +146,8 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
     }
   }
 
-  if (ACTIVE_NETWORK_ADDRESS)
-    console.debug(`****useErc20TokenContract.networkResponse = ${stringifyBigInt(networkResponse)}`)
+  // if (ACTIVE_NETWORK_ADDRESS)
+  //   console.debug(`****useErc20TokenContract.networkResponse = ${stringifyBigInt(networkResponse)}`)
   return networkResponse
 }
 

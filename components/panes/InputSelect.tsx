@@ -48,12 +48,9 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     if (tokenContract?.address) {
       // alert(`tokenContract = ${stringifyBigInt(tokenContract)}`)
       fetchIconResource(tokenContract, setTokenContractCallBack)
-      // console.debug(`HERE 1 tokenContract = ${stringifyBigInt(tokenContract)}`)
     }
     else {
       setTokenContractCallBack(tokenContract);
-      // console.debug(`HERE 2 tokenContract = ${stringifyBigInt(tokenContract)}`)
-      // alert (`Empty Contract(${stringifyBigInt(tokenContract)})`)
     }
   }, [tokenContract?.name, tokenContract?.symbol, tokenContract?.decimals, tokenContract?.totalSupply])
 
@@ -61,11 +58,9 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     if (networkContract?.address) {
       // alert(`networkContract = ${stringifyBigInt(networkContract)}`)
       fetchIconResource(networkContract, setTokenContractCallBack)
-      // console.debug(`HERE 1 networkContract = ${stringifyBigInt(networkContract)}`)
     }
     else {
       setTokenContractCallBack(networkContract);
-      // console.debug(`HERE 2 networkContract = ${stringifyBigInt(networkContract)}`)
       // alert (`Empty Contract(${stringifyBigInt(networkContract)})`)
     }
   }, [networkContract?.name, networkContract?.symbol, networkContract?.decimals, networkContract?.totalSupply])
@@ -75,11 +70,9 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
 
     if (validAddress) {
       setContractType(validAddress)
-      console.debug(`HERE 4 Valid Token  debouncedText = ${debouncedText}`)
     } else {
       const invalidToken:TokenContract|undefined = invalidTokenContract(debouncedText, chainId)
       setTokenContractCallBack(invalidToken);
-      console.debug(`HERE 3 Invalid Token  debouncedText = ${stringifyBigInt(invalidToken)}`)
     }
   }, [debouncedText])
 

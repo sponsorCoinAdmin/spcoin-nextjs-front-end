@@ -89,7 +89,7 @@ const createNetworkJsonList = () => {
     sepolia  : defaultSepoliaSettings,
   }
   let networkSettings = "default json Network Settings for all Networks AS follows:\n"+ JSON.stringify(defaultNetworkSettings, null, 2);
-  console.debug(networkSettings)
+  console.log(networkSettings)
   alert("NetworkSettings: "+networkSettings)
 }
 

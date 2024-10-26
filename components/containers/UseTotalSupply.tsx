@@ -40,7 +40,7 @@ let readContractProps = {
   // config: config
 };
 
-console.debug(`**** readContractProps:\n${JSON.stringify(readContractProps,null,2)}`)
+// console.debug(`**** readContractProps:\n${JSON.stringify(readContractProps,null,2)}`)
 
 const result = useReadContract({
     abi: erc20Abi,
@@ -50,7 +50,7 @@ const result = useReadContract({
     // chainId: polygon.id, 
     config: config
     })
-    console.debug(`result = ${JSON.stringify(result,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
+    // console.debug(`result = ${JSON.stringify(result,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
   return (
     <div>
       {result.status.toString()}

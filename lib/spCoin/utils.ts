@@ -10,16 +10,16 @@ const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
-  console.debug("Searching " + _searchParam + " in _urlParams " + _urlParams)
+  // console.debug("Searching " + _searchParam + " in _urlParams " + _urlParams)
    var vars = _urlParams.split("&");
    for (var i=0; i<vars.length; i++) {
            var pair = vars[i].split("=");
            if(pair[0] == _searchParam){
-            console.debug("FOUND Search Param " + _searchParam + ": " + pair[1])
+            // console.debug("FOUND Search Param " + _searchParam + ": " + pair[1])
             return pair[1];
           }
    }
-   console.debug("*** ERROR *** Search Param " + _searchParam + " Not Found")
+   console.error("*** ERROR *** Search Param " + _searchParam + " Not Found")
    return "";
 }
 
@@ -56,7 +56,7 @@ const  getValidFormattedPrice = (value:string|bigint, decimals:number|undefined)
 }
 
 const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (txt:bigint) => void ) => {
-  console.debug(`$$$$$$$$$$$ 2. setValidPriceInput txt value = ${txt}`)
+  // console.debug(`$$$$$$$$$$$ 2. setValidPriceInput txt value = ${txt}`)
   txt = getValidFormattedPrice(txt, decimals);
   if (txt !== "")
     setSellAmount(parseUnits(txt,decimals));
@@ -90,7 +90,7 @@ const fetchTokenDetails = async(chainId:any, tokenAddr: any) => {
     }
   // return ELEMENT_DETAILS
   } catch (e:any) {
-      console.debug("SELL_ERROR:setTokenDetails e.message" + e.message)
+      console.error("SELL_ERROR:setTokenDetails e.message" + e.message)
   }
   return tokenContract
 }
@@ -100,7 +100,7 @@ const updateBalance = async (connectedAccountAddr: Address|undefined|null, Token
   let balance:string = "N/A";
   let errMsg = "N/A";
   let tokenAddr = TokenContract.address;
-  console.debug("updateBalance(wallet Address = " + connectedAccountAddr + " TokenContract = " + JSON.stringify(TokenContract,null,2) + ")");
+  // console.debug("updateBalance(wallet Address = " + connectedAccountAddr + " TokenContract = " + JSON.stringify(TokenContract,null,2) + ")");
   if (connectedAccountAddr != null && connectedAccountAddr !== undefined)
   {
     let retResponse: any = await getWagmiBalanceOfRec(tokenAddr);
@@ -132,7 +132,7 @@ const exchangeContextDump = () => {
   const exchangeData = stringifyBigInt(exchangeContext);
   alert(exchangeData);
   toggleElement("AddSponsorshipButton_ID");
-  console.debug(exchangeData);
+  console.log(exchangeData);
 }
 
 function decimalAdjustTokenAmount(amount:bigint, newTokenContract: TokenContract|undefined, prevTokenContract: TokenContract|undefined) {
@@ -161,8 +161,8 @@ const getValidAddress = (addrType:any, chainId?:number) => {
       return getAddress(addrType.trim(), chainId)
   }
   catch (err:any) {
-      console.debug(`ERROR: getAddress(${addrType})`)
-      console.debug(err.message)
+      console.log(`ERROR: getAddress(${addrType})`)
+      console.log(err.message)
       // alert(err.message)
       return undefined
   }

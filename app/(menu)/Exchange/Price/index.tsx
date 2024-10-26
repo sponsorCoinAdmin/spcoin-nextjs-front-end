@@ -36,11 +36,9 @@ export default function PriceView() {
     errorMessage = errMsg;
   }
 
-  try {
-    useEffect(() => {
-      displaySpCoinContainers(exchangeContext.spCoinPanels)
-      // exchangeContext.test.dumpContextButton = true
-    }, [])
+  useEffect(() => {
+    displaySpCoinContainers(exchangeContext.spCoinPanels)
+  }, [])
 
   useEffect(() => {
     exchangeContext.buyTokenContract = buyTokenContract;
@@ -50,140 +48,134 @@ export default function PriceView() {
     exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract])
 
-    useEffect(() => {
-      const chain = ACTIVE_ACCOUNT.chain;
-      if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
-        // alert(`chain = ${stringifyBigInt(chain)}`)
-        resetNetworkContext(chain)
-        console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
-        setAgentElement(exchangeContext.agentAccount);
-        setSlippage(exchangeContext.tradeData.slippage);
-        setSellTokenContract(exchangeContext.sellTokenContract);
-        setBuyTokenContract(exchangeContext.buyTokenContract);
-      }
-    }, [ACTIVE_ACCOUNT.chain]);
-
-    useEffect(() => {
-      exchangeContext.activeWalletAccount = ACTIVE_ACCOUNT.address as Address;
-    }, [ACTIVE_ACCOUNT.address]);
-
-    useEffect(() => {
-      console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
-      exchangeContext.tradeData.sellAmount = sellAmount;
-      if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-        setBuyAmount(0n);
-      }
-    },[sellAmount]);
-
-    useEffect(() => {
-      console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
-      exchangeContext.tradeData.buyAmount = buyAmount; 
-      if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-        setSellAmount(0n);
-      }
-    },[buyAmount]);
-
-    useEffect(() => {
-      console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
-      exchangeContext.tradeData.slippage = slippage;
-    }, [slippage]);
-
-    useEffect(() => {
-      console.debug(`PRICE.useEffect[buyTokenContract = ${buyTokenContract}])`);
-      exchangeContext.buyTokenContract = buyTokenContract;
-    }, [buyTokenContract]);
-
-    useEffect(() => {
-      console.debug(`PRICE.useEffect[transactionType = ${transactionType}])`);
-      exchangeContext.tradeData.transactionType = transactionType;
-    }, [transactionType]);
-
-    // useEffect(() => {
-    //   console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
-    //   if ( errorMessage && errorMessage.source !== "" && errorMessage.msg !== "") {
-    //     openDialog("#errorDialog");
-    //   }
-    // }, [errorMessage.errCode]);
-
-    const apiErrorCallBack = (apiErrorObj:ErrorMessage) => {
-      alert(`${stringifyBigInt(apiErrorObj)}`);
-      console.debug(`${stringifyBigInt(apiErrorObj)}`);
-      setErrorMessage({ source: apiErrorObj.source, errCode: apiErrorObj.errCode, msg: apiErrorObj.msg });
-      // setShowError(true);
-      // console.debug(`${stringifyBigInt(apiErrorObj)}`);
+  useEffect(() => {
+    const chain = ACTIVE_ACCOUNT.chain;
+    if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
+      // alert(`chain = ${stringifyBigInt(chain)}`)
+      resetNetworkContext(chain)
+      // console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
+      setAgentElement(exchangeContext.agentAccount);
+      setSlippage(exchangeContext.tradeData.slippage);
+      setSellTokenContract(exchangeContext.sellTokenContract);
+      setBuyTokenContract(exchangeContext.buyTokenContract);
     }
-  
-    const sellTokenAddress = sellTokenContract?.address;
-    const buyTokenAddress = buyTokenContract?.address;
-    const { isLoading:isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
-      transactionType,
-      sellTokenAddress, 
-      buyTokenAddress,
-      sellAmount,
-      buyAmount,
-      setPriceResponse,
-      setBuyAmount,
-      setSellAmount,
-      apiErrorCallBack});
+  }, [ACTIVE_ACCOUNT.chain]);
 
-    useEffect(() => {
-      if(PriceError) {
-         setErrorMessage({ source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
-      }
-    }, [PriceError]);
+  useEffect(() => {
+    exchangeContext.activeWalletAccount = ACTIVE_ACCOUNT.address as Address;
+  }, [ACTIVE_ACCOUNT.address]);
 
-   function swapBuySellTokens() {
-      const tmpTokenContract: TokenContract|undefined = exchangeContext.buyTokenContract;
-      setBuyTokenContract(exchangeContext.sellTokenContract);
-      setSellTokenContract(tmpTokenContract);
+  useEffect(() => {
+    // console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
+    exchangeContext.tradeData.sellAmount = sellAmount;
+    if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+      setBuyAmount(0n);
     }
+  },[sellAmount]);
 
-    function updateBuyTransaction(newTransactionContract: TokenContract) {
-      setBuyTokenContract(newTransactionContract);
-      let msg = `>>>>>>>>>>>> setDecimalAdjustedContract:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
-      msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
-      msg += `buyTokenContract = ${stringifyBigInt(buyTokenContract)}\n`
-      msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-      console.debug(msg);
+  useEffect(() => {
+    // console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
+    exchangeContext.tradeData.buyAmount = buyAmount; 
+    if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+      setSellAmount(0n);
     }
-    try {
-      return (
-        <form autoComplete="off">
-          <ErrorDialog errMsg={errorMessage} showDialog={showError} />
-          <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
-            <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
-            <PriceInputContainer  priceInputContainType={CONTAINER_TYPE.INPUT_SELL_PRICE}
-                                  updateAmount={sellAmount}
-                                  activeContract={sellTokenContract}
-                                  setCallbackAmount={setSellAmount}
-                                  slippage={slippage}
-                                  setTransactionType={setTransactionType}
-                                  setTokenContractCallback={setSellTokenContract}/>
-            <PriceInputContainer  priceInputContainType={CONTAINER_TYPE.INPUT_BUY_PRICE}
-                                  updateAmount={buyAmount}
-                                  activeContract={buyTokenContract}
-                                  setCallbackAmount={setBuyAmount}
-                                  slippage={slippage}
-                                  setTransactionType={setTransactionType}
-                                  setTokenContractCallback={setBuyTokenContract}/>
-            <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-            <PriceButton isLoadingPrice={isLoadingPrice}/>
-            <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
-          </div>
-          <FeeDisclosure/>
-          <IsLoadingPrice isLoadingPrice={isLoadingPrice} />
+  },[buyAmount]);
 
-          {/* <div>ETH NETWORK 0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63</div>
-          <div>FTM  0x4e15361fd6b4bb609fa63c81a2be19d873717870</div>
-          <div>FLOK 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E</div>
-          <div>AAVI 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9</div>
-          <div>CHKN	0xD55210Bb6898C021a19de1F58d27b71f095921Ee</div> */}
-        </form>
-      );
-    } catch (err:any) {
-      console.debug (`Price Components Error:\n ${err.message}`)
-    }
-  } catch (err:any) {
-    console.debug (`Price Methods Error:\n ${err.message}`)
+  useEffect(() => {
+    // console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
+    exchangeContext.tradeData.slippage = slippage;
+  }, [slippage]);
+
+  useEffect(() => {
+    // console.debug(`PRICE.useEffect[buyTokenContract = ${buyTokenContract}])`);
+    exchangeContext.buyTokenContract = buyTokenContract;
+  }, [buyTokenContract]);
+
+  useEffect(() => {
+    // console.debug(`PRICE.useEffect[transactionType = ${transactionType}])`);
+    exchangeContext.tradeData.transactionType = transactionType;
+  }, [transactionType]);
+
+  // useEffect(() => {
+  //   console.debug(`PRICE.useEffect[errorMessage.errorCode = ${errorMessage.errCode}])`);
+  //   if ( errorMessage && errorMessage.source !== "" && errorMessage.msg !== "") {
+  //     openDialog("#errorDialog");
+  //   }
+  // }, [errorMessage.errCode]);
+
+  const apiErrorCallBack = (apiErrorObj:ErrorMessage) => {
+    alert(`${stringifyBigInt(apiErrorObj)}`);
+    console.error(`${stringifyBigInt(apiErrorObj)}`);
+    setErrorMessage({ source: apiErrorObj.source, errCode: apiErrorObj.errCode, msg: apiErrorObj.msg });
+    // setShowError(true);
+    // console.debug(`${stringifyBigInt(apiErrorObj)}`);
   }
+
+  const sellTokenAddress = sellTokenContract?.address;
+  const buyTokenAddress = buyTokenContract?.address;
+  const { isLoading:isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
+    transactionType,
+    sellTokenAddress, 
+    buyTokenAddress,
+    sellAmount,
+    buyAmount,
+    setPriceResponse,
+    setBuyAmount,
+    setSellAmount,
+    apiErrorCallBack});
+
+  useEffect(() => {
+    if(PriceError) {
+        setErrorMessage({ source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
+    }
+  }, [PriceError]);
+
+  function swapBuySellTokens() {
+    const tmpTokenContract: TokenContract|undefined = exchangeContext.buyTokenContract;
+    setBuyTokenContract(exchangeContext.sellTokenContract);
+    setSellTokenContract(tmpTokenContract);
+  }
+
+  function updateBuyTransaction(newTransactionContract: TokenContract) {
+    setBuyTokenContract(newTransactionContract);
+    let msg = `>>>>>>>>>>>> setDecimalAdjustedContract:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
+    msg += `newTransactionContract = ${stringifyBigInt(newTransactionContract)}\n`
+    msg += `buyTokenContract = ${stringifyBigInt(buyTokenContract)}\n`
+    msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
+    console.log(msg);
+  }
+
+  return (
+    <form autoComplete="off">
+      <ErrorDialog errMsg={errorMessage} showDialog={showError} />
+      <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
+        <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage}/>
+        <PriceInputContainer  priceInputContainType={CONTAINER_TYPE.INPUT_SELL_PRICE}
+                              updateAmount={sellAmount}
+                              activeContract={sellTokenContract}
+                              setCallbackAmount={setSellAmount}
+                              slippage={slippage}
+                              setTransactionType={setTransactionType}
+                              setTokenContractCallback={setSellTokenContract}/>
+        <PriceInputContainer  priceInputContainType={CONTAINER_TYPE.INPUT_BUY_PRICE}
+                              updateAmount={buyAmount}
+                              activeContract={buyTokenContract}
+                              setCallbackAmount={setBuyAmount}
+                              slippage={slippage}
+                              setTransactionType={setTransactionType}
+                              setTokenContractCallback={setBuyTokenContract}/>
+        <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
+        <PriceButton isLoadingPrice={isLoadingPrice}/>
+        <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
+      </div>
+      <FeeDisclosure/>
+      {/* <IsLoadingPrice isLoadingPrice={isLoadingPrice} /> */}
+
+      {/* <div>ETH NETWORK 0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63</div>
+      <div>FTM  0x4e15361fd6b4bb609fa63c81a2be19d873717870</div>
+      <div>FLOK 0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E</div>
+      <div>AAVI 0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9</div>
+      <div>CHKN	0xD55210Bb6898C021a19de1F58d27b71f095921Ee</div> */}
+    </form>
+  );
 }

@@ -96,7 +96,7 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
             }
             if (duplicateToken(tokenContract.address)) {
                     alert("SELECT_ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")")
-                console.log("ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")");
+                console.error("ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")");
                 return false;
             }
             callBackSetter(tokenContract)

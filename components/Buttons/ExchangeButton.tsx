@@ -11,14 +11,14 @@ type Props = {
 
 const ExchangeButton = ({isLoadingPrice}:Props) => {
   const transActionType:TRANSACTION_TYPE = exchangeContext.tradeData.transactionType;
-  console.debug(`ExchangeButton:transActionType = ${transActionType}`);
+  // console.debug(`ExchangeButton:transActionType = ${transActionType}`);
 
   const getTokenContractByTradeType = () =>{
     const tokenContract:TokenContract|undefined = (transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ?
               exchangeContext.sellTokenContract as TokenContract | undefined :
               exchangeContext.buyTokenContract as TokenContract | undefined;
-    console.debug(`ExchangeButton:transActionType = ${transActionType}`);
-    console.debug(`ExchangeButton:getTokenContractByTradeType tokenContract = ${stringifyBigInt(tokenContract)}`);
+    // console.debug(`ExchangeButton:transActionType = ${transActionType}`);
+    // console.debug(`ExchangeButton:getTokenContractByTradeType tokenContract = ${stringifyBigInt(tokenContract)}`);
     return tokenContract;
   };
 
@@ -30,7 +30,7 @@ const ExchangeButton = ({isLoadingPrice}:Props) => {
     try {
       noTradingAmount = ( exchangeContext.tradeData.sellAmount.toString() === "0" )
     } catch(err:any) {
-      console.debug(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
+      console.error(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
     }
     return noTradingAmount;
   }
@@ -43,13 +43,13 @@ const ExchangeButton = ({isLoadingPrice}:Props) => {
       const tradeBalance = balance || BigInt(0);
       insufficientBalance = tradeBalance <  tradeAmount
 
-      console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${tradeBalance}"`);
-      console.debug(`tradeAmount             = "${tradeAmount}"`);
-      console.debug(`tradeBalance            = "${tradeBalance}"`);
-      console.debug(`insufficientBalance     = "${insufficientBalance}"`);
+      // console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${tradeBalance}"`);
+      // console.debug(`tradeAmount             = "${tradeAmount}"`);
+      // console.debug(`tradeBalance            = "${tradeBalance}"`);
+      // console.debug(`insufficientBalance     = "${insufficientBalance}"`);
 
     } catch(err:any) {
-      console.debug(`ERROR: ExchangeButton.insufficientSellBalance: ${err.message}`)
+      console.error(`ERROR: ExchangeButton.insufficientSellBalance: ${err.message}`)
     }
     return insufficientBalance;
   }

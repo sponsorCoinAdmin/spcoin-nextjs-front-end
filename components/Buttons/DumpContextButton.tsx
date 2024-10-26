@@ -6,7 +6,7 @@ import { exchangeContext } from '@/lib/context';
 const DumpContextButton = () => {
     const show = () => {
         // alert(`show:CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-        console.debug(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+        console.log(`CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
     }
     
     return (

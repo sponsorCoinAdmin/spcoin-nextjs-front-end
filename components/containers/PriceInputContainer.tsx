@@ -49,23 +49,23 @@ const priceInputContainer = ({priceInputContainType,
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
-    console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    // console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       exchangeContext.sellTokenContract = tokenContract :
       exchangeContext.buyTokenContract = tokenContract;
-    console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
+    // console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);
 
   useEffect(() =>  {
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
-      console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
-      console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
+    // priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+      // console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
+      // console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
     setDecimalAdjustedContract(activeContract)
   }, [activeContract]);
 
   useEffect (() => {
-    console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
+    // console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
     exchangeContext.tradeData.sellAmount = debouncedAmount :
     exchangeContext.tradeData.buyAmount = debouncedAmount ;
@@ -106,7 +106,7 @@ const priceInputContainer = ({priceInputContainType,
     const decimals = tokenContract?.decimals;
     stringValue = getValidFormattedPrice(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
-    console.debug(`priceInputContainer.setStringToBigIntStateValue setAmount(${bigIntValue})`);
+    // console.debug(`priceInputContainer.setStringToBigIntStateValue setAmount(${bigIntValue})`);
     setFormattedAmount(stringValue);
     setAmount(bigIntValue);
   }

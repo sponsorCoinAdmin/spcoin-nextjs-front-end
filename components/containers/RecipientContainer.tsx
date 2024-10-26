@@ -21,7 +21,7 @@ const RecipientContainer = ({setRecipientCallBack}:Props) => {
   const [recipientAccount, setRecipientAccount] = useState<AccountRecord|undefined>(exchangeContext.recipientAccount);
 
   useEffect(() => {
-    console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
+    // console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
     exchangeContext.recipientAccount = recipientAccount;
   }, [recipientAccount]);
 

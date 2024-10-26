@@ -21,10 +21,10 @@ switch (BLOCKCHAIN_PROVIDER) {
   break;
 }
 
-console.debug(`BLOCKCHAIN_PROVIDER = ${BLOCKCHAIN_PROVIDER}`)
-console.debug(`MAINNET_URL         = ${MAINNET_URL}`)
-console.debug(`POLYGON_URL         = ${POLYGON_URL}`)
-console.debug(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
+console.log(`BLOCKCHAIN_PROVIDER = ${BLOCKCHAIN_PROVIDER}`)
+console.log(`MAINNET_URL         = ${MAINNET_URL}`)
+console.log(`POLYGON_URL         = ${POLYGON_URL}`)
+console.log(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
 
 export const config = createConfig(
   getDefaultConfig({

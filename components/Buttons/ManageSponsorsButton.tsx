@@ -33,7 +33,7 @@ const ManageSponsorsButton = ({activeAccount, tokenContract}:Props) => {
       </>
     );
   } catch (err:any) {
-    console.debug (`Sell Container Error:\n ${err.message}`)
+    console.error (`Sell Container Error:\n ${err.message}`)
   }
 }
 

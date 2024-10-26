@@ -20,7 +20,7 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
     throw `ERROR: getWagmiBalanceOfRec(tokenAddr:Address = ${tokenAddr})`
   }
 
-  console.debug(`BEFORE: getWagmiBalanceOfRec:tokenAddr = :\n${JSON.stringify(tokenAddr,null,2)}`)
+  // console.debug(`BEFORE: getWagmiBalanceOfRec:tokenAddr = :\n${JSON.stringify(tokenAddr,null,2)}`)
 
   const resp = await getBalance(config, {
     address: getAddress(tokenAddr),
@@ -36,7 +36,7 @@ const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
   // alert(`getWagmiBalanceOfRec:config:\n${JSON.stringify(config,null,2)}`)
   // console.debug(`getWagmiBalanceOfRec:config:\n${JSON.stringify(config,null,2)}`)
   // console.debug(`getWagmiBalanceOfRec:resp:\n${JSON.stringify(resp,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
-  console.debug(`AFTER: getWagmiBalanceOfRec:retResponse:\n${JSON.stringify(retResponse,null,2)}`)
+  // console.debug(`AFTER: getWagmiBalanceOfRec:retResponse:\n${JSON.stringify(retResponse,null,2)}`)
 
   return retResponse
 }

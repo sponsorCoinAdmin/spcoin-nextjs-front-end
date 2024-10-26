@@ -53,7 +53,7 @@ const getDefaultNetworkSettings = (chain:any) => {
     chain = chain.id
   }
   
-  console.debug(`getDefaultNetworkSettings:chain = ${chain}`);
+  // console.debug(`getDefaultNetworkSettings:chain = ${chain}`);
   switch(chain)
   {
       case 1:

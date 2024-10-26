@@ -4,7 +4,7 @@ import { useAccount, useBalance } from 'wagmi'
 import { isNetworkProtocolAddress } from '@/lib/network/utils';
 
 const useERC20WagmiBalances = (parent:string, TOKEN_CONTRACT_ADDRESS: Address | undefined) => {
-  console.debug(`${parent}:useERC20WagmiBalances = , TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`);
+  // console.debug(`${parent}:useERC20WagmiBalances = , TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`);
   const ACTIVE_ACCOUNT_ADDRESS                   = useAccount().address;
   const useBalanceNetworkObj                     = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
   const isNetworkCoin:boolean                    = isNetworkProtocolAddress(TOKEN_CONTRACT_ADDRESS);
@@ -20,8 +20,8 @@ const useERC20WagmiBalances = (parent:string, TOKEN_CONTRACT_ADDRESS: Address | 
   // console.debug(`useERC20WagmiBalances:networkBalance          = ${networkBalance}`);
   // console.debug(`useERC20WagmiBalances:networkDecimals         = ${networkDecimals}`);
   // console.debug(`useERC20WagmiBalances:formattedNetworkBalance = ${formattedNetworkBalance}`);
-  console.debug(`useERC20WagmiBalances:balanceOf               = ${balanceOf}`);
-  console.debug(`useERC20WagmiBalances:decimals                = ${decimals}`);
+  // console.debug(`useERC20WagmiBalances:balanceOf               = ${balanceOf}`);
+  // console.debug(`useERC20WagmiBalances:decimals                = ${decimals}`);
   // console.debug(`useERC20WagmiBalances:formattedBalanceOf      = ${formattedBalanceOf}`);
   // console.debug(`useERC20WagmiBalances:balance                 = ${balance}`);
   // console.debug(`useERC20WagmiBalances:formattedBalance        = ${formattedBalance}`);

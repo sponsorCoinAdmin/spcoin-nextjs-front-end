@@ -10,7 +10,7 @@ type Props = {
 
 const AddSponsorshipButton = ({activeAccount, tokenContract}:Props) => {
   const openComponent = () => {
-    console.debug("AddSponsorshipButton:SHOW RecipientSelect_ID")
+    // console.debug("AddSponsorshipButton:SHOW RecipientSelect_ID")
     displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER);
     // showElement("RecipientSelect_ID")
     // hideElement("AddSponsorshipButton_ID")
@@ -30,7 +30,7 @@ const AddSponsorshipButton = ({activeAccount, tokenContract}:Props) => {
       </>
   );
   } catch (err:any) {
-    console.debug (`Buy Container Error:\n ${err.message}`)
+    console.error (`Buy Container Error:\n ${err.message}`)
   }
 }
 

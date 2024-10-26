@@ -5,10 +5,10 @@ let {exchangeContext, exchangeContextMap} = initialContext ();
 
 const resetNetworkContext = (chain:any) => {
     const networkName = chain?.name.toLowerCase();
-    console.debug("resetNetworkContext: newNetworkName = " + networkName);
+    // console.debug("resetNetworkContext: newNetworkName = " + networkName);
     exchangeContext = getInitialContext(chain)
-    console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
-    console.debug(`UPDATING NETWORK to ${networkName}`);
+    // console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
+    // console.debug(`UPDATING NETWORK to ${networkName}`);
 }
 
 export function ExchangeWrapper({children} : {
