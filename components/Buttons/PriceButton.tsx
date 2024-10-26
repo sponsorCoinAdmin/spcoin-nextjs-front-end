@@ -7,7 +7,11 @@ import DumpContextButton from './DumpContextButton';
 import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 
-const PriceButton = () => {    
+type Props = {
+    isLoadingPrice: boolean
+  }
+
+const PriceButton = ({isLoadingPrice}:Props) => {    
     const ACTIVE_ACCOUNT = useAccount()
     const [ displayDumpContextButton, setDisplayDumpContextButton ] = useState<boolean>(exchangeContext.test.dumpContextButton)
     const [walletAccount, setWalletAccount] = useState<Address|undefined>(undefined);
@@ -26,7 +30,7 @@ const PriceButton = () => {
         <div>
             {!walletAccount?
                 (<CustomConnectButton />) :
-                (<ExchangeButton />)
+                (<ExchangeButton isLoadingPrice={isLoadingPrice}/>)
             }
             {!displayDumpContextButton || <DumpContextButton />}
         </div>

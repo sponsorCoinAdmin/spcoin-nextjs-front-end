@@ -5,7 +5,11 @@ import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
 import { exchangeContext, exchangeContextMap } from "@/lib/context";
 import { BUTTON_TYPE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
 
-const ExchangeButton = () => {
+type Props = {
+  isLoadingPrice: boolean
+}
+
+const ExchangeButton = ({isLoadingPrice}:Props) => {
   const transActionType:TRANSACTION_TYPE = exchangeContext.tradeData.transactionType;
   console.debug(`ExchangeButton:transActionType = ${transActionType}`);
 
@@ -32,7 +36,6 @@ const ExchangeButton = () => {
   }
 
   const insufficientSellBalance = () => {
-
     let insufficientBalance:boolean = false;
      try {
       // console.debug(`EXCHANGE_BUTTON.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
@@ -58,8 +61,9 @@ const ExchangeButton = () => {
 
   const getButtonType = () => {
     let buttonType:BUTTON_TYPE = 
-      insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
-      insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
+    isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
+    insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
+    insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
       BUTTON_TYPE.SWAP;
     return buttonType;
   }
@@ -70,6 +74,8 @@ const ExchangeButton = () => {
 
   const getButtonText = (buttonType: BUTTON_TYPE) => {
     switch(buttonType) {
+      case BUTTON_TYPE.IS_LOADING_PRICE:
+        return "Fetching the best price...";
       case BUTTON_TYPE.ZERO_AMOUNT: 
         return "Enter an Amount";
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
@@ -84,13 +90,14 @@ const ExchangeButton = () => {
 
   const getButtonColor = (buttonType: BUTTON_TYPE) => {
     switch(buttonType) {
+      case BUTTON_TYPE.IS_LOADING_PRICE:
       case BUTTON_TYPE.ZERO_AMOUNT: 
         return "standardColor";
       case BUTTON_TYPE.SWAP:
         return "executeColor";
-        case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-        default:
-          return "errorColor";
+      case BUTTON_TYPE.INSUFFICIENT_BALANCE:
+      default:
+        return "errorColor";
     }
   }
 

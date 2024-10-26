@@ -5,7 +5,6 @@ import useSWR from 'swr';
 import { exchangeContext } from '../context';
 import { isNetworkProtocolAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
-import { stringifyBigInt } from '../spCoin/utils';
 
 const SELL_AMOUNT_ZERO = 100;
 const BUY_AMOUNT_ZERO = 200;
@@ -63,15 +62,15 @@ const getApiErrorTransactionData = (
   data:any) => {
 
   let errObj:any = {};
-    errObj.ERROR         = `API Call`;
-    errObj.Server        = `${process.env.NEXT_PUBLIC_API_SERVER}`
-    errObj.netWork       = `${exchangeContext.network.name.toLowerCase()}`
-    errObj.apiPriceBase  = `${apiPriceBase}`
-    errObj.sellToken     = `${sellTokenAddress}`
-    errObj.buyToken      = `${buyTokenAddress}`
-    errObj.sellAmount    = `${sellAmount?.toString()}`
-    errObj.apiCall       = `${apiCall}`
-    errObj.response_data = `${data}`
+    errObj.ERROR            = `API Call`;
+    errObj.Server           = `${process.env.NEXT_PUBLIC_API_SERVER}`
+    errObj.netWork          = `${exchangeContext.network.name.toLowerCase()}`
+    errObj.apiPriceBase     = `${apiPriceBase}`
+    errObj.sellTokenAddress = `${sellTokenAddress}`
+    errObj.buyTokenAddress  = `${buyTokenAddress}`
+    errObj.sellAmount       = `${sellAmount?.toString()}`
+    errObj.apiCall          = `${apiCall}`
+    errObj.response_data    = `${data}`
   return errObj;
 }
 

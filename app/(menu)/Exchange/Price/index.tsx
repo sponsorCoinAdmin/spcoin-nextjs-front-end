@@ -39,10 +39,7 @@ export default function PriceView() {
   try {
     useEffect(() => {
       displaySpCoinContainers(exchangeContext.spCoinPanels)
-    }, [])
-
-    useEffect(() => {
-      exchangeContext.test.dumpContextButton = true
+      // exchangeContext.test.dumpContextButton = true
     }, [])
 
   useEffect(() => {
@@ -110,6 +107,7 @@ export default function PriceView() {
 
     const apiErrorCallBack = (apiErrorObj:ErrorMessage) => {
       alert(`${stringifyBigInt(apiErrorObj)}`);
+      console.debug(`${stringifyBigInt(apiErrorObj)}`);
       setErrorMessage({ source: apiErrorObj.source, errCode: apiErrorObj.errCode, msg: apiErrorObj.msg });
       // setShowError(true);
       // console.debug(`${stringifyBigInt(apiErrorObj)}`);
@@ -169,7 +167,7 @@ export default function PriceView() {
                                   setTransactionType={setTransactionType}
                                   setTokenContractCallback={setBuyTokenContract}/>
             <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-            <PriceButton/>
+            <PriceButton isLoadingPrice={isLoadingPrice}/>
             <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
           </div>
           <FeeDisclosure/>
