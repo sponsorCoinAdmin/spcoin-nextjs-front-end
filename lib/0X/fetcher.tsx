@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { exchangeContext } from '../context';
 import { isNetworkProtocolAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
+import { PriceResponse } from '@/app/api/types';
 
 const SELL_AMOUNT_ZERO = 100;
 const BUY_AMOUNT_ZERO = 200;
@@ -43,10 +44,8 @@ try {
     // console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
     apiCall = endpoint + '?' + query;
-    // console.debug(`BEFORE fetcher.apiCall:${apiCall}`);
     let result = fetch(`${apiCall}`).then((res) => res.json());
-    // console.debug(`fetcher: ${endpoint}?${query}`);
-    // alert("fetcher result = " + JSON.stringify(result,null,2) + "]")
+    console.debug(`fetcher:apiCall ${apiCall}`);
     return result
   }
   catch (e) {
@@ -59,16 +58,16 @@ const getApiErrorTransactionData = (
   sellTokenAddress:Address|undefined,
   buyTokenAddress:Address|undefined,
   sellAmount:any,
-  data:any) => {
+  data:PriceResponse) => {
 
   let errObj:any = {};
     errObj.ERROR            = `API Call`;
     errObj.Server           = `${process.env.NEXT_PUBLIC_API_SERVER}`
     errObj.netWork          = `${exchangeContext.network.name.toLowerCase()}`
     errObj.apiPriceBase     = `${apiPriceBase}`
-    errObj.sellTokenAddress = `${sellTokenAddress?.toString()}`
+    errObj.sellTokenAddress = `${sellTokenAddress}`
     errObj.buyTokenAddress  = `${buyTokenAddress}`
-    errObj.sellAmount       = `${sellAmount?.toString()}`
+    errObj.sellAmount       = `${sellAmount}`
     errObj.apiCall          = `${apiCall}`
     errObj.response_data    = `${data}`
   return errObj;
@@ -90,17 +89,17 @@ const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined
                           // expectedSlippage: slippage
                         },
                       ];
-  // if(priceApiCall) {
-  //   const apiDataResponse = {
-  //     transactionType:(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? `SELL_EXACT_OUT` : `BUY_EXACT_IN`,
-  //     sellTokenAddress:sellTokenAddress,
-  //     buyTokenAddress:buyTokenAddress,
-  //     sellAmount:sellAmount,
-  //     buyAmount:buyAmount,
-  //     priceApiCall:priceApiCall
-  //   }
-  //   alert(`priceApiCall = ${stringifyBigInt(apiDataResponse)}`)
-  // }
+  if(priceApiCall) {
+    // const apiDataResponse = {
+    //   transactionType:(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? `SELL_EXACT_OUT` : `BUY_EXACT_IN`,
+    //   sellTokenAddress:sellTokenAddress,
+    //   buyTokenAddress:buyTokenAddress,
+    //   sellAmount:sellAmount,
+    //   buyAmount:buyAmount,
+    //   priceApiCall:priceApiCall
+    // }
+    // alert(`priceApiCall = ${stringifyBigInt(apiDataResponse)}`)
+  }
   return priceApiCall;
 }
 
@@ -115,7 +114,7 @@ type Props = {
   transactionType:TRANSACTION_TYPE,
   sellAmount:bigint,
   buyAmount:bigint,
-  setPriceResponse: (data:any) => void,
+  setPriceResponse: (data:PriceResponse) => void,
   setSellAmount: (sellAmount:bigint) => void,
   setBuyAmount: (buyAmount:bigint) => void,
   // setErrorMessage: (errMsg:ErrorMessage) => void
@@ -140,14 +139,23 @@ function usePriceAPI({
     {
       onSuccess: (data) => {
         if (!data.code) {
-          // let dataMsg = `SUCCESS: apiCall => ${getApiErrorTransactionData(data, sellTokenContract, buyTokenContract, sellAmount)}`
           // console.log(dataMsg)
-          // console.debug(`AFTER fetcher data =  + ${JSON.stringify(data,null,2)} + ]`)
-          setPriceResponse(data);
-          // console.debug(formatUnits(data.buyAmount, buyTokenContract.decimals), data);
-          // alert(`useSWR:TRANSACTION_TYPE = ${transactionType}\n amount = ${data.buyAmount}`)
+          console.debug(`AFTER fetcher data = ${JSON.stringify(data,null,2)}`)
           transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-          setBuyAmount(data.buyAmount || 0) : setSellAmount(data.sellAmount || 0);
+            console.debug(`SUCCESS SELL_EXACT_OUT: useSWR.fetcher data.price = ${data.price}`):
+            console.debug(`SUCCESS BUY_EXACT_IN: useSWR.fetcher data.price = ${data.price}`);
+          console.debug(`data.price      = ${data.price}\n
+                         data.sellAmount = ${data.sellAmount}\n
+                         data.buyAmount  = ${data.buyAmount}`);
+            
+          setPriceResponse(data);
+
+          transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+            // setBuyAmount(data.price) : setSellAmount(data.price);
+            // setBuyAmount(BigInt(data.price)) : setSellAmount(BigInt(data.price));
+            setBuyAmount(data.buyAmount || 0n) : 
+            setSellAmount(data.sellAmount || 0n);
+   
         }
         else {
           // if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
@@ -162,7 +170,7 @@ function usePriceAPI({
                 setBuyAmount(0n);
               else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
                 setSellAmount(BigInt(0));
-            const apiErrorObj = getApiErrorTransactionData(data, sellTokenAddress, buyTokenAddress, sellAmount)
+            const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
             apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
           }
         }
@@ -182,6 +190,5 @@ function usePriceAPI({
 }
 
 export {
-  fetcher,
   usePriceAPI
 }

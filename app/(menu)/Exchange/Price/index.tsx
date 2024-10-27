@@ -66,7 +66,7 @@ export default function PriceView() {
   }, [ACTIVE_ACCOUNT.address]);
 
   useEffect(() => {
-    // console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
+    console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
     exchangeContext.tradeData.sellAmount = sellAmount;
     if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
       setBuyAmount(0n);
@@ -74,7 +74,7 @@ export default function PriceView() {
   },[sellAmount]);
 
   useEffect(() => {
-    // console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
+    console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
     exchangeContext.tradeData.buyAmount = buyAmount; 
     if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
       setSellAmount(0n);
@@ -126,7 +126,7 @@ export default function PriceView() {
 
   useEffect(() => {
     if(PriceError) {
-        setErrorMessage({ source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
+      setErrorMessage({ source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
     }
   }, [PriceError]);
 
