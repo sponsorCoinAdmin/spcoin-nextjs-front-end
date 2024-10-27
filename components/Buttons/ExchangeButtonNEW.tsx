@@ -4,6 +4,7 @@ import { stringifyBigInt } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
 import { exchangeContext, exchangeContextMap } from "@/lib/context";
 import { BUTTON_TYPE, ErrorMessage, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
+import { useEffect, useState } from 'react';
 
 type Props = {
   isLoadingPrice: boolean,
@@ -11,16 +12,27 @@ type Props = {
   setErrorMessage: (errorMessage:ErrorMessage|undefined) => void
 }
 
-const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
+const ExchangeButton = ({isLoadingPrice, errorMessage}:Props) => {
+  const [errMessage, setErrMessage] = useState<ErrorMessage | undefined>(errorMessage);
+  const [buttonType, setButtonType] = useState<BUTTON_TYPE | undefined>(undefined);
   const transActionType:TRANSACTION_TYPE = exchangeContext.tradeData.transactionType;
   // console.debug(`ExchangeButton:transActionType = ${transActionType}`);
+
+  useEffect(() => {
+    getButtonType()
+
+  }, [])
+
+  useEffect(() => {
+    alert(`buttonType = ${buttonType}`)
+  }, [buttonType])
 
   const getTokenContractByTradeType = () =>{
     const tokenContract:TokenContract|undefined = (transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ?
               exchangeContext.sellTokenContract as TokenContract | undefined :
               exchangeContext.buyTokenContract as TokenContract | undefined;
-    console.debug(`ExchangeButton:transActionType = ${transActionType}`);
-    console.debug(`ExchangeButton:getTokenContractByTradeType tokenContract = ${stringifyBigInt(tokenContract)}`);
+    // console.debug(`ExchangeButton:transActionType = ${transActionType}`);
+    // console.debug(`ExchangeButton:getTokenContractByTradeType tokenContract = ${stringifyBigInt(tokenContract)}`);
     return tokenContract;
   };
 
@@ -32,8 +44,10 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     try {
       noTradingAmount = ( exchangeContext.tradeData.sellAmount.toString() === "0" )
     } catch(err:any) {
-      console.debug(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
+      console.error(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
     }
+    // alert(`noTradingAmount = ${noTradingAmount}`)
+
     return noTradingAmount;
   }
 
@@ -45,14 +59,15 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
       const tradeBalance = balance || BigInt(0);
       insufficientBalance = tradeBalance <  tradeAmount
 
-      console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${tradeBalance}"`);
-      console.debug(`tradeAmount             = "${tradeAmount}"`);
-      console.debug(`tradeBalance            = "${tradeBalance}"`);
-      console.debug(`insufficientBalance     = "${insufficientBalance}"`);
+      // console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${tradeBalance}"`);
+      // console.debug(`tradeAmount             = "${tradeAmount}"`);
+      // console.debug(`tradeBalance            = "${tradeBalance}"`);
+      // console.debug(`insufficientBalance     = "${insufficientBalance}"`);
 
     } catch(err:any) {
-      console.debug(`ERROR: ExchangeButton.insufficientSellBalance: ${err.message}`)
+      console.error(`ERROR: ExchangeButton.insufficientSellBalance: ${err.message}`)
     }
+    // alert(`insufficientBalance = ${insufficientBalance}`)
     return insufficientBalance;
   }
 
@@ -61,20 +76,12 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     console.log(`ExchangeButton:show exchangeContext = ${stringifyBigInt(exchangeContext)}`);
   }
 
-  const getButtonType = () => {
-    let buttonType:BUTTON_TYPE = 
-    isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
-    insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
-    insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
-      BUTTON_TYPE.SWAP;
-    return buttonType;
-  }
   const getSwapType = () => {
     return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
     "EXACT OUT SWAP" : "EXACT IN SWAP";
   }
 
-  const getButtonText = (buttonType: BUTTON_TYPE) => {
+  const getButtonText = (buttonType: BUTTON_TYPE|undefined) => {
     switch(buttonType) {
       case BUTTON_TYPE.IS_LOADING_PRICE:
         return "Fetching the best price...";
@@ -90,21 +97,39 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     }
   }
 
-  const getButtonColor = (buttonType: BUTTON_TYPE) => {
+  const getButtonColor = (buttonType: BUTTON_TYPE|undefined) => {
     switch(buttonType) {
       case BUTTON_TYPE.IS_LOADING_PRICE:
-      case BUTTON_TYPE.ZERO_AMOUNT: 
-        return "standardColor";
       case BUTTON_TYPE.SWAP:
         return "executeColor";
+      case BUTTON_TYPE.API_TRANSACTION_ERROR:
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-      default:
         return "errorColor";
+      case BUTTON_TYPE.ZERO_AMOUNT: 
+      default:
+        return "standardColor";
     }
   }
 
+  const getButtonType = () => {
+    alert(`"getButtonType()\n
+    errMessage = ${errMessage}\n
+    isLoadingPrice = ${isLoadingPrice}\n
+    insufficientSellAmount() = ${insufficientSellAmount()}\n
+    insufficientSellBalance() = ${insufficientSellBalance()}`)
+    const buttonType = (
+      errMessage ? BUTTON_TYPE.API_TRANSACTION_ERROR :
+      isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
+      insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
+      insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
+      BUTTON_TYPE.SWAP)
+    alert(`buttonType = ${buttonType}`)
+    setButtonType(buttonType)
+  }
+
   const buttonClick = () => {
-    let buttonType:any = getButtonType()
+    alert("buttonClick")
+    getButtonType()
     switch(buttonType) {
       case BUTTON_TYPE.ZERO_AMOUNT: alert("Enter An Amount");
         break;
@@ -121,9 +146,6 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
   const swap = () => {
     alert("Doing the Swap");
   }
-
-  const  buttonColor = "errorColor"
-  const buttonType:BUTTON_TYPE = getButtonType()
 
   return (
     <div>

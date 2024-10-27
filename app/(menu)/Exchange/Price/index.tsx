@@ -27,14 +27,10 @@ export default function PriceView() {
   const [slippage, setSlippage] = useState<number>(exchangeContext.tradeData.slippage);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [showError, setShowError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>(undefined);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
-  let errorMessage:ErrorMessage|undefined = undefined;
-
-  const setErrorMessage = (errMsg:ErrorMessage|undefined) => {
-    errorMessage = errMsg;
-  }
 
   useEffect(() => {
     displaySpCoinContainers(exchangeContext.spCoinPanels)
@@ -165,7 +161,7 @@ export default function PriceView() {
                               setTransactionType={setTransactionType}
                               setTokenContractCallback={setBuyTokenContract}/>
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-        <PriceButton isLoadingPrice={isLoadingPrice}/>
+        <PriceButton isLoadingPrice={isLoadingPrice} errorMessage={errorMessage} setErrorMessage={setErrorMessage}/>
         <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
       </div>
       <FeeDisclosure/>
