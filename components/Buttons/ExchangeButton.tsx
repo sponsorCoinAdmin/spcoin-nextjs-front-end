@@ -62,13 +62,21 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
   }
 
   const getButtonType = () => {
-    let buttonType:BUTTON_TYPE = 
-    isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
-    insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
-    insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
-      BUTTON_TYPE.SWAP;
-    return buttonType;
+    // alert(`"getButtonType()\n
+    // errorMessage = ${errorMessage}\n
+    // isLoadingPrice = ${isLoadingPrice}\n
+    // insufficientSellAmount() = ${insufficientSellAmount()}\n
+    // insufficientSellBalance() = ${insufficientSellBalance()}`)
+    const buttonType = (
+      errorMessage ? BUTTON_TYPE.API_TRANSACTION_ERROR :
+      isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
+      insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
+      insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
+      BUTTON_TYPE.SWAP)
+    // alert(`buttonType = ${buttonType}`)
+    return buttonType
   }
+  
   const getSwapType = () => {
     return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
     "EXACT OUT SWAP" : "EXACT IN SWAP";
@@ -90,16 +98,17 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     }
   }
 
-  const getButtonColor = (buttonType: BUTTON_TYPE) => {
+  const getButtonColor = (buttonType: BUTTON_TYPE|undefined) => {
     switch(buttonType) {
       case BUTTON_TYPE.IS_LOADING_PRICE:
-      case BUTTON_TYPE.ZERO_AMOUNT: 
-        return "standardColor";
       case BUTTON_TYPE.SWAP:
         return "executeColor";
+      case BUTTON_TYPE.API_TRANSACTION_ERROR:
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-      default:
         return "errorColor";
+      case BUTTON_TYPE.ZERO_AMOUNT: 
+      default:
+        return "standardColor";
     }
   }
 

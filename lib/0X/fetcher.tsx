@@ -60,17 +60,17 @@ const getApiErrorTransactionData = (
   sellAmount:any,
   data:PriceResponse) => {
 
-  let errObj:any = {};
-    errObj.ERROR            = `API Call`;
-    errObj.Server           = `${process.env.NEXT_PUBLIC_API_SERVER}`
-    errObj.netWork          = `${exchangeContext.network.name.toLowerCase()}`
-    errObj.apiPriceBase     = `${apiPriceBase}`
-    errObj.sellTokenAddress = `${sellTokenAddress}`
-    errObj.buyTokenAddress  = `${buyTokenAddress}`
-    errObj.sellAmount       = `${sellAmount}`
-    errObj.apiCall          = `${apiCall}`
-    errObj.response_data    = `${data}`
-  return errObj;
+  let errSTR:string[] = [];
+    errSTR.push(`ERROR : API Call`)
+    errSTR.push(`Server : ${process.env.NEXT_PUBLIC_API_SERVER}`)
+    errSTR.push(`netWork : ${exchangeContext.network.name.toLowerCase()}`)
+    errSTR.push(`apiPriceBase : ${apiPriceBase}`)
+    errSTR.push(`sellTokenAddress : ${sellTokenAddress}`)
+    errSTR.push(`buyTokenAddress : ${buyTokenAddress}`)
+    errSTR.push(`sellAmount : ${sellAmount}`)
+    errSTR.push(`apiCall : ${apiCall}`)
+    errSTR.push(`response_data : ${data}`)
+  return errSTR;
 }
 
 const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any) => {
