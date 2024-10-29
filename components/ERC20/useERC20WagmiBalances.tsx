@@ -1,13 +1,13 @@
 import { Address } from 'viem'
 import { useERC20WagmiTokenDecimals, useERC20WagmiTokenBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
 import { useAccount, useBalance } from 'wagmi'
-import { isNetworkProtocolAddress } from '@/lib/network/utils';
+import { isNetworkBurnAddress } from '@/lib/network/utils';
 
 const useERC20WagmiBalances = (parent:string, TOKEN_CONTRACT_ADDRESS: Address | undefined) => {
   // console.debug(`${parent}:useERC20WagmiBalances = , TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`);
   const ACTIVE_ACCOUNT_ADDRESS                   = useAccount().address;
   const useBalanceNetworkObj                     = useBalance( { address: ACTIVE_ACCOUNT_ADDRESS} );
-  const isNetworkCoin:boolean                    = isNetworkProtocolAddress(TOKEN_CONTRACT_ADDRESS);
+  const isNetworkCoin:boolean                    = isNetworkBurnAddress(TOKEN_CONTRACT_ADDRESS);
   const networkBalance:bigint|undefined          = useBalanceNetworkObj?.data?.value;
   const networkDecimals:number|undefined         = useBalanceNetworkObj?.data?.decimals;
   const formattedNetworkBalance:string|undefined = formatDecimals(networkBalance, networkDecimals);

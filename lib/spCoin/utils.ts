@@ -200,6 +200,13 @@ const invalidTokenContract   = (textInputField:string|undefined, chainId:any) =>
   return invalidToken;
 }
 
+const dumpContext = (isAlert:boolean = false, isConsoleDebug:boolean=true) => {
+  if (isAlert)
+    alert(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+  if (isConsoleDebug)
+    console.log(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+}
+
 // const useActiveAccountAddress = () => {
 //   const activeAccountAddress = useAccount().address;
 //   return activeAccountAddress;
@@ -214,6 +221,7 @@ export {
   decimalAdjustTokenAmount,
   defaultMissingImage,
   bigIntDecimalShift,
+  dumpContext,
   exchangeContextDump,
   fetchIconResource,
   fetchTokenDetails,

@@ -3,7 +3,7 @@ import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage } from '@/lib/struct
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { isNetworkProtocolAddress, isTransaction_A_Wrap } from '../network/utils';
+import { isNetworkBurnAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
 
@@ -20,7 +20,7 @@ let apiCall:string;
 const WRAPPED_ETHEREUM_ADDRESS ="0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
 function validTokenOrNetworkCoin(address: any): any {
-  if (isNetworkProtocolAddress(address)){
+  if (isNetworkBurnAddress(address)){
     return WRAPPED_ETHEREUM_ADDRESS;
   } else
     return address;
@@ -60,17 +60,17 @@ const getApiErrorTransactionData = (
   sellAmount:any,
   data:PriceResponse) => {
 
-  let errSTR:string[] = [];
-    errSTR.push(`ERROR : API Call`)
-    errSTR.push(`Server : ${process.env.NEXT_PUBLIC_API_SERVER}`)
-    errSTR.push(`netWork : ${exchangeContext.network.name.toLowerCase()}`)
-    errSTR.push(`apiPriceBase : ${apiPriceBase}`)
-    errSTR.push(`sellTokenAddress : ${sellTokenAddress}`)
-    errSTR.push(`buyTokenAddress : ${buyTokenAddress}`)
-    errSTR.push(`sellAmount : ${sellAmount}`)
-    errSTR.push(`apiCall : ${apiCall}`)
-    errSTR.push(`response_data : ${data}`)
-  return errSTR;
+  let errObj:any = {};
+    errObj.ERROR            = `API Call`;
+    errObj.Server           = `${process.env.NEXT_PUBLIC_API_SERVER}`
+    errObj.netWork          = `${exchangeContext.network.name.toLowerCase()}`
+    errObj.apiPriceBase     = `${apiPriceBase}`
+    errObj.sellTokenAddress = `${sellTokenAddress}`
+    errObj.buyTokenAddress  = `${buyTokenAddress}`
+    errObj.sellAmount       = `${sellAmount}`
+    errObj.apiCall          = `${apiCall}`
+    errObj.response_data    = `${data}`
+  return errObj;
 }
 
 const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any) => {
@@ -117,7 +117,7 @@ type Props = {
   setPriceResponse: (data:PriceResponse) => void,
   setSellAmount: (sellAmount:bigint) => void,
   setBuyAmount: (buyAmount:bigint) => void,
-  // setErrorMessage: (errMsg:ErrorMessage) => void
+  setErrorMessage: (errMsg:ErrorMessage|undefined) => void
   apiErrorCallBack: (apiErrorObj:any) => void
 }
 
@@ -130,6 +130,7 @@ function usePriceAPI({
     setPriceResponse,
     setSellAmount,
     setBuyAmount,
+    setErrorMessage,
     apiErrorCallBack
   }:Props) {
                         
@@ -155,10 +156,10 @@ function usePriceAPI({
             // setBuyAmount(BigInt(data.price)) : setSellAmount(BigInt(data.price));
             setBuyAmount(data.buyAmount || 0n) : 
             setSellAmount(data.sellAmount || 0n);
-   
+            setErrorMessage(undefined)
         }
         else {
-          // if (isNetworkProtocolAddress(sellTokenAddress) || isNetworkProtocolAddress(buyTokenAddress)) {
+          // if (isNetworkBurnAddress(sellTokenAddress) || isNetworkBurnAddress(buyTokenAddress)) {
             if (isTransaction_A_Wrap()) {
             // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
             if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)

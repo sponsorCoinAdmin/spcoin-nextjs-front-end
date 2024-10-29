@@ -1,9 +1,11 @@
 'use client'
 import styles from '@/styles/Exchange.module.css'
-import { stringifyBigInt } from '@/lib/spCoin/utils';
+import { dumpContext } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
-import { exchangeContext, exchangeContextMap } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
+import { exchangeContext } from "@/lib/context";
+import { BUTTON_TYPE, ErrorMessage, SWAP_TYPE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
+import { isNetworkOrWalletAccountAddress, isNetworkProtocolAddress, isWrappedNetworkAddress } from '@/lib/network/utils';
+import { Address } from 'viem';
 
 type Props = {
   isLoadingPrice: boolean,
@@ -12,20 +14,8 @@ type Props = {
 }
 
 const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
-  const transActionType:TRANSACTION_TYPE = exchangeContext.tradeData.transactionType;
-  // console.debug(`ExchangeButton:transActionType = ${transActionType}`);
-
-  const getTokenContractByTradeType = () =>{
-    const tokenContract:TokenContract|undefined = (transActionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ?
-              exchangeContext.sellTokenContract as TokenContract | undefined :
-              exchangeContext.buyTokenContract as TokenContract | undefined;
-    console.debug(`ExchangeButton:transActionType = ${transActionType}`);
-    console.debug(`ExchangeButton:getTokenContractByTradeType tokenContract = ${stringifyBigInt(tokenContract)}`);
-    return tokenContract;
-  };
-
-  const tokenContract:TokenContract|undefined = getTokenContractByTradeType();
-  const {balance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
+  const tokenContract:TokenContract|undefined = exchangeContext.sellTokenContract as TokenContract | undefined;
+  const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
 
   const insufficientSellAmount = () => {
     let noTradingAmount:boolean = false;
@@ -42,23 +32,18 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
      try {
       // console.debug(`EXCHANGE_BUTTON.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
       const tradeAmount = exchangeContext.tradeData.sellAmount;
-      const tradeBalance = balance || BigInt(0);
-      insufficientBalance = tradeBalance <  tradeAmount
+      const sellTradeBalance = sellBalance || BigInt(0);
+      insufficientBalance = sellTradeBalance <  tradeAmount
 
-      console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${tradeBalance}"`);
+      console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${sellTradeBalance}"`);
       console.debug(`tradeAmount             = "${tradeAmount}"`);
-      console.debug(`tradeBalance            = "${tradeBalance}"`);
+      console.debug(`sellTradeBalance        = "${sellTradeBalance}"`);
       console.debug(`insufficientBalance     = "${insufficientBalance}"`);
 
     } catch(err:any) {
       console.debug(`ERROR: ExchangeButton.insufficientSellBalance: ${err.message}`)
     }
     return insufficientBalance;
-  }
-
-  const show = () => {
-    // alert(`ExchangeButton:show exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-    console.log(`ExchangeButton:show exchangeContext = ${stringifyBigInt(exchangeContext)}`);
   }
 
   const getButtonType = () => {
@@ -76,14 +61,11 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     // alert(`buttonType = ${buttonType}`)
     return buttonType
   }
-  
-  const getSwapType = () => {
-    return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-    "EXACT OUT SWAP" : "EXACT IN SWAP";
-  }
 
   const getButtonText = (buttonType: BUTTON_TYPE) => {
     switch(buttonType) {
+      case BUTTON_TYPE.API_TRANSACTION_ERROR:
+        return "API Transaction Error";
       case BUTTON_TYPE.IS_LOADING_PRICE:
         return "Fetching the best price...";
       case BUTTON_TYPE.ZERO_AMOUNT: 
@@ -115,6 +97,8 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
   const buttonClick = () => {
     let buttonType:any = getButtonType()
     switch(buttonType) {
+      case BUTTON_TYPE.API_TRANSACTION_ERROR: alert(errorMessage?.msg);
+        break;
       case BUTTON_TYPE.ZERO_AMOUNT: alert("Enter An Amount");
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE: alert("Insufficient Sell Balance");
@@ -124,16 +108,56 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
       default: alert("Button Type Undefined");
         break;
     }
-    show();
+    dumpContext();
+  }
+
+  const getSwapType = () => {
+    const sellTokenAddress:Address|undefined = exchangeContext.sellTokenContract?.address;
+    const buyTokenAddress:Address|undefined = exchangeContext.buyTokenContract?.address;
+
+    // const isSELL_NETWORK_PROTOCOL_ADDRESS = isNetworkProtocolAddress(sellTokenAddress);
+
+    if (!isNetworkOrWalletAccountAddress(sellTokenAddress)) {
+      if (!isNetworkOrWalletAccountAddress(buyTokenAddress))
+        return SWAP_TYPE.SWAP
+      else
+        if (isWrappedNetworkAddress(buyTokenAddress))
+          return SWAP_TYPE.UNWRAP
+        else
+          return SWAP_TYPE.SWAP_TO_NETWORK_TOKEN_UNWRAP
+    } else {
+        if (isWrappedNetworkAddress(buyTokenAddress))
+          return SWAP_TYPE.WRAP
+        else
+          if (!isNetworkProtocolAddress(sellTokenAddress))
+            return SWAP_TYPE.WRAP_TO_NETWORK_TOKEN_SWAP
+          else
+            return SWAP_TYPE.WRAP
+      }
   }
 
   const swap = () => {
-    alert("Doing the Swap");
+    const swapType = getSwapType();
+    switch (swapType) {
+      case SWAP_TYPE.SWAP:
+        alert(`SWAP`)
+        break
+      case SWAP_TYPE.SWAP_TO_NETWORK_TOKEN_UNWRAP:
+        alert(`SWAP_TO_NETWORK_TOKEN_UNWRAP`)
+        break
+      case SWAP_TYPE.UNWRAP:
+        alert(`UNWRAP`)
+        break
+      case SWAP_TYPE.WRAP_TO_NETWORK_TOKEN_SWAP:
+        alert(`WRAP_TO_NETWORK_TOKEN_SWAP`)
+        break
+      case SWAP_TYPE.WRAP:
+        alert(`WRAP`)
+        break
+    }
   }
 
-  const  buttonColor = "errorColor"
   const buttonType:BUTTON_TYPE = getButtonType()
-
   return (
     <div>
       <button

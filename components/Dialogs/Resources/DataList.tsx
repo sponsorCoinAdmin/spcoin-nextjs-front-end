@@ -9,13 +9,13 @@ import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 import { FEED_TYPE } from '@/lib/structure/types';
 import { useChainId } from "wagmi";
-// import { isNetworkProtocolAddress, NETWORK_PROTOCOL_CRYPTO } from '@/lib/network/utils';
+// import { isNetworkBurnAddress, NETWORK_PROTOCOL_CRYPTO } from '@/lib/network/utils';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     let address = dataFeedList.address;
     // const walletAddress = useAccount().address;
     // // alert(`zzzzzz walletAddress = ${walletAddress}`)
-    // if (walletAddress && isNetworkProtocolAddress(address)) {
+    // if (walletAddress && isNetworkBurnAddress(address)) {
     //     address = walletAddress;
     //     dataFeedList.address = address;
     // }

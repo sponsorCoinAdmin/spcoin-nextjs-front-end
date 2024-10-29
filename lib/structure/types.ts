@@ -7,11 +7,13 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
                        PENDING,
                        SWAP }
 
-enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN }
+enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN}
+enum  SWAP_TYPE { SWAP, WRAP, UNWRAP,  WRAP_TO_NETWORK_TOKEN_SWAP, SWAP_TO_NETWORK_TOKEN_UNWRAP, UNDEFINED}
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 enum  SP_COIN_DISPLAY { SELECT_BUTTON, RECIPIENT_CONTAINER, SPONSOR_RATE_CONFIG }
 enum  BUTTON_TYPE { API_TRANSACTION_ERROR, UNDEFINED, CONNECT, ZERO_AMOUNT, INSUFFICIENT_BALANCE, IS_LOADING_PRICE, SWAP }
 enum  CONTAINER_TYPE { INPUT_SELL_PRICE, INPUT_BUY_PRICE }
+enum  STATUS { SUCCESS, ERROR }
 
 interface PriceRequestParams {
   sellToken: Address|string;
@@ -73,7 +75,8 @@ type ExchangeContext = {
   test : {dumpContextButton:boolean};
 }
 
-type ErrorMessage ={ 
+type ErrorMessage ={
+  status:STATUS,
   source:string,
   errCode:number,
   msg:any
@@ -87,6 +90,8 @@ export {
   EXCHANGE_STATE,
   FEED_TYPE,
   SP_COIN_DISPLAY,
+  STATUS,
+  SWAP_TYPE,
   TRANSACTION_TYPE
 }
 

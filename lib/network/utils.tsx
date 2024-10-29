@@ -16,24 +16,32 @@ const imgHome = "/resources/images/chains/"
 const imgType = ".png"
 
 const isNetworkProtocolToken = (tokenContract:TokenContract) => {
-  return isNetworkProtocolAddress(tokenContract.address);
+  return isNetworkBurnAddress(tokenContract.address);
 }
 
 const isNetworkProtocolAddress = (address:Address|undefined) : boolean => {
+  // alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
+  const isActiveWallet:boolean = isActiveWalletAccount(address);
+  return isActiveWallet;
+}
+
+const isNetworkBurnAddress = (address:Address|undefined) : boolean => {
   return address === NETWORK_PROTOCOL_CRYPTO;
 }
 
 const isActiveWalletAccount = (address:Address|undefined) : boolean => {
   // alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
-  return address === exchangeContext.activeWalletAccount;
+  const activeWalletAccount:Address|undefined = exchangeContext?.activeWalletAccount as Address|undefined;
+  const isActiveWalletAccount:boolean = address === activeWalletAccount;
+  return isActiveWalletAccount;
 }
 
 const isNetworkOrWalletAccountAddress = (address:Address|undefined) : boolean => {
-  return isNetworkProtocolAddress(address) || isActiveWalletAccount(address)
+  return isNetworkBurnAddress(address) || isActiveWalletAccount(address)
 }
 
 // *** WARNING To be fixed for other networks
-const getNetworkToken = (chainId:number):Address|undefined => {
+const getWrappedNetworkAddress = (chainId:number):Address|undefined => {
   const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   switch(chainId) {
     case 1: return WETH;
@@ -41,21 +49,22 @@ const getNetworkToken = (chainId:number):Address|undefined => {
   }
 }
 
-// *** WARNING To be fixed for other networks
-const isNetworkTokenAddress = (address:Address|undefined) : boolean => {
+// *** WARNING HARDCODING To be fixed for other networks
+const isWrappedNetworkAddress = (address:Address|undefined) : boolean => {
   const chainId:number = 1;
-  return address === getNetworkToken(chainId);
+  const  wrappedNetworkAddress:boolean = address === getWrappedNetworkAddress(chainId);
+  return wrappedNetworkAddress;
 }
 
-const isNetworkToken = (address:Address|undefined) : boolean => {
-  return isNetworkTokenAddress(address) || isNetworkOrWalletAccountAddress(address);
+const isNetworkAddress = (address:Address|undefined) : boolean => {
+  return isWrappedNetworkAddress(address) || isNetworkOrWalletAccountAddress(address);
 }
 
 const isTransaction_A_Wrap = () : boolean => {
-  const sellTokenAddress = exchangeContext.sellTokenContract?.address;
-  const buyTokenAddress = exchangeContext.buyTokenContract?.address;
+  const sellTokenAddress:Address = exchangeContext.sellTokenContract?.address;
+  const buyTokenAddress:Address = exchangeContext.buyTokenContract?.address;
   return  buyTokenAddress && sellTokenAddress && (buyTokenAddress !== sellTokenAddress) ? 
-    isNetworkToken(sellTokenAddress) && isNetworkToken(buyTokenAddress) :
+    isNetworkAddress(sellTokenAddress) && isNetworkAddress(buyTokenAddress) :
           false
 }
 
@@ -116,8 +125,12 @@ export {
   getAvatarImageURL,
   getNetworkName,
   isLowerCase,
+  isNetworkAddress,
+  isNetworkBurnAddress,
+  isNetworkOrWalletAccountAddress,
   isNetworkProtocolAddress,
   isNetworkProtocolToken,
-  isTransaction_A_Wrap
+  isTransaction_A_Wrap,
+  isWrappedNetworkAddress
 }
   

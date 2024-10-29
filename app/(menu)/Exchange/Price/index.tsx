@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import { ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
-import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE } from '@/lib/structure/types';
+import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -100,9 +100,13 @@ export default function PriceView() {
   // }, [errorMessage.errCode]);
 
   const apiErrorCallBack = (apiErrorObj:ErrorMessage) => {
-    alert(`${stringifyBigInt(apiErrorObj)}`);
-    console.error(`${stringifyBigInt(apiErrorObj)}`);
-    setErrorMessage({ source: apiErrorObj.source, errCode: apiErrorObj.errCode, msg: apiErrorObj.msg });
+    // alert(`${stringifyBigInt(apiErrorObj)}`);
+    // console.error(`${stringifyBigInt(apiErrorObj)}`);
+    setErrorMessage({
+      status: STATUS.ERROR, 
+      source: apiErrorObj.source,
+      errCode: apiErrorObj.errCode,
+      msg: stringifyBigInt(apiErrorObj.msg) });
     // setShowError(true);
     // console.debug(`${stringifyBigInt(apiErrorObj)}`);
   }
@@ -118,11 +122,12 @@ export default function PriceView() {
     setPriceResponse,
     setBuyAmount,
     setSellAmount,
+    setErrorMessage,
     apiErrorCallBack});
 
   useEffect(() => {
     if(PriceError) {
-      setErrorMessage({ source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
+      setErrorMessage({ status: STATUS.ERROR, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
     }
   }, [PriceError]);
 

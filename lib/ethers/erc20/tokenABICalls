@@ -1,0 +1,5 @@
+GENERATE WETH:
+https://api.etherscan.io/v2/api?chainid=1&module=contract&action=getabi&address=0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2&apikey=GU3IHXXA96QZ9TUF7BT61E1FNEKDSGAPPR
+
+GENERATE SPCOIN:
+https://api.etherscan.io/v2/api?chainid=137&module=contract&action=getabi&address=0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562&apikey=GU3IHXXA96QZ9TUF7BT61E1FNEKDSGAPPR
