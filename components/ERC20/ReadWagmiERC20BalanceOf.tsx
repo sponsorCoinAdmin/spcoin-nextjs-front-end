@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiTokenBalanceOfStr, useFormattedClientBalanceOf, useERC20WagmiTokenDecimals, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
+import { useERC20WagmiTokenBalanceOfStr, useFormattedClientBalanceOf, useERC20WagmiTokenDecimals, formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead'
 
 type Props = {
   ACTIVE_ACCOUNT_ADDRESS:Address|undefined, 

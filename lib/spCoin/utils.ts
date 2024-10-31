@@ -1,12 +1,36 @@
 import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
-import { TokenContract } from "@/lib/structure/types";
+import { SWAP_STATE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
 import { useAccount } from "wagmi";
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
+
+const dumpSwapState = (swapState:SWAP_STATE) => {
+  switch (swapState) {
+    case SWAP_STATE.SWAP:
+      alert(`SWAP`)
+      break
+    case SWAP_STATE.SWAP_TO_NETWORK_TOKEN_UNWRAP:
+      alert(`SWAP_TO_NETWORK_TOKEN_UNWRAP`)
+      break
+    case SWAP_STATE.UNWRAP:
+      alert(`UNWRAP`)
+      break
+    case SWAP_STATE.WRAP_TO_NETWORK_TOKEN_SWAP:
+      alert(`WRAP_TO_NETWORK_TOKEN_SWAP`)
+      break
+    case SWAP_STATE.WRAP:
+      alert(`WRAP`)
+      break
+    case SWAP_STATE.UNDEFINED:
+      alert(`UNDEFINED`)
+      break
+    }
+}
+
 
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
@@ -222,6 +246,7 @@ export {
   defaultMissingImage,
   bigIntDecimalShift,
   dumpContext,
+  dumpSwapState,
   exchangeContextDump,
   fetchIconResource,
   fetchTokenDetails,

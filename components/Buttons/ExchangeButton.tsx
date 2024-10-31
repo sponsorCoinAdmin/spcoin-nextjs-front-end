@@ -1,11 +1,11 @@
 'use client'
 import styles from '@/styles/Exchange.module.css'
-import { dumpContext } from '@/lib/spCoin/utils';
+import { dumpContext, dumpSwapState } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
 import { exchangeContext } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, SWAP_TYPE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
-import { isNetworkOrWalletAccountAddress, isNetworkProtocolAddress, isWrappedNetworkAddress } from '@/lib/network/utils';
-import { Address } from 'viem';
+import { BUTTON_TYPE, ErrorMessage, SWAP_STATE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
+import { useSwapState } from '@/lib/hooks/useSwapType';
+import { swap } from '@/lib/spCoin/swap';
 
 type Props = {
   isLoadingPrice: boolean,
@@ -14,6 +14,7 @@ type Props = {
 }
 
 const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
+  const swapState = useSwapState();
   const tokenContract:TokenContract|undefined = exchangeContext.sellTokenContract as TokenContract | undefined;
   const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
 
@@ -103,58 +104,12 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE: alert("Insufficient Sell Balance");
         break;
-      case BUTTON_TYPE.SWAP: swap();
+      case BUTTON_TYPE.SWAP: swap(swapState);
         break;
       default: alert("Button Type Undefined");
         break;
     }
     dumpContext();
-  }
-
-  const getSwapType = () => {
-    const sellTokenAddress:Address|undefined = exchangeContext.sellTokenContract?.address;
-    const buyTokenAddress:Address|undefined = exchangeContext.buyTokenContract?.address;
-
-    // const isSELL_NETWORK_PROTOCOL_ADDRESS = isNetworkProtocolAddress(sellTokenAddress);
-
-    if (!isNetworkOrWalletAccountAddress(sellTokenAddress)) {
-      if (!isNetworkOrWalletAccountAddress(buyTokenAddress))
-        return SWAP_TYPE.SWAP
-      else
-        if (isWrappedNetworkAddress(buyTokenAddress))
-          return SWAP_TYPE.UNWRAP
-        else
-          return SWAP_TYPE.SWAP_TO_NETWORK_TOKEN_UNWRAP
-    } else {
-        if (isWrappedNetworkAddress(buyTokenAddress))
-          return SWAP_TYPE.WRAP
-        else
-          if (!isNetworkProtocolAddress(sellTokenAddress))
-            return SWAP_TYPE.WRAP_TO_NETWORK_TOKEN_SWAP
-          else
-            return SWAP_TYPE.WRAP
-      }
-  }
-
-  const swap = () => {
-    const swapType = getSwapType();
-    switch (swapType) {
-      case SWAP_TYPE.SWAP:
-        alert(`SWAP`)
-        break
-      case SWAP_TYPE.SWAP_TO_NETWORK_TOKEN_UNWRAP:
-        alert(`SWAP_TO_NETWORK_TOKEN_UNWRAP`)
-        break
-      case SWAP_TYPE.UNWRAP:
-        alert(`UNWRAP`)
-        break
-      case SWAP_TYPE.WRAP_TO_NETWORK_TOKEN_SWAP:
-        alert(`WRAP_TO_NETWORK_TOKEN_SWAP`)
-        break
-      case SWAP_TYPE.WRAP:
-        alert(`WRAP`)
-        break
-    }
   }
 
   const buttonType:BUTTON_TYPE = getButtonType()

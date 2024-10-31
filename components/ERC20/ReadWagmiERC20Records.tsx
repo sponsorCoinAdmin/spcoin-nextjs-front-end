@@ -1,6 +1,6 @@
 import React from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiTokenRecords, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
+import { useERC20WagmiTokenRecords, formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address|undefined

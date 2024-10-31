@@ -10,7 +10,7 @@ import styles from '@/styles/Modal.module.css';
 import { fetchIconResource, getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
 import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
 import Image from 'next/image'
-import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@/lib/wagmi/erc20WagmiClientRead";
+import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@/lib/wagmi/wagmiERC20ClientRead";
 import { Address } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { useDebounce } from "@/lib/hooks/useDebounce";

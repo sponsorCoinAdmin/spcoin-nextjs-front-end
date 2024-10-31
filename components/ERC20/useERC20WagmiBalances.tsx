@@ -1,5 +1,5 @@
 import { Address } from 'viem'
-import { useERC20WagmiTokenDecimals, useERC20WagmiTokenBalanceOf, formatDecimals } from '@/lib/wagmi/erc20WagmiClientRead'
+import { useERC20WagmiTokenDecimals, useERC20WagmiTokenBalanceOf, formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead'
 import { useAccount, useBalance } from 'wagmi'
 import { isNetworkBurnAddress } from '@/lib/network/utils';
 

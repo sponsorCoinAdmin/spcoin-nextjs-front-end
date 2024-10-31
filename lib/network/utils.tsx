@@ -40,6 +40,10 @@ const isNetworkOrWalletAccountAddress = (address:Address|undefined) : boolean =>
   return isNetworkBurnAddress(address) || isActiveWalletAccount(address)
 }
 
+const isTokenAddress = (address:Address|undefined) : boolean => {
+  return !isNetworkOrWalletAccountAddress(address);
+}
+
 // *** WARNING To be fixed for other networks
 const getWrappedNetworkAddress = (chainId:number):Address|undefined => {
   const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -131,6 +135,7 @@ export {
   isNetworkProtocolAddress,
   isNetworkProtocolToken,
   isTransaction_A_Wrap,
+  isTokenAddress,
   isWrappedNetworkAddress
 }
   

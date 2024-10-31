@@ -17,6 +17,22 @@
     },
     {
         "chainId": 1,
+        "address": "0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E",
+        "name": "Floki",
+        "symbol": "FLOKI",
+        "decimals": 9,
+        "img": "/resources/images/tokens/0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E.png"
+    },
+    {
+        "chainId": 1,
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "name": "Wrapped Ethereum",
+        "symbol": "WETH",
+        "decimals": 18,
+        "img": "/resources/images/tokens/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
+    },
+    {
+        "chainId": 1,
         "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
         "name": "AAVE",
         "symbol": "AAVE",
@@ -62,14 +78,6 @@
         "symbol": "DAI",
         "decimals": 18,
         "img": "/resources/images/tokens/0x6b175474e89094c44da98b954eedeac495271d0f.png"
-    },
-    {
-        "chainId": 1,
-        "address": "0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E",
-        "name": "Floki",
-        "symbol": "FLOKI",
-        "decimals": 9,
-        "img": "/resources/images/tokens/0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E.png"
     },
     {
         "name": "Gemini USD",
@@ -150,14 +158,6 @@
         "symbol": "UNI",
         "decimals": 18,
         "img": "/resources/images/tokens/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.png"
-    },
-    {
-        "chainId": 1,
-        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "name": "Wrapped Ethereum",
-        "symbol": "WETH",
-        "decimals": 18,
-        "img": "/resources/images/tokens/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
     },
     {
         "chainId": 1,
