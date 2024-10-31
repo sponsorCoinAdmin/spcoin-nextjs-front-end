@@ -1,13 +1,13 @@
 import React from 'react'
 import { Address } from 'viem'
-import { useERC20WagmiTokenDecimals  } from '@/lib/wagmi/wagmiERC20ClientRead'
+import { useWagmiERC20TokenDecimals  } from '@/lib/wagmi/wagmiERC20ClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address|undefined
 }
 
 const contractDecimals = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {
-  const decimals    = useERC20WagmiTokenDecimals(TOKEN_CONTRACT_ADDRESS)
+  const decimals    = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS)
   return (
     <>
       <hr className="border-top: 3px dashed #bbb"/>

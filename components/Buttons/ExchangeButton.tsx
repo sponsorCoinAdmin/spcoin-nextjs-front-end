@@ -1,7 +1,7 @@
 'use client'
 import styles from '@/styles/Exchange.module.css'
-import { dumpContext, dumpSwapState } from '@/lib/spCoin/utils';
-import useERC20WagmiBalances from '../ERC20/useERC20WagmiBalances';
+import { dumpContext } from '@/lib/spCoin/utils';
+import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
 import { BUTTON_TYPE, ErrorMessage, SWAP_STATE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
 import { useSwapState } from '@/lib/hooks/useSwapType';

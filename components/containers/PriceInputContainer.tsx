@@ -8,7 +8,7 @@ import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidForma
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import useERC20WagmiBalances from '@/components/ERC20/useERC20WagmiBalances'
+import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
 import { isTransaction_A_Wrap } from '@/lib/network/utils';
@@ -38,7 +38,7 @@ const priceInputContainer = ({priceInputContainType,
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
-  const {formattedBalance} = useERC20WagmiBalances("***priceInputContainer", tokenContract?.address);
+  const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() =>  {
