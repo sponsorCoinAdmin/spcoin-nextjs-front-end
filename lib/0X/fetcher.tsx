@@ -6,6 +6,8 @@ import { exchangeContext } from '../context';
 import { isNetworkBurnAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
+import { stringifyBigInt } from '@/lib/spCoin/utils'
+
 
 const SELL_AMOUNT_ZERO = 100;
 const BUY_AMOUNT_ZERO = 200;
@@ -98,8 +100,10 @@ const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined
     //   buyAmount:buyAmount,
     //   priceApiCall:priceApiCall
     // }
-    // alert(`priceApiCall = ${stringifyBigInt(apiDataResponse)}`)
+    // alert(`apiDataResponse = ${stringifyBigInt(apiDataResponse)}`)
+    // alert(`priceApiCall = ${stringifyBigInt(priceApiCall)}`)
   }
+
   return priceApiCall;
 }
 
