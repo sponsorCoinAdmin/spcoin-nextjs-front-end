@@ -117,15 +117,13 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
     {
       chainId: chainId,
       address:TOKEN_CONTRACT_ADDRESS,
-      name:name || "1. CONTRACT NOT FOUND AT ADDRESS",
+      name:name || "CONTRACT NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
       totalSupply:totalSupply,
       img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
-  // if (TOKEN_CONTRACT_ADDRESS)
-  //   console.debug(`****useErc20TokenContract.contractResponse(${TOKEN_CONTRACT_ADDRESS}) = ${stringifyBigInt(contractResponse)}`)
   return contractResponse
 }
 
@@ -149,9 +147,6 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
-
-  // if (ACTIVE_NETWORK_ADDRESS)
-  //   console.debug(`****useErc20TokenContract.networkResponse = ${stringifyBigInt(networkResponse)}`)
   return networkResponse
 }
 

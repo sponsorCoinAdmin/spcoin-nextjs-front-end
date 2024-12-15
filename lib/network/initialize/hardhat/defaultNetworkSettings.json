@@ -1,6 +1,6 @@
 {
   "networkHeader": {
-    "chainId": 31337,
+    "chainId": 1,
     "name": "Ethereum",
     "symbol": "ETH",
     "img": "/resources/images/eth.png",

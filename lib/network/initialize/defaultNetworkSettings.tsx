@@ -1,5 +1,6 @@
 import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
 import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
+import defaultHardHatSettings from './hardhat/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
 import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
@@ -55,17 +56,21 @@ const getDefaultNetworkSettings = (chain:any) => {
   }
   
   // console.debug(`getDefaultNetworkSettings:chain = ${chain}`);
+  alert(`getDefaultNetworkSettings:chain = ${chain}`);
   switch(chain)
   {
       case 1:
       case "ethereum": // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultEthereumSettings;
+        return defaultEthereumSettings;
       case 137:
       case "polygon":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultPolygonSettings;
+        return defaultPolygonSettings;
+      case 31337:
+      case "hardhat":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+        return defaultHardHatSettings;
       case 11155111:
       case "sepolia":  //alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultSoliditySettings;
+        return defaultSoliditySettings;
       default: // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
       return defaultEthereumSettings;
   }
