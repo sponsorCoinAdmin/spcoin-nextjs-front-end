@@ -1,4 +1,4 @@
-import { mainnet, polygon, sepolia } from 'wagmi/chains'
+import { mainnet, polygon, sepolia, hardhat } from 'wagmi/chains'
 import { createConfig, http } from 'wagmi'
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 import { getDefaultConfig } from 'connectkit';
@@ -29,7 +29,7 @@ console.log(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
 export const config = createConfig(
   getDefaultConfig({
     // Your dApps chains
-    chains: [mainnet, polygon, sepolia],
+    chains: [mainnet, polygon, sepolia, hardhat],
     connectors: [
       injected(),
       // coinbaseWallet({ appName: 'Create Wagmi' }),

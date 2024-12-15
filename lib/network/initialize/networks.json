@@ -7,6 +7,13 @@
     "url": "https://etherscan.io/"
   },
   {
+    "name": "HardHat",
+    "chainId": 31337,
+    "symbol": "HH",
+    "img": "/resources/images/tokens/31337.png",
+    "url": "NA"
+  },
+  {
     "name": "Polygon",
     "chainId": 137,
     "symbol": "MATIC",

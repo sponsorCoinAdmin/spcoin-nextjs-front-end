@@ -1,11 +1,16 @@
 'use client'
 import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
-import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
-import { exchangeContext } from "@/lib/context";
+// import { exchangeContext } from "@/lib/context";
 import { BUTTON_TYPE, ErrorMessage, SWAP_STATE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
 import { useSwapState } from '@/lib/hooks/useSwapState';
 import { swap } from '@/lib/spCoin/swap';
+
+import { useExchangeContext } from "@/lib//hooks/useExchangeData";
+import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
+import { useEthersSigner } from "@/lib//hooks/useEthersSigner";
+
+
 
 type Props = {
   isLoadingPrice: boolean,
@@ -96,6 +101,12 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
   }
 
   const buttonClick = () => {
+
+    const swapState = useSwapState();
+const exchangeContext = useExchangeContext();
+const tradeData = exchangeContext.tradeData;
+const signer = useEthersSigner({chainId: 1})
+
     let buttonType:any = getButtonType()
     switch(buttonType) {
       case BUTTON_TYPE.API_TRANSACTION_ERROR: alert(errorMessage?.msg);

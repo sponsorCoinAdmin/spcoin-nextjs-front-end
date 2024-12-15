@@ -6,10 +6,11 @@ import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRe
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const defaultInitialTradeData:TradeData = {
+  signer: undefined,
   sellAmount: 0n,
   buyAmount: 0n,
   transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
-  slippage: "0.02"
+  slippage: 0.02
 };
 
 const initialContext = () => {

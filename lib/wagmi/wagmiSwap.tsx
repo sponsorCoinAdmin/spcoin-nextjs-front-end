@@ -113,7 +113,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
     {
       chainId: chainId,
       address:TOKEN_CONTRACT_ADDRESS,
-      name:name || "CONTRACT NOT FOUND AT ADDRESS",
+      name:name || "2. CONTRACT NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
       totalSupply:totalSupply,

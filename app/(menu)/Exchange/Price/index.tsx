@@ -3,6 +3,8 @@ import styles from '@/styles/Exchange.module.css';
 import { ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
+import { useEthersSigner } from '@/lib/hooks/useEthersSigner' 
+import { useEthersProvider } from '@/lib/hooks/useEthersProvider' 
 import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
@@ -21,6 +23,9 @@ import { Address } from 'viem';
 //////////// Price Code
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount()
+  const signer = useEthersSigner()
+  const provider = useEthersProvider()
+  // if (signer) signer.provider = provider
   const [priceResponse, setPriceResponse] = useState<PriceResponse | undefined>();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
@@ -43,6 +48,10 @@ export default function PriceView() {
   useEffect(() => {
     exchangeContext.sellTokenContract = sellTokenContract;
     }, [sellTokenContract])
+
+    useEffect(() => {
+      exchangeContext.tradeData.signer = signer;
+    }, [signer])
 
   useEffect(() => {
     const chain = ACTIVE_ACCOUNT.chain;

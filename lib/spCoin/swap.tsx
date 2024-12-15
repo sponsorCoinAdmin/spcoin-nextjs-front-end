@@ -1,5 +1,12 @@
 import { SWAP_STATE } from "../structure/types";
 import { dumpSwapState } from "./utils";
+import { exchangeContext } from "@/lib/context";
+import { stringifyBigInt } from '@/lib/spCoin/utils'
+
+const {
+    WethMethods,
+    HARDHAT } = require(`@sponsorcoin/spcoin-all-modules/index.js`);
+  
 
 const wrap = () => {
     alert(`WRAP`)
@@ -13,8 +20,26 @@ const doSwap = () => {
     alert(`SWAP`)
 }
 
+/*
+ it("10. <TYPE SCRIPT> wrap.un-wrap WEI Using connectWeth9DefaultNetwork with HardHat Network and Sinner account[11]", async function () {
+    let tx;
+    const signer = SPONSOR_ACCOUNT_SIGNERS[11];
+    const weiDepositAmount = "2";
+    const weiWithdrawAmount = "1";
+
+    const wethMethods = new WethMethods();
+    wethMethods.connectWeth9DefaultNetwork( HARDHAT, signer );
+    tx = await wethMethods.depositWEI(weiDepositAmount)
+    // console.log(`tx(${wethMethods.depositETH(weiDepositAmount)} = ${JSON.stringify(tx,null,2)}`);
+    tx = await wethMethods.withdrawWEI(weiWithdrawAmount)
+    // console.log(`tx(${wethMethods.withdrawETH(ethWithdrawAmount)} = ${JSON.stringify(tx,null,2)}`);
+  });
+  */
+
 const swap = (swapState: SWAP_STATE) => {
+    console.debug(stringifyBigInt(exchangeContext.tradeData))
     // dumpSwapState(swapState);
+    
     switch (swapState) {
         case SWAP_STATE.SWAP:
             doSwap()

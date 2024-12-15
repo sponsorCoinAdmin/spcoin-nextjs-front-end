@@ -596,6 +596,10 @@
         "name": "BASE"
     },
     {
+        "chainId": 31337,
+        "name": "HardHat"
+    },
+    {
         "chainId": 11155111,
         "name": "Sepolia"
     }

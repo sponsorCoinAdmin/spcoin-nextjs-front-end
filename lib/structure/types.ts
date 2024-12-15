@@ -57,6 +57,7 @@ type NetworkElement = {
 }
 
 type TradeData = {
+  signer: any,
   transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
   buyAmount:bigint;
