@@ -2,6 +2,7 @@ import React from 'react'
 import styles from '@/styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '@/public/resources/images/info1.png'
+import hardhatTokenList from '@/resources/data/tokens/hardhatTokenList.json';
 import polygonTokenList from '@/resources/data/tokens/polygonTokenList.json';
 import sepoliaTokenList from '@/resources/data/tokens/sepoliaTokenList.json';
 import ethereumTokenList from '@/resources/data/tokens/ethereumTokenList.json';
@@ -38,7 +39,6 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
 const getDataFeedList = (feedType: FEED_TYPE, network:string|number) => {
     if (typeof network === "string")
       network = network.toLowerCase()
-    // console.debug("NETWORK network = " + network)
     switch (feedType) {
         case FEED_TYPE.AGENT_WALLETS: return agentWalletList;
         case FEED_TYPE.TOKEN_LIST:
@@ -47,6 +47,9 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number) => {
                 case "ethereum": return ethereumTokenList;
                 case 137:
                 case "polygon": return polygonTokenList;
+                case 31337:
+                case "hardhat": 
+                return hardhatTokenList;
                 case 11155111:
                 case "sepolia": return sepoliaTokenList;
                 default: return ethereumTokenList;

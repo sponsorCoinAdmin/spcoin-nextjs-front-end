@@ -1,0 +1,9 @@
+{
+  "networkHeader": {
+    "chainId": 1,
+    "name": "Ethereum",
+    "symbol": "ETH",
+    "img": "/resources/images/eth.png",
+    "url": "https://etherscan.io/"
+  }
+}

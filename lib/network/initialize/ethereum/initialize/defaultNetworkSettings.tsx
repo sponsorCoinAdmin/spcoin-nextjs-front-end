@@ -1,4 +1,4 @@
-import {  TokenContract } from '../../../structure/types'
+import {  TokenContract } from '../../../../structure/types'
  
  const defaultSellToken: TokenContract = { 
   chainId: 1,

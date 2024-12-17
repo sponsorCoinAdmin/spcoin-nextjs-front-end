@@ -3,8 +3,8 @@
     "chainId": 11155111,
     "name": "Sepolia",
     "symbol": "ETH",
-    "url": "https://sepolia.etherscan.io/",
-    "img": "/resources/images/networks/1.png"
+    "img": "/resources/images/networks/1.png",
+    "url": "https://sepolia.etherscan.io/"
   },
   "defaultSellToken": {
     "chainId": 11155111,

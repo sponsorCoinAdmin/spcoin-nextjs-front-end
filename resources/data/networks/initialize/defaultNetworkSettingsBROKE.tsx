@@ -1,9 +1,13 @@
-import defaultEthereumSettings from '@/resources/data/networks/initialize/ethereum/initialize/defaultNetworkSettings.json';
-import defaultPolygonSettings from '@/resources/data/networks/initialize//polygon/initialize/defaultNetworkSettings.json';
-import defaultHardHatSettings from '@/resources/data/networks/initialize//hardhat/initialize/defaultNetworkSettings.json';
-import defaultSoliditySettings from '@/resources/data/networks/initialize//sepolia/initialize/defaultNetworkSettings.json';
+import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
+import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
+import defaultHardHatSettings from './hardhat/defaultNetworkSettings.json';
+import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
 import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
+import { getNetworkName } from "@/lib/network/utils";
+
+const getNetworkName2:any = getNetworkName;
 
 const defaultInitialTradeData:TradeData = {
   signer: undefined,
@@ -12,6 +16,21 @@ const defaultInitialTradeData:TradeData = {
   transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
   slippage: 0.02
 };
+
+const getEmptyContext = () => {
+  const emptyContext = {
+      activeWalletAccount : undefined,
+      network: undefined,
+      recipientAccount: undefined,
+      agentAccount: undefined,
+      sellTokenContract: undefined,
+      buyTokenContract: undefined,
+      tradeData: defaultInitialTradeData,
+      spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
+      test : {dumpContextButton:false}
+  }
+  return emptyContext;
+}
 
 const initialContext = () => {
   // Default startup network to Ethereum
@@ -40,41 +59,45 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
   return initialContext;
 }
 
-function getInitialContextMap(chain:any) {
-  const initialNetworkContext = getDefaultNetworkSettings(chain);
+function getInitialContextMap(chainId:any) {
+  const initialNetworkContext = getDefaultNetworkSettings(chainId);
   return new Map(Object.entries(initialNetworkContext));
 }
 
-const getDefaultNetworkSettings = (chain:any) => {
-  // alert("getDefaultNetworkSettings"+chain )
-  if (chain && typeof chain === "string" && !isLowerCase(chain)) {
-    chain = chain.toLowerCase()
+const getDefaultNetworkSettings = (chainId:any) => {
+  if (chainId && typeof chainId === "string" && !isLowerCase(chainId)) {
+    chainId = chainId.toLowerCase()
   }
-  else if (chain && typeof chain !== "number" && typeof chain !== "string") {
-    chain = chain.id
+  else if (chainId && typeof chainId !== "number" && typeof chainId !== "string") {
+    chainId = chainId.id
   }
+
   
-  // console.debug(`getDefaultNetworkSettings:chain = ${chain}`);
-  switch(chain)
+  alert("*** getDefaultNetworkSettings:chainId = " + chainId )
+  const networkName = getNetworkName(chainId)
+  alert(`*** getDefaultNetworkSettings:networkName = ${networkName}`);
+
+  // console.debug(`getDefaultNetworkSettings:chainId = ${chainId}`);
+  // console.debug(`getDefaultNetworkSettings:networkName = ${networkName}`);
+  switch(chainId)
   {
       case 1:
       case "ethereum":
-        // alert(`SELECTING chain = ${chain} defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+        alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
         return defaultEthereumSettings;
       case 137:
       case "polygon":
-        // alert(`SELECTING chain = ${chain} defaultPolygonSettings = \n${stringifyBigInt(defaultPolygonSettings)}`);
+        alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
         return defaultPolygonSettings;
       case 31337:
       case "hardhat":
-        // alert(`SELECTING chain = ${chain} defaultHardHatSettings = \n${stringifyBigInt(defaultHardHatSettings)}`);
         return defaultHardHatSettings;
       case 11155111:
       case "sepolia":
-        // alert(`SELECTING chain = ${chain} defaultSoliditySettings = \n${stringifyBigInt(defaultSoliditySettings)}`);
+        alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
         return defaultSoliditySettings;
       default: 
-      // alert(`SELECTING chain = ${chain} defaultUndefinedSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      alert(`SELECTING defaultSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
         return defaultEthereumSettings;
   }
 }
@@ -83,5 +106,6 @@ export {
   getDefaultNetworkSettings,
   getInitialContext,
   getInitialContextMap,
+  getEmptyContext,
   initialContext
  };

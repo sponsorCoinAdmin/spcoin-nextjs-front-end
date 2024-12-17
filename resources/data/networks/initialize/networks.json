@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Ethereum",
+    "chainId": 1,
+    "symbol": "ETH",
+    "img": "/resources/images/networks/1.png",
+    "url": "https://etherscan.io/"
+  },
+  {
+    "name": "HardHat",
+    "chainId": 31337,
+    "symbol": "HH",
+    "img": "/resources/images/tokens/31337.png",
+    "url": "NA"
+  },
+  {
+    "name": "Polygon",
+    "chainId": 137,
+    "symbol": "MATIC",
+    "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
+    "url": "https://polygonscan.com/"
+  },
+  {
+    "name": "Sepolia",
+    "chainId": 11155111,
+    "symbol": "ETH",
+    "img": "/resources/images/networks/11155111.png",
+    "url": "https://sepolia.etherscan.io/"
+  }    
+] 

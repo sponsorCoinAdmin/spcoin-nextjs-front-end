@@ -1,9 +1,9 @@
-import defaultEthereumSettings from '@/resources/data/networks/initialize/ethereum/initialize/defaultNetworkSettings.json';
-import defaultPolygonSettings from '@/resources/data/networks/initialize//polygon/initialize/defaultNetworkSettings.json';
-import defaultHardHatSettings from '@/resources/data/networks/initialize//hardhat/initialize/defaultNetworkSettings.json';
-import defaultSoliditySettings from '@/resources/data/networks/initialize//sepolia/initialize/defaultNetworkSettings.json';
+import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
+import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
+import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
 import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const defaultInitialTradeData:TradeData = {
   signer: undefined,
@@ -58,24 +58,16 @@ const getDefaultNetworkSettings = (chain:any) => {
   switch(chain)
   {
       case 1:
-      case "ethereum":
-        // alert(`SELECTING chain = ${chain} defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-        return defaultEthereumSettings;
+      case "ethereum": // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultEthereumSettings;
       case 137:
-      case "polygon":
-        // alert(`SELECTING chain = ${chain} defaultPolygonSettings = \n${stringifyBigInt(defaultPolygonSettings)}`);
-        return defaultPolygonSettings;
-      case 31337:
-      case "hardhat":
-        // alert(`SELECTING chain = ${chain} defaultHardHatSettings = \n${stringifyBigInt(defaultHardHatSettings)}`);
-        return defaultHardHatSettings;
+      case "polygon":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultPolygonSettings;
       case 11155111:
-      case "sepolia":
-        // alert(`SELECTING chain = ${chain} defaultSoliditySettings = \n${stringifyBigInt(defaultSoliditySettings)}`);
-        return defaultSoliditySettings;
-      default: 
-      // alert(`SELECTING chain = ${chain} defaultUndefinedSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-        return defaultEthereumSettings;
+      case "sepolia":  //alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultSoliditySettings;
+      default: // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+      return defaultEthereumSettings;
   }
 }
 

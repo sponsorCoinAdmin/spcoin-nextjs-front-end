@@ -1,7 +1,7 @@
-import defaultEthereumSettings from '@/resources/data/networks/initialize/ethereum/initialize/defaultNetworkSettings.json';
-import defaultPolygonSettings from '@/resources/data/networks/initialize//polygon/initialize/defaultNetworkSettings.json';
-import defaultHardHatSettings from '@/resources/data/networks/initialize//hardhat/initialize/defaultNetworkSettings.json';
-import defaultSoliditySettings from '@/resources/data/networks/initialize//sepolia/initialize/defaultNetworkSettings.json';
+import defaultEthereumSettings from './ethereum/initialize/defaultNetworkSettings.json';
+import defaultPolygonSettings from './polygon/initialize/defaultNetworkSettings.json';
+import defaultHardHatSettings from './hardhat/initialize/defaultNetworkSettings.json';
+import defaultSoliditySettings from './sepolia/initialize/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
 import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
 

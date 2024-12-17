@@ -1,4 +1,4 @@
-import chainIdList from '@/resources/data/networks/chainIds.json';
+import chainIdListJSON from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultEthereumSettings } from './initialize/ethereum/initialize/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultPolygonSettings } from './initialize/polygon/initialize/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultSepoliaSettings } from './initialize/sepolia/initialize/defaultNetworkSettings'
@@ -6,6 +6,7 @@ import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import { TokenContract } from '../structure/types';
 
+const chainIdList =chainIdListJSON
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
 const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
 // const NETWORK_PROTOCOL_CRYPTO = "NETWORK PROTOCOL CRYPTO"
