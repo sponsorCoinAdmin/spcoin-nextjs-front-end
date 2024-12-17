@@ -19,12 +19,16 @@ import { stringifyBigInt } from '@/lib/spCoin/utils';
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import PriceInputContainer from '@/components/containers/PriceInputContainer';
 import { Address } from 'viem';
+import { useChainId } from "wagmi";
+import { config } from '@/lib/wagmi/wagmiConfig'
 
 //////////// Price Code
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount()
   const signer = useEthersSigner()
   const provider = useEthersProvider()
+  const chainId = useChainId({config});
+
   // if (signer) signer.provider = provider
   const [priceResponse, setPriceResponse] = useState<PriceResponse | undefined>();
   const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
@@ -55,7 +59,7 @@ export default function PriceView() {
 
   useEffect(() => {
     const chain = ACTIVE_ACCOUNT.chain;
-    if (chain != undefined && exchangeContext.network.chainId !== chain.id) {
+    if (chain) {
       // alert(`chain = ${stringifyBigInt(chain)}`)
       resetNetworkContext(chain)
       // console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
@@ -64,7 +68,8 @@ export default function PriceView() {
       setSellTokenContract(exchangeContext.sellTokenContract);
       setBuyTokenContract(exchangeContext.buyTokenContract);
     }
-  }, [ACTIVE_ACCOUNT.chain]);
+   }, [chainId]);
+//  }, [ACTIVE_ACCOUNT.chain]);
 
   useEffect(() => {
     exchangeContext.activeWalletAccount = ACTIVE_ACCOUNT.address as Address;
