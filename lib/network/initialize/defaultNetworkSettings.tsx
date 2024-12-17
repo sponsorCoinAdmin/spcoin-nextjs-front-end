@@ -1,5 +1,6 @@
 import defaultEthereumSettings from './ethereum/defaultNetworkSettings.json';
 import defaultPolygonSettings from './polygon/defaultNetworkSettings.json';
+import defaultHardHatSettings from './hardhat/defaultNetworkSettings.json';
 import defaultSoliditySettings from './sepolia/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
 import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
@@ -58,16 +59,24 @@ const getDefaultNetworkSettings = (chain:any) => {
   switch(chain)
   {
       case 1:
-      case "ethereum": // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultEthereumSettings;
+      case "ethereum":
+        alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+        return defaultEthereumSettings;
       case 137:
-      case "polygon":  //alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultPolygonSettings;
+      case "polygon":
+        alert(`SELECTING defaultPolygonSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+        return defaultPolygonSettings;
+      case 31337:
+      case "hardhat":
+        alert(`SELECTING defaultHardHatSettings = \n${stringifyBigInt(defaultHardHatSettings)}`);
+        return defaultHardHatSettings;
       case 11155111:
-      case "sepolia":  //alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultSoliditySettings;
-      default: // alert(`SELECTING defaultEthereumSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
-      return defaultEthereumSettings;
+      case "sepolia":
+        alert(`SELECTING defaultSoliditySettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+        return defaultSoliditySettings;
+      default: 
+      alert(`SELECTING defaultSettings = \n${stringifyBigInt(defaultEthereumSettings)}`);
+        return defaultEthereumSettings;
   }
 }
 
