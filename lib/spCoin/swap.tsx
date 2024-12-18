@@ -1,4 +1,4 @@
-import { SWAP_STATE } from "../structure/types";
+import { SWAP_STATE } from "@/lib/structure/types";
 import { dumpSwapState } from "./utils";
 import { exchangeContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils'

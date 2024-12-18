@@ -2,10 +2,10 @@ import React from 'react'
 import styles from '@/styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '@/public/resources/images/info1.png'
-import hardhatTokenList from '@/resources/data/tokens/hardhatTokenList.json';
-import polygonTokenList from '@/resources/data/tokens/polygonTokenList.json';
-import sepoliaTokenList from '@/resources/data/tokens/sepoliaTokenList.json';
-import ethereumTokenList from '@/resources/data/tokens/ethereumTokenList.json';
+import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
+import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
+import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
+import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 import { FEED_TYPE } from '@/lib/structure/types';

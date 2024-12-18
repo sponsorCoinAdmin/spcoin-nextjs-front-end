@@ -4,7 +4,7 @@ import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/da
 import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings'
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
-import { TokenContract } from '../structure/types';
+import { TokenContract } from '@/lib/structure/types';
 
 const chainIdList =chainIdListJSON
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"

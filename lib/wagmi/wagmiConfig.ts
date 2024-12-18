@@ -7,6 +7,7 @@ export const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
 let MAINNET_URL:string = "";
 let POLYGON_URL:string = "";
 let SEPOLIA_URL:string = "";
+let HARDHAT_URL:string = process.env.HARDHAT || "";
 
 switch (BLOCKCHAIN_PROVIDER) {
   case "ALCHEMY":
@@ -25,6 +26,7 @@ console.log(`BLOCKCHAIN_PROVIDER = ${BLOCKCHAIN_PROVIDER}`)
 console.log(`MAINNET_URL         = ${MAINNET_URL}`)
 console.log(`POLYGON_URL         = ${POLYGON_URL}`)
 console.log(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
+console.log(`HARDHAT_URL         = ${HARDHAT_URL}`)
 
 export const config = createConfig(
   getDefaultConfig({
@@ -40,6 +42,7 @@ export const config = createConfig(
       [mainnet.id]: http(MAINNET_URL),      
       [polygon.id]: http(POLYGON_URL),
       [sepolia.id]: http(SEPOLIA_URL),
+      [hardhat.id]: http(HARDHAT_URL),
     },
   
     // Required API Keys

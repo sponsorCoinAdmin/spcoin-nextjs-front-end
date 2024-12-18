@@ -1,5 +1,5 @@
 import { useSwapState } from "../hooks/useSwapState";
-import { SWAP_STATE } from "../structure/types";
+import { SWAP_STATE } from "@/lib/structure/types";
 import { dumpSwapState } from "./utils";
 // const swapState2 = useSwapState();
 

@@ -6,14 +6,14 @@ import { Address, formatUnits } from 'viem'
 // import { erc20Abi } from 'viem'
 // import erc20Abi from '@/resources/data/ABIs/erc20ABI.json'
 import { erc20Abi } from '@/resources/data/ABIs/erc20ABI'
-import { TokenContract, ContractRecs } from '../structure/types'
+import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getNetworkName } from '@/lib/network/utils';
 import { stringifyBigInt } from '../spCoin/utils'
 
 // console.log(`AAAAAAAAA erc20Abi = ${JSON.stringify(erc20Abi)}`)
 // console.log(`BBBBBBBBB erc20Abi2 = ${JSON.stringify(erc20Abi2)}`)
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
-  // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
+  console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
   const wagmiBalanceOfRec = useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,

@@ -4,7 +4,7 @@ import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 import { erc20Abi } from 'viem'
-import { TokenContract, ContractRecs } from '../structure/types'
+import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getNetworkName } from '@/lib/network/utils';
 import { stringifyBigInt } from '../spCoin/utils'
 
