@@ -1,7 +1,7 @@
 /// START DROPDOWN STUFF
 
 import { exchangeContext } from "../context";
-import { SP_COIN_DISPLAY } from "../structure/types";
+import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 
 const displaySpCoinContainers = (spCoinDisplay:SP_COIN_DISPLAY) => {
   switch (spCoinDisplay) {

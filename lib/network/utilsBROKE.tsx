@@ -1,12 +1,12 @@
-import chainIdList from '@/resources/data/networks/chainIds.json';
+import chainIdListJSON from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultEthereumSettings } from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings'
-import { defaultNetworkSettings as defaultHardHatSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings'
 import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings'
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import { TokenContract } from '@/lib/structure/types';
 
+const chainIdList =chainIdListJSON
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
 const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
 // const NETWORK_PROTOCOL_CRYPTO = "NETWORK PROTOCOL CRYPTO"
@@ -99,7 +99,6 @@ function getAvatarImageURL(chainId:number|string) {
 const createNetworkJsonList = () => {
   const defaultNetworkSettings = {
     ethereum : defaultEthereumSettings,
-    hardhat : defaultHardHatSettings,
     polygon  : defaultPolygonSettings,
     sepolia  : defaultSepoliaSettings,
   }

@@ -5,7 +5,7 @@ import { Address, formatUnits } from 'viem'
 // import erc20Abi from '@/resources/data/ABIs/erc20ABI.json'
 import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20Abi } from '@/resources/data/ABIs/erc20ABI'
-import { TokenContract, ContractRecs } from '../structure/types'
+import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getNetworkName } from '@/lib/network/utils';
 import { stringifyBigInt } from '../spCoin/utils'
 

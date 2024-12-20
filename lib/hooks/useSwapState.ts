@@ -2,7 +2,7 @@ import { Address } from 'viem';
 import { useEffect, useState } from 'react';
 import { exchangeContext } from '../context';
 import { isTokenAddress, isNetworkAddress, isWrappedNetworkAddress } from '../network/utils';
-import { SWAP_STATE } from '../structure/types';
+import { SWAP_STATE } from '@/lib/structure/types';
 
 export const useSwapState = () => {
   const [swapState, setSwapState] = useState<SWAP_STATE>(SWAP_STATE.UNDEFINED);
