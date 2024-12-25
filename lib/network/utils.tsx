@@ -6,6 +6,8 @@ import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/da
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import { TokenContract } from '@/lib/structure/types';
+import { config } from '@/lib/wagmi/wagmiConfig'
+import { useChainId } from 'wagmi';
 
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
 const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
@@ -47,17 +49,17 @@ const isTokenAddress = (address:Address|undefined) : boolean => {
 
 // *** WARNING To be fixed for other networks
 const getWrappedNetworkAddress = (chainId:number):Address|undefined => {
-  const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   switch(chainId) {
-    case 1: return WETH;
+    case 1: return "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"; // Ethereum
+    case 31337: return "0x4D1338Fa46ca6060F1472b70599cc635Ad275EDa"; // HardHat
     default: return undefined;
   }
 }
 
 // *** WARNING HARDCODING To be fixed for other networks
 const isWrappedNetworkAddress = (address:Address|undefined) : boolean => {
-  const chainId:number = 1;
-  const  wrappedNetworkAddress:boolean = address === getWrappedNetworkAddress(chainId);
+  // const chainId = useChainId({config});
+  const  wrappedNetworkAddress:boolean = address === getWrappedNetworkAddress(31337);
   return wrappedNetworkAddress;
 }
 

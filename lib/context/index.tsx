@@ -3,12 +3,8 @@ import { getInitialContext, initialContext } from '@/lib/network/initialize/defa
 
 let {exchangeContext, exchangeContextMap} = initialContext ();
 
-const resetNetworkContext = (chain:any) => {
-    const networkName = chain?.name.toLowerCase();
-    // console.debug("resetNetworkContext: newNetworkName = " + networkName);
+const resetNetworkContext = (chain:number) => {
     exchangeContext = getInitialContext(chain)
-    // console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
-    // console.debug(`UPDATING NETWORK to ${networkName}`);
 }
 
 export function ExchangeWrapper({children} : {

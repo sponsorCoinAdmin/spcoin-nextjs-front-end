@@ -21,8 +21,7 @@ const initialContext = () => {
   return { exchangeContext, exchangeContextMap }
 }
 
-const getInitialContext = (chain:any | number): ExchangeContext => {
-  const chainId:number = chain || 1;
+const getInitialContext = (chainId:number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
   const initialContext = {
       activeWalletAccount : undefined,

@@ -1,4 +1,5 @@
 // 'use server'
+import { useEffect } from "react";
 import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
@@ -6,8 +7,9 @@ import { exchangeContext } from '../context';
 import { isNetworkBurnAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
-import { stringifyBigInt } from '@/lib/spCoin/utils'
-
+import { config } from '@/lib/wagmi/wagmiConfig'
+import { useChainId } from 'wagmi';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 const SELL_AMOUNT_ZERO = 100;
 const BUY_AMOUNT_ZERO = 200;
@@ -107,9 +109,20 @@ const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined
   return priceApiCall;
 }
 
+let chainId:number
 // ToDo This is to turn on off mandatory fetching
 const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
-  return true;
+  let fetch:boolean = true;
+  chainId = useChainId({config});
+  // useEffect(() => {
+  //   alert(`Changing chainId to ${chainId}`)
+  // }, [chainId])
+  fetch = chainId !== 31337
+
+  // if (!fetch)
+  //   alert(`Fetch$ {fetch} to fail for chainId = ${chainId}`)
+
+  return fetch;
 }
 
 type Props = {
@@ -149,9 +162,9 @@ function usePriceAPI({
           transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
             console.debug(`SUCCESS SELL_EXACT_OUT: useSWR.fetcher data.price = ${data.price}`):
             console.debug(`SUCCESS BUY_EXACT_IN: useSWR.fetcher data.price = ${data.price}`);
-          console.debug(`data.price      = ${data.price}\n
-                         data.sellAmount = ${data.sellAmount}\n
-                         data.buyAmount  = ${data.buyAmount}`);
+              console.debug(`data.price      = ${data.price}\n
+                            data.sellAmount = ${data.sellAmount}\n
+                            data.buyAmount  = ${data.buyAmount}`);
             
           setPriceResponse(data);
 
@@ -163,6 +176,7 @@ function usePriceAPI({
             setErrorMessage(undefined)
         }
         else {
+          alert("AAAAAAAAAAAAAAAAA")
           // if (isNetworkBurnAddress(sellTokenAddress) || isNetworkBurnAddress(buyTokenAddress)) {
             if (isTransaction_A_Wrap()) {
             // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
@@ -179,8 +193,11 @@ function usePriceAPI({
             apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
           }
         }
+        alert("BBBBBBBBBBBBBBBBBB")
       },
-      // onError: (error) => {
+      onError: (error) => {
+        alert(`Fetcher Error = ${stringifyBigInt(error)}`)
+
         // processError(
         //   error,
         //   setErrorMessage,
@@ -189,8 +206,10 @@ function usePriceAPI({
         //   setBuyAmount,
         //   setValidPriceInput
         // );
-      // }
+      }
+
     }
+
   );
 }
 

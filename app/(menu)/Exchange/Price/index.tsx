@@ -58,10 +58,9 @@ export default function PriceView() {
     }, [signer])
 
   useEffect(() => {
-    const chain = ACTIVE_ACCOUNT.chain;
-    if (chain) {
-      // alert(`chain = ${stringifyBigInt(chain)}`)
-      resetNetworkContext(chain)
+    if (chainId) {
+      // alert(`chainId = ${stringifyBigInt(chainId)}`)
+      resetNetworkContext(chainId)
       // console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
       setAgentElement(exchangeContext.agentAccount);
       setSlippage(exchangeContext.tradeData.slippage);
@@ -69,9 +68,10 @@ export default function PriceView() {
       setBuyTokenContract(exchangeContext.buyTokenContract);
     }
    }, [chainId]);
-//  }, [ACTIVE_ACCOUNT.chain]);
 
   useEffect(() => {
+    // alert(`Account Address changed to ${ACTIVE_ACCOUNT.address}`)
+    resetNetworkContext(chainId)
     exchangeContext.activeWalletAccount = ACTIVE_ACCOUNT.address as Address;
   }, [ACTIVE_ACCOUNT.address]);
 
