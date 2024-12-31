@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "echo \"Error: no spcoin-nextjs-front-end tests specified\" && exit 1",
+    "preinstall": "echo preinstall spcoin-nextjs-front-end; . ./scripts/installDevSubModules.sh",
+    "postinstall": "echo postinstall spcoin-nextjs-front-end Installation Complete",
+    "installDevModules": "echo Installing SPCOIN-PROJECT-MODULES; . ./scripts/installDevSubModules.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.6",
