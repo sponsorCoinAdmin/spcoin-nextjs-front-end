@@ -18,7 +18,8 @@ createNewEnvironmentFile() {
     export ACTIVE_PROJECT_NAME=$2
     export ACTIVE_ENV_DIR=$3
     export ACTIVE_ENV_PATH=$ACTIVE_PROJECT_PATH$ACTIVE_ENV_DIR
-    echo "SET UP SPCOIN_ROOT_ENV_DIR CONFIGURATION FILE: $$ACTIVE_ENV_PATH/.e"
+    mkdir $ACTIVE_ENV_PATH
+    echo "SET UP SPCOIN_ROOT_ENV_DIR CONFIGURATION FILE: $ACTIVE_ENV_PATH/.e"
     echo "export ACTIVE_PROJECT_NAME=$ACTIVE_PROJECT_NAME"                               | tee    $ACTIVE_ENV_PATH/.e
     echo "export ACTIVE_PROJECT_PATH=$ACTIVE_PROJECT_PATH"                               | tee -a $ACTIVE_ENV_PATH/.e
     echo "export ACTIVE_ENV_PATH=$ACTIVE_ENV_PATH"                                       | tee -a $ACTIVE_ENV_PATH/.e

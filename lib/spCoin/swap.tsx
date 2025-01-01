@@ -1,12 +1,6 @@
 import { SWAP_STATE } from "@/lib/structure/types";
-import { dumpSwapState } from "./utils";
 import { exchangeContext } from "@/lib/context";
 import { stringifyBigInt } from '@/lib/spCoin/utils'
-
-const {
-    WethMethods,
-    HARDHAT } = require(`@sponsorcoin/spcoin-all-modules/index.js`);
-  
 
 const wrap = () => {
     alert(`WRAP`)
