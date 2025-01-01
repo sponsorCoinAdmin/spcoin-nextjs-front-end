@@ -4,6 +4,7 @@ import { SWAP_STATE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
+import { stringifyBigInt } from '@/node_modules-dev/common/spcoin-lib';
 import { useAccount } from "wagmi";
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
@@ -148,10 +149,6 @@ const isSpCoin = (TokenContract:TokenContract|undefined) => {
   return TokenContract?.symbol === "SpCoin" ? true:false
 }
 
-const stringifyBigInt = (obj:any) => {
-  return JSON.stringify(obj, (_, v) => typeof v === 'bigint' ? v.toString() : v,2)
-}
-
 const exchangeContextDump = () => {
   const exchangeData = stringifyBigInt(exchangeContext);
   alert(exchangeData);
@@ -260,6 +257,5 @@ export {
   // isActiveNetworkAddress,
   isSpCoin,
   setValidPriceInput,
-  stringifyBigInt,
   updateBalance
 }

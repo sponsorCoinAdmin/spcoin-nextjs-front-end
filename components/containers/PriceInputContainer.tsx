@@ -4,7 +4,8 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin , stringifyBigInt  } from '@/lib/spCoin/utils';
+import { stringifyBigInt }from '@/node_modules-dev/common/spcoin-lib'
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
