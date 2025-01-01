@@ -1,3 +1,6 @@
 [submodule "node_modules-dev/common/spcoin-lib"]
 	path = node_modules-dev/common/spcoin-lib
 	url = git@github.com:sponsorCoinAdmin/spcoin-lib.git
+[submodule "node_modules-dev/be/spcoin-access-modules"]
+	path = node_modules-dev/be/spcoin-access-modules
+	url = git@github.com:sponsorCoinAdmin/spcoin-access-modules.git
