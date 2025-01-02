@@ -4,6 +4,12 @@
 [submodule "node_modules-dev/be/spcoin-access-modules"]
 	path = node_modules-dev/be/spcoin-access-modules
 	url = git@github.com:sponsorCoinAdmin/spcoin-access-modules.git
-[submodule "node_modules-dev/be/spcoin-weth-module"]
-	path = node_modules-dev/be/spcoin-weth-module
-	url = git@github.com:sponsorCoinAdmin/spcoin-weth-module.git
+[submodule "node_modules-dev/spcoin-back-end"]
+	path = node_modules-dev/spcoin-back-end
+	url = git@github.com:sponsorCoinAdmin/spcoin-back-end.git
+[submodule "node_modules-dev/spcoin-front-end"]
+	path = node_modules-dev/spcoin-front-end
+	url = git@github.com:sponsorCoinAdmin/spcoin-front-end.git
+[submodule "node_modules-dev/spcoin-common"]
+	path = node_modules-dev/spcoin-common
+	url = git@github.com:sponsorCoinAdmin/spcoin-common.git
