@@ -4,7 +4,7 @@ import { SWAP_STATE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
-import { stringifyBigInt } from '@/node_modules-dev/common/spcoin-lib';
+import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
 import { useAccount } from "wagmi";
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
