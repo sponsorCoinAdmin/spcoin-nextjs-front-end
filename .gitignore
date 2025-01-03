@@ -3,6 +3,7 @@ node_modules
 test.out
 /ignition/deployments/
 /.deps
+/.next/
 /.vscode/
 .env
 .env.local
