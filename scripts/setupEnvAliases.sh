@@ -1,5 +1,7 @@
 clear
+echo ==== SETTING UP ENVIRONMENT VARIABLES ====
 export ACTIVE_PROJECT_NAME=$(basename $PWD)
+
 export ACTIVE_PROJECT_PATH=$PWD
 export ACTIVE_ENV_DIR=/.e
 
@@ -34,12 +36,16 @@ createNewEnvironmentFile() {
 
     echo "export SPCOIN_BE_PATH=\$ACTIVE_PROJECT_PATH"                                   | tee -a $ACTIVE_ENV_PATH/.e
     echo ". \$ACTIVE_ENV_PATH/.a"                                                        | tee -a $ACTIVE_ENV_PATH/.e
+    # echo "m"                                                                             | tee -a $ACTIVE_ENV_PATH/.e
 }
 
 #SET UP BASH ENVIRONMENT
 createNewEnvironmentFile $ACTIVE_PROJECT_PATH $ACTIVE_PROJECT_NAME $ACTIVE_ENV_DIR
+echo "Adding sponsor coin startup configuration Files to bootstrap file ~/.baschrc"
 insertOnce "set -o vi" ~/.bashrc;
-insertOnce ". $ACTIVE_ENV_PATH/." ~/.bashrc;
+sed -i '/ACTIVE_ENV_PATH/d' ~/.bashrc
+echo "export ACTIVE_ENV_PATH=$ACTIVE_ENV_PATH/.e"                                        | tee -a ~/.bashrc
+echo ". \$ACTIVE_ENV_PATH"                                                               | tee -a ~/.bashrc
 
 #RUN THE ENVIRONMENT SETUP
 . $ACTIVE_ENV_PATH/.e
