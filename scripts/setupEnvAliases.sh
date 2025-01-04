@@ -41,7 +41,7 @@ createNewEnvironmentFile() {
 
 #SET UP BASH ENVIRONMENT
 createNewEnvironmentFile $ACTIVE_PROJECT_PATH $ACTIVE_PROJECT_NAME $ACTIVE_ENV_DIR
-echo "Adding sponsor coin startup configuration Files to bootstrap file ~/.baschrc"
+echo "Adding sponsor coin startup configuration Files to bootstrap file ~/.bashrc"
 insertOnce "set -o vi" ~/.bashrc;
 sed -i '/ACTIVE_ENV_PATH/d' ~/.bashrc
 echo "export ACTIVE_ENV_PATH=$ACTIVE_ENV_PATH/.e"                                        | tee -a ~/.bashrc
