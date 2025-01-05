@@ -1,9 +1,9 @@
-alias a=". $ACTIVE_ENV_PATH/.a;m"
-alias e=". $ACTIVE_ENV_PATH/.e"
-alias m=". $ACTIVE_ENV_PATH/.m"
-alias va="vi $ACTIVE_ENV_PATH/.a;a"
-alias ve="vi $ACTIVE_ENV_PATH/.e;e"
-alias vm="vi $ACTIVE_ENV_PATH/.m;m"
+alias a=". \$ACTIVE_ENV_PATH/.a;m"
+alias e=". \$ACTIVE_ENV_PATH/.e"
+alias m=". \$ACTIVE_ENV_PATH/.m"
+alias va="vi \$ACTIVE_ENV_PATH/.a;a"
+alias ve="vi \$ACTIVE_ENV_PATH/.e;e"
+alias vm="vi \$ACTIVE_ENV_PATH/.m;m"
 
 alias runfe="npm run dev"
 
