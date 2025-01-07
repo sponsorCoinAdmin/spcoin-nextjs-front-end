@@ -16,8 +16,8 @@ insertOnce() {
 }
 
 createNewEnvironmentFile() {
-    export ACTIVE_PROJECT_PATH=$1
-    export ACTIVE_PROJECT_NAME=$2
+    export ACTIVE_PROJECT_NAME=$1
+    export ACTIVE_PROJECT_PATH=$2
     export ACTIVE_ENV_DIR=$3
     export ACTIVE_ENV_PATH=$ACTIVE_PROJECT_PATH$ACTIVE_ENV_DIR
     export ACTIVE_ENV_FILE_PATH=$ACTIVE_ENV_PATH/.e
@@ -38,7 +38,7 @@ createNewEnvironmentFile() {
 }
 
 #SET UP BASH ENVIRONMENT
-createNewEnvironmentFile $ACTIVE_PROJECT_PATH $ACTIVE_PROJECT_NAME $ACTIVE_ENV_DIR
+createNewEnvironmentFile $ACTIVE_PROJECT_NAME $ACTIVE_PROJECT_PATH $ACTIVE_ENV_DIR
 insertOnce "set -o vi" ~/.bashrc;
 
 echo "Adding sponsor coin startup configuration Files to bootstrap file ~/.bashrc"
