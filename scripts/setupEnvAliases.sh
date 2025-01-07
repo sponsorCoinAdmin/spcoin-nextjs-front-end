@@ -1,4 +1,3 @@
-clear
 echo ==== SETTING UP ENVIRONMENT VARIABLES ====
 export ACTIVE_PROJECT_NAME=$(basename $PWD)
 export ACTIVE_ROOT_DIR="$(dirname "$PWD")"
