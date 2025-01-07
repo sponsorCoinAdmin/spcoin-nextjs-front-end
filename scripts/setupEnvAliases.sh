@@ -43,7 +43,6 @@ insertOnce "set -o vi" ~/.bashrc;
 echo "Adding sponsor coin startup configuration Files to bootstrap file ~/.bashrc"
 sed -i '/ACTIVE_ENV_FILE_PATH/d' ~/.bashrc
 sed -i '/ACTIVE_PROJECT_PATH/d' ~/.bashrc
-echo "export ACTIVE_ENV_FILE_PATH=$ACTIVE_ENV_FILE_PATH" | tee -a ~/.bashrc;
 echo ". \$ACTIVE_ENV_FILE_PATH"                          | tee -a ~/.bashrc;
 echo "cd \$ACTIVE_PROJECT_PATH"                          | tee -a ~/.bashrc;
 
