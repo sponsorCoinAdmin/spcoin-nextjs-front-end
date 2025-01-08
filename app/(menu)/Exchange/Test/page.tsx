@@ -15,7 +15,8 @@ import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20Con
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
 import { BURN_ADDRESS } from '@/lib/network/utils'
 import DumpContextButton from '@/components/Buttons/DumpContextButton'
-import { stringifyBigInt } from '@/lib/spCoin/utils'
+import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
+
 import { exchangeContext } from '@/lib/context'
 import InputSelect from '@/components/panes/InputSelect';
 import { TokenContract } from '@/lib/structure/types'

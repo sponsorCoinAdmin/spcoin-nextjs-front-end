@@ -32,7 +32,6 @@ const dumpSwapState = (swapState:SWAP_STATE) => {
     }
 }
 
-
 function getQueryVariable(_urlParams:string, _searchParam:string)
 {
   // console.debug("Searching " + _searchParam + " in _urlParams " + _urlParams)

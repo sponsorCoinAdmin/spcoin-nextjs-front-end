@@ -14,7 +14,8 @@ import ReadWagmiERC20ContractName from '@/components/ERC20/ReadWagmiERC20Contrac
 import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20ContractSymbol'
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals'
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
-import { stringifyBigInt } from '@/lib/spCoin/utils'
+import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
+
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
