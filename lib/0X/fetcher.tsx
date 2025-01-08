@@ -6,7 +6,7 @@ import { exchangeContext } from '../context';
 import { isNetworkBurnAddress, isTransaction_A_Wrap } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
-import { stringifyBigInt } from '@/lib/spCoin/utils'
+import { useChainId } from "wagmi";
 
 
 const SELL_AMOUNT_ZERO = 100;
@@ -106,9 +106,16 @@ const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined
 
   return priceApiCall;
 }
-
+let chainId:number
 // ToDo This is to turn on off mandatory fetching
 const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
+  chainId = useChainId();
+  console.log(`fetcher.shouldFetch.chainId = ${chainId}`)
+  if (chainId = 31337)
+  {
+    console.log(`fetcher.shouldFetch returning FALSE`)
+    return false
+  }
   return true;
 }
 
@@ -171,13 +178,14 @@ function usePriceAPI({
             else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
               setSellAmount(buyAmount);
             }
-            else {if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
-                setBuyAmount(0n);
-              else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
-                setSellAmount(BigInt(0));
-            const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
-            apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
-          }
+            else if (chainId != 31337) {
+              if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
+                  setBuyAmount(0n);
+                else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+                  setSellAmount(BigInt(0));
+              const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
+              apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
+            }
         }
       },
       // onError: (error) => {
