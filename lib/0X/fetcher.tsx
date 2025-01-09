@@ -111,7 +111,7 @@ let chainId:number
 const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
   chainId = useChainId();
   console.log(`fetcher.shouldFetch.chainId = ${chainId}`)
-  if (chainId = 31337)
+  if (chainId === 31337)
   {
     console.log(`fetcher.shouldFetch returning FALSE`)
     return false
