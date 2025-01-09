@@ -66,8 +66,8 @@ const isNetworkAddress = (address:Address|undefined) : boolean => {
 }
 
 const isTransaction_A_Wrap = () : boolean => {
-  const sellTokenAddress:Address = exchangeContext.sellTokenContract?.address;
-  const buyTokenAddress:Address = exchangeContext.buyTokenContract?.address;
+  const sellTokenAddress:Address = exchangeContext.tradeData.sellTokenContract?.address;
+  const buyTokenAddress:Address = exchangeContext.tradeData.buyTokenContract?.address;
   return  buyTokenAddress && sellTokenAddress && (buyTokenAddress !== sellTokenAddress) ? 
     isNetworkAddress(sellTokenAddress) && isNetworkAddress(buyTokenAddress) :
           false

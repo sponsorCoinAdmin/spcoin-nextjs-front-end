@@ -8,8 +8,8 @@ export const useSwapState = () => {
   const [swapState, setSwapState] = useState<SWAP_STATE>(SWAP_STATE.UNDEFINED);
 
   useEffect(() => {
-    getSwapState(exchangeContext.sellTokenContract?.address, exchangeContext.buyTokenContract?.address);
-  }, [exchangeContext.sellTokenContract?.address, exchangeContext.buyTokenContract?.address]);
+    getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
+  }, [exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address]);
 
   const getSwapState = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined) => {
     if (isTokenAddress(sellTokenAddress)) {

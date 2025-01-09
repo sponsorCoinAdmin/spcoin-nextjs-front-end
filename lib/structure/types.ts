@@ -61,6 +61,8 @@ type TradeData = {
   transactionType:TRANSACTION_TYPE;
   sellAmount:bigint;
   buyAmount:bigint;
+  sellTokenContract: TokenContract|undefined;
+  buyTokenContract: TokenContract|undefined;
   slippage: number;
 }
 
@@ -69,8 +71,6 @@ type ExchangeContext = {
   network: NetworkElement;
   recipientAccount: AccountRecord|undefined;
   agentAccount: AccountRecord|undefined;
-  sellTokenContract: TokenContract|undefined;
-  buyTokenContract: TokenContract|undefined;
   tradeData: TradeData;
   spCoinPanels:SP_COIN_DISPLAY;
   test : {dumpContextButton:boolean};

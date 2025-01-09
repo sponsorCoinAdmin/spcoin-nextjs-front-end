@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from 'wagmi' 
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner' 
 import { useEthersProvider } from '@/lib/hooks/useEthersProvider' 
-import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS } from '@/lib/structure/types';
+import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS, TradeData } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -28,33 +28,34 @@ export default function PriceView() {
   const signer = useEthersSigner()
   const provider = useEthersProvider()
   const chainId = useChainId({config});
+  const tradeData:TradeData = exchangeContext.tradeData;
 
   // if (signer) signer.provider = provider
   const [priceResponse, setPriceResponse] = useState<PriceResponse | undefined>();
-  const [sellAmount, setSellAmount] = useState<bigint>(exchangeContext.tradeData.sellAmount);
-  const [buyAmount, setBuyAmount] = useState<bigint>(exchangeContext.tradeData.buyAmount);
-  const [slippage, setSlippage] = useState<number>(exchangeContext.tradeData.slippage);
+  const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
+  const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
+  const [slippage, setSlippage] = useState<number>(tradeData.slippage);
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>(undefined);
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(exchangeContext.sellTokenContract);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(exchangeContext.buyTokenContract);
-  const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(exchangeContext.tradeData.transactionType);
+  const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(tradeData.sellTokenContract);
+  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(tradeData.buyTokenContract);
+  const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
 
   useEffect(() => {
     displaySpCoinContainers(exchangeContext.spCoinPanels)
   }, [])
 
   useEffect(() => {
-    exchangeContext.buyTokenContract = buyTokenContract;
+    tradeData.buyTokenContract = buyTokenContract;
     }, [buyTokenContract])
 
   useEffect(() => {
-    exchangeContext.sellTokenContract = sellTokenContract;
+    tradeData.sellTokenContract = sellTokenContract;
     }, [sellTokenContract])
 
     useEffect(() => {
-      exchangeContext.tradeData.signer = signer;
+      tradeData.signer = signer;
     }, [signer])
 
   useEffect(() => {
@@ -64,9 +65,9 @@ export default function PriceView() {
       resetNetworkContext(chain)
       // console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
       setAgentElement(exchangeContext.agentAccount);
-      setSlippage(exchangeContext.tradeData.slippage);
-      setSellTokenContract(exchangeContext.sellTokenContract);
-      setBuyTokenContract(exchangeContext.buyTokenContract);
+      setSlippage(tradeData.slippage);
+      setSellTokenContract(tradeData.sellTokenContract);
+      setBuyTokenContract(tradeData.buyTokenContract);
     }
    }, [chainId]);
 //  }, [ACTIVE_ACCOUNT.chain]);
@@ -77,7 +78,7 @@ export default function PriceView() {
 
   useEffect(() => {
     console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
-    exchangeContext.tradeData.sellAmount = sellAmount;
+    tradeData.sellAmount = sellAmount;
     if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
       setBuyAmount(0n);
     }
@@ -85,7 +86,7 @@ export default function PriceView() {
 
   useEffect(() => {
     console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
-    exchangeContext.tradeData.buyAmount = buyAmount; 
+    tradeData.buyAmount = buyAmount; 
     if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
       setSellAmount(0n);
     }
@@ -93,17 +94,17 @@ export default function PriceView() {
 
   useEffect(() => {
     // console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
-    exchangeContext.tradeData.slippage = slippage;
+    tradeData.slippage = slippage;
   }, [slippage]);
 
   useEffect(() => {
     // console.debug(`PRICE.useEffect[buyTokenContract = ${buyTokenContract}])`);
-    exchangeContext.buyTokenContract = buyTokenContract;
+    tradeData.buyTokenContract = buyTokenContract;
   }, [buyTokenContract]);
 
   useEffect(() => {
     // console.debug(`PRICE.useEffect[transactionType = ${transactionType}])`);
-    exchangeContext.tradeData.transactionType = transactionType;
+    tradeData.transactionType = transactionType;
   }, [transactionType]);
 
   // useEffect(() => {
@@ -146,8 +147,8 @@ export default function PriceView() {
   }, [PriceError]);
 
   function swapBuySellTokens() {
-    const tmpTokenContract: TokenContract|undefined = exchangeContext.buyTokenContract;
-    setBuyTokenContract(exchangeContext.sellTokenContract);
+    const tmpTokenContract: TokenContract|undefined = tradeData.buyTokenContract;
+    setBuyTokenContract(tradeData.sellTokenContract);
     setSellTokenContract(tmpTokenContract);
   }
 

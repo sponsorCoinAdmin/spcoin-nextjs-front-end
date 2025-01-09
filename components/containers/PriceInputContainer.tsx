@@ -52,8 +52,8 @@ const priceInputContainer = ({priceInputContainType,
     // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
-      exchangeContext.sellTokenContract = tokenContract :
-      exchangeContext.buyTokenContract = tokenContract;
+      exchangeContext.tradeData.sellTokenContract = tokenContract :
+      exchangeContext.tradeData.buyTokenContract = tokenContract;
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);

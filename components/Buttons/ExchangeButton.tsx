@@ -15,7 +15,7 @@ type Props = {
 
 const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
   const swapState = useSwapState();
-  const tokenContract:TokenContract|undefined = exchangeContext.sellTokenContract as TokenContract | undefined;
+  const tokenContract:TokenContract|undefined = exchangeContext.tradeData.sellTokenContract as TokenContract | undefined;
   const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
 
   const insufficientSellAmount = () => {
@@ -72,7 +72,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
       case BUTTON_TYPE.ZERO_AMOUNT: 
         return "Enter an Amount";
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-        return `Insufficient ${exchangeContext.sellTokenContract?.symbol} Balance`;
+        return `Insufficient ${exchangeContext.tradeData.sellTokenContract?.symbol} Balance`;
       case BUTTON_TYPE.SWAP:
         return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
         "EXACT OUT SWAP" : "EXACT IN SWAP";
