@@ -6,8 +6,8 @@ import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
 import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
 import { useAccount } from "wagmi";
-// import { getWeth9Contract } from '@sponsorcoin/spcoin-weth-module'
-const { deployWETH9Contract, deploySpCoinContract, getDeployedArtifactsABIAddress, getWeth9Contract } = require('@sponsorcoin/spcoin-weth-module');
+// import { getWeth9Contract } from '@sponsorcoin/spcoin-weth-module-CJS'
+const { deployWETH9Contract, deploySpCoinContract, getDeployedArtifactsABIAddress, getWeth9Contract } = require('@sponsorcoin/spcoin-weth-module-CJS');
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
 

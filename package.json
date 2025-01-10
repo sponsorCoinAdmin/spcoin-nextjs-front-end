@@ -15,7 +15,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.3.6",
     "@sponsorcoin/spcoin-all-modules": "^1.0.2",
-    "@sponsorcoin/spcoin-weth-module": "^1.0.1",
+    "@sponsorcoin/spcoin-weth-module-CJS": "^1.0.1",
     "@tanstack/react-query": "^5.29.2",
     "@types/pbkdf2": "^3.1.2",
     "@wagmi/connectors": "^5.1.4",
