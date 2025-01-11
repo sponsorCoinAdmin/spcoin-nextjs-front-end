@@ -1,0 +1,3 @@
+[submodule "node_modules-dev"]
+	path = node_modules-dev
+	url = git@github.com:sponsorCoinAdmin/node_modules-dev.git
