@@ -8,14 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "test": "echo \"Error: no spcoin-nextjs-front-end tests specified\" && exit 1",
-    "preinstall": "echo preinstall spcoin-nextjs-front-end; . ./scripts/installNodeSubModules.sh",
+    "preinstall": ". ./scripts/installNodeSubModules.sh",
     "postinstall": "echo postinstall spcoin-nextjs-front-end Installation Complete",
     "installDevModules": "echo Installing SPCOIN-PROJECT-MODULES; . ./scripts/installNodeSubModules.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.6",
     "@sponsorcoin/spcoin-all-modules": "^1.0.2",
-    "@sponsorcoin/spcoin-weth-module-cjs": "^1.0.1",
+    "@sponsorcoin/spcoin-weth-module-cjs": "^1.0.0",
     "@tanstack/react-query": "^5.29.2",
     "@types/pbkdf2": "^3.1.2",
     "@wagmi/connectors": "^5.1.4",
