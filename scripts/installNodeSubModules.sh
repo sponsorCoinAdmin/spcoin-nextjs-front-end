@@ -1,3 +1,4 @@
+echo "=======================spcoin-nextjs-front-end========================================="
 echo START INSTALLING NPM Modules in $PWD/node_modules-dev/spcoin-back-end
 cd ./node_modules-dev
 . ./scripts/installNodeSubModules.sh
