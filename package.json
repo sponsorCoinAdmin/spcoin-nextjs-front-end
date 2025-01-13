@@ -8,11 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "echo \"Error: no spcoin-nextjs-front-end tests specified\" && exit 1",
-<<<<<<< HEAD
-    "preinstall": "echo preinstall spcoin-nextjs-front-end; pwd; . ./scripts/installNodeSubModules.sh",
-=======
     "preinstall": "bash ./scripts/installNodeSubModules.sh",
->>>>>>> JJ
     "postinstall": "echo postinstall spcoin-nextjs-front-end Installation Complete",
     "installDevModules": "echo Installing SPCOIN-PROJECT-MODULES; . ./scripts/installNodeSubModules.sh"
   },
