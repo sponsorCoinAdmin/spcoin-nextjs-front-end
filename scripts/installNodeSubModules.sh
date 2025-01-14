@@ -1,7 +1,23 @@
+exeIfDirExists() {
+    local CURR_DIR=$PWD
+    DIRECTORY=$1
+    COMMAND=$2
+    echo "FROM ROOT DIR        : $PWD"
+    if [ -d "$DIRECTORY" ]; then
+        echo "INSTALLING MODULES IN: $DIRECTORY"
+        echo "EXECUTING            : $COMMAND"
+         $COMMAND
+    else 
+        echo "***ERROR: DIRECTORY $DIRECTORY not found"
+        echo "***ERROR: COMMAND $COMMAND NOT EXECUTED" 
+    fi
+    cd $CURR_DIR
+}
+
+clear
 echo "=======================spcoin-nextjs-front-end========================================="
 echo START INSTALLING NPM Modules in $PWD/node_modules-dev/spcoin-back-end
-cd ./node_modules-dev
- . ./scripts/installNodeSubModules.sh
+exeIfDirExists ./node_modules-dev ". ./scripts/installNodeSubModules.sh"
 cd ..
 
 
