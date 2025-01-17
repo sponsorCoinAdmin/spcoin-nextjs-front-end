@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css'
 // import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
-import { stringifyBigInt } from '../../../../node_modules-dev/spcoin-common/spcoin-lib';
+import { stringifyBigInt } from '../../../../spcoin-back-end/spcoin-common/spcoin-lib/utils';
 
 import { exchangeContext } from '@/lib/context';
 

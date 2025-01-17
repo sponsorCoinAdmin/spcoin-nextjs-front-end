@@ -15,9 +15,7 @@ import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
-// import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
-// import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib';
- import { stringifyBigInt } from '../../../../../../node_modules-dev/spcoin-common/spcoin-lib';
+import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-back-end/spcoin-common/spcoin-lib';
 
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import PriceInputContainer from '@/components/containers/PriceInputContainer';
