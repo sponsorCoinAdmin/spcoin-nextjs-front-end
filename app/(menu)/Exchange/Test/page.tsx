@@ -15,7 +15,9 @@ import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20Con
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
 import { BURN_ADDRESS } from '@/lib/network/utils'
 import DumpContextButton from '@/components/Buttons/DumpContextButton'
-import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
+// import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib';
+// import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
+import { stringifyBigInt } from '../../../../../../node_modules-dev/spcoin-common/spcoin-lib/utils'
 
 import { exchangeContext } from '@/lib/context'
 import InputSelect from '@/components/panes/InputSelect';
@@ -58,7 +60,6 @@ function App() {
   }, [ACTIVE_ACCOUNT.address]);
 
   // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
-
   const show = () => {
     // alert(`show:CustomConnectButton:useEffect(() => exchangeContext = ${stringifyBigInt(exchangeContext)}`);
     setExchangeContext(stringifyBigInt(exchangeContext));

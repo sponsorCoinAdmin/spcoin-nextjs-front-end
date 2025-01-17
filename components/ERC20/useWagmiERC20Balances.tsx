@@ -2,7 +2,8 @@ import { Address } from 'viem'
 import { useWagmiERC20TokenDecimals, useWagmiERC20TokenBalanceOf, formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead'
 import { useAccount, useBalance } from 'wagmi'
 import { isNetworkBurnAddress } from '@/lib/network/utils';
-import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
+//import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
+import { stringifyBigInt } from '../../../../node_modules-dev/spcoin-common/spcoin-lib';
 
 const useWagmiERC20Balances = (parent:string, TOKEN_CONTRACT_ADDRESS: Address | undefined) => {
   const ACTIVE_ACCOUNT_ADDRESS                   = useAccount().address;
