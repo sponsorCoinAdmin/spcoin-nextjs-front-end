@@ -1,7 +1,8 @@
 import { SWAP_STATE } from "@/lib/structure/types";
 import { exchangeContext } from "@/lib/context";
 // import { stringifyBigInt } from '@/node_modules-dev/spcoin-common/spcoin-lib';
-import { stringifyBigInt } from '../../../../spcoin-back-end/spcoin-common/spcoin-lib/utils';
+// import { stringifyBigInt } from '../../../../spcoin-common/spcoin-lib/utils';
+import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
 // const { WethMethods }  = require("@sponsorcoin/spcoin-weth-module-cjs/index");
 
 
