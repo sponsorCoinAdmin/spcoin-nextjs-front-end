@@ -5,7 +5,7 @@ import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
 //import { stringifyBigInt }from '@/node_modules-dev/spcoin-common/spcoin-lib'
-import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib';
+import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount } from 'wagmi';
