@@ -9,3 +9,14 @@ alias runfe="npm run dev"
 
 # NPM SETUP
 alias npmi="npm install @sponsorcoin/spcoin-access-modules"
+
+alias rt="clear; . ./scripts/installNodeModules.sh 0"
+alias vt="vi ./scripts/installNodeModules.sh"
+alias is=". ./scripts/installNewScripts.sh"
+alias fs="clear;. ./scripts/findInstallScripts.sh | tee fs.log"
+alias vfs="vi ./scripts/findInstallScripts.sh"
+alias home="cd  ~/spCoin/JUNK2/SPCOIN-PROJECT-MODULES"
+
+alias t="clear; . ./arrsort.sh | tee arrsort.log"
+alias vta="vi ./arrsort.sh"
+alias rta=". ./arrsort.sh"
