@@ -12,4 +12,4 @@ package-lock.json
 
 cache
 artifacts
-
+*.log
