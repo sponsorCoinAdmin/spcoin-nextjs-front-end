@@ -8,7 +8,7 @@ alias vm="vi \$ACTIVE_ENV_PATH/.m;m"
 alias runfe="npm run dev"
 
 # NPM SETUP
-alias npmi="npm install @sponsorcoin/spcoin-access-modules"
+alias npmi="npm install @sponsorcoin/spcoin-access-modules-cjs"
 
 alias rt="clear; . ./scripts/installNodeModules.sh 0"
 alias vt="vi ./scripts/installNodeModules.sh"
