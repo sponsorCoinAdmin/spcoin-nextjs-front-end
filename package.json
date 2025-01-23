@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "echo \"Error: no spcoin-nextjs-front-end tests specified\" && exit 1",
-    "preinstall": "echo 'ToDo:bash ./scripts/installNodeSubModules.sh'",
+    "preinstall": "echo 'Executing package.json for: spcoin-hardhat-contract-access-test'",
     "postinstall": "echo postinstall spcoin-nextjs-front-end Installation Complete",
     "installDevModules": "echo Installing SPCOIN-PROJECT-MODULES; . ./scripts/installNodeSubModules.sh"
   },
