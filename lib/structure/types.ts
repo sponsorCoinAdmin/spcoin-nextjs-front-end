@@ -8,7 +8,7 @@ enum  EXCHANGE_STATE { NOT_CONNECTED,
                        SWAP }
 
 enum  TRANSACTION_TYPE { SELL_EXACT_OUT, BUY_EXACT_IN}
-enum  SWAP_STATE { SWAP, WRAP, UNWRAP,  WRAP_TO_NETWORK_TOKEN_SWAP, SWAP_TO_NETWORK_TOKEN_UNWRAP, UNDEFINED}
+enum  SWAP_TYPE { SWAP, WRAP, UNWRAP,  WRAP_SWAP, SWAP_UNWRAP, UNDEFINED}
 enum  FEED_TYPE { TOKEN_LIST, AGENT_WALLETS, RECIPIENT_WALLETS }
 enum  SP_COIN_DISPLAY { SELECT_BUTTON, RECIPIENT_CONTAINER, SPONSOR_RATE_CONFIG }
 enum  BUTTON_TYPE { API_TRANSACTION_ERROR, UNDEFINED, CONNECT, ZERO_AMOUNT, INSUFFICIENT_BALANCE, IS_LOADING_PRICE, SWAP }
@@ -58,12 +58,13 @@ type NetworkElement = {
 
 type TradeData = {
   signer: any,
-  transactionType:TRANSACTION_TYPE;
-  sellAmount:bigint;
-  buyAmount:bigint;
+  transactionType: TRANSACTION_TYPE;
+  swapType: SWAP_TYPE;
+  sellAmount: bigint;
+  buyAmount: bigint;
+  slippage: number;
   sellTokenContract: TokenContract|undefined;
   buyTokenContract: TokenContract|undefined;
-  slippage: number;
 }
 
 type ExchangeContext = {
@@ -92,7 +93,7 @@ export {
   FEED_TYPE,
   SP_COIN_DISPLAY,
   STATUS,
-  SWAP_STATE,
+  SWAP_TYPE,
   TRANSACTION_TYPE
 }
 

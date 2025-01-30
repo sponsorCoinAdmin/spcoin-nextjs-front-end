@@ -47,16 +47,27 @@ const isTokenAddress = (address:Address|undefined) : boolean => {
 
 // *** WARNING To be fixed for other networks
 const getWrappedNetworkAddress = (chainId:number):Address|undefined => {
-  const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+
+  const ETH_WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+  const POLYGON_WETH = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
+  const HARDHAT_WETH = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+  const SEPOLIA_WETH = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+  let WETH_ADDRESS:Address|undefined = undefined;
   switch(chainId) {
-    case 1: return WETH;
-    default: return undefined;
+    case 1: WETH_ADDRESS = ETH_WETH; break;
+    case 137: WETH_ADDRESS = POLYGON_WETH; break;
+    case 31337: WETH_ADDRESS = HARDHAT_WETH; break;
+    case 11155111: WETH_ADDRESS = SEPOLIA_WETH; break;
+    default: break;
   }
+  console.log(`getWrappedNetworkAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`)
+  return WETH_ADDRESS;
 }
 
 // *** WARNING HARDCODING To be fixed for other networks
 const isWrappedNetworkAddress = (address:Address|undefined) : boolean => {
-  const chainId:number = 1;
+  const chainId = exchangeContext.network.chainId;
+
   const  wrappedNetworkAddress:boolean = address === getWrappedNetworkAddress(chainId);
   return wrappedNetworkAddress;
 }

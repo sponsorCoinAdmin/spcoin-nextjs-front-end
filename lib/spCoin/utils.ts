@@ -1,34 +1,31 @@
 import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
-import { SWAP_STATE, TokenContract } from "@/lib/structure/types";
+import { SWAP_TYPE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
-import { useAccount } from "wagmi";
-// import { getWeth9Contract } from '@sponsorcoin/spcoin-weth-module-cjs'
-const { deployWETH9Contract, deploySpCoinContract, getDeployedArtifactsABIAddress, getWeth9Contract } = require('@sponsorcoin/spcoin-weth-module-cjs');
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
 
-const dumpSwapState = (swapState:SWAP_STATE) => {
-  switch (swapState) {
-    case SWAP_STATE.SWAP:
+const dumpSwapState = (swapType:SWAP_TYPE) => {
+  switch (swapType) {
+    case SWAP_TYPE.SWAP:
       alert(`SWAP`)
       break
-    case SWAP_STATE.SWAP_TO_NETWORK_TOKEN_UNWRAP:
-      alert(`SWAP_TO_NETWORK_TOKEN_UNWRAP`)
+    case SWAP_TYPE.SWAP_UNWRAP:
+      alert(`SWAP_UNWRAP`)
       break
-    case SWAP_STATE.UNWRAP:
+    case SWAP_TYPE.UNWRAP:
       alert(`UNWRAP`)
       break
-    case SWAP_STATE.WRAP_TO_NETWORK_TOKEN_SWAP:
-      alert(`WRAP_TO_NETWORK_TOKEN_SWAP`)
+    case SWAP_TYPE.WRAP_SWAP:
+      alert(`WRAP_SWAP`)
       break
-    case SWAP_STATE.WRAP:
+    case SWAP_TYPE.WRAP:
       alert(`WRAP`)
       break
-    case SWAP_STATE.UNDEFINED:
+    case SWAP_TYPE.UNDEFINED:
       alert(`UNDEFINED`)
       break
     }

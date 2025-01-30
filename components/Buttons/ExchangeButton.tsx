@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, SWAP_STATE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
+import { BUTTON_TYPE, ErrorMessage, SWAP_TYPE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
 import { useSwapState } from '@/lib/hooks/useSwapState';
 import { swap } from '@/lib/spCoin/swap';
 
@@ -14,7 +14,7 @@ type Props = {
 }
 
 const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
-  const swapState = useSwapState();
+  const swapType = useSwapState();
   const tokenContract:TokenContract|undefined = exchangeContext.tradeData.sellTokenContract as TokenContract | undefined;
   const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
 
@@ -104,7 +104,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE: alert("Insufficient Sell Balance");
         break;
-      case BUTTON_TYPE.SWAP: swap(swapState);
+      case BUTTON_TYPE.SWAP: swap(swapType);
         break;
       default: alert("Button Type Undefined");
         break;

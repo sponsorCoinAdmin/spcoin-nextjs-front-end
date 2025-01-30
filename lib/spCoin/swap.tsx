@@ -1,17 +1,46 @@
-import { SWAP_STATE } from "@/lib/structure/types";
+import { SWAP_TYPE } from "@/lib/structure/types";
 import { exchangeContext } from "@/lib/context";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
 
+// ToDo: The error on the nextline is a typescript definition for a javascript file requirement
+// since javascript does not define types and typescript is looking for a specific type.
+// START: Create a new file, e.g., weth-access-module.d.ts inside your @types or src/types directory and add:
+// Create a Custom Declaration File
+// declare module '@sponsorcoin/weth-access-module-es6/index.js' {
+//   const value: any; // Change `any` to the correct type if known
+//   export default value;
+// }
+// then install with // npm i --save-dev @types/sponsorcoin__weth-access-module-es6
+// Youtube tutorial => https://www.youtube.com/watch?v=iKNfDKrJRP4
+import { WethMethods } from "@sponsorcoin/weth-access-module-es6/index.js"
+
+const wethMethods = new WethMethods();
+// Example: Call
+// it("9. <TYPE SCRIPT> Wrap/Unwrap WEI Using connectWeth9DefaultNetwork with HardHat Network and Signer account[11]", async function () {
+//     const signer = SPONSOR_ACCOUNT_SIGNERS[11];
+//     const weiDepositAmount = ethers.parseUnits("123");
+//     const weiWithdrawAmount = ethers.parseUnits("23");
+
+//     const wethMethods = new WethMethods();
+//     wethMethods.connect(weth9Address, weth9ABI, signer);
+
+//     await wethMethods.depositWEI(weiDepositAmount);
+//     await wethMethods.withdrawWEI(weiWithdrawAmount);
+// });
+
 const wrap = () => {
+    console.log(`WRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`WRAP`)
 }
 
 const unwrap = () => {
-    alert(`UNWRAP`)
+    console.log(`UNWRAP:`+stringifyBigInt(exchangeContext.tradeData))
+    alert(`UNWRAP:`)
 }
 
 const doSwap = () => {
-    alert(`SWAP`)
+    console.log(`SWAP:`+stringifyBigInt(exchangeContext.tradeData))
+    alert(`SWAP:`)
 }
 
 /*
@@ -30,30 +59,29 @@ const doSwap = () => {
   });
   */
 
-const swap = (swapState: SWAP_STATE) => {
+const swap = (swapType: SWAP_TYPE) => {
     console.debug(stringifyBigInt(exchangeContext.tradeData))
-    // dumpSwapState(swapState);
-    
-    switch (swapState) {
-        case SWAP_STATE.SWAP:
+    // dumpSwapState(swapType);
+    switch (swapType) {
+        case SWAP_TYPE.SWAP:
             doSwap()
         break
-        case SWAP_STATE.SWAP_TO_NETWORK_TOKEN_UNWRAP:
+        case SWAP_TYPE.SWAP_UNWRAP:
             doSwap()
             unwrap();
         break
-        case SWAP_STATE.UNWRAP:
+        case SWAP_TYPE.UNWRAP:
             unwrap();
         break
-        case SWAP_STATE.WRAP_TO_NETWORK_TOKEN_SWAP:
+        case SWAP_TYPE.WRAP_SWAP:
             wrap()
             doSwap()
         break
-        case SWAP_STATE.WRAP:
+        case SWAP_TYPE.WRAP:
             wrap();
         break
-        case SWAP_STATE.UNDEFINED:
-            alert(`UNDEFINED SWAP_STATE`)
+        case SWAP_TYPE.UNDEFINED:
+            alert(`UNDEFINED SWAP_TYPE`)
         break
     }
 }

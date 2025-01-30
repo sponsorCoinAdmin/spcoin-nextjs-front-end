@@ -3,14 +3,17 @@ import defaultPolygonSettings from '@/resources/data/networks//polygon/initializ
 import defaultHardHatSettings from '@/resources/data/networks//hardhat/initialize/defaultNetworkSettings.json';
 import defaultSoliditySettings from '@/resources/data/networks//sepolia/initialize/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
-import { TradeData, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { TradeData, SWAP_TYPE, TRANSACTION_TYPE, ExchangeContext, NetworkElement, AccountRecord, TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
 
 const defaultInitialTradeData:TradeData = {
   signer: undefined,
+  transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
+  swapType: SWAP_TYPE.UNDEFINED,
   sellAmount: 0n,
   buyAmount: 0n,
-  transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
-  slippage: 0.02
+  slippage: 0.02,
+  sellTokenContract: undefined,
+  buyTokenContract: undefined
 };
 
 const initialContext = () => {
