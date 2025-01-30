@@ -58,6 +58,7 @@ type NetworkElement = {
 
 type TradeData = {
   signer: any,
+  chainId:number,
   transactionType: TRANSACTION_TYPE;
   swapType: SWAP_TYPE;
   sellAmount: bigint;

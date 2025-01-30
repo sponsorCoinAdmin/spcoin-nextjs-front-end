@@ -63,7 +63,8 @@ export default function PriceView() {
     const chain = ACTIVE_ACCOUNT.chain;
     if (chain) {
       // alert(`chain = ${stringifyBigInt(chain)}`)
-      resetNetworkContext(chain)
+      tradeData.chainId = chainId;
+      resetNetworkContext(chain);
       // console.debug(`chainId = ${chain.id}\nexchangeContext = ${stringifyBigInt(exchangeContext)}`)
       setAgentElement(exchangeContext.agentAccount);
       setSlippage(tradeData.slippage);

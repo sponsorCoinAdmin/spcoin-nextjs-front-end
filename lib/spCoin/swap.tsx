@@ -1,8 +1,8 @@
-import { SWAP_TYPE } from "@/lib/structure/types";
+import { SWAP_TYPE, TradeData } from "@/lib/structure/types";
 import { exchangeContext } from "@/lib/context";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
 
-// ToDo: The error on the nextline is a typescript definition for a javascript file requirement
+// ToDo: The error on the next line is a typescript definition for a javascript file requirement
 // since javascript does not define types and typescript is looking for a specific type.
 // START: Create a new file, e.g., weth-access-module.d.ts inside your @types or src/types directory and add:
 // Create a Custom Declaration File
@@ -29,11 +29,17 @@ const wethMethods = new WethMethods();
 // });
 
 const wrap = () => {
-    console.log(`WRAP:`+stringifyBigInt(exchangeContext.tradeData))
+    console.log(`AAA WRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`WRAP`)
-    const weiDepositAmount:bigint = exchangeContext.tradeData.sellAmount;
-    //     wethMethods.connect(weth9Address, weth9ABI, signer);
-    //     await wethMethods.depositWEI(weiDepositAmount);
+    const tradeData:TradeData = exchangeContext.tradeData
+    const weiDepositAmount:bigint = tradeData.sellAmount
+    const signer = tradeData.signer
+    const chainId = tradeData.chainId
+    const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
+    alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
+
+    wethMethods.connect(weth9Address, weth9ABI, signer);
+        // await wethMethods.depositWEI(weiDepositAmount);
 
 
 
@@ -63,7 +69,7 @@ const doSwap = () => {
     tx = await wethMethods.withdrawWEI(weiWithdrawAmount)
     // console.log(`tx(${wethMethods.withdrawETH(ethWithdrawAmount)} = ${JSON.stringify(tx,null,2)}`);
   });
-  */
+*/
 
 const swap = (swapType: SWAP_TYPE) => {
     console.debug(stringifyBigInt(exchangeContext.tradeData))
