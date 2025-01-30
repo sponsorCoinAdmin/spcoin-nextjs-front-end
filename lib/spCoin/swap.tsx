@@ -12,7 +12,7 @@ import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-
 // }
 // then install with // npm i --save-dev @types/sponsorcoin__weth-access-module-es6
 // Youtube tutorial => https://www.youtube.com/watch?v=iKNfDKrJRP4
-import { WethMethods } from "@sponsorcoin/weth-access-module-es6/index.js"
+import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6/index.js"
 
 const wethMethods = new WethMethods();
 // Example: Call
@@ -31,6 +31,12 @@ const wethMethods = new WethMethods();
 const wrap = () => {
     console.log(`WRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`WRAP`)
+    const weiDepositAmount:bigint = exchangeContext.tradeData.sellAmount;
+    //     wethMethods.connect(weth9Address, weth9ABI, signer);
+    //     await wethMethods.depositWEI(weiDepositAmount);
+
+
+
 }
 
 const unwrap = () => {
