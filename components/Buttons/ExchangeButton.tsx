@@ -95,7 +95,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     }
   }
 
-  const buttonClick = () => {
+  const buttonClick = async () => {
     let buttonType:any = getButtonType()
     switch(buttonType) {
       case BUTTON_TYPE.API_TRANSACTION_ERROR: alert(errorMessage?.msg);
@@ -104,7 +104,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE: alert("Insufficient Sell Balance");
         break;
-      case BUTTON_TYPE.SWAP: swap(swapType);
+      case BUTTON_TYPE.SWAP: await swap(swapType);
         break;
       default: alert("Button Type Undefined");
         break;

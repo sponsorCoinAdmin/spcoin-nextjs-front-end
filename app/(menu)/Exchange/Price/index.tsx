@@ -2,7 +2,7 @@
 import styles from '@/styles/Exchange.module.css';
 import { ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
-import { useAccount } from 'wagmi' 
+import { useChainId, useAccount, useBalance } from 'wagmi'
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner' 
 import { useEthersProvider } from '@/lib/hooks/useEthersProvider' 
 import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS, TradeData } from '@/lib/structure/types';
@@ -20,8 +20,10 @@ import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/s
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import PriceInputContainer from '@/components/containers/PriceInputContainer';
 import { Address } from 'viem';
-import { useChainId } from "wagmi";
 import { config } from '@/lib/wagmi/wagmiConfig'
+import { BURN_ADDRESS } from '@/lib/network/utils';
+import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances';
+import { formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead';
 
 //////////// Price Code
 export default function PriceView() {
@@ -32,6 +34,11 @@ export default function PriceView() {
   const tradeData:TradeData = exchangeContext.tradeData;
 
   // if (signer) signer.provider = provider
+
+  const [formattedBalance, setFormattedBalance] = useState<string|undefined>("");
+  // const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", ACTIVE_ACCOUNT.address);
+
+
   const [priceResponse, setPriceResponse] = useState<PriceResponse | undefined>();
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
@@ -187,6 +194,7 @@ export default function PriceView() {
         <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
       </div>
       <FeeDisclosure/>
+      <div>Balance:  {formattedBalance}</div>
       {/* <IsLoadingPrice isLoadingPrice={isLoadingPrice} /> */}
 
       {/* <div>ETH NETWORK 0x1EFFDE4A0e5eEcF79810Dd39f954A515ab962D63</div>

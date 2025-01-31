@@ -2,6 +2,7 @@ import { Address } from 'viem'
 import { useWagmiERC20TokenDecimals, useWagmiERC20TokenBalanceOf, formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead'
 import { useAccount, useBalance } from 'wagmi'
 import { isNetworkBurnAddress } from '@/lib/network/utils';
+import { useEffect } from 'react';
 
 const useWagmiERC20Balances = (parent:string, TOKEN_CONTRACT_ADDRESS: Address | undefined) => {
   const ACTIVE_ACCOUNT_ADDRESS                   = useAccount().address;
@@ -15,7 +16,12 @@ const useWagmiERC20Balances = (parent:string, TOKEN_CONTRACT_ADDRESS: Address | 
   const formattedBalanceOf:string|undefined      = formatDecimals(balanceOf, decimals);
   const balance:bigint|undefined                 = isNetworkCoin ? networkBalance : balanceOf;
   const formattedBalance:string|undefined        = isNetworkCoin ? formattedNetworkBalance : formattedBalanceOf;
-  // console.debug(`${parent}:useWagmiERC20Balances = , ACTIVE_ACCOUNT_ADDRESS = ${ACTIVE_ACCOUNT_ADDRESS}`);
+
+  // useEffect(() => {  // JUNK TESTING REMOVE LATER
+  //       alert(`useWagmiERC20Balances setting networkBalance to: ${networkBalance} FormattedBalance to: ${formattedBalance}`);
+  //   }, [useBalanceNetworkObj])
+    
+  console.debug(`${parent}:useWagmiERC20Balances = , ACTIVE_ACCOUNT_ADDRESS = ${ACTIVE_ACCOUNT_ADDRESS}`);
   // console.debug(`${parent}:useWagmiERC20Balances = , TOKEN_CONTRACT_ADDRESS = ${TOKEN_CONTRACT_ADDRESS}`);
   // console.debug(`useBalanceNetworkObj                          = ${stringifyBigInt(useBalanceNetworkObj)}`);
   // console.debug(`useWagmiERC20Balances:isNetworkCoin           = ${isNetworkCoin}`);

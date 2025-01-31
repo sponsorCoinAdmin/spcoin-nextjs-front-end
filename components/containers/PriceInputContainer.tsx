@@ -7,7 +7,7 @@ import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
@@ -32,15 +32,36 @@ const priceInputContainer = ({priceInputContainType,
                               setTransactionType,
                               setTokenContractCallback}:Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
+  // const BALANCE_OF = useBalance({
+  //   address: activeContract?.address,
+  // });
   const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
+  const [refreshComponent, setRefreshComponent] = useState<boolean>(true);
   const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
+
+  // const BALANCE_OF = useBalance(activeContract?.address);
+
+  // useEffect(() => {
+  //   alert(`ACTIVE_ACCOUNT DATA CHANGED: ${ACTIVE_ACCOUNT}`);
+  //   // console.debug(stringifyBigInt(ACTIVE_ACCOUNT))
+  // }, [ACTIVE_ACCOUNT])
+
+  // useEffect(() => {
+  //   // alert(`ACTIVE_ACCOUNT DATA CHANGED: ${ACTIVE_ACCOUNT}`);
+  //   console.debug(`BALANCE_OF OBJECT CHANGE: {stringifyBigInt(BALANCE_OF)}`)
+  //   setRefreshComponent(!refreshComponent)
+  // }, [BALANCE_OF])
+
+
+  useEffect(() => {
+    alert(`Setting formattedBalance for Contract: ${activeContract} FormattedBalance to: ${formattedBalance}`);
+  }, [formattedBalance])
 
   useEffect(() =>  {
     const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);

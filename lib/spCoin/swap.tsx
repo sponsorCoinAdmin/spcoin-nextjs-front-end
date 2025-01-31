@@ -12,7 +12,8 @@ import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-
 // }
 // then install with // npm i --save-dev @types/sponsorcoin__weth-access-module-es6
 // Youtube tutorial => https://www.youtube.com/watch?v=iKNfDKrJRP4
-import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6/index.js"
+// import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6"
+import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6"
 
 const wethMethods = new WethMethods();
 // Example: Call
@@ -28,7 +29,7 @@ const wethMethods = new WethMethods();
 //     await wethMethods.withdrawWEI(weiWithdrawAmount);
 // });
 
-const wrap = () => {
+const wrap = async () => {
     console.log(`AAA WRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`WRAP`)
     const tradeData:TradeData = exchangeContext.tradeData
@@ -36,21 +37,19 @@ const wrap = () => {
     const signer = tradeData.signer
     const chainId = tradeData.chainId
     const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
-    alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
+    // alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
 
     wethMethods.connect(weth9Address, weth9ABI, signer);
-        // await wethMethods.depositWEI(weiDepositAmount);
-
-
-
+    // wethMethods.depositWEI(weiDepositAmount);
+    await wethMethods.depositWEI(weiDepositAmount);
 }
 
-const unwrap = () => {
+const unwrap = async () => {
     console.log(`UNWRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`UNWRAP:`)
 }
 
-const doSwap = () => {
+const doSwap = async () => {
     console.log(`SWAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`SWAP:`)
 }
@@ -71,26 +70,26 @@ const doSwap = () => {
   });
 */
 
-const swap = (swapType: SWAP_TYPE) => {
+const swap = async(swapType: SWAP_TYPE) => {
     console.debug(stringifyBigInt(exchangeContext.tradeData))
     // dumpSwapState(swapType);
     switch (swapType) {
         case SWAP_TYPE.SWAP:
-            doSwap()
+            await doSwap()
         break
         case SWAP_TYPE.SWAP_UNWRAP:
-            doSwap()
-            unwrap();
+            await doSwap()
+            await unwrap()
         break
         case SWAP_TYPE.UNWRAP:
-            unwrap();
+            await unwrap()
         break
         case SWAP_TYPE.WRAP_SWAP:
-            wrap()
+            await wrap()
             doSwap()
         break
         case SWAP_TYPE.WRAP:
-            wrap();
+            await wrap()
         break
         case SWAP_TYPE.UNDEFINED:
             alert(`UNDEFINED SWAP_TYPE`)
