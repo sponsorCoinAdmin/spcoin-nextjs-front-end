@@ -41,7 +41,10 @@ const wrap = async () => {
 
     wethMethods.connect(weth9Address, weth9ABI, signer);
     // wethMethods.depositWEI(weiDepositAmount);
+    const beforeWethBalance = await wethMethods.wethBalance(weth9Address);
     await wethMethods.depositWEI(weiDepositAmount);
+    const afterWethBalance = await wethMethods.wethBalance(weth9Address);
+    alert(`beforeWethBalance:${beforeWethBalance}\nafterWethBalance:${afterWethBalance}`)
 }
 
 const unwrap = async () => {
