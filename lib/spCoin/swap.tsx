@@ -34,7 +34,7 @@ const unwrap = async () => {
     console.log(`WRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`UN_WRAP`)
     const tradeData:TradeData = exchangeContext.tradeData
-    const weiWithdrawAmount:bigint = tradeData.buyAmount
+    const weiWithdrawAmount:bigint = tradeData.sellAmount
     const signer = tradeData.signer
     const chainId = tradeData.chainId
     const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
