@@ -44,7 +44,7 @@ const wrap = async () => {
     const beforeWethBalance = await wethMethods.wethBalance(weth9Address);
     await wethMethods.depositWEI(weiDepositAmount);
     const afterWethBalance = await wethMethods.wethBalance(weth9Address);
-    alert(`beforeWethBalance:${beforeWethBalance}\nafterWethBalance:${afterWethBalance}`)
+    // alert(`beforeWethBalance:${beforeWethBalance}\nafterWethBalance:${afterWethBalance}`)
 }
 
 const unwrap = async () => {

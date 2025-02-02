@@ -12,7 +12,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { BURN_ADDRESS, isTransaction_A_Wrap } from '@/lib/network/utils';
+import { BURN_ADDRESS, isNetworkBurnAddress, isTransaction_A_Wrap } from '@/lib/network/utils';
 import { config } from '@/lib/wagmi/wagmiConfig';
 import { getBalance } from '@wagmi/core';
 
@@ -43,12 +43,15 @@ const priceInputContainer = ({priceInputContainType,
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
-  const [refreshComponent, setRefreshComponent] = useState<boolean>(true);
   const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
   const [blockNumber, setBlockNumber] = useState<bigint>(0n);
   const [tokenBalance, setTokenBalance] = useState<string>();
 
+
+  useEffect(() => {
+    setTokenBalance(formattedBalance)
+  }, [formattedBalance])
 
   useWatchBlockNumber({
     emitOnBegin: true, 
@@ -64,11 +67,19 @@ const priceInputContainer = ({priceInputContainType,
   }, [blockNumber])
 
   const setNewBalance = async() =>  {
-    const balanceObj = await getBalance(config, {
-      address: ACTIVE_ACCOUNT.address || BURN_ADDRESS,
-    })
+    const TOKEN_CONTRACT_ADDRESS = tokenContract?.address
+    const ACTIVE_ACCOUNT_ADDRESS = ACTIVE_ACCOUNT.address;
+    const BALANCE_ADDRESS = isNetworkBurnAddress(TOKEN_CONTRACT_ADDRESS) ? ACTIVE_ACCOUNT_ADDRESS : TOKEN_CONTRACT_ADDRESS;
+    // alert(`ACTIVE_ACCOUNT_ADDRESS=${ACTIVE_ACCOUNT_ADDRESS}\n
+    //        TOKEN_CONTRACT_ADDRESS=${TOKEN_CONTRACT_ADDRESS}\n
+    //        BALANCE_ADDRESS=${BALANCE_ADDRESS}\n`)
 
-    setTokenBalance(balanceObj.formatted)
+    if (BALANCE_ADDRESS) {
+      const balanceObj = await getBalance(config, {
+        address:     BALANCE_ADDRESS || BURN_ADDRESS,
+      })
+      setTokenBalance(balanceObj.formatted)
+    }
   }
 
 
@@ -85,11 +96,6 @@ const priceInputContainer = ({priceInputContainType,
   //   console.debug(`BALANCE_OF OBJECT CHANGE: {stringifyBigInt(BALANCE_OF)}`)
   //   setRefreshComponent(!refreshComponent)
   // }, [BALANCE_OF])
-
-
-  useEffect(() => {
-    alert(`Setting formattedBalance for Contract: ${activeContract} FormattedBalance to: ${formattedBalance}`);
-  }, [formattedBalance])
 
   useEffect(() =>  {
     const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
