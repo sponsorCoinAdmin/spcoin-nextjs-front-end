@@ -16,21 +16,9 @@ import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6"
 
 const wethMethods = new WethMethods();
-// Example: Call
-// it("9. <TYPE SCRIPT> Wrap/Unwrap WEI Using connectWeth9DefaultNetwork with HardHat Network and Signer account[11]", async function () {
-//     const signer = SPONSOR_ACCOUNT_SIGNERS[11];
-//     const weiDepositAmount = ethers.parseUnits("123");
-//     const weiWithdrawAmount = ethers.parseUnits("23");
-
-//     const wethMethods = new WethMethods();
-//     wethMethods.connect(weth9Address, weth9ABI, signer);
-
-//     await wethMethods.depositWEI(weiDepositAmount);
-//     await wethMethods.withdrawWEI(weiWithdrawAmount);
-// });
 
 const wrap = async () => {
-    console.log(`AAA WRAP:`+stringifyBigInt(exchangeContext.tradeData))
+    console.log(`WRAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`WRAP`)
     const tradeData:TradeData = exchangeContext.tradeData
     const weiDepositAmount:bigint = tradeData.sellAmount
@@ -38,40 +26,27 @@ const wrap = async () => {
     const chainId = tradeData.chainId
     const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
     // alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
-
     wethMethods.connect(weth9Address, weth9ABI, signer);
-    // wethMethods.depositWEI(weiDepositAmount);
-    const beforeWethBalance = await wethMethods.wethBalance(weth9Address);
     await wethMethods.depositWEI(weiDepositAmount);
-    const afterWethBalance = await wethMethods.wethBalance(weth9Address);
-    // alert(`beforeWethBalance:${beforeWethBalance}\nafterWethBalance:${afterWethBalance}`)
 }
 
 const unwrap = async () => {
-    console.log(`UNWRAP:`+stringifyBigInt(exchangeContext.tradeData))
-    alert(`UNWRAP:`)
+    console.log(`WRAP:`+stringifyBigInt(exchangeContext.tradeData))
+    alert(`UN_WRAP`)
+    const tradeData:TradeData = exchangeContext.tradeData
+    const weiWithdrawAmount:bigint = tradeData.buyAmount
+    const signer = tradeData.signer
+    const chainId = tradeData.chainId
+    const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
+    alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
+    wethMethods.connect(weth9Address, weth9ABI, signer);
+    await wethMethods.withdrawWEI(weiWithdrawAmount);
 }
 
 const doSwap = async () => {
     console.log(`SWAP:`+stringifyBigInt(exchangeContext.tradeData))
     alert(`SWAP:`)
 }
-
-/*
- it("10. <TYPE SCRIPT> wrap.un-wrap WEI Using connectWeth9DefaultNetwork with HardHat Network and Sinner account[11]", async function () {
-    let tx;
-    const signer = SPONSOR_ACCOUNT_SIGNERS[11];
-    const weiDepositAmount = "2";
-    const weiWithdrawAmount = "1";
-
-    const wethMethods = new WethMethods();
-    wethMethods.connectWeth9DefaultNetwork( HARDHAT, signer );
-    tx = await wethMethods.depositWEI(weiDepositAmount)
-    // console.log(`tx(${wethMethods.depositETH(weiDepositAmount)} = ${JSON.stringify(tx,null,2)}`);
-    tx = await wethMethods.withdrawWEI(weiWithdrawAmount)
-    // console.log(`tx(${wethMethods.withdrawETH(ethWithdrawAmount)} = ${JSON.stringify(tx,null,2)}`);
-  });
-*/
 
 const swap = async(swapType: SWAP_TYPE) => {
     console.debug(stringifyBigInt(exchangeContext.tradeData))

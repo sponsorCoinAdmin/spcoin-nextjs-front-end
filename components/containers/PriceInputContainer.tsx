@@ -34,20 +34,21 @@ const priceInputContainer = ({priceInputContainType,
                               setTransactionType,
                               setTokenContractCallback}:Props) => {
   const ACTIVE_ACCOUNT = useAccount();
-  // const BALANCE_OF = useBalance({
-  //   address: activeContract?.address,
-  // });
   const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
                                          exchangeContext?.tradeData?.sellAmount :
                                          exchangeContext?.tradeData?.buyAmount;
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
-  const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
   const [blockNumber, setBlockNumber] = useState<bigint>(0n);
   const [tokenBalance, setTokenBalance] = useState<string>();
+  const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
 
+  useEffect(() =>  {
+    const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
+    setFormattedAmount(formattedAmount)
+  }, []);
 
   useEffect(() => {
     setTokenBalance(formattedBalance)
@@ -61,9 +62,7 @@ const priceInputContainer = ({priceInputContainType,
   })
 
   useEffect(() => {
-    // setTokenBalance("ToDo Get Token Balance with wagmi getBalance.")
     setNewBalance()
-    // let beforeEthBalance = await ethers.provider.getBalance(signer.address);
   }, [blockNumber])
 
   const setNewBalance = async() =>  {
@@ -81,26 +80,6 @@ const priceInputContainer = ({priceInputContainType,
       setTokenBalance(balanceObj.formatted)
     }
   }
-
-
-  
-  // const BALANCE_OF = useBalance(activeContract?.address);
-
-  // useEffect(() => {
-  //   alert(`ACTIVE_ACCOUNT DATA CHANGED: ${ACTIVE_ACCOUNT}`);
-  //   // console.debug(stringifyBigInt(ACTIVE_ACCOUNT))
-  // }, [ACTIVE_ACCOUNT])
-
-  // useEffect(() => {
-  //   // alert(`ACTIVE_ACCOUNT DATA CHANGED: ${ACTIVE_ACCOUNT}`);
-  //   console.debug(`BALANCE_OF OBJECT CHANGE: {stringifyBigInt(BALANCE_OF)}`)
-  //   setRefreshComponent(!refreshComponent)
-  // }, [BALANCE_OF])
-
-  useEffect(() =>  {
-    const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
-    setFormattedAmount(formattedAmount)
-  }, []);
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
