@@ -7,12 +7,14 @@ import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount, useBalance, useWatchBlockNumber } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { isTransaction_A_Wrap } from '@/lib/network/utils';
+import { BURN_ADDRESS, isTransaction_A_Wrap } from '@/lib/network/utils';
+import { config } from '@/lib/wagmi/wagmiConfig';
+import { getBalance } from '@wagmi/core';
 
 type Props = {
   priceInputContainType: CONTAINER_TYPE,
@@ -44,7 +46,33 @@ const priceInputContainer = ({priceInputContainType,
   const [refreshComponent, setRefreshComponent] = useState<boolean>(true);
   const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
   const debouncedAmount = useDebounce(amount);
+  const [blockNumber, setBlockNumber] = useState<bigint>(0n);
+  const [tokenBalance, setTokenBalance] = useState<string>();
 
+
+  useWatchBlockNumber({
+    emitOnBegin: true, 
+    onBlockNumber(blockNumber) {
+      setBlockNumber(blockNumber);
+    },
+  })
+
+  useEffect(() => {
+    // setTokenBalance("ToDo Get Token Balance with wagmi getBalance.")
+    setNewBalance()
+    // let beforeEthBalance = await ethers.provider.getBalance(signer.address);
+  }, [blockNumber])
+
+  const setNewBalance = async() =>  {
+    const balanceObj = await getBalance(config, {
+      address: ACTIVE_ACCOUNT.address || BURN_ADDRESS,
+    })
+
+    setTokenBalance(balanceObj.formatted)
+  }
+
+
+  
   // const BALANCE_OF = useBalance(activeContract?.address);
 
   // useEffect(() => {
@@ -149,7 +177,7 @@ const priceInputContainer = ({priceInputContainType,
                     tokenContract={tokenContract} 
                     setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
-      <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
+      <div className={styles["assetBalance"]}> Balance: {tokenBalance || "0.0"}</div>
       {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
