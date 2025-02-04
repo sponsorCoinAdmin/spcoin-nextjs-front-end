@@ -4,7 +4,7 @@ import { exchangeContext } from "@/lib/context";
 import styles from '@/styles/Exchange.module.css';
 import AssetSelect from './AssetSelect';
 import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
+import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from '@/lib/spCoin/utils';
 import { parseUnits } from "ethers";
 import { useAccount, useBalance, useWatchBlockNumber } from 'wagmi';
@@ -63,6 +63,7 @@ const priceInputContainer = ({priceInputContainType,
 
   useEffect(() => {
     setNewBalance()
+    console.log(`blockNumber=${blockNumber}`)
   }, [blockNumber])
 
   const setNewBalance = async() =>  {

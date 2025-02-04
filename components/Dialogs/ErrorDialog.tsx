@@ -18,7 +18,7 @@ export default function Dialog({showDialog, errMsg}:Props) {
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))
-    // },[errorMessage])
+    // }, [errorMessage])
   
     const closeDialog = () => {
         dialogRef.current?.close();

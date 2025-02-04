@@ -3,36 +3,67 @@ import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, SWAP_TYPE, TRANSACTION_TYPE, TokenContract } from '@/lib/structure/types';
-import { useSwapState } from '@/lib/hooks/useSwapState';
-import { swap } from '@/lib/spCoin/swap';
+import { BUTTON_TYPE, ErrorMessage, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
+import swap from '@/lib/spCoin/swap';
+
+// import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 
 type Props = {
   isLoadingPrice: boolean,
   errorMessage:ErrorMessage|undefined,
-  setErrorMessage: (errorMessage:ErrorMessage|undefined) => void
+  setErrorMessage: (errorMessage:ErrorMessage|undefined) => void,
+  setResetAmounts: (resetAmounts:boolean) => void
 }
 
-const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
-  const swapType = useSwapState();
-  const tokenContract:TokenContract|undefined = exchangeContext.tradeData.sellTokenContract as TokenContract | undefined;
-  const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
+const tradeData:TradeData = exchangeContext.tradeData
 
-  const insufficientSellAmount = () => {
-    let noTradingAmount:boolean = false;
-    try {
-      noTradingAmount = ( exchangeContext.tradeData.sellAmount.toString() === "0" )
-    } catch(err:any) {
-      console.debug(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
+const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts}:Props) => {
+  const tokenContract:TokenContract|undefined = tradeData.sellTokenContract as TokenContract | undefined;
+  const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
+  let buttonType:BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
+
+
+  // const insufficientSellAmount = () => {
+  //   let noTradingAmount:boolean = false;
+  //   try {
+  //     noTradingAmount = ( tradeData.sellAmount.toString() === "0" )
+  //   } catch(err:any) {
+  //     console.debug(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
+  //   }
+  //   return noTradingAmount;
+  // }
+
+  const getButtonText = (buttonType: BUTTON_TYPE) => {
+    switch(buttonType) {
+      case BUTTON_TYPE.TOKENS_REQUIRED:
+        return "Select Trading Pair";
+      case BUTTON_TYPE.API_TRANSACTION_ERROR:
+        return "API Transaction Error";
+      case BUTTON_TYPE.IS_LOADING_PRICE:
+        return "Fetching Best Price...";
+      case BUTTON_TYPE.ZERO_AMOUNT: 
+        return "Enter an Amount";
+      case BUTTON_TYPE.INSUFFICIENT_BALANCE:
+        return `Insufficient ${tradeData.sellTokenContract?.symbol} Balance`;
+      case BUTTON_TYPE.SWAP:
+        return tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+        "EXACT OUT SWAP" : "EXACT IN SWAP";
+      case BUTTON_TYPE.SELL_TOKEN_REQUIRED:
+      case BUTTON_TYPE.SELL_ERROR_REQUIRED:
+        return "Sell Token Required";
+      case BUTTON_TYPE.BUY_TOKEN_REQUIRED:
+      case BUTTON_TYPE.BUY_ERROR_REQUIRED:
+        return "Buy Token Required";
+      default:
+        return "Button Type Undefined";
     }
-    return noTradingAmount;
   }
 
   const insufficientSellBalance = () => {
     let insufficientBalance:boolean = false;
      try {
       // console.debug(`EXCHANGE_BUTTON.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
-      const tradeAmount = exchangeContext.tradeData.sellAmount;
+      const tradeAmount = tradeData.sellAmount;
       const sellTradeBalance = sellBalance || BigInt(0);
       insufficientBalance = sellTradeBalance <  tradeAmount
 
@@ -47,7 +78,23 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     return insufficientBalance;
   }
 
-  const getButtonType = () => {
+  const tokensRequired = ():boolean => {
+    return sellTokenRequired() && buyTokenRequired()
+  }
+
+  const sellTokenRequired = ():boolean => {
+    return !(tradeData.sellTokenContract)
+  }
+
+  const buyTokenRequired = ():boolean => {
+    return !(tradeData.buyTokenContract)
+  }
+
+  const amountRequired = ():boolean => {
+    return tradeData.sellAmount === 0n && tradeData.buyAmount === 0n
+  }
+
+  const getButtonType = ():BUTTON_TYPE => {
     // alert(`"getButtonType()\n
     // errorMessage = ${errorMessage}\n
     // isLoadingPrice = ${isLoadingPrice}\n
@@ -56,39 +103,30 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     const buttonType = (
       errorMessage ? BUTTON_TYPE.API_TRANSACTION_ERROR :
       isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
-      insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
+      tokensRequired() ? BUTTON_TYPE.TOKENS_REQUIRED : 
+      sellTokenRequired() ? BUTTON_TYPE.SELL_TOKEN_REQUIRED : 
+      buyTokenRequired() ? BUTTON_TYPE.BUY_TOKEN_REQUIRED : 
+      amountRequired() ? BUTTON_TYPE.ZERO_AMOUNT : 
+      // insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
       insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
       BUTTON_TYPE.SWAP)
     // alert(`buttonType = ${buttonType}`)
     return buttonType
   }
 
-  const getButtonText = (buttonType: BUTTON_TYPE) => {
-    switch(buttonType) {
-      case BUTTON_TYPE.API_TRANSACTION_ERROR:
-        return "API Transaction Error";
-      case BUTTON_TYPE.IS_LOADING_PRICE:
-        return "Fetching the best price...";
-      case BUTTON_TYPE.ZERO_AMOUNT: 
-        return "Enter an Amount";
-      case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-        return `Insufficient ${exchangeContext.tradeData.sellTokenContract?.symbol} Balance`;
-      case BUTTON_TYPE.SWAP:
-        return exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-        "EXACT OUT SWAP" : "EXACT IN SWAP";
-      default:
-        return "Button Type Undefined";
-    }
-  }
-
   const getButtonColor = (buttonType: BUTTON_TYPE|undefined) => {
     switch(buttonType) {
-      case BUTTON_TYPE.IS_LOADING_PRICE:
       case BUTTON_TYPE.SWAP:
         return "executeColor";
       case BUTTON_TYPE.API_TRANSACTION_ERROR:
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
+      case BUTTON_TYPE.SELL_ERROR_REQUIRED:
+      case BUTTON_TYPE.BUY_ERROR_REQUIRED:
         return "errorColor";
+      case BUTTON_TYPE.TOKENS_REQUIRED:
+      case BUTTON_TYPE.IS_LOADING_PRICE:
+      case BUTTON_TYPE.SELL_TOKEN_REQUIRED:
+      case BUTTON_TYPE.BUY_TOKEN_REQUIRED:
       case BUTTON_TYPE.ZERO_AMOUNT: 
       default:
         return "standardColor";
@@ -98,13 +136,23 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
   const buttonClick = async () => {
     let buttonType:any = getButtonType()
     switch(buttonType) {
+      case BUTTON_TYPE.TOKENS_REQUIRED: alert(`Select Buy/Sell Tokens\nFrom The Drop Down Token List`)
+        break;
       case BUTTON_TYPE.API_TRANSACTION_ERROR: alert(errorMessage?.msg);
         break;
       case BUTTON_TYPE.ZERO_AMOUNT: alert("Enter An Amount");
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE: alert("Insufficient Sell Balance");
         break;
-      case BUTTON_TYPE.SWAP: await swap(swapType);
+      case BUTTON_TYPE.SWAP: await validateAndSwap();
+        break;
+      case BUTTON_TYPE.SELL_TOKEN_REQUIRED: alert("Please select Token to Sell (Required)");
+        break;
+      case BUTTON_TYPE.BUY_TOKEN_REQUIRED: alert("Please select Token to Buy (Required)");
+        break;
+      case BUTTON_TYPE.SELL_ERROR_REQUIRED: alert(`Select Sell Tokens\nFrom The Drop Down Token List`)
+        break;
+      case BUTTON_TYPE.BUY_ERROR_REQUIRED: alert(`Select Buy Tokens\nFrom The Drop Down Token List`)
         break;
       default: alert("Button Type Undefined");
         break;
@@ -112,7 +160,19 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) =
     dumpContext();
   }
 
-  const buttonType:BUTTON_TYPE = getButtonType()
+  const validateAndSwap = async() => {
+    // if (!tradeData.sellAmount)
+    //   setButtonType(BUTTON_TYPE.SELL_TOKEN_REQUIRED)
+    // else if (!tradeData.buyAmount)
+    //   setButtonType(BUTTON_TYPE.SELL_TOKEN_REQUIRED)
+    // else
+    await swap();
+    setResetAmounts(true);
+    buttonType = BUTTON_TYPE.TOKENS_REQUIRED
+  }
+
+  buttonType = getButtonType()
+  
   return (
     <div>
       <button

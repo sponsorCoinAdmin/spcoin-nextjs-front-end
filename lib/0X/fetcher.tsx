@@ -171,21 +171,29 @@ function usePriceAPI({
         }
         else {
           // if (isNetworkBurnAddress(sellTokenAddress) || isNetworkBurnAddress(buyTokenAddress)) {
-            if (isTransaction_A_Wrap()) {
+          if (isTransaction_A_Wrap()) {
             // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
-            if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
+            if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+              exchangeContext.tradeData.sellAmount = sellAmount
               setBuyAmount(sellAmount);
-            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+            }
+            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+              exchangeContext.tradeData.sellAmount = buyAmount
               setSellAmount(buyAmount);
             }
-            else if (chainId != 31337) {
-              if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
-                  setBuyAmount(0n);
-                else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
-                  setSellAmount(BigInt(0));
-              const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
-              apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
+          }
+          else if (chainId != 31337) {
+            if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+              exchangeContext.tradeData.sellAmount = buyAmount
+              setBuyAmount(0n);
             }
+            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+              exchangeContext.tradeData.sellAmount = sellAmount
+              setSellAmount(BigInt(0));
+            }
+            const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
+            apiErrorCallBack({ source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
+          }
         }
       },
       // onError: (error) => {

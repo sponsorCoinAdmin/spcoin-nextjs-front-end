@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.6",
+    "@sponsorcoin/spcoin-lib-es6": "^1.0.0",
     "@sponsorcoin/weth-access-module-es6": "^1.0.5",
     "@tanstack/react-query": "^5.29.2",
     "@types/pbkdf2": "^3.1.2",

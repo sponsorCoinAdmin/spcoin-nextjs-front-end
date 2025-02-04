@@ -11,9 +11,20 @@ export const useSwapState = () => {
     exchangeContext.tradeData.swapType = swapType;
   }, [swapType]);
  
+  // useEffect(() => {
+  //   getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
+  // }, [exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address]);
+
+  console.log(`exchangeContext.tradeData.sellTokenContract?.address] =${exchangeContext.tradeData.sellTokenContract?.address}
+    exchangeContext.tradeData.buyTokenContract?.address] =${exchangeContext.tradeData.buyTokenContract?.address}`)
+
   useEffect(() => {
     getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
-  }, [exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address]);
+  }, [exchangeContext.tradeData.sellTokenContract?.address]);
+
+  useEffect(() => {
+    getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
+  }, [exchangeContext.tradeData.buyTokenContract?.address]);
 
   const getSwapState = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined) => {
     if (isTokenAddress(sellTokenAddress)) {
@@ -33,6 +44,5 @@ export const useSwapState = () => {
       } else
         setSwapType(SWAP_TYPE.UNDEFINED)
   }
-
   return swapType;
 };

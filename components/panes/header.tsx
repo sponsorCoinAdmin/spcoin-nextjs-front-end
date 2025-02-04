@@ -22,7 +22,7 @@ export default () => {
   useEffect(() => {
     setAvatar(getAvatarImageURL(chainId));
     setNetworkName(network);
-  },[network]);
+  }, [network]);
 
   return (
     <header>

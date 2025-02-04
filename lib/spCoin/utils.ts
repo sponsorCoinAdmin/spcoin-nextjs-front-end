@@ -4,7 +4,7 @@ import { SWAP_TYPE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
-import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib/utils';
+import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 
 const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
 

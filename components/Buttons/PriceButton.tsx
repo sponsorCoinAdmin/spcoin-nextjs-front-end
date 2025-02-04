@@ -11,10 +11,11 @@ import { ErrorMessage } from '@/lib/structure/types';
 type Props = {
     isLoadingPrice: boolean,
     errorMessage:ErrorMessage|undefined,
-    setErrorMessage: (errorMessage:ErrorMessage|undefined) => void
+    setErrorMessage: (errorMessage:ErrorMessage|undefined) => void,
+    setResetAmounts: (resetAmounts:boolean) => void
   }
 
-const PriceButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {    
+const PriceButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts}:Props) => {    
     const ACTIVE_ACCOUNT = useAccount()
     const [ displayDumpContextButton, setDisplayDumpContextButton ] = useState<boolean>(exchangeContext.test.dumpContextButton)
     const [ walletAccount, setWalletAccount ] = useState<Address|undefined>(undefined);
@@ -33,7 +34,10 @@ const PriceButton = ({isLoadingPrice, errorMessage, setErrorMessage}:Props) => {
         <div>
             {!walletAccount?
                 (<CustomConnectButton />) :
-                (<ExchangeButton isLoadingPrice={isLoadingPrice} errorMessage={errorMessage} setErrorMessage={setErrorMessage}/>)
+                (<ExchangeButton isLoadingPrice={isLoadingPrice}
+                                 errorMessage={errorMessage}
+                                 setErrorMessage={setErrorMessage}
+                                 setResetAmounts={setResetAmounts}/>)
             }
             {!displayDumpContextButton || <DumpContextButton />}
         </div>

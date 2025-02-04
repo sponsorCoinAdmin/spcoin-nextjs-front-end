@@ -15,6 +15,7 @@ import { useSwapState } from '@/lib/hooks/useSwapState';
 // Youtube tutorial => https://www.youtube.com/watch?v=iKNfDKrJRP4
 // import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6"
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6"
+import React, { useEffect, useState } from "react";
 import { isNetworkAddress, isTokenAddress, isWrappedNetworkAddress } from "../network/utils";
 import { Address } from "viem";
 
@@ -52,44 +53,47 @@ const doSwap = async () => {
 }
 
 const swap = async() => {
-    let swapType:SWAP_TYPE;
-    const sellTokenAddress = exchangeContext.tradeData.sellTokenContract?.address
-    const buyTokenAddress  = exchangeContext.tradeData.buyTokenContract?.address
-    console.log(`sellTokenAddress =${sellTokenAddress}\nbuyTokenAddress =${buyTokenAddress}`)
+    const [swapType, setSwapType] = useState<SWAP_TYPE>(SWAP_TYPE.UNDEFINED);
 
-    const setSwapType = (_swapType:SWAP_TYPE) => {
-        swapType = _swapType
-        exchangeContext.tradeData.swapType = _swapType;
-      };;
+    useEffect(() => {
+        exchangeContext.tradeData.swapType = swapType;
+      }, [swapType]);
      
       // useEffect(() => {
       //   getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
       // }, [exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address]);
     
-    const getSwapState = () => {
-        let swapType:SWAP_TYPE = SWAP_TYPE.UNDEFINED
+    console.log(`exchangeContext.tradeData.sellTokenContract?.address] =${exchangeContext.tradeData.sellTokenContract?.address}
+    exchangeContext.tradeData.buyTokenContract?.address] =${exchangeContext.tradeData.buyTokenContract?.address}`)
+
+    useEffect(() => {
+        getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
+    }, [exchangeContext.tradeData.sellTokenContract?.address]);
+
+    useEffect(() => {
+        getSwapState(exchangeContext.tradeData.sellTokenContract?.address, exchangeContext.tradeData.buyTokenContract?.address);
+    }, [exchangeContext.tradeData.buyTokenContract?.address]);
+
+    const getSwapState = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined) => {
         if (isTokenAddress(sellTokenAddress)) {
             if (isTokenAddress(buyTokenAddress))
-                swapType = SWAP_TYPE.SWAP
-            else  
-                if (isNetworkAddress(buyTokenAddress))
-                    if (isWrappedNetworkAddress(sellTokenAddress))
-                        swapType = SWAP_TYPE.UNWRAP
-                    else
-                        swapType = SWAP_TYPE.SWAP_UNWRAP
+                setSwapType(SWAP_TYPE.SWAP)
+            else  if (isNetworkAddress(buyTokenAddress))
+                if (isWrappedNetworkAddress(sellTokenAddress))
+                    setSwapType(SWAP_TYPE.UNWRAP)
+                else
+                    setSwapType(SWAP_TYPE.SWAP_UNWRAP)
         } else if (isNetworkAddress(sellTokenAddress)){
             if (isWrappedNetworkAddress(buyTokenAddress))
-                swapType = SWAP_TYPE.WRAP
+                setSwapType(SWAP_TYPE.WRAP)
             else
-                swapType = SWAP_TYPE.WRAP_SWAP
+                setSwapType(SWAP_TYPE.WRAP_SWAP)
             } else
-        swapType = SWAP_TYPE.UNDEFINED
-        exchangeContext.tradeData.swapType = swapType;
-        return swapType;
+                setSwapType(SWAP_TYPE.UNDEFINED)
     }
 
+
     console.debug(stringifyBigInt(exchangeContext.tradeData))
-    swapType = getSwapState()
     switch (swapType) {
         case SWAP_TYPE.SWAP:
             await doSwap()
@@ -112,7 +116,7 @@ const swap = async() => {
             alert(`UNDEFINED SWAP_TYPE`)
         break
     }
-    return swapType;
+    return "<h1>JJJ</h1";
 }
 
 export default swap

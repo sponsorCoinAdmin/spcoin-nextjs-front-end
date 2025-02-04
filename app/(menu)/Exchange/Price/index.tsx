@@ -4,7 +4,6 @@ import { ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useChainId, useAccount, useBalance } from 'wagmi'
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner' 
-import { useEthersProvider } from '@/lib/hooks/useEthersProvider' 
 import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS, TradeData } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
@@ -13,23 +12,18 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import IsLoadingPrice from '@/components/containers/IsLoadingPrice';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
-import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib';
+import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6';
 
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import PriceInputContainer from '@/components/containers/PriceInputContainer';
 import { Address } from 'viem';
 import { config } from '@/lib/wagmi/wagmiConfig'
-import { BURN_ADDRESS } from '@/lib/network/utils';
-import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances';
-import { formatDecimals } from '@/lib/wagmi/wagmiERC20ClientRead';
 
 //////////// Price Code
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount()
   const signer = useEthersSigner()
-  const provider = useEthersProvider()
   const chainId = useChainId({config});
   const tradeData:TradeData = exchangeContext.tradeData;
 
@@ -46,6 +40,7 @@ export default function PriceView() {
   const [agentAccount, setAgentElement] = useState(exchangeContext.agentAccount);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>(undefined);
+  const [resetAmounts, setResetAmounts] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract|undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract|undefined>(tradeData.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
@@ -86,12 +81,12 @@ export default function PriceView() {
   }, [ACTIVE_ACCOUNT.address]);
 
   useEffect(() => {
-    console.debug(`%%%% PRICE.useEffect[sellAmount = ${sellAmount}])`);
+    console.log(`PRICE.useEffect[sellAmount = ${sellAmount}])`);
     tradeData.sellAmount = sellAmount;
     if (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
       setBuyAmount(0n);
     }
-  },[sellAmount]);
+  }, [sellAmount]);
 
   useEffect(() => {
     console.debug(`PRICE.useEffect[buyAmount = ${buyAmount}])`);
@@ -99,7 +94,15 @@ export default function PriceView() {
     if (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
       setSellAmount(0n);
     }
-  },[buyAmount]);
+  }, [buyAmount]);
+
+  useEffect(() => {
+    if (resetAmounts) {
+      setSellAmount(0n)
+      setBuyAmount(0n)
+      setResetAmounts(false)
+    }
+   }, [resetAmounts]);
 
   useEffect(() => {
     // console.debug(`PRICE.useEffect[slippage = ${slippage}])`);
@@ -190,7 +193,10 @@ export default function PriceView() {
                               setTransactionType={setTransactionType}
                               setTokenContractCallback={setBuyTokenContract}/>
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens}/>
-        <PriceButton isLoadingPrice={isLoadingPrice} errorMessage={errorMessage} setErrorMessage={setErrorMessage}/>
+        <PriceButton isLoadingPrice={isLoadingPrice}
+                     errorMessage={errorMessage}
+                     setErrorMessage={setErrorMessage}
+                     setResetAmounts={setResetAmounts}/>
         <AffiliateFee priceResponse={priceResponse} buyTokenContract={buyTokenContract}/>
       </div>
       <FeeDisclosure/>

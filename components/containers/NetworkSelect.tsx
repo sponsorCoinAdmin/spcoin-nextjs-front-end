@@ -44,7 +44,7 @@ const NetworkSelect = ({networkElement, id, disabled}:Props) => {
             // console.debug(`disabled = ${disabled} showElement(${selectId})`)
             showElement(selectId)
         }
-    },[]);
+    }, []);
 
     // alert(`networkElement = ${JSON.stringify(networkElement,null,2)}`)
   
