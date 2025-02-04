@@ -160,8 +160,11 @@ export default function PriceView() {
 
   function swapBuySellTokens() {
     const tmpTokenContract: TokenContract|undefined = tradeData.buyTokenContract;
-    setBuyTokenContract(tradeData.sellTokenContract);
-    setSellTokenContract(tmpTokenContract);
+    tradeData.buyTokenContract = sellTokenContract;
+    tradeData.sellTokenContract = tmpTokenContract;
+
+    setBuyTokenContract(tradeData.buyTokenContract);
+    setSellTokenContract(tradeData.sellTokenContract);
   }
 
   function updateBuyTransaction(newTransactionContract: TokenContract) {

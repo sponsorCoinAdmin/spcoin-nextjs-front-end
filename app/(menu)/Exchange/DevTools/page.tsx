@@ -14,7 +14,6 @@ import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20Contr
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals'
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
 
-
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
 const USDT_TON_CONTRACT:Address  = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1'
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
