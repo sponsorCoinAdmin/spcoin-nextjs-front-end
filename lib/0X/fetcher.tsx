@@ -1,5 +1,5 @@
 // 'use server'
-import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
+import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
@@ -111,7 +111,7 @@ let chainId:number
 const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
   chainId = useChainId();
   console.log(`fetcher.shouldFetch.chainId = ${chainId}`)
-  if (chainId === 31337)
+  if (chainId === HARDHAT)
   {
     console.log(`fetcher.shouldFetch returning FALSE`)
     return false
@@ -182,7 +182,7 @@ function usePriceAPI({
               setSellAmount(buyAmount);
             }
           }
-          else if (chainId != 31337) {
+          else if (chainId != HARDHAT) {
             if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
               exchangeContext.tradeData.sellAmount = buyAmount
               setBuyAmount(0n);

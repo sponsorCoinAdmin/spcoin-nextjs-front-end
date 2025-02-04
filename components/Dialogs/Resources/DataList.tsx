@@ -8,7 +8,7 @@ import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import { FEED_TYPE } from '@/lib/structure/types';
+import { ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA } from '@/lib/structure/types';
 import { useChainId } from "wagmi";
 // import { isNetworkBurnAddress, NETWORK_PROTOCOL_CRYPTO } from '@/lib/network/utils';
 
@@ -43,14 +43,14 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number) => {
         case FEED_TYPE.AGENT_WALLETS: return agentWalletList;
         case FEED_TYPE.TOKEN_LIST:
             switch(network) {
-                case 1:
+                case ETHEREUM:
                 case "ethereum": return ethereumTokenList;
-                case 137:
+                case POLYGON:
                 case "polygon": return polygonTokenList;
-                case 31337:
+                case HARDHAT:
                 case "hardhat": 
                 return hardhatTokenList;
-                case 11155111:
+                case SEPOLIA:
                 case "sepolia": return sepoliaTokenList;
                 default: return ethereumTokenList;
             }

@@ -5,7 +5,11 @@ import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/da
 import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings'
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
-import { TokenContract } from '@/lib/structure/types';
+import { ETHEREUM, ETHEREUM_WETH_ADDRESS,
+         HARDHAT, HARDHAT_WETH_ADDRESS,
+         POLYGON, POLYGON_WETH_ADDRESS,
+         SEPOLIA, SEPOLIA_WETH_ADDRESS, 
+         TokenContract } from '@/lib/structure/types';
 
 const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
 const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
@@ -48,16 +52,13 @@ const isTokenAddress = (address:Address|undefined) : boolean => {
 // *** WARNING To be fixed for other networks
 const getWrappedNetworkAddress = (chainId:number):Address|undefined => {
 
-  const ETH_WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
-  const POLYGON_WETH = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
-  const HARDHAT_WETH = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
-  const SEPOLIA_WETH = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"
+
   let WETH_ADDRESS:Address|undefined = undefined;
   switch(chainId) {
-    case 1: WETH_ADDRESS = ETH_WETH; break;
-    case 137: WETH_ADDRESS = POLYGON_WETH; break;
-    case 31337: WETH_ADDRESS = HARDHAT_WETH; break;
-    case 11155111: WETH_ADDRESS = SEPOLIA_WETH; break;
+    case ETHEREUM: WETH_ADDRESS = ETHEREUM_WETH_ADDRESS; break;
+    case POLYGON: WETH_ADDRESS  = POLYGON_WETH_ADDRESS;  break;
+    case HARDHAT: WETH_ADDRESS  = HARDHAT_WETH_ADDRESS;  break;
+    case SEPOLIA: WETH_ADDRESS  = SEPOLIA_WETH_ADDRESS;  break;
     default: break;
   }
   console.log(`getWrappedNetworkAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`)

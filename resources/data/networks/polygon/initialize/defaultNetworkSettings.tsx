@@ -1,7 +1,7 @@
-import {  TokenContract } from '@/lib/structure/types'
+import {  POLYGON, TokenContract } from '@/lib/structure/types'
  
  const defaultSellToken: TokenContract = { 
-  chainId: 137,
+  chainId: POLYGON,
   "symbol": "USDC",
   "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
   "name": "USD Coin Staked",
@@ -11,7 +11,7 @@ import {  TokenContract } from '@/lib/structure/types'
  };
 
 const defaultBuyToken: TokenContract = { 
-  chainId: 137,
+  chainId: POLYGON,
   symbol: "SpCoin",
   img: "/resources/images/tokens/0xToDo_SpCoin.png",
   name: "Sponsor Coin",

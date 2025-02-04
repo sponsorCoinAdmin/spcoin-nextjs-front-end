@@ -1,7 +1,7 @@
-import {  TokenContract } from '@/lib/structure/types'
+import {  SEPOLIA, TokenContract } from '@/lib/structure/types'
  
  const defaultSellToken: TokenContract = { 
-  chainId: 11155111,
+  chainId: SEPOLIA,
   address: "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
   name: "Wrapped Bitcoin",
   symbol: "WBTC",
@@ -11,7 +11,7 @@ import {  TokenContract } from '@/lib/structure/types'
  };
 
 const defaultBuyToken: TokenContract = { 
-  chainId: 11155111,
+  chainId: SEPOLIA,
   address: "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
   name: "Tether USD",
   symbol: "USDT",

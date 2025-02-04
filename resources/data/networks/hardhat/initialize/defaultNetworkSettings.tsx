@@ -1,7 +1,7 @@
-import {  TokenContract } from '@/lib/structure/types'
+import {  HARDHAT, TokenContract } from '@/lib/structure/types'
  
  const defaultSellToken: TokenContract = { 
-  chainId: 31337,
+  chainId: HARDHAT,
   address: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
   name: "TONCOIN",
   symbol: "TON",
@@ -11,7 +11,7 @@ import {  TokenContract } from '@/lib/structure/types'
  };
 
  const defaultBuyToken: TokenContract = { 
-  chainId: 31337,
+  chainId: HARDHAT,
   address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
   name: "Tether USD",
   symbol: "USDT",
