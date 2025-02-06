@@ -1,12 +1,13 @@
 // 'use server'
-import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT } from '@/lib/structure/types'
+import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage } from '@/lib/structure/types'
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
+import { isActiveAccountAddress, isWrappingTransaction } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
-import { useAccount, useChainId } from "wagmi";
+import { useChainId } from "wagmi";
+
 
 const SELL_AMOUNT_ZERO = 100;
 const BUY_AMOUNT_ZERO = 200;
@@ -109,12 +110,12 @@ let chainId:number
 // ToDo This is to turn on off mandatory fetching
 const shouldFetch = (sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined)  => {
   chainId = useChainId();
-  // console.log(`fetcher.shouldFetch.chainId = ${chainId}`)
-  // if (chainId === HARDHAT)
-  // {
-  //   console.log(`fetcher.shouldFetch returning FALSE`)
-  //   return false
-  // }
+  console.log(`fetcher.shouldFetch.chainId = ${chainId}`)
+  if (chainId === 31337)
+  {
+    console.log(`fetcher.shouldFetch returning FALSE`)
+    return false
+  }
   return true;
 }
 
@@ -143,14 +144,9 @@ function usePriceAPI({
     setErrorMessage,
     apiErrorCallBack
   }:Props) {
-
-  sellTokenAddress = mapAccountAddrToWethAddr(sellTokenAddress as Address)
-  buyTokenAddress = mapAccountAddrToWethAddr(buyTokenAddress as Address)
                         
   return useSWR(
-    () => shouldFetch(sellTokenAddress, buyTokenAddress) ? 
-          getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) :
-    null,
+    () => shouldFetch(sellTokenAddress, buyTokenAddress) ? getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
     fetcher,
     {
       onSuccess: (data) => {
@@ -175,29 +171,21 @@ function usePriceAPI({
         }
         else {
           // if (isActiveAccountAddress(sellTokenAddress) || isActiveAccountAddress(buyTokenAddress)) {
-          if (isWrappingTransaction(sellTokenAddress, buyTokenAddress)) {
+            if (isWrappingTransaction()) {
             // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
-            if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-              exchangeContext.tradeData.sellAmount = sellAmount
+            if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
               setBuyAmount(sellAmount);
-            }
-            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-              exchangeContext.tradeData.sellAmount = buyAmount
+            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
               setSellAmount(buyAmount);
             }
-          }
-          else if (chainId != HARDHAT) {
-            if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-              exchangeContext.tradeData.sellAmount = buyAmount
-              setBuyAmount(0n);
+            else if (chainId != 31337) {
+              if(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT)
+                  setBuyAmount(0n);
+                else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+                  setSellAmount(BigInt(0));
+              const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
+              apiErrorCallBack({ source: "ApiFetcher: ", errCode:data.code, msg: apiErrorObj });
             }
-            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-              exchangeContext.tradeData.sellAmount = sellAmount
-              setSellAmount(BigInt(0));
-            }
-            const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
-            apiErrorCallBack({ source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
-          }
         }
       },
       // onError: (error) => {

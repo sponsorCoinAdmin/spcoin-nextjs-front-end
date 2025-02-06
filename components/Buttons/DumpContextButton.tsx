@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { createContext } from 'react';
 import styles from '@/styles/Exchange.module.css'
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 
 import { exchangeContext } from '@/lib/context';
+
 
 const DumpContextButton = () => {
     const show = () => {
@@ -22,5 +23,7 @@ const DumpContextButton = () => {
         </div>
     );
 }
+export const testContext = createContext(undefined);
+
 
 export default DumpContextButton;

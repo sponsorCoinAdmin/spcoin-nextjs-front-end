@@ -12,7 +12,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances'
 import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { BURN_ADDRESS, isNetworkBurnAddress, isTransaction_A_Wrap } from '@/lib/network/utils';
+import { isActiveAccountAddress, isWrappingTransaction } from '@/lib/network/utils';
 import { config } from '@/lib/wagmi/wagmiConfig';
 import { getBalance } from '@wagmi/core';
 
@@ -43,12 +43,20 @@ const priceInputContainer = ({priceInputContainType,
   const debouncedAmount = useDebounce(amount);
   const [blockNumber, setBlockNumber] = useState<bigint>(0n);
   const [tokenBalance, setTokenBalance] = useState<string>();
-  const {formattedBalance} = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
+  const { formattedBalance } = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
+  const bal       = useBalance( { address: tokenContract?.address} );
 
   useEffect(() =>  {
     const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
     setFormattedAmount(formattedAmount)
   }, []);
+
+  useEffect(() => {
+    // alert(`Token Balance changed to ${tokenBalance}\n
+      // formattedBalance = ${formattedBalance}\n
+      // bal = ${stringifyBigInt(bal)}`
+    // )
+  },[tokenBalance])
 
   useEffect(() => {
     setTokenBalance(formattedBalance)
@@ -61,26 +69,36 @@ const priceInputContainer = ({priceInputContainType,
     },
   })
 
-  useEffect(() => {
-    setNewBalance()
-    console.log(`blockNumber=${blockNumber}`)
-  }, [blockNumber])
+  // useEffect(() => {
+  //   const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
+  //   console.debug(`Setting setFormattedAmount(${formattedAmount})`)
+  //   // setFormattedAmount(formattedBalance+10000)
 
-  const setNewBalance = async() =>  {
-    const TOKEN_CONTRACT_ADDRESS = tokenContract?.address
-    const ACTIVE_ACCOUNT_ADDRESS = ACTIVE_ACCOUNT.address;
-    const BALANCE_ADDRESS = isNetworkBurnAddress(TOKEN_CONTRACT_ADDRESS) ? ACTIVE_ACCOUNT_ADDRESS : TOKEN_CONTRACT_ADDRESS;
-    // alert(`ACTIVE_ACCOUNT_ADDRESS=${ACTIVE_ACCOUNT_ADDRESS}\n
-    //        TOKEN_CONTRACT_ADDRESS=${TOKEN_CONTRACT_ADDRESS}\n
-    //        BALANCE_ADDRESS=${BALANCE_ADDRESS}\n`)
+  //   setNewBalance()
+  //   console.log(`blockNumber=${blockNumber}`)
+  // }, [blockNumber])
 
-    if (BALANCE_ADDRESS) {
-      const balanceObj = await getBalance(config, {
-        address:     BALANCE_ADDRESS || BURN_ADDRESS,
-      })
-      setTokenBalance(balanceObj.formatted)
-    }
-  }
+  // const setNewBalance = async() =>  {
+  //   // const bal       = useBalance( { address: tokenContract?.address} );
+
+  //   const TOKEN_CONTRACT_ADDRESS = tokenContract?.address
+  //   const ACTIVE_ACCOUNT_ADDRESS = ACTIVE_ACCOUNT.address;
+  //   const BALANCE_ADDRESS = isActiveAccountAddress(TOKEN_CONTRACT_ADDRESS) ? ACTIVE_ACCOUNT_ADDRESS : TOKEN_CONTRACT_ADDRESS;
+  //   // alert(`ACTIVE_ACCOUNT_ADDRESS=${ACTIVE_ACCOUNT_ADDRESS}\n
+  //   //        TOKEN_CONTRACT_ADDRESS=${TOKEN_CONTRACT_ADDRESS}\n
+  //   //        BALANCE_ADDRESS=${BALANCE_ADDRESS}\n`)
+
+  //   if (BALANCE_ADDRESS) {
+  //     const balanceObj = await getBalance(config, {
+  //       address:     BALANCE_ADDRESS || ACTIVE_ACCOUNT_ADDRESS,
+  //     })
+  //     // setTokenBalance(balanceObj.formatted)
+  //     setTokenBalance(bal?.data?.formatted)
+  //     // setTokenBalance(formattedBalance)
+
+      
+  //   }
+  // }
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
@@ -147,7 +165,8 @@ const priceInputContainer = ({priceInputContainType,
     setAmount(bigIntValue);
   }
 
-  const buySellText = isTransaction_A_Wrap() ? 
+  const buySellText = isWrappingTransaction( exchangeContext.tradeData.sellTokenContract?.address,
+                                            exchangeContext.tradeData.buyTokenContract?.address) ? 
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
       exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
         priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage*100}%` :
@@ -167,6 +186,7 @@ const priceInputContainer = ({priceInputContainType,
       {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
+      <div>bal = {bal.data?.formatted}</div>
     </div>
   )
 }

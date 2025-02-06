@@ -65,7 +65,7 @@ const  getValidFormattedPrice = (value:string|bigint, decimals:number|undefined)
   if (price === '' || re.test(price)) {
     let splitText = price.split(".");
     // Remove leading zeros
-    let formattedPrice = splitText[0].replace(/^0+/, "");
+    let formattedPrice:string = splitText[0].replace(/^0+/, "");
     if (formattedPrice === "" )
       formattedPrice = "0";
     if(splitText[1] != undefined) {
@@ -236,24 +236,32 @@ const dumpContext = (isAlert:boolean = false, isConsoleDebug:boolean=true) => {
 //   return (address === activeAccountAddress);
 // }
 
+// const useActiveAccountAddress = () => {
+//   const activeAccountAddress = useAccount().address;
+//   return activeAccountAddress;
+// }
+// const isActiveNetworkAddress = (address:Address|undefined) => {
+//   const activeAccountAddress = useAccount().address;
+//   return (address === activeAccountAddress);
+// }
 export {
-  decimalAdjustTokenAmount,
-  defaultMissingImage,
-  bigIntDecimalShift,
-  dumpContext,
-  dumpSwapState,
-  exchangeContextDump,
-  fetchIconResource,
-  fetchTokenDetails,
-  // useActiveAccountAddress,
-  getValidAddress,
-  getValidBigIntToFormattedPrice,
-  getValidFormattedPrice,
-  getQueryVariable,
-  getTokenDetails,
-  invalidTokenContract,
-  // isActiveNetworkAddress,
-  isSpCoin,
-  setValidPriceInput,
-  updateBalance
-}
+    decimalAdjustTokenAmount,
+    defaultMissingImage,
+    bigIntDecimalShift,
+    dumpContext,
+    dumpSwapState,
+    exchangeContextDump,
+    fetchIconResource,
+    fetchTokenDetails,
+    // useActiveAccountAddress,
+    getValidAddress,
+    getValidBigIntToFormattedPrice,
+    getValidFormattedPrice,
+    getQueryVariable,
+    getTokenDetails,
+    invalidTokenContract,
+    // isActiveNetworkAddress,
+    isSpCoin,
+    setValidPriceInput,
+    updateBalance, stringifyBigInt
+};

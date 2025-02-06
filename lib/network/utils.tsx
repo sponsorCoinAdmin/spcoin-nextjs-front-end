@@ -1,155 +1,112 @@
 import chainIdList from '@/resources/data/networks/chainIds.json';
-import { defaultNetworkSettings as defaultEthereumSettings } from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings'
-import { defaultNetworkSettings as defaultHardHatSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings'
-import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings'
-import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings'
+import { defaultNetworkSettings as defaultEthereumSettings } from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings';
+import { defaultNetworkSettings as defaultHardHatSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings';
+import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings';
+import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings';
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
-import { ETHEREUM, ETHEREUM_WETH_ADDRESS,
-         HARDHAT, HARDHAT_WETH_ADDRESS,
-         POLYGON, POLYGON_WETH_ADDRESS,
-         SEPOLIA, SEPOLIA_WETH_ADDRESS, 
-         TokenContract } from '@/lib/structure/types';
+import {
+  ETHEREUM, ETHEREUM_WETH_ADDRESS,
+  HARDHAT, HARDHAT_WETH_ADDRESS,
+  POLYGON, POLYGON_WETH_ADDRESS,
+  SEPOLIA, SEPOLIA_WETH_ADDRESS,
+  TokenContract
+} from '@/lib/structure/types';
+import { useAccount, useChainId } from 'wagmi';
 
-const BURN_ADDRESS:Address = "0x0000000000000000000000000000000000000000"
-const NETWORK_PROTOCOL_CRYPTO:Address = BURN_ADDRESS
-// const NETWORK_PROTOCOL_CRYPTO = "NETWORK PROTOCOL CRYPTO"
+const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
-// This should work
-const imgHome = "/resources/images/chains/"
-// const imgHome = "../../resources/images/chains"
-const imgType = ".png"
+const IMG_HOME = "/resources/images/chains/";
+const IMG_TYPE = ".png";
 
-const isNetworkProtocolToken = (tokenContract:TokenContract) => {
-  return isNetworkBurnAddress(tokenContract.address);
-}
+const isNetworkProtocolToken = (tokenContract: TokenContract) => 
+  isActiveAccountAddress(tokenContract.address);
 
-const isNetworkProtocolAddress = (address:Address|undefined) : boolean => {
-  // alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
-  const isActiveWallet:boolean = isActiveWalletAccount(address);
-  return isActiveWallet;
-}
+const isActiveAccountAddress = (address?: Address): boolean => 
+  address === exchangeContext.activeAccountAddress;
 
-const isNetworkBurnAddress = (address:Address|undefined) : boolean => {
-  return address === NETWORK_PROTOCOL_CRYPTO;
-}
+const isTokenAddress = (address?: Address): boolean => 
+  !isActiveAccountAddress(address);
 
-const isActiveWalletAccount = (address:Address|undefined) : boolean => {
-  // alert(`address = ${address}\nexchangeContext.activeWalletAccount = ${exchangeContext.activeWalletAccount}`);
-  const activeWalletAccount:Address|undefined = exchangeContext?.activeWalletAccount as Address|undefined;
-  const isActiveWalletAccount:boolean = address === activeWalletAccount;
-  return isActiveWalletAccount;
-}
-
-const isNetworkOrWalletAccountAddress = (address:Address|undefined) : boolean => {
-  return isNetworkBurnAddress(address) || isActiveWalletAccount(address)
-}
-
-const isTokenAddress = (address:Address|undefined) : boolean => {
-  return !isNetworkOrWalletAccountAddress(address);
-}
-
-// *** WARNING To be fixed for other networks
-const getWrappedNetworkAddress = (chainId:number):Address|undefined => {
-
-
-  let WETH_ADDRESS:Address|undefined = undefined;
-  switch(chainId) {
-    case ETHEREUM: WETH_ADDRESS = ETHEREUM_WETH_ADDRESS; break;
-    case POLYGON: WETH_ADDRESS  = POLYGON_WETH_ADDRESS;  break;
-    case HARDHAT: WETH_ADDRESS  = HARDHAT_WETH_ADDRESS;  break;
-    case SEPOLIA: WETH_ADDRESS  = SEPOLIA_WETH_ADDRESS;  break;
-    default: break;
-  }
-  console.log(`getWrappedNetworkAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`)
+// *** WARNING: To be fixed for other networks ***
+const getNetworkWethAddress = (chainId: number): Address | undefined => {
+  const wethAddresses = {
+    [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
+    [POLYGON]: POLYGON_WETH_ADDRESS,
+    [HARDHAT]: HARDHAT_WETH_ADDRESS,
+    [SEPOLIA]: SEPOLIA_WETH_ADDRESS
+  };
+  
+  const WETH_ADDRESS: Address | undefined = wethAddresses[chainId];
+  console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS;
-}
+};
 
-// *** WARNING HARDCODING To be fixed for other networks
-const isWrappedNetworkAddress = (address:Address|undefined) : boolean => {
-  const chainId = exchangeContext.network.chainId;
+// *** WARNING: HARDCODING To be fixed for other networks ***
+const isWrappedNetworkAddress = (address?: Address): boolean =>
+  address === getNetworkWethAddress(exchangeContext.tradeData.chainId);
 
-  const  wrappedNetworkAddress:boolean = address === getWrappedNetworkAddress(chainId);
-  return wrappedNetworkAddress;
-}
+const isNetworkAddress = (address?: Address): boolean => 
+  isWrappedNetworkAddress(address) || isActiveAccountAddress(address);
 
-const isNetworkAddress = (address:Address|undefined) : boolean => {
-  return isWrappedNetworkAddress(address) || isNetworkOrWalletAccountAddress(address);
-}
+const mapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
+  const chainId = exchangeContext.tradeData.chainId;
+  const ethAct = exchangeContext.activeAccountAddress;
 
-const isTransaction_A_Wrap = () : boolean => {
-  const sellTokenAddress:Address = exchangeContext.tradeData.sellTokenContract?.address;
-  const buyTokenAddress:Address = exchangeContext.tradeData.buyTokenContract?.address;
-  return  buyTokenAddress && sellTokenAddress && (buyTokenAddress !== sellTokenAddress) ? 
-    isNetworkAddress(sellTokenAddress) && isNetworkAddress(buyTokenAddress) :
-          false
-}
+  console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
+               Ethereum Account Address = ${ethAct} 
+               Token Account Address = ${tokenAddress}`);
 
-const getChainMap = (chainList: any[]) => {
-  const chainMap = new Map();
-  const tList = chainList.map((e: any, i: number) => {
-      chainMap.set(chainList[i].chainId,chainList[i])
-  })
-  return chainMap
-}
+  return ethAct === tokenAddress ? getNetworkWethAddress(chainId) : tokenAddress;
+};
 
-const chainIdMap = getChainMap(chainIdList)
+const isWrappingTransaction = (
+  sellTokenAddress?: Address, 
+  buyTokenAddress?: Address
+): boolean => 
+  !!(sellTokenAddress && buyTokenAddress && 
+     mapAccountAddrToWethAddr(sellTokenAddress) === mapAccountAddrToWethAddr(buyTokenAddress));
 
-const getNetworkName = (chainId:number) => {
-  const networkName:string = chainIdMap.get(chainId)?.name;
-  return networkName;
-}
+const getChainMap = (chainList: any[]): Map<number, any> => 
+  new Map(chainList.map((e) => [e.chainId, e]));
 
-function getAvatarImageURL(chainId:number|string) {
-  // console.debug(`getAvatarImageURL:chainId = (${chainId})`)
-  let imgURL:string = imgHome+chainId + imgType;
-  // console.debug(`getAvatarImageURL:imgURL = (${imgURL})`)
-  return imgURL
-}
+const chainIdMap = getChainMap(chainIdList);
 
-  // This method is never executed in the main program but is a utility to create a default network json list
+const getNetworkName = (chainId: number): string | undefined => 
+  chainIdMap.get(chainId)?.name;
+
+const getAvatarImageURL = (chainId: number | string): string => 
+  `${IMG_HOME}${chainId}${IMG_TYPE}`;
+
+// Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
   const defaultNetworkSettings = {
-    ethereum : defaultEthereumSettings,
-    hardhat : defaultHardHatSettings,
-    polygon  : defaultPolygonSettings,
-    sepolia  : defaultSepoliaSettings,
-  }
-  let networkSettings = "default json Network Settings for all Networks AS follows:\n"+ JSON.stringify(defaultNetworkSettings, null, 2);
-  console.log(networkSettings)
-  alert("NetworkSettings: "+networkSettings)
-}
+    ethereum: defaultEthereumSettings,
+    hardhat: defaultHardHatSettings,
+    polygon: defaultPolygonSettings,
+    sepolia: defaultSepoliaSettings
+  };
+  
+  const networkSettings = JSON.stringify(defaultNetworkSettings, null, 2);
+  console.log(`Default JSON Network Settings:\n${networkSettings}`);
+  alert(`Network Settings: ${networkSettings}`);
+};
 
-function isLowerCase (input:string) {  
-  return input === String(input).toLowerCase()
-}
-
-// This code is not used anywhere but is implemented for future use
-async function catchPromiseError<T>(promise: Promise<T>): Promise<[undefined, T] | [Error]> {
-  return promise
-    .then(data => {
-      return [undefined, data] as [undefined, T]
-    })
-    .catch(error => {
-      return [error]
-    })
-}
+const isLowerCase = (input: string): boolean => 
+  input === input.toLowerCase();
 
 export {
   BURN_ADDRESS,
-  NETWORK_PROTOCOL_CRYPTO,
-  catchPromiseError,
   createNetworkJsonList,
   getAvatarImageURL,
   getNetworkName,
+  getNetworkWethAddress,
   isLowerCase,
   isNetworkAddress,
-  isNetworkBurnAddress,
-  isNetworkOrWalletAccountAddress,
-  isNetworkProtocolAddress,
+  isActiveAccountAddress,
   isNetworkProtocolToken,
-  isTransaction_A_Wrap,
+  isWrappingTransaction,
   isTokenAddress,
-  isWrappedNetworkAddress
-}
-  
+  isWrappedNetworkAddress,
+  mapAccountAddrToWethAddr
+};

@@ -10,6 +10,8 @@ import { defaultMissingImage, stringifyBigInt } from '@/lib/spCoin/utils';
 import DataList from './Resources/DataList';
 import InputSelect from '../panes/InputSelect';
 import { Address } from 'viem';
+import { useAccount } from 'wagmi';
+import { BURN_ADDRESS } from '@/lib/network/utils';
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
@@ -33,6 +35,9 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
     const [tokenSymbol, setTokenSymbol] = useState<string|undefined>();
     const [tokenIconPath, setTokenIconPath] = useState<string|undefined>()
     const [tokenContract, setTokenContract] = useState<TokenContract|undefined>()
+    const ACTIVE_ACCOUNT = useAccount()
+    const ACTIVE_ACCOUNT_ADDRESS = ACTIVE_ACCOUNT.address
+    
     // const ACTIVE_ACCOUNT = useAccount();
     // const walletAddress = ACTIVE_ACCOUNT.address;
     // console.debug(`walletAddress = ${walletAddress}`)
@@ -70,13 +75,13 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
 
     const duplicateToken = (tokenAddress:any|undefined):boolean => {
         const isDuplicateToken = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
-                exchangeContext?.buyTokenContract?.address === tokenAddress :
-                exchangeContext?.sellTokenContract?.address === tokenAddress;
+                exchangeContext?.tradeData.buyTokenContract?.address === tokenAddress :
+                exchangeContext?.tradeData.sellTokenContract?.address === tokenAddress;
 
         // const msg = `priceInputContainType = ${priceInputContainType === 0 ?"SELL":"BUY"}\n`+
         //         `tokenAddress = ${tokenAddress}\n` +
         //         `sellTokenAddress = ${exchangeContext?.sellTokenContract?.address}\n` +
-        //         `buyTokenAddress = ${exchangeContext?.buyTokenContract?.address}\n` +
+        //         `buyTokenAddress = ${exchangeContext?.tradeData.buyTokenContract?.address}\n` +
         //         `isDuplicateToken = ${isDuplicateToken}`
         // alert(msg);
 
@@ -94,6 +99,9 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
                 alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address : ${tokenContract.address}`);
                 return false;
             }
+            if (tokenContract.address === BURN_ADDRESS)
+                tokenContract.address = ACTIVE_ACCOUNT_ADDRESS
+
             if (duplicateToken(tokenContract.address)) {
                     alert("SELECT_ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")")
                 console.error("ERROR: Sell Token cannot be the same as Buy Token("+tokenContract?.symbol+")");
