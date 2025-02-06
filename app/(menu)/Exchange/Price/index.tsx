@@ -4,7 +4,7 @@ import { ErrorDialog} from '@/components/Dialogs/Dialogs';
 import { useState, useEffect } from "react";
 import { useChainId, useAccount, useBalance } from 'wagmi'
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner' 
-import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS, TradeData } from '@/lib/structure/types';
+import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS, TradeData, HARDHAT } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import type { PriceResponse } from "@/app/api/types";
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -19,6 +19,7 @@ import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import PriceInputContainer from '@/components/containers/PriceInputContainer';
 import { Address } from 'viem';
 import { config } from '@/lib/wagmi/wagmiConfig'
+import { isWrappingTransaction } from '@/lib/network/utils';
 
 //////////// Price Code
 export default function PriceView() {
@@ -140,7 +141,35 @@ export default function PriceView() {
 
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
-  const { isLoading:isLoadingPrice, data:Data, error:PriceError } = usePriceAPI({
+
+  useEffect(() => {
+    alert(`sellTokenAddress Changed: ${sellTokenAddress}`)
+    setValidWrapPrice(sellTokenAddress, buyTokenAddress)
+  }, [sellTokenAddress]);
+
+  useEffect(() => {
+    alert(`buyTokenAddress: ${buyTokenAddress}`)
+    setValidWrapPrice(sellTokenAddress, buyTokenAddress)
+  }, [buyTokenAddress]);
+
+  const setValidWrapPrice = (sellTokenAddress:Address, buyTokenAddress:Address) : boolean => {
+    if (isWrappingTransaction(sellTokenAddress, buyTokenAddress)) {
+      alert(`IT'S A WRAP`)
+      // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
+      if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+        exchangeContext.tradeData.sellAmount = sellAmount
+        setBuyAmount(sellAmount);
+      }
+      else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+        exchangeContext.tradeData.sellAmount = buyAmount
+        setSellAmount(buyAmount);
+      }
+      return true
+    }
+    return false
+  }
+
+  const { isLoading:isLoadingPrice, data:priceData, error:PriceError } = usePriceAPI({
     transactionType,
     sellTokenAddress, 
     buyTokenAddress,
@@ -153,13 +182,25 @@ export default function PriceView() {
     apiErrorCallBack});
 
   useEffect(() => {
-    if(PriceError) {
-      setErrorMessage({ status: STATUS.ERROR, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
+    if(priceData) {
+      alert(`priceData: ${stringifyBigInt(priceData)}`)
+    }
+  }, [priceData]);
+  
+  useEffect(() => {
+    if (!isWrappingTransaction(sellTokenAddress, buyTokenAddress))
+      if (PriceError) {
+        if (chainId === HARDHAT) {
+          setErrorMessage({ status: STATUS.WARNING_HARDHAT, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
+        }
+        else
+          setErrorMessage({ status: STATUS.ERROR, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
     }
   }, [PriceError]);
 
+
   function swapBuySellTokens() {
-    const tmpTokenContract: TokenContract|undefined = tradeData.buyTokenContract;
+    const tmpTokenContract: TokenContract | undefined = tradeData.buyTokenContract;
     tradeData.buyTokenContract = sellTokenContract;
     tradeData.sellTokenContract = tmpTokenContract;
 

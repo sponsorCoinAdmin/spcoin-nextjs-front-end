@@ -3,7 +3,7 @@ import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
+import { BUTTON_TYPE, ErrorMessage, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
@@ -41,6 +41,8 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
         return "API Transaction Error";
       case BUTTON_TYPE.IS_LOADING_PRICE:
         return "Fetching Best Price...";
+      case BUTTON_TYPE.NO_HARDHAT_API:
+        return "No Hardhat API Provisioning..";
       case BUTTON_TYPE.ZERO_AMOUNT: 
         return "Enter an Amount";
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
@@ -100,18 +102,16 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
     // isLoadingPrice = ${isLoadingPrice}\n
     // insufficientSellAmount() = ${insufficientSellAmount()}\n
     // insufficientSellBalance() = ${insufficientSellBalance()}`)
-    const buttonType = (
-      errorMessage ? BUTTON_TYPE.API_TRANSACTION_ERROR :
-      isLoadingPrice ? BUTTON_TYPE.IS_LOADING_PRICE : 
-      tokensRequired() ? BUTTON_TYPE.TOKENS_REQUIRED : 
-      sellTokenRequired() ? BUTTON_TYPE.SELL_TOKEN_REQUIRED : 
-      buyTokenRequired() ? BUTTON_TYPE.BUY_TOKEN_REQUIRED : 
-      amountRequired() ? BUTTON_TYPE.ZERO_AMOUNT : 
-      // insufficientSellAmount() ? BUTTON_TYPE.ZERO_AMOUNT : 
-      insufficientSellBalance() ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
+    return buttonType = (
+      errorMessage?.status  === STATUS.WARNING_HARDHAT ? BUTTON_TYPE.NO_HARDHAT_API :
+      errorMessage?.status  === STATUS.ERROR           ? BUTTON_TYPE.API_TRANSACTION_ERROR :
+      isLoadingPrice                                   ? BUTTON_TYPE.IS_LOADING_PRICE : 
+      tokensRequired()                                 ? BUTTON_TYPE.TOKENS_REQUIRED : 
+      sellTokenRequired()                              ? BUTTON_TYPE.SELL_TOKEN_REQUIRED : 
+      buyTokenRequired()                               ? BUTTON_TYPE.BUY_TOKEN_REQUIRED : 
+      amountRequired()                                 ? BUTTON_TYPE.ZERO_AMOUNT : 
+      insufficientSellBalance()                        ? BUTTON_TYPE.INSUFFICIENT_BALANCE :
       BUTTON_TYPE.SWAP)
-    // alert(`buttonType = ${buttonType}`)
-    return buttonType
   }
 
   const getButtonColor = (buttonType: BUTTON_TYPE|undefined) => {
@@ -119,9 +119,10 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
       case BUTTON_TYPE.SWAP:
         return "executeColor";
       case BUTTON_TYPE.API_TRANSACTION_ERROR:
-      case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-      case BUTTON_TYPE.SELL_ERROR_REQUIRED:
       case BUTTON_TYPE.BUY_ERROR_REQUIRED:
+      case BUTTON_TYPE.INSUFFICIENT_BALANCE:
+      case BUTTON_TYPE.NO_HARDHAT_API:
+      case BUTTON_TYPE.SELL_ERROR_REQUIRED:
         return "errorColor";
       case BUTTON_TYPE.TOKENS_REQUIRED:
       case BUTTON_TYPE.IS_LOADING_PRICE:
@@ -143,6 +144,8 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
       case BUTTON_TYPE.ZERO_AMOUNT: alert("Enter An Amount");
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE: alert("Insufficient Sell Balance");
+        break;
+      case BUTTON_TYPE.NO_HARDHAT_API: alert("No HardHat API Provisioning");
         break;
       case BUTTON_TYPE.SWAP: await validateAndSwap();
         break;
