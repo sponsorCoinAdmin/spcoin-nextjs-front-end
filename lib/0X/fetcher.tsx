@@ -146,101 +146,45 @@ function usePriceAPI({
   chainId=useChainId();
   const fetch = shouldFetch(sellTokenAddress, buyTokenAddress)
   const priceApiCall = getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount)
-                        
+
+  const handleError = (data: any) => {
+    const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data);
+    apiErrorCallBack({ source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
+  };
+
+  const processData = (data: any, transactionType: TRANSACTION_TYPE) => {
+    logSuccess(data, transactionType);
+    transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+    setBuyAmount(data.buyAmount || 0n) : 
+    setSellAmount(data.sellAmount || 0n);
+    setErrorMessage(undefined);
+  }
+
+  const logSuccess = (data: any, transactionType: TRANSACTION_TYPE) => {
+    const type = transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? "SELL_EXACT_OUT" : "BUY_EXACT_IN";
+    console.debug(`AFTER fetcher data = ${JSON.stringify(data, null, 2)}`);
+    console.debug(`SUCCESS ${type}: useSWR.fetcher data.price = ${data.price}`);
+    console.debug(`data.price = ${data.price}\ndata.sellAmount = ${data.sellAmount}\ndata.buyAmount = ${data.buyAmount}`);
+  };
+             
   return useSWR(
     () => shouldFetch(sellTokenAddress, buyTokenAddress) ?
-    getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) :
-    null,
+      getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
     fetcher,
     {
       onSuccess: (data) => {
-        if (!data.code) {
-          // console.log(dataMsg)
-          console.debug(`AFTER fetcher data = ${JSON.stringify(data,null,2)}`)
-          transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-            console.debug(`SUCCESS SELL_EXACT_OUT: useSWR.fetcher data.price = ${data.price}`):
-            console.debug(`SUCCESS BUY_EXACT_IN: useSWR.fetcher data.price = ${data.price}`);
-          console.debug(`data.price      = ${data.price}\n
-                         data.sellAmount = ${data.sellAmount}\n
-                         data.buyAmount  = ${data.buyAmount}`);
-            
-          transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-            
-            setBuyAmount(data.buyAmount || 0n) : 
-            setSellAmount(data.sellAmount || 0n);
-            setErrorMessage(undefined)
+        if (data.code) {
+          handleError(data);
+          return;
         }
-        else {
-          if (isWrappingTransaction(sellTokenAddress, buyTokenAddress)) {
-
-            // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
-            if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-              exchangeContext.tradeData.sellAmount = sellAmount
-              setBuyAmount(sellAmount);
-            }
-            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-              exchangeContext.tradeData.sellAmount = buyAmount
-              setSellAmount(buyAmount);
-            }
-          }
-          else if (chainId != HARDHAT) {
-            if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-              exchangeContext.tradeData.sellAmount = buyAmount
-              setBuyAmount(0n);
-            }
-            else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-              exchangeContext.tradeData.sellAmount = sellAmount
-              setSellAmount(BigInt(0));
-            }
-          }
-          else { // Return Error
-            const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data)
-              apiErrorCallBack({ source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
-          }
-        
-        }
+        processData(data, transactionType);
       },
     // if (isActiveAccountAddress(sellTokenAddress) || isActiveAccountAddress(buyTokenAddress)) {
       onError: (error) => {
-        // if (isWrappingTransaction(sellTokenAddress, buyTokenAddress)) {
-
-        //   // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
-        //   if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-        //     exchangeContext.tradeData.sellAmount = sellAmount
-        //     setBuyAmount(sellAmount);
-        //   }
-        //   else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-        //     exchangeContext.tradeData.sellAmount = buyAmount
-        //     setSellAmount(buyAmount);
-        //   }
-        // }
-        // else if (chainId != HARDHAT) {
-        //   if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-        //     exchangeContext.tradeData.sellAmount = buyAmount
-        //     setBuyAmount(0n);
-        //   }
-        //   else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-        //     exchangeContext.tradeData.sellAmount = sellAmount
-        //     setSellAmount(BigInt(0));
-        //   }
-        // }
-    }
-
+        handleError(error);
+      }
      }
   );
-  
-  if (isWrappingTransaction(sellTokenAddress, buyTokenAddress)) {
-    // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
-    if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-      exchangeContext.tradeData.sellAmount = sellAmount
-      setBuyAmount(sellAmount);
-    }
-    else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-      exchangeContext.tradeData.sellAmount = buyAmount
-      setSellAmount(buyAmount);
-    }
-  }
-
 }
 
 export {
