@@ -1,4 +1,4 @@
-import PriceView from "./Price";
+import PriceView from "./Price/index";
 import { EXCHANGE_STATE } from "@/lib/structure/types";
 import React from 'react';
 

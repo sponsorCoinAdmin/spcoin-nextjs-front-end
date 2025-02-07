@@ -1,5 +1,5 @@
 // 'use server'
-import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT } from '@/lib/structure/types'
+import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
@@ -8,19 +8,24 @@ import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
 import { useAccount, useChainId } from "wagmi";
 
+// Constants
 const SELL_AMOUNT_ZERO = 100;
 const BUY_AMOUNT_ZERO = 200;
 const ERROR_0X_RESPONSE = 300;
-let chainId:number = exchangeContext.tradeData.chainId;
+const WRAPPED_ETHEREUM_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
-
-const NEXT_PUBLIC_API_SERVER:string|undefined = process.env.NEXT_PUBLIC_API_SERVER
-
+// Configurations
+const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER;
 const apiPriceBase = "/0X/price";
 const apiQuoteBase = "/0X/quote";
-let apiCall:string;
 
-const WRAPPED_ETHEREUM_ADDRESS ="0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+// The chain ID can be dynamically obtained when needed
+let chainId = exchangeContext.tradeData.chainId || 1; // Default to 1 if undefined
+
+// API Call Reference
+let apiCall: string | undefined;
+
+
 
 function validTokenOrNetworkCoin(address: any): any {
   if (isActiveAccountAddress(address)){
@@ -113,17 +118,16 @@ const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boo
 };
 
 type Props = {
-  sellTokenAddress:Address|undefined,
-  buyTokenAddress:Address|undefined,
-  transactionType:TRANSACTION_TYPE,
-  sellAmount:bigint,
-  buyAmount:bigint,
-  setPriceResponse: (data:PriceResponse) => void,
-  setSellAmount: (sellAmount:bigint) => void,
-  setBuyAmount: (buyAmount:bigint) => void,
-  setErrorMessage: (errMsg:ErrorMessage|undefined) => void
-  apiErrorCallBack: (apiErrorObj:any) => void
-}
+  sellTokenAddress?: Address;
+  buyTokenAddress?: Address;
+  transactionType: TRANSACTION_TYPE;
+  sellAmount: bigint;
+  buyAmount: bigint;
+  setSellAmount: (amount: bigint) => void;
+  setBuyAmount: (amount: bigint) => void;
+  setErrorMessage: (message?: ErrorMessage) => void;
+  apiErrorCallBack: (error: unknown) => void;
+};
 
 function usePriceAPI({
     sellTokenAddress, 
@@ -131,7 +135,6 @@ function usePriceAPI({
     transactionType,
     sellAmount,
     buyAmount,
-    setPriceResponse,
     setSellAmount,
     setBuyAmount,
     setErrorMessage,
@@ -161,11 +164,7 @@ function usePriceAPI({
                          data.sellAmount = ${data.sellAmount}\n
                          data.buyAmount  = ${data.buyAmount}`);
             
-          setPriceResponse(data);
-
           transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-            // setBuyAmount(data.price) : setSellAmount(data.price);
-            // setBuyAmount(BigInt(data.price)) : setSellAmount(BigInt(data.price));
             
             setBuyAmount(data.buyAmount || 0n) : 
             setSellAmount(data.sellAmount || 0n);
@@ -229,6 +228,7 @@ function usePriceAPI({
 
      }
   );
+  
   if (isWrappingTransaction(sellTokenAddress, buyTokenAddress)) {
     // alert(`ERROR:sellTokenAddress = ${sellTokenAddress}\nbuyTokenAddress = ${buyTokenAddress}\nsellAmount = ${sellAmount}`)
     if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
