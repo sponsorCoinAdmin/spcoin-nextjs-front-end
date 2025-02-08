@@ -3,9 +3,8 @@ import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
 import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
+import { BUTTON_TYPE, ErrorMessage, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { useState } from 'react';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 
@@ -13,19 +12,16 @@ type Props = {
   isLoadingPrice: boolean,
   errorMessage:ErrorMessage|undefined,
   setErrorMessage: (errorMessage:ErrorMessage|undefined) => void,
-  setResetAmounts: (resetAmounts:boolean) => void,
-  toggleButton: boolean
+  setResetAmounts: (resetAmounts:boolean) => void
 }
 
-const EC:ExchangeContext = exchangeContext
 const tradeData:TradeData = exchangeContext.tradeData
 
-const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton}:Props) => {
+const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts}:Props) => {
   const tokenContract:TokenContract|undefined = tradeData.sellTokenContract as TokenContract | undefined;
   const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
   let buttonType:BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
 
-  // alert(`toggleButton = ${toggleButton}`)
 
   // const insufficientSellAmount = () => {
   //   let noTradingAmount:boolean = false;
@@ -100,20 +96,15 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
     return tradeData.sellAmount === 0n && tradeData.buyAmount === 0n
   }
 
-  const setButtonType = (_buttonType:BUTTON_TYPE):BUTTON_TYPE => {
-    buttonType = _buttonType;
-    return buttonType;
-  }
-
   const getButtonType = ():BUTTON_TYPE => {
     // alert(`"getButtonType()\n
     // errorMessage = ${errorMessage}\n
     // isLoadingPrice = ${isLoadingPrice}\n
     // insufficientSellAmount() = ${insufficientSellAmount()}\n
     // insufficientSellBalance() = ${insufficientSellBalance()}`)
-    return (
+    return buttonType = (
       errorMessage?.status  === STATUS.WARNING_HARDHAT ? BUTTON_TYPE.NO_HARDHAT_API :
-      errorMessage?.status  === STATUS.ERROR_API_PRICE ? BUTTON_TYPE.API_TRANSACTION_ERROR :
+      errorMessage?.status  === STATUS.ERROR_API_PRICE           ? BUTTON_TYPE.API_TRANSACTION_ERROR :
       isLoadingPrice                                   ? BUTTON_TYPE.IS_LOADING_PRICE : 
       tokensRequired()                                 ? BUTTON_TYPE.TOKENS_REQUIRED : 
       sellTokenRequired()                              ? BUTTON_TYPE.SELL_TOKEN_REQUIRED : 
@@ -180,10 +171,10 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
     // else
     await swap();
     setResetAmounts(true);
-    setButtonType(BUTTON_TYPE.TOKENS_REQUIRED)
+    buttonType = BUTTON_TYPE.TOKENS_REQUIRED
   }
 
-  setButtonType(getButtonType())
+  buttonType = getButtonType()
   
   return (
     <div>
@@ -192,7 +183,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
         // disabled={true}
         type="button"
         className={styles["exchangeButton"] + " " + styles[getButtonColor(buttonType)]}>
-        { getButtonText(buttonType) }
+        {getButtonText(buttonType)}
       </button>
     </div>
   )

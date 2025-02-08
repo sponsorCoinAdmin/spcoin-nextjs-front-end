@@ -79,7 +79,7 @@ export default function Dialog({priceInputContainType, showDialog, setShowDialog
 
         // const msg = `priceInputContainType = ${priceInputContainType === 0 ?"SELL":"BUY"}\n`+
         //         `tokenAddress = ${tokenAddress}\n` +
-        //         `sellTokenAddress = ${exchangeContext?.sellTokenContract?.address}\n` +
+        //         `sellTokenAddress = ${exchangeContext?.tradeData.sellTokenContract?.address}\n` +
         //         `buyTokenAddress = ${exchangeContext?.tradeData.buyTokenContract?.address}\n` +
         //         `isDuplicateToken = ${isDuplicateToken}`
         // alert(msg);

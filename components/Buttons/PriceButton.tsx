@@ -12,10 +12,11 @@ type Props = {
     isLoadingPrice: boolean,
     errorMessage:ErrorMessage|undefined,
     setErrorMessage: (errorMessage:ErrorMessage|undefined) => void,
-    setResetAmounts: (resetAmounts:boolean) => void
+    setResetAmounts: (resetAmounts:boolean) => void,
+    toggleButton: boolean
   }
 
-const PriceButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts}:Props) => {    
+const PriceButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton}:Props) => {    
     const ACTIVE_ACCOUNT = useAccount()
     const [ displayDumpContextButton, setDisplayDumpContextButton ] = useState<boolean>(exchangeContext.test.dumpContextButton)
     const [ walletAccount, setWalletAccount ] = useState<Address|undefined>(undefined);
@@ -37,7 +38,8 @@ const PriceButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmo
                 (<ExchangeButton isLoadingPrice={isLoadingPrice}
                                  errorMessage={errorMessage}
                                  setErrorMessage={setErrorMessage}
-                                 setResetAmounts={setResetAmounts}/>)
+                                 setResetAmounts={setResetAmounts}
+                                 toggleButton={toggleButton}/>)
             }
             {!displayDumpContextButton || <DumpContextButton />}
         </div>

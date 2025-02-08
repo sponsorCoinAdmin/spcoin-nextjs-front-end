@@ -1,12 +1,13 @@
 'use client'
 import { getInitialContext, initialContext } from '@/lib/network/initialize/defaultNetworkSettings';
+import { ExchangeContext } from "@/lib/structure/types";
 
 let {exchangeContext, exchangeContextMap} = initialContext ();
 
 const resetNetworkContext = (chain:any) => {
     const networkName = chain?.name.toLowerCase();
     // console.debug("resetNetworkContext: newNetworkName = " + networkName);
-    exchangeContext = getInitialContext(chain)
+    const exchangeContext:ExchangeContext = getInitialContext(chain)
     // console.debug("resetNetworkContext: exchangeContext.network.name = " + exchangeContext.network.name);
     // console.debug(`UPDATING NETWORK to ${networkName}`);
 }

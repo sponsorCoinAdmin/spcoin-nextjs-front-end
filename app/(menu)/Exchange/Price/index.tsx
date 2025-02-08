@@ -32,6 +32,7 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
+  const [ toggleButton, setToggleButton ] = useState<boolean>(false);
 
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
@@ -43,11 +44,16 @@ export default function PriceView() {
     tradeData.sellAmount = sellAmount;
     tradeData.buyAmount = buyAmount;
     tradeData.slippage = slippage;
-    tradeData.sellTokenContract = sellTokenContract;
-    tradeData.buyTokenContract = buyTokenContract;
     tradeData.transactionType = transactionType;
     tradeData.signer = signer;
+  }, [sellAmount, buyAmount, slippage, transactionType, signer]);
+
+  useEffect(() => {
+    tradeData.sellTokenContract = sellTokenContract;
+    tradeData.buyTokenContract = buyTokenContract;
+    setToggleButton(!toggleButton)
   }, [sellAmount, buyAmount, slippage, sellTokenContract, buyTokenContract, transactionType, signer]);
+
 
   useEffect(() => {
     if (resetAmounts) {
@@ -80,7 +86,7 @@ export default function PriceView() {
 
   const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
     setErrorMessage({
-      status: STATUS.ERROR,
+      status: STATUS.ERROR_API_PRICE,
       source: apiErrorObj.source,
       errCode: apiErrorObj.errCode,
       msg: stringifyBigInt(apiErrorObj.msg),
@@ -102,7 +108,7 @@ export default function PriceView() {
   useEffect(() => {
     if (PriceError && !isWrapTransaction) {
       setErrorMessage({
-        status: chainId === HARDHAT ? STATUS.WARNING_HARDHAT : STATUS.ERROR,
+        status: chainId === HARDHAT ? STATUS.WARNING_HARDHAT : STATUS.ERROR_API_PRICE,
         source: "PriceError: ",
         errCode: PriceError.errCode,
         msg: PriceError.errMsg,
@@ -139,7 +145,12 @@ export default function PriceView() {
           setTokenContractCallback={setBuyTokenContract}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
-        <PriceButton isLoadingPrice={isLoadingPrice} errorMessage={errorMessage} setErrorMessage={setErrorMessage} setResetAmounts={setResetAmounts} />
+        <PriceButton isLoadingPrice={isLoadingPrice} 
+                     errorMessage={errorMessage}
+                     setErrorMessage={setErrorMessage}
+                     setResetAmounts={setResetAmounts}
+                     toggleButton={toggleButton}
+        />
         <AffiliateFee priceResponse={priceData} buyTokenContract={buyTokenContract} />
       </div>
       <FeeDisclosure />

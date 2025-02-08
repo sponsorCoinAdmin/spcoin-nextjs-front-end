@@ -28,13 +28,11 @@ const initialContext = () => {
 const getInitialContext = (chain:any | number): ExchangeContext => {
   const chainId:number = chain || 1;
   const initialContextMap = getInitialContextMap(chainId);
-  const initialContext = {
+  const initialContext:ExchangeContext = {
       activeAccountAddress : undefined,
       network: initialContextMap.get("networkHeader") as NetworkElement,
       recipientAccount: initialContextMap.get("defaultRecipient") as AccountRecord | undefined,
       agentAccount: initialContextMap.get("defaultAgent") as AccountRecord | undefined,
-      sellTokenContract: initialContextMap.get("defaultSellToken") as TokenContract | undefined,
-      buyTokenContract: initialContextMap.get("defaultBuyToken") as TokenContract | undefined,
       tradeData: defaultInitialTradeData,
       spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
       test : {dumpContextButton:false}

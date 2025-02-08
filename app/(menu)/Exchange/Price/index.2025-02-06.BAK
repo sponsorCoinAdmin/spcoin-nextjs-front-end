@@ -133,7 +133,7 @@ export default function PriceView() {
     // alert(`${stringifyBigInt(apiErrorObj)}`);
     // console.error(`${stringifyBigInt(apiErrorObj)}`);
     setErrorMessage({
-      status: STATUS.ERROR, 
+      status: STATUS.ERROR_API_PRICE, 
       source: apiErrorObj.source,
       errCode: apiErrorObj.errCode,
       msg: stringifyBigInt(apiErrorObj.msg) });
@@ -196,7 +196,7 @@ export default function PriceView() {
           setErrorMessage({ status: STATUS.WARNING_HARDHAT, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
         }
         else
-          setErrorMessage({ status: STATUS.ERROR, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
+          setErrorMessage({ status: STATUS.ERROR_API_PRICE, source: "PriceError: ", errCode: PriceError.errCode, msg: PriceError.errMsg });
     }
   }, [PriceError]);
 

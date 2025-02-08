@@ -1,12 +1,12 @@
 // 'use server'
-import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT } from '@/lib/structure/types';
+import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
 import { isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
-import { useAccount, useChainId } from "wagmi";
+import { useChainId } from "wagmi";
 
 // Constants
 const SELL_AMOUNT_ZERO = 100;
@@ -49,11 +49,10 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   }
 
 try {
-    // console.debug("fetcher([endpoint = " + endpoint + ",params = " + JSON.stringify(params,null,2) + "]")
     const query = qs.stringify(params);
-    apiCall = endpoint + '?' + query;
+    const apiCall = `${endpoint}?${query}`;
     let result = fetch(`${apiCall}`).then((res) => res.json());
-    console.debug(`fetcher:apiCall ${apiCall}`);
+    console.debug(`fetcher: apiCall ${apiCall}`);
     return result
   }
   catch (e) {
@@ -97,18 +96,6 @@ const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined
                           // expectedSlippage: slippage
                         },
                       ];
-  if(priceApiCall) {
-    // const apiDataResponse = {
-    //   transactionType:(transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? `SELL_EXACT_OUT` : `BUY_EXACT_IN`,
-    //   sellTokenAddress:sellTokenAddress,
-    //   buyTokenAddress:buyTokenAddress,
-    //   sellAmount:sellAmount,
-    //   buyAmount:buyAmount,
-    //   priceApiCall:priceApiCall
-    // }
-    // alert(`apiDataResponse = ${stringifyBigInt(apiDataResponse)}`)
-    // alert(`priceApiCall = ${stringifyBigInt(priceApiCall)}`)
-  }
   return priceApiCall;
 }
 
@@ -126,7 +113,7 @@ type Props = {
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
   setErrorMessage: (message?: ErrorMessage) => void;
-  apiErrorCallBack: (error: unknown) => void;
+  apiErrorCallBack: (error: ErrorMessage) => void;
 };
 
 function usePriceAPI({
@@ -141,15 +128,13 @@ function usePriceAPI({
     apiErrorCallBack
   } : Props) {
 
+  chainId=useChainId();
   sellTokenAddress = mapAccountAddrToWethAddr(sellTokenAddress as Address)
   buyTokenAddress = mapAccountAddrToWethAddr(buyTokenAddress as Address)
-  chainId=useChainId();
-  const fetch = shouldFetch(sellTokenAddress, buyTokenAddress)
-  const priceApiCall = getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount)
 
   const handleError = (data: any) => {
     const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data);
-    apiErrorCallBack({ source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
+    apiErrorCallBack({ status:STATUS.ERROR_API_PRICE, source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
   };
 
   const processData = (data: any, transactionType: TRANSACTION_TYPE) => {
@@ -168,22 +153,13 @@ function usePriceAPI({
   };
              
   return useSWR(
-    () => shouldFetch(sellTokenAddress, buyTokenAddress) ?
-      getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
+    () => shouldFetch(sellTokenAddress, buyTokenAddress)
+      ? getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
     fetcher,
     {
-      onSuccess: (data) => {
-        if (data.code) {
-          handleError(data);
-          return;
-        }
-        processData(data, transactionType);
-      },
-    // if (isActiveAccountAddress(sellTokenAddress) || isActiveAccountAddress(buyTokenAddress)) {
-      onError: (error) => {
-        handleError(error);
-      }
-     }
+      onSuccess: (data) => (data.code ? handleError(data) : processData(data, transactionType)),
+      onError: (error) => {handleError(error)}
+    }
   );
 }
 
