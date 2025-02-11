@@ -57,7 +57,7 @@ const priceInputContainer = ({
 
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
-  const [tokenBalance, setTokenBalance] = useState<string>();
+  const [formattedBalance, setFormattedBalance] = useState<string>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE
       ? tradeData?.sellTokenContract
@@ -75,7 +75,6 @@ const priceInputContainer = ({
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
-    // alert (` balance = ${balance}\formattedNetworkBalance = ${stringifyBigInt(balance)}`)
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       exchangeContext.tradeData.sellTokenContract = tokenContract :
@@ -121,16 +120,17 @@ const priceInputContainer = ({
   }
 
   useEffect(() => {
-    if (TOKEN_CONTRACT_ADDRESS) {
+    if (TOKEN_CONTRACT_ADDRESS && tokenContract) {
       balanceInWei = getBalanceInWei(TOKEN_CONTRACT_ADDRESS)
       const decimals:number = tokenContract?.decimals || 0;
       balanceInWei.then(() => {
         if (balanceInWei) {
+          tokenContract.balance = balanceInWei;
           const formattedBalance = formatDecimals(balanceInWei, decimals);
+          setFormattedBalance(formattedBalance);
           console.log(`Address: ${TOKEN_CONTRACT_ADDRESS} => balanceInWei: ${stringifyBigInt(balanceInWei)}\n
                 Address: ${TOKEN_CONTRACT_ADDRESS} => decimals        : ${decimals}\n
                 Address: ${TOKEN_CONTRACT_ADDRESS} => formattedBalance: ${formattedBalance}`)
-                setTokenBalance(formattedBalance);
         }
       })
     }
@@ -182,11 +182,10 @@ const priceInputContainer = ({
         tokenContract={tokenContract}
         setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
-      <div className={styles["assetBalance"]}> Balance: {tokenBalance || "0.0"}</div>
+      <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
       {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract} /> : null}
-      {/* BAL: {bal} */}
     </div>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
-import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
@@ -21,20 +20,8 @@ const tradeData:TradeData = exchangeContext.tradeData
 
 const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton}:Props) => {
   const tokenContract:TokenContract|undefined = tradeData.sellTokenContract as TokenContract | undefined;
-  const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
+  // const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
   let buttonType:BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
-
-  // alert(`toggleButton = ${toggleButton}`)
-
-  // const insufficientSellAmount = () => {
-  //   let noTradingAmount:boolean = false;
-  //   try {
-  //     noTradingAmount = ( tradeData.sellAmount.toString() === "0" )
-  //   } catch(err:any) {
-  //     console.debug(`ERROR: ExchangeButton.insufficientSellAmount: ${err.message}`)
-  //   }
-  //   return noTradingAmount;
-  // }
 
   const getButtonText = (buttonType: BUTTON_TYPE) => {
     switch(buttonType) {
@@ -69,7 +56,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
      try {
       // console.debug(`EXCHANGE_BUTTON.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
       const tradeAmount = tradeData.sellAmount;
-      const sellTradeBalance = sellBalance || BigInt(0);
+      const sellTradeBalance = tradeData.sellTokenContract?.balance || 0n;
       insufficientBalance = sellTradeBalance <  tradeAmount
 
       console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${sellTradeBalance}"`);
@@ -183,8 +170,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
   }
 
   setButtonType(getButtonType())
-  
-  return (
+    return (
     <div>
       <button
         onClick={buttonClick}

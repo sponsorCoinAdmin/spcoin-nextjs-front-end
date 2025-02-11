@@ -3,6 +3,7 @@ import styles from '@/styles/Exchange.module.css';
 import { openDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 type Props = {
     priceInputContainType: CONTAINER_TYPE,
@@ -22,7 +23,7 @@ const AssetSelect = ({priceInputContainType, tokenContract, setDecimalAdjustedCo
             {tokenContract?
             <>
                 <div className={styles["assetSelect"]}>
-                    <img alt={tokenContract?.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={tokenContract?.img} onClick={() => alert("sellTokenContract " + JSON.stringify(tokenContract,null,2))}/>
+                    <img alt={tokenContract?.name} className="h-9 w-9 mr-2 rounded-md cursor-pointer" src={tokenContract?.img} onClick={() => alert("sellTokenContract " + stringifyBigInt(tokenContract))}/>
                     {tokenContract?.symbol}
                     <DownOutlined onClick={() => openDialog()}/>
                 </div>
