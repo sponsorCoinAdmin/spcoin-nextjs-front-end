@@ -2,11 +2,10 @@ import React, { useEffect, useState } from "react";
 
 // External Libraries
 import { parseUnits } from "ethers";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount } from "wagmi";
 import { Address } from "viem";
 
 // Wagmi & Custom Hooks
-import useWagmiERC20Balances from "@/components/ERC20/useWagmiERC20Balances";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Context & Styles
@@ -47,9 +46,7 @@ const priceInputContainer = ({
   updateAmount,
 }: Props) => {
 
-
   // Hooks
-  const ACTIVE_ACCOUNT = useAccount();
   const tradeData: TradeData = exchangeContext?.tradeData;
   
   // Determine initial state based on price input type
@@ -67,34 +64,14 @@ const priceInputContainer = ({
       : tradeData?.buyTokenContract
   );
 
+  const ACTIVE_ACCOUNT = useAccount();
+  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address
   const debouncedAmount = useDebounce(amount);
-
-  // Token balance and decimals
-  // let { formattedBalance, decimals } = useWagmiERC20Balances(
-  //   "***priceInputContainer",
-  //   tokenContract?.address
-  // );
-
-  // Fetch balance using Wagmi `useBalance`
-  const balObj = useBalance({ address: tokenContract?.address });
-
-  useEffect(() => {
-    if (balObj?.data) {
-      console.debug(
-        `Address: ${tokenContract?.address}
-         BAL.data: ${stringifyBigInt(balObj?.data)}`
-      );
-    }
-  }, [balObj]);
 
   useEffect(() =>  {
     const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
     setFormattedAmount(formattedAmount)
   }, []);
-
-  // useEffect(() => {
-  //   setTokenBalance(formattedBalance)
-  // }, [formattedBalance])
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
@@ -133,7 +110,6 @@ const priceInputContainer = ({
   }, [updateAmount]);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////
-  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address
   // const decimals:number|undefined = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
   const provider = exchangeContext.tradeData.signer?.provider
   let balanceInWei:any = 0n;
