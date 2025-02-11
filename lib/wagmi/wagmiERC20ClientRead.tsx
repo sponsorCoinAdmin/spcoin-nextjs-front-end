@@ -155,8 +155,8 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
   return networkResponse
 }
 
-const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
-  if (val === undefined) return undefined;
+const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined):string => {
+  if (val === undefined) return "";
   let bigInt = BigInt(val)
   return (decimals !== undefined) ? formatUnits(bigInt, decimals) : bigInt.toString()
 }

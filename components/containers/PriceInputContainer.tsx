@@ -1,65 +1,100 @@
-import React, { useEffect, useState } from 'react';
-import { exchangeContext } from "@/lib/context";
+import React, { useEffect, useState } from "react";
 
-import styles from '@/styles/Exchange.module.css';
-import AssetSelect from './AssetSelect';
-import { CONTAINER_TYPE, TokenContract, TRANSACTION_TYPE } from '@/lib/structure/types';
-import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
-import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from '@/lib/spCoin/utils';
+// External Libraries
 import { parseUnits } from "ethers";
-import { useAccount, useBalance, useWatchBlockNumber } from 'wagmi';
-import { useDebounce } from '@/lib/hooks/useDebounce';
-import useWagmiERC20Balances from '@/components/ERC20/useWagmiERC20Balances'
-import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
-import AddSponsorButton from '../Buttons/AddSponsorButton';
-import { isActiveAccountAddress, isWrappingTransaction } from '@/lib/network/utils';
-import { config } from '@/lib/wagmi/wagmiConfig';
-import { getBalance } from '@wagmi/core';
+import { useAccount, useBalance } from "wagmi";
+import { Address } from "viem";
+
+// Wagmi & Custom Hooks
+import useWagmiERC20Balances from "@/components/ERC20/useWagmiERC20Balances";
+import { useDebounce } from "@/lib/hooks/useDebounce";
+
+// Context & Styles
+import { exchangeContext } from "@/lib/context";
+import styles from "@/styles/Exchange.module.css";
+
+// Components
+import AddSponsorButton from "../Buttons/AddSponsorButton";
+import AssetSelect from "./AssetSelect";
+import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
+
+// Utilities
+import { isWrappingTransaction } from "@/lib/network/utils";
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from "@/lib/spCoin/utils";
+import { formatDecimals } from "@/lib/wagmi/wagmiERC20ClientRead";
+import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
+
+// Types & Constants
+import { CONTAINER_TYPE, TokenContract, TradeData, TRANSACTION_TYPE } from "@/lib/structure/types";
 
 type Props = {
-  priceInputContainType: CONTAINER_TYPE,
-  updateAmount: bigint,
-  activeContract: TokenContract | undefined, 
-  slippage:number,
-  setCallbackAmount: (amount:bigint) => void,
-  setTransactionType:(transactionType:TRANSACTION_TYPE) => void,
-  setTokenContractCallback: (tokenContract:TokenContract|undefined) => void,
-}
+  activeContract: TokenContract | undefined;
+  priceInputContainType: CONTAINER_TYPE;
+  setCallbackAmount: (amount: bigint) => void;
+  setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
+  setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
+  slippage: number;
+  updateAmount: bigint;
+};
 
-const priceInputContainer = ({priceInputContainType,
-                              updateAmount,
-                              activeContract,
-                              setCallbackAmount,
-                              slippage,
-                              setTransactionType,
-                              setTokenContractCallback}:Props) => {
+const priceInputContainer = ({
+  activeContract,
+  priceInputContainType,
+  setCallbackAmount,
+  setTokenContractCallback,
+  setTransactionType,
+  slippage,
+  updateAmount,
+}: Props) => {
+
+
+  // Hooks
   const ACTIVE_ACCOUNT = useAccount();
-  const initialAmount:bigint|undefined = priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
-                                         exchangeContext?.tradeData?.sellAmount :
-                                         exchangeContext?.tradeData?.buyAmount;
+  const tradeData: TradeData = exchangeContext?.tradeData;
+  
+  // Determine initial state based on price input type
+  const initialAmount: bigint | undefined =
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      ? tradeData?.sellAmount
+      : tradeData?.buyAmount;
+
   const [amount, setAmount] = useState<bigint>(initialAmount);
-  const [formattedAmount, setFormattedAmount] = useState<string|undefined>();
-  const [tokenContract, setTokenContract] = useState<TokenContract|undefined>(activeContract);
-  const debouncedAmount = useDebounce(amount);
-  const [blockNumber, setBlockNumber] = useState<bigint>(0n);
+  const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [tokenBalance, setTokenBalance] = useState<string>();
-  const { formattedBalance } = useWagmiERC20Balances("***priceInputContainer", tokenContract?.address);
+  const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
+    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      ? tradeData?.sellTokenContract
+      : tradeData?.buyTokenContract
+  );
+
+  const debouncedAmount = useDebounce(amount);
+
+  // Token balance and decimals
+  // let { formattedBalance, decimals } = useWagmiERC20Balances(
+  //   "***priceInputContainer",
+  //   tokenContract?.address
+  // );
+
+  // Fetch balance using Wagmi `useBalance`
+  const balObj = useBalance({ address: tokenContract?.address });
+
+  useEffect(() => {
+    if (balObj?.data) {
+      console.debug(
+        `Address: ${tokenContract?.address}
+         BAL.data: ${stringifyBigInt(balObj?.data)}`
+      );
+    }
+  }, [balObj]);
 
   useEffect(() =>  {
     const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
     setFormattedAmount(formattedAmount)
   }, []);
 
-  useEffect(() => {
-    setTokenBalance(formattedBalance)
-  }, [formattedBalance])
-
-  useWatchBlockNumber({
-    emitOnBegin: true, 
-    onBlockNumber(blockNumber) {
-      setBlockNumber(blockNumber);
-    },
-  })
+  // useEffect(() => {
+  //   setTokenBalance(formattedBalance)
+  // }, [formattedBalance])
 
   useEffect(() =>  {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
@@ -88,14 +123,43 @@ const priceInputContainer = ({priceInputContainType,
   }, [debouncedAmount])
 
   useEffect(() =>  {
+    // console.debug(`updateAmount = ${updateAmount}\nformattedBalance = ${formattedBalance}`)
     const decimals:number = activeContract?.decimals || 0;
     const stringValue:string = getValidBigIntToFormattedPrice(updateAmount, decimals)
     if (stringValue !== "") {
       setFormattedAmount(stringValue);
     }
-    if (updateAmount) 
-      setAmount(updateAmount);
+    setAmount(updateAmount);
   }, [updateAmount]);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////
+  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address
+  // const decimals:number|undefined = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
+  const provider = exchangeContext.tradeData.signer?.provider
+  let balanceInWei:any = 0n;
+  // let formattedBalance:string|undefined
+
+  const getBalanceInWei = async (address: any) => {
+    balanceInWei = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
+    return balanceInWei
+  }
+
+  useEffect(() => {
+    if (TOKEN_CONTRACT_ADDRESS) {
+      balanceInWei = getBalanceInWei(TOKEN_CONTRACT_ADDRESS)
+      const decimals:number = tokenContract?.decimals || 0;
+      balanceInWei.then(() => {
+        if (balanceInWei) {
+          const formattedBalance = formatDecimals(balanceInWei, decimals);
+          console.log(`Address: ${TOKEN_CONTRACT_ADDRESS} => balanceInWei: ${stringifyBigInt(balanceInWei)}\n
+                Address: ${TOKEN_CONTRACT_ADDRESS} => decimals        : ${decimals}\n
+                Address: ${TOKEN_CONTRACT_ADDRESS} => formattedBalance: ${formattedBalance}`)
+                setTokenBalance(formattedBalance);
+        }
+      })
+    }
+  }, [TOKEN_CONTRACT_ADDRESS, amount]);
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
   const  setDecimalAdjustedContract = (newTokenContract: TokenContract|undefined) => {
     // console.debug(`priceInputContainer.setDecimalAdjustedContract(priceInputContainer:${stringifyBigInt(newTokenContract)})`)
@@ -114,7 +178,6 @@ const priceInputContainer = ({priceInputContainType,
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT:
       exchangeContext.tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
-                                           
   }
 
   const setStringToBigIntStateValue = (stringValue:string) => {
@@ -126,27 +189,28 @@ const priceInputContainer = ({priceInputContainType,
     setAmount(bigIntValue);
   }
 
-  const buySellText = isWrappingTransaction( exchangeContext.tradeData.sellTokenContract?.address,
-                                            exchangeContext.tradeData.buyTokenContract?.address) ? 
+  const buySellText = isWrappingTransaction(exchangeContext.tradeData.sellTokenContract?.address,
+    exchangeContext.tradeData.buyTokenContract?.address) ?
     priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
-      exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage*100}%` :
-        priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippage*100}%`    : "You Exactly Receive"
-  
+    exchangeContext.tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+      priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage * 100}%` :
+      priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippage * 100}%` : "You Exactly Receive"
+
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
       <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""}
         onChange={(e) => { setTextInputValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
-      <AssetSelect  priceInputContainType={priceInputContainType}
-                    tokenContract={tokenContract} 
-                    setDecimalAdjustedContract={setDecimalAdjustedContract} />
+      <AssetSelect priceInputContainType={priceInputContainType}
+        tokenContract={tokenContract}
+        setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {tokenBalance || "0.0"}</div>
-      {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? 
+      {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
-        <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract}/> : null}
+        <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract} /> : null}
+      {/* BAL: {bal} */}
     </div>
   )
 }

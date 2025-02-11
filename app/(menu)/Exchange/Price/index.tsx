@@ -22,7 +22,6 @@ export default function PriceView() {
   const signer = useEthersSigner();
   const chainId = useChainId();
   const tradeData: TradeData = exchangeContext.tradeData;
-
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
   const [slippage, setSlippage] = useState<number>(tradeData.slippage);
@@ -32,7 +31,7 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
-  const [ toggleButton, setToggleButton ] = useState<boolean>(false);
+  const [toggleButton,setToggleButton ] = useState<boolean>(false);
 
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
@@ -145,11 +144,12 @@ export default function PriceView() {
           setTokenContractCallback={setBuyTokenContract}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
-        <PriceButton isLoadingPrice={isLoadingPrice} 
-                     errorMessage={errorMessage}
-                     setErrorMessage={setErrorMessage}
-                     setResetAmounts={setResetAmounts}
-                     toggleButton={toggleButton}
+        <PriceButton 
+          isLoadingPrice={isLoadingPrice}
+          errorMessage={errorMessage}
+          setErrorMessage={setErrorMessage}
+          setResetAmounts={setResetAmounts}
+          toggleButton={toggleButton}
         />
         <AffiliateFee priceResponse={priceData} buyTokenContract={buyTokenContract} />
       </div>

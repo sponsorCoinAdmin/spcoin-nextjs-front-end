@@ -94,13 +94,6 @@ function App() {
           Hide Context
         </button>
       </div>
-      <div>
-        <button
-          onClick={toggle}
-          type="button">
-          Toggle Dump Button On = {DISPLAY_CONTEXT_BUTTON.toString()}
-        </button>
-      </div>
 
       <p>{EXCHANGE_CONTEXT}</p>
 

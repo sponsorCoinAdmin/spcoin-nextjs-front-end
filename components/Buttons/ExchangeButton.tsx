@@ -5,7 +5,6 @@ import useERC20WagmiBalances from '../ERC20/useWagmiERC20Balances';
 import { exchangeContext } from "@/lib/context";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { useState } from 'react';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 

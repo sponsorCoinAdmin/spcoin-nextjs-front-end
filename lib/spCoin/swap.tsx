@@ -27,10 +27,11 @@ const wrap = async () => {
     const weiDepositAmount:bigint = tradeData.sellAmount
     const signer = tradeData.signer
     const chainId = tradeData.chainId
-    const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
+    const weth9Address =   wethMethods.getWeth9NetworkAddress(chainId)
     // alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
     wethMethods.connect(weth9Address, weth9ABI, signer);
-    await wethMethods.depositWEI(weiDepositAmount);
+    const tx = await wethMethods.depositWEI(weiDepositAmount);
+    tx.wait();
 }
 
 const unwrap = async () => {
@@ -43,7 +44,8 @@ const unwrap = async () => {
     const weth9Address = wethMethods.getWeth9NetworkAddress(chainId)
     alert(`chainId = ${chainId} weth9Address = ${weth9Address}`)
     wethMethods.connect(weth9Address, weth9ABI, signer);
-    await wethMethods.withdrawWEI(weiWithdrawAmount);
+    const tx = await wethMethods.withdrawWEI(weiWithdrawAmount);
+    tx.wait();
 }
 
 const doSwap = async () => {
