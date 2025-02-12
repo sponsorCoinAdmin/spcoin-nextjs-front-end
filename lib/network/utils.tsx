@@ -12,7 +12,6 @@ import {
   SEPOLIA, SEPOLIA_WETH_ADDRESS,
   TokenContract
 } from '@/lib/structure/types';
-import { useAccount, useChainId } from 'wagmi';
 
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
@@ -30,17 +29,18 @@ const isTokenAddress = (address?: Address): boolean =>
 
 // *** WARNING: To be fixed for other networks ***
 const getNetworkWethAddress = (chainId: number): Address | undefined => {
-  const wethAddresses = {
+  const wethAddresses: Record<number, Address> = {
     [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
     [POLYGON]: POLYGON_WETH_ADDRESS,
     [HARDHAT]: HARDHAT_WETH_ADDRESS,
-    [SEPOLIA]: SEPOLIA_WETH_ADDRESS
+    [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
   };
-  
-  const WETH_ADDRESS: Address | undefined = wethAddresses[chainId];
+
+  const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
   console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS;
 };
+
 
 // *** WARNING: HARDCODING To be fixed for other networks ***
 const isWrappedNetworkAddress = (address?: Address): boolean =>
@@ -95,9 +95,14 @@ const createNetworkJsonList = () => {
 const isLowerCase = (input: string): boolean => 
   input === input.toLowerCase();
 
+function delay(ms: number | undefined) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export {
   BURN_ADDRESS,
   createNetworkJsonList,
+  delay,
   getAvatarImageURL,
   getNetworkName,
   getNetworkWethAddress,

@@ -1,7 +1,6 @@
 import { SWAP_TYPE, TradeData } from "@/lib/structure/types";
 import { exchangeContext } from "@/lib/context";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
-import { useSwapState } from '@/lib/hooks/useSwapState';
 
 // ToDo: The error on the next line is a typescript definition for a javascript file requirement
 // since javascript does not define types and typescript is looking for a specific type.
@@ -16,7 +15,6 @@ import { useSwapState } from '@/lib/hooks/useSwapState';
 // import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6"
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6"
 import { isNetworkAddress, isTokenAddress, isWrappedNetworkAddress } from "../network/utils";
-import { Address } from "viem";
 
 const wethMethods = new WethMethods();
 

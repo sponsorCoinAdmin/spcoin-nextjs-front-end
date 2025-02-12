@@ -14,6 +14,7 @@ import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@
 import { Address } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { isActiveAccountAddress } from "@/lib/network/utils";
 
 type Props = {
   placeHolder:string,
@@ -29,15 +30,16 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const [ networkAddress, setNetworkAddress ] = useState<Address|undefined>();
   const tokenContract:TokenContract|undefined = useErc20TokenContract(tokenAddress);
   const networkContract:TokenContract|undefined = useErc20NetworkContract(networkAddress);
-  const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
+  // const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
   const debouncedText = useDebounce(textInputField);
 
-  const getActiveAccountAddress = () => {
-    return ACTIVE_ACCOUNT_ADDRESS;
-  }
+  // const getActiveAccountAddress = () => {
+  //   return ACTIVE_ACCOUNT_ADDRESS;
+  // }
   
   const isActiveNetworkAddress = (address:Address|undefined) => {
-    return (address === getActiveAccountAddress());
+    return isActiveAccountAddress(address)
+    // return (address === getActiveAccountAddress());
   }
     
   useEffect(() => {

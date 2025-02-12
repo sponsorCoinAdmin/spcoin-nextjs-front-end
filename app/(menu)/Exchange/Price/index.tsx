@@ -40,39 +40,39 @@ export default function PriceView() {
   const isWrapTransaction = useMemo(() => isWrappingTransaction(sellTokenAddress, buyTokenAddress), [sellTokenAddress, buyTokenAddress]);
 
   useEffect(() => {
-    tradeData.sellAmount = sellAmount;
     tradeData.buyAmount = buyAmount;
+    tradeData.sellAmount = sellAmount;
+    tradeData.signer = signer;
     tradeData.slippage = slippage;
     tradeData.transactionType = transactionType;
-    tradeData.signer = signer;
-  }, [sellAmount, buyAmount, slippage, transactionType, signer]);
-
+  }, [buyAmount, sellAmount, signer, slippage, transactionType]);
+  
   useEffect(() => {
     tradeData.sellTokenContract = sellTokenContract;
     tradeData.buyTokenContract = buyTokenContract;
     setToggleButton(!toggleButton)
-  }, [sellAmount, buyAmount, slippage, sellTokenContract, buyTokenContract, transactionType, signer]);
-
-
-  useEffect(() => {
-    if (resetAmounts) {
-      setSellAmount(0n);
-      setBuyAmount(0n);
-      setResetAmounts(false);
-    }
-  }, [resetAmounts]);
-
+  }, [buyTokenContract, transactionType]);
+  
+  const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
+    setErrorMessage({
+      errCode: apiErrorObj.errCode,
+      msg: stringifyBigInt(apiErrorObj.msg),
+      source: apiErrorObj.source,
+      status: STATUS.ERROR_API_PRICE,
+    });
+  }, []);
+  
   useEffect(() => {
     if (ACTIVE_ACCOUNT.chain) {
       tradeData.chainId = chainId;
       resetNetworkContext(ACTIVE_ACCOUNT.chain);
     }
   }, [chainId]);
-
+  
   useEffect(() => {
     exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
   }, [ACTIVE_ACCOUNT.address]);
-
+  
   useEffect(() => {
     if (isWrapTransaction) {
       if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
@@ -81,18 +81,17 @@ export default function PriceView() {
         setSellAmount(buyAmount);
       }
     }
-  }, [sellAmount, buyAmount, isWrapTransaction]);
-
-  const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
-    setErrorMessage({
-      status: STATUS.ERROR_API_PRICE,
-      source: apiErrorObj.source,
-      errCode: apiErrorObj.errCode,
-      msg: stringifyBigInt(apiErrorObj.msg),
-    });
-  }, []);
-
-  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
+  }, [buyAmount, sellAmount, isWrapTransaction]);
+  
+  useEffect(() => {
+    if (resetAmounts) {
+      setBuyAmount(0n);
+      setResetAmounts(false);
+      setSellAmount(0n);
+    }
+  }, [resetAmounts]);
+  
+   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
     transactionType,
     sellTokenAddress,
     buyTokenAddress,

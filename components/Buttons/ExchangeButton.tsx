@@ -4,6 +4,7 @@ import { dumpContext } from '@/lib/spCoin/utils';
 import { exchangeContext } from "@/lib/context";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
+import { isActiveAccountAddress, isWrappedNetworkAddress } from '@/lib/network/utils';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 
@@ -15,8 +16,27 @@ type Props = {
   toggleButton: boolean
 }
 
-const EC:ExchangeContext = exchangeContext
-const tradeData:TradeData = exchangeContext.tradeData
+const tradeData:TradeData = exchangeContext.tradeData;
+const buyTokenContract = tradeData.buyTokenContract;
+const sellTokenContract = tradeData.sellTokenContract;
+const transactionType:string = tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
+        "EXACT OUT " : "EXACT IN "
+
+const getSwapType = () => {
+  if (isActiveAccountAddress(sellTokenContract?.address))
+    if (isWrappedNetworkAddress(buyTokenContract?.address))
+      return "SWAP ( WRAP ETH -> WETH )"
+    else
+      return transactionType + "( WRAP ETH -> WETH -> sellTokenContract?.name)"
+  else
+    if (isActiveAccountAddress(buyTokenContract?.address))
+      if (isWrappedNetworkAddress(sellTokenContract?.address))
+        return "SWAP ( UN-WRAP WETH -> ETH )"
+      else
+        return transactionType + "( sellTokenContract?.nameWRAP -> WETH -> ETH -> )"
+    else return transactionType + "SWAP"
+}
+
 
 const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton}:Props) => {
   const tokenContract:TokenContract|undefined = tradeData.sellTokenContract as TokenContract | undefined;
@@ -37,9 +57,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
         return "Enter an Amount";
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
         return `Insufficient ${tradeData.sellTokenContract?.symbol} Balance`;
-      case BUTTON_TYPE.SWAP:
-        return tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-        "EXACT OUT SWAP" : "EXACT IN SWAP";
+      case BUTTON_TYPE.SWAP: getSwapType();
       case BUTTON_TYPE.SELL_TOKEN_REQUIRED:
       case BUTTON_TYPE.SELL_ERROR_REQUIRED:
         return "Sell Token Required";
@@ -166,7 +184,7 @@ const ExchangeButton = ({isLoadingPrice, errorMessage, setErrorMessage, setReset
     // else
     await swap();
     setResetAmounts(true);
-    setButtonType(BUTTON_TYPE.TOKENS_REQUIRED)
+    // setButtonType(BUTTON_TYPE.TOKENS_REQUIRED)
   }
 
   setButtonType(getButtonType())
