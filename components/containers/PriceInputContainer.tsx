@@ -133,9 +133,14 @@ const priceInputContainer = ({
       const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS)
       setBalanceInWei(newBal)
     } else {
-      const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
-      const newBal = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
-      setBalanceInWei(newBal)
+      if (TOKEN_CONTRACT_ADDRESS && signer)
+      {
+        const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
+        const newBal:bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
+        setBalanceInWei(newBal)
+      }
+      else
+        setBalanceInWei(undefined);
     }
     // alert(`balanceInWei = ${stringifyBigInt(balanceInWei)}`)
   }
@@ -162,6 +167,8 @@ const priceInputContainer = ({
               Address: ${TOKEN_CONTRACT_ADDRESS} => decimals        : ${decimals}\n
               Address: ${TOKEN_CONTRACT_ADDRESS} => formattedBalance: ${formattedBalance}`)
     }
+    else
+    setFormattedBalance("Undefined");
   }, [balanceInWei, activeContract?.balance]);
   //////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
