@@ -129,7 +129,7 @@ const priceInputContainer = ({
       // ToDo: NOTE This delay is because we are using wagmi in conjunction with ethers.
       // The fir is to just use 1 provider library either Wagmi or Ethers.
       // For now it is stable do to do later.
-      await delay(100)
+      await delay(400)
       const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS)
       setBalanceInWei(newBal)
     } else {

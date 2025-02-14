@@ -25,10 +25,8 @@ let chainId = exchangeContext.tradeData.chainId || 1; // Default to 1 if undefin
 // API Call Reference
 let apiCall: string | undefined;
 
-
-
 function validTokenOrNetworkCoin(address: any): any {
-  if (isActiveAccountAddress(address)){
+  if (isActiveAccountAddress(address)) {
     return WRAPPED_ETHEREUM_ADDRESS;
   } else
     return address;
@@ -41,14 +39,14 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   if (!sellAmount && !buyAmount) return;
 
   if (!sellAmount && buyAmount === "0") {
-    throw {errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0'}
+    throw { errCode: BUY_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Buy Amount is 0' }
   }
 
   if (!buyAmount && (sellAmount === undefined || sellAmount === "0")) {
-    throw {errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0'};
+    throw { errCode: SELL_AMOUNT_ZERO, errMsg: 'Fetcher not executing remote price call: Sell Amount is 0' };
   }
 
-try {
+  try {
     const query = qs.stringify(params);
     const apiCall = `${endpoint}?${query}`;
     let result = fetch(`${apiCall}`).then((res) => res.json());
@@ -56,46 +54,46 @@ try {
     return result
   }
   catch (e) {
-    alert("fetcher Error: "+JSON.stringify(e, null, 2))
-    throw {errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2)}
+    alert("fetcher Error: " + JSON.stringify(e, null, 2))
+    throw { errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2) }
   }
 }
 
 const getApiErrorTransactionData = (
-  sellTokenAddress:Address|undefined,
-  buyTokenAddress:Address|undefined,
-  sellAmount:any,
-  data:PriceResponse) => {
+  sellTokenAddress: Address | undefined,
+  buyTokenAddress: Address | undefined,
+  sellAmount: any,
+  data: PriceResponse) => {
 
-  let errObj:any = {};
-    errObj.ERROR            = `API Call`;
-    errObj.Server           = `${process.env.NEXT_PUBLIC_API_SERVER}`
-    errObj.netWork          = `${exchangeContext.network.name.toLowerCase()}`
-    errObj.apiPriceBase     = `${apiPriceBase}`
-    errObj.sellTokenAddress = `${sellTokenAddress}`
-    errObj.buyTokenAddress  = `${buyTokenAddress}`
-    errObj.sellAmount       = `${sellAmount}`
-    errObj.apiCall          = `${apiCall}`
-    errObj.response_data    = `${data}`
+  let errObj: any = {};
+  errObj.ERROR = `API Call`;
+  errObj.Server = `${process.env.NEXT_PUBLIC_API_SERVER}`
+  errObj.netWork = `${exchangeContext.network.name.toLowerCase()}`
+  errObj.apiPriceBase = `${apiPriceBase}`
+  errObj.sellTokenAddress = `${sellTokenAddress}`
+  errObj.buyTokenAddress = `${buyTokenAddress}`
+  errObj.sellAmount = `${sellAmount}`
+  errObj.apiCall = `${apiCall}`
+  errObj.response_data = `${data}`
   return errObj;
 }
 
-const getPriceApiCall = (transactionType:any, sellTokenAddress:Address|undefined, buyTokenAddress:Address|undefined, sellAmount:any, buyAmount:any) => {
+const getPriceApiCall = (transactionType: any, sellTokenAddress: Address | undefined, buyTokenAddress: Address | undefined, sellAmount: any, buyAmount: any) => {
   let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
-                     (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)? 
-                      undefined :
-                      [
-                        exchangeContext.network.name.toLowerCase() + apiPriceBase,
-                        {
-                          sellToken: validTokenOrNetworkCoin(sellTokenAddress),
-                          buyToken: validTokenOrNetworkCoin(buyTokenAddress),
-                          sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
-                          buyAmount: (transactionType ===  TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
-                          // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
-                          // slippagePercentage: slippage,
-                          // expectedSlippage: slippage
-                        },
-                      ];
+    (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) ?
+    undefined :
+    [
+      exchangeContext.network.name.toLowerCase() + apiPriceBase,
+      {
+        sellToken: validTokenOrNetworkCoin(sellTokenAddress),
+        buyToken: validTokenOrNetworkCoin(buyTokenAddress),
+        sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
+        buyAmount: (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
+        // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
+        // slippagePercentage: slippage,
+        // expectedSlippage: slippage
+      },
+    ];
   return priceApiCall;
 }
 
@@ -117,31 +115,31 @@ type Props = {
 };
 
 function usePriceAPI({
-    sellTokenAddress, 
-    buyTokenAddress,
-    transactionType,
-    sellAmount,
-    buyAmount,
-    setSellAmount,
-    setBuyAmount,
-    setErrorMessage,
-    apiErrorCallBack
-  } : Props) {
+  sellTokenAddress,
+  buyTokenAddress,
+  transactionType,
+  sellAmount,
+  buyAmount,
+  setSellAmount,
+  setBuyAmount,
+  setErrorMessage,
+  apiErrorCallBack
+}: Props) {
 
-  chainId=useChainId();
+  chainId = useChainId();
   sellTokenAddress = mapAccountAddrToWethAddr(sellTokenAddress as Address)
   buyTokenAddress = mapAccountAddrToWethAddr(buyTokenAddress as Address)
 
   const handleError = (data: any) => {
     const apiErrorObj = getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data);
-    apiErrorCallBack({ status:STATUS.ERROR_API_PRICE, source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
+    apiErrorCallBack({ status: STATUS.ERROR_API_PRICE, source: "ApiFetcher: ", errCode: data.code, msg: apiErrorObj });
   };
 
   const processData = (data: any, transactionType: TRANSACTION_TYPE) => {
     logSuccess(data, transactionType);
-    transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? 
-    setBuyAmount(data.buyAmount || 0n) : 
-    setSellAmount(data.sellAmount || 0n);
+    transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+      setBuyAmount(data.buyAmount || 0n) :
+      setSellAmount(data.sellAmount || 0n);
     setErrorMessage(undefined);
   }
 
@@ -151,14 +149,14 @@ function usePriceAPI({
     console.debug(`SUCCESS ${type}: useSWR.fetcher data.price = ${data.price}`);
     console.debug(`data.price = ${data.price}\ndata.sellAmount = ${data.sellAmount}\ndata.buyAmount = ${data.buyAmount}`);
   };
-             
+
   return useSWR(
     () => shouldFetch(sellTokenAddress, buyTokenAddress)
       ? getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
     fetcher,
     {
       onSuccess: (data) => (data.code ? handleError(data) : processData(data, transactionType)),
-      onError: (error) => {handleError(error)}
+      onError: (error) => { handleError(error) }
     }
   );
 }

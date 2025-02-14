@@ -65,6 +65,10 @@ export default function PriceView() {
   useEffect(() => {
     if (ACTIVE_ACCOUNT.chain) {
       tradeData.chainId = chainId;
+      setSellAmount(0n);
+      setBuyAmount(0n);
+      setSellTokenContract(undefined)
+      setBuyTokenContract(undefined)
       resetNetworkContext(ACTIVE_ACCOUNT.chain);
     }
   }, [chainId]);
