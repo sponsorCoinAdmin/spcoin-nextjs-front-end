@@ -124,7 +124,7 @@ const priceInputContainer = ({
     }
   }, [bigIntBalanceOf]);
 
-   const getBalanceInWei = async () => {
+  const getBalanceInWei = async () => {
     if (isActiveAccountAddress(TOKEN_CONTRACT_ADDRESS)) {
       // ToDo: NOTE This delay is because we are using wagmi in conjunction with ethers.
       // The fir is to just use 1 provider library either Wagmi or Ethers.
@@ -133,10 +133,9 @@ const priceInputContainer = ({
       const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS)
       setBalanceInWei(newBal)
     } else {
-      if (TOKEN_CONTRACT_ADDRESS && signer)
-      {
+      if (TOKEN_CONTRACT_ADDRESS && signer) {
         const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
-        const newBal:bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
+        const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
         setBalanceInWei(newBal)
       }
       else
@@ -152,7 +151,7 @@ const priceInputContainer = ({
 
   useEffect(() => {
     getBalanceInWei()
-  }, [TOKEN_CONTRACT_ADDRESS, amount]);
+  }, [ ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS, amount ]);
 
   useEffect(() => {
     // alert(`useEffect.balanceInWei = ${stringifyBigInt(balanceInWei)}`)
