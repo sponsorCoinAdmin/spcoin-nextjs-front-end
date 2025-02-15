@@ -74,7 +74,12 @@ export default function PriceView() {
   }, [chainId]);
   
   useEffect(() => {
-    exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
+    if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress)
+      sellTokenContract.address = ACTIVE_ACCOUNT.address
+    else
+      if (buyTokenContract && buyTokenContract.address === exchangeContext.activeAccountAddress)
+        buyTokenContract.address = ACTIVE_ACCOUNT.address
+    exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address
   }, [ACTIVE_ACCOUNT.address]);
   
   useEffect(() => {
@@ -89,9 +94,11 @@ export default function PriceView() {
   
   useEffect(() => {
     if (resetAmounts) {
+      tradeData.sellAmount = 0n;
+      tradeData.buyAmount = 0n;
       setBuyAmount(0n);
-      setResetAmounts(false);
       setSellAmount(0n);
+      setResetAmounts(false);
     }
   }, [resetAmounts]);
   

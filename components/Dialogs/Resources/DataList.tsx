@@ -8,8 +8,10 @@ import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import { ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA } from '@/lib/structure/types';
-import { useChainId } from "wagmi";
+import { ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
+import { useAccount, useChainId } from "wagmi";
+import { BURN_ADDRESS } from '@/lib/network/utils';
+import { Address } from 'viem';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     let address = dataFeedList.address;
@@ -81,9 +83,17 @@ const getDataFeedListElement = (dataFeedList: any, addressKey:any) => {
     return element
 }
 
-function displayElementDetail (le: any) {
-    // alert("displayElementDetail\n" + stringifyBigInt(le,null,2))
-    alert(`${le?.name} Token Address = ${le?.address}`)
+let ACTIVE_ACCOUNT_ADDRESS:Address;
+
+const setActiveAccount = (address:Address) => {
+    ACTIVE_ACCOUNT_ADDRESS = address;
+}
+
+function displayElementDetail (tokenContract:any) {
+    const clone = { ...tokenContract } as TokenContract;
+    clone.address = clone.address === BURN_ADDRESS ? ACTIVE_ACCOUNT_ADDRESS : clone.address
+    // alert("displayElementDetail\n" + stringifyBigInt(tokenContract,null,2))
+    alert(`${tokenContract?.name} Token Address = ${clone.address}`)
 }
 
 type Props = {
@@ -93,6 +103,9 @@ type Props = {
 
 function DataList({dataFeedType, updateTokenCallback}:Props) {
     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
+    const ACTIVE_ACCOUNT =  useAccount()
+    const { address: tokenAddress } = useAccount();
+    ACTIVE_ACCOUNT_ADDRESS = tokenAddress as Address;
     // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
     const tList = dataFeedList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={getDataKey( dataFeedType, e)}>
@@ -121,5 +134,6 @@ export {
     getDataFeedList,
     getDataFeedMap,
     getNetworkListElement,
-    getDataFeedListElement
+    getDataFeedListElement,
+    setActiveAccount
  }

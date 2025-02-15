@@ -8,10 +8,11 @@ import { useAccount } from "wagmi";
 
 import info_png from "@/public/resources/images/info1.png";
 import { defaultMissingImage, stringifyBigInt } from "@/lib/spCoin/utils";
-import DataList from "./Resources/DataList";
+import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
 import { BURN_ADDRESS } from "@/lib/network/utils";
+import { Address } from "viem";
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
@@ -32,7 +33,6 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
-
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
 
   useEffect(() => {
@@ -40,6 +40,13 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
   }, [showDialog]);
+
+  useEffect(() => {
+    if (ACTIVE_ACCOUNT_ADDRESS) {
+      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);;
+    }
+  }, [ACTIVE_ACCOUNT_ADDRESS]);
+
 
   useEffect(() => {
     setInputField(tokenContract?.address);
@@ -51,7 +58,7 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
     dialogRef.current?.close();
   };
 
-  const duplicateToken = (tokenAddress: string | undefined): boolean => {
+  const isDuplicateToken = (tokenAddress: string | undefined): boolean => {
     if (!tokenAddress) return false;
 
     const isDuplicate =
@@ -61,6 +68,15 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
 
     return isDuplicate;
   };
+
+  const cloneIfNetworkToken = (tokenContract:TokenContract) : TokenContract => {
+    if (tokenContract?.address === BURN_ADDRESS) {
+      const clone = { ...tokenContract } as TokenContract;
+      clone.address = ACTIVE_ACCOUNT_ADDRESS;
+      return clone
+    }
+    return tokenContract;
+  }
 
   const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
     if (!tokenContract) {
@@ -72,17 +88,15 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
       return false;
     }
 
-    if (tokenContract.address === BURN_ADDRESS) {
-      tokenContract.address = ACTIVE_ACCOUNT_ADDRESS;
-    }
+    const newToken = cloneIfNetworkToken(tokenContract)
 
-    if (duplicateToken(tokenContract.address)) {
-      alert(`SELECT_ERROR: Sell Token cannot be the same as Buy Token (${tokenContract.symbol})`);
-      console.error(`ERROR: Sell Token cannot be the same as Buy Token (${tokenContract.symbol})`);
+    if (isDuplicateToken(newToken.address)) {
+      alert(`SELECT_ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
+      console.error(`ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
       return false;
     }
 
-    callBackSetter(tokenContract);
+    callBackSetter(newToken);
     closeDialog();
     return true;
   };
@@ -114,7 +128,6 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
             </div>
           </div>
         )}
-
         <div className={styles.modalScrollBar}>
           <DataList dataFeedType={FEED_TYPE.TOKEN_LIST} updateTokenCallback={updateTokenCallback} />
         </div>
