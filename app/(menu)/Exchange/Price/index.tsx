@@ -136,7 +136,7 @@ export default function PriceView() {
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
         <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage} />
         <PriceInputContainer
-          priceInputContainType={CONTAINER_TYPE.INPUT_SELL_PRICE}
+          priceInputContainerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
           updateAmount={sellAmount}
           activeContract={sellTokenContract}
           setCallbackAmount={setSellAmount}
@@ -145,7 +145,7 @@ export default function PriceView() {
           setTokenContractCallback={setSellTokenContract}
         />
         <PriceInputContainer
-          priceInputContainType={CONTAINER_TYPE.INPUT_BUY_PRICE}
+          priceInputContainerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
           updateAmount={buyAmount}
           activeContract={buyTokenContract}
           setCallbackAmount={setBuyAmount}

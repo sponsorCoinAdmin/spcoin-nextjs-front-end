@@ -97,11 +97,6 @@ const getPriceApiCall = (transactionType: any, sellTokenAddress: Address | undef
   return priceApiCall;
 }
 
-const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => {
-  console.log(`fetcher.shouldFetch.chainId = ${chainId}`);
-  return sellTokenAddress !== buyTokenAddress && chainId !== HARDHAT;
-};
-
 type Props = {
   sellTokenAddress?: Address;
   buyTokenAddress?: Address;
@@ -149,6 +144,17 @@ function usePriceAPI({
     console.debug(`SUCCESS ${type}: useSWR.fetcher data.price = ${data.price}`);
     console.debug(`data.price = ${data.price}\ndata.sellAmount = ${data.sellAmount}\ndata.buyAmount = ${data.buyAmount}`);
   };
+
+  const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => {
+    console.log(`fetcher.shouldFetch.chainId = ${chainId}`);
+    const shouldFetch: boolean =
+      (sellTokenAddress != undefined) &&
+      (buyTokenAddress != undefined) &&
+      (sellTokenAddress !== buyTokenAddress) &&
+      (chainId !== HARDHAT);
+    return shouldFetch;
+  };
+
 
   return useSWR(
     () => shouldFetch(sellTokenAddress, buyTokenAddress)

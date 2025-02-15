@@ -31,7 +31,7 @@ import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 
 type Props = {
   activeContract: TokenContract | undefined;
-  priceInputContainType: CONTAINER_TYPE;
+  priceInputContainerType: CONTAINER_TYPE;
   setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
   setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
@@ -41,7 +41,7 @@ type Props = {
 
 const priceInputContainer = ({
   activeContract,
-  priceInputContainType,
+  priceInputContainerType,
   setCallbackAmount,
   setTokenContractCallback,
   setTransactionType,
@@ -54,7 +54,7 @@ const priceInputContainer = ({
 
   // Determine initial state based on price input type
   const initialAmount: bigint | undefined =
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
       ? tradeData?.sellAmount : tradeData?.buyAmount;
 
   const [amount, setAmount] = useState<bigint>(initialAmount);
@@ -62,7 +62,7 @@ const priceInputContainer = ({
   const [formattedBalance, setFormattedBalance] = useState<string>();
   const [balanceInWei, setBalanceInWei] = useState<bigint>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
       ? tradeData?.sellTokenContract : tradeData?.buyTokenContract
   );
 
@@ -79,7 +79,7 @@ const priceInputContainer = ({
   useEffect(() => {
     // alert (`useEffect(() => tokenContract(${stringifyBigInt(tokenContract)})`)
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       tradeData.sellTokenContract = tokenContract :
       tradeData.buyTokenContract = tokenContract;
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${stringifyBigInt(exchangeContext)}`)
@@ -87,7 +87,7 @@ const priceInputContainer = ({
   }, [tokenContract?.address]);
 
   useEffect(() => {
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
       console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
     setDecimalAdjustedContract(activeContract)
@@ -95,7 +95,7 @@ const priceInputContainer = ({
 
   useEffect(() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       tradeData.sellAmount = debouncedAmount :
       tradeData.buyAmount = debouncedAmount;
     setCallbackAmount(debouncedAmount)
@@ -133,7 +133,7 @@ const priceInputContainer = ({
       const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS)
       setBalanceInWei(newBal)
     } else {
-      if (TOKEN_CONTRACT_ADDRESS && signer) {
+      if (TOKEN_CONTRACT_ADDRESS && TOKEN_CONTRACT_ADDRESS !== BURN_ADDRESS && signer) {
         const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
         const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
         setBalanceInWei(newBal)
@@ -182,10 +182,10 @@ const priceInputContainer = ({
 
   const setTextInputValue = (stringValue: string) => {
     setStringToBigIntStateValue(stringValue)
-    setTransactionType(priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    setTransactionType(priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       TRANSACTION_TYPE.SELL_EXACT_OUT :
       TRANSACTION_TYPE.BUY_EXACT_IN)
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       tradeData.transactionType = TRANSACTION_TYPE.SELL_EXACT_OUT :
       tradeData.transactionType = TRANSACTION_TYPE.BUY_EXACT_IN;
   }
@@ -201,10 +201,10 @@ const priceInputContainer = ({
 
   const buySellText = isWrappingTransaction(tradeData.sellTokenContract?.address,
     tradeData.buyTokenContract?.address) ?
-    priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
+    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
     tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
-      priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage * 100}%` :
-      priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippage * 100}%` : "You Exactly Receive"
+      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage * 100}%` :
+      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippage * 100}%` : "You Exactly Receive"
 
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
@@ -212,12 +212,12 @@ const priceInputContainer = ({
         onChange={(e) => { setTextInputValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
-      <AssetSelect priceInputContainType={priceInputContainType}
+      <AssetSelect priceInputContainerType={priceInputContainerType}
         tokenContract={tokenContract}
         setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
-      {isSpCoin(tokenContract) ? priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+      {isSpCoin(tokenContract) ? priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
         <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
         <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract} /> : null}
     </div>

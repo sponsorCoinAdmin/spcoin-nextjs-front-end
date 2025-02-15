@@ -6,12 +6,12 @@ import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 type Props = {
-    priceInputContainType: CONTAINER_TYPE,
+    priceInputContainerType: CONTAINER_TYPE,
     tokenContract: TokenContract|undefined, 
     setDecimalAdjustedContract: (tokenContract:TokenContract) => void,
   }
 
-const AssetSelect = ({priceInputContainType, tokenContract, setDecimalAdjustedContract}:Props) => {
+const AssetSelect = ({priceInputContainerType, tokenContract, setDecimalAdjustedContract}:Props) => {
     const [showDialog, setShowDialog ] = useState<boolean>(false)
     const openDialog = () => {
         setShowDialog(true)
@@ -19,7 +19,7 @@ const AssetSelect = ({priceInputContainType, tokenContract, setDecimalAdjustedCo
     
     return (
         <>
-            <TokenSelectDialog priceInputContainType={priceInputContainType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
+            <TokenSelectDialog priceInputContainerType={priceInputContainerType} showDialog={showDialog} setShowDialog={setShowDialog} callBackSetter={setDecimalAdjustedContract} />
             {tokenContract?
             <>
                 <div className={styles["assetSelect"]}>

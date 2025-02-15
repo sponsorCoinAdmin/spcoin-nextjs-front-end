@@ -9,8 +9,6 @@ import { isActiveAccountAddress, isWrappedNetworkAddress } from '@/lib/network/u
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 
 const tradeData: TradeData = exchangeContext.tradeData;
-const transactionType: string = tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
-  "EXACT OUT " : "EXACT IN "
 
 type Props = {
   isLoadingPrice: boolean,
@@ -24,6 +22,8 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
   // const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
+  const transactionType: string = tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+  "EXACT OUT " : "EXACT IN "
 
   const setButtonType = (_buttonType: BUTTON_TYPE): BUTTON_TYPE => {
     buttonType = _buttonType;

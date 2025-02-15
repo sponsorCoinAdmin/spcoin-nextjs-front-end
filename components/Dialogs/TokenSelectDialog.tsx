@@ -23,13 +23,13 @@ const ELEMENT_DETAILS =
   "Currently, there is no image token lookup, but that is to come.";
 
 type Props = {
-  priceInputContainType: CONTAINER_TYPE;
+  priceInputContainerType: CONTAINER_TYPE;
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;
   callBackSetter: (tokenContract: TokenContract) => void;
 };
 
-export default function Dialog({ priceInputContainType, showDialog, setShowDialog, callBackSetter }: Props) {
+export default function Dialog({ priceInputContainerType, showDialog, setShowDialog, callBackSetter }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
@@ -62,7 +62,7 @@ export default function Dialog({ priceInputContainType, showDialog, setShowDialo
     if (!tokenAddress) return false;
 
     const isDuplicate =
-      priceInputContainType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
         ? exchangeContext?.tradeData.buyTokenContract?.address === tokenAddress
         : exchangeContext?.tradeData.sellTokenContract?.address === tokenAddress;
 
