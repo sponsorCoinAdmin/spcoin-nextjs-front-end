@@ -1,15 +1,15 @@
 "use client"
 import { useEffect, useRef } from 'react';
 import styles from '@/styles/Modal.module.css';
-import Slippage from '../Popover/Slippage';
+import SlippageBps from '../Popover/SlippageBps';
 
 type Props = {
-    slippage:number,
-    setSlippageCallback: () => void,
+    slippageBps:number,
+    setSlippageBpsCallback: () => void,
     showDialog:boolean
 }
 
-export default function Dialog({showDialog, slippage, setSlippageCallback}:Props) {
+export default function Dialog({showDialog, slippageBps, setSlippageBpsCallback}:Props) {
     useEffect(() => {
         showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
     }, [showDialog])
@@ -36,8 +36,8 @@ export default function Dialog({showDialog, slippage, setSlippageCallback}:Props
             </div>
             <div >
                 <div className={styles.modalScrollBar}>
-                <Slippage initialSlippage={slippage} setSlippageCallback={setSlippageCallback}/>
-                    <h1>{slippage}</h1>
+                <SlippageBps initialSlippage={slippageBps} setSlippageCallback={setSlippageBpsCallback}/>
+                    <h1>{slippageBps}</h1>
                 </div>
             </div>
         </dialog>

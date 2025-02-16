@@ -24,7 +24,7 @@ export default function PriceView() {
   const tradeData: TradeData = exchangeContext.tradeData;
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
-  const [slippage, setSlippage] = useState<number>(tradeData.slippage);
+  const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [resetAmounts, setResetAmounts] = useState<boolean>(false);
@@ -43,9 +43,9 @@ export default function PriceView() {
     tradeData.buyAmount = buyAmount;
     tradeData.sellAmount = sellAmount;
     tradeData.signer = signer;
-    tradeData.slippage = slippage;
+    tradeData.slippageBps = slippageBps;
     tradeData.transactionType = transactionType;
-  }, [buyAmount, sellAmount, signer, slippage, transactionType]);
+  }, [buyAmount, sellAmount, signer, slippageBps, transactionType]);
   
   useEffect(() => {
     tradeData.sellTokenContract = sellTokenContract;
@@ -108,6 +108,7 @@ export default function PriceView() {
     buyTokenAddress,
     sellAmount,
     buyAmount,
+    slippageBps,
     setBuyAmount,
     setSellAmount,
     setErrorMessage,
@@ -134,13 +135,13 @@ export default function PriceView() {
     <form autoComplete="off">
       <ErrorDialog errMsg={errorMessage} showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
-        <TradeContainerHeader slippage={slippage} setSlippageCallback={setSlippage} />
+        <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
         <PriceInputContainer
           priceInputContainerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
           updateAmount={sellAmount}
           activeContract={sellTokenContract}
           setCallbackAmount={setSellAmount}
-          slippage={slippage}
+          slippageBps={slippageBps}
           setTransactionType={setTransactionType}
           setTokenContractCallback={setSellTokenContract}
         />
@@ -149,7 +150,7 @@ export default function PriceView() {
           updateAmount={buyAmount}
           activeContract={buyTokenContract}
           setCallbackAmount={setBuyAmount}
-          slippage={slippage}
+          slippageBps={slippageBps}
           setTransactionType={setTransactionType}
           setTokenContractCallback={setBuyTokenContract}
         />

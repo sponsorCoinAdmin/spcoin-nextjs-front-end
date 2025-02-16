@@ -3,7 +3,7 @@ import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } f
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
+import { BURN_ADDRESS, isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import { PriceResponse } from '@/app/api/types';
 import { useChainId } from "wagmi";
@@ -16,6 +16,8 @@ const WRAPPED_ETHEREUM_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
 // Configurations
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER;
+// const apiPriceBase = "/0X/price";
+// const apiQuoteBase = "/0X/quote";
 const apiPriceBase = "/0X/price";
 const apiQuoteBase = "/0X/quote";
 
@@ -78,17 +80,27 @@ const getApiErrorTransactionData = (
   return errObj;
 }
 
-const getPriceApiCall = (transactionType: any, sellTokenAddress: Address | undefined, buyTokenAddress: Address | undefined, sellAmount: any, buyAmount: any) => {
-  let priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
+const getPriceApiCall = (
+  transactionType: TRANSACTION_TYPE,
+  chainId: number,
+  sellTokenAddress: Address | undefined,
+  buyTokenAddress: Address | undefined,
+  sellAmount: bigint,
+  buyAmount: bigint,
+  slippageBps?: number ) => {
+  let priceApiCall = undefined;
+  priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
     (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) ?
     undefined :
     [
       exchangeContext.network.name.toLowerCase() + apiPriceBase,
       {
+        // chainId: chainId,
         sellToken: validTokenOrNetworkCoin(sellTokenAddress),
         buyToken: validTokenOrNetworkCoin(buyTokenAddress),
         sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
         buyAmount: (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) ? buyAmount.toString() : undefined,
+        slippageBps: slippageBps
         // The Slippage does not seam to pass check the api parameters with a JMeter Test then implement here
         // slippagePercentage: slippage,
         // expectedSlippage: slippage
@@ -103,6 +115,7 @@ type Props = {
   transactionType: TRANSACTION_TYPE;
   sellAmount: bigint;
   buyAmount: bigint;
+  slippageBps: number;
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
   setErrorMessage: (message?: ErrorMessage) => void;
@@ -115,6 +128,7 @@ function usePriceAPI({
   transactionType,
   sellAmount,
   buyAmount,
+  slippageBps,
   setSellAmount,
   setBuyAmount,
   setErrorMessage,
@@ -145,7 +159,7 @@ function usePriceAPI({
     console.debug(`data.price = ${data.price}\ndata.sellAmount = ${data.sellAmount}\ndata.buyAmount = ${data.buyAmount}`);
   };
 
-  const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => {
+  const shouldFetch = (sellTokenAddress?: Address | undefined, buyTokenAddress?: Address | undefined): boolean => {
     console.log(`fetcher.shouldFetch.chainId = ${chainId}`);
     const shouldFetch: boolean =
       (sellTokenAddress != undefined) &&
@@ -155,10 +169,18 @@ function usePriceAPI({
     return shouldFetch;
   };
 
-
+  
+  // slippageBps = 100;
   return useSWR(
-    () => shouldFetch(sellTokenAddress, buyTokenAddress)
-      ? getPriceApiCall(transactionType, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount) : null,
+    () => shouldFetch(sellTokenAddress, buyTokenAddress) ?
+      getPriceApiCall(
+        chainId,
+        transactionType,
+        sellTokenAddress,
+        buyTokenAddress,
+        sellAmount,
+        buyAmount,
+        slippageBps) : null,
     fetcher,
     {
       onSuccess: (data) => (data.code ? handleError(data) : processData(data, transactionType)),

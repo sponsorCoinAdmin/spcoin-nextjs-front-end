@@ -149,7 +149,7 @@ type TradeData = {
   sellAmount: bigint;
   sellTokenContract?: TokenContract;
   signer: any;
-  slippage: number;
+  slippageBps: number;
   swapType: SWAP_TYPE;
   transactionType: TRANSACTION_TYPE;
 };

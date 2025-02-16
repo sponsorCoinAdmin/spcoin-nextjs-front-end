@@ -16,6 +16,7 @@ const apiResponse = async(request:string, urlParms:string) => {
       {
         headers: {
           "0x-api-key": OX_API_KEY, // process.env.NEXT_PUBLIC_0X_API_KEY,
+          "0x-version": 'v2'
         },
       }
     );

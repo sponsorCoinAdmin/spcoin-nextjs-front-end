@@ -2,18 +2,18 @@ import React, { useEffect, useState } from 'react'
 import { type RadioChangeEvent, Radio } from "antd";
 import styles from '@/styles/Exchange.module.css';
 
-function Slippage({initialSlippage, setSlippageCallback}:any) {
+function SlippageBps({initialSlippageBps, setSlippageBpsCallback}:any) {
 
   const [value, setValue] = useState("0.02");
   useEffect(() => {
-    // console.log (`setting Initial slippage value`+ value)
-    setValue(initialSlippage)
+    // console.log (`setting Initial slippageBps value`+ value)
+    setValue(initialSlippageBps)
   }, []);
 
   const setRadioButton = ({ target: { value } }: RadioChangeEvent) => {
     console.log('radio checked ' + value);
     setValue(value);
-    setSlippageCallback(value)
+    setSlippageBpsCallback(value)
   };
 
   const options = [
@@ -27,7 +27,7 @@ function Slippage({initialSlippage, setSlippageCallback}:any) {
     
   return (
     <div>
-      <div >Slippage Tolerance</div>
+      <div >slippageBps Tolerance</div>
       <Radio.Group value={value}
           options={options}
           onChange={setRadioButton}
@@ -38,4 +38,4 @@ function Slippage({initialSlippage, setSlippageCallback}:any) {
   )
 }
 
-export default Slippage
+export default SlippageBps

@@ -12,7 +12,7 @@ const defaultInitialTradeData:TradeData = {
   swapType: SWAP_TYPE.UNDEFINED,
   sellAmount: 0n,
   buyAmount: 0n,
-  slippage: 0.02,
+  slippageBps: 100,
   sellTokenContract: undefined,
   buyTokenContract: undefined
 };

@@ -35,7 +35,7 @@ type Props = {
   setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
   setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
-  slippage: number;
+  slippageBps: number;
   updateAmount: bigint;
 };
 
@@ -45,7 +45,7 @@ const priceInputContainer = ({
   setCallbackAmount,
   setTokenContractCallback,
   setTransactionType,
-  slippage,
+  slippageBps,
   updateAmount,
 }: Props) => {
 
@@ -203,8 +203,8 @@ const priceInputContainer = ({
     tradeData.buyTokenContract?.address) ?
     priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
     tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
-      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippage * 100}%` :
-      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippage * 100}%` : "You Exactly Receive"
+      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippageBps * 100}%` :
+      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippageBps * 100}%` : "You Exactly Receive"
 
   return (
     <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>

@@ -14,6 +14,7 @@ import {
 } from '@/lib/structure/types';
 
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
+const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
 const IMG_HOME = "/resources/images/chains/";
 const IMG_TYPE = ".png";
@@ -38,7 +39,7 @@ const getNetworkWethAddress = (chainId: number): Address | undefined => {
 
   const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
   console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
-  return WETH_ADDRESS;
+  return WETH_ADDRESS || BURN_ADDRESS;
 };
 
 
