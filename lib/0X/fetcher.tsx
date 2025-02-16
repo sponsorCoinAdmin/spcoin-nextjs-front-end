@@ -18,8 +18,8 @@ const WRAPPED_ETHEREUM_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER;
 // const apiPriceBase = "/0X/price";
 // const apiQuoteBase = "/0X/quote";
-const apiPriceBase = "/0X/price";
-const apiQuoteBase = "/0X/quote";
+const apiPriceBase = "/price";
+const apiQuoteBase = "/quote";
 
 // The chain ID can be dynamically obtained when needed
 let chainId = exchangeContext.tradeData.chainId || 1; // Default to 1 if undefined
