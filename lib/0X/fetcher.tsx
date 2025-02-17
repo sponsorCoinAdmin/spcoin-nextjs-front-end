@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { exchangeContext } from '../context';
 import { BURN_ADDRESS, isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
-import { PriceResponse } from '@/app/api/types';
+import { PriceResponse } from '@/app/api/0X/types';
 import { useChainId } from "wagmi";
 
 // Constants

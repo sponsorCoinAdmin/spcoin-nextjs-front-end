@@ -1,2 +1,1 @@
-export const NETWORK = "sepolia.api.0x.org";
-export const CHAIN_ID = 11155111;
+export const BASE_URL = "sepolia.api.0x.org";

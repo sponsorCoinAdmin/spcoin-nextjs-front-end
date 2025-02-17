@@ -1,2 +1,1 @@
-export const NETWORK = "polygon.api.0x.org";
-export const CHAIN_ID = 137;
+export const BASE_URL = "polygon.api.0x.org";
