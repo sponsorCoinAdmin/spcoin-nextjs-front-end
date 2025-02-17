@@ -21,6 +21,7 @@ const apiResponse = async(request:string, urlParms:string) => {
       }
     );
     const data = await response.json();
+    console.debug(JSON.stringify(data,null,2));
     return new Response(JSON.stringify(data, null, 2))
   }
 

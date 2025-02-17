@@ -3,9 +3,9 @@ import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } f
 import qs from "qs";
 import useSWR from 'swr';
 import { exchangeContext } from '../context';
-import { BURN_ADDRESS, isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
+import { isActiveAccountAddress, isWrappingTransaction, mapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
-import { PriceResponse } from '@/app/api/0X/types';
+import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from "wagmi";
 
 // Constants
@@ -89,13 +89,16 @@ const getPriceApiCall = (
   buyAmount: bigint,
   slippageBps?: number ) => {
   let priceApiCall = undefined;
+  chainId = useChainId();
+
   priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
     (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) ?
     undefined :
     [
-      exchangeContext.network.name.toLowerCase() + apiPriceBase,
+      // exchangeContext.network.name.toLowerCase() + apiPriceBase,
+      apiPriceBase,
       {
-        // chainId: chainId,
+        chainId: chainId,
         sellToken: validTokenOrNetworkCoin(sellTokenAddress),
         buyToken: validTokenOrNetworkCoin(buyTokenAddress),
         sellAmount: (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ? sellAmount.toString() : undefined,
@@ -135,7 +138,6 @@ function usePriceAPI({
   apiErrorCallBack
 }: Props) {
 
-  chainId = useChainId();
   sellTokenAddress = mapAccountAddrToWethAddr(sellTokenAddress as Address)
   buyTokenAddress = mapAccountAddrToWethAddr(buyTokenAddress as Address)
 
@@ -159,6 +161,8 @@ function usePriceAPI({
     console.debug(`data.price = ${data.price}\ndata.sellAmount = ${data.sellAmount}\ndata.buyAmount = ${data.buyAmount}`);
   };
 
+  chainId = useChainId();
+
   const shouldFetch = (sellTokenAddress?: Address | undefined, buyTokenAddress?: Address | undefined): boolean => {
     console.log(`fetcher.shouldFetch.chainId = ${chainId}`);
     const shouldFetch: boolean =
@@ -169,7 +173,7 @@ function usePriceAPI({
     return shouldFetch;
   };
 
-  
+
   // slippageBps = 100;
   return useSWR(
     () => shouldFetch(sellTokenAddress, buyTokenAddress) ?

@@ -1,7 +1,8 @@
 import { Address } from "viem";
 
 // https://docs.0x.org/0x-api-swap/api-references/get-swap-v1-price#response
-export interface PriceResponse {
+export default interface PriceResponse_V1
+ {
   chainId: number;
   price: string;
   estimatedPriceImpact: string;
@@ -24,7 +25,7 @@ export interface PriceResponse {
 }
 
 // https://docs.0x.org/0x-api-swap/api-references/get-swap-v1-quote#response
-export interface QuoteResponse {
+export interface QuoteResponse_V1 {
   chainId: number;
   price: string;
   guaranteedPrice: string;

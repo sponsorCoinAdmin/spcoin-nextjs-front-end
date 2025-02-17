@@ -1,5 +1,5 @@
 import { BASE_URL } from '../networkConfig'
-import { apiResponse } from '@/lib/0X/apiResponse'
+import { apiResponse } from '@/app/api/0X/lib/apiResponse'
 
 const api="/swap/permit2/quote/"
 

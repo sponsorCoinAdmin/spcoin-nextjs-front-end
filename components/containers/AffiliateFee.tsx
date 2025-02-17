@@ -1,4 +1,4 @@
-import { PriceResponse } from '@/app/api/0X/types';
+import PriceResponse from '@/lib/0X/typesV1';
 import { TokenContract } from '@/lib/structure/types';
 import { formatUnits } from 'ethers';
 import React from 'react';
