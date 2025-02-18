@@ -1,0 +1,9 @@
+{
+  "networkHeader": {
+    "chainId": 8453,
+    "name": "BASE",
+    "symbol": "BASE",
+    "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
+    "url": "https://basescan.org"
+  }
+}

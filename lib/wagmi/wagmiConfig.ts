@@ -1,9 +1,10 @@
-import { mainnet, polygon, sepolia, hardhat } from 'wagmi/chains'
+import { base, mainnet, polygon, sepolia, hardhat } from 'wagmi/chains'
 import { createConfig, http } from 'wagmi'
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 import { getDefaultConfig } from 'connectkit';
 
 export const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
+let BASE_URL:string = "";
 let MAINNET_URL:string = "";
 let POLYGON_URL:string = "";
 let SEPOLIA_URL:string = "";
@@ -16,6 +17,7 @@ switch (BLOCKCHAIN_PROVIDER) {
     SEPOLIA_URL = process.env.NEXT_PUBLIC_ALCHEMY_SEPOLIA_URL || "";
   break;
   case "INFURA":
+    BASE_URL    = process.env.NEXT_PUBLIC_INFURA_BASE_URL    || "";
     MAINNET_URL = process.env.NEXT_PUBLIC_INFURA_MAINNET_URL || "";
     POLYGON_URL = process.env.NEXT_PUBLIC_INFURA_POLYGON_URL || "";
     SEPOLIA_URL = process.env.NEXT_PUBLIC_INFURA_SEPOLIA_URL || "";
@@ -23,6 +25,7 @@ switch (BLOCKCHAIN_PROVIDER) {
 }
 
 console.log(`BLOCKCHAIN_PROVIDER = ${BLOCKCHAIN_PROVIDER}`)
+console.log(`BASE_URL            = ${BASE_URL}`)
 console.log(`MAINNET_URL         = ${MAINNET_URL}`)
 console.log(`POLYGON_URL         = ${POLYGON_URL}`)
 console.log(`SEPOLIA_URL         = ${SEPOLIA_URL}`)
@@ -31,7 +34,7 @@ console.log(`HARDHAT_URL         = ${HARDHAT_URL}`)
 export const config = createConfig(
   getDefaultConfig({
     // Your dApps chains
-    chains: [mainnet, polygon, sepolia, hardhat],
+    chains: [base, mainnet, polygon, sepolia, hardhat],
     connectors: [
       injected(),
       // coinbaseWallet({ appName: 'Create Wagmi' }),
@@ -39,6 +42,7 @@ export const config = createConfig(
     ],
     ssr: true,
     transports: {
+      [base.id]   : http(BASE_URL),      
       [mainnet.id]: http(MAINNET_URL),      
       [polygon.id]: http(POLYGON_URL),
       [sepolia.id]: http(SEPOLIA_URL),

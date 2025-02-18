@@ -6,6 +6,7 @@ import {  ETHEREUM, TokenContract } from '@/lib/structure/types'
   name: "TONCOIN",
   symbol: "TON",
   decimals: 9,
+  balance: 0n,
   totalSupply: null,
   img: "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
  };
@@ -16,6 +17,7 @@ import {  ETHEREUM, TokenContract } from '@/lib/structure/types'
   name: "Tether USD",
   symbol: "USDT",
   decimals: 6,
+  balance: 0n,
   totalSupply: null,
   img: "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
 };

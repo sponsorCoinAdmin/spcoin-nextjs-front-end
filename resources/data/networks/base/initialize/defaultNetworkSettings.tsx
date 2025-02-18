@@ -1,18 +1,18 @@
-import {  POLYGON, TokenContract } from '@/lib/structure/types'
+import {  BASE, TokenContract } from '@/lib/structure/types'
  
  const defaultSellToken: TokenContract = { 
-  chainId: POLYGON,
-  "symbol": "USDC",
+  chainId: BASE,
+  "symbol": "BRETT",
   "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
-  "name": "USD Coin Staked",
-  "address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+  "name": "Bret Meme Coin",
+  "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
   totalSupply: null,
   balance: 0n,
   "decimals": 6
  };
 
 const defaultBuyToken: TokenContract = { 
-  chainId: POLYGON,
+  chainId: BASE,
   symbol: "SpCoin",
   img: "/resources/images/tokens/0xToDo_SpCoin.png",
   name: "Sponsor Coin",

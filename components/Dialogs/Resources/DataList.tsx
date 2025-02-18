@@ -2,13 +2,14 @@ import React from 'react'
 import styles from '@/styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '@/public/resources/images/info1.png'
+import baseTokenList from '@/resources/data/networks/base/tokenList.json';
 import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import { ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
+import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
 import { BURN_ADDRESS } from '@/lib/network/utils';
 import { Address } from 'viem';
@@ -44,6 +45,8 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number) => {
         case FEED_TYPE.AGENT_WALLETS: return agentWalletList;
         case FEED_TYPE.TOKEN_LIST:
             switch(network) {
+                case BASE:
+                case "base": return baseTokenList;
                 case ETHEREUM:
                 case "ethereum": return ethereumTokenList;
                 case POLYGON:
