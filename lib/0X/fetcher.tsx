@@ -88,10 +88,9 @@ const getPriceApiCall = (
   sellAmount: bigint,
   buyAmount: bigint,
   slippageBps?: number ) => {
-  let priceApiCall = undefined;
-  chainId = useChainId();
+  // chainId = useChainId();
 
-  priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
+  const priceApiCall = (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
     (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) ?
     undefined :
     [
@@ -178,8 +177,8 @@ function usePriceAPI({
   return useSWR(
     () => shouldFetch(sellTokenAddress, buyTokenAddress) ?
       getPriceApiCall(
-        chainId,
         transactionType,
+        chainId,
         sellTokenAddress,
         buyTokenAddress,
         sellAmount,
