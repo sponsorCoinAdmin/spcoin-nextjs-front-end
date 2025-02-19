@@ -1,4 +1,5 @@
 import chainIdList from '@/resources/data/networks/chainIds.json';
+import { defaultNetworkSettings as defaultBaseSettings } from '@/resources/data/networks/base/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultEthereumSettings } from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultHardHatSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings';
@@ -6,10 +7,11 @@ import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/da
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import {
+  BASE,     BASE_WETH_ADDRESS,
   ETHEREUM, ETHEREUM_WETH_ADDRESS,
-  HARDHAT, HARDHAT_WETH_ADDRESS,
-  POLYGON, POLYGON_WETH_ADDRESS,
-  SEPOLIA, SEPOLIA_WETH_ADDRESS,
+  HARDHAT,  HARDHAT_WETH_ADDRESS,
+  POLYGON,  POLYGON_WETH_ADDRESS,
+  SEPOLIA,  SEPOLIA_WETH_ADDRESS,
   TokenContract
 } from '@/lib/structure/types';
 
@@ -31,6 +33,7 @@ const isTokenAddress = (address?: Address): boolean =>
 // *** WARNING: To be fixed for other networks ***
 const getNetworkWethAddress = (chainId: number): Address | undefined => {
   const wethAddresses: Record<number, Address> = {
+    [BASE]: BASE_WETH_ADDRESS,
     [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
     [POLYGON]: POLYGON_WETH_ADDRESS,
     [HARDHAT]: HARDHAT_WETH_ADDRESS,
@@ -82,6 +85,7 @@ const getAvatarImageURL = (chainId: number | string): string =>
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
   const defaultNetworkSettings = {
+    base: defaultBaseSettings,
     ethereum: defaultEthereumSettings,
     hardhat: defaultHardHatSettings,
     polygon: defaultPolygonSettings,

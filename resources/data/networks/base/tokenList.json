@@ -8,7 +8,7 @@
         "img": "/resources/images/tokens/0xToDo_SpCoin.png"
     },
     {
-        "chainId": 1,
+        "chainId": 84531,
         "address": "0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2",
         "name": "Ethereum",
         "symbol": "ETH",
@@ -21,7 +21,7 @@
         "name": "AERO",
         "symbol": "AeroDrome Exchange",
         "decimals": 18,
-        "img": "/resources/images/tokens/0xToDo_SpCoin.png"
+        "img": "/resources/images/tokens/0x940181a94A35A4569E4529A3CDfB74e38FD98631.png"
     },
      {
         "chainId": 8453,
@@ -29,7 +29,7 @@
         "name": "Basenji Meme Coin",
         "symbol": "BENJI",
         "decimals": 6,
-        "img": "/resources/images/tokens/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.png"
+        "img": "/resources/images/tokens/0xBC45647eA894030a4E9801Ec03479739FA2485F0.png"
     },
     {
         "chainId": 8453,
@@ -37,7 +37,7 @@
         "name": "Brett Meme Coin",
         "symbol": "BRETT",
         "decimals": 6,
-        "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+        "img": "/resources/images/tokens/0x532f27101965dd16442e59d40670faf5ebb142e4.png"
     },
     {
         "chainId": 8453,
