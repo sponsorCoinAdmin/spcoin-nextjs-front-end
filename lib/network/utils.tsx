@@ -18,7 +18,7 @@ import {
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-const IMG_HOME = "/resources/images/chains/";
+const IMG_HOME = "assets/blockchains/";
 const IMG_TYPE = ".png";
 
 const isNetworkProtocolToken = (tokenContract: TokenContract) => 
@@ -76,11 +76,16 @@ const getChainMap = (chainList: any[]): Map<number, any> =>
 
 const chainIdMap = getChainMap(chainIdList);
 
-const getNetworkName = (chainId: number): string | undefined => 
+const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-const getAvatarImageURL = (chainId: number | string): string => 
-  `${IMG_HOME}${chainId}${IMG_TYPE}`;
+const getNativeAvatar = (chainId: number ): string => 
+  `${IMG_HOME}${chainId}/info/logo${IMG_TYPE}`;
+
+const getTokenAvatar = (chainId: number , tokenAddress : bigint ): string => {
+  // alert(`getTokenAvatar = ${IMG_HOME}${chainId}/assets/${tokenAddress}/info/logo${IMG_TYPE}`);
+  return `${IMG_HOME}${chainId}/assets/${tokenAddress}/logo${IMG_TYPE}`;
+}
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
@@ -108,9 +113,10 @@ export {
   BURN_ADDRESS,
   createNetworkJsonList,
   delay,
-  getAvatarImageURL,
-  getNetworkName,
+  getNativeAvatar,
+  getBlockChainName,
   getNetworkWethAddress,
+  getTokenAvatar,
   isLowerCase,
   isNetworkAddress,
   isActiveAccountAddress,

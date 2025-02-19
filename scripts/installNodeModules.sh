@@ -17,15 +17,14 @@ installArrayModules() {
     doubleLine 110
     for element in $arr
     do
-         parentdir="$(dirname "$element")"
-	 echo EXECUTING: cd $parentdir
+         parentDir="$(dirname "$element")"
+	 echo EXECUTING: cd $parentDir
          echo EXECUTING installNodeModules: npm i $SEARCH_FILE
          # npm i $element
 	 echo EXECUTING: cd $CURR_DIR
 	 singleLine 110
     done
 }
-
 
 installNodeModules() {
     echo "installNodeModules():"

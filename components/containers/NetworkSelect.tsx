@@ -6,7 +6,7 @@ import { NetworkElement } from '@/lib/structure/types';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 import networks from '@/lib/network/initialize/networks.json';
 import Image from 'next/image'
-import info_png from '@/public/resources/images/info1.png'
+import info_png from '@/public/assets/miscellaneous/info1.png'
 
 type Props = {
     networkElement: NetworkElement, 

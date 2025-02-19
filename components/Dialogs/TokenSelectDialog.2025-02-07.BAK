@@ -2,7 +2,7 @@
 import styles from '@/styles/Modal.module.css';
 import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from 'react'
-import info_png from '@/public/resources/images/info1.png'
+import info_png from '@/public/assets/miscellaneous/info1.png'
 import Image from 'next/image'
 import { TRANSACTION_TYPE, FEED_TYPE, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
 import { isAddress } from 'ethers';

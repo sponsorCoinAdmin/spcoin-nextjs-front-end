@@ -1,7 +1,8 @@
+'use client';
 import React from 'react'
 import styles from '@/styles/Modal.module.css'
 import Image from 'next/image'
-import info_png from '@/public/resources/images/info1.png'
+import info_png from '@/public/assets/miscellaneous/info1.png'
 import baseTokenList from '@/resources/data/networks/base/tokenList.json';
 import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
@@ -11,7 +12,7 @@ import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
-import { BURN_ADDRESS } from '@/lib/network/utils';
+import { BURN_ADDRESS, getTokenAvatar } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
@@ -113,7 +114,8 @@ function DataList({dataFeedType, updateTokenCallback}:Props) {
     const tList = dataFeedList?.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={getDataKey( dataFeedType, e)}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])} >
-                <img src={e.img} alt={e.symbol} className={styles.elementLogo} />
+                {/* <img src={e.img} alt={e.symbol} className={styles.elementLogo} /> */}
+                <img src={getTokenAvatar(e.chainId, e.address)} alt={e.symbol} className={styles.elementLogo} />
                 <div>
                     <div className={styles.elementName}>{e.name}</div>
                     <div className={styles.elementSymbol}>{e.symbol}</div> 

@@ -3,7 +3,7 @@
     "chainId": 31337,
     "name": "Ethereum",
     "symbol": "ETH",
-    "img": "/resources/images/networks/1.png",
+    "img": "/assets/blockchains/1/info/1.png",
     "url": "https://etherscan.io/"
   },
   "defaultSellToken":  {
@@ -13,7 +13,7 @@
     "symbol": "USDC",
     "decimals": 6,
     "totalSupply": null,
-    "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
+    "img": "assets/blockchains/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
   },
   "defaultBuyToken": {
     "chainId": 31337,
@@ -22,10 +22,10 @@
     "symbol": "TON",
     "totalSupply": null,
     "decimals": 9,
-    "img": "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
+    "img": "assets/blockchains/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
   },
   "defaultRecipient": {
-      "img": "/resources/images/tokens/0xToDo_SpCoin.png",
+      "img": "assets/blockchains/0xToDo_SpCoin.png",
       "name": "Sponsor Coin",
       "address": "0xToDo_SpCoin.png",
       "url": "ToDo add URL here",
@@ -36,6 +36,6 @@
     "name": "Wilma Flintstone",
     "address": "Wilma Flintstone's Wallet Address",
     "url": "ToDo add URL here",
-    "img": "/resources/images/agents/WilmaFlintstone.png"
+    "img": "/assets/agents/WilmaFlintstone.png"
   }
 }

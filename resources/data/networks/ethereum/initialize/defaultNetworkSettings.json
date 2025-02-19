@@ -3,7 +3,7 @@
     "chainId": 1,
     "name": "Ethereum",
     "symbol": "ETH",
-    "img": "/resources/images/eth.png",
+    "img": "/assets/eth.png",
     "url": "https://etherscan.io/"
   }
 }

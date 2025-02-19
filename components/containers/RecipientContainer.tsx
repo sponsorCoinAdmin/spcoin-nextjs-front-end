@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
-import cog_png from '@/public/resources/images/miscellaneous/cog.png';
+import cog_png from '@/public/assets/miscellaneous/cog.png';
 import Link from 'next/link'
 import { AccountRecord, SP_COIN_DISPLAY } from '@/lib/structure/types';
 import SponsorRateConfig from './SponsorRateConfig';

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import styles from "@/styles/Modal.module.css";
 import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from "react";
@@ -6,7 +6,7 @@ import Image from "next/image";
 import { isAddress } from "ethers";
 import { useAccount } from "wagmi";
 
-import info_png from "@/public/resources/images/info1.png";
+import info_png from "@/public/assets/miscellaneous/info1.png";
 import { defaultMissingImage, stringifyBigInt } from "@/lib/spCoin/utils";
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
@@ -103,12 +103,12 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
 
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
-      <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
+      {/* <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
         <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
         <div className="cursor-pointer rounded border-none w-5 text-xl text-white" onClick={closeDialog}>
           X
         </div>
-      </div>
+      </div> */}
       <div className={styles.modalBox}>
         <InputSelect placeHolder={INPUT_PLACE_HOLDER} passedInputField={inputField || ""} setTokenContractCallBack={setTokenContract} />
 

@@ -6,7 +6,7 @@ import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 
-const defaultMissingImage = '/resources/images/miscellaneous/QuestionBlackOnRed.png';
+const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 const dumpSwapState = (swapType:SWAP_TYPE) => {
   switch (swapType) {
@@ -94,7 +94,7 @@ const getTokenDetails = async(chainId:any, tokenAddr: any, setTokenCallback:any)
 }
 
 const fetchTokenDetails = async(chainId:any, tokenAddr: any) => {
-  const tokenIconPath = `/resources/images/tokens/${tokenAddr}.png`;
+  const tokenIconPath = `assets/blockchains/${tokenAddr}.png`;
   let tokenContract:TokenContract|undefined;
   try {
     if (isAddress(tokenAddr)) {
@@ -107,6 +107,7 @@ const fetchTokenDetails = async(chainId:any, tokenAddr: any) => {
         name: retResponse.name,
         symbol: retResponse.symbol,
         decimals: retResponse.decimals,
+        balance: 0n,
         totalSupply: undefined,
         img: tokenIconPath
       }
@@ -189,7 +190,7 @@ const getValidAddress = (addrType:any, chainId?:number) => {
 
 async function fetchIconResource(tokenContract:TokenContract,
   setTokenContractCallBack:(tokenContract:TokenContract) => void) {
-  const tokenIconPath = `/resources/images/tokens/${tokenContract.address}.png`
+  const tokenIconPath = `assets/blockchains/${tokenContract.address}.png`
   // alert(`BEFORE: TokenSelectDialog:fetchIconResource(${tokenIconPath})`)
   const res = await fetch(tokenIconPath || "")
   if (res.ok) {
@@ -213,6 +214,7 @@ const invalidTokenContract   = (textInputField:string|undefined, chainId:any) =>
                                                  name:INVALID_TOKEN_NAME,
                                                  symbol:INVALID_TOKEN_SYMBOL,
                                                  decimals:undefined,
+                                                 balance:0n,
                                                  totalSupply:undefined,
                                                  img:defaultMissingImage
                                                }

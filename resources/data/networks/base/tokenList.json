@@ -5,7 +5,7 @@
         "name": "Sponsor Coin",
         "symbol": "SpCoin",
         "decimals": 18,
-        "img": "/resources/images/tokens/0xToDo_SpCoin.png"
+        "img": "assets/blockchains/0xToDo_SpCoin.png"
     },
     {
         "chainId": 84531,
@@ -13,7 +13,7 @@
         "name": "Ethereum",
         "symbol": "ETH",
         "decimals": 18,
-        "img": "/resources/images/networks/1.png"
+        "img": "/assets/blockchains/1/info/1.png"
     },
     {
         "chainId": 8453,
@@ -21,7 +21,7 @@
         "name": "AERO",
         "symbol": "AeroDrome Exchange",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x940181a94A35A4569E4529A3CDfB74e38FD98631.png"
+        "img": "assets/blockchains/0x940181a94A35A4569E4529A3CDfB74e38FD98631.png"
     },
      {
         "chainId": 8453,
@@ -29,7 +29,7 @@
         "name": "Basenji Meme Coin",
         "symbol": "BENJI",
         "decimals": 6,
-        "img": "/resources/images/tokens/0xBC45647eA894030a4E9801Ec03479739FA2485F0.png"
+        "img": "assets/blockchains/0xBC45647eA894030a4E9801Ec03479739FA2485F0.png"
     },
     {
         "chainId": 8453,
@@ -37,7 +37,7 @@
         "name": "Brett Meme Coin",
         "symbol": "BRETT",
         "decimals": 6,
-        "img": "/resources/images/tokens/0x532f27101965dd16442e59d40670faf5ebb142e4.png"
+        "img": "assets/blockchains/0x532f27101965dd16442e59d40670faf5ebb142e4.png"
     },
     {
         "chainId": 8453,
@@ -45,7 +45,7 @@
         "name": "USD Coin Staked",
         "symbol": "USDC",
         "decimals": 6,
-        "img": "/resources/images/tokens/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.png"
+        "img": "assets/blockchains/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.png"
     },
     {
         "chainId": 8453,
@@ -53,7 +53,7 @@
         "name": "Tether USD",
         "symbol": "USDT",
         "decimals": 6,
-        "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+        "img": "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
     },
     {
         "chainId": 8453,
@@ -61,7 +61,7 @@
         "name": "Gemini USD",
         "symbol": "cgUSD",
         "decimals": 2,
-        "img": "/resources/images/tokens/0x056fd409e1d7a124bd7017459dfea2f387b6d5cd.png"
+        "img": "assets/blockchains/0x056fd409e1d7a124bd7017459dfea2f387b6d5cd.png"
     },
     {
         "chainId": 8453,
@@ -69,7 +69,7 @@
         "name": "Dai Stablecoin",
         "symbol": "DAI",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x6b175474e89094c44da98b954eedeac495271d0f.png"
+        "img": "assets/blockchains/0x6b175474e89094c44da98b954eedeac495271d0f.png"
     },
     {
         "chainId": 8453,
@@ -77,14 +77,14 @@
         "name": "Wrapped Ethereum",
         "symbol": "WETH",
         "decimals": 18,
-        "img": "/resources/images/tokens/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
+        "img": "assets/blockchains/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
     },
     {
         "chainId": 8453,
         "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
         "name": "Wrapped Bitcoin",
         "symbol": "WBTC",
-        "img": "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+        "img": "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
         "decimals": 8
     },
     {
@@ -93,7 +93,7 @@
         "name": "Bad Token Address",
         "symbol": "BAD",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1.png"
+        "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1.png"
     },
     {
         "symbol": "MATIC",
@@ -101,7 +101,7 @@
         "name": "Matic Token",
         "chainId": 8453,
         "decimals": 18,
-        "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"
+        "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"
     },
     {
         "chainId": 8453,
@@ -109,7 +109,7 @@
         "name": "Uniswap",
         "symbol": "UNI",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.png"
+        "img": "assets/blockchains/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.png"
     },
     {
         "chainId": 8453,
@@ -117,7 +117,7 @@
         "name": "Shiba Inu",
         "symbol": "SHIB",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce.png"
+        "img": "assets/blockchains/0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce.png"
     },
     {
         "chainId": 8453,
@@ -125,6 +125,6 @@
         "name": "AAVE",
         "symbol": "AAVE",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9.png"
+        "img": "assets/blockchains/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9.png"
     }
 ]

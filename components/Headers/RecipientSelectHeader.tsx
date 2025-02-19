@@ -1,8 +1,8 @@
 import styles from '@/styles/Exchange.module.css';
 import { SettingOutlined } from "@ant-design/icons";
 import Image from 'next/image';
-import spCoin_png from '@/public/resources/images/spCoin.png';
-import cog_png from '@/public/resources/images/miscellaneous/cog.png';
+import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
+import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/utils';

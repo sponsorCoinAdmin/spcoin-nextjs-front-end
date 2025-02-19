@@ -2,9 +2,9 @@
 import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react'
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
-import searchMagGlassGrey_png from '@/public/resources/images/SearchMagGlassGrey.png'
-import customUnknownImage_png from '@/public/resources/images/miscellaneous/QuestionWhiteOnRed.png'
-import info_png from '@/public/resources/images/info1.png'
+import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
+import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png'
+import info_png from '@/public/assets/miscellaneous/info1.png'
 import Image from 'next/image'
 import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
@@ -69,7 +69,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
                 let td:AccountRecord = {
                     address: agentInput,
                     symbol: retResponse.symbol,
-                    img: '/resources/images/miscellaneous/QuestionWhiteOnRed.png',
+                    img: '/assets/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
                     url: "ToDo Set This"
                 }
@@ -147,7 +147,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.AGENT_WALLETS} getSelectedListElement={getSelectedListElement}/>
+                    <DataList dataFeedType={FEED_TYPE.AGENT_WALLETS} updateTokenCallback={getSelectedListElement}/>
                 </div>
             </div>
         </dialog>

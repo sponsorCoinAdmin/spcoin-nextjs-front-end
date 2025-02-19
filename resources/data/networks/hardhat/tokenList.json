@@ -5,7 +5,7 @@
         "name": "Ethereum",
         "symbol": "ETH",
         "decimals": 18,
-        "img": "/resources/images/networks/1.png"
+        "img": "/assets/blockchains/1/info/1.png"
     },
     {
         "chainId": 31337,
@@ -13,7 +13,7 @@
         "name": "Sponsor Coin",
         "symbol": "SpCoin",
         "decimals": 18,
-        "img": "/resources/images/tokens/0xToDo_SpCoin.png"
+        "img": "assets/blockchains/0xToDo_SpCoin.png"
     },
     {
         "chainId": 31337,
@@ -21,7 +21,7 @@
         "name": "Wrapped Ethereum",
         "symbol": "WETH",
         "decimals": 18,
-        "img": "/resources/images/tokens/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
+        "img": "assets/blockchains/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
     },
     {
         "chainId": 31337,
@@ -29,7 +29,7 @@
         "name": "Bad Token Address",
         "symbol": "BAD",
         "decimals": 18,
-        "img": "/resources/images/tokens/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1.png"
+        "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1.png"
     },
     {
         "chainId": 31337,
@@ -37,7 +37,7 @@
         "name": "Chicken Coin",
         "symbol": "CHKN",
         "decimals": 18,
-        "img": "/resources/images/tokens/0xD55210Bb6898C021a19de1F58d27b71f095921Ee.png"
+        "img": "assets/blockchains/0xD55210Bb6898C021a19de1F58d27b71f095921Ee.png"
     },
     {
         "chainId": 31337,
@@ -45,7 +45,7 @@
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
-        "img": "/resources/images/tokens/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
+        "img": "assets/blockchains/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
     },
     {
         "chainId": 31337,
@@ -53,6 +53,6 @@
         "name": "Tether USD",
         "symbol": "USDT",
         "decimals": 6,
-        "img": "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+        "img": "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
     }
 ]
