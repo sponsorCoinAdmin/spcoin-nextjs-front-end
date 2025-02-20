@@ -15,6 +15,8 @@ import {
   TokenContract
 } from '@/lib/structure/types';
 
+const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
+
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -79,12 +81,21 @@ const chainIdMap = getChainMap(chainIdList);
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-const getNativeAvatar = (chainId: number ): string => 
-  `${IMG_HOME}${chainId}/info/logo${IMG_TYPE}`;
+const getNativeAvatar = (): string =>
+  `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/avatar${IMG_TYPE}`;
 
-const getTokenAvatar = (chainId: number , tokenAddress : bigint ): string => {
-  // alert(`getTokenAvatar = ${IMG_HOME}${chainId}/assets/${tokenAddress}/info/logo${IMG_TYPE}`);
-  return `${IMG_HOME}${chainId}/assets/${tokenAddress}/logo${IMG_TYPE}`;
+const getTokenAvatar = (tokenContract : TokenContract | undefined ): string => {
+  if (!tokenContract)
+    return defaultMissingImage
+  tokenContract.img = getAddressAvatar(tokenContract.address);
+  return tokenContract.img;
+}
+
+const getAddressAvatar = (tokenAddress : Address | undefined ): string => {
+  const chainId = exchangeContext.tradeData.chainId;
+  // alert(`getTokenAvatar = ${IMG_HOME}${chainId}/assets/${tokenAddress}/info/avatar${IMG_TYPE}`);
+  const img = `${IMG_HOME}${chainId}/assets/${tokenAddress}/avatar${IMG_TYPE}`;
+  return img || defaultMissingImage
 }
 
 // Utility function to create a default network JSON list (for debugging/testing)
@@ -113,16 +124,17 @@ export {
   BURN_ADDRESS,
   createNetworkJsonList,
   delay,
-  getNativeAvatar,
+  getAddressAvatar,
   getBlockChainName,
+  getNativeAvatar,
   getNetworkWethAddress,
   getTokenAvatar,
+  isActiveAccountAddress,
   isLowerCase,
   isNetworkAddress,
-  isActiveAccountAddress,
   isNetworkProtocolToken,
-  isWrappingTransaction,
   isTokenAddress,
   isWrappedNetworkAddress,
+  isWrappingTransaction,
   mapAccountAddrToWethAddr
 };

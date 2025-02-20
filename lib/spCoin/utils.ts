@@ -5,8 +5,7 @@ import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
-
-const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
+import { BURN_ADDRESS } from "../network/utils";
 
 const dumpSwapState = (swapType:SWAP_TYPE) => {
   switch (swapType) {
@@ -93,7 +92,7 @@ const getTokenDetails = async(chainId:any, tokenAddr: any, setTokenCallback:any)
   return tokenContract
 }
 
-const fetchTokenDetails = async(chainId:any, tokenAddr: any) => {
+const fetchTokenDetails = async(chainId:any, tokenAddr: Address) => {
   const tokenIconPath = `assets/blockchains/${tokenAddr}.png`;
   let tokenContract:TokenContract|undefined;
   try {
@@ -188,35 +187,20 @@ const getValidAddress = (addrType:any, chainId?:number) => {
   }
 }
 
-async function fetchIconResource(tokenContract:TokenContract,
-  setTokenContractCallBack:(tokenContract:TokenContract) => void) {
-  const tokenIconPath = `assets/blockchains/${tokenContract.address}.png`
-  // alert(`BEFORE: TokenSelectDialog:fetchIconResource(${tokenIconPath})`)
-  const res = await fetch(tokenIconPath || "")
-  if (res.ok) {
-    tokenContract.img = tokenIconPath;
-    setTokenContractCallBack(tokenContract)
-  } 
-  else {
-    // alert(`ERROR: fetchIconResource(${contractAddress})`)
-    tokenContract.img = defaultMissingImage;
-    setTokenContractCallBack(tokenContract)
-  }
-}
-
 const invalidTokenContract   = (textInputField:string|undefined, chainId:any) => {
   const INVALID_TOKEN_NAME   = "Invalid Network/Token Address";
   const INVALID_TOKEN_SYMBOL = "Please Enter Valid Token Address";
   const invalidToken:TokenContract|undefined = (!textInputField) ? undefined :
                                                {
                                                  chainId: chainId,
-                                                 address:textInputField,
+                                                //  address:textInputField,
+                                                 address:BURN_ADDRESS,
                                                  name:INVALID_TOKEN_NAME,
                                                  symbol:INVALID_TOKEN_SYMBOL,
                                                  decimals:undefined,
                                                  balance:0n,
                                                  totalSupply:undefined,
-                                                 img:defaultMissingImage
+                                                 img:undefined
                                                }
   return invalidToken;
 }
@@ -248,12 +232,10 @@ const dumpContext = (isAlert:boolean = false, isConsoleDebug:boolean=true) => {
 // }
 export {
     decimalAdjustTokenAmount,
-    defaultMissingImage,
     bigIntDecimalShift,
     dumpContext,
     dumpSwapState,
     exchangeContextDump,
-    fetchIconResource,
     fetchTokenDetails,
     // useActiveAccountAddress,
     getValidAddress,

@@ -13,14 +13,14 @@ import { useChainId } from "wagmi";
 
 export default () => {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
-  const [avatar, setAvatar] = useState<string>("/assets/blockchains/1/info/logo.png");
+  const [avatar, setAvatar] = useState<string>("/assets/blockchains/1/info/avatar.png");
   const chainId = useChainId({config});
-  let network:string = getBlockChainName(chainId)
+  let network:string = getBlockChainName(chainId) || ""
   // ToDo Optimize this: useEffect is used to set the network and image for the set chainId when
   // the networkName async is complete.
   // This is required because NextJS Currently does not allow aync functions in client components.
   useEffect(() => {
-    setAvatar(getNativeAvatar(chainId));
+    setAvatar(getNativeAvatar());
     setNetworkName(network);
   }, [network]);
 

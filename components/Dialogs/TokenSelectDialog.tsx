@@ -69,7 +69,7 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
     return isDuplicate;
   };
 
-  const cloneIfNetworkToken = (tokenContract:TokenContract) : TokenContract => {
+  const cloneIfNetworkToken = (tokenContract: TokenContract): TokenContract => {
     if (tokenContract?.address === BURN_ADDRESS) {
       const clone = { ...tokenContract } as TokenContract;
       clone.address = ACTIVE_ACCOUNT_ADDRESS;
@@ -103,12 +103,12 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
 
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
-      {/* <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
+      <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
         <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
         <div className="cursor-pointer rounded border-none w-5 text-xl text-white" onClick={closeDialog}>
           X
         </div>
-      </div> */}
+      </div>
       <div className={styles.modalBox}>
         <InputSelect placeHolder={INPUT_PLACE_HOLDER} passedInputField={inputField || ""} setTokenContractCallBack={setTokenContract} />
 

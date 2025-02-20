@@ -7,14 +7,14 @@ import styles from '@/styles/Modal.module.css';
 // import searchMagGlassWhite_png from './assets/searchMagGlassWhite.png'
 // import searchMagGlassGrey_png from '../../../assets/SearchMagGlassGrey.png'
 // import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
-import { fetchIconResource, getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
+import { getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
 import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
 import Image from 'next/image'
 import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@/lib/wagmi/wagmiERC20ClientRead";
 import { Address } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import { isActiveAccountAddress } from "@/lib/network/utils";
+import { getTokenAvatar, isActiveAccountAddress } from "@/lib/network/utils";
 
 type Props = {
   placeHolder:string,
@@ -49,7 +49,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   useEffect(() => {
     if (tokenContract?.address) {
       // alert(`tokenContract = ${stringifyBigInt(tokenContract)}`)
-      fetchIconResource(tokenContract, setTokenContractCallBack)
+      getTokenAvatar(tokenContract)
     }
     else {
       setTokenContractCallBack(tokenContract);
@@ -59,7 +59,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   useEffect(() => {
     if (networkContract?.address) {
       // alert(`networkContract = ${stringifyBigInt(networkContract)}`)
-      fetchIconResource(networkContract, setTokenContractCallBack)
+      getTokenAvatar(tokenContract)
     }
     else {
       setTokenContractCallBack(networkContract);
@@ -69,7 +69,6 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
 
   useEffect(() => {
     const validAddress = getValidAddress(debouncedText);
-
     if (validAddress) {
       setContractType(validAddress)
     } else {
