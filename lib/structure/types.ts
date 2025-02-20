@@ -138,7 +138,7 @@ type TokenContract = {
   balance: bigint;
   chainId?: number;
   decimals?: number;
-  img?: string;
+  img?: any;
   name?: string;
   symbol?: string;
   totalSupply: any;

@@ -7,11 +7,11 @@ import { isAddress } from "ethers";
 import { useAccount } from "wagmi";
 
 import info_png from "@/public/assets/miscellaneous/info1.png";
-import { defaultMissingImage, stringifyBigInt } from "@/lib/spCoin/utils";
+import { stringifyBigInt } from "@/lib/spCoin/utils";
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
-import { BURN_ADDRESS } from "@/lib/network/utils";
+import { BURN_ADDRESS, defaultMissingImage, getTokenAvatar } from "@/lib/network/utils";
 import { Address } from "viem";
 
 const TITLE_NAME = "Select a token to select";
@@ -72,7 +72,7 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
   const cloneIfNetworkToken = (tokenContract: TokenContract): TokenContract => {
     if (tokenContract?.address === BURN_ADDRESS) {
       const clone = { ...tokenContract } as TokenContract;
-      clone.address = ACTIVE_ACCOUNT_ADDRESS;
+      clone.address = ACTIVE_ACCOUNT_ADDRESS as Address;
       return clone
     }
     return tokenContract;
@@ -116,7 +116,7 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
               <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)}>
-                <Image id="tokenImage" src={tokenContract?.img || defaultMissingImage} height={40} width={40} alt="Token Image" />
+                <Image id="tokenImage" src={getTokenAvatar(tokenContract) || defaultMissingImage} height={40} width={40} alt="Token Image" />
                 <div>
                   <div className={styles.elementName}>{tokenContract?.name}</div>
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>

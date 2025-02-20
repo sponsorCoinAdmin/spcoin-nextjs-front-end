@@ -12,7 +12,7 @@ import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
-import { BURN_ADDRESS, getAddressAvatar } from '@/lib/network/utils';
+import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
@@ -100,38 +100,96 @@ function displayElementDetail (tokenContract:any) {
     alert(`${tokenContract?.name} Token Address = ${clone.address}`)
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// document.addEventListener("DOMContentLoaded", () => {
+//     const imgElements: NodeListOf<HTMLImageElement> = document.querySelectorAll('.image'); // Select all images
+
+//     imgElements.forEach((img: HTMLImageElement) => {
+//         img.onerror = () => {
+//             console.warn(`Image not found: ${img.src}, using alternative.`);
+//             img.src = defaultMissingImage;
+//             img.alt = 'Alternative image';
+//         };
+//     });
+// });
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 type Props = {
     dataFeedType: any,
     updateTokenCallback:  (listElement: any) => void,
 }
 
-function DataList({dataFeedType, updateTokenCallback}:Props) {
-    let dataFeedList = getDataFeedList(dataFeedType, useChainId());
-    const ACTIVE_ACCOUNT =  useAccount()
+function DataList({ dataFeedType, updateTokenCallback }: Props) {
     const { address: tokenAddress } = useAccount();
-    ACTIVE_ACCOUNT_ADDRESS = tokenAddress as Address;
-    // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
-    const tList = dataFeedList?.map((e: any, i: number) => (
-        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"  key={getDataKey( dataFeedType, e)}>
-            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])} >
-                {/* <img src={e.img} alt={e.symbol} className={styles.elementLogo} /> */}
-                <img src={getAddressAvatar(e.address)} alt={e.symbol} className={styles.elementLogo} />
+    const dataFeedList = getDataFeedList(dataFeedType, useChainId()) || [];
+    const defaultMissingImage = "/images/default.png"; // Ensure this is a valid image path
+
+    const tList = dataFeedList.map((e: any, i: number) => (
+        <div 
+            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
+            key={getDataKey(dataFeedType, e)}
+        >
+            <div 
+                className="cursor-pointer flex flex-row justify-between" 
+                onClick={() => updateTokenCallback(dataFeedList[i])}
+            >
+                {/* Ensure getAddressAvatar(e.address) is valid */}
+                <img
+                    className={styles.elementLogo} 
+                    src={getAddressAvatar(e.address)} 
+                    alt="Token Avatar"
+                    onError={(event) => (event.currentTarget.src = defaultMissingImage)}
+                />
                 <div>
                     <div className={styles.elementName}>{e.name}</div>
-                    <div className={styles.elementSymbol}>{e.symbol}</div> 
+                    <div className={styles.elementSymbol}>{e.symbol}</div>
                 </div>
             </div>
-            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(dataFeedList[i])}>
+            <div 
+                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  
+                onClick={() => displayElementDetail(dataFeedList[i])}
+            >
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
             </div>
         </div>
-    ))
+    ));
 
-    return (
-        <div>
-            {tList}
-        </div>
-    )
+    return <>{tList}</>;
+
+// function DataList({dataFeedType, updateTokenCallback}:Props) {
+//     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
+//     const { address: tokenAddress } = useAccount();
+//     ACTIVE_ACCOUNT_ADDRESS = tokenAddress as Address;
+//     // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
+//     const tList = dataFeedList?.map((e: any, i: number) => (
+//         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" key={getDataKey(dataFeedType, e)}>
+//             <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])} >
+//                 {/* <img src={e.img} alt={e.symbol} className={styles.elementLogo} /> */}
+//                 <img
+//                     className={`${image} ${styles.elementLogo}`}
+//                     src={getAddressAvatar(e.address)}
+//                     alt={defaultMissingImage}
+//                     onError={(event) => (event.currentTarget.src = defaultMissingImage)}
+//                 />
+//                 <div>
+//                     <div className={styles.elementName}>{e.name}</div>
+//                     <div className={styles.elementSymbol}>{e.symbol}</div>
+//                 </div>
+//             </div>
+//             <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(dataFeedList[i])}>
+//                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+//             </div>
+//         </div>
+//     ))
+
+    // return (
+    //     <div>
+    //         {tList}
+    //     </div>
+    // )
 }
 
 export default DataList

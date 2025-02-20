@@ -14,6 +14,7 @@ import {
   SEPOLIA,  SEPOLIA_WETH_ADDRESS,
   TokenContract
 } from '@/lib/structure/types';
+import { useChainId } from 'wagmi';
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
@@ -41,12 +42,10 @@ const getNetworkWethAddress = (chainId: number): Address | undefined => {
     [HARDHAT]: HARDHAT_WETH_ADDRESS,
     [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
   };
-
   const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
   console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS || BURN_ADDRESS;
 };
-
 
 // *** WARNING: HARDCODING To be fixed for other networks ***
 const isWrappedNetworkAddress = (address?: Address): boolean =>
@@ -107,7 +106,6 @@ const createNetworkJsonList = () => {
     polygon: defaultPolygonSettings,
     sepolia: defaultSepoliaSettings
   };
-  
   const networkSettings = JSON.stringify(defaultNetworkSettings, null, 2);
   console.log(`Default JSON Network Settings:\n${networkSettings}`);
   alert(`Network Settings: ${networkSettings}`);
@@ -123,6 +121,7 @@ function delay(ms: number | undefined) {
 export {
   BURN_ADDRESS,
   createNetworkJsonList,
+  defaultMissingImage,
   delay,
   getAddressAvatar,
   getBlockChainName,
