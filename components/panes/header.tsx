@@ -7,7 +7,7 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
-import { getBlockChainName, getNativeAvatar } from "@/lib/network/utils";
+import { getBlockChainName, getNetworkAvatar } from "@/lib/network/utils";
 
 import { useChainId } from "wagmi";
 
@@ -20,7 +20,7 @@ export default () => {
   // the networkName async is complete.
   // This is required because NextJS Currently does not allow aync functions in client components.
   useEffect(() => {
-    setAvatar(getNativeAvatar());
+    setAvatar(getNetworkAvatar());
     setNetworkName(network);
   }, [network]);
 

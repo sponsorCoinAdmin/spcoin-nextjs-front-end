@@ -92,6 +92,9 @@ const getBlockChainName = (chainId: number): string | undefined =>
 const getNativeAvatar = (): string =>
   `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/avatar${IMG_TYPE}`;
 
+const getNetworkAvatar = (): string =>
+  `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/network${IMG_TYPE}`;
+
 const getTokenAvatar = (tokenContract : TokenContract | undefined ): string => {
   if (!tokenContract)
     return defaultMissingImage
@@ -139,6 +142,7 @@ export {
   getAddressAvatar,
   getBlockChainName,
   getNativeAvatar,
+  getNetworkAvatar,
   getNetworkWethAddress,
   getTokenAvatar,
   isActiveAccountAddress,
