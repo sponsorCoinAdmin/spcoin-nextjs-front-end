@@ -12,7 +12,7 @@ import agentWalletList from '@/resources/data/agents/agentWalletList.json';
 import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
-import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar } from '@/lib/network/utils';
+import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
@@ -39,28 +39,28 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     return address;
 }
 
-const getDataFeedList = (feedType: FEED_TYPE, network:string|number) => {
+const getDataFeedList = (feedType: FEED_TYPE, network:string|number):TokenContract[] => {
     if (typeof network === "string")
       network = network.toLowerCase()
     switch (feedType) {
-        case FEED_TYPE.AGENT_WALLETS: return agentWalletList;
+        case FEED_TYPE.AGENT_WALLETS: return agentWalletList as TokenContract[];
         case FEED_TYPE.TOKEN_LIST:
             switch(network) {
                 case BASE:
-                case "base": return baseTokenList;
+                case "base": return baseTokenList as TokenContract[];
                 case ETHEREUM:
-                case "ethereum": return ethereumTokenList;
+                case "ethereum": return ethereumTokenList as TokenContract[];
                 case POLYGON:
-                case "polygon": return polygonTokenList;
+                case "polygon": return polygonTokenList as TokenContract[];
                 case HARDHAT:
                 case "hardhat": 
-                return hardhatTokenList;
+                return hardhatTokenList as TokenContract[];
                 case SEPOLIA:
-                case "sepolia": return sepoliaTokenList;
-                default: return ethereumTokenList;
+                case "sepolia": return sepoliaTokenList as TokenContract[];
+                default: return ethereumTokenList as TokenContract[];
             }
-        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList;
-        default: return ethereumTokenList;
+        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList as TokenContract[];
+        default: return ethereumTokenList as TokenContract[];
     }
 }
 
@@ -100,49 +100,36 @@ function displayElementDetail (tokenContract:any) {
     alert(`${tokenContract?.name} Token Address = ${clone.address}`)
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-// document.addEventListener("DOMContentLoaded", () => {
-//     const imgElements: NodeListOf<HTMLImageElement> = document.querySelectorAll('.image'); // Select all images
-
-//     imgElements.forEach((img: HTMLImageElement) => {
-//         img.onerror = () => {
-//             console.warn(`Image not found: ${img.src}, using alternative.`);
-//             img.src = defaultMissingImage;
-//             img.alt = 'Alternative image';
-//         };
-//     });
-// });
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-
 type Props = {
     dataFeedType: any,
     updateTokenCallback:  (listElement: any) => void,
 }
 
+const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenContract: TokenContract) => {
+    // ToDo Set Timer to ignore fetch if last call
+    if(isActiveAccountToken(tokenContract))
+        event.currentTarget.src = defaultMissingImage;
+    else
+        event.currentTarget.src = defaultMissingImage;
+}
+
 function DataList({ dataFeedType, updateTokenCallback }: Props) {
     const { address: tokenAddress } = useAccount();
-    const dataFeedList = getDataFeedList(dataFeedType, useChainId()) || [];
-    const defaultMissingImage = "/images/default.png"; // Ensure this is a valid image path
+    const dataFeedList:TokenContract[] = getDataFeedList(dataFeedType, useChainId()) || [];
 
     const tList = dataFeedList.map((e: any, i: number) => (
         <div 
             className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
-            key={getDataKey(dataFeedType, e)}
-        >
+            key={getDataKey(dataFeedType, e)}>
             <div 
                 className="cursor-pointer flex flex-row justify-between" 
-                onClick={() => updateTokenCallback(dataFeedList[i])}
-            >
+                onClick={() => updateTokenCallback(dataFeedList[i])}>
                 {/* Ensure getAddressAvatar(e.address) is valid */}
                 <img
                     className={styles.elementLogo} 
                     src={getAddressAvatar(e.address)} 
-                    alt="Token Avatar"
-                    onError={(event) => (event.currentTarget.src = defaultMissingImage)}
-                />
+                    alt={`${e.name} Token Avatar`} 
+                    onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
                 <div>
                     <div className={styles.elementName}>{e.name}</div>
                     <div className={styles.elementSymbol}>{e.symbol}</div>
@@ -150,46 +137,12 @@ function DataList({ dataFeedType, updateTokenCallback }: Props) {
             </div>
             <div 
                 className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  
-                onClick={() => displayElementDetail(dataFeedList[i])}
-            >
+                onClick={() => displayElementDetail(dataFeedList[i])}>
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
             </div>
         </div>
     ));
-
     return <>{tList}</>;
-
-// function DataList({dataFeedType, updateTokenCallback}:Props) {
-//     let dataFeedList = getDataFeedList(dataFeedType, useChainId());
-//     const { address: tokenAddress } = useAccount();
-//     ACTIVE_ACCOUNT_ADDRESS = tokenAddress as Address;
-//     // console.debug("dataFeedList = \n" +JSON.stringify(dataFeedList,null,2))
-//     const tList = dataFeedList?.map((e: any, i: number) => (
-//         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" key={getDataKey(dataFeedType, e)}>
-//             <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])} >
-//                 {/* <img src={e.img} alt={e.symbol} className={styles.elementLogo} /> */}
-//                 <img
-//                     className={`${image} ${styles.elementLogo}`}
-//                     src={getAddressAvatar(e.address)}
-//                     alt={defaultMissingImage}
-//                     onError={(event) => (event.currentTarget.src = defaultMissingImage)}
-//                 />
-//                 <div>
-//                     <div className={styles.elementName}>{e.name}</div>
-//                     <div className={styles.elementSymbol}>{e.symbol}</div>
-//                 </div>
-//             </div>
-//             <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  onClick={() => displayElementDetail(dataFeedList[i])}>
-//                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
-//             </div>
-//         </div>
-//     ))
-
-    // return (
-    //     <div>
-    //         {tList}
-    //     </div>
-    // )
 }
 
 export default DataList

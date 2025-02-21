@@ -24,17 +24,26 @@ const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEe
 const IMG_HOME = "assets/blockchains/";
 const IMG_TYPE = ".png";
 
-const isNetworkProtocolToken = (tokenContract: TokenContract) => 
+const isActiveAccountToken = (tokenContract: TokenContract) : boolean => 
   isActiveAccountAddress(tokenContract.address);
 
-const isActiveAccountAddress = (address?: Address): boolean => 
+const isNativeToken = (tokenContract: TokenContract) : boolean => 
+  isNativeTokenAddress(tokenContract.address);
+
+const isNativeTokenAddress = (address?: Address) : boolean => 
+  address === NATIVE_TOKEN_ADDRESS;
+
+const isActiveAccountAddress = (address?: Address) : boolean => 
   address === exchangeContext.activeAccountAddress;
 
-const isTokenAddress = (address?: Address): boolean => 
+const isBurnTokenAddress = (address?: Address) : boolean => 
+  address === BURN_ADDRESS
+
+const isTokenAddress = (address?: Address) : boolean => 
   !isActiveAccountAddress(address);
 
 // *** WARNING: To be fixed for other networks ***
-const getNetworkWethAddress = (chainId: number): Address | undefined => {
+const getNetworkWethAddress = (chainId: number) : Address | undefined => {
   const wethAddresses: Record<number, Address> = {
     [BASE]: BASE_WETH_ADDRESS,
     [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
@@ -93,8 +102,12 @@ const getTokenAvatar = (tokenContract : TokenContract | undefined ): string => {
 const getAddressAvatar = (tokenAddress : Address | undefined ): string => {
   const chainId = exchangeContext.tradeData.chainId;
   // alert(`getTokenAvatar = ${IMG_HOME}${chainId}/assets/${tokenAddress}/info/avatar${IMG_TYPE}`);
-  const img = `${IMG_HOME}${chainId}/assets/${tokenAddress}/avatar${IMG_TYPE}`;
-  return img || defaultMissingImage
+  if(isActiveAccountAddress(tokenAddress) ||
+   isNativeTokenAddress(tokenAddress) || 
+   isBurnTokenAddress(tokenAddress))
+    return getNativeAvatar();
+  else
+    return `${IMG_HOME}${chainId}/assets/${tokenAddress}/avatar${IMG_TYPE}`;
 }
 
 // Utility function to create a default network JSON list (for debugging/testing)
@@ -129,9 +142,12 @@ export {
   getNetworkWethAddress,
   getTokenAvatar,
   isActiveAccountAddress,
+  isActiveAccountToken,
+  isBurnTokenAddress,
   isLowerCase,
+  isNativeToken,
+  isNativeTokenAddress,
   isNetworkAddress,
-  isNetworkProtocolToken,
   isTokenAddress,
   isWrappedNetworkAddress,
   isWrappingTransaction,
