@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title> <!-- Title will be updated dynamically -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            margin: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .radio-group {
+            margin-top: 20px;
+        }
+        .radio-group label {
+            margin-right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="headerTitle">Loading...</h1> <!-- Header dynamically updated -->
+
+    <div class="container">
+        <p id="siteName">Site Name: Loading...</p>
+        <p id="forwardingSite">Forwarding Site: Loading...</p>
+
+        <button class="button" id="forwardButton" onclick="openForwardingSite()">Open Site</button>
+
+        <!-- Radio Buttons -->
+        <div class="radio-group">
+            <label>Forwarding:</label>
+            <label>
+                <input type="radio" name="forwardOption" value="current" checked> Current
+            </label>
+            <label>
+                <input type="radio" name="forwardOption" value="tab"> Tab
+            </label>
+            <label>
+                <input type="radio" name="forwardOption" value="window"> Window
+            </label>
+        </div>
+    </div>
+
+    <script>
+        // Get query parameters from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const siteName = urlParams.get('site') || 'No site name provided';
+        const forwardingSite = urlParams.get('forward') || null;
+        const autoForward = urlParams.get('autoforward') === 'true';
+        const tabParam = urlParams.get('tab') || 'current'; // Default is 'current'
+
+        // Update the page title and header to "$site Site Forwarder"
+        document.title = `${siteName} Site Forwarder`;
+        document.getElementById('headerTitle').innerText = `${siteName} Site Forwarder`;
+
+        // Display the site and forwarding URL on the page
+        document.getElementById('siteName').innerText = 'Site Name: ' + siteName;
+        if (forwardingSite) {
+            document.getElementById('forwardingSite').innerText = 'Forwarding Site: ' + forwardingSite;
+        } else {
+            document.getElementById('forwardingSite').innerText = 'Forwarding Site: Not provided';
+        }
+
+        // Change button text to "Open Site $siteName"
+        document.getElementById('forwardButton').innerText = `Open ${siteName}`;
+
+        // Set the selected radio button based on the 'tab' parameter value
+        if (tabParam.toLowerCase() === 'current') {
+            document.querySelector('input[name="forwardOption"][value="current"]').checked = true;
+        } else if (tabParam.toLowerCase() === 'tab') {
+            document.querySelector('input[name="forwardOption"][value="tab"]').checked = true;
+        } else if (tabParam.toLowerCase() === 'window') {
+            document.querySelector('input[name="forwardOption"][value="window"]').checked = true;
+        } else {
+            // Default to 'current' if no valid tab param is found
+            document.querySelector('input[name="forwardOption"][value="current"]').checked = true;
+        }
+
+        // Function to open the forwarding site based on the selected radio option
+        function openForwardingSite() {
+            if (forwardingSite) {
+                const selectedOption = document.querySelector('input[name="forwardOption"]:checked').value;
+
+                // Open site based on the radio button selection
+                if (selectedOption === 'current') {
+                    // Open in the current tab
+                    window.location.href = forwardingSite;
+                } else if (selectedOption === 'tab') {
+                    // Open in a new tab
+                    window.open(forwardingSite, '_blank');
+                } else if (selectedOption === 'window') {
+                    // Open in a new window
+                    window.open(forwardingSite, '_blank', 'width=800,height=600,resizable=yes,scrollbars=yes');
+                }
+            } else {
+                // Redirect to missing page if forwarding site is not provided
+                window.location.href = `http://localhost:3000/websites/missing/index.html?site=${siteName}&url=${forwardingSite}`;
+            }
+        }
+
+        // Automatically forward if "autoforward" is true
+        if (autoForward && forwardingSite) {
+            openForwardingSite(); // Automatically redirect to the forwarding site
+        }
+
+    </script>
+
+</body>
+</html>

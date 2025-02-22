@@ -7,15 +7,15 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
-import { getBlockChainName, getNetworkAvatar } from "@/lib/network/utils";
+import { defaultMissingImage, getBlockChainName, getNetworkAvatar } from "@/lib/network/utils";
 
 import { useChainId } from "wagmi";
 
 export default () => {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
   const [avatar, setAvatar] = useState<string>("/assets/blockchains/1/info/avatar.png");
-  const chainId = useChainId({config});
-  let network:string = getBlockChainName(chainId) || ""
+  const chainId = useChainId({ config });
+  let network: string = getBlockChainName(chainId) || ""
   // ToDo Optimize this: useEffect is used to set the network and image for the set chainId when
   // the networkName async is complete.
   // This is required because NextJS Currently does not allow aync functions in client components.
@@ -35,8 +35,15 @@ export default () => {
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
-          <img src={avatar} alt={'??'} width={20} height={20} className={styles.elementLogo}/>
-           &nbsp;&nbsp;{networkName}
+          <img
+            src={avatar}
+            className={styles.elementLogo}
+            alt={`Header ChainId = ${chainId} Network = ${networkName}`}
+            width={25}
+            height={25}
+            onError={(event) => { event.currentTarget.src = defaultMissingImage; }}
+          />
+          &nbsp;&nbsp;{networkName}
         </div>
         <ConnectButton />
       </div>
