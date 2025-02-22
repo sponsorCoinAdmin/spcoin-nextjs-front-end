@@ -8,7 +8,7 @@ import {  SEPOLIA, TokenContract } from '@/lib/structure/types'
   decimals: 8,
   balance: 0n,
   totalSupply: null,
-  img: "/resources/images/tokens/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+  img: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
  };
 
 const defaultBuyToken: TokenContract = { 
@@ -19,7 +19,7 @@ const defaultBuyToken: TokenContract = {
   decimals: 6,
   balance: 0n,
   totalSupply: null,
-  img: "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+  img: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
 };
 
 const defaultRecipient = { 
@@ -27,7 +27,7 @@ const defaultRecipient = {
   "name": "Support The Tiger",
   "symbol": "Tiger",
   "url": "ToDo N/A",
-  "img": "/resources/images/recipients/SaveTheTiger4.png"
+  "img": "/assets/recipients/SaveTheTiger4.png"
 };
 
 const defaultAgent = {
@@ -35,7 +35,7 @@ const defaultAgent = {
   "symbol": "Stuge 3",
   "name": "Moe Howard",
   "url": "ToDo N/A",
-  "img": "/resources/images/agents/MoeHoward.png"
+  "img": "/assets/agents/MoeHoward.png"
 };
 
 const defaultNetworkSettings = {

@@ -6,7 +6,7 @@ import { Address, formatUnits } from 'viem'
 import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20Abi } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure/types'
-import { BURN_ADDRESS, getNetworkName } from '@/lib/network/utils';
+import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 import { stringifyBigInt } from '../spCoin/utils'
 
 // console.log(`AAAAAAAAA erc20Abi = ${JSON.stringify(erc20Abi)}`)
@@ -113,7 +113,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       symbol:symbol,
       decimals:decimals,
       totalSupply:totalSupply,
-      img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+      img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
   // if (TOKEN_CONTRACT_ADDRESS)
@@ -126,7 +126,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
   const chainId:number            = useChainId();
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
-  const name                      = getNetworkName(chainId);
+  const name                      = getBlockChainName(chainId);
 
   let networkResponse:TokenContract|undefined;
   if ( ACTIVE_NETWORK_ADDRESS ) {
@@ -138,7 +138,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       symbol:symbol,
       decimals:decimals,
       totalSupply:undefined,
-      img:'/resources/images/miscellaneous/QuestionWhiteOnRed.png'
+      img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
 

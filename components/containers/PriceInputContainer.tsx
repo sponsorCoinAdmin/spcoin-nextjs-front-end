@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from "react";
 
 // External Libraries
@@ -68,7 +69,7 @@ const priceInputContainer = ({
 
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS: Address = ACTIVE_ACCOUNT.address || BURN_ADDRESS
-  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address
+  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address || BURN_ADDRESS as Address
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() => {

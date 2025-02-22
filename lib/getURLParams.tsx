@@ -4,5 +4,5 @@ const getURLParams = (url:string) => {
   return params;
 }
 
-  export { getURLParams
-  }
+export { getURLParams
+}

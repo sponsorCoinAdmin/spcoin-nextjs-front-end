@@ -8,7 +8,7 @@ import {  HARDHAT, TokenContract } from '@/lib/structure/types'
   decimals: 9,
   balance: 0n,
   totalSupply: null,
-  img: "/resources/images/tokens/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
+  img: "assets/blockchains/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
  };
 
  const defaultBuyToken: TokenContract = { 
@@ -19,7 +19,7 @@ import {  HARDHAT, TokenContract } from '@/lib/structure/types'
   decimals: 6,
   balance: 0n,
   totalSupply: null,
-  img: "/resources/images/tokens/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+  img: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
 };
 
 const defaultRecipient = { 
@@ -27,7 +27,7 @@ const defaultRecipient = {
   "address": "0xToDo_SpCoin.png",
   "name": "Sponsor Coin",
   "url": "ToDo add URL here",
-  "img": "/resources/images/tokens/0xToDo_SpCoin.png"
+  "img": "assets/blockchains/0xToDo_SpCoin.png"
 };
 
 const defaultAgent = { 
@@ -35,7 +35,7 @@ const defaultAgent = {
   address: "Wilma Flintstone's Wallet Address",
   name: "Wilma Flintstone",
   "url": "ToDo add URL here",
-  img: "/resources/images/agents/WilmaFlintstone.png"
+  img: "/assets/agents/WilmaFlintstone.png"
 };
 
 const defaultNetworkSettings = {

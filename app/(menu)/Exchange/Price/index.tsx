@@ -20,8 +20,8 @@ import { isWrappingTransaction } from '@/lib/network/utils';
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
   const signer = useEthersSigner();
-  const chainId = useChainId();
   const tradeData: TradeData = exchangeContext.tradeData;
+  const chainId = useChainId();
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
   const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
@@ -38,6 +38,8 @@ export default function PriceView() {
 
   // Memoize transaction validity check
   const isWrapTransaction = useMemo(() => isWrappingTransaction(sellTokenAddress, buyTokenAddress), [sellTokenAddress, buyTokenAddress]);
+
+  tradeData.chainId = chainId;
 
   useEffect(() => {
     tradeData.buyAmount = buyAmount;
@@ -63,7 +65,7 @@ export default function PriceView() {
   }, []);
   
   useEffect(() => {
-    if (ACTIVE_ACCOUNT.chain) {
+    if (ACTIVE_ACCOUNT.chainId) {
       tradeData.chainId = chainId;
       setSellAmount(0n);
       setBuyAmount(0n);
@@ -74,12 +76,14 @@ export default function PriceView() {
   }, [chainId]);
   
   useEffect(() => {
-    if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress)
-      sellTokenContract.address = ACTIVE_ACCOUNT.address
-    else
-      if (buyTokenContract && buyTokenContract.address === exchangeContext.activeAccountAddress)
-        buyTokenContract.address = ACTIVE_ACCOUNT.address
-    exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address
+    if (ACTIVE_ACCOUNT.address) {
+      if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress)
+        sellTokenContract.address = ACTIVE_ACCOUNT.address
+      else
+        if (buyTokenContract && buyTokenContract.address === exchangeContext.activeAccountAddress)
+          buyTokenContract.address = ACTIVE_ACCOUNT.address
+      exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address
+    }
   }, [ACTIVE_ACCOUNT.address]);
   
   useEffect(() => {

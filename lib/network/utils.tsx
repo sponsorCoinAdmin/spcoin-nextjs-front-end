@@ -1,4 +1,5 @@
 import chainIdList from '@/resources/data/networks/chainIds.json';
+import { defaultNetworkSettings as defaultBaseSettings } from '@/resources/data/networks/base/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultEthereumSettings } from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultHardHatSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings';
@@ -6,42 +7,54 @@ import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/da
 import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import {
+  BASE,     BASE_WETH_ADDRESS,
   ETHEREUM, ETHEREUM_WETH_ADDRESS,
-  HARDHAT, HARDHAT_WETH_ADDRESS,
-  POLYGON, POLYGON_WETH_ADDRESS,
-  SEPOLIA, SEPOLIA_WETH_ADDRESS,
+  HARDHAT,  HARDHAT_WETH_ADDRESS,
+  POLYGON,  POLYGON_WETH_ADDRESS,
+  SEPOLIA,  SEPOLIA_WETH_ADDRESS,
   TokenContract
 } from '@/lib/structure/types';
+import { useChainId } from 'wagmi';
+
+const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-const IMG_HOME = "/resources/images/chains/";
+const IMG_HOME = "assets/blockchains/";
 const IMG_TYPE = ".png";
 
-const isNetworkProtocolToken = (tokenContract: TokenContract) => 
+const isActiveAccountToken = (tokenContract: TokenContract) : boolean => 
   isActiveAccountAddress(tokenContract.address);
 
-const isActiveAccountAddress = (address?: Address): boolean => 
+const isNativeToken = (tokenContract: TokenContract) : boolean => 
+  isNativeTokenAddress(tokenContract.address);
+
+const isNativeTokenAddress = (address?: Address) : boolean => 
+  address === NATIVE_TOKEN_ADDRESS;
+
+const isActiveAccountAddress = (address?: Address) : boolean => 
   address === exchangeContext.activeAccountAddress;
 
-const isTokenAddress = (address?: Address): boolean => 
+const isBurnTokenAddress = (address?: Address) : boolean => 
+  address === BURN_ADDRESS
+
+const isTokenAddress = (address?: Address) : boolean => 
   !isActiveAccountAddress(address);
 
 // *** WARNING: To be fixed for other networks ***
-const getNetworkWethAddress = (chainId: number): Address | undefined => {
+const getNetworkWethAddress = (chainId: number) : Address | undefined => {
   const wethAddresses: Record<number, Address> = {
+    [BASE]: BASE_WETH_ADDRESS,
     [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
     [POLYGON]: POLYGON_WETH_ADDRESS,
     [HARDHAT]: HARDHAT_WETH_ADDRESS,
     [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
   };
-
   const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
   console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS || BURN_ADDRESS;
 };
-
 
 // *** WARNING: HARDCODING To be fixed for other networks ***
 const isWrappedNetworkAddress = (address?: Address): boolean =>
@@ -73,21 +86,42 @@ const getChainMap = (chainList: any[]): Map<number, any> =>
 
 const chainIdMap = getChainMap(chainIdList);
 
-const getNetworkName = (chainId: number): string | undefined => 
+const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-const getAvatarImageURL = (chainId: number | string): string => 
-  `${IMG_HOME}${chainId}${IMG_TYPE}`;
+const getNativeAvatar = (): string =>
+  `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/avatar${IMG_TYPE}`;
+
+const getNetworkAvatar = (): string =>
+  `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/network${IMG_TYPE}`;
+
+const getTokenAvatar = (tokenContract : TokenContract | undefined ): string => {
+  if (!tokenContract)
+    return defaultMissingImage
+  tokenContract.img = getAddressAvatar(tokenContract.address);
+  return tokenContract.img;
+}
+
+const getAddressAvatar = (tokenAddress : Address | undefined ): string => {
+  const chainId = exchangeContext.tradeData.chainId;
+  // alert(`getTokenAvatar = ${IMG_HOME}${chainId}/assets/${tokenAddress}/info/avatar${IMG_TYPE}`);
+  if(isActiveAccountAddress(tokenAddress) ||
+   isNativeTokenAddress(tokenAddress) || 
+   isBurnTokenAddress(tokenAddress))
+    return getNativeAvatar();
+  else
+    return `${IMG_HOME}${chainId}/assets/${tokenAddress}/avatar${IMG_TYPE}`;
+}
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
   const defaultNetworkSettings = {
+    base: defaultBaseSettings,
     ethereum: defaultEthereumSettings,
     hardhat: defaultHardHatSettings,
     polygon: defaultPolygonSettings,
     sepolia: defaultSepoliaSettings
   };
-  
   const networkSettings = JSON.stringify(defaultNetworkSettings, null, 2);
   console.log(`Default JSON Network Settings:\n${networkSettings}`);
   alert(`Network Settings: ${networkSettings}`);
@@ -103,16 +137,23 @@ function delay(ms: number | undefined) {
 export {
   BURN_ADDRESS,
   createNetworkJsonList,
+  defaultMissingImage,
   delay,
-  getAvatarImageURL,
-  getNetworkName,
+  getAddressAvatar,
+  getBlockChainName,
+  getNativeAvatar,
+  getNetworkAvatar,
   getNetworkWethAddress,
-  isLowerCase,
-  isNetworkAddress,
+  getTokenAvatar,
   isActiveAccountAddress,
-  isNetworkProtocolToken,
-  isWrappingTransaction,
+  isActiveAccountToken,
+  isBurnTokenAddress,
+  isLowerCase,
+  isNativeToken,
+  isNativeTokenAddress,
+  isNetworkAddress,
   isTokenAddress,
   isWrappedNetworkAddress,
+  isWrappingTransaction,
   mapAccountAddrToWethAddr
 };
