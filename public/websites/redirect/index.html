@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading...</title> <!-- Title will be updated dynamically -->
+    <title>Loading...</title> <!-- Title dynamically updated -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -98,23 +98,24 @@
 
         // Function to open the forwarding site based on the selected radio option
         function openForwardingSite() {
-            if (forwardingSite) {
-                const selectedOption = document.querySelector('input[name="forwardOption"]:checked').value;
-
-                // Open site based on the radio button selection
-                if (selectedOption === 'current') {
-                    // Open in the current tab
-                    window.location.href = forwardingSite;
-                } else if (selectedOption === 'tab') {
-                    // Open in a new tab
-                    window.open(forwardingSite, '_blank');
-                } else if (selectedOption === 'window') {
-                    // Open in a new window
-                    window.open(forwardingSite, '_blank', 'width=800,height=600,resizable=yes,scrollbars=yes');
-                }
-            } else {
+            if (!forwardingSite) {
                 // Redirect to missing page if forwarding site is not provided
-                window.location.href = `http://localhost:3000/websites/missing/index.html?site=${siteName}&url=${forwardingSite}`;
+                window.location.href = `http://localhost:3000/websites/missing/index.html?site=${encodeURIComponent(siteName)}&url=${encodeURIComponent(forwardingSite)}`;
+                return;
+            }
+
+            const selectedOption = document.querySelector('input[name="forwardOption"]:checked').value;
+
+            // Open site based on the radio button selection
+            if (selectedOption === 'current') {
+                // Open in the current tab
+                window.location.href = forwardingSite;
+            } else if (selectedOption === 'tab') {
+                // Open in a new tab
+                window.open(forwardingSite, '_blank');
+            } else if (selectedOption === 'window') {
+                // Open in a new window
+                window.open(forwardingSite, '_blank', 'width=800,height=600,resizable=yes,scrollbars=yes');
             }
         }
 
@@ -122,8 +123,6 @@
         if (autoForward && forwardingSite) {
             openForwardingSite(); // Automatically redirect to the forwarding site
         }
-
     </script>
-
 </body>
 </html>
