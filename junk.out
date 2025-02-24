@@ -55011,3 +55011,3200 @@ Check the top-level render call using <ul>. See https://reactjs.org/link/warning
     at li
  GET /wallets 200 in 10100ms
  GET /wallets 200 in 10109ms
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+Warning: Each child in a list should have a unique "key" prop.
+
+Check the top-level render call using <ul>. See https://reactjs.org/link/warning-keys for more information.
+    at li
+ GET /wallets 200 in 866ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+Warning: Each child in a list should have a unique "key" prop.
+
+Check the top-level render call using <ul>. See https://reactjs.org/link/warning-keys for more information.
+    at li
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+ ⨯ ./lib/spCoin/getWallets.ts
+Error: 
+  [31mx[0m Unterminated regexp literal
+    ,-[[36;1;4mC:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\lib\spCoin\getWallets.ts[0m:28:1]
+ [2m28[0m | 
+ [2m29[0m |     return (
+ [2m30[0m |         <div>
+ [2m31[0m |             <h1>Wallets</h1>
+    : [31;1m                        ^^^^[0m
+ [2m32[0m |             <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
+ [2m33[0m |                 {wallets.map((wallet, index) => {
+ [2m33[0m |                     return (
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/spCoin/getWallets.ts
+./app/wallets/page.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+ GET /wallets 200 in 825ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/connectkit/build/index.es.js
+./components/Wrappers/SpCoinWrapper.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/connectkit/build/index.es.js
+./components/Wrappers/SpCoinWrapper.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/connectkit/build/index.es.js
+./components/Wrappers/SpCoinWrapper.tsx
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+ ⨯ ./app/wallets/page.tsx
+Module parse failed: Unexpected token (37:46)
+|                                         marginBottom: "8px"
+|                                     },
+>                                     children: <invalid> ?? "Unknown Wallet"
+|                                 }, void 0, false, {
+|                                     fileName: "C:\\Users\\Robin\\spCoin\\SPCOIN-PROJECT-MODULES\\spcoin-nextjs-front-end\\app\\wallets\\page.tsx",
+
+Import trace for requested module:
+./app/wallets/page.tsx
+ GET /wallets 500 in 300ms
+ GET /wallets 500 in 237ms
+ GET /Exchange 500 in 347ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /_next/static/webpack/aae402aa40db8f8b.webpack.hot-update.json 404 in 4041ms
+ GET /_next/static/webpack/aae402aa40db8f8b.webpack.hot-update.json 404 in 1389ms
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Error: Directory 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\wallets' does not exist.
+Wallets with Avatars: []
+Wallets Only: []
+ GET /wallets 200 in 591ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /wallets 200 in 718ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /_next/static/webpack/aae402aa40db8f8b.webpack.hot-update.json 404 in 155ms
+BLOCKCHAIN_PROVIDER = INFURA
+BASE_URL            = https://base-mainnet.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+MAINNET_URL         = https://mainnet.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+POLYGON_URL         = https://polygon-mainnet.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+SEPOLIA_URL         = https://sepolia.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+HARDHAT_URL         = http://127.0.0.1:8545
+mapAccountAddrToWethAddr: chainId(8453) 
+               Ethereum Account Address = undefined 
+               Token Account Address = undefined
+getNetworkWethAddress(8453): WETH ADDRESS: 0x4200000000000000000000000000000000000006
+mapAccountAddrToWethAddr: chainId(8453) 
+               Ethereum Account Address = undefined 
+               Token Account Address = undefined
+getNetworkWethAddress(8453): WETH ADDRESS: 0x4200000000000000000000000000000000000006
+fetcher.shouldFetch.chainId = 8453
+useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = 0x0000000000000000000000000000000000000000, contractAddress = 0x0000000000000000000000000000000000000000
+useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = 0x0000000000000000000000000000000000000000, contractAddress = 0x0000000000000000000000000000000000000000
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /_next/static/webpack/aae402aa40db8f8b.webpack.hot-update.json 404 in 1319ms
+ GET /Exchange 200 in 1533ms
+ GET /assets/blockchains/8453/assets/0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562/avatar.png 404 in 106ms
+ GET /assets/blockchains/8453/assets/0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2/avatar.png 404 in 132ms
+ GET /assets/blockchains/8453/assets/0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2/avatar.png 404 in 384ms
+ GET /assets/blockchains/8453/assets/0xCa72827a3D211CfD8F6b00Ac98824872b72CAb49/avatar.png 404 in 164ms
+ GET /assets/blockchains/8453/assets/0x0555E30da8f98308EdB960aa94C0Db47230d2B9c/avatar.png 404 in 507ms
+ GET /assets/blockchains/8453/assets/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1/avatar.png 404 in 490ms
+ GET /assets/blockchains/8453/assets/0xe868c3d83ec287c01bcb533a33d197d9bfa79dad/avatar.png 404 in 484ms
+ GET /assets/blockchains/8453/assets/0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290/avatar.png 404 in 272ms
+ GET /assets/blockchains/8453/assets/0x239b9C1F24F3423062B0d364796e07Ee905E9FcE/avatar.png 404 in 263ms
+ GET /assets/blockchains/8453/assets/0xD6DF932A45C0f255f85145f286eA0b292B21C90B/avatar.png 404 in 253ms
+ GET /assets/blockchains/8453/assets/0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562/avatar.png 404 in 129ms
+ GET /assets/blockchains/8453/assets/0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2/avatar.png 404 in 86ms
+ GET /assets/blockchains/8453/assets/0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2/avatar.png 404 in 124ms
+ GET /assets/blockchains/8453/assets/0xCa72827a3D211CfD8F6b00Ac98824872b72CAb49/avatar.png 404 in 207ms
+ GET /assets/blockchains/8453/assets/0x0555E30da8f98308EdB960aa94C0Db47230d2B9c/avatar.png 404 in 203ms
+ GET /assets/blockchains/8453/assets/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1/avatar.png 404 in 240ms
+ GET /assets/blockchains/8453/assets/0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290/avatar.png 404 in 294ms
+ GET /assets/blockchains/8453/assets/0xe868c3d83ec287c01bcb533a33d197d9bfa79dad/avatar.png 404 in 314ms
+ GET /assets/blockchains/8453/assets/0x239b9C1F24F3423062B0d364796e07Ee905E9FcE/avatar.png 404 in 439ms
+ GET /assets/blockchains/8453/assets/0xD6DF932A45C0f255f85145f286eA0b292B21C90B/avatar.png 404 in 86ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ GET /wallets 200 in 1184ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ GET /wallets 200 in 839ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/PriceInputContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ GET /wallets 200 in 2021ms
