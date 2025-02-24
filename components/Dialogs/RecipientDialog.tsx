@@ -131,7 +131,6 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
                     onClick={closeDialog}
                 >X</div>
             </div>
-
             <div className={styles.modalBox} >
                 <div className={styles.modalElementSelect}>
                     <div className={styles.leftH}>

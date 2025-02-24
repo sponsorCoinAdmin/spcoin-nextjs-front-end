@@ -15,6 +15,32 @@ import { useAccount, useChainId } from "wagmi";
 import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
 import { Address } from 'viem';
 
+const walletList: any = [];
+
+import * as fs from "fs";
+import * as path from "path";
+function preloadWallets() {
+    const walletsDirectory = "/assets/recipients/"
+
+    try {
+        const files = fs.readdirSync(walletsDirectory);
+
+        files.forEach((file) => {
+            if (file.endsWith(".json")) {
+                const filePath = path.join(walletsDirectory, file);
+                const fileContent = fs.readFileSync(filePath, "utf-8");
+                const wallet: any = JSON.parse(fileContent);
+                walletList.push(wallet);
+            }
+        });
+
+        console.log("Preloaded Wallets:", walletList);
+    } catch (error) {
+        console.error("Error reading wallet files:", error);
+    }
+}
+
+
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     let address = dataFeedList.address;
     // const walletAddress = useAccount().address;
@@ -39,7 +65,7 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     return address;
 }
 
-const getDataFeedList = (feedType: FEED_TYPE, network:string|number):TokenContract[] => {
+const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
     if (typeof network === "string")
       network = network.toLowerCase()
     switch (feedType) {
@@ -59,7 +85,7 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number):TokenContra
                 case "sepolia": return sepoliaTokenList as TokenContract[];
                 default: return ethereumTokenList as TokenContract[];
             }
-        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList as TokenContract[];
+        case FEED_TYPE.RECIPIENT_WALLETS: return loadRecipientWalletListFiles(recipientWalletList);
         default: return ethereumTokenList as TokenContract[];
     }
 }
@@ -100,11 +126,6 @@ function displayElementDetail (tokenContract:any) {
     alert(`${tokenContract?.name} Token Address = ${clone.address}`)
 }
 
-type Props = {
-    dataFeedType: any,
-    updateTokenCallback:  (listElement: any) => void,
-}
-
 const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenContract: TokenContract) => {
     // ToDo Set Timer to ignore fetch if last call
     if(isActiveAccountToken(tokenContract))
@@ -113,13 +134,16 @@ const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenCont
         event.currentTarget.src = defaultMissingImage;
 }
 
+type Props = {
+    dataFeedType: any,
+    updateTokenCallback:  (listElement: any) => void
+}
+
 function DataList({ dataFeedType, updateTokenCallback }: Props) {
-    const { address: tokenAddress } = useAccount();
     const dataFeedList:TokenContract[] = getDataFeedList(dataFeedType, useChainId()) || [];
 
     const tList = dataFeedList.map((e: any, i: number) => (
-        <div 
-            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
+        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
             key={getDataKey(dataFeedType, e)}>
             <div 
                 className="cursor-pointer flex flex-row justify-between" 

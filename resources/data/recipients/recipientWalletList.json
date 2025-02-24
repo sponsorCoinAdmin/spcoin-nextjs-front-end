@@ -1,276 +1,196 @@
 [
     {
-        "symbol": "SpCoin",
-        "img": "assets/blockchains/0xToDo_SpCoin.png",
+        "symbol": "AAA_SpCoin",
         "name": "Sponsor Coin",
-        "address": "0xToDo_SpCoin.png",
-        "url": "ToDo add URL here"
+        "address": "0xToDo_SpCoin.png"
     },
     {
         "symbol": "AAA_Rebel",
-        "img": "/assets/recipients/RebelNews1.png",
         "name": "Help Rebel News",
-        "address": "0x39846f9558199c333c5212fe4658293cbf3da679",
-        "url": "https://www.rebelnews.com/"
+        "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
     },
     {
         "symbol": "AAA_BFree",
-        "img": "/assets/recipients/BornFree2.png",
         "name": "Born Free USA",
-        "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67",
-        "url": "https://www.bornfreeusa.org"
+        "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
     },
     {
         "symbol": "AAA_Tiger",
-        "img": "/assets/recipients/SaveTheTiger2.png",
         "name": "Save The Siberian",
-        "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b",
-        "url": "ToDo add URL here"
+        "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
     },
     {
         "symbol": "AAA_Bark",
-        "img": "/assets/recipients/AnimalShelter1.png",
         "name": "Paws Prints Shelter",
-        "address": "0x000000000000000000000000000000000000000a",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000000a"
     },
     {
         "symbol": "AAA_Help Me",
-        "img": "/assets/recipients/SickGirl.png",
         "name": "Judy's Leukemia",
-        "address": "0x000000000000000000000000000000000000005c",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005c"
     },
     {
         "symbol": "AAA_Meow",
-        "img": "/assets/recipients/AnimalShelter2.png",
         "name": "Wiskers Place",
-        "address": "0x000000000000000000000000000000000000000b",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000000b"
     },
     {
-        "symbol": "Woof",
-        "img": "/assets/recipients/AnimalShelter3.png",
+        "symbol": "AAA_Woof",
         "name": "Dogs R Us",
-        "address": "0x000000000000000000000000000000000000000c",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000000c"
     },
     {
-        "symbol": "N.Y.A.S.",
-        "img": "/assets/recipients/AnimalShelter4.png",
+        "symbol": "AAA_N.Y.A.S.",
         "name": "N.Y. Animal Shelter",
-        "address": "0x000000000000000000000000000000000000000d",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000000d"
     },
     {
-        "symbol": "Cancer",
-        "img": "/assets/recipients/BreastCancerFoundation.png",
+        "symbol": "AAA_Cancer",
         "name": "Breast Cancer",
-        "address": "0x000000000000000000000000000000000000001b",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000001b"
     },
     {
-        "symbol": "Biden",
-        "img": "/assets/recipients/Biden1.png",
+        "symbol": "AAA_Biden",
         "name": "Support Biden",
-        "address": "0x000000000000000000000000000000000000000e",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000000e"
     },
     {
-        "symbol": "BIDEN2",
-        "img": "/assets/recipients/Biden2.png",
+        "symbol": "AAA_BIDEN2",
         "name": "Bidanomics Works",
-        "address": "0x000000000000000000000000000000000000000f",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000000f"
     },
     {
-        "symbol": "C.W.F.",
-        "img": "/assets/recipients/ChildrensWishFoundation1.png",
+        "symbol": "AAA_C.W.F.",
         "name": "Children's Wish",
-        "address": "0x000000000000000000000000000000000000001c",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000001c"
     },
     {
-        "symbol": "WISH",
-        "img": "/assets/recipients/ChildrensWishFoundation2.png",
+        "symbol": "AAA_WISH",
         "name": "Wish Foundation",
-        "address": "0x000000000000000000000000000000000000001d",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000001d"
     },
     {
-        "symbol": "Parks",
-        "img": "/assets/recipients/CleanTheParks.png",
+        "symbol": "AAA_Parks",
         "name": "Clean The Parks",
-        "address": "0x000000000000000000000000000000000000001e",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000001e"
     },
     {
-        "symbol": "DP",
-        "img": "/assets/recipients/Democrat.png",
+        "symbol": "AAA_DP",
         "name": "Democratic Party",
-        "address": "0x000000000000000000000000000000000000001f",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000001f"
     },
     {
-        "symbol": "PotHoles",
-        "img": "/assets/recipients/FixTheRoads.png",
+        "symbol": "AAA_PotHoles",
         "name": "Fix The Roads",
-        "address": "0x0000000000000000000000000000000000000002",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000002"
     },
     {
-        "symbol": "Food",
-        "img": "/assets/recipients/FoodBank.png",
+        "symbol": "AAA_Food",
         "name": "T.O. FoodBank",
-        "address": "0x000000000000000000000000000000000000002a",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000002a"
     },
     {
-        "symbol": "Help",
-        "img": "/assets/recipients/Homeless.png",
+        "symbol": "AAA_Help",
         "name": "Help the Homeless",
-        "address": "0x000000000000000000000000000000000000002c",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000002c"
     },
     {
-        "symbol": "Liberals2",
-        "img": "/assets/recipients/Liberals2.png",
+        "symbol": "AAA_Liberals2",
         "name": "Vote Liberals",
-        "address": "0x000000000000000000000000000000000000002d",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000002d"
     },
     {
-        "symbol": "Liberals6",
-        "img": "/assets/recipients/Liberals6.png",
+        "symbol": "AAA_Liberals6",
         "name": "Support Liberals",
-        "address": "0x000000000000000000000000000000000000002e",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000002e"
     },
     {
-        "symbol": "RC",
-        "img": "/assets/recipients/RedCross.png",
+        "symbol": "AAA_RC",
         "name": "Red Cross",
-        "address": "0x000000000000000000000000000000000000003f",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000003f"
     },
     {
-        "symbol": "RP",
-        "img": "/assets/recipients/Republican1.png",
+        "symbol": "AAA_RP",
         "name": "Fund Republican",
-        "address": "0x0000000000000000000000000000000000000004",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000004"
     },
     {
-        "symbol": "Sharks",
-        "img": "/assets/recipients/SaveTheSharks.png",
+        "symbol": "AAA_Sharks",
         "name": "Protect The Sharks",
-        "address": "0x000000000000000000000000000000000000004a",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000004a"
     },
     {
-        "symbol": "Kids",
-        "img": "/assets/recipients/SickKids.png",
+        "symbol": "AAA_Kids",
         "name": "Support Sick Kids",
-        "address": "0x000000000000000000000000000000000000005d",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005d"
     },
     {  
-        "symbol": "DRUGS",
-        "img": "/assets/recipients/SickKids.png",
+        "symbol": "AAA_DRUGS",
         "name": "Stop Drug Abuse",
-        "address": "0x000000000000000000000000000000000000005e",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005e"
     },
     {
-        "symbol": "Tiger",
-        "img": "/assets/recipients/SaveTheTiger3.png",
+        "symbol": "AAA_Tiger",
         "name": "Save The Bangle",
-        "address": "0x000000000000000000000000000000000000004d",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000004d"
     },
     {
-        "symbol": "Tiger",
-        "img": "/assets/recipients/SaveTheTiger4.png",
+        "symbol": "AAA_Tiger",
         "name": "Support The Tiger",
-        "address": "0x000000000000000000000000000000000000004e",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000004e"
     },
     {
-        "symbol": "Tiger",
-        "img": "/assets/recipients/SaveTheTiger6.png",
+        "symbol": "AAA_Tiger",
         "name": "Help The Tiger",
-        "address": "0x0000000000000000000000000000000000000005",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000005"
     },
     {
-        "symbol": "Trees",
-        "img": "/assets/recipients/SaveTheTrees.png",
+        "symbol": "AAA_Trees",
         "name": "Save The Trees",
-        "address": "0x000000000000000000000000000000000000005a",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005a"
     },
     {
-        "symbol": "Whales",
-        "img": "/assets/recipients/SaveTheWhales.png",
+        "symbol": "AAA_Whales",
         "name": "Save The Whales",
-        "address": "0x000000000000000000000000000000000000005b",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005b"
     },
         {
-        "symbol": "Trump FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX",
-        "img": "/assets/recipients/Trump1.png",
+        "symbol": "AAA_Trump FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX",
         "name": "Vote Trump",
-        "address": "0x000000000000000000000000000000000000005e",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005e"
     },
     {
-        "symbol": "Trump",
-        "img": "/assets/recipients/Trump2.png",
+        "symbol": "AAA_Trump",
         "name": "Trump For President",
-        "address": "0x000000000000000000000000000000000000005f",
-        "url": "ToDo add URL here"
+        "address": "0x000000000000000000000000000000000000005f"
     },
     {
-        "symbol": "Trump",
-        "img": "/assets/recipients/Trump3.png",
+        "symbol": "AAA_Trump",
         "name": "Support Trump",
-        "address": "0x0000000000000000000000000000000000000006",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000006"
     },
     {
-        "symbol": "Trump",
-        "img": "/assets/recipients/Trump4.png",
+        "symbol": "AAA_Trump",
         "name": "Support Trump",
-        "address": "0x0000000000000000000000000000000000000007",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000007"
     },
-
-
-
     {
-        "symbol": "Unicef",
-        "img": "/assets/recipients/Unicef.png",
+        "symbol": "AAA_Unicef",
         "name": "Unicef",
-        "address": "0x0000000000000000000000000000000000000008",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000008"
     },
     {
-        "symbol": "Veterans",
-        "img": "/assets/recipients/Veterans.png",
+        "symbol": "AAA_Veterans",
         "name": "Support your Veterans",
-        "address": "0x0000000000000000000000000000000000000009",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000009"
     },
      {
-        "symbol": "Pierre",
-        "img": "/assets/recipients/VotePierre.png",
+        "symbol": "AAA_Pierre",
         "name": "Pierre as Prime Minister",
-        "address": "0x0000000000000000000000000000000000000010",
-        "url": "ToDo add URL here"
+        "address": "0x0000000000000000000000000000000000000010"
     },
     {
-        "symbol": "Trudeau",
-        "img": "/assets/recipients/VoteTrudeau.png",
+        "symbol": "AAA_Trudeau",
         "name": "Support Trudeau",
         "address": "0x0000000000000000000000000000000000000011"
     }
