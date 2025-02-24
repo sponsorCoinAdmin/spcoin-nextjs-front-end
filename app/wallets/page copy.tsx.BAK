@@ -1,0 +1,71 @@
+import { getWalletsWithAvatars } from "@/lib/spCoin/getWallets";
+import { defaultMissingImage } from "@/lib/network/utils"; // Import missing avatar image
+
+const publicWalletPath: string = "assets/wallets";
+
+export default async function WalletsPage() {
+    const walletsWithAvatars = await getWalletsWithAvatars(publicWalletPath); // Fetch wallets at build time
+
+    return (
+        <div>
+            <h1>Wallets</h1>
+            <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
+                {walletsWithAvatars.map((walletData, index) => {
+                    // Get avatar or use default if it's missing
+                    const avatar = walletData?.data?.avatar 
+                        ? `/${publicWalletPath}/${walletData.address}/avatar.png`
+                        : defaultMissingImage; // If avatar is missing, set it as null (you can choose to display nothing or a placeholder here)
+
+                    const wallet = walletData?.data?.wallet ?? {}; // Get wallet data
+
+                    return (
+                        <li 
+                            key={index} 
+                            style={{ 
+                                display: "flex", 
+                                alignItems: "center", 
+                                padding: "12px",
+                                backgroundColor: index % 2 === 0 ? "#d6d6d6" : "#f5f5f5" // Darker grey for better contrast
+                            }}
+                        >
+                            {/* Avatar image */}
+                            <div style={{ textAlign: "center", marginRight: "12px" }}>
+                                {avatar ? (
+                                    <img 
+                                        src={avatar} 
+                                        alt="Avatar" 
+                                        width="40" 
+                                        height="40" 
+                                        style={{ 
+                                            borderRadius: "50%", 
+                                            border: "2px solid #ccc" 
+                                        }}
+                                    />
+                                ) : (
+                                    <div style={{ width: "40px", height: "40px", backgroundColor: "#ccc", borderRadius: "50%" }} />
+                                )}
+                            </div>
+
+                            <div>
+                                {/* Wallet Name above the JSON */}
+                                <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px" }}>
+                                    {wallet?.name ?? "Unknown Wallet"}
+                                </div>
+                                {/* Wallet Data */}
+                                <pre style={{ 
+                                    whiteSpace: "pre-wrap", 
+                                    wordWrap: "break-word", 
+                                    margin: "4px 0 0 12px",
+                                    fontSize: "14px", 
+                                    color: "#333"
+                                }}>
+                                    {JSON.stringify(wallet, null, 2)}
+                                </pre>
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+}
