@@ -2,20 +2,40 @@
 
 import { useState } from "react";
 
-export default function WalletsClient() {
+interface BlockScanner {
+    blockchain: string;
+    explorer?: string;
+    url?: string;
+}
+
+interface Wallet {
+    name: string;
+    symbol: string;
+    type: string;
+    website: string;
+    description: string;
+    status: string;
+    address: string;
+    "block-scanners": BlockScanner[];
+}
+
+interface WalletsClientProps {
+    wallets: Wallet[];
+}
+
+export default function WalletsClient({ wallets }: WalletsClientProps) {
     const [filter, setFilter] = useState<"All" | "Recipients" | "Agents">("All");
 
-    // ✅ Ensure title updates correctly when state changes
     const getTitle = (filter: "All" | "Recipients" | "Agents") => {
-        if (filter === "All") return "All Wallets";
-        if (filter === "Recipients") return "Recipient Wallets";
-        if (filter === "Agents") return "Agent Wallets";
-        return "Wallets";
+        return filter === "All" ? "All Wallets" : `${filter} Wallets`;
     };
+
+    const filteredWallets = wallets.filter(wallet =>
+        filter === "All" || wallet.type === filter.toLowerCase()
+    );
 
     return (
         <div>
-            {/* ✅ Fixed Title Bar with Centered Title & Radio Buttons Below */}
             <div style={{
                 position: "fixed",
                 top: 0,
@@ -30,16 +50,9 @@ export default function WalletsClient() {
                 alignItems: "center",
                 zIndex: 1000
             }}>
-                {/* ✅ Dynamic Title (Will update correctly) */}
-                <h1 style={{
-                    margin: 0,
-                    fontSize: "22px",
-                    fontWeight: "bold"
-                }}>
+                <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "bold" }}>
                     {getTitle(filter)}
                 </h1>
-
-                {/* ✅ Radio Buttons Below the Title */}
                 <div style={{ display: "flex", gap: "10px", fontSize: "16px", marginTop: "8px" }}>
                     {["All", "Recipients", "Agents"].map(option => (
                         <label key={option} style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
@@ -57,9 +70,12 @@ export default function WalletsClient() {
                 </div>
             </div>
 
-            {/* ✅ Wallet List Placeholder */}
             <div style={{ marginTop: "90px", padding: "0 20px" }}>
-                <p>Wallet list goes here...</p>
+                <ul>
+                    {filteredWallets.map(wallet => (
+                        <li key={wallet.address}>{wallet.name}</li>
+                    ))}
+                </ul>
             </div>
         </div>
     );

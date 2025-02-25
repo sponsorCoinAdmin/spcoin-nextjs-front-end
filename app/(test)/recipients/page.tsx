@@ -1,8 +1,10 @@
-import { defaultMissingImage } from "@/lib/network/utils"; // Import default missing image
+"use client";
+
+import { defaultMissingImage } from "@/lib/network/utils";
 import { loadWallets } from "@/lib/spCoin/loadWallets";
-import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
+import { useState } from "react";
 
 const publicWalletPath: string = "assets/wallets";
 
@@ -30,14 +32,18 @@ function checkAvatarExists(walletAddress: string): string {
 }
 
 export default async function WalletsPage() {
-    const wallets = await loadWallets(publicWalletPath, recipientWalletList); // Fetch wallets at build time
+    const wallets = await loadWallets(publicWalletPath); // Fetch wallets at build time
 
+    return <WalletsClient wallets={wallets} />;
+}
+
+// ✅ Wallet list only (Title & Radio Buttons Removed)
+export function WalletsClient({ wallets }: { wallets: Wallet[] }) {
     return (
-        <div>
-            <h1>Wallets</h1>
+        <div style={{ padding: "20px" }}>
             <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-                {wallets.map((wallet:Wallet, index:number) => {
-                    const avatarUrl = checkAvatarExists(wallet.address); // Check if avatar exists
+                {wallets.map((wallet, index) => {
+                    const avatarUrl = checkAvatarExists(wallet.address);
                     const isMissingAvatar = avatarUrl === defaultMissingImage;
 
                     return (
@@ -47,7 +53,9 @@ export default async function WalletsPage() {
                                 display: "flex",
                                 alignItems: "center",
                                 padding: "12px",
-                                backgroundColor: index % 2 === 0 ? "#d6d6d6" : "#f5f5f5"
+                                backgroundColor: index % 2 === 0 ? "#d6d6d6" : "#f5f5f5",
+                                marginBottom: "10px",
+                                borderRadius: "8px"
                             }}
                         >
                             {/* Avatar Image */}
@@ -62,9 +70,14 @@ export default async function WalletsPage() {
                                         border: "2px solid #ccc"
                                     }}
                                 />
-                                {/* Display Missing Avatar message in bold red with larger font size */}
+                                {/* Display Missing Avatar message */}
                                 {isMissingAvatar && (
-                                    <div style={{ color: "red", fontSize: "14px", marginTop: "4px", fontWeight: "bold" }}>
+                                    <div style={{
+                                        color: "red",
+                                        fontSize: "16px",
+                                        marginTop: "4px",
+                                        fontWeight: "bold"
+                                    }}>
                                         Missing Avatar
                                     </div>
                                 )}
