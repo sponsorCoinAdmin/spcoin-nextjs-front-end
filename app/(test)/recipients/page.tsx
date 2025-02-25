@@ -1,5 +1,6 @@
-import { getWallets } from "@/lib/spCoin/getWallets";
 import { defaultMissingImage } from "@/lib/network/utils"; // Import default missing image
+import { loadWallets } from "@/lib/spCoin/loadWallets";
+import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 import fs from 'fs';
 import path from 'path';
 
@@ -29,13 +30,13 @@ function checkAvatarExists(walletAddress: string): string {
 }
 
 export default async function WalletsPage() {
-    const wallets = await getWallets(publicWalletPath); // Fetch wallets at build time
+    const wallets = await loadWallets(publicWalletPath, recipientWalletList); // Fetch wallets at build time
 
     return (
         <div>
             <h1>Wallets</h1>
             <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-                {wallets.map((wallet, index) => {
+                {wallets.map((wallet:Wallet, index:number) => {
                     const avatarUrl = checkAvatarExists(wallet.address); // Check if avatar exists
                     const isMissingAvatar = avatarUrl === defaultMissingImage;
 

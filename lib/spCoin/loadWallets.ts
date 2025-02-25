@@ -1,6 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 
+interface WalletAddress {
+    address: string;
+}
+
 interface BlockScanner {
     blockchain: string;
     explorer?: string;
@@ -68,10 +72,38 @@ async function fetchWallets(rootDir: string): Promise<Wallet[]> {
 }
 
 /**
- * Returns wallets without avatar images.
- * @param rootDir - Base directory to search.
- * @returns Array of Wallet objects.
+ * Reads wallet file list from JSON and loads corresponding wallet data.
+ * If jsonWalletFileList is provided, it loads wallets from the file list; otherwise, it scans the rootDir.
+ * @param rootDir - Root directory containing wallet files.
+ * @param jsonWalletFileList - Optional list of WalletAddress objects.
+ * @returns Promise<Wallet[]>
  */
-export async function getWallets(rootDir: string): Promise<Wallet[]> {
-    return fetchWallets(rootDir);
+export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAddress[]): Promise<Wallet[]> {
+    const absoluteRootPath = path.join(process.cwd(), "public", rootDir);
+
+    if (jsonWalletFileList && jsonWalletFileList.length > 0) {
+        try {
+            const wallets: Wallet[] = [];
+
+            for (const file of jsonWalletFileList) {
+                const walletDir = path.join(absoluteRootPath, file.address);
+                const walletFilePath = path.join(walletDir, "wallet.json"); // Ensuring the correct path
+
+                if (fs.existsSync(walletFilePath)) {
+                    const walletData = fs.readFileSync(walletFilePath, "utf-8");
+                    const wallet: Wallet = JSON.parse(walletData);
+                    wallets.push(wallet);
+                } else {
+                    console.warn(`Wallet file not found: ${walletFilePath}`);
+                }
+            }
+
+            return wallets;
+        } catch (error) {
+            console.error("Error loading wallets from list:", error);
+            return [];
+        }
+    } else {
+        return fetchWallets(rootDir);
+    }
 }
