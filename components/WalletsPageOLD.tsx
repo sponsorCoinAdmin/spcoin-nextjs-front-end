@@ -1,22 +1,38 @@
-import WalletsClient from "./WalletsClient";
-import { loadWallets } from "@/lib/spCoin/loadWallets";
-import agentWalletList from '@/resources/data/agents/agentWalletList.json';
-import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
+"use client";
 
-// interface WalletAddress {
-//     address: string;
-// }
+import { useState, useEffect } from "react";
+import WalletsClient from "./WalletsClient";
+import { loadWallets, Wallet } from "@/lib/spCoin/loadWallets";
+import agentWalletList from "@/resources/data/agents/agentWalletList.json";
+import recipientWalletList from "@/resources/data/recipients/recipientWalletList.json";
 
 const publicWalletPath = "assets/wallets";
 
-type Props = {
-    walletList:any
-  }
-  
-export default async function WalletsPage({walletList}:Props) {
+export default function WalletsPage() {
+    const [wallets, setWallets] = useState<Wallet[]>([]);
+    const [typeOfWallets, setTypeOfWallets] = useState<"All" | "Recipients" | "Agents">("All");
 
-    console.log(`walletList = ${JSON.stringify(walletList,null,2)}`)
-    const wallets = await loadWallets(publicWalletPath, walletList); // ✅ Load wallets on the server
+    useEffect(() => {
+        async function fetchWallets() {
+            console.log("Fetching wallets for:", typeOfWallets);
+
+            let loadedWallets: Wallet[];
+
+            if (typeOfWallets === "Recipients") {
+                loadedWallets = await loadWallets(publicWalletPath, recipientWalletList);
+                // alert(`typeOfWallets = ${typeOfWallets} Loaded wallets: ${loadedWallets}`);
+            } else if (typeOfWallets === "Agents") {
+                loadedWallets = await loadWallets(publicWalletPath, agentWalletList);
+                // alert(`typeOfWallets = ${typeOfWallets} Loaded wallets: ${loadedWallets}`);
+            } else {
+                loadedWallets = await loadWallets(publicWalletPath);
+                // alert(`typeOfWallets = ${typeOfWallets} Loaded wallets: ${loadedWallets}`);
+            }
+
+            setWallets(loadedWallets);
+        }
+        fetchWallets();
+    }, [typeOfWallets]);
 
     return (
         <div>
@@ -35,7 +51,7 @@ export default async function WalletsPage({walletList}:Props) {
                 zIndex: 1000
             }}>
                 <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "bold" }}>
-                    All Wallets
+                    {typeOfWallets} Wallets
                 </h1>
                 <div style={{ display: "flex", gap: "10px", fontSize: "16px", marginTop: "8px" }}>
                     {["All", "Recipients", "Agents"].map(option => (
@@ -44,7 +60,8 @@ export default async function WalletsPage({walletList}:Props) {
                                 type="radio"
                                 name="walletFilter"
                                 value={option}
-                                defaultChecked={option === "All"}
+                                checked={typeOfWallets === option}
+                                onChange={() => setTypeOfWallets(option as "All" | "Recipients" | "Agents")}
                                 style={{ marginRight: "5px" }}
                             />
                             {option}

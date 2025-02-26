@@ -6,7 +6,7 @@ import recipientWalletList from '@/resources/data/recipients/recipientWalletList
 export default function Home() {
     return (
         <main>
-            <WalletsPage walletList={undefined}/>
+            <WalletsPage/>
         </main>
     );
 }
