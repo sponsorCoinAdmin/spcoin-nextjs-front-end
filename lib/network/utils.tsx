@@ -95,11 +95,18 @@ const getNativeAvatar = (): string =>
 const getNetworkAvatar = (): string =>
   `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/network${IMG_TYPE}`;
 
-const getTokenAvatar = (tokenContract : TokenContract | undefined ): string => {
+const getTokenAvatar = (tokenContract : any | undefined ): string => {
   if (!tokenContract)
     return defaultMissingImage
   tokenContract.img = getAddressAvatar(tokenContract.address);
   return tokenContract.img;
+}
+
+const getWalletAvatar = (wallet : any | undefined ): string => {
+  if (!wallet)
+    return defaultMissingImage
+  const imgURL = wallet.avatarUrl = `/assets/wallets/${wallet.address}/avatar.png`;
+  return imgURL;
 }
 
 const getAddressAvatar = (tokenAddress : Address | undefined ): string => {
@@ -145,6 +152,7 @@ export {
   getNetworkAvatar,
   getNetworkWethAddress,
   getTokenAvatar,
+  getWalletAvatar,
   isActiveAccountAddress,
   isActiveAccountToken,
   isBurnTokenAddress,

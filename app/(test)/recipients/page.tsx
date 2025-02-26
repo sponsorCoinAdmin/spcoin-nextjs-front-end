@@ -9,7 +9,7 @@ import { useState } from "react";
 const publicWalletPath: string = "assets/wallets";
 
 interface BlockScanner {
-    blockchain: string;
+    chainId: number
     explorer?: string;
     url?: string;
 }

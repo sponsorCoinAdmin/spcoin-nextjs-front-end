@@ -1,38 +1,22 @@
-"use client";
+import WalletsClient from "./WalletsClient";
+import { loadWallets } from "@/lib/spCoin/loadWallets";
+import agentWalletList from '@/resources/data/agents/agentWalletList.json';
+import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
 
-import { useState } from "react";
+// interface WalletAddress {
+//     address: string;
+// }
 
-interface BlockScanner {
-    blockchain: string;
-    explorer?: string;
-    url?: string;
-}
+const publicWalletPath = "assets/wallets";
 
-interface Wallet {
-    name: string;
-    symbol: string;
-    type: string;
-    website: string;
-    description: string;
-    status: string;
-    address: string;
-    "block-scanners": BlockScanner[];
-}
+type Props = {
+    walletList:any
+  }
+  
+export default async function WalletsPage({walletList}:Props) {
 
-interface WalletsClientProps {
-    wallets: Wallet[];
-}
-
-export default function WalletsClient({ wallets }: WalletsClientProps) {
-    const [filter, setFilter] = useState<"All" | "Recipients" | "Agents">("All");
-
-    const getTitle = (filter: "All" | "Recipients" | "Agents") => {
-        return filter === "All" ? "All Wallets" : `${filter} Wallets`;
-    };
-
-    const filteredWallets = wallets.filter(wallet =>
-        filter === "All" || wallet.type === filter.toLowerCase()
-    );
+    console.log(`walletList = ${JSON.stringify(walletList,null,2)}`)
+    const wallets = await loadWallets(publicWalletPath, walletList); // ✅ Load wallets on the server
 
     return (
         <div>
@@ -51,7 +35,7 @@ export default function WalletsClient({ wallets }: WalletsClientProps) {
                 zIndex: 1000
             }}>
                 <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "bold" }}>
-                    {getTitle(filter)}
+                    All Wallets
                 </h1>
                 <div style={{ display: "flex", gap: "10px", fontSize: "16px", marginTop: "8px" }}>
                     {["All", "Recipients", "Agents"].map(option => (
@@ -60,8 +44,7 @@ export default function WalletsClient({ wallets }: WalletsClientProps) {
                                 type="radio"
                                 name="walletFilter"
                                 value={option}
-                                checked={filter === option}
-                                onChange={() => setFilter(option as "All" | "Recipients" | "Agents")}
+                                defaultChecked={option === "All"}
                                 style={{ marginRight: "5px" }}
                             />
                             {option}
@@ -70,12 +53,8 @@ export default function WalletsClient({ wallets }: WalletsClientProps) {
                 </div>
             </div>
 
-            <div style={{ marginTop: "90px", padding: "0 20px" }}>
-                <ul>
-                    {filteredWallets.map(wallet => (
-                        <li key={wallet.address}>{wallet.name}</li>
-                    ))}
-                </ul>
+            <div style={{ marginTop: "90px" }}>
+                <WalletsClient wallets={wallets} />
             </div>
         </div>
     );

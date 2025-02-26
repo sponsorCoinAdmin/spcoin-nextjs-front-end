@@ -1,3 +1,5 @@
+'use server';
+
 import * as fs from "fs";
 import * as path from "path";
 
@@ -6,7 +8,7 @@ interface WalletAddress {
 }
 
 interface BlockScanner {
-    blockchain: string;
+    chainId: number
     explorer?: string;
     url?: string;
 }
@@ -80,7 +82,6 @@ async function fetchWallets(rootDir: string): Promise<Wallet[]> {
  */
 export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAddress[]): Promise<Wallet[]> {
     const absoluteRootPath = path.join(process.cwd(), "public", rootDir);
-
     if (jsonWalletFileList && jsonWalletFileList.length > 0) {
         try {
             const wallets: Wallet[] = [];

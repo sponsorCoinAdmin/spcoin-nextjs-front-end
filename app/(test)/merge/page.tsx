@@ -9,7 +9,7 @@ import path from "path";
 const publicWalletPath: string = "assets/wallets";
 
 interface BlockScanner {
-    blockchain: string;
+    chainId: number
     explorer?: string;
     url?: string;
 }
