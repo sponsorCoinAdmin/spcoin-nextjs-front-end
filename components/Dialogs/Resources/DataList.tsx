@@ -1,5 +1,5 @@
 'use client';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from '@/styles/Modal.module.css'
 import Image from 'next/image'
 import info_png from '@/public/assets/miscellaneous/info1.png'
@@ -8,68 +8,45 @@ import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
-import agentWalletList from '@/resources/data/agents/agentWalletList.json';
-import recipientWalletList from '@/resources/data/recipients/recipientWalletList.json';
-import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, TokenContract } from '@/lib/structure/types';
+import agentJsonList from '@/resources/data/agents/agentJsonList.json';
+import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
+import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, publicWalletPath, SEPOLIA, TokenContract, Wallet } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
 import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
 import { Address } from 'viem';
 
-const walletList: any = [];
+
 
 import * as fs from "fs";
 import * as path from "path";
-function preloadWallets() {
-    const walletsDirectory = "/assets/recipients/"
-
-    try {
-        const files = fs.readdirSync(walletsDirectory);
-
-        files.forEach((file) => {
-            if (file.endsWith(".json")) {
-                const filePath = path.join(walletsDirectory, file);
-                const fileContent = fs.readFileSync(filePath, "utf-8");
-                const wallet: any = JSON.parse(fileContent);
-                walletList.push(wallet);
-            }
-        });
-
-        console.log("Preloaded Wallets:", walletList);
-    } catch (error) {
-        console.error("Error reading wallet files:", error);
-    }
-}
-
+import { loadWallets } from '@/lib/spCoin/loadWallets';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     let address = dataFeedList.address;
-    // const walletAddress = useAccount().address;
-    // // alert(`zzzzzz walletAddress = ${walletAddress}`)
-    // if (walletAddress && isActiveAccountAddress(address)) {
-    //     address = walletAddress;
-    //     dataFeedList.address = address;
-    // }
-
-    // switch (feedType) {
-    //     case FEED_TYPE.TOKEN_LIST:
-    //         switch(network) {
-    //             case 1: return ethereumTokenList;
-    //             case 137: return polygonTokenList;
-    //             case 11155111: return sepoliaTokenList;
-    //             default: return ethereumTokenList;
-    //         }
-    //     default: return address;
-    // }
-    // alert(`address = ${address}`)
-
     return address;
 }
 
 const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
+    const [recipientWalletList, setRecipientWalletList] = useState<Wallet[]>([]);
+
+    // ✅ Fetch recipient wallets only once and store them
+    useEffect(() => {
+        const fetchWallets = async () => {
+            try {
+                const wallets = await loadWallets(publicWalletPath, recipientJsonList);
+                setRecipientWalletList(wallets);
+            } catch (error) {
+                console.error("Error loading wallets:", error);
+            }
+        };
+
+        fetchWallets();
+    }, []); // Runs only once on mount
+
     if (typeof network === "string")
       network = network.toLowerCase()
     switch (feedType) {
-        case FEED_TYPE.AGENT_WALLETS: return agentWalletList as TokenContract[];
+        case FEED_TYPE.AGENT_WALLETS: return agentJsonList as TokenContract[];
         case FEED_TYPE.TOKEN_LIST:
             switch(network) {
                 case BASE:
@@ -85,7 +62,7 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
                 case "sepolia": return sepoliaTokenList as TokenContract[];
                 default: return ethereumTokenList as TokenContract[];
             }
-        case FEED_TYPE.RECIPIENT_WALLETS: return loadRecipientWalletListFiles(recipientWalletList);
+        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList;
         default: return ethereumTokenList as TokenContract[];
     }
 }

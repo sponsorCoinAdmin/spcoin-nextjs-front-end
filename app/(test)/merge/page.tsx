@@ -5,25 +5,7 @@ import { defaultMissingImage } from "@/lib/network/utils";
 import { loadWallets } from "@/lib/spCoin/loadWallets";
 import fs from "fs";
 import path from "path";
-
-const publicWalletPath: string = "assets/wallets";
-
-interface BlockScanner {
-    chainId: number
-    explorer?: string;
-    url?: string;
-}
-
-interface Wallet {
-    name: string;
-    symbol: string;
-    type: string;
-    website: string;
-    description: string;
-    status: string;
-    address: string;
-    "block-scanners": BlockScanner[];
-}
+import { publicWalletPath, Wallet } from "@/lib/structure/types";
 
 // Helper function to check if avatar exists
 function checkAvatarExists(walletAddress: string): string {

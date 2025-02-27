@@ -1,4 +1,4 @@
-import WalletsPage from "@/components/WalletsPage";
+import WalletsPage from "@/components/Pages/WalletsPage";
 
 export default function Home() {
     return (

@@ -1,5 +1,29 @@
 import { Account, Address } from "viem";
 
+export const publicWalletPath: string = "assets/wallets";
+
+export interface WalletAddress {
+    address: string;
+}
+
+export interface BlockScanner {
+    chainId: number
+    explorer?: string;
+    url?: string;
+}
+
+// Define Wallet type
+export interface Wallet {
+    name: string;
+    symbol: string;
+    type: string;
+    website: string;
+    description: string;
+    status: string;
+    address: string;
+    "block-scanners": BlockScanner[];
+}
+
 // Button Types
 enum BUTTON_TYPE {
   API_TRANSACTION_ERROR,

@@ -2,28 +2,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-
-interface WalletAddress {
-    address: string;
-}
-
-interface BlockScanner {
-    chainId: number
-    explorer?: string;
-    url?: string;
-}
-
-// Define Wallet type
-export interface Wallet {
-    name: string;
-    symbol: string;
-    type: string;
-    website: string;
-    description: string;
-    status: string;
-    address: string;
-    "block-scanners": BlockScanner[];
-}
+import { Wallet, WalletAddress } from "../structure/types";
 
 /**
  * Recursively finds wallet.json files.
