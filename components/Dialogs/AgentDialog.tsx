@@ -69,7 +69,7 @@ export default function Dialog({showDialog, recipientWallet, callBackSetter }: P
                 let td:WalletAccount = {
                     address: agentInput,
                     symbol: retResponse.symbol,
-                    img: '/assets/miscellaneous/QuestionWhiteOnRed.png',
+                    avatar: '/assets/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
                     url: "ToDo Set This"
                 }
