@@ -1,8 +1,8 @@
 import AgentDialog from './AgentDialog';
 import Config from './ConfigDialog';
 import ErrorDialog from './ErrorDialog';
-import RecipientDialog from './RecipientDialog';
-import TokenSelectDialog from './TokenSelectDialog';
+import RecipientDialog from './WalletSelectDialog';
+import TokenSelectDialog from './AssetSelectDialog';
 
 // --------------------------- END NEW MODAL/DIALOG CODE -----------------------------------------------------
 const openDialog = (dialogType:string) => {

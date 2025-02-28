@@ -30,6 +30,7 @@ export default () => {
         <Image className={styles.imgOptions} src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
         <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
+        <div className={styles.headerItem}><Link href="/Recipient">Recipient</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
         <div className={styles.headerItem}><Link href="/Exchange/Test">Test</Link></div>
       </div>

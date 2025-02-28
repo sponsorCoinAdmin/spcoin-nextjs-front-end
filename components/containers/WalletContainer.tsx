@@ -39,7 +39,7 @@ const RecipientContainer: React.FC = () => {
           <div className={styles.recipientName}>No recipient selected</div>
         )}
         <div className={styles.recipientSelect}>
-          <RecipientSelect recipientWallet={recipientWallet} callBackRecipientAccount={setRecipientWallet} />
+          <RecipientSelect recipientWallet={recipientWallet} callBackWallet={setRecipientWallet} />
         </div>
         <div>
           <Image

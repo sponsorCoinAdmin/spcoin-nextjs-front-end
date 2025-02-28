@@ -1,54 +1,52 @@
-"use client"
-import styles from '@/styles/Modal.module.css';
+"use client";
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from "react";
+import styles from "@/styles/Modal.module.css";
 
 type ErrorType = {
-    name: string;
-    message: string;
-    errorId?: number;
-    stack?: string;
-}
+  name: string;
+  message: string;
+  errorId?: number;
+  stack?: string;
+};
 
 type Props = {
-    errMsg: any,
-    showDialog:boolean
-}
+  errMsg: ErrorType;
+  showDialog: boolean;
+};
 
-export default function Dialog({showDialog, errMsg}:Props) {
-    const dialogRef = useRef<null | HTMLDialogElement>(null)
-    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
+export default function Dialog({ showDialog, errMsg }: Props) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-    // useEffect(() => {
-    //     alert(JSON.stringify(errorMessage,null,2))
-    // }, [errorMessage])
-  
-    useEffect(() => {
-        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
-    }, [showDialog])
-
-    const closeDialog = () => {
-        dialogRef.current?.close();
+  useEffect(() => {
+    if (dialogRef.current) {
+      showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
+  }, [showDialog]);
 
-    const Dialog = (
-        <dialog id="errorDialog" ref={dialogRef} className={styles.modalContainer}>
-            <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-                <h1 className="text-sm indent-9 mt-1">{errMsg.name}</h1>
-                <div className="cursor-pointer rounded border-none w-5 text-xl text-white"
-                    onClick={closeDialog}
-                >X</div>
-            </div>
+  return (
+    <dialog
+      id="errorDialog"
+      ref={dialogRef}
+      className={styles.modalContainer}
+      aria-modal="true"
+    >
+      <div className="flex justify-between mb-1 pt-0 px-3 text-gray-600">
+        <h1 className="text-sm indent-9 mt-1">{errMsg.name}</h1>
+        <button
+          className="cursor-pointer rounded border-none w-5 text-xl text-white"
+          onClick={() => dialogRef.current?.close()}
+        >
+          X
+        </button>
+      </div>
 
-            <div className={styles.modalBox}>
-                <div className={styles.modalScrollBar}>
-                    <h1>{errMsg.name}</h1>
-                    <div>
-                        {errMsg.message}
-                    </div>
-                </div>
-            </div>
-        </dialog>
-    )
-    return Dialog
+      <div className={styles.modalBox}>
+        <div className={styles.modalScrollBar}>
+          <h1>{errMsg.name}</h1>
+          <p>{errMsg.message}</p>
+        </div>
+      </div>
+    </dialog>
+  );
 }

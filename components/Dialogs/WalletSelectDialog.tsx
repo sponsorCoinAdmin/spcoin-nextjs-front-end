@@ -23,12 +23,12 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 
 // ToDo Read in data List remotely
 type Props = {
-    callBackRecipientAccount: (walletAccount: WalletAccount) => void,
+    callBackWallet: (walletAccount: WalletAccount) => void,
     setShowDialog: (showDialog:boolean) => void,
     showDialog:boolean
 }
 
-export default function Dialog({showDialog, setShowDialog, callBackRecipientAccount }: Props) {
+export default function Dialog({showDialog, setShowDialog, callBackWallet }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null);
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
@@ -123,7 +123,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
         walletAccount.avatar = getAddressAvatar(walletAccount.address as Address, FEED_TYPE.RECIPIENT_WALLETS)
         // let urlParms:string = `/assets/wallets/${walletAccount.address}`
 
-        callBackRecipientAccount(walletAccount)
+        callBackWallet(walletAccount)
         closeDialog()
     }
 

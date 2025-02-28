@@ -13,7 +13,7 @@ import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { exchangeContext, resetNetworkContext } from "@/lib/context";
 import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
-import PriceInputContainer from '@/components/containers/PriceInputContainer';
+import PriceInputContainer from '@/components/containers/AssetContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
 
