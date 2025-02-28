@@ -1,0 +1,12 @@
+import Recipient from '@/components/containers/Recipient';
+
+export default function Home() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <h1 className="text-center text-3xl font-bold my-5">Welcome to My Next.js App</h1>
+      <div className="flex-grow">
+        <Recipient />
+      </div>
+    </div>
+  );
+}
