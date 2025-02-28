@@ -6,14 +6,14 @@ export interface WalletAddress {
     address: string;
 }
 
-export interface BlockScanner {
+interface BlockScanner {
     chainId: number
     explorer?: string;
     url?: string;
 }
 
 // Define Wallet type
-export interface Wallet {
+interface WalletAccount {
     name: string;
     symbol: string;
     type: string;
@@ -22,6 +22,7 @@ export interface Wallet {
     status: string;
     address: string;
     "block-scanners": BlockScanner[];
+    avatar:string;
 }
 
 // Button Types
@@ -117,14 +118,6 @@ interface PriceRequestParams {
   sellToken: Address | string;
 }
 
-type AccountRecord = {
-  address: Address | string;
-  img: string;
-  name: string;
-  symbol: string;
-  url: string;
-};
-
 type ContractRecs = {
   decimalRec: any;
   nameRec: any;
@@ -141,9 +134,9 @@ type ErrorMessage = {
 
 type ExchangeContext = {
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
-  agentAccount?: AccountRecord;
+  agentAccount?: WalletAccount;
   network: NetworkElement;
-  recipientAccount?: AccountRecord;
+  recipientWallet?: WalletAccount;
   spCoinPanels: SP_COIN_DISPLAY;
   test: { dumpContextButton: boolean };
   tradeData: TradeData;
@@ -203,7 +196,7 @@ export {
 };
 
 export type {
-  AccountRecord,
+  WalletAccount,
   ContractRecs,
   ErrorMessage,
   ExchangeContext,

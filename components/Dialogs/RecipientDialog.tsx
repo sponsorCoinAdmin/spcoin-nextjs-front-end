@@ -6,12 +6,13 @@ import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlass
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '@/public/assets/miscellaneous/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
+import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
-import { Account } from 'viem';
 import { exchangeContext } from '@/lib/context';
+import { getAddressAvatar } from '@/lib/network/utils';
+import { Address } from 'viem';
 
 const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
@@ -22,7 +23,7 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 
 // ToDo Read in data List remotely
 type Props = {
-    callBackRecipientAccount: (accountRecord:AccountRecord) => void,
+    callBackRecipientAccount: (walletAccount: WalletAccount) => void,
     setShowDialog: (showDialog:boolean) => void,
     showDialog:boolean
 }
@@ -31,7 +32,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
     const dialogRef = useRef<null | HTMLDialogElement>(null);
     const [recipientInput, setRecipientInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
+    const [walletElement, setWalletElement] = useState<WalletAccount | undefined>();
     const agentAccount = exchangeContext.agentAccount;
 
     useEffect(() => {
@@ -76,12 +77,16 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:AccountRecord = {
+                let td: WalletAccount = {
                     address: recipientInput,
                     symbol: retResponse.symbol,
-                    img: '/assets/miscellaneous/QuestionWhiteOnRed.png',
+                    avatar: '/assets/miscellaneous/QuestionWhiteOnRed.png',
                     name: '',
-                    url: "ToDo add AccountRecord URL"
+                    type: '',
+                    website: '',
+                    description: '',
+                    status: '',
+                    'block-scanners': []
                 }
                 setWalletElement(td);
                 return true
@@ -94,32 +99,31 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
     }
 
     const displayElementDetail = async(elementAddress:any) => {
-        let x = setWalletDetails(elementAddress)
-         if (!(await setWalletDetails(elementAddress))) {
+        let walletDetails = await setWalletDetails(elementAddress)
+         if (!walletDetails) {
             alert("*** ERROR *** Invalid Wallet Address: " + recipientInput + "\n\n" + ELEMENT_DETAILS)
             return false
         }
-        alert("displayElementDetail\n" + JSON.stringify(walletElement, null, 2) + "\n\n" + ELEMENT_DETAILS)
+        alert("displayElementDetail\n" + JSON.stringify(walletDetails, null, 2) + "\n\n" + ELEMENT_DETAILS)
         return true
     }
 
-    const getSelectedListElement = (listElement: AccountRecord | undefined) => {
-        // console.debug("getSelectedListElement:listElement     : " +JSON.stringify(listElement,null,2))
+    const getSelectedListElement = (walletAccount: WalletAccount | undefined) => {
+        // console.debug("getSelectedListElement:walletAccount     : " +JSON.stringify(walletAccount,null,2))
         // console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
-        if (listElement === undefined) {
+        if (walletAccount === undefined) {
             alert("Invalid Wallet address : " + recipientInput)
             return false;
         }
-        if (listElement?.address === agentAccount?.address) {
+        if (walletAccount?.address === agentAccount?.address) {
             alert("Recipient cannot be the same as Recipient("+agentAccount.symbol+")")
             console.log("Recipient cannot be the same as Recipient("+agentAccount.symbol+")");
             return false;
         }
-        let urlParms:string = `/Recipient/${listElement.address}`
+        walletAccount.avatar = getAddressAvatar(walletAccount.address as Address, FEED_TYPE.RECIPIENT_WALLETS)
+        // let urlParms:string = `/assets/wallets/${walletAccount.address}`
 
-        listElement.url = `/Recipient/${listElement.address}?url=${listElement.url}`
-
-        callBackRecipientAccount(listElement)
+        callBackRecipientAccount(walletAccount)
         closeDialog()
     }
 
@@ -141,7 +145,7 @@ export default function Dialog({showDialog, setShowDialog, callBackRecipientAcco
                 </div>
                 <div id="recipientSelectGroup_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" >
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)} >
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement )} >
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.elementName}>{walletSelect}</div>

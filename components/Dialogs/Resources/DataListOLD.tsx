@@ -152,7 +152,7 @@ function DataList({ dataFeedType, updateTokenCallback }: Props) {
                 {/* Ensure getAddressAvatar(e.address) is valid */}
                 <img
                     className={styles.elementLogo} 
-                    src={getAddressAvatar(e.address)} 
+                    src={getAddressAvatar(e.address, dataFeedType)} 
                     alt={`${e.name} Token Avatar`} 
                     onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
                 <div>

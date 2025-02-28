@@ -12,14 +12,14 @@ const walletOptions = ["All", "Recipients", "Agents"] as const;
 
 export default function WalletsPage() {
     // State for caching wallets for each type
-    const [walletCache, setWalletCache] = useState<Record<string, Wallet[]>>({
+    const [walletCache, setWalletCache] = useState<Record<string, WalletAccount[]>>({
         All: [],
         Recipients: [],
         Agents: []
     });
 
     const [typeOfWallets, setTypeOfWallets] = useState<typeof walletOptions[number]>("All");
-    const [wallets, setWallets] = useState<Wallet[]>([]);
+    const [wallets, setWallets] = useState<WalletAccount[]>([]);
     const [loading, setLoading] = useState(false); // Track loading state
 
     /**

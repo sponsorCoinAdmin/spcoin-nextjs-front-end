@@ -1,23 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { openDialog, RecipientDialog, TokenSelectDialog } from '../Dialogs/Dialogs';
+import { RecipientDialog } from '../Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
-import { AccountRecord, TokenContract } from '@/lib/structure/types';
+import { WalletAccount } from '@/lib/structure/types';
+import { defaultMissingImage, getWalletAvatar } from '@/lib/network/utils';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 type Props = {
-  recipientAccount: AccountRecord| undefined
-  callBackRecipientAccount: (accountRecord:AccountRecord) => void,
+  recipientWallet: WalletAccount| undefined
+  callBackRecipientAccount: (walletAccount: WalletAccount) => void,
 }
 
-const RecipientSelect = ({recipientAccount, callBackRecipientAccount}:Props) => {
+const setMissingAvatar = (event: { currentTarget: { src: string; }; }, walletAccount: WalletAccount) => {
+  // ToDo Set Timer to ignore fetch if last call
+  event.currentTarget.src = defaultMissingImage;
+  walletAccount.avatar = `***ERROR: MISSING AVATAR FILE*** -> ${walletAccount.avatar}`
+}
+
+const RecipientSelect = ({recipientWallet, callBackRecipientAccount}:Props) => {
   const [showDialog, setShowDialog ] = useState<boolean>(false)
+
+  // useEffect(() => {
+  //   alert(`recipientWallet = ${stringifyBigInt(recipientWallet)}`)  
+  // }, [recipientWallet]);
+
   const openDialog = () => { setShowDialog(true) }
-  
   return (
-    recipientAccount ?
+    recipientWallet ?
     <>
       <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackRecipientAccount={callBackRecipientAccount} />
-      <img alt={recipientAccount.name} className="h-9 w-9 mr-2 rounded-md  cursor-pointer text-white" src={recipientAccount.img} onClick={() => alert("Recipient Data " + JSON.stringify(recipientAccount,null,2))}/>
-      {recipientAccount.symbol}
+      <img 
+        alt={recipientWallet.name}
+        className="h-9 w-9 mr-2 rounded-md  cursor-pointer text-white"
+        src={recipientWallet.avatar}
+        onClick={() => alert("Recipient Data " + JSON.stringify(recipientWallet,null,2))}
+        onError={(event) => setMissingAvatar(event, recipientWallet)}/>
+      {recipientWallet.symbol}
       <DownOutlined onClick={() => openDialog()}/>
     </> :
     <>

@@ -10,15 +10,11 @@ import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
-import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, publicWalletPath, SEPOLIA, TokenContract, Wallet } from '@/lib/structure/types';
+import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, publicWalletPath, SEPOLIA, TokenContract, WalletAccount } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
 import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
 import { Address } from 'viem';
 
-
-
-import * as fs from "fs";
-import * as path from "path";
 import { loadWallets } from '@/lib/spCoin/loadWallets';
 
 const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
@@ -27,11 +23,20 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
 }
 
 const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
-    const [recipientWalletList, setRecipientWalletList] = useState<Wallet[]>([]);
+    const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
+    const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
 
     // ✅ Fetch recipient wallets only once and store them
     useEffect(() => {
-        const fetchWallets = async () => {
+        const fetchAgentWallets = async () => {
+            try {
+                const wallets = await loadWallets(publicWalletPath, agentJsonList);
+                setAgentWalletList(wallets);
+            } catch (error) {
+                console.error("Error loading wallets:", error);
+            }          
+        };
+        const fetchRecipientWallets = async () => {
             try {
                 const wallets = await loadWallets(publicWalletPath, recipientJsonList);
                 setRecipientWalletList(wallets);
@@ -39,14 +44,14 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
                 console.error("Error loading wallets:", error);
             }
         };
-
-        fetchWallets();
+        fetchAgentWallets();
+        fetchRecipientWallets();
     }, []); // Runs only once on mount
 
     if (typeof network === "string")
       network = network.toLowerCase()
     switch (feedType) {
-        case FEED_TYPE.AGENT_WALLETS: return agentJsonList as TokenContract[];
+        case FEED_TYPE.AGENT_WALLETS: return agentWalletList as WalletAccount[];
         case FEED_TYPE.TOKEN_LIST:
             switch(network) {
                 case BASE:
@@ -62,12 +67,12 @@ const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
                 case "sepolia": return sepoliaTokenList as TokenContract[];
                 default: return ethereumTokenList as TokenContract[];
             }
-        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList;
+        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList as WalletAccount[];
         default: return ethereumTokenList as TokenContract[];
     }
 }
 
-const getDataFeedMap = (feedType: any, chainId:any) => {
+const getDataFeedMap = (feedType: FEED_TYPE, chainId:number) => {
     let dataFeedList = getDataFeedList(feedType, chainId);
     let dataFeedMap = new Map(dataFeedList?.map((element: { address: any }) => [element.address, element]));
     return dataFeedMap
@@ -103,21 +108,18 @@ function displayElementDetail (tokenContract:any) {
     alert(`${tokenContract?.name} Token Address = ${clone.address}`)
 }
 
-const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenContract: TokenContract) => {
-    // ToDo Set Timer to ignore fetch if last call
-    if(isActiveAccountToken(tokenContract))
-        event.currentTarget.src = defaultMissingImage;
-    else
-        event.currentTarget.src = defaultMissingImage;
-}
-
 type Props = {
     dataFeedType: any,
     updateTokenCallback:  (listElement: any) => void
 }
 
+const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenContract: TokenContract | WalletAccount) => {
+    // alert(`Error: Missing Avatar event Image = ${event.currentTarget.src}`)    
+    event.currentTarget.src = defaultMissingImage;
+}
+
 function DataList({ dataFeedType, updateTokenCallback }: Props) {
-    const dataFeedList:TokenContract[] = getDataFeedList(dataFeedType, useChainId()) || [];
+    const dataFeedList : TokenContract[] | WalletAccount[] = getDataFeedList(dataFeedType, useChainId()) || [];
 
     const tList = dataFeedList.map((e: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
@@ -128,7 +130,7 @@ function DataList({ dataFeedType, updateTokenCallback }: Props) {
                 {/* Ensure getAddressAvatar(e.address) is valid */}
                 <img
                     className={styles.elementLogo} 
-                    src={getAddressAvatar(e.address)} 
+                    src={getAddressAvatar(e.address, dataFeedType)} 
                     alt={`${e.name} Token Avatar`} 
                     onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
                 <div>
@@ -139,7 +141,11 @@ function DataList({ dataFeedType, updateTokenCallback }: Props) {
             <div 
                 className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  
                 onClick={() => displayElementDetail(dataFeedList[i])}>
-                <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+                <Image 
+                    className={styles.infoLogo}
+                    src={info_png}
+                    alt="Info Image"
+                    onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
             </div>
         </div>
     ));

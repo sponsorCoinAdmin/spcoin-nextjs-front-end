@@ -3,31 +3,32 @@ import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import Link from 'next/link'
-import { AccountRecord, SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure/types';
 import SponsorRateConfig from './SponsorRateConfig';
 import { exchangeContext } from '@/lib/context';
 import RecipientSelect from './RecipientSelect';
 import { displaySpCoinContainers, toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
 
 type Props = {
-  // accountRecord:AccountRecord;
-  setRecipientCallBack: (accountRecord:AccountRecord) => void;
+  // walletAccount:WalletAccount;
+  setRecipientCallBack: (walletAccount:WalletAccount|undefined) => void;
 }
 
-const RecipientContainer = ({setRecipientCallBack}:Props) => {
+const RecipientContainer = () => {
   // const RecipientContainer = ({setRecipientCallBack}:Props) => {
-  // alert("RecipientContainer:\n" + JSON.stringify(exchangeContext.recipientAccount,null,2))
-  // let urlParms:string = `/Recipient?address=${recipientAccount?.address}`
-  const [recipientAccount, setRecipientAccount] = useState<AccountRecord|undefined>(exchangeContext.recipientAccount);
+  // alert("RecipientContainer:\n" + JSON.stringify(exchangeContext.recipientWallet,null,2))
+  // let urlParms:string = `/Recipient?address=${recipientWallet?.address}`
+  const [recipientWallet, setRecipientWallet] = useState<WalletAccount|undefined>(exchangeContext.recipientWallet);
 
   useEffect(() => {
-    // console.debug(`PRICE.useEffect[recipientAccount = ${recipientAccount}])`);
-    exchangeContext.recipientAccount = recipientAccount;
-  }, [recipientAccount]);
+    // console.debug(`PRICE.useEffect[recipientWallet = ${recipientWallet}])`);
+    if (exchangeContext.recipientWallet !== recipientWallet)
+      exchangeContext.recipientWallet = recipientWallet;
+  }, [recipientWallet]);
 
   const closeRecipientSelect = () => {
     displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON);
-    setRecipientAccount(undefined);
+    setRecipientWallet(undefined);
   }
 
   return (
@@ -39,11 +40,11 @@ const RecipientContainer = ({setRecipientCallBack}:Props) => {
         <div className={styles["yourRecipient"]}>
           You are sponsoring:
         </div>
-        <Link href={`${recipientAccount?.url}`} className={styles["recipientName"]}>
-          {recipientAccount?.name}
+        <Link href={`${recipientWallet?.website}`} className={styles["recipientName"]}>
+          {recipientWallet?.name}
         </Link>
         <div className={styles["recipientSelect"]}>
-          <RecipientSelect recipientAccount={recipientAccount} callBackRecipientAccount={setRecipientAccount}/>
+          <RecipientSelect recipientWallet={recipientWallet} callBackRecipientAccount={setRecipientWallet}/>
         </div>
         <div>
           <Image src={cog_png} className={styles["cogImg"]} width={20} height={20} alt="Info Image"  

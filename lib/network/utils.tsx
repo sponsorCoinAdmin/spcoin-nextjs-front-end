@@ -9,6 +9,7 @@ import { Address } from 'viem';
 import {
   BASE,     BASE_WETH_ADDRESS,
   ETHEREUM, ETHEREUM_WETH_ADDRESS,
+  FEED_TYPE,
   HARDHAT,  HARDHAT_WETH_ADDRESS,
   POLYGON,  POLYGON_WETH_ADDRESS,
   SEPOLIA,  SEPOLIA_WETH_ADDRESS,
@@ -20,9 +21,6 @@ const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-
-const IMG_HOME = "assets/blockchains/";
-const IMG_TYPE = ".png";
 
 const isActiveAccountToken = (tokenContract: TokenContract) : boolean => 
   isActiveAccountAddress(tokenContract.address);
@@ -90,15 +88,15 @@ const getBlockChainName = (chainId: number): string | undefined =>
   chainIdMap.get(chainId)?.name;
 
 const getNativeAvatar = (): string =>
-  `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/avatar${IMG_TYPE}`;
+  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 
 const getNetworkAvatar = (): string =>
-  `${IMG_HOME}${exchangeContext.tradeData.chainId}/info/network${IMG_TYPE}`;
+  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network$.png`;
 
 const getTokenAvatar = (tokenContract : any | undefined ): string => {
   if (!tokenContract)
     return defaultMissingImage
-  tokenContract.img = getAddressAvatar(tokenContract.address);
+  tokenContract.img = getAddressAvatar(tokenContract.address, FEED_TYPE.TOKEN_LIST);
   return tokenContract.img;
 }
 
@@ -109,15 +107,25 @@ const getWalletAvatar = (wallet : any | undefined ): string => {
   return imgURL;
 }
 
-const getAddressAvatar = (tokenAddress : Address | undefined ): string => {
-  const chainId = exchangeContext.tradeData.chainId;
-  // alert(`getTokenAvatar = ${IMG_HOME}${chainId}/assets/${tokenAddress}/info/avatar${IMG_TYPE}`);
-  if(isActiveAccountAddress(tokenAddress) ||
-   isNativeTokenAddress(tokenAddress) || 
-   isBurnTokenAddress(tokenAddress))
-    return getNativeAvatar();
-  else
-    return `${IMG_HOME}${chainId}/assets/${tokenAddress}/avatar${IMG_TYPE}`;
+const getAddressAvatar = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
+  let avatarURL:string;
+  switch(dataFeedType) {
+    case FEED_TYPE.AGENT_WALLETS:
+    case FEED_TYPE.RECIPIENT_WALLETS:
+      avatarURL = `assets/wallets/${tokenAddress}/avatar.png`;
+      break;
+    case FEED_TYPE.TOKEN_LIST:
+      const chainId = exchangeContext.tradeData.chainId;
+      // alert(`getTokenAvatar = assets/blockchains/${chainId}/assets/${tokenAddress}/info/avatar.png`);
+      if(isActiveAccountAddress(tokenAddress) ||
+        isNativeTokenAddress(tokenAddress) || 
+        isBurnTokenAddress(tokenAddress))
+        avatarURL = getNativeAvatar();
+      else
+        avatarURL = `assets/blockchains/${chainId}/assets/${tokenAddress}/avatar.png`;
+  }
+  console.log(`Avatar URL = ${avatarURL}`)
+  return avatarURL;
 }
 
 // Utility function to create a default network JSON list (for debugging/testing)

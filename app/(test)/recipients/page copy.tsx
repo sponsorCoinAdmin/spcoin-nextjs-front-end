@@ -21,7 +21,7 @@ export default async function WalletsPage() {
 }
 
 // ✅ Move state and filtering logic to client-side
-function WalletsClient({ wallets }: { wallets: Wallet[] }) {
+function WalletsClient({ wallets }: { wallets: WalletAccount[] }) {
     const [filter, setFilter] = useState<"All" | "Recipients" | "Agents">("All");
 
     // ✅ Function to format title properly

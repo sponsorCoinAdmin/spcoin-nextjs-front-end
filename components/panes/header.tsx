@@ -18,7 +18,7 @@ export default () => {
   let network: string = getBlockChainName(chainId) || ""
   // ToDo Optimize this: useEffect is used to set the network and image for the set chainId when
   // the networkName async is complete.
-  // This is required because NextJS Currently does not allow aync functions in client components.
+  // This is required because NextJS Currently does not allow async functions in client components.
   useEffect(() => {
     setAvatar(getNetworkAvatar());
     setNetworkName(network);

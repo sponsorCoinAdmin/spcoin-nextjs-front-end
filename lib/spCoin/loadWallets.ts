@@ -10,8 +10,8 @@ import { Wallet, WalletAddress } from "../structure/types";
  * @param rootDir - The base directory to search.
  * @returns An array of Wallet objects.
  */
-async function fetchWallets(rootDir: string): Promise<Wallet[]> {
-    const results: Wallet[] = [];
+async function fetchWallets(rootDir: string): Promise<WalletAccount[]> {
+    const results: WalletAccount[] = [];
     const absolutePath = path.join(process.cwd(), "public", rootDir);
 
     try {
@@ -33,7 +33,7 @@ async function fetchWallets(rootDir: string): Promise<Wallet[]> {
             } else if (file === "wallet.json") {
                 try {
                     const fileContent = await fs.promises.readFile(fullPath, "utf-8");
-                    const wallet: Wallet = JSON.parse(fileContent);
+                    const wallet: WalletAccount = JSON.parse(fileContent);
 
                     // Validate that wallet has the required properties before pushing
                     if (wallet && wallet.name && wallet.address) {
@@ -57,13 +57,13 @@ async function fetchWallets(rootDir: string): Promise<Wallet[]> {
  * If jsonWalletFileList is provided, it loads wallets from the file list; otherwise, it scans the rootDir.
  * @param rootDir - Root directory containing wallet files.
  * @param jsonWalletFileList - Optional list of WalletAddress objects.
- * @returns Promise<Wallet[]>
+ * @returns Promise<WalletAccount[]>
  */
-export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAddress[]): Promise<Wallet[]> {
+export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAccountAddress[]): Promise<WalletAccount[]> {
     const absoluteRootPath = path.join(process.cwd(), "public", rootDir);
     if (jsonWalletFileList && jsonWalletFileList.length > 0) {
         try {
-            const wallets: Wallet[] = [];
+            const wallets: WalletAccount[] = [];
 
             for (const file of jsonWalletFileList) {
                 const walletDir = path.join(absoluteRootPath, file.address);
@@ -71,7 +71,7 @@ export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAd
 
                 if (fs.existsSync(walletFilePath)) {
                     const walletData = fs.readFileSync(walletFilePath, "utf-8");
-                    const wallet: Wallet = JSON.parse(walletData);
+                    const wallet: WalletAccount = JSON.parse(walletData);
                     wallets.push(wallet);
                 } else {
                     console.warn(`Wallet file not found: ${walletFilePath}`);

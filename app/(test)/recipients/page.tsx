@@ -20,7 +20,7 @@ export default async function WalletsPage() {
 }
 
 // ✅ Wallet list only (Title & Radio Buttons Removed)
-export function WalletsClient({ wallets }: { wallets: Wallet[] }) {
+export function WalletsClient({ wallets }: { wallets: WalletAccount[] }) {
     return (
         <div style={{ padding: "20px" }}>
             <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>

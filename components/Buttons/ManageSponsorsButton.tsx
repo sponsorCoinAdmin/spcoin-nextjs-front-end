@@ -6,11 +6,10 @@ import ManageSponsorships from '../Dialogs/ManageSponsorships';
 import { useState } from 'react';
 
 type Props = {
-  activeAccount: any,
   tokenContract: TokenContract|undefined,
 }
 
-const ManageSponsorsButton = ({activeAccount, tokenContract}:Props) => {
+const ManageSponsorsButton = ({ tokenContract}:Props) => {
   const [showDialog, setShowDialog ] = useState<boolean>(false)
   const openDialog2 = () => {
       setShowDialog(true)

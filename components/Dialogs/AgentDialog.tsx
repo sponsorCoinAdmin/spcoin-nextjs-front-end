@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlass
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '@/public/assets/miscellaneous/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, AccountRecord } from '@/lib/structure/types';
+import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
@@ -20,16 +20,16 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 
 // ToDo Read in data List remotely
 type Props = {
-    recipientAccount:any,
-    callBackSetter: (agentAccount: AccountRecord) => void,
+    recipientWallet:any,
+    callBackSetter: (agentAccount: WalletAccount) => void,
     showDialog:boolean
 }
 
-export default function Dialog({showDialog, recipientAccount, callBackSetter }: Props) {
+export default function Dialog({showDialog, recipientWallet, callBackSetter }: Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [agentInput, setAgentInput] = useState("");
     const [walletSelect, setWalletSelect] = useState("");
-    const [walletElement, setWalletElement] = useState<AccountRecord| undefined>();
+    const [walletElement, setWalletElement] = useState<WalletAccount| undefined>();
 
     useEffect(() => {
         closeDialog();
@@ -66,7 +66,7 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
                 let retResponse:any = await getWagmiBalanceOfRec (walletAddr)
                 // console.debug("retResponse = " + JSON.stringify(retResponse))
                 // alert(JSON.stringify(retResponse,null,2))
-                let td:AccountRecord = {
+                let td:WalletAccount = {
                     address: agentInput,
                     symbol: retResponse.symbol,
                     img: '/assets/miscellaneous/QuestionWhiteOnRed.png',
@@ -93,15 +93,15 @@ export default function Dialog({showDialog, recipientAccount, callBackSetter }: 
         return true
     }
 
-    const getSelectedListElement = (listElement: AccountRecord | undefined) => {
+    const getSelectedListElement = (listElement: WalletAccount | undefined) => {
         // alert("getSelectedListElement: " +JSON.stringify(listElement,null,2))
         if (listElement === undefined) {
             alert("Invalid Wallet address : " + agentInput)
             return false;
         }
-        if (listElement.address === recipientAccount.address) {
-            alert("Agent cannot be the same as Recipient("+recipientAccount.symbol+")")
-            console.log("Agent cannot be the same as Recipient("+recipientAccount.symbol+")");
+        if (listElement.address === recipientWallet.address) {
+            alert("Agent cannot be the same as Recipient("+recipientWallet.symbol+")")
+            console.log("Agent cannot be the same as Recipient("+recipientWallet.symbol+")");
             return false;
         }
         callBackSetter(listElement)

@@ -1,14 +1,13 @@
 import styles from '@/styles/Exchange.module.css';
-import { AccountRecord, SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
+import { WalletAccount, SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import RecipientContainer from '../containers/RecipientContainer';
 
 type Props = {
-  activeAccount: any,
   tokenContract: TokenContract|undefined,
 }
 
-const AddSponsorshipButton = ({activeAccount, tokenContract}:Props) => {
+const AddSponsorshipButton = ({tokenContract}:Props) => {
   const openComponent = () => {
     // console.debug("AddSponsorshipButton:SHOW RecipientSelect_ID")
     displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER);
@@ -24,8 +23,7 @@ const AddSponsorshipButton = ({activeAccount, tokenContract}:Props) => {
           <div className={styles["centerBottom"]} >Sponsorship</div>
         </div>
         <div id="RecipientSelect_ID" className={styles[`hidden`]}>
-          <RecipientContainer setRecipientCallBack={function (accountRecord: AccountRecord): void {
-            throw new Error('Function not implemented.'); } }/>
+          <RecipientContainer />
         </div>
       </>
   );

@@ -16,7 +16,7 @@ import styles from "@/styles/Exchange.module.css";
 
 // Components
 import AddSponsorButton from "../Buttons/AddSponsorButton";
-import AssetSelect from "./AssetSelect";
+import TokenSelect from "./TokenSelect";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
@@ -213,14 +213,14 @@ const priceInputContainer = ({
         onChange={(e) => { setTextInputValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
-      <AssetSelect priceInputContainerType={priceInputContainerType}
+      <TokenSelect priceInputContainerType={priceInputContainerType}
         tokenContract={tokenContract}
         setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
       {isSpCoin(tokenContract) ? priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
-        <ManageSponsorsButton activeAccount={ACTIVE_ACCOUNT} tokenContract={tokenContract} /> :
-        <AddSponsorButton activeAccount={ACTIVE_ACCOUNT} tokenContract={activeContract} /> : null}
+        <ManageSponsorsButton tokenContract={tokenContract} /> :
+        <AddSponsorButton tokenContract={activeContract} /> : null}
     </div>
   )
 }
