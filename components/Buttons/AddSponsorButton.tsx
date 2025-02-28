@@ -1,7 +1,7 @@
 import styles from '@/styles/Exchange.module.css';
 import { WalletAccount, SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
 import { displaySpCoinContainers } from '@/lib/spCoin/guiControl';
-import RecipientContainer from '../containers/RecipientContainer';
+import RecipientContainer from '../containers/WalletContainer';
 
 type Props = {
   tokenContract: TokenContract|undefined,
