@@ -91,7 +91,7 @@ const getNativeAvatar = (): string =>
   `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 
 const getNetworkAvatar = (): string =>
-  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network$.png`;
+  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network.png`;
 
 const getTokenAvatar = (tokenContract : any | undefined ): string => {
   if (!tokenContract)

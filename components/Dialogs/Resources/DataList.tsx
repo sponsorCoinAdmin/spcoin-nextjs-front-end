@@ -152,11 +152,5 @@ function DataList({ dataFeedType, updateTokenCallback }: Props) {
     return <>{tList}</>;
 }
 
-export default DataList
-export { 
-    getDataFeedList,
-    getDataFeedMap,
-    getNetworkListElement,
-    getDataFeedListElement,
-    setActiveAccount
- }
+export default DataList;
+export { getDataFeedList, getDataFeedMap, getDataFeedListElement, setActiveAccount };
