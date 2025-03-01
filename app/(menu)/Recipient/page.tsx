@@ -19,7 +19,7 @@ export default function Recipient() {
   const [remoteUrl, setRemoteUrl] = useState<string>(defaultHelpPage);
   
   // Store iframe height state
-  const [iframeHeight, setIframeHeight] = useState<number>(window.innerHeight - 99);
+  const [iframeHeight, setIframeHeight] = useState<number>(window.innerHeight);
 
   // Reference to the parent container
   const parentContainerRef = useRef<HTMLDivElement | null>(null);
@@ -44,7 +44,7 @@ export default function Recipient() {
   // Dynamically set iframe height based on window height minus 99px
   useEffect(() => {
     const updateIframeHeight = () => {
-      setIframeHeight(window.innerHeight - 99);
+      setIframeHeight(window.innerHeight - 60);
     };
 
     window.addEventListener("resize", updateIframeHeight);
@@ -67,11 +67,11 @@ export default function Recipient() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div>
       {/* Iframe Container */}
       <div
         ref={parentContainerRef} // Add ref to the parent container
-        className="w-full min-h-screen border rounded-lg shadow-lg relative overflow-hidden"
+        className=""
       >
         {loadingError ? (
           <p className="text-red-600">Failed to load the content. The website may not allow embedding.</p>

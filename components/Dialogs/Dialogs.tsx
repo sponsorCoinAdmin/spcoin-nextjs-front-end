@@ -1,4 +1,3 @@
-import AgentDialog from './AgentDialog';
 import Config from './ConfigDialog';
 import ErrorDialog from './ErrorDialog';
 import RecipientDialog from './WalletSelectDialog';
@@ -12,7 +11,6 @@ const openDialog = (dialogType:string) => {
 
 export {
     openDialog,
-    AgentDialog,
     Config,
     RecipientDialog, 
     TokenSelectDialog,

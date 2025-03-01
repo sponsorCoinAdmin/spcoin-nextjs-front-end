@@ -14,6 +14,7 @@ import { displaySpCoinContainers, toggleSponsorRateConfig } from '@/lib/spCoin/g
 
 const RecipientContainer: React.FC = () => {
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(exchangeContext.recipientWallet);
+  const [siteExists, setSiteExists] = useState<boolean>(true);
 
   useEffect(() => {
     if (exchangeContext.recipientWallet !== recipientWallet) {
@@ -26,17 +27,38 @@ const RecipientContainer: React.FC = () => {
     setRecipientWallet(undefined);
   }, []);
 
+  // Default URL if recipient website does not exist
+  const defaultUrl = `Recipient?url=/websites/test-dummy-sites?site=${recipientWallet?.name}&avatar=${recipientWallet?.name}&recipientWallet_JSON=${JSON.stringify(recipientWallet, null, 2)}`;
+
+  // Function to check if the URL is reachable
+  useEffect(() => {
+    if (recipientWallet?.website && recipientWallet.website !== "N/A" && recipientWallet.website.trim() !== "") {
+      fetch(recipientWallet.website, { method: 'HEAD' })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Site not reachable');
+          }
+          setSiteExists(true);
+        })
+        .catch(() => setSiteExists(false));
+    } else {
+      setSiteExists(false);
+    }
+  }, [recipientWallet?.website]);
+
   return (
     <>
       <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.RecipientContainer)}>
         <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
-        {recipientWallet?.website ? (
-          <Link href={recipientWallet.website} className={styles.recipientName}>
+        {recipientWallet && siteExists ? (
+          <Link href={`Recipient?url=${recipientWallet.website}`} className={styles.recipientName}>
             {recipientWallet.name}
           </Link>
         ) : (
-          <div className={styles.recipientName}>No recipient selected</div>
+          <Link href={defaultUrl} className={styles.recipientName}>
+            {recipientWallet?.name || 'No recipient selected'}
+          </Link>
         )}
         <div className={styles.recipientSelect}>
           <RecipientSelect recipientWallet={recipientWallet} callBackWallet={setRecipientWallet} />
