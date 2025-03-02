@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { defaultMissingImage } from "@/lib/network/utils";
-import { loadWallets } from "@/lib/spCoin/loadWallets";
 import fs from "fs";
 import path from "path";
 import { publicWalletPath, WalletAccount } from "@/lib/structure/types";

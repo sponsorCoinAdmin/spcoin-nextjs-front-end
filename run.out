@@ -1,0 +1,2068 @@
+
+> spcoin-hardhat-contract-access-test@1.0.1 dev
+> next dev
+
+(node:22300) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end/next.config.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ▲ Next.js 14.2.23
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+(node:9328) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Robin/spCoin/SPCOIN-PROJECT-MODULES/spcoin-nextjs-front-end/next.config.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Ready in 2.9s
+ ○ Compiling /Exchange ...
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/connectkit/build/index.es.js
+./components/Wrappers/SpCoinWrapper.tsx
+BLOCKCHAIN_PROVIDER = INFURA
+BASE_URL            = https://base-mainnet.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+MAINNET_URL         = https://mainnet.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+POLYGON_URL         = https://polygon-mainnet.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+SEPOLIA_URL         = https://sepolia.infura.io/v3/08b06e80980b4c1c9d9d450f4f71607d
+HARDHAT_URL         = http://127.0.0.1:8545
+mapAccountAddrToWethAddr: chainId(8453) 
+               Ethereum Account Address = undefined 
+               Token Account Address = undefined
+getNetworkWethAddress(8453): WETH ADDRESS: 0x4200000000000000000000000000000000000006
+mapAccountAddrToWethAddr: chainId(8453) 
+               Ethereum Account Address = undefined 
+               Token Account Address = undefined
+getNetworkWethAddress(8453): WETH ADDRESS: 0x4200000000000000000000000000000000000006
+fetcher.shouldFetch.chainId = 8453
+useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = 0x0000000000000000000000000000000000000000, contractAddress = 0x0000000000000000000000000000000000000000
+Avatar URL = assets/blockchains/8453/assets/0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x940181a94A35A4569E4529A3CDfB74e38FD98631/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xBC45647eA894030a4E9801Ec03479739FA2485F0/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x532f27101965dd16442e59d40670faf5ebb142e4/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xCa72827a3D211CfD8F6b00Ac98824872b72CAb49/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x50c5725949a6f0c72e6c4a641f24049a917db0cb/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x4200000000000000000000000000000000000006/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x0555E30da8f98308EdB960aa94C0Db47230d2B9c/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xe868c3d83ec287c01bcb533a33d197d9bfa79dad/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x239b9C1F24F3423062B0d364796e07Ee905E9FcE/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xD6DF932A45C0f255f85145f286eA0b292B21C90B/avatar.png
+useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = 0x0000000000000000000000000000000000000000, contractAddress = 0x0000000000000000000000000000000000000000
+Avatar URL = assets/blockchains/8453/assets/0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x940181a94A35A4569E4529A3CDfB74e38FD98631/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xBC45647eA894030a4E9801Ec03479739FA2485F0/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x532f27101965dd16442e59d40670faf5ebb142e4/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xCa72827a3D211CfD8F6b00Ac98824872b72CAb49/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x50c5725949a6f0c72e6c4a641f24049a917db0cb/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x4200000000000000000000000000000000000006/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x0555E30da8f98308EdB960aa94C0Db47230d2B9c/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xe868c3d83ec287c01bcb533a33d197d9bfa79dad/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0x239b9C1F24F3423062B0d364796e07Ee905E9FcE/avatar.png
+Avatar URL = assets/blockchains/8453/assets/0xD6DF932A45C0f255f85145f286eA0b292B21C90B/avatar.png
+ GET /Exchange 200 in 18017ms
+ ⚠ ./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./lib/wagmi/wagmiERC20ClientRead.tsx
+Attempted import error: 'erc20Abi' is not exported from '@/resources/data/ABIs/erc20ABI' (imported as 'erc20Abi').
+
+Import trace for requested module:
+./lib/wagmi/wagmiERC20ClientRead.tsx
+./components/containers/AssetContainer.tsx
+./app/(menu)/Exchange/Price/index.tsx
+./app/(menu)/Exchange/index.tsx
+./app/(menu)/Exchange/page.tsx
+
+./node_modules/pino/lib/tools.js
+Module not found: Can't resolve 'pino-pretty' in 'C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\pino\lib'
+
+Import trace for requested module:
+./node_modules/pino/lib/tools.js
+./node_modules/pino/pino.js
+./node_modules/@walletconnect/logger/dist/index.es.js
+./node_modules/@walletconnect/universal-provider/dist/index.es.js
+./node_modules/@walletconnect/ethereum-provider/dist/index.es.js
+./node_modules/@wagmi/connectors/dist/esm/walletConnect.js
+./node_modules/@wagmi/connectors/dist/esm/exports/index.js
+./node_modules/wagmi/dist/esm/exports/connectors.js
+./lib/wagmi/wagmiConfig.ts
+./components/panes/header.tsx
+ GET /assets/blockchains/8453/assets/0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562/avatar.png 404 in 7423ms
+ GET /assets/blockchains/8453/assets/0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2/avatar.png 404 in 5030ms
+ GET /assets/blockchains/8453/assets/0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2/avatar.png 404 in 7346ms
+ GET /assets/blockchains/8453/assets/0xCa72827a3D211CfD8F6b00Ac98824872b72CAb49/avatar.png 404 in 4935ms
+ GET /assets/blockchains/8453/assets/0x0555E30da8f98308EdB960aa94C0Db47230d2B9c/avatar.png 404 in 2698ms
+ GET /assets/blockchains/8453/assets/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1/avatar.png 404 in 2669ms
+ GET /assets/blockchains/8453/assets/0xe868c3d83ec287c01bcb533a33d197d9bfa79dad/avatar.png 404 in 138ms
+ GET /assets/blockchains/8453/assets/0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290/avatar.png 404 in 135ms
+ GET /assets/blockchains/8453/assets/0xD6DF932A45C0f255f85145f286eA0b292B21C90B/avatar.png 404 in 129ms
+ GET /assets/blockchains/8453/assets/0x239b9C1F24F3423062B0d364796e07Ee905E9FcE/avatar.png 404 in 125ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x0000000000000000000000000000000000000071"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000072"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000074"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000075"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000073"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007d"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000085"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000080"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000081"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000082"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000083"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000077"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000078"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000079"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000087"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000084"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000076"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000086"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008a"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000088"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000089"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008c"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000090"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008e"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000071\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000072\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000074\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000075\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000073\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000085\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000080\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000081\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000082\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000083\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000077\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000078\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000079\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000087\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000084\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000076\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000086\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000088\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000089\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000090\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008e\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 375ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
+  },
+  {
+    "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+  },
+  {
+    "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000f"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000002"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000003f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000004"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004e"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000005"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000006"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000007"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000008"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000009"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000010"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000011"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x39846f9558199c333c5212fe4658293cbf3da679\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json
+ERROR: processing wallet file C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json: SyntaxError: Expected double-quoted property name in JSON at position 98 (line 5 column 19)
+    at JSON.parse (<anonymous>)
+    at loadWallets (webpack-internal:///(action-browser)/./lib/spCoin/loadWallets.tsx:77:45)
+    at endpoint (webpack-internal:///(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CRobin%5C%5CspCoin%5C%5CSPCOIN-PROJECT-MODULES%5C%5Cspcoin-nextjs-front-end%5C%5Clib%5C%5CspCoin%5C%5CloadWallets.tsx%22%2C%5B%22loadWallets%22%5D%5D%5D&__client_imported__=true!:8:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:39:418
+    at async rk (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:38:8148)
+    at async r3 (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:41:1256)
+    at async doRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1496:28)
+    at async DevServer.renderPageComponent (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1962:32)
+    at async DevServer.pipeImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:173:21)
+    at async handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:350:24)
+    at async requestHandlerImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:374:13)
+    at async Server.requestListener (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\start-server.js:141:13)
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000002\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000003f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000004\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000005\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000006\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000007\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000008\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000009\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000010\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000011\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 68ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x0000000000000000000000000000000000000071"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000072"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000074"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000075"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000073"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007d"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000085"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000080"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000081"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000082"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000083"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000077"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000078"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000079"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000087"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000084"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000076"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000086"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008a"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000088"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000089"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008c"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000090"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008e"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000071\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000072\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000074\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000075\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000073\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000085\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000080\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000081\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000082\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000083\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000077\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000078\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000079\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000087\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000084\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000076\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000086\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000088\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000089\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000090\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008e\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 57ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
+  },
+  {
+    "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+  },
+  {
+    "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000f"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000002"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000003f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000004"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004e"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000005"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000006"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000007"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000008"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000009"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000010"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000011"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x39846f9558199c333c5212fe4658293cbf3da679\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json
+ERROR: processing wallet file C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json: SyntaxError: Expected double-quoted property name in JSON at position 98 (line 5 column 19)
+    at JSON.parse (<anonymous>)
+    at loadWallets (webpack-internal:///(action-browser)/./lib/spCoin/loadWallets.tsx:77:45)
+    at endpoint (webpack-internal:///(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CRobin%5C%5CspCoin%5C%5CSPCOIN-PROJECT-MODULES%5C%5Cspcoin-nextjs-front-end%5C%5Clib%5C%5CspCoin%5C%5CloadWallets.tsx%22%2C%5B%22loadWallets%22%5D%5D%5D&__client_imported__=true!:8:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:39:418
+    at async rk (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:38:8148)
+    at async r3 (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:41:1256)
+    at async doRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1496:28)
+    at async DevServer.renderPageComponent (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1962:32)
+    at async DevServer.pipeImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:173:21)
+    at async handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:350:24)
+    at async requestHandlerImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:374:13)
+    at async Server.requestListener (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\start-server.js:141:13)
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000002\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000003f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000004\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000005\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000006\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000007\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000008\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000009\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000010\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000011\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 46ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x0000000000000000000000000000000000000071"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000072"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000074"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000075"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000073"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007d"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000085"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000080"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000081"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000082"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000083"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000077"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000078"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000079"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000087"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000084"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000076"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000086"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008a"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000088"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000089"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008c"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000090"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008e"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000071\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000072\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000074\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000075\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000073\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000085\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000080\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000081\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000082\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000083\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000077\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000078\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000079\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000087\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000084\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000076\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000086\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000088\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000089\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000090\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008e\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 40ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
+  },
+  {
+    "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+  },
+  {
+    "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000f"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000002"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000003f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000004"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004e"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000005"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000006"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000007"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000008"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000009"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000010"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000011"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x39846f9558199c333c5212fe4658293cbf3da679\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json
+ERROR: processing wallet file C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json: SyntaxError: Expected double-quoted property name in JSON at position 98 (line 5 column 19)
+    at JSON.parse (<anonymous>)
+    at loadWallets (webpack-internal:///(action-browser)/./lib/spCoin/loadWallets.tsx:77:45)
+    at endpoint (webpack-internal:///(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CRobin%5C%5CspCoin%5C%5CSPCOIN-PROJECT-MODULES%5C%5Cspcoin-nextjs-front-end%5C%5Clib%5C%5CspCoin%5C%5CloadWallets.tsx%22%2C%5B%22loadWallets%22%5D%5D%5D&__client_imported__=true!:8:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:39:418
+    at async rk (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:38:8148)
+    at async r3 (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:41:1256)
+    at async doRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1496:28)
+    at async DevServer.renderPageComponent (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1962:32)
+    at async DevServer.pipeImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:173:21)
+    at async handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:350:24)
+    at async requestHandlerImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:374:13)
+    at async Server.requestListener (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\start-server.js:141:13)
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000002\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000003f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000004\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000005\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000006\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000007\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000008\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000009\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000010\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000011\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 44ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x0000000000000000000000000000000000000071"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000072"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000074"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000075"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000073"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007d"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000085"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000080"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000081"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000082"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000083"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000077"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000078"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000079"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000087"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000084"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000076"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000086"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008a"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000088"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000089"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008c"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000090"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008e"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000071\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000072\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000074\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000075\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000073\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000085\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000080\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000081\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000082\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000083\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000077\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000078\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000079\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000087\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000084\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000076\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000086\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000088\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000089\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000090\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008e\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 44ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
+  },
+  {
+    "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+  },
+  {
+    "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000f"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000002"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000003f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000004"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004e"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000005"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000006"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000007"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000008"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000009"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000010"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000011"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x39846f9558199c333c5212fe4658293cbf3da679\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json
+ERROR: processing wallet file C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json: SyntaxError: Expected double-quoted property name in JSON at position 98 (line 5 column 19)
+    at JSON.parse (<anonymous>)
+    at loadWallets (webpack-internal:///(action-browser)/./lib/spCoin/loadWallets.tsx:77:45)
+    at endpoint (webpack-internal:///(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5CRobin%5C%5CspCoin%5C%5CSPCOIN-PROJECT-MODULES%5C%5Cspcoin-nextjs-front-end%5C%5Clib%5C%5CspCoin%5C%5CloadWallets.tsx%22%2C%5B%22loadWallets%22%5D%5D%5D&__client_imported__=true!:8:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:39:418
+    at async rk (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:38:8148)
+    at async r3 (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\compiled\next-server\app-page.runtime.dev.js:41:1256)
+    at async doRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1496:28)
+    at async DevServer.renderPageComponent (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:1962:32)
+    at async DevServer.pipeImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\base-server.js:818:17)
+    at async C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:173:21)
+    at async handleRequest (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:350:24)
+    at async requestHandlerImpl (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\router-server.js:374:13)
+    at async Server.requestListener (C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\node_modules\next\dist\server\lib\start-server.js:141:13)
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000002\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000003f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000004\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000005\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000006\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000007\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000008\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000009\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000010\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000011\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 46ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x0000000000000000000000000000000000000071"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000072"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000074"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000075"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000073"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007d"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000085"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000080"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000081"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000082"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000083"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000077"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000078"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000079"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000087"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000084"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000076"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000086"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008a"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000088"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000089"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008c"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000090"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008e"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000071\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000072\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000074\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000075\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000073\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000085\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000080\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000081\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000082\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000083\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000077\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000078\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000079\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000087\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000084\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000076\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000086\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000088\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000089\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000090\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008e\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 46ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
+  },
+  {
+    "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+  },
+  {
+    "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000f"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000002"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000003f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000004"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004e"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000005"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000006"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000007"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000008"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000009"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000010"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000011"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x39846f9558199c333c5212fe4658293cbf3da679\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000002\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000003f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000004\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000005\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000006\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000007\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000008\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000009\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000010\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000011\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 50ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x0000000000000000000000000000000000000071"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000072"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000074"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000075"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000073"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007d"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000085"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000080"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000081"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000082"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000083"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000077"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000078"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000079"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000087"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000084"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000076"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000086"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008a"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000088"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000089"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008c"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000090"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000007c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000008e"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000071\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000072\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000074\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000075\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000073\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000085\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000080\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000081\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000082\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000083\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000077\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000078\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000079\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000087\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000084\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000076\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000086\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000088\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000089\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000090\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000007c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000008e\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 60ms
+ GET /assets/wallets/0x000000000000000000000000000000000000005f/avatar.png 404 in 107ms
+ GET /assets/wallets/0x0000000000000000000000000000000000000008/avatar.png 404 in 42ms
+absoluteRootPath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets
+jsonWalletFileList = [
+  {
+    "address": "0x39846f9558199c333c5212fe4658293cbf3da679"
+  },
+  {
+    "address": "0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67"
+  },
+  {
+    "address": "0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000000f"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000001f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000002"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002c"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000002e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000003f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000004"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004d"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000004e"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000005"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005a"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005b"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005e"
+  },
+  {
+    "address": "0x000000000000000000000000000000000000005f"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000006"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000007"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000008"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000009"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000010"
+  },
+  {
+    "address": "0x0000000000000000000000000000000000000011"
+  }
+]
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x39846f9558199c333c5212fe4658293cbf3da679\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x96f03e32D5fAb2A729ab4C815fbc959C202B0A67\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000000f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000001f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000002\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002c\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000002e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000003f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000004\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004d\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000004e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000005\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005a\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005b\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005e\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x000000000000000000000000000000000000005f\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000006\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000007\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000008\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000009\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000010\wallet.json
+walletFilePath: C:\Users\Robin\spCoin\SPCOIN-PROJECT-MODULES\spcoin-nextjs-front-end\public\assets\wallets\0x0000000000000000000000000000000000000011\wallet.json
+=======================================================================================================
+ POST /Exchange 200 in 102ms

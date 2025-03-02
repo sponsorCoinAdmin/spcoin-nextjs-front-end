@@ -14,7 +14,7 @@ import { displaySpCoinContainers, toggleSponsorRateConfig } from '@/lib/spCoin/g
 
 const RecipientContainer: React.FC = () => {
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(exchangeContext.recipientWallet);
-  const [siteExists, setSiteExists] = useState<boolean>(true);
+  const [siteExists, setSiteExists] = useState<boolean>(false);
 
   useEffect(() => {
     if (exchangeContext.recipientWallet !== recipientWallet) {
@@ -32,15 +32,20 @@ const RecipientContainer: React.FC = () => {
 
   // Function to check if the URL is reachable
   useEffect(() => {
+    const website = recipientWallet?.website
+    let fetchResponse:Response;
     if (recipientWallet?.website && recipientWallet.website !== "N/A" && recipientWallet.website.trim() !== "") {
       fetch(recipientWallet.website, { method: 'HEAD' })
         .then((response) => {
-          if (!response.ok) {
-            throw new Error('Site not reachable');
+          if (response.ok) {
+            setSiteExists(true);
           }
-          setSiteExists(true);
+          else {
+            setSiteExists(false);
+          }
+          fetchResponse = response;
         })
-        .catch(() => setSiteExists(false));
+        // alert(`RESPONSE_STATUS: $(fetchResponse) = siteExists(${website}) = ${siteExists}`);
     } else {
       setSiteExists(false);
     }

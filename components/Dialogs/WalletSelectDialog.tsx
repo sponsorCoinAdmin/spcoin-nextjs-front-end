@@ -85,8 +85,7 @@ export default function Dialog({showDialog, setShowDialog, callBackWallet }: Pro
                     type: '',
                     website: '',
                     description: '',
-                    status: '',
-                    'block-scanners': []
+                    status: ''
                 }
                 setWalletElement(td);
                 return true

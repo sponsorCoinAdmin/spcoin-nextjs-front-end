@@ -1,1 +1,104 @@
-<H1>TEST DUMMY WEBSITE</H1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missing Site</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            position: relative;
+        }
+        h1 {
+            margin-top: 50px;
+        }
+        .sitename {
+            margin-top: 25px;
+        }
+        .image-wrapper {
+            position: absolute;
+            top: 100px; /* Image starts at exactly 100px from the top */
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        img {
+            display: block;
+            transform: scale(0.61);
+        }
+        .missing-img-text {
+            position: absolute;
+            top: 500px; /* Text exactly 500px from the top */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 120%;
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+        .error {
+            color: red;
+            font-size: 110%;
+            margin-top: 20px;
+        }
+        .usage {
+            position: absolute;
+            bottom: 70px; /* USAGE line exactly 70px from the bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 82.5%; /* Decreased by 25% (original 110% * 0.75) */
+            color: black; /* Changed text color to black */
+            font-weight: bold;
+        }
+        .website-input {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const sitename = params.get('sitename');
+        const imgSrc = params.get('img');
+        const website = params.get('website');
+        const baseUrl = window.location.href.split('?')[0];
+        const defaultMissingImg = '/assets/miscellaneous/QuestionBlackOnRed.png';
+
+        let content = `<h1>Web Site ${sitename ? sitename : 'ERROR: missing "sitename" parameter'} Not Found</h1>`;
+
+        if (website) {
+            content += `<input type="text" value="${website}" readonly class="website-input">`;
+        } else {
+            content += '<h2 style="color: red;">Missing "website" parameter</h2>';
+        }
+
+        // Image positioned at 100px from the top
+        content += `<div class="image-wrapper">
+            <img src="${imgSrc}" alt="Missing Image" onerror="this.onerror=null; this.src='${defaultMissingImg}'; 
+            document.getElementById('missing-img-text').style.display = 'inline-block';">
+        </div>`;
+
+        // Text positioned at 500px from the top
+        content += `<div id="missing-img-text" class="missing-img-text">Missing {img} Parameter</div>`;
+
+        // USAGE line positioned exactly 70px from the bottom, in black and smaller font size
+        if (!sitename || !imgSrc || !website) {
+            content += `<div class="usage"><strong>USAGE:</strong> ${baseUrl}?sitename=EXAMPLE&img=IMAGE_URL&website=WEBSITE_URL</div>`;
+        }
+
+        document.body.innerHTML = content;
+    </script>
+</body>
+</html>

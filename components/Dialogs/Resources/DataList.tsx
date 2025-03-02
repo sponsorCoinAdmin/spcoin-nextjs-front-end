@@ -121,21 +121,21 @@ const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenCont
 function DataList({ dataFeedType, updateTokenCallback }: Props) {
     const dataFeedList : TokenContract[] | WalletAccount[] = getDataFeedList(dataFeedType, useChainId()) || [];
 
-    const tList = dataFeedList.map((e: any, i: number) => (
+    const tList = dataFeedList.map((listElement: any, i: number) => (
         <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
-            key={getDataKey(dataFeedType, e)}>
+            key={getDataKey(dataFeedType, listElement)}>
             <div 
                 className="cursor-pointer flex flex-row justify-between" 
                 onClick={() => updateTokenCallback(dataFeedList[i])}>
-                {/* Ensure getAddressAvatar(e.address) is valid */}
+                {/* Ensure getAddressAvatar(listElement.address) is valid */}
                 <img
                     className={styles.elementLogo} 
-                    src={getAddressAvatar(e.address, dataFeedType)} 
-                    alt={`${e.name} Token Avatar`} 
+                    src={getAddressAvatar(listElement.address, dataFeedType)} 
+                    alt={`${listElement.name} Token Avatar`} 
                     onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
                 <div>
-                    <div className={styles.elementName}>{e.name}</div>
-                    <div className={styles.elementSymbol}>{e.symbol}</div>
+                    <div className={styles.elementName}>{listElement.name}</div>
+                    <div className={styles.elementSymbol}>{listElement.symbol}</div>
                 </div>
             </div>
             <div 

@@ -6,12 +6,6 @@ export interface WalletAddress {
     address: string;
 }
 
-interface BlockScanner {
-    chainId: number
-    explorer?: string;
-    url?: string;
-}
-
 // Define Wallet type
 interface WalletAccount {
     name: string;
@@ -21,7 +15,6 @@ interface WalletAccount {
     description: string;
     status: string;
     address: string;
-    "block-scanners": BlockScanner[];
     avatar:string;
 }
 

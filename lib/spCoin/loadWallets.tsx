@@ -2,7 +2,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { Wallet, WalletAddress } from "../structure/types";
+import { WalletAccount, WalletAddress } from "../structure/types";
 
 /**
  * Recursively finds wallet.json files.
@@ -59,8 +59,11 @@ async function fetchWallets(rootDir: string): Promise<WalletAccount[]> {
  * @param jsonWalletFileList - Optional list of WalletAddress objects.
  * @returns Promise<WalletAccount[]>
  */
-export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAccountAddress[]): Promise<WalletAccount[]> {
+export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAccount[]): Promise<WalletAccount[]> {
+
     const absoluteRootPath = path.join(process.cwd(), "public", rootDir);
+    console.warn(`absoluteRootPath: ${absoluteRootPath}`);
+    console.warn(`jsonWalletFileList = ${JSON.stringify(jsonWalletFileList,null,2)}`)
     if (jsonWalletFileList && jsonWalletFileList.length > 0) {
         try {
             const wallets: WalletAccount[] = [];
@@ -68,19 +71,26 @@ export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAc
             for (const file of jsonWalletFileList) {
                 const walletDir = path.join(absoluteRootPath, file.address);
                 const walletFilePath = path.join(walletDir, "wallet.json"); // Ensuring the correct path
+                console.log(`walletFilePath: ${walletFilePath}`);
 
                 if (fs.existsSync(walletFilePath)) {
-                    const walletData = fs.readFileSync(walletFilePath, "utf-8");
-                    const wallet: WalletAccount = JSON.parse(walletData);
-                    wallets.push(wallet);
+                    try {
+                        const walletData = fs.readFileSync(walletFilePath, "utf-8");
+                        const wallet: WalletAccount = JSON.parse(walletData);
+                        wallets.push(wallet);
+                    } catch (error) {
+                        console.error(`ERROR: processing wallet file ${walletFilePath}:`, error);
+                    }
                 } else {
-                    console.warn(`Wallet file not found: ${walletFilePath}`);
+                    console.error(`ERROR: Wallet file not found: ${walletFilePath}`);
                 }
             }
 
+            // console.log(`wallets = ${JSON.stringify(wallets,null,2)}`)
+            console.warn(`=======================================================================================================`)
             return wallets;
-        } catch (error) {
-            console.error("Error loading wallets from list:", error);
+        } catch (error:any) {
+            console.error("ERROR: loading wallets from list:", JSON.parse(error));
             return [];
         }
     } else {
