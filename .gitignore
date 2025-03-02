@@ -9,6 +9,7 @@ test.out
 .env.local
 */.e
 package-lock.json
+run.out
 
 cache
 artifacts
