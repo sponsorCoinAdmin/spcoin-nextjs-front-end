@@ -230,6 +230,16 @@ const dumpContext = (isAlert:boolean = false, isConsoleDebug:boolean=true) => {
 //   const activeAccountAddress = useAccount().address;
 //   return (address === activeAccountAddress);
 // }
+
+const getPublicFileUrl = (fileName: string): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) {
+    throw new Error("NEXT_PUBLIC_BASE_URL is not defined in environment variables.");
+  }
+  // alert(`${baseUrl}/${fileName}`)
+  return `${baseUrl}/${fileName}`;
+};
+
 export {
     decimalAdjustTokenAmount,
     bigIntDecimalShift,
@@ -237,7 +247,7 @@ export {
     dumpSwapState,
     exchangeContextDump,
     fetchTokenDetails,
-    // useActiveAccountAddress,
+    getPublicFileUrl,
     getValidAddress,
     getValidBigIntToFormattedPrice,
     getValidFormattedPrice,
