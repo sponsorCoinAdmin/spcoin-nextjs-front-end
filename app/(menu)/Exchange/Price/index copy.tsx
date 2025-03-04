@@ -85,7 +85,7 @@ export default function PriceView() {
       exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address
     }
   }, [ACTIVE_ACCOUNT.address]);
-
+  
   useEffect(() => {
     if (isWrapTransaction) {
       if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
