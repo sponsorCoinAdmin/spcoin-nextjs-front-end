@@ -74,7 +74,6 @@ export default function Recipient() {
                 </p>
               </div>
             )}
-
             <iframe
               src={remoteUrl}
               className="w-full"

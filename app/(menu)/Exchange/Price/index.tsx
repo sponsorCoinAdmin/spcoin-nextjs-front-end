@@ -21,7 +21,6 @@ export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
   const signer = useEthersSigner();
   const tradeData: TradeData = exchangeContext.tradeData;
-  const chainId = useChainId();
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
   const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
@@ -38,8 +37,7 @@ export default function PriceView() {
 
   // Memoize transaction validity check
   const isWrapTransaction = useMemo(() => isWrappingTransaction(sellTokenAddress, buyTokenAddress), [sellTokenAddress, buyTokenAddress]);
-
-  tradeData.chainId = chainId;
+  // tradeData.chainId = useChainId();
 
   useEffect(() => {
     tradeData.buyAmount = buyAmount;
@@ -65,15 +63,15 @@ export default function PriceView() {
   }, []);
   
   useEffect(() => {
-    if (ACTIVE_ACCOUNT.chainId) {
-      tradeData.chainId = chainId;
+    if (ACTIVE_ACCOUNT.chainId && ACTIVE_ACCOUNT.chainId !== tradeData?.chainId) {
+      tradeData.chainId = ACTIVE_ACCOUNT.chainId;
       setSellAmount(0n);
       setBuyAmount(0n);
       setSellTokenContract(undefined)
       setBuyTokenContract(undefined)
       resetNetworkContext(ACTIVE_ACCOUNT.chain);
     }
-  }, [chainId]);
+  }, [ACTIVE_ACCOUNT.chainId]);
   
   useEffect(() => {
     if (ACTIVE_ACCOUNT.address) {
@@ -122,7 +120,7 @@ export default function PriceView() {
   useEffect(() => {
     if (PriceError && !isWrapTransaction) {
       setErrorMessage({
-        status: chainId === HARDHAT ? STATUS.WARNING_HARDHAT : STATUS.ERROR_API_PRICE,
+        status: tradeData.chainId === HARDHAT ? STATUS.WARNING_HARDHAT : STATUS.ERROR_API_PRICE,
         source: "PriceError: ",
         errCode: PriceError.errCode,
         msg: PriceError.errMsg,
