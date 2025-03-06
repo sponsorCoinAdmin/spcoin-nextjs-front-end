@@ -253,14 +253,22 @@ const PriceInputContainer = ({
     ? `You Pay +-${slippageBps * 100}%`
     : "You Exactly Receive";
 
-  return (
-    <div className={`${styles.inputs} ${styles.priceInputContainer}`}>
-      <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""} onChange={(e) => setTextInputValue(e.target.value)} />
-      <TokenSelect priceInputContainerType={priceInputContainerType} tokenContract={tokenContract} setDecimalAdjustedContract={setDecimalAdjustedContract} />
-      <div className={styles.buySell}>{buySellText}</div>
-      <div className={styles.assetBalance}> Balance: {formattedBalance || "0.0"}</div>
-    </div>
-  );
+    return (
+      <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
+        <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""}
+          onChange={(e) => { setTextInputValue(e.target.value) }}
+          onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
+        />
+        <TokenSelect priceInputContainerType={priceInputContainerType}
+          tokenContract={tokenContract}
+          setDecimalAdjustedContract={setDecimalAdjustedContract} />
+        <div className={styles["buySell"]}>{buySellText}</div>
+        <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
+        {isSpCoin(tokenContract) ? priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+          <ManageSponsorsButton tokenContract={tokenContract} /> :
+          <AddSponsorButton/> : null}
+      </div>
+    )
 };
 
 export default PriceInputContainer;
