@@ -1,35 +1,31 @@
 'use client'
+
 import styles from '@/styles/Exchange.module.css'
 import { dumpContext } from '@/lib/spCoin/utils';
-import { exchangeContext } from "@/lib/context";
-import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, SWAP_TYPE, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
+import { useExchangeContext } from "@/lib/context/ExchangeContext";
+import { BUTTON_TYPE, ErrorMessage, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
 import { isActiveAccountAddress, isWrappedNetworkAddress } from '@/lib/network/utils';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 
-const tradeData: TradeData = exchangeContext.tradeData;
-
-type Props = {
-  isLoadingPrice: boolean,
-  errorMessage: ErrorMessage | undefined,
-  setErrorMessage: (errorMessage: ErrorMessage | undefined) => void,
-  setResetAmounts: (resetAmounts: boolean) => void,
-  toggleButton: boolean
-}
-
 const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton }: Props) => {
+  // ✅ Use useExchangeContext() instead of direct reference
+  const { exchangeContext } = useExchangeContext();
+  const tradeData: TradeData = exchangeContext.tradeData;
+  
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
-  // const {balance:sellBalance} = useERC20WagmiBalances("ExchangeButton", tokenContract?.address);
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
   const transactionType: string = tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
-  "EXACT OUT " : "EXACT IN "
+    "EXACT OUT " : "EXACT IN "
 
+  // ✅ Set the button type dynamically
   const setButtonType = (_buttonType: BUTTON_TYPE): BUTTON_TYPE => {
     buttonType = _buttonType;
     return buttonType;
   }
 
+  // ✅ Determine the swap type text
   const getSwapType = () => {
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
@@ -43,10 +39,11 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
         if (isWrappedNetworkAddress(sellTokenContract?.address))
           return "SWAP UN-WRAP\n( WETH -> ETH )"
         else
-          return transactionType + ( `${sellTokenContract?.symbol} -> ( WETH -> ETH )` )
+          return transactionType + (`${sellTokenContract?.symbol} -> ( WETH -> ETH )`)
       else return transactionType + "SWAP"
   }
 
+  // ✅ Button text based on state
   const getButtonText = (buttonType: BUTTON_TYPE) => {
     switch (buttonType) {
       case BUTTON_TYPE.TOKENS_REQUIRED:
@@ -73,25 +70,25 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     }
   }
 
+  // ✅ Check if the sell balance is sufficient
   const insufficientSellBalance = () => {
     let insufficientBalance: boolean = false;
     try {
-      // console.debug(`EXCHANGE_BUTTON.exchangeContext = \n${stringifyBigInt(exchangeContext)}`);
       const tradeAmount = tradeData.sellAmount;
       const sellTradeBalance = tradeData.sellTokenContract?.balance || 0n;
-      insufficientBalance = sellTradeBalance < tradeAmount
+      insufficientBalance = sellTradeBalance < tradeAmount;
 
       console.debug(`CustomConnectButton.insufficientBalance: sellBalanceOf = "${sellTradeBalance}"`);
       console.debug(`tradeAmount             = "${tradeAmount}"`);
       console.debug(`sellTradeBalance        = "${sellTradeBalance}"`);
       console.debug(`insufficientBalance     = "${insufficientBalance}"`);
-
     } catch (err: any) {
       console.debug(`ERROR: ExchangeButton.insufficientSellBalance: ${err.message}`)
     }
     return insufficientBalance;
   }
 
+  // ✅ Helper functions to check token requirements
   const tokensRequired = (): boolean => {
     return sellTokenRequired() && buyTokenRequired()
   }
@@ -108,12 +105,8 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     return tradeData.sellAmount === 0n && tradeData.buyAmount === 0n
   }
 
+  // ✅ Determine the button type dynamically
   const getButtonType = (): BUTTON_TYPE => {
-    // alert(`"getButtonType()\n
-    // errorMessage = ${errorMessage}\n
-    // isLoadingPrice = ${isLoadingPrice}\n
-    // insufficientSellAmount() = ${insufficientSellAmount()}\n
-    // insufficientSellBalance() = ${insufficientSellBalance()}`)
     return (
       errorMessage?.status === STATUS.WARNING_HARDHAT ? BUTTON_TYPE.NO_HARDHAT_API :
         errorMessage?.status === STATUS.ERROR_API_PRICE ? BUTTON_TYPE.API_TRANSACTION_ERROR :
@@ -126,6 +119,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
                       BUTTON_TYPE.SWAP)
   }
 
+  // ✅ Get button color based on state
   const getButtonColor = (buttonType: BUTTON_TYPE | undefined) => {
     switch (buttonType) {
       case BUTTON_TYPE.SWAP:
@@ -146,6 +140,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     }
   }
 
+  // ✅ Handle button clicks based on type
   const buttonClick = async () => {
     let buttonType: any = getButtonType()
     switch (buttonType) {
@@ -175,23 +170,18 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     dumpContext(exchangeContext);
   }
 
+  // ✅ Validate and perform swap
   const validateAndSwap = async () => {
-    // if (!tradeData.sellAmount)
-    //   setButtonType(BUTTON_TYPE.SELL_TOKEN_REQUIRED)
-    // else if (!tradeData.buyAmount)
-    //   setButtonType(BUTTON_TYPE.SELL_TOKEN_REQUIRED)
-    // else
     await swap();
     setResetAmounts(true);
-    // setButtonType(BUTTON_TYPE.TOKENS_REQUIRED)
   }
 
   setButtonType(getButtonType())
+
   return (
     <div>
       <button
         onClick={buttonClick}
-        // disabled={true}
         type="button"
         className={styles["exchangeButton"] + " " + styles[getButtonColor(buttonType)]}>
         {getButtonText(buttonType)}
@@ -200,4 +190,4 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   )
 }
 
-export default ExchangeButton
+export default ExchangeButton;
