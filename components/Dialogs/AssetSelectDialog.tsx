@@ -1,12 +1,12 @@
-'use client';
+"use client";
+
 import styles from "@/styles/Modal.module.css";
-import { exchangeContext } from "@/lib/context";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { isAddress } from "ethers";
 import { useAccount } from "wagmi";
 
-import info_png from "@/public/assets/miscellaneous/info1.png";
+import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import { stringifyBigInt } from "@/lib/spCoin/utils";
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
@@ -14,13 +14,10 @@ import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types"
 import { BURN_ADDRESS, defaultMissingImage, getTokenAvatar } from "@/lib/network/utils";
 import { Address } from "viem";
 
+import info_png from "@/public/assets/miscellaneous/info1.png";
+
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
-const ELEMENT_DETAILS =
-  "This container allows for the entry selection of a valid token address.\n" +
-  "When the address entry is completed and selected, " +
-  "this address will be verified prior to entry acceptance.\n" +
-  "Currently, there is no image token lookup, but that is to come.";
 
 type Props = {
   priceInputContainerType: CONTAINER_TYPE;
@@ -34,6 +31,7 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
+  const { exchangeContext } = useExchangeContext();
 
   useEffect(() => {
     if (dialogRef.current) {
@@ -43,10 +41,9 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
 
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
-      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);;
+      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
-
 
   useEffect(() => {
     setInputField(tokenContract?.address);
@@ -61,34 +58,30 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
   const isDuplicateToken = (tokenAddress: string | undefined): boolean => {
     if (!tokenAddress) return false;
 
-    const isDuplicate =
-      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
-        ? exchangeContext?.tradeData.buyTokenContract?.address === tokenAddress
-        : exchangeContext?.tradeData.sellTokenContract?.address === tokenAddress;
-
-    return isDuplicate;
+    return priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      ? exchangeContext.tradeData.buyTokenContract?.address === tokenAddress
+      : exchangeContext.tradeData.sellTokenContract?.address === tokenAddress;
   };
 
   const cloneIfNetworkToken = (tokenContract: TokenContract): TokenContract => {
-    if (tokenContract?.address === BURN_ADDRESS) {
-      const clone = { ...tokenContract } as TokenContract;
-      clone.address = ACTIVE_ACCOUNT_ADDRESS as Address;
-      return clone
+    if (tokenContract.address === BURN_ADDRESS) {
+      return { ...tokenContract, address: ACTIVE_ACCOUNT_ADDRESS as Address };
     }
     return tokenContract;
-  }
+  };
 
   const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
-    if (!tokenContract) {
-      alert("SELECT_ERROR: Invalid Token contract : " + inputField);
-      return false;
-    }
-    if (!isAddress(tokenContract.address)) {
-      alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address : ${tokenContract.address}`);
+    if (!tokenContract || !tokenContract.address) {
+      alert(`SELECT_ERROR: Invalid Token contract : ${inputField}`);
       return false;
     }
 
-    const newToken = cloneIfNetworkToken(tokenContract)
+    if (!isAddress(tokenContract.address)) {
+      alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address: ${tokenContract.address}`);
+      return false;
+    }
+
+    const newToken = cloneIfNetworkToken(tokenContract);
 
     if (isDuplicateToken(newToken.address)) {
       alert(`SELECT_ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
@@ -122,7 +115,10 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
                 </div>
               </div>
-              <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white" onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
+              <div
+                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}
+              >
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
               </div>
             </div>
