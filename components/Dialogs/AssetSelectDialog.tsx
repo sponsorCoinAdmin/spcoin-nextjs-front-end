@@ -1,18 +1,31 @@
-'use client';
-import styles from "@/styles/Modal.module.css";
-import { exchangeContext } from "@/lib/context";
-import { useEffect, useRef, useState } from "react";
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+
+// Wagmi & Next.js
+import { useAccount } from "wagmi";
 import Image from "next/image";
 import { isAddress } from "ethers";
-import { useAccount } from "wagmi";
+import { Address } from "viem";
 
-import info_png from "@/public/assets/miscellaneous/info1.png";
-import { stringifyBigInt } from "@/lib/spCoin/utils";
+// Context & Styles
+import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Use context
+import styles from "@/styles/Modal.module.css";
+
+// Components
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
+
+// Utilities
+import {
+  BURN_ADDRESS,
+  defaultMissingImage,
+  getTokenAvatar,
+} from "@/lib/network/utils";
+import { stringifyBigInt } from "@/lib/spCoin/utils";
+
+// Types
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
-import { BURN_ADDRESS, defaultMissingImage, getTokenAvatar } from "@/lib/network/utils";
-import { Address } from "viem";
 
 const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
@@ -29,55 +42,75 @@ type Props = {
   callBackSetter: (tokenContract: TokenContract) => void;
 };
 
-export default function Dialog({ priceInputContainerType, showDialog, setShowDialog, callBackSetter }: Props) {
+export default function Dialog({
+  priceInputContainerType,
+  showDialog,
+  setShowDialog,
+  callBackSetter,
+}: Props) {
+  const { exchangeContext } = useExchangeContext(); // ✅ Use global context
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
 
+  /**
+   * Opens or closes the modal when `showDialog` changes.
+   */
   useEffect(() => {
     if (dialogRef.current) {
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
   }, [showDialog]);
 
+  /**
+   * Updates the active account in the `DataList` component.
+   */
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
-      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);;
+      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
 
-
+  /**
+   * Updates the input field when tokenContract changes.
+   */
   useEffect(() => {
     setInputField(tokenContract?.address);
   }, [tokenContract]);
 
+  /**
+   * Closes the dialog and resets input field.
+   */
   const closeDialog = () => {
     setInputField(undefined);
     setShowDialog(false);
     dialogRef.current?.close();
   };
 
+  /**
+   * Checks if the selected token is a duplicate.
+   */
   const isDuplicateToken = (tokenAddress: string | undefined): boolean => {
     if (!tokenAddress) return false;
-
-    const isDuplicate =
-      priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
-        ? exchangeContext?.tradeData.buyTokenContract?.address === tokenAddress
-        : exchangeContext?.tradeData.sellTokenContract?.address === tokenAddress;
-
-    return isDuplicate;
+    return priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      ? exchangeContext.tradeData.buyTokenContract?.address === tokenAddress
+      : exchangeContext.tradeData.sellTokenContract?.address === tokenAddress;
   };
 
+  /**
+   * Clones the token contract if it is a network token.
+   */
   const cloneIfNetworkToken = (tokenContract: TokenContract): TokenContract => {
     if (tokenContract?.address === BURN_ADDRESS) {
-      const clone = { ...tokenContract } as TokenContract;
-      clone.address = ACTIVE_ACCOUNT_ADDRESS as Address;
-      return clone
+      return { ...tokenContract, address: ACTIVE_ACCOUNT_ADDRESS as Address };
     }
     return tokenContract;
-  }
+  };
 
+  /**
+   * Validates and sets the selected token.
+   */
   const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
     if (!tokenContract) {
       alert("SELECT_ERROR: Invalid Token contract : " + inputField);
@@ -88,7 +121,7 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
       return false;
     }
 
-    const newToken = cloneIfNetworkToken(tokenContract)
+    const newToken = cloneIfNetworkToken(tokenContract);
 
     if (isDuplicateToken(newToken.address)) {
       alert(`SELECT_ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
@@ -105,24 +138,43 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
         <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
-        <div className="cursor-pointer rounded border-none w-5 text-xl text-white" onClick={closeDialog}>
+        <div
+          className="cursor-pointer rounded border-none w-5 text-xl text-white"
+          onClick={closeDialog}
+        >
           X
         </div>
       </div>
       <div className={styles.modalBox}>
-        <InputSelect placeHolder={INPUT_PLACE_HOLDER} passedInputField={inputField || ""} setTokenContractCallBack={setTokenContract} />
+        <InputSelect
+          placeHolder={INPUT_PLACE_HOLDER}
+          passedInputField={inputField || ""}
+          setTokenContractCallBack={setTokenContract}
+        />
 
         {inputField && (
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-              <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)}>
-                <Image id="tokenImage" src={getTokenAvatar(tokenContract) || defaultMissingImage} height={40} width={40} alt="Token Image" />
+              <div
+                className="cursor-pointer flex flex-row justify-between"
+                onClick={() => updateTokenCallback(tokenContract)}
+              >
+                <Image
+                  id="tokenImage"
+                  src={getTokenAvatar(tokenContract) || defaultMissingImage}
+                  height={40}
+                  width={40}
+                  alt="Token Image"
+                />
                 <div>
                   <div className={styles.elementName}>{tokenContract?.name}</div>
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
                 </div>
               </div>
-              <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white" onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
+              <div
+                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}
+              >
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
               </div>
             </div>
