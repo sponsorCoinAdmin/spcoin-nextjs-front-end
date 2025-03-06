@@ -172,7 +172,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
       default: alert("Button Type Undefined");
         break;
     }
-    dumpContext();
+    dumpContext(exchangeContext);
   }
 
   const validateAndSwap = async () => {

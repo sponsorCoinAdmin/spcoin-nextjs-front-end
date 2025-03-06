@@ -1,6 +1,6 @@
 import { isAddress, parseUnits } from "ethers";
 import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagmiBalanceOfRec";
-import { SWAP_TYPE, TokenContract } from "@/lib/structure/types";
+import { ExchangeContext, SWAP_TYPE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
 import { exchangeContext } from "../context";
@@ -205,12 +205,10 @@ const invalidTokenContract   = (textInputField:string|undefined, chainId:any) =>
   return invalidToken;
 }
 
-const dumpContext = (isAlert:boolean = false, isConsoleDebug:boolean=true) => {
-  if (isAlert)
-    alert(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-  if (isConsoleDebug)
-    console.log(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-}
+const dumpContext = (exchangeContext: ExchangeContext, isAlert: boolean = false, isConsoleDebug: boolean = true) => {
+  if (isAlert) alert(`ExchangeButton:dumpContext exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+  if (isConsoleDebug) console.log(`ExchangeButton:dumpContext exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+};
 
 // const useActiveAccountAddress = () => {
 //   const activeAccountAddress = useAccount().address;
