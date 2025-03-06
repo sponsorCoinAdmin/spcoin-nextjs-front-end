@@ -4,6 +4,7 @@ import { displaySpCoinContainers, hideElement } from '@/lib/spCoin/guiControl';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { exchangeContext, resetNetworkContext } from "@/lib/context";
 
 function setRateRatios(newRate: string) {
   var numRate = Number(newRate)
@@ -43,7 +44,7 @@ const SponsorRateConfig = ({}:Props) => {
           50%
         </div>
       </div>
-      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER)}>
+      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER, exchangeContext)}>
         X
       </div>
       <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>

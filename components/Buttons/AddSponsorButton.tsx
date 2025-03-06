@@ -12,7 +12,7 @@ const AddSponsorshipButton = () => {
 
   useEffect(() => {
     // Call function when component mounts
-    displaySpCoinContainers(exchangeContext.spCoinPanels);
+    displaySpCoinContainers(exchangeContext.spCoinPanels, exchangeContext);
   }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
@@ -20,7 +20,7 @@ const AddSponsorshipButton = () => {
       <div
         id="AddSponsorshipButton_ID"
         className={styles.addSponsorshipDiv}
-        onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER)}
+        onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER, exchangeContext)}
       >
         <div className={styles.centerTop}>Add</div>
         <div className={styles.centerBottom}>Sponsorship</div>

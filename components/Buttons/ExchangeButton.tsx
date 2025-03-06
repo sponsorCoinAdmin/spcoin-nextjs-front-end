@@ -8,6 +8,13 @@ import swap from '@/lib/spCoin/swap';
 import { isActiveAccountAddress, isWrappedNetworkAddress } from '@/lib/network/utils';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
+type Props = {
+  isLoadingPrice: boolean,
+  errorMessage: ErrorMessage | undefined,
+  setErrorMessage: (errorMessage: ErrorMessage | undefined) => void,
+  setResetAmounts: (resetAmounts: boolean) => void,
+  toggleButton: boolean
+}
 
 const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton }: Props) => {
   // ✅ Use useExchangeContext() instead of direct reference
