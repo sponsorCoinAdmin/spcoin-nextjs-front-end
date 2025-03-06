@@ -19,7 +19,7 @@ import DumpContextButton from "@/components/Buttons/DumpContextButton";
 import InputSelect from "@/components/panes/InputSelect";
 
 // Utilities & Context
-import { exchangeContext } from "@/lib/context";
+import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Updated import
 import { stringifyBigInt } from "../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils";
 import { TokenContract } from "@/lib/structure/types";
 
@@ -31,10 +31,12 @@ const TON_ETHEREUM_CONTRACT: Address = "0x582d872A1B094FC48F5DE31D3B73F2D9bE47de
 
 function App() {
   const { address, chainId } = useAccount(); // ✅ Using `useAccount` properly
+  const { exchangeContext } = useExchangeContext(); // ✅ Using `useExchangeContext()` instead of `exchangeContext`
+  
   const [activeAccountAddress, setActiveAccountAddress] = useState<Address | undefined>(address);
   const [tokenContractAddress, setTokenContractAddress] = useState<Address>(address || TON_ETHEREUM_CONTRACT);
   const [exchangeContextData, setExchangeContextData] = useState<string>("");
-  const [displayContextButton, setDisplayContextButton] = useState<boolean>(false);
+  const [displayContextButton, setDisplayContextButton] = useState<boolean>(exchangeContext.test.dumpContextButton);
   const [textInputField, setTokenInput] = useState<Address | undefined>(TON_ETHEREUM_CONTRACT);
 
   // ✅ Update token contract based on active chain

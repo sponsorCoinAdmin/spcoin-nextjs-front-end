@@ -3,6 +3,7 @@ import { WagmiProvider } from "wagmi";
 import { ConnectKitProvider } from "connectkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { config } from "@/lib/wagmi/wagmiConfig";
+import { ExchangeWrapper } from "@/lib/context/ExchangeContext";
 
 export default function ({children} : {
   children: React.ReactNode;
@@ -14,9 +15,11 @@ export default function ({children} : {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>
-          { children }
-        </ConnectKitProvider>
+        <ExchangeWrapper>
+          <ConnectKitProvider>
+            { children }
+          </ConnectKitProvider>
+        </ExchangeWrapper>
       </QueryClientProvider>
     </WagmiProvider>
   )
