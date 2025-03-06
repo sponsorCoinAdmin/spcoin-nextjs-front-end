@@ -1,65 +1,83 @@
-/// START DROPDOWN STUFF
+"use client";
 
-import { exchangeContext } from "../context";
+import { useExchangeContext } from "../context/ExchangeContext"; // ✅ Use context
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 
-const displaySpCoinContainers = (spCoinDisplay:SP_COIN_DISPLAY) => {
+/**
+ * Updates the displayed SP Coin UI panels based on the provided display type.
+ * @param {SP_COIN_DISPLAY} spCoinDisplay - The selected display mode.
+ */
+const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
+  const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Get global context
+
   switch (spCoinDisplay) {
     case SP_COIN_DISPLAY.SELECT_BUTTON:
-      // alert(`displaySpCoinContainers = ${spCoinDisplay}\nSP_COIN_DISPLAY.SELECT_BUTTON:`)
       showElement("AddSponsorshipButton_ID");
-      hideElement("RecipientSelect_ID")
-      hideElement("SponsorRateConfig_ID")
-      exchangeContext.spCoinPanels = spCoinDisplay;
-    break;
+      hideElement("RecipientSelect_ID");
+      hideElement("SponsorRateConfig_ID");
+      break;
     case SP_COIN_DISPLAY.RECIPIENT_CONTAINER:
-      // alert(`displaySpCoinContainers = ${spCoinDisplay}\nSP_COIN_DISPLAY.RECIPIENT_CONTAINER:`)
-      showElement("RecipientSelect_ID")
-      hideElement("AddSponsorshipButton_ID")
-      hideElement("SponsorRateConfig_ID")
-      exchangeContext.spCoinPanels = spCoinDisplay;
-    break;
+      showElement("RecipientSelect_ID");
+      hideElement("AddSponsorshipButton_ID");
+      hideElement("SponsorRateConfig_ID");
+      break;
     case SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG:
-      // alert(`displaySpCoinContainers = ${spCoinDisplay}\nSP_COIN_DISPLAY.SPONSOR_RATE_CONFIG:`)
-      showElement("SponsorRateConfig_ID")
-      showElement("RecipientSelect_ID")
-      hideElement("AddSponsorshipButton_ID")
-      exchangeContext.spCoinPanels = spCoinDisplay;
-    break;
+      showElement("SponsorRateConfig_ID");
+      showElement("RecipientSelect_ID");
+      hideElement("AddSponsorshipButton_ID");
+      break;
   }
-}
 
+  // ✅ Update global context state
+  setExchangeContext({
+    ...exchangeContext,
+    spCoinPanels: spCoinDisplay,
+  });
+};
+
+/**
+ * Hides a specified HTML element by setting its display to "none".
+ * @param {string} element - The ID of the element to hide.
+ */
 const hideElement = (element: string) => {
   const el = document.getElementById(element);
-  // console.debug("hideElement(" + element +")")
-  if (el != null) {
-    el.style.display = 'none';
+  if (el) {
+    el.style.display = "none";
   }
 };
 
+/**
+ * Shows a specified HTML element by setting its display to "block".
+ * @param {string} element - The ID of the element to show.
+ */
 const showElement = (element: string) => {
   const el = document.getElementById(element);
-  // console.debug("showElement(" + element + ")");
-  if (el != null) {
-    el.style.display = 'block';
+  if (el) {
+    el.style.display = "block";
   }
 };
 
-const toggleSponsorRateConfig = (element: any) => {
-  // alert(`Toggle Sponsor Rate Config = ${element}`)
+/**
+ * Toggles the visibility of the Sponsor Rate Config panel.
+ * @param {string} element - The ID of the element to toggle.
+ */
+const toggleSponsorRateConfig = (element: string) => {
   const el = document.getElementById(element);
-  if (el != null) {
-    el.style.display === 'block' ? 
-      displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER) :
-      displaySpCoinContainers(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG);
+  if (el) {
+    el.style.display === "block"
+      ? displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER)
+      : displaySpCoinContainers(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG);
   }
 };
 
-const toggleElement = (element: any) => {
-  // alert(`Toggle Element = ${element}`)
+/**
+ * Toggles the visibility of any given HTML element.
+ * @param {string} element - The ID of the element to toggle.
+ */
+const toggleElement = (element: string) => {
   const el = document.getElementById(element);
-  if (el != null) {
-    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  if (el) {
+    el.style.display = el.style.display === "block" ? "none" : "block";
   }
 };
 
@@ -68,5 +86,5 @@ export {
   hideElement,
   showElement,
   toggleElement,
-  toggleSponsorRateConfig
-}
+  toggleSponsorRateConfig,
+};
