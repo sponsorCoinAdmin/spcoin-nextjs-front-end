@@ -1,15 +1,19 @@
+"use client";
+
 import { useEffect } from "react";
 import styles from "@/styles/Exchange.module.css";
-import { SP_COIN_DISPLAY, TokenContract } from "@/lib/structure/types";
+import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 import { displaySpCoinContainers } from "@/lib/spCoin/guiControl";
-import { exchangeContext } from "@/lib/context";
+import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Use context
 import RecipientContainer from "../containers/WalletContainer";
 
 const AddSponsorshipButton = () => {
+  const { exchangeContext } = useExchangeContext(); // ✅ Get context
+
   useEffect(() => {
-    // Call function when component mounts
+    // Call function when component mounts with current context data
     displaySpCoinContainers(exchangeContext.spCoinPanels);
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, [exchangeContext.spCoinPanels]); // ✅ Depend on context state
 
   return (
     <>
