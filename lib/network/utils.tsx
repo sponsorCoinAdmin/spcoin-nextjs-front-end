@@ -38,7 +38,7 @@ const isNativeTokenAddress = (address?: Address) : boolean =>
   address === NATIVE_TOKEN_ADDRESS;
 
 // ✅ Use `useExchangeContext()` Hook
-const isActiveAccountAddress2 = (address?: Address): boolean => {
+const isActiveAccountAddress_NEW = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
   return address === exchangeContext.activeAccountAddress;
 };
@@ -65,20 +65,25 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
 };
 
 // ✅ Use `useExchangeContext()` Hook
-const isWrappedNetworkAddress2 = (address?: Address): boolean => {
+const isWrappedNetworkAddress_NEW = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
   return address === getNetworkWethAddress(exchangeContext.tradeData.chainId);
 };
 
 // *** WARNING: HARDCODING To be fixed for other networks ***
-const isWrappedNetworkAddress = (address?: Address): boolean =>
+const isWrappedNetworkAddress_OLD = (address?: Address): boolean =>
   address === getNetworkWethAddress(exchangeContext.tradeData.chainId);
 
+// *** WARNING: HARDCODING To be fixed for other networks ***
+const isWrappedNetworkAddress = (address?: Address): boolean => {
+  const { exchangeContext } = useExchangeContext();
+  return address === getNetworkWethAddress(exchangeContext.tradeData.chainId);
+};
 const isNetworkAddress = (address?: Address): boolean => 
   isWrappedNetworkAddress(address) || isActiveAccountAddress(address);
 
 // ✅ Use `useExchangeContext()` Hook
-const mapAccountAddrToWethAddr2 = (tokenAddress: Address): Address | undefined => {
+const mapAccountAddrToWethAddr_NEW = (tokenAddress: Address): Address | undefined => {
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext.tradeData.chainId;
   const ethAct = exchangeContext.activeAccountAddress;
@@ -90,7 +95,19 @@ const mapAccountAddrToWethAddr2 = (tokenAddress: Address): Address | undefined =
   return ethAct === tokenAddress ? getNetworkWethAddress(chainId) : tokenAddress;
 };
 
+const mapAccountAddrToWethAddr_OLD = (tokenAddress: Address): Address | undefined => {
+  const chainId = exchangeContext.tradeData.chainId;
+  const ethAct = exchangeContext.activeAccountAddress;
+
+  console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
+               Ethereum Account Address = ${ethAct} 
+               Token Account Address = ${tokenAddress}`);
+
+  return ethAct === tokenAddress ? getNetworkWethAddress(chainId) : tokenAddress;
+}
+
 const mapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
+  const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext.tradeData.chainId;
   const ethAct = exchangeContext.activeAccountAddress;
 
@@ -120,19 +137,25 @@ const getBlockChainName = (chainId: number): string | undefined =>
   chainIdMap.get(chainId)?.name;
 
 // ✅ Use `useExchangeContext()` Hook
-const getNativeAvatar2 = (): string => {
+const getNativeAvatar_NEW = (): string => {
   const { exchangeContext } = useExchangeContext();
   return `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 };
+
+const getNativeAvatar_OLD = (): string =>
+  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 
 const getNativeAvatar = (): string =>
   `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 
 // ✅ Use `useExchangeContext()` Hook
-const getNetworkAvatar2 = (): string => {
+const getNetworkAvatar_NEW = (): string => {
   const { exchangeContext } = useExchangeContext();
   return `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network.png`;
 };
+
+const getNetworkAvatar_OLD = (): string =>
+  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network.png`;
 
 const getNetworkAvatar = (): string =>
   `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network.png`;
@@ -150,7 +173,7 @@ const getWalletAvatar = (wallet : any | undefined ): string => {
 }
 
 // ✅ Use `useExchangeContext()` Hook
-const getAddressAvatar2 = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
+const getAddressAvatar_NEW = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
   const { exchangeContext } = useExchangeContext();
   let avatarURL: string;
   switch (dataFeedType) {
@@ -172,7 +195,7 @@ const getAddressAvatar2 = (tokenAddress: Address | undefined, dataFeedType: FEED
   return avatarURL;
 };
 
-const getAddressAvatar = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
+const getAddressAvatar_OLD = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
   let avatarURL:string;
   switch(dataFeedType) {
     case FEED_TYPE.AGENT_WALLETS:
@@ -192,6 +215,29 @@ const getAddressAvatar = (tokenAddress: Address | undefined, dataFeedType: FEED_
   console.log(`Avatar URL = ${avatarURL}`)
   return avatarURL;
 }
+
+const getAddressAvatar = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
+  const { exchangeContext } = useExchangeContext();
+  let avatarURL: string;
+  switch (dataFeedType) {
+    case FEED_TYPE.AGENT_WALLETS:
+    case FEED_TYPE.RECIPIENT_WALLETS:
+      avatarURL = `assets/wallets/${tokenAddress}/avatar.png`;
+      break;
+    case FEED_TYPE.TOKEN_LIST:
+      const chainId = exchangeContext.tradeData.chainId;
+      if (
+        isActiveAccountAddress(tokenAddress) ||
+        isNativeTokenAddress(tokenAddress) ||
+        isBurnTokenAddress(tokenAddress)
+      )
+        avatarURL = getNativeAvatar();
+      else avatarURL = `assets/blockchains/${chainId}/assets/${tokenAddress}/avatar.png`;
+  }
+  console.log(`Avatar URL = ${avatarURL}`);
+  return avatarURL;
+};
+
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
