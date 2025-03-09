@@ -11,15 +11,18 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { exchangeContext, resetNetworkContext } from "@/lib/context";
+import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
 import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 import PriceInputContainer from '@/components/containers/AssetContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
+// import { resetNetworkContext } from '@/lib/context ';
 
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
   const signer = useEthersSigner();
+
+  const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
@@ -30,14 +33,13 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
   const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
-  const [toggleButton,setToggleButton ] = useState<boolean>(false);
+  const [toggleButton, setToggleButton] = useState<boolean>(false);
 
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
 
   // Memoize transaction validity check
   const isWrapTransaction = useMemo(() => isWrappingTransaction(sellTokenAddress, buyTokenAddress), [sellTokenAddress, buyTokenAddress]);
-  // tradeData.chainId = useChainId();
 
   useEffect(() => {
     tradeData.buyAmount = buyAmount;
@@ -46,13 +48,13 @@ export default function PriceView() {
     tradeData.slippageBps = slippageBps;
     tradeData.transactionType = transactionType;
   }, [buyAmount, sellAmount, signer, slippageBps, transactionType]);
-  
+
   useEffect(() => {
     tradeData.sellTokenContract = sellTokenContract;
     tradeData.buyTokenContract = buyTokenContract;
     setToggleButton(!toggleButton)
   }, [buyTokenContract, transactionType]);
-  
+
   const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
     setErrorMessage({
       errCode: apiErrorObj.errCode,
@@ -61,7 +63,7 @@ export default function PriceView() {
       status: STATUS.ERROR_API_PRICE,
     });
   }, []);
-  
+
   useEffect(() => {
     if (ACTIVE_ACCOUNT.chainId && ACTIVE_ACCOUNT.chainId !== tradeData?.chainId) {
       tradeData.chainId = ACTIVE_ACCOUNT.chainId;
@@ -69,10 +71,10 @@ export default function PriceView() {
       setBuyAmount(0n);
       setSellTokenContract(undefined)
       setBuyTokenContract(undefined)
-      resetNetworkContext(ACTIVE_ACCOUNT.chain);
+      // resetNetworkContext(ACTIVE_ACCOUNT.chain);
     }
   }, [ACTIVE_ACCOUNT.chainId]);
-  
+
   useEffect(() => {
     if (ACTIVE_ACCOUNT.address) {
       if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress)
@@ -93,7 +95,7 @@ export default function PriceView() {
       }
     }
   }, [buyAmount, sellAmount, isWrapTransaction]);
-  
+
   useEffect(() => {
     if (resetAmounts) {
       tradeData.sellAmount = 0n;
@@ -103,8 +105,8 @@ export default function PriceView() {
       setResetAmounts(false);
     }
   }, [resetAmounts]);
-  
-   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
+
+  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
     transactionType,
     sellTokenAddress,
     buyTokenAddress,
@@ -157,7 +159,7 @@ export default function PriceView() {
           setTokenContractCallback={setBuyTokenContract}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
-        <PriceButton 
+        <PriceButton
           isLoadingPrice={isLoadingPrice}
           errorMessage={errorMessage}
           setErrorMessage={setErrorMessage}

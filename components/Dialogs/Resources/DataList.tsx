@@ -1,156 +1,144 @@
-'use client';
-import React, { useEffect, useState } from 'react'
-import styles from '@/styles/Modal.module.css'
-import Image from 'next/image'
-import info_png from '@/public/assets/miscellaneous/info1.png'
-import baseTokenList from '@/resources/data/networks/base/tokenList.json';
-import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
-import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
-import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
-import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
-import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
-import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, publicWalletPath, SEPOLIA, TokenContract, WalletAccount } from '@/lib/structure/types';
-import { useAccount, useChainId } from "wagmi";
-import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
-import { Address } from 'viem';
+"use client";
 
-import { loadWallets } from '@/lib/spCoin/loadWallets';
+import React, { useEffect, useState, useMemo } from "react";
+import styles from "@/styles/Modal.module.css";
+import Image from "next/image";
+import info_png from "@/public/assets/miscellaneous/info1.png";
+import { useChainId } from "wagmi";
+import {
+  BASE,
+  ETHEREUM,
+  FEED_TYPE,
+  HARDHAT,
+  POLYGON,
+  SEPOLIA,
+  TokenContract,
+  WalletAccount
+} from "@/lib/structure/types";
+import {
+    BURN_ADDRESS,
+  defaultMissingImage,
+  useGetAddressAvatar,
+} from "@/lib/network/utils";
+import { loadWallets } from "@/lib/spCoin/loadWallets";
 
-const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
-    let address = dataFeedList.address;
-    return address;
-}
+// Token Lists
+import baseTokenList from "@/resources/data/networks/base/tokenList.json";
+import hardhatTokenList from "@/resources/data/networks/hardhat/tokenList.json";
+import polygonTokenList from "@/resources/data/networks/polygon/tokenList.json";
+import sepoliaTokenList from "@/resources/data/networks/sepolia/tokenList.json";
+import ethereumTokenList from "@/resources/data/networks/ethereum/tokenList.json";
+import agentJsonList from "@/resources/data/agents/agentJsonList.json";
+import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
+import { Address } from "viem";
 
-const getDataFeedList = (feedType: FEED_TYPE, network:string|number):any[] => {
-    const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
-    const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
+const publicWalletPath = "/path/to/public/wallets"; // Update as needed
 
-    // ✅ Fetch recipient wallets only once and store them
-    useEffect(() => {
-        const fetchAgentWallets = async () => {
-            try {
-                const wallets = await loadWallets(publicWalletPath, agentJsonList);
-                setAgentWalletList(wallets);
-            } catch (error) {
-                console.error("Error loading wallets:", error);
-            }          
-        };
-        const fetchRecipientWallets = async () => {
-            try {
-                const wallets = await loadWallets(publicWalletPath, recipientJsonList);
-                setRecipientWalletList(wallets);
-            } catch (error) {
-                console.error("Error loading wallets:", error);
-            }
-        };
-        fetchAgentWallets();
-        fetchRecipientWallets();
-    }, []); // Runs only once on mount
+// 🔹 Store active account address globally
+let ACTIVE_ACCOUNT_ADDRESS: Address;
 
-    if (typeof network === "string")
-      network = network.toLowerCase()
-    switch (feedType) {
-        case FEED_TYPE.AGENT_WALLETS: return agentWalletList as WalletAccount[];
-        case FEED_TYPE.TOKEN_LIST:
-            switch(network) {
-                case BASE:
-                case "base": return baseTokenList as TokenContract[];
-                case ETHEREUM:
-                case "ethereum": return ethereumTokenList as TokenContract[];
-                case POLYGON:
-                case "polygon": return polygonTokenList as TokenContract[];
-                case HARDHAT:
-                case "hardhat": 
-                return hardhatTokenList as TokenContract[];
-                case SEPOLIA:
-                case "sepolia": return sepoliaTokenList as TokenContract[];
-                default: return ethereumTokenList as TokenContract[];
-            }
-        case FEED_TYPE.RECIPIENT_WALLETS: return recipientWalletList as WalletAccount[];
-        default: return ethereumTokenList as TokenContract[];
-    }
-}
+const setActiveAccount = (address: Address) => {
+  ACTIVE_ACCOUNT_ADDRESS = address;
+};
 
-const getDataFeedMap = (feedType: FEED_TYPE, chainId:number) => {
-    let dataFeedList = getDataFeedList(feedType, chainId);
-    let dataFeedMap = new Map(dataFeedList?.map((element: { address: any }) => [element.address, element]));
-    return dataFeedMap
-}
+// 🔹 Hook to fetch wallets only once
+const useWalletLists = () => {
+  const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
+  const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
 
-const getNetworkListElement = (network: any, addressKey:any) => {
-    // console.debug(`DataList:getNetworkListElement(${network}, ${addressKey})`)
-    let dataFeedList = getDataFeedList(FEED_TYPE.TOKEN_LIST, network)
-    // console.debug(`DataList:getNetworkListElement:dataFeedList = ${JSON.stringify(dataFeedList,null,2)}`)
-    let element = getDataFeedListElement(dataFeedList, addressKey)
-    // console.debug(`DataList:element:dataFeedList = ${JSON.stringify(element,null,2)}`)
-    return element
-}
+  useEffect(() => {
+    const fetchWallets = async () => {
+      try {
+        const agents = await loadWallets(publicWalletPath, agentJsonList);
+        setAgentWalletList(agents);
 
-const getDataFeedListElement = (dataFeedList: any, addressKey:any) => {
-    // let dataFeedList = getDataFeedList(feedType, chainId);
-    let dataFeedMap = new Map(dataFeedList?.map((element: { address: any }) => [element.address, element]));
-    let element:any = dataFeedMap.get(addressKey)
-    // alert("DataList:getDataFeedListElement\n" +JSON.stringify(element))
-    return element
-}
+        const recipients = await loadWallets(publicWalletPath, recipientJsonList);
+        setRecipientWalletList(recipients);
+      } catch (error) {
+        console.error("Error loading wallets:", error);
+      }
+    };
+    fetchWallets();
+  }, []);
 
-let ACTIVE_ACCOUNT_ADDRESS:Address;
+  return { recipientWalletList, agentWalletList };
+};
 
-const setActiveAccount = (address:Address) => {
-    ACTIVE_ACCOUNT_ADDRESS = address;
-}
+// 🔹 Function to get data feed list
+const getDataFeedList = (feedType: FEED_TYPE, chainId: number, walletLists: { recipientWalletList: WalletAccount[], agentWalletList: WalletAccount[] }) => {
+  switch (feedType) {
+    case FEED_TYPE.AGENT_WALLETS:
+      return walletLists.agentWalletList;
+    case FEED_TYPE.RECIPIENT_WALLETS:
+      return walletLists.recipientWalletList;
+    case FEED_TYPE.TOKEN_LIST:
+      switch (chainId) {
+        case BASE:
+          return baseTokenList;
+        case ETHEREUM:
+          return ethereumTokenList;
+        case POLYGON:
+          return polygonTokenList;
+        case HARDHAT:
+          return hardhatTokenList;
+        case SEPOLIA:
+          return sepoliaTokenList;
+        default:
+          return ethereumTokenList;
+      }
+    default:
+      return ethereumTokenList;
+  }
+};
 
-function displayElementDetail (tokenContract:any) {
-    const clone = { ...tokenContract } as TokenContract;
-    clone.address = clone.address === BURN_ADDRESS ? ACTIVE_ACCOUNT_ADDRESS : clone.address
-    // alert("displayElementDetail\n" + stringifyBigInt(tokenContract,null,2))
-    alert(`${tokenContract?.name} Token Address = ${clone.address}`)
-}
+// 🔹 Get data map (improved)
+const getDataFeedMap = (feedType: FEED_TYPE, chainId: number, walletLists: any) => {
+  return new Map(getDataFeedList(feedType, chainId, walletLists).map((element: { address: any }) => [element.address, element]));
+};
 
-type Props = {
-    dataFeedType: any,
-    updateTokenCallback:  (listElement: any) => void
-}
+// 🔹 Display token details
+const displayElementDetail = (tokenContract: any) => {
+  const clone = { ...tokenContract } as TokenContract;
+  clone.address = clone.address === BURN_ADDRESS ? ACTIVE_ACCOUNT_ADDRESS : clone.address;
+  alert(`${tokenContract?.name} Token Address = ${clone.address}`);
+};
 
-const setMissingAvatar = (event: { currentTarget: { src: string; }; }, tokenContract: TokenContract | WalletAccount) => {
-    // alert(`Error: Missing Avatar event Image = ${event.currentTarget.src}`)    
-    event.currentTarget.src = defaultMissingImage;
-}
+// 🔹 Set missing avatar
+const setMissingAvatar = (event: { currentTarget: { src: string } }) => {
+  event.currentTarget.src = defaultMissingImage;
+};
 
-function DataList({ dataFeedType, updateTokenCallback }: Props) {
-    const dataFeedList : TokenContract[] | WalletAccount[] = getDataFeedList(dataFeedType, useChainId()) || [];
+// 🔹 Optimized `DataList` component
+const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TYPE; updateTokenCallback: (listElement: any) => void }) => {
+  const chainId = useChainId(); // ✅ Hook at the top level
+  const walletLists = useWalletLists(); // ✅ Fetch wallets only once
 
-    const tList = dataFeedList.map((listElement: any, i: number) => (
-        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" 
-            key={getDataKey(dataFeedType, listElement)}>
-            <div 
-                className="cursor-pointer flex flex-row justify-between" 
-                onClick={() => updateTokenCallback(dataFeedList[i])}>
-                {/* Ensure getAddressAvatar(listElement.address) is valid */}
-                <img
-                    className={styles.elementLogo} 
-                    src={getAddressAvatar(listElement.address, dataFeedType)} 
-                    alt={`${listElement.name} Token Avatar`} 
-                    onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
-                <div>
-                    <div className={styles.elementName}>{listElement.name}</div>
-                    <div className={styles.elementSymbol}>{listElement.symbol}</div>
-                </div>
+  // ✅ Memoize `dataFeedList` to avoid unnecessary recomputations
+  const dataFeedList = useMemo(() => getDataFeedList(dataFeedType, chainId, walletLists), [dataFeedType, chainId, walletLists]);
+
+  return (
+    <>
+      {dataFeedList.map((listElement: any, i: number) => {
+        const avatar = useGetAddressAvatar(listElement.address, dataFeedType); // ✅ Hook usage is correct now
+
+        return (
+          <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" key={listElement.address}>
+            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])}>
+              <img className={styles.elementLogo} src={avatar} alt={`${listElement.name} Token Avatar`} onError={(event) => setMissingAvatar(event)} />
+              <div>
+                <div className={styles.elementName}>{listElement.name}</div>
+                <div className={styles.elementSymbol}>{listElement.symbol}</div>
+              </div>
             </div>
-            <div 
-                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"  
-                onClick={() => displayElementDetail(dataFeedList[i])}>
-                <Image 
-                    className={styles.infoLogo}
-                    src={info_png}
-                    alt="Info Image"
-                    onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
+            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white" onClick={() => displayElementDetail(dataFeedList[i])}>
+              <Image className={styles.infoLogo} src={info_png} alt="Info Image" onError={(event) => setMissingAvatar(event)} />
             </div>
-        </div>
-    ));
-    return <>{tList}</>;
-}
+          </div>
+        );
+      })}
+    </>
+  );
+};
 
 export default DataList;
-export { getDataFeedList, getDataFeedMap, getDataFeedListElement, setActiveAccount };
+export { getDataFeedList, getDataFeedMap, setActiveAccount };

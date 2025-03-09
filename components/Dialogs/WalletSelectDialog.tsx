@@ -12,7 +12,7 @@ import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Updated import
-import { getAddressAvatar } from '@/lib/network/utils';
+import { useGetAddressAvatar } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 const TITLE_NAME = "Select a Recipient";
@@ -111,25 +111,26 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
         return true;
     };
 
-    const getSelectedListElement = (walletAccount: WalletAccount | undefined) => {
-        // console.debug("getSelectedListElement:walletAccount     : " +JSON.stringify(walletAccount,null,2))
-        // console.debug("getSelectedListElement:agentAccount: " +JSON.stringify(agentAccount,null,2))
-        if (walletAccount === undefined) {
-            alert("Invalid Wallet address : " + recipientInput);
-            return false;
-        }
-        if (walletAccount?.address === agentAccount?.address) {
-            alert("Recipient cannot be the same as Recipient(" + agentAccount.symbol + ")");
-            console.log("Recipient cannot be the same as Recipient(" + agentAccount.symbol + ")");
-            return false;
-        }
-        walletAccount.avatar = getAddressAvatar(walletAccount.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
-        // let urlParms:string = `/assets/wallets/${walletAccount.address}`
-
-        callBackWallet(walletAccount);
-        closeDialog();
+    const useSelectedListElement = (walletAccount?: WalletAccount) => {
+        const avatar = useGetAddressAvatar(walletAccount?.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
+    
+        return () => {
+            if (!walletAccount) {
+                alert("Invalid Wallet address: " + recipientInput);
+                return false;
+            }
+            if (walletAccount.address === agentAccount?.address) {
+                alert(`Recipient cannot be the same as Recipient (${agentAccount.symbol})`);
+                console.log(`Recipient cannot be the same as Recipient (${agentAccount.symbol})`);
+                return false;
+            }
+    
+            walletAccount.avatar = avatar;
+            callBackWallet(walletAccount);
+            closeDialog();
+        };
     };
-
+            
     const Dialog = (
         <dialog id="recipientDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
@@ -148,7 +149,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
                 </div>
                 <div id="recipientSelectGroup_ID" className={styles.modalInputSelect}>
                     <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => getSelectedListElement(walletElement)}>
+                        <div className="cursor-pointer flex flex-row justify-between" onClick={() => useSelectedListElement(walletElement)}>
                             <Image id="walletImage" src={customUnknownImage_png} className={styles.elementLogo} alt="Search Image Grey" />
                             <div>
                                 <div className={styles.elementName}>{walletSelect}</div>
@@ -161,7 +162,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
                     </div>
                 </div>
                 <div className={styles.modalScrollBar}>
-                    <DataList dataFeedType={FEED_TYPE.RECIPIENT_WALLETS} updateTokenCallback={getSelectedListElement} />
+                    <DataList dataFeedType={FEED_TYPE.RECIPIENT_WALLETS} updateTokenCallback={useSelectedListElement} />
                 </div>
             </div>
         </dialog>

@@ -2,10 +2,9 @@
 
 import { defaultMissingImage } from "@/lib/network/utils";
 import { loadWallets } from "@/lib/spCoin/loadWallets";
-import { publicWalletPath, Wallet } from "@/lib/structure/types";
+import { publicWalletPath } from "@/lib/structure/types";
 import fs from "fs";
 import path from "path";
-import { useState } from "react";
 
 // Helper function to check if avatar exists
 function checkAvatarExists(walletAddress: string): string {

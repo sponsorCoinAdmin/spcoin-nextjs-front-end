@@ -17,7 +17,7 @@ import { stringifyBigInt } from "../../../node_modules-dev/spcoin-common/spcoin-
 // import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6"
 
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6";
-import { isNetworkAddress, isTokenAddress, isWrappedNetworkAddress } from "../network/utils";
+import { useIsNetworkAddress, isTokenAddress, useIsWrappedNetworkAddress } from "../network/utils";
 
 const wethMethods = new WethMethods();
 
@@ -89,15 +89,15 @@ const swap = async () => {
         if (isTokenAddress(sellTokenAddress)) {
             if (isTokenAddress(buyTokenAddress)) {
                 swapType = SWAP_TYPE.SWAP;
-            } else if (isNetworkAddress(buyTokenAddress)) {
-                if (isWrappedNetworkAddress(sellTokenAddress)) {
+            } else if (useIsNetworkAddress(buyTokenAddress)) {
+                if (useIsWrappedNetworkAddress(sellTokenAddress)) {
                     swapType = SWAP_TYPE.UNWRAP;
                 } else {
                     swapType = SWAP_TYPE.SWAP_UNWRAP;
                 }
             }
-        } else if (isNetworkAddress(sellTokenAddress)) {
-            if (isWrappedNetworkAddress(buyTokenAddress)) {
+        } else if (useIsNetworkAddress(sellTokenAddress)) {
+            if (useIsWrappedNetworkAddress(buyTokenAddress)) {
                 swapType = SWAP_TYPE.WRAP;
             } else {
                 swapType = SWAP_TYPE.WRAP_SWAP;

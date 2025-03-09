@@ -12,7 +12,7 @@ import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import { BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, publicWalletPath, SEPOLIA, TokenContract } from '@/lib/structure/types';
 import { useAccount, useChainId } from "wagmi";
-import { BURN_ADDRESS, defaultMissingImage, getAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
+import { BURN_ADDRESS, defaultMissingImage, useGetAddressAvatar, isActiveAccountToken } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 const recipientWalletList = await loadWallets(publicWalletPath, recipientJsonList);
@@ -46,7 +46,7 @@ const getDataKey = (feedType:FEED_TYPE, dataFeedList:any) => {
     let address = dataFeedList.address;
     // const walletAddress = useAccount().address;
     // // alert(`zzzzzz walletAddress = ${walletAddress}`)
-    // if (walletAddress && isActiveAccountAddress(address)) {
+    // if (walletAddress && useIsActiveAccountAddress(address)) {
     //     address = walletAddress;
     //     dataFeedList.address = address;
     // }
@@ -149,10 +149,10 @@ function DataList({ dataFeedType, updateTokenCallback }: Props) {
             <div 
                 className="cursor-pointer flex flex-row justify-between" 
                 onClick={() => updateTokenCallback(dataFeedList[i])}>
-                {/* Ensure getAddressAvatar(e.address) is valid */}
+                {/* Ensure useGetAddressAvatar(e.address) is valid */}
                 <img
                     className={styles.elementLogo} 
-                    src={getAddressAvatar(e.address, dataFeedType)} 
+                    src={useGetAddressAvatar(e.address, dataFeedType)} 
                     alt={`${e.name} Token Avatar`} 
                     onError={(event) => setMissingAvatar(event, dataFeedList[i])}/>
                 <div>

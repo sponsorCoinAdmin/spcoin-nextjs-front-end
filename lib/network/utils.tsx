@@ -1,14 +1,17 @@
+import { useExchangeContext } from "@/lib/context/ExchangeContext";
+
 import chainIdList from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultBaseSettings } from '@/resources/data/networks/base/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultEthereumSettings } from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultHardHatSettings } from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings';
 import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings';
-import { exchangeContext } from "@/lib/context";
+// import { exchangeContext } from "@/lib/context";
 import { Address } from 'viem';
 import {
   BASE,     BASE_WETH_ADDRESS,
   ETHEREUM, ETHEREUM_WETH_ADDRESS,
+  ExchangeContext,
   FEED_TYPE,
   HARDHAT,  HARDHAT_WETH_ADDRESS,
   POLYGON,  POLYGON_WETH_ADDRESS,
@@ -22,8 +25,18 @@ const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
+const useExchangeValues = () => {
+  const { exchangeContext } = useExchangeContext();
+  return exchangeContext;
+};
+
+const useIsActiveAccountAddress = (address?: Address): boolean => {
+  const exchangeContext = useExchangeValues();
+  return address === exchangeContext.activeAccountAddress;
+};
+
 const isActiveAccountToken = (tokenContract: TokenContract) : boolean => 
-  isActiveAccountAddress(tokenContract.address);
+  useIsActiveAccountAddress(tokenContract.address);
 
 const isNativeToken = (tokenContract: TokenContract) : boolean => 
   isNativeTokenAddress(tokenContract.address);
@@ -31,14 +44,11 @@ const isNativeToken = (tokenContract: TokenContract) : boolean =>
 const isNativeTokenAddress = (address?: Address) : boolean => 
   address === NATIVE_TOKEN_ADDRESS;
 
-const isActiveAccountAddress = (address?: Address) : boolean => 
-  address === exchangeContext.activeAccountAddress;
-
 const isBurnTokenAddress = (address?: Address) : boolean => 
   address === BURN_ADDRESS
 
 const isTokenAddress = (address?: Address) : boolean => 
-  !isActiveAccountAddress(address);
+  !useIsActiveAccountAddress(address);
 
 // *** WARNING: To be fixed for other networks ***
 const getNetworkWethAddress = (chainId: number) : Address | undefined => {
@@ -55,17 +65,24 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
 };
 
 // *** WARNING: HARDCODING To be fixed for other networks ***
-const isWrappedNetworkAddress = (address?: Address): boolean =>
-  address === getNetworkWethAddress(exchangeContext.tradeData.chainId);
+const useIsWrappedNetworkAddress = (address?: Address): boolean => {
+  const { exchangeContext } = useExchangeContext();
+  return address === getNetworkWethAddress(exchangeContext.tradeData.chainId);
+}
 
-const isNetworkAddress = (address?: Address): boolean => 
-  isWrappedNetworkAddress(address) || isActiveAccountAddress(address);
+const useIsNetworkAddress = (address?: Address): boolean => {
+  const isWrappedNetworkAddress = useIsWrappedNetworkAddress(address) 
+  const isActiveAccountAddress = useIsActiveAccountAddress(address);
+  return isWrappedNetworkAddress || isActiveAccountAddress;
+}
 
-const mapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
+const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
+  const { exchangeContext } = useExchangeContext();
+
   const chainId = exchangeContext.tradeData.chainId;
   const ethAct = exchangeContext.activeAccountAddress;
 
-  console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
+  console.log(`useMapAccountAddrToWethAddr: chainId(${chainId}) 
                Ethereum Account Address = ${ethAct} 
                Token Account Address = ${tokenAddress}`);
 
@@ -77,56 +94,51 @@ const isWrappingTransaction = (
   buyTokenAddress?: Address
 ): boolean => 
   !!(sellTokenAddress && buyTokenAddress && 
-     mapAccountAddrToWethAddr(sellTokenAddress) === mapAccountAddrToWethAddr(buyTokenAddress));
+     useMapAccountAddrToWethAddr(sellTokenAddress) === useMapAccountAddrToWethAddr(buyTokenAddress));
 
 const getChainMap = (chainList: any[]): Map<number, any> => 
   new Map(chainList.map((e) => [e.chainId, e]));
 
 const chainIdMap = getChainMap(chainIdList);
 
+const getBlockChainAvatar = (chainId:number): string => 
+  `assets/blockchains/${chainId}/info/network.png`;
+
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-const getNativeAvatar = (): string =>
-  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
-
-const getNetworkAvatar = (): string =>
-  `assets/blockchains/${exchangeContext.tradeData.chainId}/info/network.png`;
-
-const getTokenAvatar = (tokenContract : any | undefined ): string => {
-  if (!tokenContract)
-    return defaultMissingImage
-  tokenContract.img = getAddressAvatar(tokenContract.address, FEED_TYPE.TOKEN_LIST);
-  return tokenContract.img;
+const useBlockChainAvatar = (): string => {
+  const { exchangeContext } = useExchangeContext();
+  return `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 }
 
-const getWalletAvatar = (wallet : any | undefined ): string => {
-  if (!wallet)
-    return defaultMissingImage
-  const imgURL = wallet.avatarUrl = `/assets/wallets/${wallet.address}/avatar.png`;
-  return imgURL;
-}
+const getTokenAvatar = (tokenContract?: { address: Address }): string => {
+  return tokenContract 
+    ? useGetAddressAvatar(tokenContract.address, FEED_TYPE.TOKEN_LIST) 
+    : defaultMissingImage;
+};
 
-const getAddressAvatar = (tokenAddress: Address | undefined, dataFeedType: FEED_TYPE): string => {
-  let avatarURL:string;
-  switch(dataFeedType) {
+const getWalletAvatar = (wallet?: { address: Address }): string => 
+  wallet ? `/assets/wallets/${wallet.address}/avatar.png` : defaultMissingImage;
+
+const useGetAddressAvatar = (tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
+  const chainId = useChainId();
+  const isActiveAccount = useIsActiveAccountAddress(tokenAddress);
+
+  if (!tokenAddress) return defaultMissingImage;
+
+  switch (dataFeedType) {
     case FEED_TYPE.AGENT_WALLETS:
     case FEED_TYPE.RECIPIENT_WALLETS:
-      avatarURL = `assets/wallets/${tokenAddress}/avatar.png`;
-      break;
+      return `assets/wallets/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
-      const chainId = exchangeContext.tradeData.chainId;
-      // alert(`getTokenAvatar = assets/blockchains/${chainId}/assets/${tokenAddress}/info/avatar.png`);
-      if(isActiveAccountAddress(tokenAddress) ||
-        isNativeTokenAddress(tokenAddress) || 
-        isBurnTokenAddress(tokenAddress))
-        avatarURL = getNativeAvatar();
-      else
-        avatarURL = `assets/blockchains/${chainId}/assets/${tokenAddress}/avatar.png`;
+      return isActiveAccount || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
+        ? getBlockChainAvatar(chainId)
+        : `assets/blockchains/${chainId}/assets/${tokenAddress}/avatar.png`;
+    default:
+      return defaultMissingImage;
   }
-  console.log(`Avatar URL = ${avatarURL}`)
-  return avatarURL;
-}
+};
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
@@ -154,22 +166,22 @@ export {
   createNetworkJsonList,
   defaultMissingImage,
   delay,
-  getAddressAvatar,
+  useGetAddressAvatar,
   getBlockChainName,
-  getNativeAvatar,
-  getNetworkAvatar,
+  useBlockChainAvatar,
+  getBlockChainAvatar,
   getNetworkWethAddress,
   getTokenAvatar,
   getWalletAvatar,
-  isActiveAccountAddress,
+  useIsActiveAccountAddress,
   isActiveAccountToken,
   isBurnTokenAddress,
   isLowerCase,
   isNativeToken,
   isNativeTokenAddress,
-  isNetworkAddress,
+  useIsNetworkAddress,
   isTokenAddress,
-  isWrappedNetworkAddress,
+  useIsWrappedNetworkAddress,
   isWrappingTransaction,
-  mapAccountAddrToWethAddr
+  useMapAccountAddrToWethAddr
 };

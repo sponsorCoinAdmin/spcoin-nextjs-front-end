@@ -7,12 +7,14 @@ import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/utils';
 import { toggleElement, toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
+import { useExchangeContext } from "@/lib/context/ExchangeContext";
 
-const RecipientSelectHeader = ({slippage, setSlippageCallback, closeDialog}:any) => {
+const RecipientSelectHeader = ({slippageBps, setSlippageBpsCallback, closeDialog}:any) => {
+  const { exchangeContext } = useExchangeContext();
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog slippage={slippage} setSlippageCallback={setSlippageCallback} showDialog={false}/>
-      <div  onClick={() => exchangeContextDump()}>
+      <ConfigDialog slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback} showDialog={false}/>
+      <div  onClick={() => exchangeContextDump(exchangeContext)}>
         <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="SponsorCoin Logo" />
       </div>
 
@@ -26,7 +28,7 @@ const RecipientSelectHeader = ({slippage, setSlippageCallback, closeDialog}:any)
         </div> */}
         <div>
           <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  
-              onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID")}/>
+              onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID", exchangeContext)}/>
         </div>
       </div>
     </div>

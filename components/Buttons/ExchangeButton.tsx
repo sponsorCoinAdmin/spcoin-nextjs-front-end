@@ -5,7 +5,7 @@ import { dumpContext } from '@/lib/spCoin/utils';
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import { BUTTON_TYPE, ErrorMessage, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { isActiveAccountAddress, isWrappedNetworkAddress } from '@/lib/network/utils';
+import { useIsActiveAccountAddress, useIsWrappedNetworkAddress } from '@/lib/network/utils';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
@@ -36,19 +36,27 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   const getSwapType = () => {
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
-    if (isActiveAccountAddress(sellTokenContract?.address))
-      if (isWrappedNetworkAddress(buyTokenContract?.address))
-        return "SWAP WRAP ( ETH -> WETH )"
-      else
-        return transactionType + `( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`
-    else
-      if (isActiveAccountAddress(buyTokenContract?.address))
-        if (isWrappedNetworkAddress(sellTokenContract?.address))
-          return "SWAP UN-WRAP\n( WETH -> ETH )"
-        else
-          return transactionType + (`${sellTokenContract?.symbol} -> ( WETH -> ETH )`)
-      else return transactionType + "SWAP"
-  }
+  
+    const isSellActive = useIsActiveAccountAddress(sellTokenContract?.address);
+    const isBuyActive = useIsActiveAccountAddress(buyTokenContract?.address);
+    const isBuyWrapped = useIsWrappedNetworkAddress(buyTokenContract?.address);
+    const isSellWrapped = useIsWrappedNetworkAddress(sellTokenContract?.address);
+  
+    if (isSellActive) {
+      return isBuyWrapped
+        ? "SWAP WRAP ( ETH -> WETH )"
+        : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
+    }
+  
+    if (isBuyActive) {
+      return isSellWrapped
+        ? "SWAP UN-WRAP\n( WETH -> ETH )"
+        : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
+    }
+  
+    return `${transactionType} SWAP`;
+  };
+  
 
   // ✅ Button text based on state
   const getButtonText = (buttonType: BUTTON_TYPE) => {

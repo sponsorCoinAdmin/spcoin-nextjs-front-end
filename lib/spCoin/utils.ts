@@ -3,7 +3,7 @@ import { getWagmiBalanceOfRec, readContractBalanceOf } from "@/lib/wagmi/getWagm
 import { ExchangeContext, SWAP_TYPE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
-import { exchangeContext } from "../context";
+import { useExchangeContext } from "../context/ExchangeContext";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 import { BURN_ADDRESS } from "../network/utils";
 
@@ -147,24 +147,25 @@ const isSpCoin = (TokenContract:TokenContract|undefined) => {
   return TokenContract?.symbol === "SpCoin" ? true:false
 }
 
-const exchangeContextDump = () => {
+const exchangeContextDump = (exchangeContext:ExchangeContext) => {
+  // const { exchangeContext } = useExchangeContext();
   const exchangeData = stringifyBigInt(exchangeContext);
   alert(exchangeData);
   toggleElement("AddSponsorshipButton_ID");
   console.log(exchangeData);
-}
+};
 
-function decimalAdjustTokenAmount(amount:bigint, newTokenContract: TokenContract|undefined, prevTokenContract: TokenContract|undefined) {
+function decimalAdjustTokenAmount(amount: bigint, newTokenContract: TokenContract | undefined, prevTokenContract: TokenContract | undefined) {
+  // const { exchangeContext } = useExchangeContext();
   let msg = `>>>>>>>>>>>> decimalAdjustTokenAmount:TRANSACTION_TYPE = transactionType <<<<<<<<<<<<`;
-  msg += `newTokenContract = ${stringifyBigInt(newTokenContract)}\n`
-  msg += `prevTokenContract = ${stringifyBigInt(prevTokenContract)}\n`
-  msg += `amount=${amount}\n`
-  const decimalShift:number = (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0);
-  const adjustedAmount:bigint = bigIntDecimalShift(amount , decimalShift);
-  msg += `decimalShift=${decimalShift}\n`
-  msg += `adjustedAmount=${adjustedAmount}\n`
-  msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`
-  // alert(msg)
+  msg += `newTokenContract = ${stringifyBigInt(newTokenContract)}\n`;
+  msg += `prevTokenContract = ${stringifyBigInt(prevTokenContract)}\n`;
+  msg += `amount=${amount}\n`;
+  const decimalShift: number = (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0);
+  const adjustedAmount: bigint = bigIntDecimalShift(amount, decimalShift);
+  msg += `decimalShift=${decimalShift}\n`;
+  msg += `adjustedAmount=${adjustedAmount}\n`;
+  // msg += `tradeData = ${stringifyBigInt(exchangeContext.tradeData)}`;
   return adjustedAmount;
 }
 
@@ -205,9 +206,10 @@ const invalidTokenContract   = (textInputField:string|undefined, chainId:any) =>
   return invalidToken;
 }
 
-const dumpContext = (exchangeContext: ExchangeContext, isAlert: boolean = false, isConsoleDebug: boolean = true) => {
-  if (isAlert) alert(`ExchangeButton:dumpContext exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
-  if (isConsoleDebug) console.log(`ExchangeButton:dumpContext exchangeContext = ${JSON.stringify(exchangeContext, null, 2)}`);
+const dumpContext = (isAlert: boolean = false, isConsoleDebug: boolean = true) => {
+  const { exchangeContext } = useExchangeContext();
+  if (isAlert) alert(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+  if (isConsoleDebug) console.log(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
 };
 
 // const useActiveAccountAddress = () => {

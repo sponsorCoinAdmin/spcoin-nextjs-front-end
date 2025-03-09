@@ -34,7 +34,7 @@ const RecipientContainer: React.FC = () => {
   }, [recipientWallet, exchangeContext, setExchangeContext]);
 
   const closeRecipientSelect = useCallback(() => {
-    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON);
+    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON, exchangeContext);
     setRecipientWallet(undefined);
   }, []);
 
@@ -85,7 +85,7 @@ const RecipientContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
-            onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID")}
+            onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID", exchangeContext)}
           />
         </div>
         <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>
