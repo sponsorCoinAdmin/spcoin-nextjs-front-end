@@ -59,7 +59,7 @@ async function fetchWallets(rootDir: string): Promise<WalletAccount[]> {
  * @param jsonWalletFileList - Optional list of WalletAddress objects.
  * @returns Promise<WalletAccount[]>
  */
-export async function loadWallets(rootDir: string, jsonWalletFileList?: WalletAccount[]): Promise<WalletAccount[]> {
+export async function loadWallets(rootDir: string, jsonWalletFileList: string | any[] | undefined): Promise<WalletAccount[]> {
 
     const absoluteRootPath = path.join(process.cwd(), "public", rootDir);
     console.warn(`absoluteRootPath: ${absoluteRootPath}`);
