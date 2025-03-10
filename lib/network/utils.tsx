@@ -41,8 +41,18 @@ const isActiveAccountToken = (tokenContract: TokenContract) : boolean =>
 const isNativeToken = (tokenContract: TokenContract) : boolean => 
   isNativeTokenAddress(tokenContract.address);
 
-const isNativeTokenAddress = (address?: Address) : boolean => 
-  address === NATIVE_TOKEN_ADDRESS;
+const isNativeTokenAddress = (address?: Address) : boolean => {
+  return address === NATIVE_TOKEN_ADDRESS;
+}
+
+const isBlockChainToken = (tokenContract: TokenContract) : boolean => {
+  return isActiveAccountToken(tokenContract) ||
+  isNativeToken(tokenContract) ||
+  isBurnToken(tokenContract);
+}
+
+const isBurnToken = (tokenContract:TokenContract) : boolean => 
+  tokenContract?.address ? isBurnTokenAddress(tokenContract.address) : false;
 
 const isBurnTokenAddress = (address?: Address) : boolean => 
   address === BURN_ADDRESS
@@ -112,9 +122,9 @@ const useBlockChainAvatar = (): string => {
   return `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
 }
 
-const getTokenAvatar = (tokenContract?: { address: Address }): string => {
+const getTokenAvatar = (tokenContract?: TokenContract): string => {
   return tokenContract 
-    ? useGetAddressAvatar(tokenContract.address, FEED_TYPE.TOKEN_LIST) 
+    ? `assets/blockchains/${tokenContract.chainId}/assets/${tokenContract.address}/avatar.png` 
     : defaultMissingImage;
 };
 
@@ -175,6 +185,7 @@ export {
   getWalletAvatar,
   useIsActiveAccountAddress,
   isActiveAccountToken,
+  isBlockChainToken,
   isBurnTokenAddress,
   isLowerCase,
   isNativeToken,
