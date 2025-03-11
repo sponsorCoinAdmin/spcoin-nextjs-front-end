@@ -20,15 +20,18 @@ const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
 // ✅ Provider Component
 export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
-  const chainId = useChainId();
+  const chainId = useChainId(); // ✅ Move hook to the top level
   const [exchangeContext, setExchangeContext] = useState<ExchangeContext>(
     () => loadStoredExchangeContext() || getInitialContext(chainId)
   );
 
   useEffect(() => {
-    const newContext = getInitialContext(chainId);
-    setExchangeContext(newContext);
-    saveExchangeContext(newContext);
+    console.log("🔍 Updating ExchangeContext with chainId:", chainId);
+    if (chainId) { // ✅ Ensure `chainId` is valid before using it
+      const newContext = getInitialContext(chainId);
+      setExchangeContext(newContext);
+      saveExchangeContext(newContext);
+    }
   }, [chainId]);
 
   return (

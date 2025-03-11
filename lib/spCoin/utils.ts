@@ -181,7 +181,7 @@ const getValidAddress = (addrType:any, chainId?:number) => {
       return getAddress(addrType.trim(), chainId)
   }
   catch (err:any) {
-      console.log(`ERROR: getAddress(${addrType})`)
+      console.log(`ERROR: getAddress(${addrType}, ${chainId})`)
       console.log(err.message)
       // alert(err.message)
       return undefined

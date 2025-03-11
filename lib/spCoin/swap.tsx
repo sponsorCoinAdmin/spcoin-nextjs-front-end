@@ -86,8 +86,8 @@ const swap = async () => {
 
     const getSwapState = () => {
         let swapType: SWAP_TYPE = SWAP_TYPE.UNDEFINED;
-        if (isTokenAddress(sellTokenAddress)) {
-            if (isTokenAddress(buyTokenAddress)) {
+        if (isTokenAddress(exchangeContext, sellTokenAddress)) {
+            if (isTokenAddress(exchangeContext, buyTokenAddress)) {
                 swapType = SWAP_TYPE.SWAP;
             } else if (useIsNetworkAddress(buyTokenAddress)) {
                 if (useIsWrappedNetworkAddress(sellTokenAddress)) {

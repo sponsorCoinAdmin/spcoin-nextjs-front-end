@@ -75,8 +75,6 @@ const useWalletLists = () => {
   return { recipientWalletList, agentWalletList };
 };
 
-
-
 // 🔹 Function to get data feed list
 const getDataFeedList = (feedType: FEED_TYPE, chainId: number, walletLists: { recipientWalletList: WalletAccount[], agentWalletList: WalletAccount[] }) => {
   switch (feedType) {

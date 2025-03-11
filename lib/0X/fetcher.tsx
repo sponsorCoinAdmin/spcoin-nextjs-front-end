@@ -55,11 +55,12 @@ const getApiErrorTransactionData = (
   sellAmount: any,
   data: PriceResponse
 ) => {
-  const { exchangeContext } = useExchangeContext();
+  // const { exchangeContext } = useExchangeContext();
   return {
     ERROR: `API Call`,
     Server: `${process.env.NEXT_PUBLIC_API_SERVER}`,
-    netWork: `${exchangeContext.network.name.toLowerCase()}`,
+    // netWork: `${exchangeContext.network.name.toLowerCase()}`,
+    netWork: `${"ToDo add Network"}`,
     apiPriceBase: `${apiPriceBase}`,
     sellTokenAddress: `${sellTokenAddress}`,
     buyTokenAddress: `${buyTokenAddress}`,

@@ -194,7 +194,7 @@ const priceInputContainer = ({
         onChange={(e) => { setTextInputValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
       />
-      <TokenSelect priceInputContainerType={priceInputContainerType} tokenContract={tokenContract} setDecimalAdjustedContract={setDecimalAdjustedContract} />
+      <TokenSelect exchangeContext={exchangeContext} priceInputContainerType={priceInputContainerType} tokenContract={tokenContract} setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
       {isSpCoin(tokenContract) ? (priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? <ManageSponsorsButton tokenContract={tokenContract} /> : <AddSponsorButton />) : null}

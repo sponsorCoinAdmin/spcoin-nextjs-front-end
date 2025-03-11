@@ -4,7 +4,7 @@ import styles from '@/styles/Exchange.module.css'
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { isBuyActive, isBuyWrapped, isSellActive, isSellWrapped, useIsActiveAccountAddress, useIsWrappedNetworkAddress } from '@/lib/network/utils';
+import { isActiveBuyToken, isWrappedBuyToken, isActiveSellToken, isWrappedSellToken, useIsActiveAccountAddress, useIsWrappedNetworkAddress } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
@@ -37,24 +37,24 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
   
-    // const isSellActive = useIsActiveAccountAddress(sellTokenContract?.address);
-    // const isBuyActive = useIsActiveAccountAddress(buyTokenContract?.address);
-    // const isBuyWrapped = useIsWrappedNetworkAddress(buyTokenContract?.address);
-    // const isSellWrapped = useIsWrappedNetworkAddress(sellTokenContract?.address);
+    // const isActiveSellToken = useIsActiveAccountAddress(sellTokenContract?.address);
+    // const isActiveBuyToken = useIsActiveAccountAddress(buyTokenContract?.address);
+    // const isWrappedBuyToken = useIsWrappedNetworkAddress(buyTokenContract?.address);
+    // const isWrappedSellToken = useIsWrappedNetworkAddress(sellTokenContract?.address);
 
-    const sellActive = isSellActive(tradeData, sellTokenContract?.address as Address);
-    const buyActive = isBuyActive(tradeData, buyTokenContract?.address as Address);
-    const sellWrapped = isSellWrapped(tradeData);
-    const buyWrapped = isBuyWrapped(tradeData);
+    const sellActive = isActiveSellToken(tradeData, sellTokenContract?.address as Address);
+    const buyActive = isActiveBuyToken(tradeData, buyTokenContract?.address as Address);
+    const sellWrapped = isWrappedSellToken(tradeData);
+    const buyWrapped = isWrappedBuyToken(tradeData);
   
-    if (isSellActive(tradeData, sellTokenContract?.address as Address)) {
-      return isBuyWrapped(tradeData)
+    if (isActiveSellToken(tradeData, sellTokenContract?.address as Address)) {
+      return isWrappedBuyToken(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
         : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
-    if (isBuyActive(tradeData, buyTokenContract?.address as Address)) {
-      return isSellWrapped(tradeData)
+    if (isActiveBuyToken(tradeData, buyTokenContract?.address as Address)) {
+      return isWrappedSellToken(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
         : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
     }

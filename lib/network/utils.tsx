@@ -22,37 +22,38 @@ import {
 import { useChainId } from 'wagmi';
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
-
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-const useExchangeValues = () => {
-  const { exchangeContext } = useExchangeContext();
-  return exchangeContext;
-};
+const isActiveSellToken = (exchangeContext:ExchangeContext, tradeData: TradeData ): boolean =>
+  tradeData.sellTokenContract ? isActiveToken(exchangeContext, tradeData.sellTokenContract) : false;
 
-const isSellActive = (tradeData: TradeData, sellTokenAddress: Address): boolean =>
-  sellTokenAddress === tradeData.sellTokenContract?.address;
+const isActiveBuyToken = (exchangeContext:ExchangeContext, tradeData: TradeData): boolean =>
+  tradeData.buyTokenContract ? isActiveToken(exchangeContext, tradeData.buyTokenContract) : false;
 
-const isBuyActive = (tradeData: TradeData, buyTokenAddress: Address): boolean =>
-  buyTokenAddress === tradeData.buyTokenContract?.address;
+const isActiveToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract ) =>
+  isActiveAddress(exchangeContext, tokenContract.address);
 
-const isSellWrapped = (tradeData: TradeData): boolean =>
-  tradeData.sellTokenContract?.address === getNetworkWethAddress(tradeData.chainId);
-
-const isBuyWrapped = (tradeData: TradeData): boolean =>
-  tradeData.buyTokenContract?.address === getNetworkWethAddress(tradeData.chainId);
-
-  const useIsActiveAccountAddress = (address?: Address): boolean => {
-  const exchangeContext = useExchangeValues();
-  return address === exchangeContext.activeAccountAddress;
-};
-
-const isActiveAccount = (exchangeContext:ExchangeContext, address:Address ) =>
+const isActiveAddress = (exchangeContext: ExchangeContext, address: Address ) =>
   address === exchangeContext.activeAccountAddress;
 
-const isActiveAccountToken = (tokenContract: TokenContract) : boolean => 
-  useIsActiveAccountAddress(tokenContract.address);
+const isWrappedSellToken = (tradeData: TradeData): boolean =>
+  tradeData.sellTokenContract ? isWrappedToken(tradeData.sellTokenContract, tradeData.chainId) : false;
+
+const isWrappedBuyToken = (tradeData: TradeData): boolean =>
+  tradeData.buyTokenContract ? isWrappedToken(tradeData.buyTokenContract, tradeData.chainId) : false;
+
+const isWrappedToken = (tokenContract: TokenContract, chainId:number): boolean =>
+  isWrappedAddress(tokenContract.address, chainId);
+
+const isWrappedAddress = (address:Address, chainId:number): boolean =>
+  address === getNetworkWethAddress(chainId);
+
+const isNativeSellToken = (tradeData: TradeData) : boolean => 
+  tradeData.sellTokenContract ? isNativeToken(tradeData.sellTokenContract) : false;
+
+const isNativeBuyToken = (tradeData: TradeData) : boolean => 
+  tradeData.buyTokenContract ? isNativeToken(tradeData.buyTokenContract) : false;
 
 const isNativeToken = (tokenContract: TokenContract) : boolean => 
   isNativeTokenAddress(tokenContract.address);
@@ -61,20 +62,29 @@ const isNativeTokenAddress = (address?: Address) : boolean => {
   return address === NATIVE_TOKEN_ADDRESS;
 }
 
-const isBlockChainToken = (tokenContract: TokenContract) : boolean => {
-  return isActiveAccountToken(tokenContract) ||
+const isTokenAddress = (exchangeContext:ExchangeContext, address?: Address) : boolean => 
+  address ? !isActiveAddress(exchangeContext, address) : false;
+
+const isBlockChainToken = (exchangeContext:ExchangeContext, tokenContract: TokenContract) : boolean => {
+  return isActiveToken(exchangeContext, tokenContract) ||
   isNativeToken(tokenContract) ||
   isBurnToken(tokenContract);
 }
+
+const useIsActiveAccountAddress = (address?: Address): boolean => {
+  const { exchangeContext } = useExchangeContext();
+  return address === exchangeContext.activeAccountAddress;
+};
+
+const useIsActiveAccountToken = (tokenContract: TokenContract) : boolean => 
+  useIsActiveAccountAddress(tokenContract.address);
+
 
 const isBurnToken = (tokenContract:TokenContract) : boolean => 
   tokenContract?.address ? isBurnTokenAddress(tokenContract.address) : false;
 
 const isBurnTokenAddress = (address?: Address) : boolean => 
   address === BURN_ADDRESS
-
-const isTokenAddress = (address?: Address) : boolean => 
-  !useIsActiveAccountAddress(address);
 
 // *** WARNING: To be fixed for other networks ***
 const getNetworkWethAddress = (chainId: number) : Address | undefined => {
@@ -98,8 +108,8 @@ const useIsWrappedNetworkAddress = (address?: Address): boolean => {
 
 const useIsNetworkAddress = (address?: Address): boolean => {
   const isWrappedNetworkAddress = useIsWrappedNetworkAddress(address) 
-  const isActiveAccountAddress = useIsActiveAccountAddress(address);
-  return isWrappedNetworkAddress || isActiveAccountAddress;
+  const isActiveAddress = useIsActiveAccountAddress(address);
+  return isWrappedNetworkAddress || isActiveAddress;
 }
 
 const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
@@ -133,11 +143,6 @@ const getBlockChainAvatar = (chainId:number): string =>
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-const useBlockChainAvatar = (): string => {
-  const { exchangeContext } = useExchangeContext();
-  return `assets/blockchains/${exchangeContext.tradeData.chainId}/info/avatar.png`;
-}
-
 const getTokenAvatar = (tokenContract?: TokenContract): string => {
   return tokenContract 
     ? `assets/blockchains/${tokenContract.chainId}/assets/${tokenContract.address}/avatar.png` 
@@ -168,7 +173,7 @@ const useGetAddressAvatar = (tokenAddress: Address, dataFeedType: FEED_TYPE): st
 
 const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
   const chainId = exchangeContext.tradeData.chainId;
-  const isNativeToken = isActiveAccount(exchangeContext, tokenAddress);
+  const isNativeToken = isActiveAddress(exchangeContext, tokenAddress);
 
   if (!tokenAddress) return defaultMissingImage;
 
@@ -184,8 +189,6 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
       return defaultMissingImage;
   }
 };
-
-
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
@@ -213,29 +216,32 @@ export {
   createNetworkJsonList,
   defaultMissingImage,
   delay,
-  useGetAddressAvatar,
   getAddressAvatar,
-  getBlockChainName,
-  useBlockChainAvatar,
   getBlockChainAvatar,
+  getBlockChainName,
   getNetworkWethAddress,
   getTokenAvatar,
   getWalletAvatar,
-  useIsActiveAccountAddress,
-  isActiveAccountToken,
+  isActiveAddress,
+  isActiveBuyToken,
+  isActiveSellToken,
+  isActiveToken,
   isBlockChainToken,
   isBurnTokenAddress,
   isLowerCase,
+  isNativeBuyToken,
+  isNativeSellToken,
   isNativeToken,
   isNativeTokenAddress,
-  useIsNetworkAddress,
   isTokenAddress,
-  useIsWrappedNetworkAddress,
+  isWrappedAddress,
   isWrappingTransaction,
+  isWrappedBuyToken,
+  isWrappedToken,
+  isWrappedSellToken,
+  useGetAddressAvatar,
+  useIsActiveAccountAddress,
+  useIsNetworkAddress,
+  useIsWrappedNetworkAddress,
   useMapAccountAddrToWethAddr,
-
-  isBuyActive,
-  isBuyWrapped,
-  isSellActive,
-  isSellWrapped
 };

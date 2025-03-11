@@ -16,7 +16,6 @@ import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/s
 import PriceInputContainer from '@/components/containers/AssetContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
-// import { resetNetworkContext } from '@/lib/context ';
 
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
@@ -24,6 +23,7 @@ export default function PriceView() {
 
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
+
   const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
   const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
   const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
@@ -38,63 +38,37 @@ export default function PriceView() {
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
 
-  // Memoize transaction validity check
-  const isWrapTransaction = useMemo(() => isWrappingTransaction(sellTokenAddress, buyTokenAddress), [sellTokenAddress, buyTokenAddress]);
+  const isWrapTransaction = useMemo(() => {
+    return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(sellTokenAddress, buyTokenAddress) : false;
+  }, [sellTokenAddress, buyTokenAddress]);
 
   useEffect(() => {
-    tradeData.buyAmount = buyAmount;
-    tradeData.sellAmount = sellAmount;
-    tradeData.signer = signer;
-    tradeData.slippageBps = slippageBps;
-    tradeData.transactionType = transactionType;
-  }, [buyAmount, sellAmount, signer, slippageBps, transactionType]);
-
-  useEffect(() => {
-    tradeData.sellTokenContract = sellTokenContract;
-    tradeData.buyTokenContract = buyTokenContract;
-    setToggleButton(!toggleButton)
-  }, [buyTokenContract, transactionType]);
-
-  const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
-    setErrorMessage({
-      errCode: apiErrorObj.errCode,
-      msg: stringifyBigInt(apiErrorObj.msg),
-      source: apiErrorObj.source,
-      status: STATUS.ERROR_API_PRICE,
-    });
-  }, []);
-
-  useEffect(() => {
-    if (ACTIVE_ACCOUNT.chainId && ACTIVE_ACCOUNT.chainId !== tradeData?.chainId) {
-      tradeData.chainId = ACTIVE_ACCOUNT.chainId;
-      setSellAmount(0n);
-      setBuyAmount(0n);
-      setSellTokenContract(undefined)
-      setBuyTokenContract(undefined)
-      // resetNetworkContext(ACTIVE_ACCOUNT.chain);
-    }
+    if (!ACTIVE_ACCOUNT.chainId || ACTIVE_ACCOUNT.chainId === tradeData?.chainId) return;
+    tradeData.chainId = ACTIVE_ACCOUNT.chainId;
+    setSellAmount(0n);
+    setBuyAmount(0n);
+    setSellTokenContract(undefined);
+    setBuyTokenContract(undefined);
   }, [ACTIVE_ACCOUNT.chainId]);
 
   useEffect(() => {
-    if (ACTIVE_ACCOUNT.address) {
-      if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress)
-        sellTokenContract.address = ACTIVE_ACCOUNT.address
-      else
-        if (buyTokenContract && buyTokenContract.address === exchangeContext.activeAccountAddress)
-          buyTokenContract.address = ACTIVE_ACCOUNT.address
-      exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address
+    if (!ACTIVE_ACCOUNT.address) return;
+    if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress) {
+      sellTokenContract.address = ACTIVE_ACCOUNT.address;
+    } else if (buyTokenContract && buyTokenContract.address === exchangeContext.activeAccountAddress) {
+      buyTokenContract.address = ACTIVE_ACCOUNT.address;
     }
+    exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
   }, [ACTIVE_ACCOUNT.address]);
 
   useEffect(() => {
-    if (isWrapTransaction) {
-      if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
-        setBuyAmount(sellAmount);
-      } else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
-        setSellAmount(buyAmount);
-      }
+    if (!isWrapTransaction || !transactionType) return;
+    if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+      setBuyAmount(sellAmount);
+    } else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+      setSellAmount(buyAmount);
     }
-  }, [buyAmount, sellAmount, isWrapTransaction]);
+  }, [buyAmount, sellAmount, isWrapTransaction, transactionType]);
 
   useEffect(() => {
     if (resetAmounts) {
@@ -116,7 +90,14 @@ export default function PriceView() {
     setBuyAmount,
     setSellAmount,
     setErrorMessage,
-    apiErrorCallBack,
+    apiErrorCallBack: useCallback((apiErrorObj: ErrorMessage) => {
+      setErrorMessage({
+        errCode: apiErrorObj.errCode,
+        msg: stringifyBigInt(apiErrorObj.msg),
+        source: apiErrorObj.source,
+        status: STATUS.ERROR_API_PRICE,
+      });
+    }, [])
   });
 
   useEffect(() => {
@@ -131,6 +112,7 @@ export default function PriceView() {
   }, [PriceError, isWrapTransaction]);
 
   const swapBuySellTokens = useCallback(() => {
+    if (!tradeData.buyTokenContract || !tradeData.sellTokenContract) return;
     setSellTokenContract(tradeData.buyTokenContract);
     setBuyTokenContract(tradeData.sellTokenContract);
   }, []);
@@ -159,13 +141,7 @@ export default function PriceView() {
           setTokenContractCallback={setBuyTokenContract}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
-        <PriceButton
-          isLoadingPrice={isLoadingPrice}
-          errorMessage={errorMessage}
-          setErrorMessage={setErrorMessage}
-          setResetAmounts={setResetAmounts}
-          toggleButton={toggleButton}
-        />
+        <PriceButton isLoadingPrice={isLoadingPrice} errorMessage={errorMessage} setErrorMessage={setErrorMessage} setResetAmounts={setResetAmounts} toggleButton={toggleButton} />
         <AffiliateFee priceResponse={priceData} buyTokenContract={buyTokenContract} />
       </div>
       <FeeDisclosure />

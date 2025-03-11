@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import styles from "@/styles/Exchange.module.css";
 import { TokenSelectDialog } from "../Dialogs/Dialogs";
 import { DownOutlined } from "@ant-design/icons";
-import { CONTAINER_TYPE, TokenContract } from "@/lib/structure/types";
+import { CONTAINER_TYPE, ExchangeContext, TokenContract } from "@/lib/structure/types";
 import { stringifyBigInt } from "@/lib/spCoin/utils";
 import {
     defaultMissingImage,
@@ -18,13 +18,16 @@ type Props = {
     priceInputContainerType: CONTAINER_TYPE;
     tokenContract: TokenContract | undefined;
     setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
+    exchangeContext: ExchangeContext; // ✅ Pass exchangeContext from parent
 };
 
-const AssetSelect = ({ priceInputContainerType, tokenContract, setDecimalAdjustedContract }: Props) => {
+function AssetSelect({ priceInputContainerType, tokenContract, setDecimalAdjustedContract, exchangeContext }: Props) {    /** ✅ Always call hooks in the same order */
     const [showDialog, setShowDialog] = useState<boolean>(false);
-    const { exchangeContext } = useExchangeContext();
 
-    /** 📌 Extract values from context to avoid re-accessing on every render */
+    console.debug("🛠 AssetSelect is rendering on:", typeof window !== "undefined" ? "Client ✅" : "Server ❌");
+    console.debug("🛠 exchangeContext in AssetSelect:", stringifyBigInt(exchangeContext));
+
+    /** ✅ Hooks must always execute in the same order */
     const { tradeData, activeAccountAddress } = exchangeContext;
     const chainId = tradeData.chainId;
     const tokenAddress = tokenContract?.address;
@@ -32,7 +35,7 @@ const AssetSelect = ({ priceInputContainerType, tokenContract, setDecimalAdjuste
     /** 📌 Memoized function to get the token avatar */
     const avatarSrc = useMemo(() => {
         if (!tokenContract || !tokenContract.address) return defaultMissingImage;
-        return isBlockChainToken(tokenContract)
+        return isBlockChainToken(exchangeContext, tokenContract)
             ? getBlockChainAvatar(tokenContract.chainId || 1)
             : getTokenAvatar(tokenContract);
     }, [tokenContract]);
@@ -44,6 +47,15 @@ const AssetSelect = ({ priceInputContainerType, tokenContract, setDecimalAdjuste
             tokenContract.img = `***ERROR: MISSING AVATAR FILE*** -> ${tokenContract.img}`;
         }
     }, [tokenContract]);
+
+    /** ✅ Ensure `setDecimalAdjustedContract` is always called safely */
+    const handleTokenSelect = useCallback(() => {
+        if (tokenContract) {
+            setDecimalAdjustedContract(tokenContract);
+        } else {
+            console.warn("No token contract selected");
+        }
+    }, [tokenContract, setDecimalAdjustedContract]);
 
     return (
         <>
@@ -60,7 +72,7 @@ const AssetSelect = ({ priceInputContainerType, tokenContract, setDecimalAdjuste
                             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
                             alt={`${tokenContract?.name} Token Avatar`}
                             src={avatarSrc}
-                            onClick={() => alert("sellTokenContract " + stringifyBigInt(tokenContract))}
+                            onClick={handleTokenSelect}
                             onError={handleMissingAvatar}
                         />
                         {tokenContract.symbol}
@@ -72,6 +84,6 @@ const AssetSelect = ({ priceInputContainerType, tokenContract, setDecimalAdjuste
             </div>
         </>
     );
-};
+}
 
 export default AssetSelect;
