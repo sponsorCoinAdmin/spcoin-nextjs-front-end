@@ -130,7 +130,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
             closeDialog();
         };
     };
-            
+    
     const Dialog = (
         <dialog id="recipientDialog" ref={dialogRef} className={styles.modalContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">

@@ -16,7 +16,8 @@ import {
   HARDHAT,  HARDHAT_WETH_ADDRESS,
   POLYGON,  POLYGON_WETH_ADDRESS,
   SEPOLIA,  SEPOLIA_WETH_ADDRESS,
-  TokenContract
+  TokenContract,
+  TradeData
 } from '@/lib/structure/types';
 import { useChainId } from 'wagmi';
 
@@ -30,10 +31,25 @@ const useExchangeValues = () => {
   return exchangeContext;
 };
 
-const useIsActiveAccountAddress = (address?: Address): boolean => {
+const isSellActive = (tradeData: TradeData, sellTokenAddress: Address): boolean =>
+  sellTokenAddress === tradeData.sellTokenContract?.address;
+
+const isBuyActive = (tradeData: TradeData, buyTokenAddress: Address): boolean =>
+  buyTokenAddress === tradeData.buyTokenContract?.address;
+
+const isSellWrapped = (tradeData: TradeData): boolean =>
+  tradeData.sellTokenContract?.address === getNetworkWethAddress(tradeData.chainId);
+
+const isBuyWrapped = (tradeData: TradeData): boolean =>
+  tradeData.buyTokenContract?.address === getNetworkWethAddress(tradeData.chainId);
+
+  const useIsActiveAccountAddress = (address?: Address): boolean => {
   const exchangeContext = useExchangeValues();
   return address === exchangeContext.activeAccountAddress;
 };
+
+const isActiveAccount = (exchangeContext:ExchangeContext, address:Address ) =>
+  address === exchangeContext.activeAccountAddress;
 
 const isActiveAccountToken = (tokenContract: TokenContract) : boolean => 
   useIsActiveAccountAddress(tokenContract.address);
@@ -150,6 +166,27 @@ const useGetAddressAvatar = (tokenAddress: Address, dataFeedType: FEED_TYPE): st
   }
 };
 
+const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
+  const chainId = exchangeContext.tradeData.chainId;
+  const isNativeToken = isActiveAccount(exchangeContext, tokenAddress);
+
+  if (!tokenAddress) return defaultMissingImage;
+
+  switch (dataFeedType) {
+    case FEED_TYPE.AGENT_WALLETS:
+    case FEED_TYPE.RECIPIENT_WALLETS:
+      return `assets/wallets/${tokenAddress}/avatar.png`;
+    case FEED_TYPE.TOKEN_LIST:
+      return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
+        ? getBlockChainAvatar(chainId)
+        : `assets/blockchains/${chainId}/assets/${tokenAddress}/avatar.png`;
+    default:
+      return defaultMissingImage;
+  }
+};
+
+
+
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
   const defaultNetworkSettings = {
@@ -177,6 +214,7 @@ export {
   defaultMissingImage,
   delay,
   useGetAddressAvatar,
+  getAddressAvatar,
   getBlockChainName,
   useBlockChainAvatar,
   getBlockChainAvatar,
@@ -194,5 +232,10 @@ export {
   isTokenAddress,
   useIsWrappedNetworkAddress,
   isWrappingTransaction,
-  useMapAccountAddrToWethAddr
+  useMapAccountAddrToWethAddr,
+
+  isBuyActive,
+  isBuyWrapped,
+  isSellActive,
+  isSellWrapped
 };

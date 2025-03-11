@@ -30,6 +30,7 @@ import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-
 import { CONTAINER_TYPE, TokenContract, TradeData, TRANSACTION_TYPE } from "@/lib/structure/types";
 
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
+import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
 
 type Props = {
   activeContract: TokenContract | undefined;
@@ -54,6 +55,8 @@ const priceInputContainer = ({
   // ✅ Use `useExchangeContext()` Hook
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
+  const signer = tradeData.signer;
+  const provider = signer?.provider;
 
   // Determine initial state based on price input type
   const initialAmount: bigint | undefined =
@@ -111,31 +114,28 @@ const priceInputContainer = ({
     setAmount(updateAmount);
   }, [updateAmount]);
 
-  const signer = tradeData.signer;
-  const provider = signer?.provider;
-
-  const bigIntBalanceOf: bigint | undefined = useWagmiERC20TokenBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
-  useEffect(() => {
-    if (bigIntBalanceOf) {
-      alert(`bigIntBalanceOf: ${bigIntBalanceOf}`)
-    }
-  }, [bigIntBalanceOf]);
-
-  const getBalanceInWei = async () => {
-    if (useIsActiveAccountAddress(TOKEN_CONTRACT_ADDRESS)) {
-      await delay(400);
-      const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
-      setBalanceInWei(newBal);
-    } else {
-      if (TOKEN_CONTRACT_ADDRESS && TOKEN_CONTRACT_ADDRESS !== BURN_ADDRESS && signer) {
-        const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
-        const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
-        setBalanceInWei(newBal);
-      } else {
-        setBalanceInWei(undefined);
-      }
-    }
-  };
+  // const bigIntBalanceOf: bigint | undefined = useWagmiERC20TokenBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
+  // useEffect(() => {
+  //   if (bigIntBalanceOf) {
+  //     alert(`bigIntBalanceOf: ${bigIntBalanceOf}`)
+  //   }
+  // }, [bigIntBalanceOf]);
+  
+  // const getBalanceInWei = async () => {
+  //   if (useIsActiveAccountAddress(TOKEN_CONTRACT_ADDRESS)) {
+  //     await delay(400);
+  //     const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
+  //     setBalanceInWei(newBal);
+  //   } else {
+  //     if (TOKEN_CONTRACT_ADDRESS && TOKEN_CONTRACT_ADDRESS !== BURN_ADDRESS && signer) {
+  //       const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
+  //       const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
+  //       setBalanceInWei(newBal);
+  //     } else {
+  //       setBalanceInWei(undefined);
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     if (activeContract) {
@@ -144,7 +144,10 @@ const priceInputContainer = ({
   }, [balanceInWei]);
 
   useEffect(() => {
-    getBalanceInWei();
+    // const balanceInWei = useBalanceInWei(TOKEN_CONTRACT_ADDRESS, provider, signer)
+    // setBalanceInWei(balanceInWei);
+    setBalanceInWei(9999999n);
+    // getBalanceInWei();
   }, [ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS, amount]);
 
   useEffect(() => {

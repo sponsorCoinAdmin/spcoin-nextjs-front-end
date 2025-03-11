@@ -1,11 +1,11 @@
 'use client'
 
 import styles from '@/styles/Exchange.module.css'
-import { dumpContext } from '@/lib/spCoin/utils';
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
-import { BUTTON_TYPE, ErrorMessage, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
+import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { useIsActiveAccountAddress, useIsWrappedNetworkAddress } from '@/lib/network/utils';
+import { isBuyActive, isBuyWrapped, isSellActive, isSellWrapped, useIsActiveAccountAddress, useIsWrappedNetworkAddress } from '@/lib/network/utils';
+import { Address } from 'viem';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
@@ -33,23 +33,28 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   }
 
   // ✅ Determine the swap type text
-  const getSwapType = () => {
+  const getSwapTypeInfo = (exchangeContext:ExchangeContext) => {
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
   
-    const isSellActive = useIsActiveAccountAddress(sellTokenContract?.address);
-    const isBuyActive = useIsActiveAccountAddress(buyTokenContract?.address);
-    const isBuyWrapped = useIsWrappedNetworkAddress(buyTokenContract?.address);
-    const isSellWrapped = useIsWrappedNetworkAddress(sellTokenContract?.address);
+    // const isSellActive = useIsActiveAccountAddress(sellTokenContract?.address);
+    // const isBuyActive = useIsActiveAccountAddress(buyTokenContract?.address);
+    // const isBuyWrapped = useIsWrappedNetworkAddress(buyTokenContract?.address);
+    // const isSellWrapped = useIsWrappedNetworkAddress(sellTokenContract?.address);
+
+    const sellActive = isSellActive(tradeData, sellTokenContract?.address as Address);
+    const buyActive = isBuyActive(tradeData, buyTokenContract?.address as Address);
+    const sellWrapped = isSellWrapped(tradeData);
+    const buyWrapped = isBuyWrapped(tradeData);
   
-    if (isSellActive) {
-      return isBuyWrapped
+    if (isSellActive(tradeData, sellTokenContract?.address as Address)) {
+      return isBuyWrapped(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
         : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
-    if (isBuyActive) {
-      return isSellWrapped
+    if (isBuyActive(tradeData, buyTokenContract?.address as Address)) {
+      return isSellWrapped(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
         : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
     }
@@ -73,7 +78,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
         return "Enter an Amount";
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
         return `Insufficient ${tradeData.sellTokenContract?.symbol} Balance`;
-      case BUTTON_TYPE.SWAP: return getSwapType();
+      case BUTTON_TYPE.SWAP: return getSwapTypeInfo(exchangeContext);
       case BUTTON_TYPE.SELL_TOKEN_REQUIRED:
       case BUTTON_TYPE.SELL_ERROR_REQUIRED:
         return "Sell Token Required";
@@ -182,7 +187,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
       default: alert("Button Type Undefined");
         break;
     }
-    dumpContext(exchangeContext);
+    // logAlert(exchangeContext);
   }
 
   // ✅ Validate and perform swap

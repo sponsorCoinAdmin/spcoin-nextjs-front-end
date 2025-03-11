@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "@/styles/Modal.module.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { isAddress } from "ethers";
 import { useAccount } from "wagmi";
@@ -33,66 +33,80 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
 
+  /** 📌 Handle Dialog Visibility */
   useEffect(() => {
     if (dialogRef.current) {
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
   }, [showDialog]);
 
+  /** 📌 Set Active Account */
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
       setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
 
+  /** 📌 Sync Input Field with Selected Token */
   useEffect(() => {
     setInputField(tokenContract?.address);
   }, [tokenContract]);
 
-  const closeDialog = () => {
+  /** 📌 Close Dialog */
+  const closeDialog = useCallback(() => {
     setInputField(undefined);
     setShowDialog(false);
     dialogRef.current?.close();
-  };
+  }, [setShowDialog]);
 
-  const isDuplicateToken = (tokenAddress: string | undefined): boolean => {
-    if (!tokenAddress) return false;
+  /** 📌 Check if the Selected Token is a Duplicate */
+  const isDuplicateToken = useCallback(
+    (tokenAddress: string | undefined): boolean => {
+      if (!tokenAddress) return false;
+      return priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+        ? exchangeContext.tradeData.buyTokenContract?.address === tokenAddress
+        : exchangeContext.tradeData.sellTokenContract?.address === tokenAddress;
+    },
+    [priceInputContainerType, exchangeContext.tradeData]
+  );
 
-    return priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
-      ? exchangeContext.tradeData.buyTokenContract?.address === tokenAddress
-      : exchangeContext.tradeData.sellTokenContract?.address === tokenAddress;
-  };
+  /** 📌 Clone Network Token if Needed */
+  const cloneIfNetworkToken = useCallback(
+    (tokenContract: TokenContract): TokenContract => {
+      return tokenContract.address === BURN_ADDRESS
+        ? { ...tokenContract, address: ACTIVE_ACCOUNT_ADDRESS as Address }
+        : tokenContract;
+    },
+    [ACTIVE_ACCOUNT_ADDRESS]
+  );
 
-  const cloneIfNetworkToken = (tokenContract: TokenContract): TokenContract => {
-    if (tokenContract.address === BURN_ADDRESS) {
-      return { ...tokenContract, address: ACTIVE_ACCOUNT_ADDRESS as Address };
-    }
-    return tokenContract;
-  };
+  /** 📌 Handle Token Selection */
+  const updateTokenCallback = useCallback(
+    (tokenContract: TokenContract | undefined): boolean => {
+      if (!tokenContract || !tokenContract.address) {
+        alert(`SELECT_ERROR: Invalid Token contract : ${inputField}`);
+        return false;
+      }
 
-  const updateTokenCallback = (tokenContract: TokenContract | undefined) => {
-    if (!tokenContract || !tokenContract.address) {
-      alert(`SELECT_ERROR: Invalid Token contract : ${inputField}`);
-      return false;
-    }
+      if (!isAddress(tokenContract.address)) {
+        alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address: ${tokenContract.address}`);
+        return false;
+      }
 
-    if (!isAddress(tokenContract.address)) {
-      alert(`SELECT_ERROR: ${tokenContract.name} has invalid token address: ${tokenContract.address}`);
-      return false;
-    }
+      const newToken = cloneIfNetworkToken(tokenContract);
 
-    const newToken = cloneIfNetworkToken(tokenContract);
+      if (isDuplicateToken(newToken.address)) {
+        alert(`SELECT_ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
+        console.error(`ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
+        return false;
+      }
 
-    if (isDuplicateToken(newToken.address)) {
-      alert(`SELECT_ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
-      console.error(`ERROR: Sell Token cannot be the same as Buy Token (${newToken.symbol})`);
-      return false;
-    }
-
-    callBackSetter(newToken);
-    closeDialog();
-    return true;
-  };
+      callBackSetter(newToken);
+      closeDialog();
+      return true;
+    },
+    [inputField, cloneIfNetworkToken, isDuplicateToken, callBackSetter, closeDialog]
+  );
 
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>

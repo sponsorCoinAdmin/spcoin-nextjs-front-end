@@ -206,30 +206,36 @@ const invalidTokenContract   = (textInputField:string|undefined, chainId:any) =>
   return invalidToken;
 }
 
-const dumpContext = (isAlert: boolean = false, isConsoleDebug: boolean = true) => {
-  const { exchangeContext } = useExchangeContext();
-  if (isAlert) alert(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
-  if (isConsoleDebug) console.log(`ExchangeButton:dumpContext exchangeContext = ${stringifyBigInt(exchangeContext)}`);
+// const useActiveAccountAddress = () => {
+//   const activeAccountAddress = useAccount().address;
+//   return activeAccountAddress;
+// }
+
+// const isActiveNetworkAddress = (address:Address|undefined) => {
+//   const activeAccountAddress = useAccount().address;
+//   return (address === activeAccountAddress);
+// }
+
+// const useActiveAccountAddress = () => {
+//   const activeAccountAddress = useAccount().address;
+//   return activeAccountAddress;
+// }
+// const isActiveNetworkAddress = (address:Address|undefined) => {
+//   const activeAccountAddress = useAccount().address;
+//   return (address === activeAccountAddress);
+// }
+
+const logAlert = (
+    obj: any,
+    name: string = "",
+    logAlert: boolean = true,
+    logConsole: boolean = true
+): string => {
+    const objStr = name ? `${name}: ${stringifyBigInt(obj)}` : stringifyBigInt(obj);
+    if (logConsole) { console.debug(objStr); }
+    if (logAlert) { alert(objStr); }
+    return objStr;
 };
-
-// const useActiveAccountAddress = () => {
-//   const activeAccountAddress = useAccount().address;
-//   return activeAccountAddress;
-// }
-
-// const isActiveNetworkAddress = (address:Address|undefined) => {
-//   const activeAccountAddress = useAccount().address;
-//   return (address === activeAccountAddress);
-// }
-
-// const useActiveAccountAddress = () => {
-//   const activeAccountAddress = useAccount().address;
-//   return activeAccountAddress;
-// }
-// const isActiveNetworkAddress = (address:Address|undefined) => {
-//   const activeAccountAddress = useAccount().address;
-//   return (address === activeAccountAddress);
-// }
 
 const getPublicFileUrl = (fileName: string): string => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -243,7 +249,6 @@ const getPublicFileUrl = (fileName: string): string => {
 export {
     decimalAdjustTokenAmount,
     bigIntDecimalShift,
-    dumpContext,
     dumpSwapState,
     exchangeContextDump,
     fetchTokenDetails,
@@ -256,6 +261,7 @@ export {
     invalidTokenContract,
     // isActiveNetworkAddress,
     isSpCoin,
+    logAlert,
     setValidPriceInput,
     updateBalance, stringifyBigInt
 };

@@ -5,6 +5,8 @@ import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
 import { useChainId } from "wagmi";
+import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+
 import {
   BASE,
   ETHEREUM,
@@ -18,6 +20,7 @@ import {
 import {
     BURN_ADDRESS,
   defaultMissingImage,
+  getAddressAvatar,
   useGetAddressAvatar,
 } from "@/lib/network/utils";
 import { loadWallets } from "@/lib/spCoin/loadWallets";
@@ -45,15 +48,19 @@ const setActiveAccount = (address: Address) => {
 const useWalletLists = () => {
   const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
   const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true); // Prevent SSR mismatch
+
     const fetchWallets = async () => {
       try {
-        const agents = await loadWallets(publicWalletPath, agentJsonList);
-        setAgentWalletList(agents);
-
-        const recipients = await loadWallets(publicWalletPath, recipientJsonList);
-        setRecipientWalletList(recipients);
+        const [agents, recipients] = await Promise.all([
+          loadWallets(publicWalletPath, agentJsonList),
+          loadWallets(publicWalletPath, recipientJsonList),
+        ]);
+        setAgentWalletList(agents || []);
+        setRecipientWalletList(recipients || []);
       } catch (error) {
         console.error("Error loading wallets:", error);
       }
@@ -61,8 +68,14 @@ const useWalletLists = () => {
     fetchWallets();
   }, []);
 
+  if (!isClient) {
+    return { recipientWalletList: [], agentWalletList: [] }; // Ensures consistent SSR/CSR output
+  }
+
   return { recipientWalletList, agentWalletList };
 };
+
+
 
 // 🔹 Function to get data feed list
 const getDataFeedList = (feedType: FEED_TYPE, chainId: number, walletLists: { recipientWalletList: WalletAccount[], agentWalletList: WalletAccount[] }) => {
@@ -110,32 +123,54 @@ const setMissingAvatar = (event: { currentTarget: { src: string } }) => {
 
 // 🔹 Optimized `DataList` component
 const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TYPE; updateTokenCallback: (listElement: any) => void }) => {
-  const chainId = useChainId(); // ✅ Hook at the top level
-  const walletLists = useWalletLists(); // ✅ Fetch wallets only once
+  const [isClient, setIsClient] = useState(false);
+  const chainId = useChainId(); // ✅ Ensure it's not used on SSR
+  const walletLists = useWalletLists();
+  const { exchangeContext } = useExchangeContext();
 
-  // ✅ Memoize `dataFeedList` to avoid unnecessary recomputations
-  const dataFeedList = useMemo(() => getDataFeedList(dataFeedType, chainId, walletLists), [dataFeedType, chainId, walletLists]);
+  /** ✅ Prevent SSR Mismatch */
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  /** ✅ Memoized Data Feed (Ensures it’s always an array) */
+  const dataFeedList = useMemo(() => {
+    return isClient ? getDataFeedList(dataFeedType, chainId, walletLists) || [] : [];
+  }, [dataFeedType, chainId, walletLists, isClient]);
+
+  /** ✅ Memoized Avatars */
+  const avatars = useMemo(() => {
+    return dataFeedList.map((listElement) => ({
+      ...listElement,
+      avatar: getAddressAvatar(exchangeContext, listElement.address as Address, dataFeedType),
+    }));
+  }, [dataFeedList, exchangeContext, dataFeedType]);
+
+  /** ✅ Prevent SSR Hydration Errors */
+  if (!isClient) {
+    return <p>Loading data...</p>;
+  }
 
   return (
     <>
-      {dataFeedList.map((listElement: any, i: number) => {
-        const avatar = useGetAddressAvatar(listElement.address, dataFeedType); // ✅ Hook usage is correct now
-
-        return (
+      {avatars.length === 0 ? (
+        <p>No data available.</p>
+      ) : (
+        avatars.map((listElement, i) => (
           <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" key={listElement.address}>
             <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])}>
-              <img className={styles.elementLogo} src={avatar} alt={`${listElement.name} Token Avatar`} onError={(event) => setMissingAvatar(event)} />
+              <img className={styles.elementLogo} src={listElement.avatar || defaultMissingImage} alt={`${listElement.name} Token Avatar`} />
               <div>
                 <div className={styles.elementName}>{listElement.name}</div>
                 <div className={styles.elementSymbol}>{listElement.symbol}</div>
               </div>
             </div>
-            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white" onClick={() => displayElementDetail(dataFeedList[i])}>
-              <Image className={styles.infoLogo} src={info_png} alt="Info Image" onError={(event) => setMissingAvatar(event)} />
+            <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white" onClick={() => alert(`${listElement.name} Address: ${listElement.address}`)}>
+              <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
             </div>
           </div>
-        );
-      })}
+        ))
+      )}
     </>
   );
 };
