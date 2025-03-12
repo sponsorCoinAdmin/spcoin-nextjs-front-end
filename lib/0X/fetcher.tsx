@@ -2,7 +2,7 @@ import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } f
 import qs from "qs";
 import useSWR from 'swr';
 import { useExchangeContext } from '@/lib/context/ExchangeContext';
-import { useIsActiveAccountAddress, isWrappingTransaction, useMapAccountAddrToWethAddr } from '../network/utils';
+import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from "wagmi";

@@ -119,25 +119,37 @@ const useIsActiveAccountAddress = (address?: Address): boolean => {
   return isActiveAccountAddress(exchangeContext, address)
 };
 
-const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
-  const { exchangeContext } = useExchangeContext();
-
+const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress: Address): Address | undefined => {
   const chainId = exchangeContext.tradeData.chainId;
   const ethAct = exchangeContext.activeAccountAddress;
 
-  console.log(`useMapAccountAddrToWethAddr: chainId(${chainId}) 
+  console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
                Ethereum Account Address = ${ethAct} 
                Token Account Address = ${tokenAddress}`);
 
   return ethAct === tokenAddress ? getNetworkWethAddress(chainId) : tokenAddress;
 };
 
-const isWrappingTransaction = (
-  sellTokenAddress?: Address, 
-  buyTokenAddress?: Address
-): boolean => 
-  !!(sellTokenAddress && buyTokenAddress && 
-     useMapAccountAddrToWethAddr(sellTokenAddress) === useMapAccountAddrToWethAddr(buyTokenAddress));
+const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
+  const { exchangeContext } = useExchangeContext();
+  return mapAccountAddrToWethAddr(exchangeContext, tokenAddress)
+};
+
+// const isWrappingTransactionOLD = (
+//   sellTokenAddress?: Address, 
+//   buyTokenAddress?: Address
+// ): boolean => 
+//   !!(sellTokenAddress && buyTokenAddress && 
+//      useMapAccountAddrToWethAddr(sellTokenAddress) === useMapAccountAddrToWethAddr(buyTokenAddress));
+
+const isWrappingTransaction = (exchangeContext:ExchangeContext, tradeData:TradeData,
+): boolean => {
+  const sellTokenAddress = tradeData.sellTokenContract?.address;
+  const buyTokenAddress = tradeData.buyTokenContract?.address;
+
+  return (sellTokenAddress && buyTokenAddress && 
+    mapAccountAddrToWethAddr(exchangeContext, sellTokenAddress) === mapAccountAddrToWethAddr(exchangeContext, buyTokenAddress)) || false;
+  }
 
 const getChainMap = (chainList: any[]): Map<number, any> => 
   new Map(chainList.map((e) => [e.chainId, e]));
@@ -210,6 +222,7 @@ export {
   isWrappedBuyToken,
   isWrappedToken,
   isWrappedSellToken,
+  mapAccountAddrToWethAddr,
   useIsActiveAccountAddress,
   useMapAccountAddrToWethAddr,
 };

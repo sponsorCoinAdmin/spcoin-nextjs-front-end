@@ -50,7 +50,7 @@ export default function PriceView() {
 
   // ✅ Move `useMemo` to top level
   const isWrapTransaction = useMemo(() => {
-    return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(sellTokenAddress, buyTokenAddress) : false;
+    return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(exchangeContext, tradeData) : false;
   }, [sellTokenAddress, buyTokenAddress]);
 
   // ✅ Move `useCallback` to top level before passing it to `usePriceAPI`

@@ -52,7 +52,6 @@ const priceInputContainer = ({
   updateAmount,
 }: Props) => {
 
-  // ✅ Use `useExchangeContext()` Hook
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
   const signer = tradeData.signer;
@@ -182,7 +181,7 @@ const priceInputContainer = ({
     setAmount(bigIntValue);
   };
 
-  const buySellText = isWrappingTransaction(tradeData.sellTokenContract?.address, tradeData.buyTokenContract?.address) ?
+  const buySellText = isWrappingTransaction(exchangeContext, tradeData) ?
     priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
     tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippageBps * 100}%` :
