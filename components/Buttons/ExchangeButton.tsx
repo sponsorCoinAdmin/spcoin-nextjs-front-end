@@ -4,8 +4,7 @@ import styles from '@/styles/Exchange.module.css'
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { isActiveBuyToken, isWrappedBuyToken, isActiveSellToken, isWrappedSellToken, useIsActiveAccountAddress, useIsWrappedNetworkAddress } from '@/lib/network/utils';
-import { Address } from 'viem';
+import { isActiveBuyToken, isWrappedBuyToken, isActiveSellToken, isWrappedSellToken } from '@/lib/network/utils';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
@@ -37,23 +36,13 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
   
-    // const isActiveSellToken = useIsActiveAccountAddress(sellTokenContract?.address);
-    // const isActiveBuyToken = useIsActiveAccountAddress(buyTokenContract?.address);
-    // const isWrappedBuyToken = useIsWrappedNetworkAddress(buyTokenContract?.address);
-    // const isWrappedSellToken = useIsWrappedNetworkAddress(sellTokenContract?.address);
-
-    const sellActive = isActiveSellToken(tradeData, sellTokenContract?.address as Address);
-    const buyActive = isActiveBuyToken(tradeData, buyTokenContract?.address as Address);
-    const sellWrapped = isWrappedSellToken(tradeData);
-    const buyWrapped = isWrappedBuyToken(tradeData);
-  
-    if (isActiveSellToken(tradeData, sellTokenContract?.address as Address)) {
+    if (isActiveSellToken(exchangeContext, tradeData)) {
       return isWrappedBuyToken(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
         : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
-    if (isActiveBuyToken(tradeData, buyTokenContract?.address as Address)) {
+    if (isActiveBuyToken(exchangeContext, tradeData)) {
       return isWrappedSellToken(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
         : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
@@ -62,7 +51,6 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     return `${transactionType} SWAP`;
   };
   
-
   // ✅ Button text based on state
   const getButtonText = (buttonType: BUTTON_TYPE) => {
     switch (buttonType) {

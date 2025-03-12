@@ -12,7 +12,7 @@ import { isAddress } from "ethers";
 import DataList from "./Resources/DataList";
 import { hideElement, showElement } from "@/lib/spCoin/guiControl";
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
-import { useGetAddressAvatar } from "@/lib/network/utils";
+import { getAddressAvatar } from "@/lib/network/utils";
 import { Address } from "viem";
 
 const TITLE_NAME = "Select a Recipient";
@@ -81,6 +81,8 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
     };
 
     const handleSelectWallet = useCallback(() => {
+        const { exchangeContext } = useExchangeContext(); // ✅ Using `useExchangeContext()`
+        
         if (!walletElement) {
             alert("Invalid Wallet address: " + recipientInput);
             return;
@@ -89,7 +91,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
             alert(`Recipient cannot be the same as Agent (${agentAccount.symbol})`);
             return;
         }
-        walletElement.avatar = useGetAddressAvatar(walletElement.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
+        walletElement.avatar = getAddressAvatar(exchangeContext, walletElement.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
         callBackWallet(walletElement);
         closeDialog();
     }, [walletElement, agentAccount, callBackWallet, closeDialog]);

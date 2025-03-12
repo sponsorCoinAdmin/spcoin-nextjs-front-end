@@ -12,7 +12,7 @@ import { isAddress } from 'ethers'; // ethers v6
 import DataList from './Resources/DataList';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Updated import
-import { useGetAddressAvatar } from '@/lib/network/utils';
+import { getAddressAvatar } from '@/lib/network/utils';
 import { Address } from 'viem';
 
 const TITLE_NAME = "Select a Recipient";
@@ -112,7 +112,8 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
     };
 
     const useSelectedListElement = (walletAccount?: WalletAccount) => {
-        const avatar = useGetAddressAvatar(walletAccount?.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
+        const { exchangeContext } = useExchangeContext(); // ✅ Using `useExchangeContext()`
+        const avatar = getAddressAvatar(exchangeContext, walletAccount?.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
     
         return () => {
             if (!walletAccount) {

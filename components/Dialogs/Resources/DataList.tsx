@@ -18,10 +18,9 @@ import {
   WalletAccount
 } from "@/lib/structure/types";
 import {
-    BURN_ADDRESS,
+  BURN_ADDRESS,
   defaultMissingImage,
-  getAddressAvatar,
-  useGetAddressAvatar,
+  getAddressAvatar
 } from "@/lib/network/utils";
 import { loadWallets } from "@/lib/spCoin/loadWallets";
 

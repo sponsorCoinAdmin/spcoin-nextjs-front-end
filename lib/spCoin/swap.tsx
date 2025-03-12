@@ -17,7 +17,12 @@ import { stringifyBigInt } from "../../../node_modules-dev/spcoin-common/spcoin-
 // import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6"
 
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6";
-import { useIsNetworkAddress, isTokenAddress, useIsWrappedNetworkAddress } from "../network/utils";
+import { isActiveSellToken, 
+    isActiveBuyToken, 
+    isBlockChainBuyToken, 
+    isBlockChainSellToken, 
+    isWrappedSellToken, 
+    isWrappedBuyToken } from "../network/utils";
 
 const wethMethods = new WethMethods();
 
@@ -70,34 +75,26 @@ const swap = async () => {
     const tradeData = exchangeContext.tradeData;
 
     let swapType: SWAP_TYPE;
-    const sellTokenAddress = tradeData.sellTokenContract?.address;
-    const buyTokenAddress = tradeData.buyTokenContract?.address;
-
-    console.log(`sellTokenAddress =${sellTokenAddress}\nbuyTokenAddress =${buyTokenAddress}`);
-
+ 
     const setSwapType = (_swapType: SWAP_TYPE) => {
         swapType = _swapType;
         tradeData.swapType = _swapType;
     };
 
-    // useEffect(() => {
-    //   getSwapState(tradeData.sellTokenContract?.address, tradeData.buyTokenContract?.address);
-    // }, [tradeData.sellTokenContract?.address, tradeData.buyTokenContract?.address]);
-
     const getSwapState = () => {
         let swapType: SWAP_TYPE = SWAP_TYPE.UNDEFINED;
-        if (isTokenAddress(exchangeContext, sellTokenAddress)) {
-            if (isTokenAddress(exchangeContext, buyTokenAddress)) {
+        if (isActiveSellToken(exchangeContext, tradeData)) {
+            if (isActiveBuyToken(exchangeContext, tradeData)) {
                 swapType = SWAP_TYPE.SWAP;
-            } else if (useIsNetworkAddress(buyTokenAddress)) {
-                if (useIsWrappedNetworkAddress(sellTokenAddress)) {
+            } else if (isBlockChainBuyToken(exchangeContext, tradeData)) {
+                if (isWrappedSellToken(tradeData)) {
                     swapType = SWAP_TYPE.UNWRAP;
                 } else {
                     swapType = SWAP_TYPE.SWAP_UNWRAP;
                 }
             }
-        } else if (useIsNetworkAddress(sellTokenAddress)) {
-            if (useIsWrappedNetworkAddress(buyTokenAddress)) {
+        } else if (isBlockChainSellToken(exchangeContext, tradeData)) {
+            if (isWrappedBuyToken(tradeData)) {
                 swapType = SWAP_TYPE.WRAP;
             } else {
                 swapType = SWAP_TYPE.WRAP_SWAP;

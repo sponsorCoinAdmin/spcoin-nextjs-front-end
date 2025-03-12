@@ -5,7 +5,7 @@ import { loadWallets } from "@/lib/spCoin/loadWallets";
 import { defaultMissingImage, getWalletAvatar } from "@/lib/network/utils";
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
-import { publicWalletPath, Wallet } from "@/lib/structure/types";
+import { publicWalletPath, WalletAccount } from "@/lib/structure/types";
 
 // Options for filtering wallets
 const walletOptions = ["All", "Recipients", "Agents"] as const;
@@ -101,7 +101,7 @@ export default function WalletsPage() {
                     <p style={{ textAlign: "center", fontSize: "18px", color: "#555" }}>Loading...</p>
                 ) : (
                     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                        {wallets.map((wallet, index) => (
+                        {wallets.map((wallet:WalletAccount, index) => (
                             <li key={`${typeOfWallets}-${wallet.address}-${index}`} style={{
                                 display: "flex", alignItems: "center", padding: "12px",
                                 backgroundColor: index % 2 === 0 ? "#d6d6d6" : "#f5f5f5",
