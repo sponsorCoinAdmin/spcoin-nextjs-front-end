@@ -3,19 +3,19 @@
 import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
-// import { erc20Abi } from 'viem'
-// import erc20Abi from '@/resources/data/ABIs/erc20ABI.json'
-import { erc20Abi } from '@/resources/data/ABIs/erc20ABI'
+// import { erc20ABI } from 'viem'
+// import erc20ABI from '@/resources/data/ABIs/erc20ABI.json'
+import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 import { stringifyBigInt } from '../spCoin/utils'
 
-// console.log(`AAAAAAAAA erc20Abi = ${JSON.stringify(erc20Abi)}`)
-// console.log(`BBBBBBBBB erc20Abi2 = ${JSON.stringify(erc20Abi2)}`)
+// console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)
+// console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
   const wagmiBalanceOfRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'balanceOf',
     args: [connectedAccountAddr || BURN_ADDRESS],
@@ -28,7 +28,7 @@ const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefine
 
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
   const wagmiDecimalsRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'decimals',
     config: config, 
@@ -38,7 +38,7 @@ const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
 
 const useWagmiERC20TokenNameRec = (contractAddress:Address | undefined) => {
   const wagmiNameRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'name',
     config: config, 
@@ -48,7 +48,7 @@ const useWagmiERC20TokenNameRec = (contractAddress:Address | undefined) => {
 
 const useWagmiERC20TokenSymbolRec = (contractAddress:Address | undefined) => {
   const wagmiSymbolRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'symbol',
     config: config, 
@@ -58,7 +58,7 @@ const useWagmiERC20TokenSymbolRec = (contractAddress:Address | undefined) => {
 
 const useWagmiERC20TokenTotalSupplyRec = (contractAddress:Address | undefined) => {
   const wagmiTotalSupplyRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'totalSupply',
     config: config, 
@@ -120,6 +120,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       name:name || "1. CONTRACT NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
+      balance:0n,
       totalSupply:totalSupply,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
@@ -143,6 +144,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       chainId: chainId,
       address:ACTIVE_NETWORK_ADDRESS,
       name:name || "NETWORK NOT FOUND AT ADDRESS",
+      balance:0n,
       symbol:symbol,
       decimals:decimals,
       totalSupply:undefined,

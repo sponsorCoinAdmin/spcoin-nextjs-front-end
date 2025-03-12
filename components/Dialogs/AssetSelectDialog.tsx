@@ -9,7 +9,7 @@ import { useAccount } from "wagmi";
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import { stringifyBigInt } from "@/lib/spCoin/utils";
 import DataList, { setActiveAccount } from "./Resources/DataList";
-import InputSelect from "../panes/InputSelectOLD";
+import InputSelect from "../panes/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
 import { BURN_ADDRESS, defaultMissingImage, getTokenAvatar } from "@/lib/network/utils";
 import { Address } from "viem";

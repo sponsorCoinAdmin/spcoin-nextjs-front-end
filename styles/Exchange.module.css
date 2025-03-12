@@ -290,18 +290,6 @@
   cursor: pointer;
 }
 
-.feeInfoCogOLD {
-  top: 0px;
-  left: 115px;
-  cursor: pointer;
-}
-
-.feeInfoCogOLD:hover {
-  color: white;
-  rotate: 360deg;
-  cursor: pointer;
-}
-
 .hidden{
   display: none
 }

@@ -1,5 +1,4 @@
 import WalletsPage from "@/components/Pages/WalletsPage";
-import WalletsPageOLD from "@/components/Pages/WalletsPageOLD";
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 

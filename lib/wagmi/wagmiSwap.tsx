@@ -114,6 +114,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       chainId: chainId,
       address:TOKEN_CONTRACT_ADDRESS,
       name:name || "2. CONTRACT NOT FOUND AT ADDRESS",
+      balance:0n,
       symbol:symbol,
       decimals:decimals,
       totalSupply:totalSupply,
@@ -141,6 +142,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       name:name || "NETWORK NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
+      balance:0n,
       totalSupply:undefined,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }

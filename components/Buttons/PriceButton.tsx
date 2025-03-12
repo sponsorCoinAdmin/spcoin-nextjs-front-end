@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import CustomConnectButton from './CustomConnectButton';
-import ExchangeButton from './ExchangeButtonOLD';
+import ExchangeButton from './ExchangeButton';
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import DumpContextButton from './DumpContextButton';
 import { useAccount } from 'wagmi';

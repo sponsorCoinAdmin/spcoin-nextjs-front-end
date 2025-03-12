@@ -1,26 +1,36 @@
 'use client';
+
 import styles from '@/styles/Exchange.module.css';
 import { ErrorDialog } from '@/components/Dialogs/Dialogs';
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useChainId, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
-import { TokenContract, ErrorMessage, TRANSACTION_TYPE, CONTAINER_TYPE, STATUS, TradeData, HARDHAT } from '@/lib/structure/types';
+import { 
+  TokenContract, 
+  ErrorMessage, 
+  TRANSACTION_TYPE, 
+  CONTAINER_TYPE, 
+  STATUS, 
+  TradeData, 
+  HARDHAT 
+} from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
-import { stringifyBigInt } from '../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
-import PriceInputContainer from '@/components/containers/AssetContainerOLD';
+import { useExchangeContext } from "@/lib/context/ExchangeContext";  
+import PriceInputContainer from '@/components/containers/AssetContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
+import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
   const signer = useEthersSigner();
-
+  
+  // ✅ Ensure all hooks are at the top level
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
 
@@ -38,10 +48,36 @@ export default function PriceView() {
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
 
+  // ✅ Move `useMemo` to top level
   const isWrapTransaction = useMemo(() => {
     return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(sellTokenAddress, buyTokenAddress) : false;
   }, [sellTokenAddress, buyTokenAddress]);
 
+  // ✅ Move `useCallback` to top level before passing it to `usePriceAPI`
+  const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
+    setErrorMessage({
+      errCode: apiErrorObj.errCode,
+      msg: stringifyBigInt(apiErrorObj.msg),
+      source: apiErrorObj.source,
+      status: STATUS.ERROR_API_PRICE,
+    });
+  }, []);
+
+  // ✅ Ensure `usePriceAPI` is called at the top level
+  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
+    transactionType,
+    sellTokenAddress,
+    buyTokenAddress,
+    sellAmount,
+    buyAmount,
+    slippageBps,
+    setBuyAmount,
+    setSellAmount,
+    setErrorMessage,
+    apiErrorCallBack, 
+  });
+
+  // ✅ Ensure `useEffect` only references values, not hooks
   useEffect(() => {
     if (!ACTIVE_ACCOUNT.chainId || ACTIVE_ACCOUNT.chainId === tradeData?.chainId) return;
     tradeData.chainId = ACTIVE_ACCOUNT.chainId;
@@ -59,7 +95,7 @@ export default function PriceView() {
       buyTokenContract.address = ACTIVE_ACCOUNT.address;
     }
     exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
-  }, [ACTIVE_ACCOUNT.address]);
+  }, [ACTIVE_ACCOUNT.address, sellTokenContract, buyTokenContract, exchangeContext]);
 
   useEffect(() => {
     if (!isWrapTransaction || !transactionType) return;
@@ -80,26 +116,6 @@ export default function PriceView() {
     }
   }, [resetAmounts]);
 
-  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
-    transactionType,
-    sellTokenAddress,
-    buyTokenAddress,
-    sellAmount,
-    buyAmount,
-    slippageBps,
-    setBuyAmount,
-    setSellAmount,
-    setErrorMessage,
-    apiErrorCallBack: useCallback((apiErrorObj: ErrorMessage) => {
-      setErrorMessage({
-        errCode: apiErrorObj.errCode,
-        msg: stringifyBigInt(apiErrorObj.msg),
-        source: apiErrorObj.source,
-        status: STATUS.ERROR_API_PRICE,
-      });
-    }, [])
-  });
-
   useEffect(() => {
     if (PriceError && !isWrapTransaction) {
       setErrorMessage({
@@ -109,13 +125,13 @@ export default function PriceView() {
         msg: PriceError.errMsg,
       });
     }
-  }, [PriceError, isWrapTransaction]);
+  }, [PriceError, isWrapTransaction, tradeData.chainId]);
 
   const swapBuySellTokens = useCallback(() => {
     if (!tradeData.buyTokenContract || !tradeData.sellTokenContract) return;
     setSellTokenContract(tradeData.buyTokenContract);
     setBuyTokenContract(tradeData.sellTokenContract);
-  }, []);
+  }, [tradeData.buyTokenContract, tradeData.sellTokenContract]);
 
   return (
     <form autoComplete="off">
@@ -141,7 +157,13 @@ export default function PriceView() {
           setTokenContractCallback={setBuyTokenContract}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
-        <PriceButton isLoadingPrice={isLoadingPrice} errorMessage={errorMessage} setErrorMessage={setErrorMessage} setResetAmounts={setResetAmounts} toggleButton={toggleButton} />
+        <PriceButton 
+          isLoadingPrice={isLoadingPrice} 
+          errorMessage={errorMessage} 
+          setErrorMessage={setErrorMessage} 
+          setResetAmounts={setResetAmounts} 
+          toggleButton={toggleButton} 
+        />
         <AffiliateFee priceResponse={priceData} buyTokenContract={buyTokenContract} />
       </div>
       <FeeDisclosure />

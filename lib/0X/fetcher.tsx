@@ -1,4 +1,3 @@
-// 'use server'
 import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
@@ -19,13 +18,15 @@ const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER;
 const apiPriceBase = "/price";
 const apiQuoteBase = "/quote";
 
-const validTokenOrNetworkCoin = (address: any): any => {
-  return useIsActiveAccountAddress(address) ? WRAPPED_ETHEREUM_ADDRESS : address;
+// ✅ Fix: Ensure hooks are NOT inside this function
+const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
+  return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;
 };
 
-const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
+// ✅ Fix: Ensure hooks are NOT inside this function
+const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
-  let { sellAmount, buyAmount } = params;
+  const { sellAmount, buyAmount } = params;
 
   if (!sellAmount && !buyAmount) return;
 
@@ -40,27 +41,27 @@ const fetcher = ([endpoint, params]: [string, PriceRequestParams]) => {
   try {
     const query = qs.stringify(params);
     const apiCall = `${endpoint}?${query}`;
-    let result = fetch(`${apiCall}`).then((res) => res.json());
     console.debug(`fetcher: apiCall ${apiCall}`);
-    return result;
+    const response = await fetch(apiCall);
+    return response.json();
   } catch (e) {
-    alert("fetcher Error: " + JSON.stringify(e, null, 2));
+    console.error("fetcher Error: ", e);
     throw { errCode: ERROR_0X_RESPONSE, errMsg: JSON.stringify(e, null, 2) };
   }
 };
 
+// ✅ Fix: Pass `exchangeContext` as an argument instead of calling `useExchangeContext` inside the function
 const getApiErrorTransactionData = (
+  exchangeContext: any, // Pass exchangeContext
   sellTokenAddress: Address | undefined,
   buyTokenAddress: Address | undefined,
   sellAmount: any,
   data: PriceResponse
 ) => {
-  // const { exchangeContext } = useExchangeContext();
   return {
     ERROR: `API Call`,
     Server: `${process.env.NEXT_PUBLIC_API_SERVER}`,
-    // netWork: `${exchangeContext.network.name.toLowerCase()}`,
-    netWork: `${"ToDo add Network"}`,
+    netWork: `${exchangeContext.network.name.toLowerCase()}`, // ✅ Now using passed context instead of a hook
     apiPriceBase: `${apiPriceBase}`,
     sellTokenAddress: `${sellTokenAddress}`,
     buyTokenAddress: `${buyTokenAddress}`,
@@ -85,8 +86,8 @@ const getPriceApiCall = (
         apiPriceBase,
         {
           chainId: chainId,
-          sellToken: validTokenOrNetworkCoin(sellTokenAddress),
-          buyToken: validTokenOrNetworkCoin(buyTokenAddress),
+          sellToken: sellTokenAddress,
+          buyToken: buyTokenAddress,
           sellAmount: transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? sellAmount.toString() : undefined,
           buyAmount: transactionType === TRANSACTION_TYPE.BUY_EXACT_IN ? buyAmount.toString() : undefined,
           slippageBps: slippageBps
@@ -108,8 +109,8 @@ type Props = {
 };
 
 function usePriceAPI({
-  sellTokenAddress,
-  buyTokenAddress,
+  sellTokenAddress: initialSellTokenAddress,
+  buyTokenAddress: initialBuyTokenAddress,
   transactionType,
   sellAmount,
   buyAmount,
@@ -119,10 +120,16 @@ function usePriceAPI({
   setErrorMessage,
   apiErrorCallBack
 }: Props) {
+  // ✅ Hooks MUST be at the top level
   const { exchangeContext } = useExchangeContext();
-  sellTokenAddress = useMapAccountAddrToWethAddr(sellTokenAddress as Address);
-  buyTokenAddress = useMapAccountAddrToWethAddr(buyTokenAddress as Address);
   const chainId = useChainId();
+
+  // ✅ Convert addresses *after* hooks are defined
+  const isActiveSellAccount = useIsActiveAccountAddress(initialSellTokenAddress as Address);
+  const isActiveBuyAccount = useIsActiveAccountAddress(initialBuyTokenAddress as Address);
+
+  const sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialSellTokenAddress as Address, isActiveSellAccount));
+  const buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialBuyTokenAddress as Address, isActiveBuyAccount));
 
   const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => {
     return (
@@ -140,8 +147,22 @@ function usePriceAPI({
         : null,
     fetcher,
     {
-      onSuccess: (data) => (data.code ? apiErrorCallBack({ status: STATUS.ERROR_API_PRICE, source: "ApiFetcher: ", errCode: data.code, msg: getApiErrorTransactionData(sellTokenAddress, buyTokenAddress, sellAmount, data) }) : setBuyAmount(data.buyAmount || 0n)),
-      onError: (error) => apiErrorCallBack({ status: STATUS.ERROR_API_PRICE, source: "ApiFetcher: ", errCode: error.code, msg: error })
+      onSuccess: (data) =>
+        data.code
+          ? apiErrorCallBack({
+              status: STATUS.ERROR_API_PRICE,
+              source: "ApiFetcher: ",
+              errCode: data.code,
+              msg: getApiErrorTransactionData(exchangeContext, sellTokenAddress, buyTokenAddress, sellAmount, data), // ✅ Fix: pass exchangeContext
+            })
+          : setBuyAmount(data.buyAmount || 0n),
+      onError: (error) =>
+        apiErrorCallBack({
+          status: STATUS.ERROR_API_PRICE,
+          source: "ApiFetcher: ",
+          errCode: error.code,
+          msg: error,
+        }),
     }
   );
 }

@@ -16,7 +16,7 @@ import ReadWagmiERC20ContractSymbol from "@/components/ERC20/ReadWagmiERC20Contr
 import ReadWagmiERC20ContractDecimals from "@/components/ERC20/ReadWagmiERC20ContractDecimals";
 import ReadWagmiERC20ContractTotalSupply from "@/components/ERC20/ReadWagmiERC20ContractTotalSupply";
 import DumpContextButton from "@/components/Buttons/DumpContextButton";
-import InputSelect from "@/components/panes/InputSelectOLD";
+import InputSelect from "@/components/panes/InputSelect";
 
 // Utilities & Context
 import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Updated import
