@@ -17,12 +17,12 @@ import { stringifyBigInt } from "../../../node_modules-dev/spcoin-common/spcoin-
 // import { WethMethods, weth9ABI } from "@sponsorcoin/weth-access-module-es6"
 
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6";
-import { isActiveAccountSellToken, 
-    isActiveAccountBuyToken, 
+import { isActiveSellToken, 
+    isActiveBuyToken, 
     isBlockChainBuyToken, 
     isBlockChainSellToken, 
     isWrappedSellToken, 
-    isWrappedBuyToken } from "../network/utils";
+    isWrappedBuyToken } from "../network/utilsOLD";
 
 const wethMethods = new WethMethods();
 
@@ -83,8 +83,8 @@ const swap = async () => {
 
     const getSwapState = () => {
         let swapType: SWAP_TYPE = SWAP_TYPE.UNDEFINED;
-        if (isActiveAccountSellToken(exchangeContext, tradeData)) {
-            if (isActiveAccountBuyToken(exchangeContext, tradeData)) {
+        if (isActiveSellToken(exchangeContext, tradeData)) {
+            if (isActiveBuyToken(exchangeContext, tradeData)) {
                 swapType = SWAP_TYPE.SWAP;
             } else if (isBlockChainBuyToken(exchangeContext, tradeData)) {
                 if (isWrappedSellToken(tradeData)) {

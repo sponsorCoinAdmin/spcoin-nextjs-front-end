@@ -4,7 +4,7 @@ import styles from '@/styles/Exchange.module.css'
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
-import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, isWrappedSellToken } from '@/lib/network/utils';
+import { isActiveBuyToken, isWrappedBuyToken, isActiveSellToken, isWrappedSellToken } from '@/lib/network/utils';
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
@@ -36,13 +36,13 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
   
-    if (isActiveAccountSellToken(exchangeContext, tradeData)) {
+    if (isActiveSellToken(exchangeContext, tradeData)) {
       return isWrappedBuyToken(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
         : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
-    if (isActiveAccountBuyToken(exchangeContext, tradeData)) {
+    if (isActiveBuyToken(exchangeContext, tradeData)) {
       return isWrappedSellToken(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
         : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;

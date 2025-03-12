@@ -21,7 +21,7 @@ import TokenSelect from "./AssetSelect";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
-import { BURN_ADDRESS, delay, isWrappingTransaction } from "@/lib/network/utils";
+import { BURN_ADDRESS, delay, useIsActiveAccountAddress, isWrappingTransaction } from "@/lib/network/utils";
 import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from "@/lib/spCoin/utils";
 import { formatDecimals, useWagmiERC20TokenBalanceOf } from "@/lib/wagmi/wagmiERC20ClientRead";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
@@ -122,7 +122,7 @@ const priceInputContainer = ({
   // }, [bigIntBalanceOf]);
   
   // const getBalanceInWei = async () => {
-  //   if (isActiveNetworkAddress(exchangeContext, TOKEN_CONTRACT_ADDRESS)) {
+  //   if (useIsActiveAccountAddress(TOKEN_CONTRACT_ADDRESS)) {
   //     await delay(400);
   //     const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
   //     setBalanceInWei(newBal);

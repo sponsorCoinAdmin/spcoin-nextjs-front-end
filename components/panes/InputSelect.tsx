@@ -14,7 +14,8 @@ import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@
 import { Address } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import { getTokenAvatar, useIsActiveAccountAddress } from "@/lib/network/utils";
+import { getTokenAvatar, isActiveAccountAddress } from "@/lib/network/utils";
+import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
 
 type Props = {
   placeHolder:string,
@@ -32,13 +33,14 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const networkContract:TokenContract|undefined = useErc20NetworkContract(networkAddress);
   // const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
   const debouncedText = useDebounce(textInputField);
+  const { exchangeContext } = useExchangeContext();
 
   // const getActiveAccountAddress = () => {
   //   return ACTIVE_ACCOUNT_ADDRESS;
   // }
   
   const isActiveNetworkAddress = (address:Address|undefined) => {
-    return useIsActiveAccountAddress(address)
+    return isActiveAccountAddress(exchangeContext, address)
     // return (address === getActiveAccountAddress());
   }
     

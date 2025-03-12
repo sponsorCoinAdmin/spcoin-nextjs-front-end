@@ -25,16 +25,16 @@ const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-const isActiveSellToken = (exchangeContext:ExchangeContext, tradeData: TradeData ): boolean =>
-  tradeData.sellTokenContract ? isActiveToken(exchangeContext, tradeData.sellTokenContract) : false;
+const isActiveAccountSellToken = (exchangeContext:ExchangeContext, tradeData: TradeData ): boolean =>
+  tradeData.sellTokenContract ? isActiveAccountToken(exchangeContext, tradeData.sellTokenContract) : false;
 
-const isActiveBuyToken = (exchangeContext:ExchangeContext, tradeData: TradeData): boolean =>
-  tradeData.buyTokenContract ? isActiveToken(exchangeContext, tradeData.buyTokenContract) : false;
+const isActiveAccountBuyToken = (exchangeContext:ExchangeContext, tradeData: TradeData): boolean =>
+  tradeData.buyTokenContract ? isActiveAccountToken(exchangeContext, tradeData.buyTokenContract) : false;
 
-const isActiveToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract ) =>
-  isActiveAddress(exchangeContext, tokenContract.address);
+const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract ) =>
+  isActiveAccountAddress(exchangeContext, tokenContract.address);
 
-const isActiveAddress = (exchangeContext: ExchangeContext, address: Address ) =>
+const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address ) =>
   address ? address === exchangeContext.activeAccountAddress : false;
 
 const isWrappedSellToken = (tradeData: TradeData): boolean =>
@@ -69,7 +69,7 @@ const isBlockChainBuyToken = (exchangeContext:ExchangeContext, tradeData: TradeD
   tradeData.buyTokenContract ? isBlockChainToken(exchangeContext, tradeData.buyTokenContract) : false;
 
 const isBlockChainToken = (exchangeContext:ExchangeContext, tokenContract: TokenContract) : boolean => {
-    return isActiveToken(exchangeContext, tokenContract) ||
+    return isActiveAccountToken(exchangeContext, tokenContract) ||
   isNativeToken(tokenContract) ||
   isWrappedToken(tokenContract) ||
   isBurnToken(tokenContract);
@@ -80,11 +80,6 @@ const isBurnToken = (tokenContract:TokenContract) : boolean =>
 
 const isBurnTokenAddress = (address?: Address) : boolean => 
   address === BURN_ADDRESS
-
-const useIsActiveAccountAddress = (address?: Address): boolean => {
-  const { exchangeContext } = useExchangeContext();
-  return address === exchangeContext.activeAccountAddress;
-};
 
 // *** WARNING: To be fixed for other networks ***
 const getNetworkWethAddress = (chainId: number) : Address | undefined => {
@@ -102,7 +97,7 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
 
 const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
   const chainId = exchangeContext.tradeData.chainId;
-  const isNativeToken = isActiveAddress(exchangeContext, tokenAddress);
+  const isNativeToken = isActiveAccountAddress(exchangeContext, tokenAddress);
 
   if (!tokenAddress) return defaultMissingImage;
 
@@ -117,6 +112,11 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
     default:
       return defaultMissingImage;
   }
+};
+
+const useIsActiveAccountAddress = (address?: Address): boolean => {
+  const { exchangeContext } = useExchangeContext();
+  return isActiveAccountAddress(exchangeContext, address)
 };
 
 const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
@@ -183,7 +183,7 @@ function delay(ms: number | undefined) {
 
 export {
   BURN_ADDRESS,
-  createNetworkJsonList,
+  // createNetworkJsonList,
   defaultMissingImage,
   delay,
   getAddressAvatar,
@@ -192,10 +192,10 @@ export {
   getNetworkWethAddress,
   getTokenAvatar,
   getWalletAvatar,
-  isActiveAddress,
-  isActiveBuyToken,
-  isActiveSellToken,
-  isActiveToken,
+  isActiveAccountAddress,
+  isActiveAccountBuyToken,
+  isActiveAccountSellToken,
+  isActiveAccountToken,
   isBlockChainSellToken,
   isBlockChainBuyToken,
   isBlockChainToken,
