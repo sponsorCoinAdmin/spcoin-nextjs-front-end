@@ -20,6 +20,7 @@ import {
   WalletAccount
 } from '@/lib/structure/types';
 import { useChainId } from 'wagmi';
+import { useMemo } from "react";
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
@@ -104,7 +105,7 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
   switch (dataFeedType) {
     case FEED_TYPE.AGENT_WALLETS:
     case FEED_TYPE.RECIPIENT_WALLETS:
-      return `assets/wallets/${tokenAddress}/avatar.png`;
+      return `assets/accounts/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
       return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
         ? getBlockChainAvatar(chainId)
@@ -133,23 +134,21 @@ const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress:
 const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
   const { exchangeContext } = useExchangeContext();
   return mapAccountAddrToWethAddr(exchangeContext, tokenAddress)
+  // return useMemo(() => mapAccountAddrToWethAddr(exchangeContext, tokenAddress), [exchangeContext, tokenAddress]);
 };
 
-// const isWrappingTransactionOLD = (
-//   sellTokenAddress?: Address, 
-//   buyTokenAddress?: Address
-// ): boolean => 
-//   !!(sellTokenAddress && buyTokenAddress && 
-//      useMapAccountAddrToWethAddr(sellTokenAddress) === useMapAccountAddrToWethAddr(buyTokenAddress));
-
-const isWrappingTransaction = (exchangeContext:ExchangeContext, tradeData:TradeData,
-): boolean => {
+const isWrappingTransaction = (exchangeContext: ExchangeContext, tradeData: TradeData): boolean => {
   const sellTokenAddress = tradeData.sellTokenContract?.address;
   const buyTokenAddress = tradeData.buyTokenContract?.address;
 
-  return (sellTokenAddress && buyTokenAddress && 
-    mapAccountAddrToWethAddr(exchangeContext, sellTokenAddress) === mapAccountAddrToWethAddr(exchangeContext, buyTokenAddress)) || false;
-  }
+  if (!sellTokenAddress || !buyTokenAddress) return false;
+
+  // ✅ Avoid redundant calls by caching mapped addresses
+  const mappedSell = mapAccountAddrToWethAddr(exchangeContext, sellTokenAddress);
+  const mappedBuy = mapAccountAddrToWethAddr(exchangeContext, buyTokenAddress);
+
+  return mappedSell === mappedBuy;
+};
 
 const getChainMap = (chainList: any[]): Map<number, any> => 
   new Map(chainList.map((e) => [e.chainId, e]));
@@ -169,7 +168,7 @@ const getTokenAvatar = (tokenContract?: TokenContract): string => {
 };
 
 const getWalletAvatar = (wallet?: WalletAccount): string => 
-  wallet ? `/assets/wallets/${wallet.address}/avatar.png` : defaultMissingImage;
+  wallet ? `/assets/accounts/${wallet.address}/avatar.png` : defaultMissingImage;
 
 
 // Utility function to create a default network JSON list (for debugging/testing)

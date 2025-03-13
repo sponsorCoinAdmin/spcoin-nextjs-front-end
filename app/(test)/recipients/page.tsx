@@ -1,7 +1,7 @@
 "use client";
 
 import { defaultMissingImage } from "@/lib/network/utils";
-import { loadWallets } from "@/lib/spCoin/loadWallets";
+import { loadAccounts } from "@/lib/spCoin/loadAccounts";
 import { publicWalletPath } from "@/lib/structure/types";
 import fs from "fs";
 import path from "path";
@@ -13,7 +13,7 @@ function checkAvatarExists(walletAddress: string): string {
 }
 
 export default async function WalletsPage() {
-    const wallets = await loadWallets(publicWalletPath); // Fetch wallets at build time
+    const wallets = await loadAccounts(publicWalletPath); // Fetch wallets at build time
 
     return <WalletsClient wallets={wallets} />;
 }

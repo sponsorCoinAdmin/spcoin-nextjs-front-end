@@ -104,7 +104,7 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
   switch (dataFeedType) {
     case FEED_TYPE.AGENT_WALLETS:
     case FEED_TYPE.RECIPIENT_WALLETS:
-      return `assets/wallets/${tokenAddress}/avatar.png`;
+      return `assets/accounts/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
       return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
         ? getBlockChainAvatar(chainId)
@@ -114,12 +114,16 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
   }
 };
 
-const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress: Address): Address | undefined => {
+const useIsActiveAccountAddress = (address?: Address): boolean => {
+  const { exchangeContext } = useExchangeContext();
+  return isActiveAccountAddress(exchangeContext, address)
+};
 
+const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress: Address): Address | undefined => {
   const chainId = exchangeContext.tradeData.chainId;
   const ethAct = exchangeContext.activeAccountAddress;
 
-  console.log(`useMapAccountAddrToWethAddr: chainId(${chainId}) 
+  console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
                Ethereum Account Address = ${ethAct} 
                Token Account Address = ${tokenAddress}`);
 
@@ -128,20 +132,24 @@ const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress:
 
 const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
   const { exchangeContext } = useExchangeContext();
-  return mapAccountAddrToWethAddr(exchangeContext, tokenAddress);
+  return mapAccountAddrToWethAddr(exchangeContext, tokenAddress)
 };
 
-const useIsActiveAccountAddress = (address?: Address): boolean => {
-  const { exchangeContext } = useExchangeContext();
-  return isActiveAccountAddress(exchangeContext, address )
-};
+// const isWrappingTransactionOLD = (
+//   sellTokenAddress?: Address, 
+//   buyTokenAddress?: Address
+// ): boolean => 
+//   !!(sellTokenAddress && buyTokenAddress && 
+//      useMapAccountAddrToWethAddr(sellTokenAddress) === useMapAccountAddrToWethAddr(buyTokenAddress));
 
-const isWrappingTransaction = (
-  sellTokenAddress?: Address, 
-  buyTokenAddress?: Address
-): boolean => 
-  !!(sellTokenAddress && buyTokenAddress && 
-     useMapAccountAddrToWethAddr(sellTokenAddress) === useMapAccountAddrToWethAddr(buyTokenAddress));
+const isWrappingTransaction = (exchangeContext:ExchangeContext, tradeData:TradeData,
+): boolean => {
+  const sellTokenAddress = tradeData.sellTokenContract?.address;
+  const buyTokenAddress = tradeData.buyTokenContract?.address;
+
+  return (sellTokenAddress && buyTokenAddress && 
+    mapAccountAddrToWethAddr(exchangeContext, sellTokenAddress) === mapAccountAddrToWethAddr(exchangeContext, buyTokenAddress)) || false;
+  }
 
 const getChainMap = (chainList: any[]): Map<number, any> => 
   new Map(chainList.map((e) => [e.chainId, e]));
@@ -161,7 +169,7 @@ const getTokenAvatar = (tokenContract?: TokenContract): string => {
 };
 
 const getWalletAvatar = (wallet?: WalletAccount): string => 
-  wallet ? `/assets/wallets/${wallet.address}/avatar.png` : defaultMissingImage;
+  wallet ? `/assets/accounts/${wallet.address}/avatar.png` : defaultMissingImage;
 
 
 // Utility function to create a default network JSON list (for debugging/testing)

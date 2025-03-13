@@ -22,7 +22,7 @@ import {
   defaultMissingImage,
   getAddressAvatar
 } from "@/lib/network/utils";
-import { loadWallets } from "@/lib/spCoin/loadWallets";
+import { loadAccounts } from "@/lib/spCoin/loadAccounts";
 
 // Token Lists
 import baseTokenList from "@/resources/data/networks/base/tokenList.json";
@@ -34,7 +34,7 @@ import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
 import { Address } from "viem";
 
-const publicWalletPath = "/path/to/public/wallets"; // Update as needed
+const publicWalletPath = "/assets/accounts"; // Update as needed
 
 // 🔹 Store active account address globally
 let ACTIVE_ACCOUNT_ADDRESS: Address;
@@ -55,8 +55,8 @@ const useWalletLists = () => {
     const fetchWallets = async () => {
       try {
         const [agents, recipients] = await Promise.all([
-          loadWallets(publicWalletPath, agentJsonList),
-          loadWallets(publicWalletPath, recipientJsonList),
+          loadAccounts(publicWalletPath, agentJsonList),
+          loadAccounts(publicWalletPath, recipientJsonList),
         ]);
         setAgentWalletList(agents || []);
         setRecipientWalletList(recipients || []);

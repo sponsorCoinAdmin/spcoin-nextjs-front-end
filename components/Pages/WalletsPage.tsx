@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { loadWallets } from "@/lib/spCoin/loadWallets";
+import { loadAccounts } from "@/lib/spCoin/loadAccounts";
 import { defaultMissingImage, getWalletAvatar } from "@/lib/network/utils";
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
@@ -36,7 +36,7 @@ export default function WalletsPage() {
             typeOfWallets === "Recipients" ? recipientJsonList :
             typeOfWallets === "Agents" ? agentJsonList : undefined;
 
-        const downloadedWallets = await loadWallets(publicWalletPath, walletList);
+        const downloadedWallets = await loadAccounts(publicWalletPath, walletList);
         setLoading(false); // Hide loading state
 
         // Update state and cache

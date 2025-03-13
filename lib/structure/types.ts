@@ -1,6 +1,6 @@
 import { Account, Address } from "viem";
 
-export const publicWalletPath: string = "assets/wallets";
+export const publicWalletPath: string = "assets/accounts";
 
 export interface WalletAddress {
     address: string;

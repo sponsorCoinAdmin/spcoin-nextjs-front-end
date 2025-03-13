@@ -39,7 +39,7 @@ const RecipientContainer: React.FC = () => {
   }, []);
 
   // ✅ Default URL if recipient website does not exist
-  const baseURL: string = getPublicFileUrl(`assets/wallets/site-info.html`);
+  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : "";
   let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
