@@ -5,7 +5,7 @@ alias va="vi \$ACTIVE_ENV_PATH/.a;a"
 alias ve="vi \$ACTIVE_ENV_PATH/.e;e"
 alias vm="vi \$ACTIVE_ENV_PATH/.m;m"
 
-alias runfe="cdfe; npm run dev 2>&1 | tee run.out"
+alias runfe="cdfe; clear; clear; npm run dev 2>&1 | tee run.out"
 
 # NPM SETUP
 alias npmi="npm install @sponsorcoin/spcoin-access-modules-cjs"
