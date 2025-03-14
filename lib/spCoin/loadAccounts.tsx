@@ -5,95 +5,78 @@ import * as path from "path";
 import { WalletAccount, WalletAddress } from "../structure/types";
 
 /**
- * Recursively finds wallet.json files.
+ * Reads account file list from JSON and loads corresponding account data.
+ * If jsonAccountFileList is provided, it loads specific accounts.
+ * Otherwise, it scans `public/assets/accounts/` for wallet.json files.
  *
- * @param rootDir - The base directory to search.
- * @returns An array of Wallet objects.
- */
-async function fetchWallets(rootDir: string): Promise<WalletAccount[]> {
-    const results: WalletAccount[] = [];
-    const absolutePath = path.join(process.cwd(), "public", rootDir);
-
-    try {
-        await fs.promises.access(absolutePath);
-    } catch (error) {
-        console.error(`Error: Directory '${absolutePath}' does not exist.`);
-        return results;
-    }
-
-    async function traverseDirectory(directory: string) {
-        const files = await fs.promises.readdir(directory);
-
-        for (const file of files) {
-            const fullPath = path.join(directory, file);
-            const stat = await fs.promises.stat(fullPath);
-
-            if (stat.isDirectory()) {
-                await traverseDirectory(fullPath); // Recursively search subdirectories
-            } else if (file === "wallet.json") {
-                try {
-                    const fileContent = await fs.promises.readFile(fullPath, "utf-8");
-                    const wallet: WalletAccount = JSON.parse(fileContent);
-
-                    // Validate that wallet has the required properties before pushing
-                    if (wallet && wallet.name && wallet.address) {
-                        results.push(wallet);
-                    } else {
-                        console.warn(`Invalid wallet data in ${fullPath}:`, wallet);
-                    }
-                } catch (error) {
-                    console.error(`Error reading JSON from ${fullPath}:`, error);
-                }
-            }
-        }
-    }
-
-    await traverseDirectory(absolutePath);
-    return results;
-}
-
-/**
- * Reads wallet file list from JSON and loads corresponding wallet data.
- * If jsonWalletFileList is provided, it loads wallets from the file list; otherwise, it scans the rootDir.
- * @param rootDir - Root directory containing wallet files.
- * @param jsonWalletFileList - Optional list of WalletAddress objects.
+ * @param jsonAccountFileList - Optional list of WalletAddress objects.
  * @returns Promise<WalletAccount[]>
  */
-export async function loadAccounts(rootDir: string, jsonWalletFileList: string | any[] | undefined): Promise<WalletAccount[]> {
+export async function loadAccounts(jsonAccountFileList?: WalletAddress[]): Promise<WalletAccount[]> {
+    console.log("🔄 Starting loadAccounts on the server...");
 
-    const absoluteRootPath = path.join(process.cwd(), "public", rootDir);
-    console.warn(`absoluteRootPath: ${absoluteRootPath}`);
-    console.warn(`jsonWalletFileList = ${JSON.stringify(jsonWalletFileList,null,2)}`)
-    if (jsonWalletFileList && jsonWalletFileList.length > 0) {
-        try {
-            const wallets: WalletAccount[] = [];
+    const accounts: WalletAccount[] = [];
+    const accountsDir = path.join(process.cwd(), "public", "assets", "accounts"); // ✅ Correct server-side path
 
-            for (const file of jsonWalletFileList) {
-                const walletDir = path.join(absoluteRootPath, file.address);
-                const walletFilePath = path.join(walletDir, "wallet.json"); // Ensuring the correct path
-                console.log(`walletFilePath: ${walletFilePath}`);
+    console.warn(`📜 jsonAccountFileList = ${JSON.stringify(jsonAccountFileList, null, 2)}`);
 
-                if (fs.existsSync(walletFilePath)) {
-                    try {
-                        const walletData = fs.readFileSync(walletFilePath, "utf-8");
-                        const wallet: WalletAccount = JSON.parse(walletData);
-                        wallets.push(wallet);
-                    } catch (error) {
-                        console.error(`ERROR: processing wallet file ${walletFilePath}:`, error);
-                    }
-                } else {
-                    console.error(`ERROR: Wallet file not found: ${walletFilePath}`);
+    // ✅ If `jsonAccountFileList` is provided, load specific accounts
+    if (jsonAccountFileList && jsonAccountFileList.length > 0) {
+        console.log("🔎 Loading accounts from provided list...");
+        for (const file of jsonAccountFileList) {
+            const accountFilePath = path.join(accountsDir, file.address, "wallet.json");
+
+            console.log(`📂 Checking account file: ${accountFilePath}`);
+
+            if (fs.existsSync(accountFilePath)) {
+                try {
+                    const accountData = fs.readFileSync(accountFilePath, "utf-8");
+                    const account: WalletAccount = JSON.parse(accountData);
+                    accounts.push(account);
+                } catch (error) {
+                    console.error(`❌ ERROR: Processing account file ${accountFilePath}:`, error);
                 }
+            } else {
+                console.error(`❌ ERROR: Account file not found: ${accountFilePath}`);
             }
-
-            // console.log(`wallets = ${JSON.stringify(wallets,null,2)}`)
-            console.warn(`=======================================================================================================`)
-            return wallets;
-        } catch (error:any) {
-            console.error("ERROR: loading wallets from list:", JSON.parse(error));
-            return [];
         }
     } else {
-        return fetchWallets(rootDir);
+        // ✅ If `jsonAccountFileList` is NOT provided, scan all `0x*` wallet directories
+        console.warn("📂 No jsonAccountFileList provided. Scanning directory for wallet.json files...");
+
+        if (!fs.existsSync(accountsDir)) {
+            console.error(`❌ ERROR: Accounts directory not found: ${accountsDir}`);
+            return [];
+        }
+
+        try {
+            const accountFolders = fs.readdirSync(accountsDir).filter((folder) =>
+                /^0x[a-fA-F0-9]{40}$/.test(folder) // ✅ Match Ethereum addresses
+            );
+
+            for (const accountFolder of accountFolders) {
+                const accountFilePath = path.join(accountsDir, accountFolder, "wallet.json");
+
+                console.log(`📂 Checking wallet file: ${accountFilePath}`);
+
+                if (fs.existsSync(accountFilePath)) {
+                    try {
+                        const accountData = fs.readFileSync(accountFilePath, "utf-8");
+                        const account: WalletAccount = JSON.parse(accountData);
+                        accounts.push(account);
+                    } catch (error) {
+                        console.error(`❌ ERROR: Reading account file ${accountFilePath}:`, error);
+                    }
+                } else {
+                    console.error(`❌ ERROR: Account file not found in directory: ${accountFilePath}`);
+                }
+            }
+        } catch (error: any) {
+            console.error("❌ ERROR: Scanning account directory:", error);
+            return [];
+        }
     }
+
+    console.warn(`✅ Loaded ${accounts.length} accounts.`);
+    return accounts;
 }

@@ -36,7 +36,7 @@ export default function WalletsPage() {
             typeOfWallets === "Recipients" ? recipientJsonList :
             typeOfWallets === "Agents" ? agentJsonList : undefined;
 
-        const downloadedWallets = await loadAccounts(publicWalletPath, walletList);
+        const downloadedWallets = await loadAccounts(walletList);
         setLoading(false); // Hide loading state
 
         // Update state and cache

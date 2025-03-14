@@ -34,8 +34,6 @@ import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
 import { Address } from "viem";
 
-const publicWalletPath = "/assets/accounts"; // Update as needed
-
 // 🔹 Store active account address globally
 let ACTIVE_ACCOUNT_ADDRESS: Address;
 
@@ -55,13 +53,14 @@ const useWalletLists = () => {
     const fetchWallets = async () => {
       try {
         const [agents, recipients] = await Promise.all([
-          loadAccounts(publicWalletPath, agentJsonList),
-          loadAccounts(publicWalletPath, recipientJsonList),
+          loadAccounts(agentJsonList),
+          loadAccounts(recipientJsonList),
         ]);
         setAgentWalletList(agents || []);
         setRecipientWalletList(recipients || []);
+        console.log("🔹 Loaded Recipient Wallets:", recipients);  // Debug Step 1 ✅
       } catch (error) {
-        console.error("Error loading wallets:", error);
+        console.error("❌ Error loading wallets:", error);
       }
     };
     fetchWallets();
@@ -113,11 +112,6 @@ const displayElementDetail = (tokenContract: any) => {
   alert(`${tokenContract?.name} Token Address = ${clone.address}`);
 };
 
-// 🔹 Set missing avatar
-const setMissingAvatar = (event: { currentTarget: { src: string } }) => {
-  event.currentTarget.src = defaultMissingImage;
-};
-
 // 🔹 Optimized `DataList` component
 const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TYPE; updateTokenCallback: (listElement: any) => void }) => {
   const [isClient, setIsClient] = useState(false);
@@ -132,7 +126,10 @@ const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TY
 
   /** ✅ Memoized Data Feed (Ensures it’s always an array) */
   const dataFeedList = useMemo(() => {
-    return isClient ? getDataFeedList(dataFeedType, chainId, walletLists) || [] : [];
+    const list = isClient ? getDataFeedList(dataFeedType, chainId, walletLists) : [];
+    console.log(`🔍 Computed DataFeedList for ${dataFeedType}:`, list);  // Debug Step 1 ✅
+    console.log(`📊 DataFeedList Length: ${list.length}`);
+    return Array.isArray(list) ? list : [];
   }, [dataFeedType, chainId, walletLists, isClient]);
 
   /** ✅ Memoized Avatars */
@@ -155,7 +152,12 @@ const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TY
       ) : (
         avatars.map((listElement, i) => (
           <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" key={listElement.address}>
-            <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(dataFeedList[i])}>
+            <div className="cursor-pointer flex flex-row justify-between"
+                 onClick={() => {
+                   console.log(`🖱 Clicked Element Index: ${i}`);
+                   console.log(`🖱 Clicked Element Data:`, dataFeedList[i]);  // Debug Step 1 ✅
+                   updateTokenCallback(dataFeedList[i]);
+                 }}>
               <img className={styles.elementLogo} src={listElement.avatar || defaultMissingImage} alt={`${listElement.name} Token Avatar`} />
               <div>
                 <div className={styles.elementName}>{listElement.name}</div>
