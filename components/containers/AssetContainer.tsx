@@ -33,23 +33,23 @@ import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
 
 type Props = {
-  activeContract: TokenContract | undefined;
   priceInputContainerType: CONTAINER_TYPE;
+  activeContract: TokenContract | undefined;
+  updateAmount: bigint;
+  setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
   setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
-  setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
   slippageBps: number;
-  updateAmount: bigint;
 };
 
 const priceInputContainer = ({
-  activeContract,
   priceInputContainerType,
+  activeContract,
+  updateAmount,
+  setTransactionType,
   setCallbackAmount,
   setTokenContractCallback,
-  setTransactionType,
   slippageBps,
-  updateAmount,
 }: Props) => {
 
   const { exchangeContext } = useExchangeContext();
