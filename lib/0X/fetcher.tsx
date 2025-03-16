@@ -99,8 +99,6 @@ const getPriceApiCall = (
 type Props = {
   sellTokenAddress?: Address;
   buyTokenAddress?: Address;
-  transactionType: TRANSACTION_TYPE;
-  slippageBps: number;
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
   setErrorMessage: (message?: ErrorMessage) => void;
@@ -110,8 +108,6 @@ type Props = {
 function usePriceAPI({
   sellTokenAddress: initialSellTokenAddress,
   buyTokenAddress: initialBuyTokenAddress,
-  transactionType,
-  slippageBps,
   setSellAmount,
   setBuyAmount,
   setErrorMessage,

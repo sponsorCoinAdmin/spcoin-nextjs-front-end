@@ -65,10 +65,8 @@ export default function PriceView() {
 
   // ✅ Ensure `usePriceAPI` is called at the top level
   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
-    transactionType,
     sellTokenAddress,
     buyTokenAddress,
-    slippageBps,
     setBuyAmount,
     setSellAmount,
     setErrorMessage,
