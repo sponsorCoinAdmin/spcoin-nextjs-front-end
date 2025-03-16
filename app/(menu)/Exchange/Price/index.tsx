@@ -68,8 +68,6 @@ export default function PriceView() {
     transactionType,
     sellTokenAddress,
     buyTokenAddress,
-    sellAmount,
-    buyAmount,
     slippageBps,
     setBuyAmount,
     setSellAmount,

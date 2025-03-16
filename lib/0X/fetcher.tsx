@@ -1,11 +1,12 @@
 import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
-import { useExchangeContext } from '@/lib/context/ExchangeContext';
+import { useExchangeContext, useTradeData } from '@/lib/context/ExchangeContext';
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from "wagmi";
+
 
 // Constants
 const SELL_AMOUNT_ZERO = 100;
@@ -99,8 +100,6 @@ type Props = {
   sellTokenAddress?: Address;
   buyTokenAddress?: Address;
   transactionType: TRANSACTION_TYPE;
-  sellAmount: bigint;
-  buyAmount: bigint;
   slippageBps: number;
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
@@ -112,8 +111,6 @@ function usePriceAPI({
   sellTokenAddress: initialSellTokenAddress,
   buyTokenAddress: initialBuyTokenAddress,
   transactionType,
-  sellAmount,
-  buyAmount,
   slippageBps,
   setSellAmount,
   setBuyAmount,
@@ -122,6 +119,7 @@ function usePriceAPI({
 }: Props) {
   // ✅ Hooks MUST be at the top level
   const { exchangeContext } = useExchangeContext();
+  const tradeData = useTradeData();
   const chainId = useChainId();
 
   // ✅ Convert addresses *after* hooks are defined
@@ -143,7 +141,14 @@ function usePriceAPI({
   return useSWR(
     () =>
       shouldFetch(sellTokenAddress, buyTokenAddress)
-        ? getPriceApiCall(transactionType, chainId, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount, slippageBps)
+        ? getPriceApiCall(
+          tradeData.transactionType,
+          chainId,
+          sellTokenAddress,
+          buyTokenAddress,
+          tradeData.sellAmount,
+          tradeData.buyAmount,
+          tradeData.slippageBps)
         : null,
     fetcher,
     {
@@ -153,7 +158,12 @@ function usePriceAPI({
               status: STATUS.ERROR_API_PRICE,
               source: "ApiFetcher: ",
               errCode: data.code,
-              msg: getApiErrorTransactionData(exchangeContext, sellTokenAddress, buyTokenAddress, sellAmount, data), // ✅ Fix: pass exchangeContext
+              msg: getApiErrorTransactionData(
+                exchangeContext,
+                sellTokenAddress,
+                buyTokenAddress,
+                tradeData.sellAmount,
+                data), // ✅ Fix: pass exchangeContext
             })
           : setBuyAmount(data.buyAmount || 0n),
       onError: (error) =>
