@@ -12,7 +12,7 @@ import { Address } from "viem";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Context & Styles
-import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+import { useExchangeContext, useTradeData} from "@/lib/context/ExchangeContext";  // ✅ Use Hook
 import styles from "@/styles/Exchange.module.css";
 
 // Components
@@ -33,47 +33,41 @@ import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
 
 type Props = {
-  activeContract: TokenContract | undefined;
   priceInputContainerType: CONTAINER_TYPE;
   setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
   setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
   slippageBps: number;
-  updateAmount: bigint;
 };
 
 const priceInputContainer = ({
-  activeContract,
   priceInputContainerType,
   setCallbackAmount,
   setTokenContractCallback,
   setTransactionType,
   slippageBps,
-  updateAmount,
 }: Props) => {
 
   const { exchangeContext } = useExchangeContext();
-  const tradeData: TradeData = exchangeContext.tradeData;
+  const tradeData = useTradeData();
   const signer = tradeData.signer;
   const provider = signer?.provider;
 
-  // Determine initial state based on price input type
-  const initialAmount: bigint | undefined =
-    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
-      ? tradeData?.sellAmount : tradeData?.buyAmount;
+  const updateAmount:bigint = priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    ? tradeData?.sellAmount : tradeData?.buyAmount;
+  const activeContract = priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    ? tradeData?.sellTokenContract : tradeData?.buyTokenContract;
+  const [amount, setAmount] = useState<bigint>(priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    ? tradeData?.sellAmount : tradeData?.buyAmount);
+  const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    ? tradeData?.sellTokenContract : tradeData?.buyTokenContract);
 
-  const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
   const [balanceInWei, setBalanceInWei] = useState<bigint>();
-  const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
-    priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
-      ? tradeData?.sellTokenContract : tradeData?.buyTokenContract
-  );
-
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS: Address = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
-  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address || BURN_ADDRESS as Address;
+  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address || BURN_ADDRESS;
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() => {
@@ -113,34 +107,18 @@ const priceInputContainer = ({
     setAmount(updateAmount);
   }, [updateAmount]);
 
-  // const bigIntBalanceOf: bigint | undefined = useWagmiERC20TokenBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
-  // useEffect(() => {
-  //   if (bigIntBalanceOf) {
-  //     alert(`bigIntBalanceOf: ${bigIntBalanceOf}`)
-  //   }
-  // }, [bigIntBalanceOf]);
-  
-  // const getBalanceInWei = async () => {
-  //   if (isActiveNetworkAddress(exchangeContext, TOKEN_CONTRACT_ADDRESS)) {
-  //     await delay(400);
-  //     const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
-  //     setBalanceInWei(newBal);
-  //   } else {
-  //     if (TOKEN_CONTRACT_ADDRESS && TOKEN_CONTRACT_ADDRESS !== BURN_ADDRESS && signer) {
-  //       const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
-  //       const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
-  //       setBalanceInWei(newBal);
-  //     } else {
-  //       setBalanceInWei(undefined);
-  //     }
-  //   }
-  // };
-
   useEffect(() => {
     if (activeContract) {
       activeContract.balance = balanceInWei || 0n;
     }
   }, [balanceInWei]);
+
+  useEffect(() => {
+    if (activeContract) {
+      // activeContract.balance = useBalanceInWei || 0n;
+      alert(`useBalanceInWei = ${stringifyBigInt()}`)
+    }
+  }, [useBalanceInWei]);
 
   useEffect(() => {
     // const balanceInWei = useBalanceInWei(TOKEN_CONTRACT_ADDRESS, provider, signer)
@@ -181,7 +159,7 @@ const priceInputContainer = ({
     setAmount(bigIntValue);
   };
 
-  const buySellText = isWrappingTransaction(exchangeContext, tradeData) ?
+  const buySellText = isWrappingTransaction(exchangeContext) ?
     priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
     tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
       priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippageBps * 100}%` :

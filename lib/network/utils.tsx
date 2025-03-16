@@ -26,11 +26,12 @@ const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-const isActiveAccountSellToken = (exchangeContext:ExchangeContext, tradeData: TradeData ): boolean =>
-  tradeData.sellTokenContract ? isActiveAccountToken(exchangeContext, tradeData.sellTokenContract) : false;
+const isActiveAccountSellToken = (exchangeContext:ExchangeContext): boolean =>
+  exchangeContext?.tradeData?.sellTokenContract ? isActiveAccountToken(exchangeContext,
+    exchangeContext.tradeData.sellTokenContract) : false;
 
-const isActiveAccountBuyToken = (exchangeContext:ExchangeContext, tradeData: TradeData): boolean =>
-  tradeData.buyTokenContract ? isActiveAccountToken(exchangeContext, tradeData.buyTokenContract) : false;
+const isActiveAccountBuyToken = (exchangeContext:ExchangeContext): boolean =>
+  exchangeContext?.tradeData.buyTokenContract ? isActiveAccountToken(exchangeContext, exchangeContext.tradeData.buyTokenContract) : false;
 
 const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract ) =>
   isActiveAccountAddress(exchangeContext, tokenContract.address);
@@ -63,11 +64,11 @@ const isNativeTokenAddress = (address?: Address) : boolean => {
   return address === NATIVE_TOKEN_ADDRESS;
 }
 
-const isBlockChainSellToken = (exchangeContext:ExchangeContext, tradeData: TradeData) : boolean =>
-  tradeData.sellTokenContract ? isBlockChainToken(exchangeContext, tradeData.sellTokenContract) : false;
+const isBlockChainSellToken = (exchangeContext:ExchangeContext) : boolean =>
+  exchangeContext?.tradeData?.sellTokenContract ? isBlockChainToken(exchangeContext, exchangeContext.tradeData.sellTokenContract) : false;
 
-const isBlockChainBuyToken = (exchangeContext:ExchangeContext, tradeData: TradeData) : boolean =>
-  tradeData.buyTokenContract ? isBlockChainToken(exchangeContext, tradeData.buyTokenContract) : false;
+const isBlockChainBuyToken = (exchangeContext:ExchangeContext) : boolean =>
+  exchangeContext?.tradeData?.buyTokenContract ? isBlockChainToken(exchangeContext, exchangeContext.tradeData.buyTokenContract) : false;
 
 const isBlockChainToken = (exchangeContext:ExchangeContext, tokenContract: TokenContract) : boolean => {
     return isActiveAccountToken(exchangeContext, tokenContract) ||
@@ -137,9 +138,9 @@ const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined
   // return useMemo(() => mapAccountAddrToWethAddr(exchangeContext, tokenAddress), [exchangeContext, tokenAddress]);
 };
 
-const isWrappingTransaction = (exchangeContext: ExchangeContext, tradeData: TradeData): boolean => {
-  const sellTokenAddress = tradeData.sellTokenContract?.address;
-  const buyTokenAddress = tradeData.buyTokenContract?.address;
+const isWrappingTransaction = (exchangeContext: ExchangeContext): boolean => {
+  const sellTokenAddress = exchangeContext.tradeData.sellTokenContract?.address;
+  const buyTokenAddress = exchangeContext.tradeData.buyTokenContract?.address;
 
   if (!sellTokenAddress || !buyTokenAddress) return false;
 

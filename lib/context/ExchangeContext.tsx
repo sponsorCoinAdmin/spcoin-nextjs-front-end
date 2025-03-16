@@ -55,3 +55,11 @@ export const useExchangeContext = () => {
   }
   return context;
 };
+
+export const useTradeData = () => {
+  const { exchangeContext } = useExchangeContext();
+  if (!exchangeContext) {
+    throw new Error("useTradeData must be used within a Wrapper.");
+  }
+  return exchangeContext.tradeData;
+};

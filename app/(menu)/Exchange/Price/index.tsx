@@ -50,7 +50,7 @@ export default function PriceView() {
 
   // ✅ Move `useMemo` to top level
   const isWrapTransaction = useMemo(() => {
-    return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(exchangeContext, tradeData) : false;
+    return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(exchangeContext) : false;
   }, [sellTokenAddress, buyTokenAddress]);
 
   // ✅ Move `useCallback` to top level before passing it to `usePriceAPI`
@@ -74,7 +74,7 @@ export default function PriceView() {
     setBuyAmount,
     setSellAmount,
     setErrorMessage,
-    apiErrorCallBack, 
+    apiErrorCallBack
   });
 
   // ✅ Ensure `useEffect` only references values, not hooks
@@ -140,21 +140,17 @@ export default function PriceView() {
         <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
         <PriceInputContainer
           priceInputContainerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
-          updateAmount={sellAmount}
-          activeContract={sellTokenContract}
           setCallbackAmount={setSellAmount}
-          slippageBps={slippageBps}
-          setTransactionType={setTransactionType}
           setTokenContractCallback={setSellTokenContract}
+          setTransactionType={setTransactionType}
+          slippageBps={slippageBps}
         />
         <PriceInputContainer
           priceInputContainerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
-          updateAmount={buyAmount}
-          activeContract={buyTokenContract}
           setCallbackAmount={setBuyAmount}
-          slippageBps={slippageBps}
-          setTransactionType={setTransactionType}
           setTokenContractCallback={setBuyTokenContract}
+          setTransactionType={setTransactionType}
+          slippageBps={slippageBps}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
         <PriceButton 
