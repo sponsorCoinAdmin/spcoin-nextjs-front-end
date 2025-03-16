@@ -140,17 +140,21 @@ export default function PriceView() {
         <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
         <PriceInputContainer
           priceInputContainerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
+          updateAmount={sellAmount}
+          activeContract={sellTokenContract}
           setCallbackAmount={setSellAmount}
-          setTokenContractCallback={setSellTokenContract}
-          setTransactionType={setTransactionType}
           slippageBps={slippageBps}
+          setTransactionType={setTransactionType}
+          setTokenContractCallback={setSellTokenContract}
         />
         <PriceInputContainer
           priceInputContainerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
+          updateAmount={buyAmount}
+          activeContract={buyTokenContract}
           setCallbackAmount={setBuyAmount}
-          setTokenContractCallback={setBuyTokenContract}
-          setTransactionType={setTransactionType}
           slippageBps={slippageBps}
+          setTransactionType={setTransactionType}
+          setTokenContractCallback={setBuyTokenContract}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
         <PriceButton 
