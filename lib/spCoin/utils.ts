@@ -42,7 +42,7 @@ const getValidFormattedPrice = (value: string | bigint, decimals: number | undef
   return "0";
 };
 
-const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (amount: bigint) => void) => {
+const setValidTokenInput = (txt: string, decimals: number, setSellAmount: (amount: bigint) => void) => {
   txt = getValidFormattedPrice(txt, decimals);
   if (!isNaN(Number(txt))) setSellAmount(parseUnits(txt, decimals));
   return txt;
@@ -175,7 +175,7 @@ export {
   invalidTokenContract,
   isSpCoin,
   logAlert,
-  setValidPriceInput,
+  setValidTokenInput,
   updateBalance,
   stringifyBigInt
 };

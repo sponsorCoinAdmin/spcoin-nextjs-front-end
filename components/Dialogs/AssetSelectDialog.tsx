@@ -20,13 +20,13 @@ const TITLE_NAME = "Select a token to select";
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
 
 type Props = {
-  priceInputContainerType: CONTAINER_TYPE;
+  containerType: CONTAINER_TYPE;
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;
   callBackSetter: (tokenContract: TokenContract) => void;
 };
 
-export default function Dialog({ priceInputContainerType, showDialog, setShowDialog, callBackSetter }: Props) {
+export default function Dialog({ containerType, showDialog, setShowDialog, callBackSetter }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
@@ -63,11 +63,11 @@ export default function Dialog({ priceInputContainerType, showDialog, setShowDia
   const isDuplicateToken = useCallback(
     (tokenAddress: string | undefined): boolean => {
       if (!tokenAddress) return false;
-      return priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      return containerType === CONTAINER_TYPE.INPUT_SELL_PRICE
         ? exchangeContext.tradeData.buyTokenContract?.address === tokenAddress
         : exchangeContext.tradeData.sellTokenContract?.address === tokenAddress;
     },
-    [priceInputContainerType, exchangeContext.tradeData]
+    [containerType, exchangeContext.tradeData]
   );
 
   /** 📌 Clone Network Token if Needed */

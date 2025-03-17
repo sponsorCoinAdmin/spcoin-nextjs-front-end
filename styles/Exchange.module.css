@@ -557,7 +557,7 @@
   margin: auto;
 }
 
-.priceInputContainer {
+.tokenInputContainer {
   margin-top: 5px;
   margin-bottom: 5px;
   /* transform: translate(0px, -10px); */
@@ -569,7 +569,7 @@
   border-radius: 15px;
 }
 
-.priceInput {
+.tokenInput {
   width: 100%;
   text-indent: 10px;
   height: 106px !important;
@@ -581,7 +581,7 @@
   border-radius: 12px !important;
 }
 
-.priceInput:focus{
+.tokenInput:focus{
   outline: none;
 }
 
