@@ -22,7 +22,7 @@ import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
 import { BURN_ADDRESS, delay, isWrappingTransaction } from "@/lib/network/utils";
-import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from "@/lib/spCoin/utils";
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedValue, getValidFormattedPrice, isSpCoin } from "@/lib/spCoin/utils";
 import { formatDecimals, useWagmiERC20TokenBalanceOf } from "@/lib/wagmi/wagmiERC20ClientRead";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 
@@ -62,8 +62,8 @@ const tokenSelectContainer = ({
     containerType === CONTAINER_TYPE.INPUT_SELL_PRICE
       ? tradeData?.sellAmount : tradeData?.buyAmount;
 
-      const [sellAmount, setSellAmount] = useSellAmount(tradeData.sellAmount);
-      const [buyAmount, setBuyAmount] = useBuyAmount(tradeData.sellAmount);
+  const [sellAmount, setSellAmount] = useSellAmount();
+  const [buyAmount, setBuyAmount] = useBuyAmount();
       
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
@@ -115,36 +115,33 @@ const tokenSelectContainer = ({
   }, [debouncedAmount])
 
   useEffect(() => {
-    const decimals: number = activeContract?.decimals || 0;
-    const stringValue: string = getValidBigIntToFormattedPrice(updateAmount, decimals)
-    if (stringValue !== "") {
-      setFormattedAmount(stringValue);
-    }
-    setAmount(updateAmount);
-  }, [updateAmount]);
+    // if (tradeData.transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
+    // else
 
-  // const bigIntBalanceOf: bigint | undefined = useWagmiERC20TokenBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
-  // useEffect(() => {
-  //   if (bigIntBalanceOf) {
-  //     alert(`bigIntBalanceOf: ${bigIntBalanceOf}`)
-  //   }
-  // }, [bigIntBalanceOf]);
-  
-  // const getBalanceInWei = async () => {
-  //   if (isActiveNetworkAddress(exchangeContext, TOKEN_CONTRACT_ADDRESS)) {
-  //     await delay(400);
-  //     const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
-  //     setBalanceInWei(newBal);
-  //   } else {
-  //     if (TOKEN_CONTRACT_ADDRESS && TOKEN_CONTRACT_ADDRESS !== BURN_ADDRESS && signer) {
-  //       const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
-  //       const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
-  //       setBalanceInWei(newBal);
-  //     } else {
-  //       setBalanceInWei(undefined);
-  //     }
-  //   }
-  // };
+    const decimals: number = activeContract?.decimals || 0;
+    const formattedAmount: string = getValidBigIntToFormattedValue(buyAmount, decimals)
+    if (formattedAmount !== "") {
+      setFormattedAmount(formattedAmount);
+    }
+
+    let msg = "";
+
+    if (containerType === CONTAINER_TYPE.INPUT_SELL_PRICE)
+      msg += `TransSelectContainer Type               = INPUT_SELL_PRICE\n`
+    else
+      msg += `TransSelectContainer Type               = INPUT_BUY_PRICE\n`
+    if (tradeData.transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
+      msg += `TRANS_DIRECTION                         = BUY_EXACT_IN\n`
+    else
+      msg += `TRANS_DIRECTION                       = SELL_EXACT_OUT\n`
+    msg   += `tokenSelectContainer:sellAmount       = ${sellAmount}\n`
+    msg   += `tokenSelectContainer:buyAmount        = ${buyAmount}\n`
+    msg   += `tokenSelectContainer:updateAmount     = ${updateAmount}\n`
+    msg   += `tokenSelectContainer:formattedAmount  = ${formattedAmount}\n`
+    alert(msg);
+
+    setAmount(updateAmount);
+  }, [sellAmount,buyAmount]);
 
   useEffect(() => {
     if (activeContract) {
@@ -216,6 +213,30 @@ const tokenSelectContainer = ({
       {isSpCoin(tokenContract) ? (containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? <ManageSponsorsButton tokenContract={tokenContract} /> : <AddSponsorButton />) : null}
     </div>
   );
+
+  // const bigIntBalanceOf: bigint | undefined = useWagmiERC20TokenBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
+  // useEffect(() => {
+  //   if (bigIntBalanceOf) {
+  //     alert(`bigIntBalanceOf: ${bigIntBalanceOf}`)
+  //   }
+  // }, [bigIntBalanceOf]);
+  
+  // const getBalanceInWei = async () => {
+  //   if (isActiveNetworkAddress(exchangeContext, TOKEN_CONTRACT_ADDRESS)) {
+  //     await delay(400);
+  //     const newBal = await provider?.getBalance(TOKEN_CONTRACT_ADDRESS);
+  //     setBalanceInWei(newBal);
+  //   } else {
+  //     if (TOKEN_CONTRACT_ADDRESS && TOKEN_CONTRACT_ADDRESS !== BURN_ADDRESS && signer) {
+  //       const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, erc20ABI, signer);
+  //       const newBal: bigint = await tokenContract.balanceOf(ACTIVE_ACCOUNT_ADDRESS);
+  //       setBalanceInWei(newBal);
+  //     } else {
+  //       setBalanceInWei(undefined);
+  //     }
+  //   }
+  // };
+
 };
 
 export default tokenSelectContainer;

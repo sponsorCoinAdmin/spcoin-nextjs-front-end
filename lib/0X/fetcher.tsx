@@ -125,7 +125,6 @@ function usePriceAPI({
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount, setSellAmount] = useSellAmount();
   
-
   const sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialSellTokenAddress as Address, isActiveSellAccount));
   const buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialBuyTokenAddress as Address, isActiveBuyAccount));
 

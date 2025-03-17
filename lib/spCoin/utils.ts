@@ -21,7 +21,7 @@ function getQueryVariable(_urlParams: string, _searchParam: string) {
   return "";
 }
 
-const getValidBigIntToFormattedPrice = (value: bigint | undefined, decimals: number | undefined) => {
+const getValidBigIntToFormattedValue = (value: bigint | undefined, decimals: number | undefined) => {
   decimals = decimals || 0;
   let stringValue: string = formatUnits(value || 0n, decimals);
   return getValidFormattedPrice(stringValue, decimals);
@@ -33,11 +33,11 @@ const getValidFormattedPrice = (value: string | bigint, decimals: number | undef
   const re = /^-?\d+(?:[.,]\d*?)?$/;
   if (price === '' || re.test(price)) {
     let splitText = price.split(".");
-    let formattedPrice: string = splitText[0].replace(/^0+/, "") || "0";
+    let formattedValue: string = splitText[0].replace(/^0+/, "") || "0";
     if (splitText[1] !== undefined) {
-      formattedPrice += "." + splitText[1].substring(0, decimals);
+      formattedValue += "." + splitText[1].substring(0, decimals);
     }
-    return formattedPrice;
+    return formattedValue;
   }
   return "0";
 };
@@ -168,7 +168,7 @@ export {
   fetchTokenDetails,
   getPublicFileUrl,
   getValidAddress,
-  getValidBigIntToFormattedPrice,
+  getValidBigIntToFormattedValue,
   getValidFormattedPrice,
   getQueryVariable,
   getTokenDetails,
