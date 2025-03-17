@@ -36,13 +36,13 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
   
-    if (isActiveAccountSellToken(exchangeContext, tradeData)) {
+    if (isActiveAccountSellToken(exchangeContext)) {
       return isWrappedBuyToken(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
         : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
-    if (isActiveAccountBuyToken(exchangeContext, tradeData)) {
+    if (isActiveAccountBuyToken(exchangeContext)) {
       return isWrappedSellToken(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
         : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
