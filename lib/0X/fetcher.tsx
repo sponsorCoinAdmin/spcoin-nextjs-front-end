@@ -146,8 +146,8 @@ function usePriceAPI({
           chainId,
           sellTokenAddress,
           buyTokenAddress,
-          tradeData.sellAmount,
-          tradeData.buyAmount,
+          sellAmount,
+          buyAmount,
           tradeData.slippageBps)
         : null,
     fetcher,
@@ -162,7 +162,7 @@ function usePriceAPI({
                 exchangeContext,
                 sellTokenAddress,
                 buyTokenAddress,
-                tradeData.sellAmount,
+                sellAmount,
                 data), // ✅ Fix: pass exchangeContext
             })
           : setBuyAmount(data.buyAmount || 0n),
