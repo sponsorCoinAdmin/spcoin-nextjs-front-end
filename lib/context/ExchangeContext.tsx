@@ -13,6 +13,10 @@ import { ExchangeContext } from "@/lib/structure/types";
 type ExchangeContextType = {
   exchangeContext: ExchangeContext;
   setExchangeContext: (context: ExchangeContext) => void;
+  sellAmount: bigint;
+  setSellAmount: (amount: bigint) => void;
+  buyAmount: bigint;
+  setBuyAmount: (amount: bigint) => void;
 };
 
 // ✅ Create Context
@@ -24,6 +28,8 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
   // ✅ Start with stored context, but wait for `chainId` before initializing a new one
   const [exchangeContext, setExchangeContext] = useState<ExchangeContext | null>(null);
+  const [sellAmount, setSellAmount] = useState<bigint>(BigInt(0));
+  const [buyAmount, setBuyAmount] = useState<bigint>(BigInt(0));
 
   // ✅ Load initial context once `chainId` is available
   useEffect(() => {
@@ -41,7 +47,9 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ExchangeContextState.Provider value={{ exchangeContext, setExchangeContext }}>
+    <ExchangeContextState.Provider
+      value={{ exchangeContext, setExchangeContext, sellAmount, setSellAmount, buyAmount, setBuyAmount }}
+    >
       {children}
     </ExchangeContextState.Provider>
   );
@@ -62,4 +70,27 @@ export const useTradeData = () => {
     throw new Error("useTradeData must be used within a Wrapper.");
   }
   return exchangeContext.tradeData;
+};
+
+// ✅ Custom hooks for using sellAmount and buyAmount with initial value like useState
+export const useSellAmount = (initialAmount: bigint = BigInt(0)) => {
+  const context = useExchangeContext();
+  const [localSellAmount, setLocalSellAmount] = useState<bigint>(context.sellAmount || initialAmount);
+
+  useEffect(() => {
+    context.setSellAmount(localSellAmount);
+  }, [localSellAmount]);
+
+  return [localSellAmount, setLocalSellAmount] as const;
+};
+
+export const useBuyAmount = (initialAmount: bigint = BigInt(0)) => {
+  const context = useExchangeContext();
+  const [localBuyAmount, setLocalBuyAmount] = useState<bigint>(context.buyAmount || initialAmount);
+
+  useEffect(() => {
+    context.setBuyAmount(localBuyAmount);
+  }, [localBuyAmount]);
+
+  return [localBuyAmount, setLocalBuyAmount] as const;
 };

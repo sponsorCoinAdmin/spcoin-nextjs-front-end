@@ -12,7 +12,7 @@ import { Address } from "viem";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Context & Styles
-import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
 import styles from "@/styles/Exchange.module.css";
 
 // Components
@@ -62,6 +62,9 @@ const priceInputContainer = ({
     priceInputContainerType === CONTAINER_TYPE.INPUT_SELL_PRICE
       ? tradeData?.sellAmount : tradeData?.buyAmount;
 
+      const [sellAmount, setSellAmount] = useSellAmount(tradeData.sellAmount);
+      const [buyAmount, setBuyAmount] = useBuyAmount(tradeData.sellAmount);
+      
   const [amount, setAmount] = useState<bigint>(initialAmount);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
@@ -80,6 +83,13 @@ const priceInputContainer = ({
     const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
     setFormattedAmount(formattedAmount);
   }, []);
+
+  useEffect(() => {
+    if (tradeData.transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+      alert(`TRANSACTION_TYPE.BUY_EXACT_IN -> AssetContainer:sellAmount = ${sellAmount}`)
+    else
+      alert(`TRANSACTION_TYPE.BUY_EXACT_OUT -> AssetContainer:buyAmount  = ${buyAmount}`)
+  }, [sellAmount, buyAmount]);
 
   useEffect(() => {
     console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)

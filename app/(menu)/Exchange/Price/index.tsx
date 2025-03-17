@@ -6,13 +6,13 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAccount } from 'wagmi';
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
 import { 
-  TokenContract, 
-  ErrorMessage, 
-  TRANSACTION_TYPE, 
+  TokenContract,
+  ErrorMessage,
+  TRANSACTION_TYPE,
   CONTAINER_TYPE, 
-  STATUS, 
-  TradeData, 
-  HARDHAT 
+  STATUS,
+  TradeData,
+  HARDHAT
 } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -20,8 +20,8 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useExchangeContext } from "@/lib/context/ExchangeContext";  
-import PriceInputContainer from '@/components/containers/AssetContainer';
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  
+import PriceInputContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
@@ -34,8 +34,8 @@ export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
 
-  const [sellAmount, setSellAmount] = useState<bigint>(tradeData.sellAmount);
-  const [buyAmount, setBuyAmount] = useState<bigint>(tradeData.buyAmount);
+  const [sellAmount, setSellAmount] = useSellAmount(tradeData.sellAmount);
+  const [buyAmount, setBuyAmount] = useBuyAmount(tradeData.buyAmount);
   const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();

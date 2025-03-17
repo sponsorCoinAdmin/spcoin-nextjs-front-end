@@ -21,7 +21,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { useExchangeContext } from "@/lib/context/ExchangeContext";  
-import PriceInputContainer from '@/components/containers/AssetContainer';
+import PriceInputContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
