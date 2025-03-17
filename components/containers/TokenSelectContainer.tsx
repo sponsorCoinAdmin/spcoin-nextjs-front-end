@@ -17,7 +17,7 @@ import styles from "@/styles/Exchange.module.css";
 
 // Components
 import AddSponsorButton from "../Buttons/AddSponsorButton";
-import TokenSelect from "./AssetSelect";
+import TokenSelect from "./TokenSelectDropDown";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
