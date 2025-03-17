@@ -1,4 +1,4 @@
-import { PriceRequestParams, TRANSACTION_TYPE, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
+import { PriceRequestParams, TRANS_DIRECTION, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
 import { useExchangeContext } from '@/lib/context/ExchangeContext';
@@ -71,7 +71,7 @@ const getApiErrorTransactionData = (
 };
 
 const getPriceApiCall = (
-  transactionType: TRANSACTION_TYPE,
+  transDirection: TRANS_DIRECTION,
   chainId: number,
   sellTokenAddress: Address | undefined,
   buyTokenAddress: Address | undefined,
@@ -79,8 +79,8 @@ const getPriceApiCall = (
   buyAmount: bigint,
   slippageBps?: number
 ) => {
-  return (sellAmount === 0n && transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) ||
-    (buyAmount === 0n && transactionType === TRANSACTION_TYPE.BUY_EXACT_IN)
+  return (sellAmount === 0n && transDirection === TRANS_DIRECTION.SELL_EXACT_OUT) ||
+    (buyAmount === 0n && transDirection === TRANS_DIRECTION.BUY_EXACT_IN)
     ? undefined
     : [
         apiPriceBase,
@@ -88,8 +88,8 @@ const getPriceApiCall = (
           chainId: chainId,
           sellToken: sellTokenAddress,
           buyToken: buyTokenAddress,
-          sellAmount: transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ? sellAmount.toString() : undefined,
-          buyAmount: transactionType === TRANSACTION_TYPE.BUY_EXACT_IN ? buyAmount.toString() : undefined,
+          sellAmount: transDirection === TRANS_DIRECTION.SELL_EXACT_OUT ? sellAmount.toString() : undefined,
+          buyAmount: transDirection === TRANS_DIRECTION.BUY_EXACT_IN ? buyAmount.toString() : undefined,
           slippageBps: slippageBps
         },
       ];
@@ -98,7 +98,7 @@ const getPriceApiCall = (
 type Props = {
   sellTokenAddress?: Address;
   buyTokenAddress?: Address;
-  transactionType: TRANSACTION_TYPE;
+  transDirection: TRANS_DIRECTION;
   sellAmount: bigint;
   buyAmount: bigint;
   slippageBps: number;
@@ -111,7 +111,7 @@ type Props = {
 function usePriceAPI({
   sellTokenAddress: initialSellTokenAddress,
   buyTokenAddress: initialBuyTokenAddress,
-  transactionType,
+  transDirection,
   sellAmount,
   buyAmount,
   slippageBps,
@@ -143,7 +143,7 @@ function usePriceAPI({
   return useSWR(
     () =>
       shouldFetch(sellTokenAddress, buyTokenAddress)
-        ? getPriceApiCall(transactionType, chainId, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount, slippageBps)
+        ? getPriceApiCall(transDirection, chainId, sellTokenAddress, buyTokenAddress, sellAmount, buyAmount, slippageBps)
         : null,
     fetcher,
     {

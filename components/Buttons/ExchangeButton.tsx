@@ -2,7 +2,7 @@
 
 import styles from '@/styles/Exchange.module.css'
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
-import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANSACTION_TYPE, TokenContract, TradeData } from '@/lib/structure/types';
+import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANS_DIRECTION, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
 import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, isWrappedSellToken } from '@/lib/network/utils';
 
@@ -22,7 +22,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
-  const transactionType: string = tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+  const transDirection: string = tradeData.transDirection === TRANS_DIRECTION.SELL_EXACT_OUT ?
     "EXACT OUT " : "EXACT IN "
 
   // ✅ Set the button type dynamically
@@ -39,16 +39,16 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
     if (isActiveAccountSellToken(exchangeContext, tradeData)) {
       return isWrappedBuyToken(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
-        : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
+        : `${transDirection} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
     if (isActiveAccountBuyToken(exchangeContext, tradeData)) {
       return isWrappedSellToken(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
-        : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
+        : `${transDirection} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
     }
   
-    return `${transactionType} SWAP`;
+    return `${transDirection} SWAP`;
   };
   
   // ✅ Button text based on state

@@ -27,7 +27,7 @@ import { formatDecimals, useWagmiERC20TokenBalanceOf } from "@/lib/wagmi/wagmiER
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 
 // Types & Constants
-import { CONTAINER_TYPE, TokenContract, TradeData, TRANSACTION_TYPE } from "@/lib/structure/types";
+import { CONTAINER_TYPE, TokenContract, TradeData, TRANS_DIRECTION } from "@/lib/structure/types";
 
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
@@ -36,7 +36,7 @@ type Props = {
   containerType: CONTAINER_TYPE;
   activeContract: TokenContract | undefined;
   updateAmount: bigint;
-  setTransactionType: (transactionType: TRANSACTION_TYPE) => void;
+  setTransDirection: (transDirection: TRANS_DIRECTION) => void;
   setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
   slippageBps: number;
@@ -46,7 +46,7 @@ const tokenInputContainer = ({
   containerType,
   activeContract,
   updateAmount,
-  setTransactionType,
+  setTransDirection,
   setCallbackAmount,
   setTokenContractCallback,
   slippageBps,
@@ -175,9 +175,9 @@ const tokenInputContainer = ({
 
   const setTextInputValue = (stringValue: string) => {
     setStringToBigIntStateValue(stringValue);
-    setTransactionType(containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
-      TRANSACTION_TYPE.SELL_EXACT_OUT :
-      TRANSACTION_TYPE.BUY_EXACT_IN);
+    setTransDirection(containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+      TRANS_DIRECTION.SELL_EXACT_OUT :
+      TRANS_DIRECTION.BUY_EXACT_IN);
   };
 
   const setStringToBigIntStateValue = (stringValue: string) => {
@@ -190,7 +190,7 @@ const tokenInputContainer = ({
 
   const buySellText = isWrappingTransaction(exchangeContext) ?
     containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
-    tradeData.transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT ?
+    tradeData.transDirection === TRANS_DIRECTION.SELL_EXACT_OUT ?
       containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippageBps * 100}%` :
       containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippageBps * 100}%` : "You Exactly Receive";
 

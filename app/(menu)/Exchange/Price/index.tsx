@@ -8,7 +8,7 @@ import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
 import { 
   TokenContract, 
   ErrorMessage, 
-  TRANSACTION_TYPE, 
+  TRANS_DIRECTION, 
   CONTAINER_TYPE, 
   STATUS, 
   TradeData, 
@@ -42,7 +42,7 @@ export default function PriceView() {
   const [resetAmounts, setResetAmounts] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
-  const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
+  const [transDirection, setTransDirection] = useState<TRANS_DIRECTION>(tradeData.transDirection);
   const [toggleButton, setToggleButton] = useState<boolean>(false);
 
   const sellTokenAddress = sellTokenContract?.address;
@@ -65,7 +65,7 @@ export default function PriceView() {
 
   // ✅ Ensure `usePriceAPI` is called at the top level
   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
-    transactionType,
+    transDirection,
     sellTokenAddress,
     buyTokenAddress,
     sellAmount,
@@ -98,13 +98,13 @@ export default function PriceView() {
   }, [ACTIVE_ACCOUNT.address, sellTokenContract, buyTokenContract, exchangeContext]);
 
   useEffect(() => {
-    if (!isWrapTransaction || !transactionType) return;
-    if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+    if (!isWrapTransaction || !transDirection) return;
+    if (transDirection === TRANS_DIRECTION.SELL_EXACT_OUT) {
       setBuyAmount(sellAmount);
-    } else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+    } else if (transDirection === TRANS_DIRECTION.BUY_EXACT_IN) {
       setSellAmount(buyAmount);
     }
-  }, [buyAmount, sellAmount, isWrapTransaction, transactionType]);
+  }, [buyAmount, sellAmount, isWrapTransaction, transDirection]);
 
   useEffect(() => {
     if (resetAmounts) {
@@ -142,7 +142,7 @@ export default function PriceView() {
           containerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
           activeContract={sellTokenContract}
           updateAmount={sellAmount}
-          setTransactionType={setTransactionType}
+          setTransDirection={setTransDirection}
           setCallbackAmount={setSellAmount}
           setTokenContractCallback={setSellTokenContract}
           slippageBps={slippageBps}
@@ -151,7 +151,7 @@ export default function PriceView() {
           containerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
           activeContract={buyTokenContract}
           updateAmount={buyAmount}
-          setTransactionType={setTransactionType}
+          setTransDirection={setTransDirection}
           setCallbackAmount={setBuyAmount}
           setTokenContractCallback={setBuyTokenContract}
           slippageBps={slippageBps}
