@@ -34,8 +34,8 @@ export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
 
-  const [sellAmount, setSellAmount] = useSellAmount(tradeData.sellAmount);
-  const [buyAmount, setBuyAmount] = useBuyAmount(tradeData.buyAmount);
+  const [sellAmount, setSellAmount] = useSellAmount();
+  const [buyAmount, setBuyAmount] = useBuyAmount();
   const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
