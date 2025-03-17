@@ -67,8 +67,8 @@ export default function PriceView() {
   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
     sellTokenAddress,
     buyTokenAddress,
-    setBuyAmount,
-    setSellAmount,
+    // setBuyAmount,
+    // setSellAmount,
     setErrorMessage,
     apiErrorCallBack
   });

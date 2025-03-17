@@ -72,25 +72,28 @@ export const useTradeData = () => {
   return exchangeContext.tradeData;
 };
 
-// ✅ Custom hooks for using sellAmount and buyAmount with initial value like useState
-export const useSellAmount = (initialAmount: bigint = BigInt(0)) => {
+// ✅ Custom hooks for using sellAmount and buyAmount with global state management
+export const useSellAmount = () => {
   const context = useExchangeContext();
-  const [localSellAmount, setLocalSellAmount] = useState<bigint>(context.sellAmount || initialAmount);
-
-  useEffect(() => {
-    context.setSellAmount(localSellAmount);
-  }, [localSellAmount]);
-
-  return [localSellAmount, setLocalSellAmount] as const;
+  return [context.sellAmount, context.setSellAmount] as const;
 };
 
-export const useBuyAmount = (initialAmount: bigint = BigInt(0)) => {
+export const useBuyAmount = () => {
   const context = useExchangeContext();
-  const [localBuyAmount, setLocalBuyAmount] = useState<bigint>(context.buyAmount || initialAmount);
+  return [context.buyAmount, context.setBuyAmount] as const;
+};
 
-  useEffect(() => {
-    context.setBuyAmount(localBuyAmount);
-  }, [localBuyAmount]);
+// ✅ Example usage component
+export const PriceDisplay = () => {
+  const [sellAmount, setSellAmount] = useSellAmount();
+  const [buyAmount, setBuyAmount] = useBuyAmount();
 
-  return [localBuyAmount, setLocalBuyAmount] as const;
+  return (
+    <div>
+      <h2>Sell Amount: {sellAmount.toString()}</h2>
+      <h2>Buy Amount: {buyAmount.toString()}</h2>
+      <button onClick={() => setSellAmount(sellAmount + BigInt(1))}>Increase Sell Amount</button>
+      <button onClick={() => setBuyAmount(buyAmount + BigInt(1))}>Increase Buy Amount</button>
+    </div>
+  );
 };

@@ -1,7 +1,7 @@
 import { PriceRequestParams, TRANS_DIRECTION, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
-import { useExchangeContext, useTradeData } from '@/lib/context/ExchangeContext';
+import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from '@/lib/context/ExchangeContext';
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
@@ -99,8 +99,8 @@ const getPriceApiCall = (
 type Props = {
   sellTokenAddress?: Address;
   buyTokenAddress?: Address;
-  setSellAmount: (amount: bigint) => void;
-  setBuyAmount: (amount: bigint) => void;
+  // setSellAmount: (amount: bigint) => void;
+  // setBuyAmount: (amount: bigint) => void;
   setErrorMessage: (message?: ErrorMessage) => void;
   apiErrorCallBack: (error: ErrorMessage) => void;
 };
@@ -108,8 +108,8 @@ type Props = {
 function usePriceAPI({
   sellTokenAddress: initialSellTokenAddress,
   buyTokenAddress: initialBuyTokenAddress,
-  setSellAmount,
-  setBuyAmount,
+  // setSellAmount,
+  // setBuyAmount,
   setErrorMessage,
   apiErrorCallBack
 }: Props) {
@@ -121,6 +121,10 @@ function usePriceAPI({
   // ✅ Convert addresses *after* hooks are defined
   const isActiveSellAccount = useIsActiveAccountAddress(initialSellTokenAddress as Address);
   const isActiveBuyAccount = useIsActiveAccountAddress(initialBuyTokenAddress as Address);
+
+  const [buyAmount, setBuyAmount] = useBuyAmount(tradeData.buyAmount);
+  const [sellAmount, setSellAmount] = useSellAmount(tradeData.buyAmount);
+  
 
   const sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialSellTokenAddress as Address, isActiveSellAccount));
   const buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialBuyTokenAddress as Address, isActiveBuyAccount));
