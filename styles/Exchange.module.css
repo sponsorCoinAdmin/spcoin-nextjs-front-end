@@ -500,7 +500,7 @@
   padding-right: 8px;
 }
 
-.RecipientContainer {
+.AccountSelectContainer {
   /* top: 100px; */
 
   background-color: #1f2639 !important;
@@ -557,7 +557,7 @@
   margin: auto;
 }
 
-.priceInputContainer {
+.tokenSelectContainer {
   margin-top: 5px;
   margin-bottom: 5px;
   /* transform: translate(0px, -10px); */

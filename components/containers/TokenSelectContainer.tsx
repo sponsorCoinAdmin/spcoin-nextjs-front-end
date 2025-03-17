@@ -42,7 +42,7 @@ type Props = {
   slippageBps: number;
 };
 
-const priceInputContainer = ({
+const tokenSelectContainer = ({
   containerType,
   activeContract,
   updateAmount,
@@ -92,7 +92,7 @@ const priceInputContainer = ({
   // }, [sellAmount, buyAmount]);
 
   useEffect(() => {
-    console.debug(`***priceInputContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
+    console.debug(`***tokenSelectContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
     containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
       tradeData.sellTokenContract = tokenContract :
       tradeData.buyTokenContract = tokenContract;
@@ -205,7 +205,7 @@ const priceInputContainer = ({
       containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippageBps * 100}%` : "You Exactly Receive";
 
   return (
-    <div className={styles["inputs"] + " " + styles["priceInputContainer"]}>
+    <div className={styles["inputs"] + " " + styles["tokenSelectContainer"]}>
       <input className={styles.priceInput} placeholder="0" disabled={!activeContract} value={formattedAmount || ""}
         onChange={(e) => { setTextInputValue(e.target.value) }}
         onBlur={(e) => { setFormattedAmount(parseFloat(e.target.value).toString()) }}
@@ -218,4 +218,4 @@ const priceInputContainer = ({
   );
 };
 
-export default priceInputContainer;
+export default tokenSelectContainer;

@@ -12,7 +12,6 @@ import {
     getTokenAvatar,
     isBlockChainToken
 } from "@/lib/network/utils";
-import { useExchangeContext } from "@/lib/context/ExchangeContext";
 
 type Props = {
     containerType: CONTAINER_TYPE;
@@ -28,15 +27,13 @@ function AssetSelect({ containerType, tokenContract, setDecimalAdjustedContract,
     console.debug("🛠 exchangeContext in AssetSelect:", stringifyBigInt(exchangeContext));
 
     /** ✅ Hooks must always execute in the same order */
-    const { tradeData, activeAccountAddress } = exchangeContext;
-    const chainId = tradeData.chainId;
-    const tokenAddress = tokenContract?.address;
+    const { tradeData } = exchangeContext;
 
     /** 📌 Memoized function to get the token avatar */
     const avatarSrc = useMemo(() => {
         if (!tokenContract || !tokenContract.address) return defaultMissingImage;
         return isBlockChainToken(exchangeContext, tokenContract)
-            ? getBlockChainAvatar(tokenContract.chainId || 1)
+            ? getBlockChainAvatar(tokenContract.chainId || 1 )
             : getTokenAvatar(tokenContract);
     }, [tokenContract]);
 

@@ -21,7 +21,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  
-import PriceInputContainer from '@/components/containers/TokenSelectContainer';
+import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
 import { stringifyBigInt } from '@/lib/spCoin/utils';
@@ -134,7 +134,7 @@ export default function PriceView() {
       <ErrorDialog errMsg={errorMessage} showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
         <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
-        <PriceInputContainer
+        <TokenSelectContainer
           containerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
           activeContract={sellTokenContract}
           updateAmount={sellAmount}
@@ -143,7 +143,7 @@ export default function PriceView() {
           setTokenContractCallback={setSellTokenContract}
           slippageBps={slippageBps}
         />
-        <PriceInputContainer
+        <TokenSelectContainer
           containerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
           activeContract={buyTokenContract}
           updateAmount={buyAmount}

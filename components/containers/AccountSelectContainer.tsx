@@ -15,7 +15,7 @@ import RecipientSelect from "./AccountSelectDropDown";
 import { displaySpCoinContainers, toggleSponsorRateConfig } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/utils";
 
-const RecipientContainer: React.FC = () => {
+const AccountSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Access global context
 
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
@@ -63,7 +63,7 @@ const RecipientContainer: React.FC = () => {
 
   return (
     <>
-      <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.RecipientContainer)}>
+      <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.AccountSelectContainer)}>
         <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
         {recipientWallet && siteExists ? (
@@ -97,4 +97,4 @@ const RecipientContainer: React.FC = () => {
   );
 };
 
-export default RecipientContainer;
+export default AccountSelectContainer;

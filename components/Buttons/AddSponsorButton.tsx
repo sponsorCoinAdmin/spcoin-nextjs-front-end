@@ -3,7 +3,7 @@ import styles from "@/styles/Exchange.module.css";
 import { SP_COIN_DISPLAY, TokenContract } from "@/lib/structure/types";
 import { displaySpCoinContainers } from "@/lib/spCoin/guiControl";
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
-import RecipientContainer from "../containers/AccountSelectContainer";
+import AccountSelectContainer from "../containers/AccountSelectContainer";
 
 const AddSponsorshipButton = () => {
   const { exchangeContext } = useExchangeContext();
@@ -24,7 +24,7 @@ const AddSponsorshipButton = () => {
         <div className={styles.centerBottom}>Sponsorship</div>
       </div>
       <div id="RecipientSelect_ID" className={styles.hidden}>
-        <RecipientContainer />
+        <AccountSelectContainer />
       </div>
     </>
   );
