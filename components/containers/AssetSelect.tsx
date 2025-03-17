@@ -15,13 +15,13 @@ import {
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 
 type Props = {
-    priceInputContainerType: CONTAINER_TYPE;
+    containerType: CONTAINER_TYPE;
     tokenContract: TokenContract | undefined;
     setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
     exchangeContext: ExchangeContext; // ✅ Pass exchangeContext from parent
 };
 
-function AssetSelect({ priceInputContainerType, tokenContract, setDecimalAdjustedContract, exchangeContext }: Props) {    /** ✅ Always call hooks in the same order */
+function AssetSelect({ containerType, tokenContract, setDecimalAdjustedContract, exchangeContext }: Props) {    /** ✅ Always call hooks in the same order */
     const [showDialog, setShowDialog] = useState<boolean>(false);
 
     console.debug("🛠 AssetSelect is rendering on:", typeof window !== "undefined" ? "Client ✅" : "Server ❌");
@@ -60,7 +60,7 @@ function AssetSelect({ priceInputContainerType, tokenContract, setDecimalAdjuste
     return (
         <>
             <TokenSelectDialog
-                priceInputContainerType={priceInputContainerType}
+                containerType={containerType}
                 showDialog={showDialog}
                 setShowDialog={setShowDialog}
                 callBackSetter={setDecimalAdjustedContract}

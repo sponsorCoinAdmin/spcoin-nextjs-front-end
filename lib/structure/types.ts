@@ -83,7 +83,7 @@ enum SWAP_TYPE {
 }
 
 // Transaction Types
-enum TRANSACTION_TYPE {
+enum TRANS_DIRECTION {
   BUY_EXACT_IN,
   SELL_EXACT_OUT
 }
@@ -163,7 +163,7 @@ type TradeData = {
   signer: any;
   slippageBps: number;
   swapType: SWAP_TYPE;
-  transactionType: TRANSACTION_TYPE;
+  transactionType: TRANS_DIRECTION;
 };
 
 // Exports
@@ -175,7 +175,7 @@ export {
   SP_COIN_DISPLAY,
   STATUS,
   SWAP_TYPE,
-  TRANSACTION_TYPE,
+  TRANS_DIRECTION,
   BASE,
   ETHEREUM,
   HARDHAT,

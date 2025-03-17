@@ -8,7 +8,7 @@ import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
 import { 
   TokenContract, 
   ErrorMessage, 
-  TRANSACTION_TYPE, 
+  TRANS_DIRECTION, 
   CONTAINER_TYPE, 
   STATUS, 
   TradeData, 
@@ -42,7 +42,7 @@ export default function PriceView() {
   const [resetAmounts, setResetAmounts] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
-  const [transactionType, setTransactionType] = useState<TRANSACTION_TYPE>(tradeData.transactionType);
+  const [transactionType, setTransactionType] = useState<TRANS_DIRECTION>(tradeData.transactionType);
   const [toggleButton, setToggleButton] = useState<boolean>(false);
 
   const sellTokenAddress = sellTokenContract?.address;
@@ -99,9 +99,9 @@ export default function PriceView() {
 
   useEffect(() => {
     if (!isWrapTransaction || !transactionType) return;
-    if (transactionType === TRANSACTION_TYPE.SELL_EXACT_OUT) {
+    if (transactionType === TRANS_DIRECTION.SELL_EXACT_OUT) {
       setBuyAmount(sellAmount);
-    } else if (transactionType === TRANSACTION_TYPE.BUY_EXACT_IN) {
+    } else if (transactionType === TRANS_DIRECTION.BUY_EXACT_IN) {
       setSellAmount(buyAmount);
     }
   }, [buyAmount, sellAmount, isWrapTransaction, transactionType]);
@@ -139,7 +139,7 @@ export default function PriceView() {
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
         <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
         <PriceInputContainer
-          priceInputContainerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
+          containerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
           updateAmount={sellAmount}
           activeContract={sellTokenContract}
           setCallbackAmount={setSellAmount}
@@ -148,7 +148,7 @@ export default function PriceView() {
           setTokenContractCallback={setSellTokenContract}
         />
         <PriceInputContainer
-          priceInputContainerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
+          containerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
           updateAmount={buyAmount}
           activeContract={buyTokenContract}
           setCallbackAmount={setBuyAmount}

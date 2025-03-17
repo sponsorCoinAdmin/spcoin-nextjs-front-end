@@ -7,7 +7,7 @@ import defaultHardHatSettings from "@/resources/data/networks/hardhat/initialize
 import defaultSoliditySettings from "@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json";
 import { 
     SWAP_TYPE, 
-    TRANSACTION_TYPE, 
+    TRANS_DIRECTION, 
     NetworkElement, 
     WalletAccount, 
     SP_COIN_DISPLAY, 
@@ -57,7 +57,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
         tradeData: {
             signer: undefined,
             chainId,
-            transactionType: TRANSACTION_TYPE.SELL_EXACT_OUT,
+            transactionType: TRANS_DIRECTION.SELL_EXACT_OUT,
             swapType: SWAP_TYPE.UNDEFINED,
             sellAmount: 0n,
             buyAmount: 0n,
