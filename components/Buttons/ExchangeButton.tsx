@@ -1,7 +1,7 @@
 'use client'
 
 import styles from '@/styles/Exchange.module.css'
-import { useExchangeContext } from "@/lib/context/ExchangeContext";
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANS_DIRECTION, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
 import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, isWrappedSellToken } from '@/lib/network/utils';
@@ -19,6 +19,8 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   // ✅ Use useExchangeContext() instead of direct reference
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
+  const [sellAmount, setSellAmount] = useSellAmount();
+  const [buyAmount, setBuyAmount] = useBuyAmount();
   
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
@@ -82,7 +84,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   const insufficientSellBalance = () => {
     let insufficientBalance: boolean = false;
     try {
-      const tradeAmount = tradeData.sellAmount;
+      const tradeAmount = sellAmount;
       const sellTradeBalance = tradeData.sellTokenContract?.balance || 0n;
       insufficientBalance = sellTradeBalance < tradeAmount;
 
@@ -110,7 +112,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   }
 
   const amountRequired = (): boolean => {
-    return tradeData.sellAmount === 0n && tradeData.buyAmount === 0n
+    return sellAmount === 0n && buyAmount === 0n
   }
 
   // ✅ Determine the button type dynamically

@@ -1,7 +1,7 @@
 "use client";
 
 import { SWAP_TYPE, TradeData } from "@/lib/structure/types";
-import { useExchangeContext } from "@/lib/context/ExchangeContext";
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";
 import { stringifyBigInt } from "../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils";
 
 import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6";
@@ -19,6 +19,8 @@ import { useCallback } from "react";
 const useSwapFunctions = () => {
     const { exchangeContext } = useExchangeContext(); // ✅ Moved to the top level (Rules of Hooks)
     const tradeData = exchangeContext.tradeData;
+  const [sellAmount, setSellAmount] = useSellAmount();
+  const [buyAmount, setBuyAmount] = useBuyAmount();
 
     // ✅ Fix: Instantiate `wethMethods` inside the hook
     const wethMethods = new WethMethods();
@@ -28,7 +30,7 @@ const useSwapFunctions = () => {
         console.log(`WRAP:` + stringifyBigInt(tradeData));
         alert(`WRAP`);
 
-        const weiDepositAmount: bigint = tradeData.sellAmount;
+        const weiDepositAmount: bigint = sellAmount;
         const signer = tradeData.signer;
         const chainId = tradeData.chainId;
         const weth9Address = wethMethods.getWeth9NetworkAddress(chainId);
@@ -42,7 +44,7 @@ const useSwapFunctions = () => {
         console.log(`UNWRAP:` + stringifyBigInt(tradeData));
         alert(`UN_WRAP`);
 
-        const weiWithdrawAmount: bigint = tradeData.sellAmount;
+        const weiWithdrawAmount: bigint = sellAmount;
         const signer = tradeData.signer;
         const chainId = tradeData.chainId;
         const weth9Address = wethMethods.getWeth9NetworkAddress(chainId);
@@ -68,13 +70,13 @@ const useSwapFunctions = () => {
 
         const getSwapState = () => {
             let swapType: SWAP_TYPE = SWAP_TYPE.UNDEFINED;
-            if (isActiveAccountSellToken(exchangeContext, tradeData)) {
-                if (isActiveAccountBuyToken(exchangeContext, tradeData)) {
+            if (isActiveAccountSellToken(exchangeContext)) {
+                if (isActiveAccountBuyToken(exchangeContext)) {
                     swapType = SWAP_TYPE.SWAP;
-                } else if (isBlockChainBuyToken(exchangeContext, tradeData)) {
+                } else if (isBlockChainBuyToken(exchangeContext)) {
                     swapType = isWrappedSellToken(tradeData) ? SWAP_TYPE.UNWRAP : SWAP_TYPE.SWAP_UNWRAP;
                 }
-            } else if (isBlockChainSellToken(exchangeContext, tradeData)) {
+            } else if (isBlockChainSellToken(exchangeContext)) {
                 swapType = isWrappedBuyToken(tradeData) ? SWAP_TYPE.WRAP : SWAP_TYPE.WRAP_SWAP;
             } else {
                 swapType = SWAP_TYPE.UNDEFINED;

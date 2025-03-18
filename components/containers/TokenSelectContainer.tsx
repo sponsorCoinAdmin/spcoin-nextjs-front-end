@@ -107,8 +107,8 @@ const tokenSelectContainer = ({
 
     // activeContract.amount = debouncedAmount;
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
-      tradeData.sellAmount = debouncedAmount :
-      tradeData.buyAmount = debouncedAmount;
+    setSellAmount(debouncedAmount) :
+    setBuyAmount(debouncedAmount);
     setCallbackAmount(debouncedAmount)
   }, [debouncedAmount])
 
