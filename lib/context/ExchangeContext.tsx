@@ -7,7 +7,8 @@ import {
   saveExchangeContext,
   loadStoredExchangeContext,
 } from "@/lib/context/ExchangeHelpers";
-import { ExchangeContext } from "@/lib/structure/types";
+import { ErrorMessage, ExchangeContext } from "@/lib/structure/types";
+import { usePriceAPI } from "../0X/fetcher";
 
 // ✅ Define Context Type
 type ExchangeContextType = {
@@ -96,4 +97,20 @@ export const PriceDisplay = () => {
       <button onClick={() => setBuyAmount(buyAmount + BigInt(1))}>Increase Buy Amount</button>
     </div>
   );
+};
+
+
+type PriceAPIFetchProps = {
+  setErrorMessage: (message?: ErrorMessage) => void;
+  apiErrorCallBack: (error: ErrorMessage) => void;
+};
+
+// ✅ Hook to wrap usePriceAPI and return the same elements
+export const usePriceAPIFetch = ({ setErrorMessage, apiErrorCallBack }:PriceAPIFetchProps) => {
+  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
+    setErrorMessage,
+    apiErrorCallBack
+  });
+
+  return { isLoading: isLoadingPrice, data: priceData, error: PriceError };
 };
