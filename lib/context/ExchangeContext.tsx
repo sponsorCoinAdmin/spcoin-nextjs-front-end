@@ -18,6 +18,9 @@ type ExchangeContextType = {
   setSellAmount: (amount: bigint) => void;
   buyAmount: bigint;
   setBuyAmount: (amount: bigint) => void;
+  isLoadingPrice: boolean;
+  priceData: any; // Adjust this type if needed
+  PriceError: ErrorMessage | null;
 };
 
 // ✅ Create Context
@@ -27,8 +30,10 @@ const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const chainId = useChainId(); // ✅ Hook is at the top level
 
-  // ✅ Start with stored context, but wait for `chainId` before initializing a new one
-  const [exchangeContext, setExchangeContext] = useState<ExchangeContext | null>(null);
+  // ✅ Start with stored context, but ensure it's non-null when rendering
+  const [exchangeContext, setExchangeContext] = useState<ExchangeContext>(
+    loadStoredExchangeContext() || getInitialContext(chainId || 1) // Default to chainId 1 if unavailable
+  );
   const [sellAmount, setSellAmount] = useState<bigint>(BigInt(0));
   const [buyAmount, setBuyAmount] = useState<bigint>(BigInt(0));
 
@@ -42,14 +47,19 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [chainId]);
 
-  // ✅ Ensure we don’t render the provider with `null` context
-  if (!exchangeContext) {
-    return null; // Render nothing until `exchangeContext` is ready
-  }
-
   return (
     <ExchangeContextState.Provider
-      value={{ exchangeContext, setExchangeContext, sellAmount, setSellAmount, buyAmount, setBuyAmount }}
+      value={{
+        exchangeContext,
+        setExchangeContext,
+        sellAmount,
+        setSellAmount,
+        buyAmount,
+        setBuyAmount,
+        isLoadingPrice: false, // Placeholder, update this if needed
+        priceData: null, // Placeholder, update this if needed
+        PriceError: null, // Placeholder, update this if needed
+      }}
     >
       {children}
     </ExchangeContextState.Provider>
@@ -67,9 +77,6 @@ export const useExchangeContext = () => {
 
 export const useTradeData = () => {
   const { exchangeContext } = useExchangeContext();
-  if (!exchangeContext) {
-    throw new Error("useTradeData must be used within a Wrapper.");
-  }
   return exchangeContext.tradeData;
 };
 
@@ -99,18 +106,17 @@ export const PriceDisplay = () => {
   );
 };
 
-
 type PriceAPIFetchProps = {
   setErrorMessage: (message?: ErrorMessage) => void;
   apiErrorCallBack: (error: ErrorMessage) => void;
 };
 
 // ✅ Hook to wrap usePriceAPI and return the same elements
-export const usePriceAPIFetch = ({ setErrorMessage, apiErrorCallBack }:PriceAPIFetchProps) => {
+export const usePriceAPIFetch = ({ setErrorMessage, apiErrorCallBack }: PriceAPIFetchProps) => {
   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
     setErrorMessage,
     apiErrorCallBack
   });
 
-  return { isLoading: isLoadingPrice, data: priceData, error: PriceError };
+  return { isLoadingPrice, priceData, PriceError };
 };
