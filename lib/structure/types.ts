@@ -157,7 +157,8 @@ type TokenContract = {
 
 type TradeData = {
   buyTokenContract?: TokenContract;
-  chainId: number;  sellTokenContract?: TokenContract;
+  chainId: number;  
+  sellTokenContract?: TokenContract;
   signer: any;
   slippageBps: number;
   swapType: SWAP_TYPE;
