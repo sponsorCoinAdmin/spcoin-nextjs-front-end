@@ -20,7 +20,7 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useBuyAmount, useExchangeContext, usePriceAPIFetch, usePriceState, useSellAmount } from "@/lib/context/ExchangeContext";  
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
@@ -64,7 +64,7 @@ export default function PriceView() {
   }, []);
 
   // ✅ Ensure `usePriceAPI` is called at the top level
-  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPIFetch({
+  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
     setErrorMessage,
     apiErrorCallBack
   });
