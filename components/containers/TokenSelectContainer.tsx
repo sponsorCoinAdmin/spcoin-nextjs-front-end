@@ -12,7 +12,7 @@ import { Address } from "viem";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Context & Styles
-import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
 import styles from "@/styles/Exchange.module.css";
 
 // Components
@@ -34,8 +34,6 @@ import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
 
 type Props = {
   containerType: CONTAINER_TYPE;
-  activeContract: TokenContract | undefined;
-  updateAmount: bigint;
   setTransactionType: (transactionType: TRANS_DIRECTION) => void;
   setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
@@ -44,8 +42,6 @@ type Props = {
 
 const tokenSelectContainer = ({
   containerType,
-  activeContract,
-  updateAmount,
   setTransactionType,
   setCallbackAmount,
   setTokenContractCallback,
@@ -53,34 +49,34 @@ const tokenSelectContainer = ({
 }: Props) => {
 
   const { exchangeContext } = useExchangeContext();
-  const tradeData: TradeData = exchangeContext.tradeData;
+  const tradeData: TradeData = useTradeData();
   const signer = tradeData.signer;
   const provider = signer?.provider;
 
-  // Determine initial state based on price input type
-  const initialAmount: bigint | undefined =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? tradeData?.sellAmount : tradeData?.buyAmount;
+  let updateAmount;
+  let activeContract;
+  if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+    activeContract = tradeData.sellTokenContract;
+  else
+    activeContract = tradeData.buyTokenContract;
+  // if (!activeContract)
+  //   return
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
-      
-  const [amount, setAmount] = useState<bigint>(initialAmount);
+  const [amount, setAmount] = useState<bigint>(activeContract?.amount || 0n);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
   const [balanceInWei, setBalanceInWei] = useState<bigint>();
-  const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? tradeData?.sellTokenContract : tradeData?.buyTokenContract
-  );
+  const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(activeContract);
 
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS: Address = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
-  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address || BURN_ADDRESS as Address;
+  const TOKEN_CONTRACT_ADDRESS: Address = activeContract?.address || BURN_ADDRESS as Address;
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() => {
-    const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
+    const formattedAmount = getValidFormattedPrice(amount, activeContract?.decimals || 0);
     setFormattedAmount(formattedAmount);
   }, []);
 
@@ -108,6 +104,8 @@ const tokenSelectContainer = ({
 
   useEffect(() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
+
+    // activeContract.amount = debouncedAmount;
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
       tradeData.sellAmount = debouncedAmount :
       tradeData.buyAmount = debouncedAmount;
@@ -117,6 +115,13 @@ const tokenSelectContainer = ({
   useEffect(() => {
     // if (tradeData.transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
     // else
+
+    let updateAmount;
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+      updateAmount = sellAmount
+    else
+      updateAmount = buyAmount
+  
 
     const decimals: number = activeContract?.decimals || 0;
     const formattedAmount: string = getValidBigIntToFormattedValue(buyAmount, decimals)
@@ -142,8 +147,6 @@ const tokenSelectContainer = ({
 
     // if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
     //   if (tradeData.transactionType === TRANS_DIRECTION.SELL_EXACT_OUT)
-
-
 
     setAmount(updateAmount);
   }, [sellAmount,buyAmount]);

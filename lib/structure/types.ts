@@ -145,6 +145,7 @@ type NetworkElement = {
 
 type TokenContract = {
   address: Address;
+  amount:bigint;
   balance: bigint;
   chainId?: number;
   decimals?: number;

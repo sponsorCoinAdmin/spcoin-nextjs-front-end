@@ -69,12 +69,6 @@ export default function PriceView() {
     apiErrorCallBack
   });
 
-  // const { isLoadingPrice, priceData, PriceError, refreshPriceData } = usePriceState({
-  //   setErrorMessage: (message) => console.error("Error Message:", message),
-  //   apiErrorCallBack: (error) => console.error("API Error:", error),
-  // });
-
-
   // ✅ Ensure `useEffect` only references values, not hooks
   useEffect(() => {
     if (!ACTIVE_ACCOUNT.chainId || ACTIVE_ACCOUNT.chainId === tradeData?.chainId) return;
@@ -95,19 +89,8 @@ export default function PriceView() {
     exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
   }, [ACTIVE_ACCOUNT.address, sellTokenContract, buyTokenContract, exchangeContext]);
 
-  useEffect(() => {
-    if (!isWrapTransaction || !transactionType) return;
-    if (transactionType === TRANS_DIRECTION.SELL_EXACT_OUT) {
-      setBuyAmount(sellAmount);
-    } else if (transactionType === TRANS_DIRECTION.BUY_EXACT_IN) {
-      setSellAmount(buyAmount);
-    }
-  }, [buyAmount, sellAmount, isWrapTransaction, transactionType]);
-
-  useEffect(() => {
+    useEffect(() => {
     if (resetAmounts) {
-      tradeData.sellAmount = 0n;
-      tradeData.buyAmount = 0n;
       setBuyAmount(0n);
       setSellAmount(0n);
       setResetAmounts(false);
@@ -138,8 +121,6 @@ export default function PriceView() {
         <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
         <TokenSelectContainer
           containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
-          activeContract={sellTokenContract}
-          updateAmount={sellAmount}
           setTransactionType={setTransactionType}
           setCallbackAmount={setSellAmount}
           setTokenContractCallback={setSellTokenContract}
@@ -147,8 +128,6 @@ export default function PriceView() {
         />
         <TokenSelectContainer
           containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}
-          activeContract={buyTokenContract}
-          updateAmount={buyAmount}
           setTransactionType={setTransactionType}
           setCallbackAmount={setBuyAmount}
           setTokenContractCallback={setBuyTokenContract}
