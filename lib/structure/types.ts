@@ -156,11 +156,8 @@ type TokenContract = {
 };
 
 type TradeData = {
-  // buyAmount: bigint;
   buyTokenContract?: TokenContract;
-  chainId: number;
-  // sellAmount: bigint;
-  sellTokenContract?: TokenContract;
+  chainId: number;  sellTokenContract?: TokenContract;
   signer: any;
   slippageBps: number;
   swapType: SWAP_TYPE;
