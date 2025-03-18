@@ -20,7 +20,7 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  
+import { useBuyAmount, useExchangeContext, usePriceState, useSellAmount } from "@/lib/context/ExchangeContext";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
@@ -65,13 +65,15 @@ export default function PriceView() {
 
   // ✅ Ensure `usePriceAPI` is called at the top level
   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
-    sellTokenAddress,
-    buyTokenAddress,
-    // setBuyAmount,
-    // setSellAmount,
     setErrorMessage,
     apiErrorCallBack
   });
+
+  // const { isLoadingPrice, priceData, PriceError, refreshPriceData } = usePriceState({
+  //   setErrorMessage: (message) => console.error("Error Message:", message),
+  //   apiErrorCallBack: (error) => console.error("API Error:", error),
+  // });
+
 
   // ✅ Ensure `useEffect` only references values, not hooks
   useEffect(() => {
@@ -135,7 +137,7 @@ export default function PriceView() {
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
         <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
         <TokenSelectContainer
-          containerType={CONTAINER_TYPE.INPUT_SELL_PRICE}
+          containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
           activeContract={sellTokenContract}
           updateAmount={sellAmount}
           setTransactionType={setTransactionType}
@@ -144,7 +146,7 @@ export default function PriceView() {
           slippageBps={slippageBps}
         />
         <TokenSelectContainer
-          containerType={CONTAINER_TYPE.INPUT_BUY_PRICE}
+          containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}
           activeContract={buyTokenContract}
           updateAmount={buyAmount}
           setTransactionType={setTransactionType}

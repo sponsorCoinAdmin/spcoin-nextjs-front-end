@@ -97,19 +97,11 @@ const getPriceApiCall = (
 };
 
 type Props = {
-  sellTokenAddress?: Address;
-  buyTokenAddress?: Address;
-  // setSellAmount: (amount: bigint) => void;
-  // setBuyAmount: (amount: bigint) => void;
   setErrorMessage: (message?: ErrorMessage) => void;
   apiErrorCallBack: (error: ErrorMessage) => void;
 };
 
 function usePriceAPI({
-  sellTokenAddress: initialSellTokenAddress,
-  buyTokenAddress: initialBuyTokenAddress,
-  // setSellAmount,
-  // setBuyAmount,
   setErrorMessage,
   apiErrorCallBack
 }: Props) {
@@ -118,15 +110,23 @@ function usePriceAPI({
   const tradeData = useTradeData();
   const chainId = useChainId();
 
+  let sellTokenAddress = tradeData.sellTokenContract?.address;
+  let buyTokenAddress = tradeData.buyTokenContract?.address;
+
+
   // ✅ Convert addresses *after* hooks are defined
-  const isActiveSellAccount = useIsActiveAccountAddress(initialSellTokenAddress as Address);
-  const isActiveBuyAccount = useIsActiveAccountAddress(initialBuyTokenAddress as Address);
+  const isActiveSellAccount = useIsActiveAccountAddress(sellTokenAddress as Address);
+  const isActiveBuyAccount = useIsActiveAccountAddress(buyTokenAddress as Address);
 
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount, setSellAmount] = useSellAmount();
+
+  // msg    += `sellTokenAddress        = ${sellTokenAddress}\n`
+  // msg    += `buyTokenAddress         = ${buyTokenAddress}`
+  // alert(msg)
   
-  const sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialSellTokenAddress as Address, isActiveSellAccount));
-  const buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(initialBuyTokenAddress as Address, isActiveBuyAccount));
+  sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount));
+  buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount));
 
   const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => {
     return (

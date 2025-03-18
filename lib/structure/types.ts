@@ -37,8 +37,8 @@ enum BUTTON_TYPE {
 
 // Container Types
 enum CONTAINER_TYPE {
-  INPUT_SELL_PRICE,
-  INPUT_BUY_PRICE
+  SELL_SELECT_CONTAINER,
+  BUY_SELECT_CONTAINER
 }
 
 // Exchange States

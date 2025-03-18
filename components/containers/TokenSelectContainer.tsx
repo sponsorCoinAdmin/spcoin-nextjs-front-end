@@ -59,7 +59,7 @@ const tokenSelectContainer = ({
 
   // Determine initial state based on price input type
   const initialAmount: bigint | undefined =
-    containerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? tradeData?.sellAmount : tradeData?.buyAmount;
 
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -70,7 +70,7 @@ const tokenSelectContainer = ({
   const [formattedBalance, setFormattedBalance] = useState<string>();
   const [balanceInWei, setBalanceInWei] = useState<bigint>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
-    containerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? tradeData?.sellTokenContract : tradeData?.buyTokenContract
   );
 
@@ -93,14 +93,14 @@ const tokenSelectContainer = ({
 
   useEffect(() => {
     console.debug(`***tokenSelectContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
-    containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
       tradeData.sellTokenContract = tokenContract :
       tradeData.buyTokenContract = tokenContract;
     setTokenContractCallback(tokenContract);
   }, [tokenContract?.address]);
 
   useEffect(() => {
-    containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
       console.debug(`SellContainer.useEffect([sellTokenContract]):sellTokenContract = ${activeContract?.name}`) :
       console.debug(`BuyContainer.useEffect([buyTokenContract]):buyTokenContract = ${activeContract?.name}`)
     setDecimalAdjustedContract(activeContract)
@@ -108,7 +108,7 @@ const tokenSelectContainer = ({
 
   useEffect(() => {
     console.debug(`%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`);
-    containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
       tradeData.sellAmount = debouncedAmount :
       tradeData.buyAmount = debouncedAmount;
     setCallbackAmount(debouncedAmount)
@@ -126,10 +126,10 @@ const tokenSelectContainer = ({
 
     let msg = "";
 
-    if (containerType === CONTAINER_TYPE.INPUT_SELL_PRICE)
-      msg += `TransSelectContainer Type               = INPUT_SELL_PRICE\n`
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+      msg += `TransSelectContainer Type               = SELL_SELECT_CONTAINER\n`
     else
-      msg += `TransSelectContainer Type               = INPUT_BUY_PRICE\n`
+      msg += `TransSelectContainer Type               = BUY_SELECT_CONTAINER\n`
     if (tradeData.transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
       msg += `TRANS_DIRECTION                         = BUY_EXACT_IN\n`
     else
@@ -139,6 +139,11 @@ const tokenSelectContainer = ({
     msg   += `tokenSelectContainer:updateAmount     = ${updateAmount}\n`
     msg   += `tokenSelectContainer:formattedAmount  = ${formattedAmount}\n`
     alert(msg);
+
+    // if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+    //   if (tradeData.transactionType === TRANS_DIRECTION.SELL_EXACT_OUT)
+
+
 
     setAmount(updateAmount);
   }, [sellAmount,buyAmount]);
@@ -182,7 +187,7 @@ const tokenSelectContainer = ({
 
   const setTextInputValue = (stringValue: string) => {
     setStringToBigIntStateValue(stringValue);
-    setTransactionType(containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ?
+    setTransactionType(containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
       TRANS_DIRECTION.SELL_EXACT_OUT :
       TRANS_DIRECTION.BUY_EXACT_IN);
   };
@@ -196,10 +201,10 @@ const tokenSelectContainer = ({
   };
 
   const buySellText = isWrappingTransaction(exchangeContext) ?
-    containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : "You Exactly Receive" :
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? "You Exactly Pay" : "You Exactly Receive" :
     tradeData.transactionType === TRANS_DIRECTION.SELL_EXACT_OUT ?
-      containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? "You Exactly Pay" : `You Receive +-${slippageBps * 100}%` :
-      containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? `You Pay +-${slippageBps * 100}%` : "You Exactly Receive";
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? "You Exactly Pay" : `You Receive +-${slippageBps * 100}%` :
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? `You Pay +-${slippageBps * 100}%` : "You Exactly Receive";
 
   return (
     <div className={styles["inputs"] + " " + styles["tokenSelectContainer"]}>
@@ -210,7 +215,7 @@ const tokenSelectContainer = ({
       <TokenSelect exchangeContext={exchangeContext} containerType={containerType} tokenContract={tokenContract} setDecimalAdjustedContract={setDecimalAdjustedContract} />
       <div className={styles["buySell"]}>{buySellText}</div>
       <div className={styles["assetBalance"]}> Balance: {formattedBalance || "0.0"}</div>
-      {isSpCoin(tokenContract) ? (containerType === CONTAINER_TYPE.INPUT_SELL_PRICE ? <ManageSponsorsButton tokenContract={tokenContract} /> : <AddSponsorButton />) : null}
+      {isSpCoin(tokenContract) ? (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? <ManageSponsorsButton tokenContract={tokenContract} /> : <AddSponsorButton />) : null}
     </div>
   );
 
