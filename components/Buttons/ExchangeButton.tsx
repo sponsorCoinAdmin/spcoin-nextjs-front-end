@@ -180,7 +180,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
 
   // ✅ Validate and perform swap
   const validateAndSwap = async () => {
-    await swap();
+    swap();
     setResetAmounts(true);
   }
 
