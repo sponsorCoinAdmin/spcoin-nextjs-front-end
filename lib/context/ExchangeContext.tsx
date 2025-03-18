@@ -126,18 +126,3 @@ export const PriceDisplay = () => {
     </div>
   );
 };
-
-// ✅ Hook to wrap usePriceAPI and return the same elements
-type PriceAPIFetchProps = {
-  setErrorMessage: (message?: ErrorMessage) => void;
-  apiErrorCallBack: (error: ErrorMessage) => void;
-};
-
-export const usePriceAPIFetch = ({ setErrorMessage, apiErrorCallBack }: PriceAPIFetchProps) => {
-  const { isLoading: isLoadingPrice, data: priceData, error: priceError } = usePriceAPI({
-    setErrorMessage,
-    apiErrorCallBack,
-  });
-
-  return { isLoadingPrice, priceData, priceError };
-};
