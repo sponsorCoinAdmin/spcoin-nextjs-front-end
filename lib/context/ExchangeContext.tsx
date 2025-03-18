@@ -24,9 +24,7 @@ const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
 // ✅ Provider Component
 export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
-  const chainId = useChainId(); // ✅ Hook is at the top level
-
-  // ✅ Start with stored context, but wait for `chainId` before initializing a new one
+  const chainId = useChainId();
   const [exchangeContext, setExchangeContext] = useState<ExchangeContext | null>(null);
   const [sellAmount, setSellAmount] = useState<bigint>(BigInt(0));
   const [buyAmount, setBuyAmount] = useState<bigint>(BigInt(0));
@@ -41,7 +39,14 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [chainId]);
 
-  // ✅ Ensure we don’t render the provider with `null` context
+  // ✅ Sync sellAmount and buyAmount with tradeData, handling potential undefined values
+  useEffect(() => {
+    if (exchangeContext?.tradeData) {
+      setSellAmount(exchangeContext.tradeData.sellTokenContract?.amount ?? BigInt(0));
+      setBuyAmount(exchangeContext.tradeData.buyTokenContract?.amount ?? BigInt(0));
+    }
+  }, [exchangeContext]);
+
   if (!exchangeContext) {
     return null; // Render nothing until `exchangeContext` is ready
   }
@@ -72,15 +77,15 @@ export const useTradeData = () => {
   return exchangeContext.tradeData;
 };
 
-// ✅ Custom hooks for using sellAmount and buyAmount with global state management
+// ✅ Custom hooks for using sellAmount and buyAmount with setters
 export const useSellAmount = () => {
   const context = useExchangeContext();
-  return [context.sellAmount, context.setSellAmount] as const;
+  return [context.sellAmount, context.setSellAmount] as [bigint, (amount: bigint) => void];
 };
 
 export const useBuyAmount = () => {
   const context = useExchangeContext();
-  return [context.buyAmount, context.setBuyAmount] as const;
+  return [context.buyAmount, context.setBuyAmount] as [bigint, (amount: bigint) => void];
 };
 
 // ✅ Example usage component

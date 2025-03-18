@@ -156,10 +156,10 @@ type TokenContract = {
 };
 
 type TradeData = {
-  buyAmount: bigint;
+  // buyAmount: bigint;
   buyTokenContract?: TokenContract;
   chainId: number;
-  sellAmount: bigint;
+  // sellAmount: bigint;
   sellTokenContract?: TokenContract;
   signer: any;
   slippageBps: number;
