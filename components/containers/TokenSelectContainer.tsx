@@ -35,7 +35,6 @@ import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
 type Props = {
   containerType: CONTAINER_TYPE;
   setTransactionType: (transactionType: TRANS_DIRECTION) => void;
-  setCallbackAmount: (amount: bigint) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
   slippageBps: number;
 };
@@ -43,7 +42,6 @@ type Props = {
 const tokenSelectContainer = ({
   containerType,
   setTransactionType,
-  setCallbackAmount,
   setTokenContractCallback,
   slippageBps,
 }: Props) => {
@@ -52,18 +50,23 @@ const tokenSelectContainer = ({
   const tradeData: TradeData = useTradeData();
   const signer = tradeData.signer;
   const provider = signer?.provider;
+  const [sellAmount, setSellAmount] = useSellAmount();
+  const [buyAmount, setBuyAmount] = useBuyAmount();
 
   let updateAmount;
   let activeContract;
-  if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+  let setCallbackAmount: (amount: bigint) => void;
+  if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
     activeContract = tradeData.sellTokenContract;
-  else
+    setCallbackAmount = setSellAmount;
+  }
+  else {
     activeContract = tradeData.buyTokenContract;
+    setCallbackAmount = setBuyAmount;
+  }
   // if (!activeContract)
   //   return
 
-  const [sellAmount, setSellAmount] = useSellAmount();
-  const [buyAmount, setBuyAmount] = useBuyAmount();
   const [amount, setAmount] = useState<bigint>(activeContract?.amount || 0n);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
@@ -121,7 +124,6 @@ const tokenSelectContainer = ({
       updateAmount = sellAmount
     else
       updateAmount = buyAmount
-  
 
     const decimals: number = activeContract?.decimals || 0;
     const formattedAmount: string = getValidBigIntToFormattedValue(buyAmount, decimals)

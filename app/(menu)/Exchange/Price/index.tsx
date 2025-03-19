@@ -122,14 +122,12 @@ export default function PriceView() {
         <TokenSelectContainer
           containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
           setTransactionType={setTransactionType}
-          setCallbackAmount={setSellAmount}
           setTokenContractCallback={setSellTokenContract}
           slippageBps={slippageBps}
         />
         <TokenSelectContainer
           containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}
           setTransactionType={setTransactionType}
-          setCallbackAmount={setBuyAmount}
           setTokenContractCallback={setBuyTokenContract}
           slippageBps={slippageBps}
         />
