@@ -128,7 +128,7 @@ export default function PriceView() {
           setResetAmounts={setResetAmounts} 
           toggleButton={toggleButton} 
         />
-        <AffiliateFee priceResponse={priceData} buyTokenContract={buyTokenContract} />
+        <AffiliateFee priceResponse={priceData} />
       </div>
       <FeeDisclosure />
     </form>
