@@ -20,7 +20,7 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";  
+import { useBuyAmount, useBuyTokenContract, useExchangeContext, useSellAmount, useSellTokenContract, useSlippageBps} from "@/lib/context/ExchangeContext";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
@@ -36,12 +36,13 @@ export default function PriceView() {
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
+  const [slippageBps, setSlippageBps] = useSlippageBps();
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [resetAmounts, setResetAmounts] = useState<boolean>(false);
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
   const [toggleButton, setToggleButton] = useState<boolean>(false);
+  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
+  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   const sellTokenAddress = sellTokenContract?.address;
   const buyTokenAddress = buyTokenContract?.address;
@@ -116,15 +117,9 @@ export default function PriceView() {
     <form autoComplete="off">
       <ErrorDialog errMsg={errorMessage} showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
-        <TradeContainerHeader />
-        <TokenSelectContainer
-          containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
-          setTokenContractCallback={setSellTokenContract}
-        />
-        <TokenSelectContainer
-          containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}
-          setTokenContractCallback={setBuyTokenContract}
-        />
+        <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
+        <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
+        <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
         <PriceButton 
           isLoadingPrice={isLoadingPrice} 

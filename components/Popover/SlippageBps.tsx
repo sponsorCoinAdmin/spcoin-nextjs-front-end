@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { type RadioChangeEvent, Radio } from "antd";
 import { useSlippageBps } from '@/lib/context/ExchangeContext';
-const [slippageBps, setSlippageBps] = useSlippageBps();
 
 function SlippageBps() {
-
+  // ✅ Call the hook at the top level
+  const [slippageBps, setSlippageBps] = useSlippageBps();
   const [value, setValue] = useState("0.02");
+
   useEffect(() => {
-    setValue(slippageBps.toString())
-  }, []);
+    setValue(slippageBps.toString());
+  }, [slippageBps]); // ✅ Ensure the effect runs when slippageBps changes
 
   const setRadioButton = ({ target: { value } }: RadioChangeEvent) => {
     console.log('radio checked ' + value);
     setValue(value);
-    setSlippageBps(parseFloat(value))
+    setSlippageBps(parseFloat(value)); // ✅ Convert value to float before setting
   };
 
   const options = [
@@ -27,15 +28,16 @@ function SlippageBps() {
     
   return (
     <div>
-      <div >slippageBps Tolerance</div>
-      <Radio.Group value={value}
-          options={options}
-          onChange={setRadioButton}
-          optionType="button"
-          buttonStyle="solid"
-          />
+      <div>Slippage Bps Tolerance</div>
+      <Radio.Group
+        value={value}
+        options={options}
+        onChange={setRadioButton}
+        optionType="button"
+        buttonStyle="solid"
+      />
     </div>
-  )
+  );
 }
 
-export default SlippageBps
+export default SlippageBps;

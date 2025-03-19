@@ -8,12 +8,11 @@ import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/utils';
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 
-
-const TradeContainerHeader = () => {
+const TradeContainerHeader = ({slippageBps, setSlippageBpsCallback}:any) => {
   const { exchangeContext } = useExchangeContext();
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog  showDialog={false}/>
+      <ConfigDialog slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback} showDialog={false}/>
       <div  onClick={() => exchangeContextDump(exchangeContext)}>
         <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="SponsorCoin Logo" />
       </div>
@@ -26,6 +25,11 @@ const TradeContainerHeader = () => {
         <Image src={cog_png} className={styles["cogImg2"]} width={20} height={20} alt="Info Image"  
             onClick={() => openDialog("#configDialog")}/>
       </div>
+      {/* 
+      <Popover content={<slippageBps initialSlippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback}/>} title="Settings" trigger="click" placement="bottomLeft">
+        <SettingOutlined className={styles.cog} />
+      </Popover>
+    */}
     </div>
   );
 }

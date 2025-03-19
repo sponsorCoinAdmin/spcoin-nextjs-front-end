@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import styles from '@/styles/Modal.module.css';
 import SlippageBps from '../Popover/SlippageBps';
 import { useSlippageBps } from '@/lib/context/ExchangeContext';
-const [slippageBps, setSlippageBps] = useSlippageBps();
+// const [slippageBps, setSlippageBps] = useSlippageBps();
 
 type Props = {
     showDialog:boolean
@@ -37,7 +37,7 @@ export default function Dialog({showDialog}:Props) {
             <div >
                 <div className={styles.modalScrollBar}>
                 <SlippageBps />
-                    <h1>{slippageBps}</h1>
+                    {/* <h1>{slippageBps}</h1> */}
                 </div>
             </div>
         </dialog>
