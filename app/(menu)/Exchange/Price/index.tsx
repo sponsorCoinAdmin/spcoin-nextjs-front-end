@@ -36,13 +36,11 @@ export default function PriceView() {
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
-  const [slippageBps, setSlippageBps] = useState<number>(tradeData.slippageBps);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [resetAmounts, setResetAmounts] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(tradeData.sellTokenContract);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(tradeData.buyTokenContract);
-  const [transactionType, setTransactionType] = useState<TRANS_DIRECTION>(tradeData.transactionType);
   const [toggleButton, setToggleButton] = useState<boolean>(false);
 
   const sellTokenAddress = sellTokenContract?.address;
@@ -118,18 +116,14 @@ export default function PriceView() {
     <form autoComplete="off">
       <ErrorDialog errMsg={errorMessage} showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
-        <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
+        <TradeContainerHeader />
         <TokenSelectContainer
           containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
-          setTransactionType={setTransactionType}
           setTokenContractCallback={setSellTokenContract}
-          slippageBps={slippageBps}
         />
         <TokenSelectContainer
           containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}
-          setTransactionType={setTransactionType}
           setTokenContractCallback={setBuyTokenContract}
-          slippageBps={slippageBps}
         />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
         <PriceButton 

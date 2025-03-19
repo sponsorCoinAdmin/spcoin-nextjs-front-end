@@ -2,14 +2,14 @@
 import { useEffect, useRef } from 'react';
 import styles from '@/styles/Modal.module.css';
 import SlippageBps from '../Popover/SlippageBps';
+import { useSlippageBps } from '@/lib/context/ExchangeContext';
+const [slippageBps, setSlippageBps] = useSlippageBps();
 
 type Props = {
-    slippageBps:number,
-    setSlippageBpsCallback: () => void,
     showDialog:boolean
 }
 
-export default function Dialog({showDialog, slippageBps, setSlippageBpsCallback}:Props) {
+export default function Dialog({showDialog}:Props) {
     useEffect(() => {
         showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
     }, [showDialog])
@@ -36,7 +36,7 @@ export default function Dialog({showDialog, slippageBps, setSlippageBpsCallback}
             </div>
             <div >
                 <div className={styles.modalScrollBar}>
-                <SlippageBps initialSlippage={slippageBps} setSlippageCallback={setSlippageBpsCallback}/>
+                <SlippageBps />
                     <h1>{slippageBps}</h1>
                 </div>
             </div>

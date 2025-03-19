@@ -9,11 +9,11 @@ import { exchangeContextDump } from '@/lib/spCoin/utils';
 import { toggleElement, toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
 import { useExchangeContext } from "@/lib/context/ExchangeContext";
 
-const RecipientSelectHeader = ({slippageBps, setSlippageBpsCallback, closeDialog}:any) => {
+const RecipientSelectHeader = () => {
   const { exchangeContext } = useExchangeContext();
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback} showDialog={false}/>
+      <ConfigDialog showDialog={false}/>
       <div  onClick={() => exchangeContextDump(exchangeContext)}>
         <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="SponsorCoin Logo" />
       </div>

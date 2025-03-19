@@ -12,7 +12,13 @@ import { Address } from "viem";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Context & Styles
-import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+import {
+  useBuyAmount,
+  useExchangeContext,
+  useSellAmount,
+  useSlippageBps,
+  useTradeData,
+  useTransactionType } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
 import styles from "@/styles/Exchange.module.css";
 
 // Components
@@ -34,16 +40,12 @@ import { useBalanceInWei } from "@/lib/hooks/useBalanceInWei";
 
 type Props = {
   containerType: CONTAINER_TYPE;
-  setTransactionType: (transactionType: TRANS_DIRECTION) => void;
   setTokenContractCallback: (tokenContract: TokenContract | undefined) => void;
-  slippageBps: number;
 };
 
 const tokenSelectContainer = ({
   containerType,
-  setTransactionType,
-  setTokenContractCallback,
-  slippageBps,
+  setTokenContractCallback
 }: Props) => {
 
   const { exchangeContext } = useExchangeContext();
@@ -64,14 +66,14 @@ const tokenSelectContainer = ({
     activeContract = tradeData.buyTokenContract;
     setCallbackAmount = setBuyAmount;
   }
-  // if (!activeContract)
-  //   return
-
+ 
   const [amount, setAmount] = useState<bigint>(activeContract?.amount || 0n);
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
   const [balanceInWei, setBalanceInWei] = useState<bigint>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(activeContract);
+  const [transactionType, setTransDirection] = useTransactionType();
+  const [slippageBps, setSlippageBps] = useSlippageBps();
 
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS: Address = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
@@ -82,13 +84,6 @@ const tokenSelectContainer = ({
     const formattedAmount = getValidFormattedPrice(amount, activeContract?.decimals || 0);
     setFormattedAmount(formattedAmount);
   }, []);
-
-  // useEffect(() => {
-  //   if (tradeData.transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
-  //     alert(`TRANS_DIRECTION.BUY_EXACT_IN -> AssetContainer:sellAmount = ${sellAmount}`)
-  //   else
-  //     alert(`TRANS_DIRECTION.BUY_EXACT_OUT -> AssetContainer:buyAmount  = ${buyAmount}`)
-  // }, [sellAmount, buyAmount]);
 
   useEffect(() => {
     console.debug(`***tokenSelectContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`)
@@ -116,9 +111,7 @@ const tokenSelectContainer = ({
   }, [debouncedAmount])
 
   useEffect(() => {
-    // if (tradeData.transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
-    // else
-
+  
     let updateAmount;
     if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
       updateAmount = sellAmount
@@ -192,7 +185,7 @@ const tokenSelectContainer = ({
 
   const setTextInputValue = (stringValue: string) => {
     setStringToBigIntStateValue(stringValue);
-    setTransactionType(containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
+    setTransDirection(containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ?
       TRANS_DIRECTION.SELL_EXACT_OUT :
       TRANS_DIRECTION.BUY_EXACT_IN);
   };

@@ -59,8 +59,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
             chainId,
             transactionType: TRANS_DIRECTION.SELL_EXACT_OUT,
             swapType: SWAP_TYPE.UNDEFINED,
-            sellAmount: 0n,
-            buyAmount: 0n,
             slippageBps: 100,
             sellTokenContract: undefined,
             buyTokenContract: undefined,

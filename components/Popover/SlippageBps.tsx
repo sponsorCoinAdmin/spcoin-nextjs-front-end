@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { type RadioChangeEvent, Radio } from "antd";
-import styles from '@/styles/Exchange.module.css';
+import { useSlippageBps } from '@/lib/context/ExchangeContext';
+const [slippageBps, setSlippageBps] = useSlippageBps();
 
-function SlippageBps({initialSlippageBps, setSlippageBpsCallback}:any) {
+function SlippageBps() {
 
   const [value, setValue] = useState("0.02");
   useEffect(() => {
-    // console.log (`setting Initial slippageBps value`+ value)
-    setValue(initialSlippageBps)
+    setValue(slippageBps.toString())
   }, []);
 
   const setRadioButton = ({ target: { value } }: RadioChangeEvent) => {
     console.log('radio checked ' + value);
     setValue(value);
-    setSlippageBpsCallback(value)
+    setSlippageBps(parseFloat(value))
   };
 
   const options = [
