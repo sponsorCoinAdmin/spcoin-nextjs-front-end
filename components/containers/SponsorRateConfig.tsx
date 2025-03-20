@@ -4,7 +4,7 @@ import { displaySpCoinContainers, hideElement } from '@/lib/spCoin/guiControl';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Updated import
+import { useExchangeContext } from '@/lib/context/contextHooks' // ✅ Updated import
 
 function setRateRatios(newRate: string) {
   var numRate = Number(newRate)

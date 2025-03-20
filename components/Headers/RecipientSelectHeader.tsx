@@ -7,7 +7,7 @@ import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/utils';
 import { toggleElement, toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
-import { useExchangeContext } from "@/lib/context/ExchangeContext";
+import { useExchangeContext } from '@/lib/context/contextHooks'
 
 const RecipientSelectHeader = ({slippageBps, setSlippageBpsCallback, closeDialog}:any) => {
   const { exchangeContext } = useExchangeContext();

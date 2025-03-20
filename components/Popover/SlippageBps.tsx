@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { type RadioChangeEvent, Radio } from "antd";
-import { useSlippageBps } from '@/lib/context/ExchangeContext';
+import { useSlippageBps } from '@/lib/context/contextHooks';
 
 function SlippageBps() {
   // ✅ Call the hook at the top level

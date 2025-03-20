@@ -19,7 +19,7 @@ import DumpContextButton from "@/components/Buttons/DumpContextButton";
 import InputSelect from "@/components/panes/InputSelect";
 
 // Utilities & Context
-import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Updated import
+import { useExchangeContext } from "@/lib/context/contextHooks"; // ✅ Updated import
 import { stringifyBigInt } from "../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils";
 import { TokenContract } from "@/lib/structure/types";
 

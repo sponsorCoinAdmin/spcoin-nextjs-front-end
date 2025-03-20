@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 import styles from '@/styles/Modal.module.css';
 import SlippageBps from '../Popover/SlippageBps';
-import { useSlippageBps } from '@/lib/context/ExchangeContext';
 // const [slippageBps, setSlippageBps] = useSlippageBps();
 
 type Props = {

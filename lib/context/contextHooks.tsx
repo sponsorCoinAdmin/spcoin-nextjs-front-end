@@ -2,7 +2,7 @@
 
 import { useContext } from "react";
 import { ExchangeContextState } from "@/lib/context/ExchangeContext";
-import { TRADE_DIRECTION } from "@/lib/structure/types";
+import { TokenContract, TRADE_DIRECTION } from "@/lib/structure/types"; // ✅ Importing required types
 
 // ✅ Hook to use Exchange Context
 export const useExchangeContext = () => {
@@ -53,14 +53,16 @@ export const useBuyTokenContract = () => {
   return [context.buyTokenContract, context.setBuyTokenContract] as [TokenContract | undefined, (contract: TokenContract | undefined) => void];
 };
 
-// ✅ Example Usage Component (Original `PriceDisplay`)
+// ✅ Example Usage Component (Updated `PriceDisplay` with `useExchangeContext`)
 export const PriceDisplay = () => {
+  const { exchangeContext } = useExchangeContext(); // ✅ Now using useExchangeContext
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [transactionType, setTransDirection] = useTransactionType();
   const [slippageBps, setSlippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
+  const tradeData = useTradeData();
 
   return (
     <div>
@@ -70,6 +72,9 @@ export const PriceDisplay = () => {
       <h2>Slippage Bps: {slippageBps}</h2>
       <h2>Sell Token Contract: {sellTokenContract?.symbol ?? "None"}</h2>
       <h2>Buy Token Contract: {buyTokenContract?.symbol ?? "None"}</h2>
+      <h2>Trade Data: {JSON.stringify(tradeData, null, 2)}</h2>
+      <h2>Exchange Context: {JSON.stringify(exchangeContext, null, 2)}</h2> {/* ✅ Displaying full exchangeContext */}
+      
       <button onClick={() => setTransDirection(TRADE_DIRECTION.SELL_EXACT_OUT)}>
         Change to SELL_EXACT_OUT
       </button>

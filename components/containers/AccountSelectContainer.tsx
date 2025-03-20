@@ -10,7 +10,7 @@ import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
 import SponsorRateConfig from "./SponsorRateConfig";
-import { useExchangeContext } from "@/lib/context/ExchangeContext"; // ✅ Use context
+import { useExchangeContext } from '@/lib/context/contextHooks' // ✅ Use context
 import RecipientSelect from "./AccountSelectDropDown";
 import { displaySpCoinContainers, toggleSponsorRateConfig } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/utils";

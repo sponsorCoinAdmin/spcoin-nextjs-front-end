@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import styles from "@/styles/Exchange.module.css";
 import { SP_COIN_DISPLAY, TokenContract } from "@/lib/structure/types";
 import { displaySpCoinContainers } from "@/lib/spCoin/guiControl";
-import { useExchangeContext } from "@/lib/context/ExchangeContext";
+import { useExchangeContext } from '@/lib/context/contextHooks'
 import AccountSelectContainer from "../containers/AccountSelectContainer";
 
 const AddSponsorshipButton = () => {

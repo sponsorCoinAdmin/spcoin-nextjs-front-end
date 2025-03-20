@@ -5,7 +5,7 @@ import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
 import { useChainId } from "wagmi";
-import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+import { useExchangeContext } from '@/lib/context/contextHooks'  // ✅ Use Hook
 
 import {
   BASE,

@@ -6,13 +6,14 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/utils';
-import { useExchangeContext } from "@/lib/context/ExchangeContext";
+import { useExchangeContext, useSlippageBps } from "@/lib/context/contextHooks";
 
-const TradeContainerHeader = ({slippageBps, setSlippageBpsCallback}:any) => {
+const TradeContainerHeader = () => {
+  const [slippageBps, setSlippageBps] = useSlippageBps();
   const { exchangeContext } = useExchangeContext();
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback} showDialog={false}/>
+      <ConfigDialog  showDialog={false}/>
       <div  onClick={() => exchangeContextDump(exchangeContext)}>
         <Image src={spCoin_png} className={styles.avatarImg} width={30} height={30} alt="SponsorCoin Logo" />
       </div>

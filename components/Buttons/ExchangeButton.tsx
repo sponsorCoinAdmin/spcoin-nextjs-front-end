@@ -1,8 +1,8 @@
 'use client'
 
 import styles from '@/styles/Exchange.module.css'
-import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/ExchangeContext";
-import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRANS_DIRECTION, TokenContract, TradeData } from '@/lib/structure/types';
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/contextHooks";
+import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRADE_DIRECTION, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
 import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, isWrappedSellToken } from '@/lib/network/utils';
 
@@ -24,7 +24,7 @@ const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setRese
   
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
-  const transactionType: string = tradeData.transactionType === TRANS_DIRECTION.SELL_EXACT_OUT ?
+  const transactionType: string = tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ?
     "EXACT OUT " : "EXACT IN "
 
   // ✅ Set the button type dynamically

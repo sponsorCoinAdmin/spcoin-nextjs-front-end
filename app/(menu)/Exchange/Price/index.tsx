@@ -20,7 +20,7 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useBuyAmount, useBuyTokenContract, useExchangeContext, useSellAmount, useSellTokenContract, useSlippageBps} from "@/lib/context/ExchangeContext";  
+import { useBuyAmount, useBuyTokenContract, useExchangeContext, useSellAmount, useSellTokenContract, useSlippageBps} from "@/lib/context/contextHooks";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
@@ -51,16 +51,6 @@ export default function PriceView() {
   const isWrapTransaction = useMemo(() => {
     return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(exchangeContext) : false;
   }, [sellTokenAddress, buyTokenAddress]);
-
-  // ✅ Move `useCallback` to top level before passing it to `usePriceAPI`
-  const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
-    setErrorMessage({
-      errCode: apiErrorObj.errCode,
-      msg: stringifyBigInt(apiErrorObj.msg),
-      source: apiErrorObj.source,
-      status: STATUS.ERROR_API_PRICE,
-    });
-  }, []);
 
   // ✅ Ensure `usePriceAPI` is called at the top level
   // const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
@@ -117,7 +107,7 @@ export default function PriceView() {
     <form autoComplete="off">
       <ErrorDialog errMsg={errorMessage} showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
-        <TradeContainerHeader slippageBps={slippageBps} setSlippageBpsCallback={setSlippageBps} />
+        <TradeContainerHeader />
         <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
         <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />

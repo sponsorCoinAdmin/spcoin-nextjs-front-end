@@ -8,7 +8,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
 import { defaultMissingImage, getBlockChainName, getBlockChainAvatar } from "@/lib/network/utils";
-// import { useExchangeContext } from "@/lib/context/ExchangeContext";
+// import { useExchangeContext } from '@/lib/context/contextHooks'
 
 import { useChainId } from "wagmi";
 

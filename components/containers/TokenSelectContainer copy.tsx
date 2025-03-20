@@ -21,7 +21,7 @@ import {
   useTransactionType,
   useSellTokenContract,
   useBuyTokenContract
-} from "@/lib/context/ExchangeContext";
+} from "@/lib/context/contextHooks";
 import styles from "@/styles/Exchange.module.css";
 
 // Components

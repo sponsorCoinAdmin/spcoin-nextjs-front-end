@@ -15,7 +15,7 @@ import { Address } from "viem";
 import { useAccount, useChainId } from "wagmi";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { getTokenAvatar, isActiveAccountAddress } from "@/lib/network/utils";
-import { useExchangeContext } from "@/lib/context/ExchangeContext";  // ✅ Use Hook
+import { useExchangeContext } from '@/lib/context/contextHooks'  // ✅ Use Hook
 
 type Props = {
   placeHolder:string,
