@@ -1,7 +1,7 @@
 import { PriceRequestParams, TRADE_DIRECTION, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
-import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from '@/lib/context/ExchangeContext';
+import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from '@/lib/context/contextHooks';
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';

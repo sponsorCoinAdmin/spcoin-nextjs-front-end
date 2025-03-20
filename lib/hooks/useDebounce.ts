@@ -7,6 +7,7 @@ export const useDebounce = <T>(value: T, delay:number = defaultMilliSeconds) => 
 
   useEffect(() => {
     const timeout = setTimeout(() => {
+      alert(`timeout = setTimeout(${defaultMilliSeconds})`)
       setDebouncedValue(value);
     }, delay);
 

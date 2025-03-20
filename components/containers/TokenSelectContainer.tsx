@@ -155,21 +155,20 @@ const TokenSelectContainer = ({ containerType }: Props) => {
   const setTextInputValue = (stringValue: string) => {
     setStringToBigIntStateValue(stringValue);
     const tradeDirection = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    ? TRADE_DIRECTION.SELL_EXACT_OUT
-    : TRADE_DIRECTION.BUY_EXACT_IN
+      ? TRADE_DIRECTION.SELL_EXACT_OUT
+      : TRADE_DIRECTION.BUY_EXACT_IN
     setTransDirection(
       tradeDirection
     );
     // tradeData.transactionType = tradeDirection;
 
-
-    const contType = `setTextInputValue:TransSelectContainer Type = ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER 
-        ? 'SELL_SELECT_CONTAINER' : 'BUY_SELECT_CONTAINER'}\n`
+    const contType = `setTextInputValue:TransSelectContainer Type = ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? 'SELL_SELECT_CONTAINER' : 'BUY_SELECT_CONTAINER'}\n`
 
     const direction = `setTextInputValue:TRADE_DIRECTION  = ${tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-        ? 'BUY_EXACT_IN' : 'SELL_EXACT_OUT'}\n`
-        alert(`setTextInputValue:\ncontainerType = ${contType}\nsetTextInputValue containerType = ${direction}\n`)
-      };
+      ? 'BUY_EXACT_IN' : 'SELL_EXACT_OUT'}\n`
+    alert(`setTextInputValue:\ncontainerType = ${contType}\nsetTextInputValue containerType = ${direction}\n`)
+  };
 
   const setStringToBigIntStateValue = (stringValue: string) => {
     const decimals = tokenContract?.decimals;
