@@ -7,7 +7,7 @@ import {
   saveExchangeContext,
   loadStoredExchangeContext,
 } from "@/lib/context/ExchangeHelpers";
-import { ExchangeContext, TRANS_DIRECTION, TokenContract } from "@/lib/structure/types";
+import { ExchangeContext, TRADE_DIRECTION, TokenContract } from "@/lib/structure/types";
 import { stringifyBigInt } from "../spCoin/utils";
 
 // ✅ Define Context Type
@@ -18,8 +18,8 @@ type ExchangeContextType = {
   setSellAmount: (amount: bigint) => void;
   buyAmount: bigint;
   setBuyAmount: (amount: bigint) => void;
-  transactionType: TRANS_DIRECTION;
-  setTransDirection: (type: TRANS_DIRECTION) => void;
+  transactionType: TRADE_DIRECTION;
+  setTransDirection: (type: TRADE_DIRECTION) => void;
   slippageBps: number;
   setSlippageBps: (bps: number) => void;
   sellTokenContract: TokenContract | undefined;
@@ -37,12 +37,29 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const [exchangeContext, setExchangeContext] = useState<ExchangeContext | null>(null);
   const [sellAmount, setSellAmount] = useState<bigint>(BigInt(0));
   const [buyAmount, setBuyAmount] = useState<bigint>(BigInt(0));
-  const [transactionType, setTransDirection] = useState<TRANS_DIRECTION>(
-    exchangeContext?.tradeData?.transactionType ?? TRANS_DIRECTION.BUY_EXACT_IN
+  const [transactionType, setTransactionTypeState] = useState<TRADE_DIRECTION>(
+    exchangeContext?.tradeData?.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN
   );
   const [slippageBps, setSlippageBps] = useState<number>(exchangeContext?.tradeData?.slippageBps ?? 0);
   const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(exchangeContext?.tradeData?.sellTokenContract ?? undefined);
   const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(exchangeContext?.tradeData?.buyTokenContract ?? undefined);
+
+  // ✅ Custom function to update `transactionType` and `exchangeContext`
+  const setTransDirection = (type: TRADE_DIRECTION) => {
+    setTransactionTypeState(type);
+
+    setExchangeContext((prevContext) => {
+      if (!prevContext) return prevContext; // If context is null, return it unchanged
+
+      return {
+        ...prevContext,
+        tradeData: {
+          ...prevContext.tradeData,
+          transactionType: type, // Update tradeData.transactionType
+        },
+      };
+    });
+  };
 
   // ✅ Load initial context once `chainId` is available
   useEffect(() => {
@@ -59,7 +76,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     if (exchangeContext?.tradeData) {
       setSellAmount(exchangeContext.tradeData.sellTokenContract?.amount ?? BigInt(0));
       setBuyAmount(exchangeContext.tradeData.buyTokenContract?.amount ?? BigInt(0));
-      setTransDirection(exchangeContext.tradeData.transactionType ?? TRANS_DIRECTION.BUY_EXACT_IN);
+      setTransactionTypeState(exchangeContext.tradeData.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN);
       setSlippageBps(exchangeContext.tradeData.slippageBps ?? 0);
       setSellTokenContract(exchangeContext.tradeData.sellTokenContract ?? undefined);
       setBuyTokenContract(exchangeContext.tradeData.buyTokenContract ?? undefined);
@@ -72,7 +89,22 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <ExchangeContextState.Provider
-      value={{ exchangeContext, setExchangeContext, sellAmount, setSellAmount, buyAmount, setBuyAmount, transactionType, setTransDirection, slippageBps, setSlippageBps, sellTokenContract, setSellTokenContract, buyTokenContract, setBuyTokenContract }}
+      value={{
+        exchangeContext,
+        setExchangeContext,
+        sellAmount,
+        setSellAmount,
+        buyAmount,
+        setBuyAmount,
+        transactionType,
+        setTransDirection,
+        slippageBps,
+        setSlippageBps,
+        sellTokenContract,
+        setSellTokenContract,
+        buyTokenContract,
+        setBuyTokenContract,
+      }}
     >
       {children}
     </ExchangeContextState.Provider>
@@ -82,17 +114,17 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 // ✅ Hook to use Exchange Context
 export const useExchangeContext = () => {
   const context = useContext(ExchangeContextState);
-  console.log(`🔍 Exchange Context Debug: ${stringifyBigInt(context)}`);
   if (!context) {
     throw new Error("useExchangeContext must be used within an ExchangeWrapper.");
   }
   return context;
 };
 
+// ✅ Hook to get `tradeData`
 export const useTradeData = () => {
   const { exchangeContext } = useExchangeContext();
   if (!exchangeContext) {
-    throw new Error("useTradeData must be used within a Wrapper.");
+    throw new Error("useTradeData must be used within an ExchangeWrapper.");
   }
   return exchangeContext.tradeData;
 };
@@ -110,7 +142,7 @@ export const useBuyAmount = () => {
 
 export const useTransactionType = () => {
   const context = useExchangeContext();
-  return [context.transactionType, context.setTransDirection] as [TRANS_DIRECTION, (type: TRANS_DIRECTION) => void];
+  return [context.transactionType, context.setTransDirection] as [TRADE_DIRECTION, (type: TRADE_DIRECTION) => void];
 };
 
 export const useSlippageBps = () => {
@@ -128,7 +160,7 @@ export const useBuyTokenContract = () => {
   return [context.buyTokenContract, context.setBuyTokenContract] as [TokenContract | undefined, (contract: TokenContract | undefined) => void];
 };
 
-// ✅ Example usage component
+// ✅ Example Usage Component (Original `PriceDisplay`)
 export const PriceDisplay = () => {
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -145,6 +177,12 @@ export const PriceDisplay = () => {
       <h2>Slippage Bps: {slippageBps}</h2>
       <h2>Sell Token Contract: {sellTokenContract?.symbol ?? "None"}</h2>
       <h2>Buy Token Contract: {buyTokenContract?.symbol ?? "None"}</h2>
+      <button onClick={() => setTransDirection(TRADE_DIRECTION.SELL_EXACT_OUT)}>
+        Change to SELL_EXACT_OUT
+      </button>
+      <button onClick={() => setTransDirection(TRADE_DIRECTION.BUY_EXACT_IN)}>
+        Change to BUY_EXACT_IN
+      </button>
     </div>
   );
 };
