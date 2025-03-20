@@ -1,4 +1,4 @@
-import { PriceRequestParams, TRANS_DIRECTION, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
+import { PriceRequestParams, TRADE_DIRECTION, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
 import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from '@/lib/context/ExchangeContext';
@@ -72,7 +72,7 @@ const getApiErrorTransactionData = (
 };
 
 const getPriceApiCall = (
-  transactionType: TRANS_DIRECTION,
+  transactionType: TRADE_DIRECTION,
   chainId: number,
   sellTokenAddress: Address | undefined,
   buyTokenAddress: Address | undefined,
@@ -80,8 +80,8 @@ const getPriceApiCall = (
   buyAmount: bigint,
   slippageBps?: number
 ) => {
-  return (sellAmount === 0n && transactionType === TRANS_DIRECTION.SELL_EXACT_OUT) ||
-    (buyAmount === 0n && transactionType === TRANS_DIRECTION.BUY_EXACT_IN)
+  return (sellAmount === 0n && transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) ||
+    (buyAmount === 0n && transactionType === TRADE_DIRECTION.BUY_EXACT_IN)
     ? undefined
     : [
         apiPriceBase,
@@ -89,8 +89,8 @@ const getPriceApiCall = (
           chainId: chainId,
           sellToken: sellTokenAddress,
           buyToken: buyTokenAddress,
-          sellAmount: transactionType === TRANS_DIRECTION.SELL_EXACT_OUT ? sellAmount.toString() : undefined,
-          buyAmount: transactionType === TRANS_DIRECTION.BUY_EXACT_IN ? buyAmount.toString() : undefined,
+          sellAmount: transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount.toString() : undefined,
+          buyAmount: transactionType === TRADE_DIRECTION.BUY_EXACT_IN ? buyAmount.toString() : undefined,
           slippageBps: slippageBps
         },
       ];

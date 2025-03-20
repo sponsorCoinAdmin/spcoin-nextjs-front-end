@@ -37,8 +37,8 @@ enum BUTTON_TYPE {
 
 // Container Types
 enum CONTAINER_TYPE {
-  INPUT_SELL_PRICE,
-  INPUT_BUY_PRICE
+  SELL_SELECT_CONTAINER,
+  BUY_SELECT_CONTAINER
 }
 
 // Exchange States
@@ -83,7 +83,7 @@ enum SWAP_TYPE {
 }
 
 // Transaction Types
-enum TRANS_DIRECTION {
+enum TRADE_DIRECTION {
   BUY_EXACT_IN,
   SELL_EXACT_OUT
 }
@@ -163,7 +163,7 @@ type TradeData = {
   signer: any;
   slippageBps: number;
   swapType: SWAP_TYPE;
-  transactionType: TRANS_DIRECTION;
+  transactionType: TRADE_DIRECTION;
 };
 
 // Exports
@@ -175,7 +175,7 @@ export {
   SP_COIN_DISPLAY,
   STATUS,
   SWAP_TYPE,
-  TRANS_DIRECTION,
+  TRADE_DIRECTION,
   BASE,
   ETHEREUM,
   HARDHAT,

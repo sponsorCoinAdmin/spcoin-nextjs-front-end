@@ -63,7 +63,7 @@ export default function Dialog({ containerType, showDialog, setShowDialog, callB
   const isDuplicateToken = useCallback(
     (tokenAddress: string | undefined): boolean => {
       if (!tokenAddress) return false;
-      return containerType === CONTAINER_TYPE.INPUT_SELL_PRICE
+      return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
         ? exchangeContext.tradeData.buyTokenContract?.address === tokenAddress
         : exchangeContext.tradeData.sellTokenContract?.address === tokenAddress;
     },
