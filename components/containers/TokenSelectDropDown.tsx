@@ -23,8 +23,8 @@ type Props = {
 function AssetSelect({ containerType, tokenContract, setDecimalAdjustedContract, exchangeContext }: Props) {    /** ✅ Always call hooks in the same order */
     const [showDialog, setShowDialog] = useState<boolean>(false);
 
-    console.debug("🛠 AssetSelect is rendering on:", typeof window !== "undefined" ? "Client ✅" : "Server ❌");
-    console.debug("🛠 exchangeContext in AssetSelect:", stringifyBigInt(exchangeContext));
+    // console.debug("🛠 AssetSelect is rendering on:", typeof window !== "undefined" ? "Client ✅" : "Server ❌");
+    // console.debug("🛠 exchangeContext in AssetSelect:", stringifyBigInt(exchangeContext));
 
     /** ✅ Hooks must always execute in the same order */
     const { tradeData } = exchangeContext;

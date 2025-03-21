@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
@@ -46,6 +46,7 @@ const useWalletLists = () => {
   const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
   const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const previous = useRef<bigint | undefined>(undefined);
 
   useEffect(() => {
     setIsClient(true); // Prevent SSR mismatch
@@ -58,7 +59,7 @@ const useWalletLists = () => {
         ]);
         setAgentWalletList(agents || []);
         setRecipientWalletList(recipients || []);
-        console.log("🔹 Loaded Recipient Wallets:", recipients);  // Debug Step 1 ✅
+        // console.log("🔹 Loaded Recipient Wallets:", recipients);  // Debug Step 1 ✅
       } catch (error) {
         console.error("❌ Error loading wallets:", error);
       }
@@ -127,8 +128,8 @@ const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TY
   /** ✅ Memoized Data Feed (Ensures it’s always an array) */
   const dataFeedList = useMemo(() => {
     const list = isClient ? getDataFeedList(dataFeedType, chainId, walletLists) : [];
-    console.log(`🔍 Computed DataFeedList for ${dataFeedType}:`, list);  // Debug Step 1 ✅
-    console.log(`📊 DataFeedList Length: ${list.length}`);
+    // console.log(`🔍 Computed DataFeedList for ${dataFeedType}:`, list);  // Debug Step 1 ✅
+    // console.log(`📊 DataFeedList Length: ${list.length}`);
     return Array.isArray(list) ? list : [];
   }, [dataFeedType, chainId, walletLists, isClient]);
 

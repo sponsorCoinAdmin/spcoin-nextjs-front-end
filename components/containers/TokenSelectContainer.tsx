@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
-// External Libraries
 import { ethers } from "ethers";
 import { parseUnits } from "ethers";
 import { useAccount } from "wagmi";
@@ -62,41 +60,56 @@ const TokenSelectContainer = ({ containerType }: Props) => {
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [transactionType, setTransDirection] = useTransactionType();
-  const [slippageBps, setSlippageBps] = useSlippageBps();
+  const [slippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
   const [balanceInWei, setBalanceInWei] = useState<bigint>();
+  const [didEdit, setDidEdit] = useState(false); // ✅ Track manual edits
+
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? sellTokenContract || undefined: buyTokenContract  || undefined);
-  const [amount, setAmount] = useState<bigint>(tokenContract?.amount || 0n);
+      ? sellTokenContract || undefined
+      : buyTokenContract || undefined
+  );
+
+  const [amount, setAmount] = useState<bigint>(
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? sellAmount || 0n
+      : buyAmount || 0n
+  );
 
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS: Address = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
-  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address || (BURN_ADDRESS);
-  const debouncedAmount = useDebounce(amount);
+  const TOKEN_CONTRACT_ADDRESS: Address = tokenContract?.address || BURN_ADDRESS;
 
-   useEffect(() => {
-    console.debug(
-      `***tokenSelectContainer.useEffect([tokenContract]):tokenContract = ${tokenContract?.name}`
-    );
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      tradeData.sellTokenContract = tokenContract;
-      setSellTokenContract(tokenContract)
-    } else {
-      tradeData.buyTokenContract = tokenContract;
-      setBuyTokenContract(tokenContract)
+  const debouncedAmount = useDebounce(amount, 500);
+
+  useEffect(() => {
+    if (tokenContract && !didEdit) {
+      setAmount(tokenContract.amount || 0n);
     }
   }, [tokenContract]);
 
   useEffect(() => {
-    console.debug(
-      `%%%% BuyContainer.useEffect[sellAmount = ${debouncedAmount}])`
-    );
+    console.log("[TokenSelectContainer] amount changed:", amount);
+  }, [amount]);
 
+  useEffect(() => {
+    console.log("[TokenSelectContainer] debouncedAmount changed:", debouncedAmount);
+  }, [debouncedAmount]);
+
+  useEffect(() => {
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      setSellTokenContract(tokenContract);
+    } else {
+      setBuyTokenContract(tokenContract);
+    }
+  }, [tokenContract]);
+
+  useEffect(() => {
     if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
       setSellAmount(debouncedAmount);
     } else {
@@ -104,51 +117,40 @@ const TokenSelectContainer = ({ containerType }: Props) => {
     }
   }, [debouncedAmount]);
 
-  // useEffect(() => {
-  //   const updateAmount =
-  //     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-  //       ? sellAmount
-  //       : buyAmount;
+  useEffect(() => {
+    const updateAmount =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? sellAmount
+        : buyAmount;
 
-  //   const decimals: number = activeContract?.decimals || 0;
-  //   const formattedAmount: string = getValidBigIntToFormattedValue(updateAmount, decimals);
+    const decimals: number = tokenContract?.decimals || 0;
+    const formatted = getValidBigIntToFormattedValue(updateAmount, decimals);
 
-  //   if (formattedAmount !== "") {
-  //     setFormattedAmount(formattedAmount);
-  //   }
+    if (formatted !== "") {
+      setFormattedAmount(formatted);
+    }
 
-  //   console.debug(`
-  //     tokenSelectContainer:updateAmount = ${updateAmount}
-  //     tokenSelectContainer:formattedAmount = ${formattedAmount}
-  //   `);
+    setAmount(updateAmount);
+  }, [sellAmount, buyAmount]);
 
-  //   setAmount(updateAmount);
-  // }, [sellAmount, buyAmount]);
+  useEffect(() => {
+    if (tokenContract) {
+      tokenContract.balance = balanceInWei || 0n;
+      const decimals: number = tokenContract.decimals || 18;
+      const formatted = ethers.formatUnits(balanceInWei || 0n, decimals);
+      setFormattedBalance(formatted);
+    } else {
+      setFormattedBalance("Undefined");
+    }
+  }, [balanceInWei, tokenContract?.balance]);
 
-  // useEffect(() => {
-  //   if (activeContract) {
-  //     activeContract.balance = balanceInWei || 0n;
-  //   }
-  // }, [balanceInWei]);
+  useEffect(() => {
+    setBalanceInWei(9999999n);
+  }, [ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS, amount]);
 
-  // useEffect(() => {
-  //   setBalanceInWei(9999999n); // Placeholder for actual balance fetching logic
-  // }, [ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS, amount]);
-
-  // useEffect(() => {
-  //   if (tokenContract) {
-  //     const decimals: number = tokenContract.decimals || 0;
-  //     tokenContract.balance = balanceInWei || 0n;
-  //     setFormattedBalance(ethers.formatUnits(balanceInWei || 0n, decimals));
-  //   } else {
-  //     setFormattedBalance("Undefined");
-  //   }
-  // }, [balanceInWei, activeContract?.balance]);
-
-  const setDecimalAdjustedContract = (
-    newTokenContract: TokenContract | undefined
-  ) => {
-    setAmount(decimalAdjustTokenAmount(amount, newTokenContract, tokenContract));
+  const setDecimalAdjustedContract = (newTokenContract: TokenContract | undefined) => {
+    const adjusted = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
+    setAmount(adjusted);
     setTokenContract(newTokenContract);
   };
 
@@ -156,26 +158,30 @@ const TokenSelectContainer = ({ containerType }: Props) => {
     setStringToBigIntStateValue(stringValue);
     const tradeDirection = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? TRADE_DIRECTION.SELL_EXACT_OUT
-      : TRADE_DIRECTION.BUY_EXACT_IN
-    setTransDirection(
-      tradeDirection
-    );
-    // tradeData.transactionType = tradeDirection;
+      : TRADE_DIRECTION.BUY_EXACT_IN;
 
-    const contType = `setTextInputValue:TransSelectContainer Type = ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? 'SELL_SELECT_CONTAINER' : 'BUY_SELECT_CONTAINER'}\n`
-
-    const direction = `setTextInputValue:TRADE_DIRECTION  = ${tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-      ? 'BUY_EXACT_IN' : 'SELL_EXACT_OUT'}\n`
-    alert(`setTextInputValue:\ncontainerType = ${contType}\nsetTextInputValue containerType = ${direction}\n`)
+    setTransDirection(tradeDirection);
   };
 
   const setStringToBigIntStateValue = (stringValue: string) => {
-    const decimals = tokenContract?.decimals;
+    const decimals = tokenContract?.decimals ?? 18;
+
     stringValue = getValidFormattedPrice(stringValue, decimals);
     setFormattedAmount(stringValue);
-    const bigIntValue = parseUnits(stringValue, decimals);
-    setAmount(bigIntValue);
+
+    // ✅ Guard against invalid input
+    if (!stringValue || isNaN(Number(stringValue))) {
+      console.warn("[setStringToBigIntStateValue] Skipping invalid input:", stringValue);
+      return;
+    }
+
+    try {
+      const bigIntValue = parseUnits(stringValue, decimals);
+      setAmount(prev => (prev === bigIntValue ? prev : bigIntValue)); // ✅ Avoid duplicate state
+      setDidEdit(true);
+    } catch (e) {
+      console.warn("[setStringToBigIntStateValue] parseUnits failed:", stringValue);
+    }
   };
 
   const buySellText = isWrappingTransaction(exchangeContext)
@@ -183,35 +189,27 @@ const TokenSelectContainer = ({ containerType }: Props) => {
       ? "You Exactly Pay"
       : "You Exactly Receive"
     : transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
-    ? containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? "You Exactly Pay"
-      : `You Receive +-${slippageBps * 100}%`
-    : containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    ? `You Pay +-${slippageBps * 100}%`
-    : "You Exactly Receive";
+      ? containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? "You Exactly Pay"
+        : `You Receive +-${slippageBps * 100}%`
+      : containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? `You Pay +-${slippageBps * 100}%`
+        : "You Exactly Receive";
 
-  const dumpParms = (
-    // tradeData: any,
-    // sellAmount: bigint,
-    // buyAmount: bigint,
-    // formattedAmount: string,
-    cType?: CONTAINER_TYPE // Optional parameter
-  ) => {
-  
-    // Ensure cType is either undefined or matches tradeData.containerType
+  const dumpParms = (cType?: CONTAINER_TYPE) => {
     if (cType === undefined || containerType === cType) {
       let msg = `tokenSelectContainer ${buySellText}\n`;
 
-      msg += `TransSelectContainer Type = ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER 
+      msg += `TransSelectContainer Type = ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
         ? 'SELL_SELECT_CONTAINER' : 'BUY_SELECT_CONTAINER'}\n`;
 
       msg += `TRADE_DIRECTION           = ${tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN
         ? 'BUY_EXACT_IN' : 'SELL_EXACT_OUT'}\n`;
 
-      msg += `sellAmount                  = ${sellAmount}\n`;
-      msg += `buyAmount                   = ${buyAmount}\n`;
-      msg += `formattedAmount             = ${formattedAmount}\n`;
-  
+      msg += `sellAmount                = ${sellAmount}\n`;
+      msg += `buyAmount                 = ${buyAmount}\n`;
+      msg += `formattedAmount           = ${formattedAmount}\n`;
+
       alert(msg);
     }
   };
@@ -221,21 +219,18 @@ const TokenSelectContainer = ({ containerType }: Props) => {
     dumpParms(CONTAINER_TYPE.BUY_SELECT_CONTAINER);
   }, [sellAmount, buyAmount]);
 
-  const fmt = (fmt:string ):string => {
-    // if (fmt !== "0" && fmt !== "")
-    //   alert(`************fmt = ${fmt}`)
-    return fmt
-  }
-
   return (
     <div className={`${styles.inputs} ${styles.tokenSelectContainer}`}>
       <input
         className={styles.priceInput}
         placeholder="0"
         disabled={!tokenContract}
-        value={fmt(formattedAmount || "")}
+        value={formattedAmount || ""}
         onChange={(e) => setTextInputValue(e.target.value)}
-        onBlur={(e) => setFormattedAmount(parseFloat(e.target.value).toString())}
+        onBlur={(e) => {
+          setFormattedAmount(parseFloat(e.target.value).toString());
+          setDidEdit(false); // ✅ Reset edit flag to allow tokenContract to update amount again
+        }}
       />
       <TokenSelect
         exchangeContext={exchangeContext}
@@ -253,8 +248,6 @@ const TokenSelectContainer = ({ containerType }: Props) => {
         ))}
     </div>
   );
-
 };
-
 
 export default TokenSelectContainer;
