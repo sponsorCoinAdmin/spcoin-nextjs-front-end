@@ -46,6 +46,7 @@ import {
   TradeData,
   TRADE_DIRECTION,
 } from "@/lib/structure/types";
+import { usePriceAPI } from "@/lib/0X/fetcher";
 
 type Props = {
   containerType: CONTAINER_TYPE;
@@ -186,7 +187,6 @@ const TokenSelectContainer = ({ containerType }: Props) => {
       dumpParms(CONTAINER_TYPE.SELL_SELECT_CONTAINER);
       dumpParms(CONTAINER_TYPE.BUY_SELECT_CONTAINER);
     }, [debouncedAmount]);
-  
 
   const fmt = (fmt: string): string => fmt;
 

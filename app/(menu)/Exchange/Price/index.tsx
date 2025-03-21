@@ -53,10 +53,10 @@ export default function PriceView() {
   }, [sellTokenAddress, buyTokenAddress]);
 
   // ✅ Ensure `usePriceAPI` is called at the top level
-  // const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
-  //   setErrorMessage,
-  //   apiErrorCallBack
-  // });
+  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
+    setErrorMessage,
+    apiErrorCallBack
+  });
 
   // ✅ Ensure `useEffect` only references values, not hooks
   useEffect(() => {
@@ -111,14 +111,14 @@ export default function PriceView() {
         <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
         <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
-        {/* <PriceButton 
+        <PriceButton 
           isLoadingPrice={isLoadingPrice} 
           errorMessage={errorMessage} 
           setErrorMessage={setErrorMessage} 
           setResetAmounts={setResetAmounts} 
           toggleButton={toggleButton} 
         />
-        <AffiliateFee priceResponse={priceData} /> */}
+        <AffiliateFee priceResponse={priceData} />
       </div>
       <FeeDisclosure />
     </form>
