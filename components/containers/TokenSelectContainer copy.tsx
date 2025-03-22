@@ -18,7 +18,7 @@ import {
   useSellAmount,
   useSlippageBps,
   useTradeData,
-  useTransactionType,
+  useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract
 } from "@/lib/context/contextHooks";
@@ -38,7 +38,7 @@ import {
 import {
   decimalAdjustTokenAmount,
   getValidBigIntToFormattedValue,
-  getValidFormattedPrice,
+  parseValidFormattedAmount,
   isSpCoin,
 } from "@/lib/spCoin/utils";
 
@@ -61,7 +61,7 @@ const TokenSelectContainer = ({ containerType }: Props) => {
   const provider = signer?.provider;
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
-  const [transactionType, setTransDirection] = useTransactionType();
+  const [transactionType, setTradeDirection] = useTradeDirection();
   const [slippageBps, setSlippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
@@ -170,7 +170,7 @@ const TokenSelectContainer = ({ containerType }: Props) => {
 
   const setTextInputValue = (stringValue: string) => {
     const decimals = tokenContract?.decimals;
-    const formatted = getValidFormattedPrice(stringValue, decimals);
+    const formatted = parseValidFormattedAmount(stringValue, decimals);
     const bigIntValue = parseUnits(formatted, decimals);
   
     // ✅ Only set if changed
@@ -181,7 +181,7 @@ const TokenSelectContainer = ({ containerType }: Props) => {
       ? TRADE_DIRECTION.SELL_EXACT_OUT
       : TRADE_DIRECTION.BUY_EXACT_IN;
   
-    setTransDirection(tradeDirection); // This is safe and needed for direction
+    setTradeDirection(tradeDirection); // This is safe and needed for direction
   
     const contType = `setTextInputValue:TransSelectContainer Type = ${
       containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER

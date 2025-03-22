@@ -15,7 +15,8 @@ export default function Dialog({showDialog}:Props) {
 
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     // 
-    // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
+    //   const [errorMessage, setErrorMessage] = useErrorMessage();
+    
 
     // useEffect(() => {
     //     alert(JSON.stringify(errorMessage,null,2))

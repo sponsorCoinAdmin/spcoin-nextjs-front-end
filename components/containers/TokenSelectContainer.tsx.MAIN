@@ -22,7 +22,7 @@ import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
 import { BURN_ADDRESS, delay, isWrappingTransaction } from "@/lib/network/utils";
-import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, getValidFormattedPrice, isSpCoin } from "@/lib/spCoin/utils";
+import { decimalAdjustTokenAmount, getValidBigIntToFormattedPrice, parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/utils";
 import { formatDecimals, useWagmiERC20TokenBalanceOf } from "@/lib/wagmi/wagmiERC20ClientRead";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 
@@ -80,7 +80,7 @@ const tokenSelectContainer = ({
   const debouncedAmount = useDebounce(amount);
 
   useEffect(() => {
-    const formattedAmount = getValidFormattedPrice(amount, tokenContract?.decimals);
+    const formattedAmount = parseValidFormattedAmount(amount, tokenContract?.decimals);
     setFormattedAmount(formattedAmount);
   }, []);
 
@@ -192,7 +192,7 @@ const tokenSelectContainer = ({
 
   const setStringToBigIntStateValue = (stringValue: string) => {
     const decimals = tokenContract?.decimals;
-    stringValue = getValidFormattedPrice(stringValue, decimals);
+    stringValue = parseValidFormattedAmount(stringValue, decimals);
     const bigIntValue = parseUnits(stringValue, decimals);
     setFormattedAmount(stringValue);
     setAmount(bigIntValue);

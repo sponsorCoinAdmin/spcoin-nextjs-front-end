@@ -3,7 +3,6 @@ import { getWagmiBalanceOfRec } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { ExchangeContext, SWAP_TYPE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
-import { useExchangeContext } from "../context/ExchangeContext";
 import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
 import { BURN_ADDRESS } from "../network/utils";
 
@@ -24,10 +23,10 @@ function getQueryVariable(_urlParams: string, _searchParam: string) {
 const getValidBigIntToFormattedValue = (value: bigint | undefined, decimals: number | undefined) => {
   decimals = decimals || 0;
   let stringValue: string = formatUnits(value || 0n, decimals);
-  return getValidFormattedPrice(stringValue, decimals);
+  return parseValidFormattedAmount(stringValue, decimals);
 };
 
-const getValidFormattedPrice = (value: string | bigint, decimals: number | undefined) => {
+const parseValidFormattedAmount = (value: string | bigint, decimals: number | undefined) => {
   decimals = decimals || 0;
   const price: string = typeof value === "string" ? value : formatUnits(value || 0n, decimals);
   const re = /^-?\d+(?:[.,]\d*?)?$/;
@@ -43,7 +42,7 @@ const getValidFormattedPrice = (value: string | bigint, decimals: number | undef
 };
 
 const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (amount: bigint) => void) => {
-  txt = getValidFormattedPrice(txt, decimals);
+  txt = parseValidFormattedAmount(txt, decimals);
   if (!isNaN(Number(txt))) setSellAmount(parseUnits(txt, decimals));
   return txt;
 };
@@ -61,10 +60,11 @@ const fetchTokenDetails = async (chainId: any, tokenAddr: Address) => {
     if (isAddress(tokenAddr)) {
       let retResponse: any = await getWagmiBalanceOfRec(tokenAddr); // ✅ Fix: Removed `.then()`
       tokenContract = {
-        chainId,
+        chainId: 1,
         address: tokenAddr,
         name: retResponse.name,
         symbol: retResponse.symbol,
+        amount: 0n,
         decimals: retResponse.decimals,
         balance: 0n,
         totalSupply: undefined,
@@ -147,7 +147,7 @@ const invalidTokenContract = (textInputField: string | undefined, chainId: any) 
     : undefined;
 };
 
-const logAlert = (obj: any, name: string = "", logAlert: boolean = true, logConsole: boolean = true): string => {
+const logAlert = (obj: any, name: string = "", logAlert: boolean = false, logConsole: boolean = true): string => {
   const objStr = name ? `${name}: ${stringifyBigInt(obj)}` : stringifyBigInt(obj);
   if (logConsole) console.debug(objStr);
   if (logAlert) alert(objStr);
@@ -169,7 +169,7 @@ export {
   getPublicFileUrl,
   getValidAddress,
   getValidBigIntToFormattedValue,
-  getValidFormattedPrice,
+  parseValidFormattedAmount,
   getQueryVariable,
   getTokenDetails,
   invalidTokenContract,

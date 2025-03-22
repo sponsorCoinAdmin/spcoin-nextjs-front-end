@@ -1,7 +1,7 @@
 'use client'
 
 import styles from '@/styles/Exchange.module.css'
-import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/contextHooks";
+import { useBuyAmount, useErrorMessage, useExchangeContext, useSellAmount } from "@/lib/context/contextHooks";
 import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRADE_DIRECTION, TokenContract, TradeData } from '@/lib/structure/types';
 import swap from '@/lib/spCoin/swap';
 import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, isWrappedSellToken } from '@/lib/network/utils';
@@ -9,18 +9,17 @@ import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, i
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
   isLoadingPrice: boolean,
-  errorMessage: ErrorMessage | undefined,
-  setErrorMessage: (errorMessage: ErrorMessage | undefined) => void,
   setResetAmounts: (resetAmounts: boolean) => void,
   toggleButton: boolean
 }
 
-const ExchangeButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton }: Props) => {
+const ExchangeButton = ({ isLoadingPrice,  setResetAmounts, toggleButton }: Props) => {
   // ✅ Use useExchangeContext() instead of direct reference
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
+  const [errorMessage, setErrorMessage] = useErrorMessage();
   
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;

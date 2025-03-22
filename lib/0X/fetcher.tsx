@@ -1,12 +1,17 @@
 import { PriceRequestParams, TRADE_DIRECTION, ErrorMessage, HARDHAT, STATUS } from '@/lib/structure/types';
 import qs from "qs";
 import useSWR from 'swr';
-import { useBuyAmount, useExchangeContext, useSellAmount, useTradeData } from '@/lib/context/contextHooks';
+import {
+  useApiErrorMessage,
+  useBuyAmount,
+  useErrorMessage,
+  useExchangeContext,
+  useSellAmount,
+  useTradeData } from '@/lib/context/contextHooks';
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from "wagmi";
-
 
 // Constants
 const SELL_AMOUNT_ZERO = 100;
@@ -96,19 +101,14 @@ const getPriceApiCall = (
       ];
 };
 
-type Props = {
-  setErrorMessage: (message?: ErrorMessage) => void;
-  apiErrorCallBack: (error: ErrorMessage) => void;
-};
-
-function usePriceAPI({
-  setErrorMessage,
-  apiErrorCallBack
-}: Props) {
+function usePriceAPI() {
   // ✅ Hooks MUST be at the top level
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
   const chainId = useChainId();
+  const [errorMessage, setErrorMessage] = useErrorMessage();
+  const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
+  // alert("FETCHER")
 
   let sellTokenAddress = tradeData.sellTokenContract?.address;
   let buyTokenAddress = tradeData.buyTokenContract?.address;
@@ -153,7 +153,7 @@ function usePriceAPI({
     {
       onSuccess: (data) =>
         data.code
-          ? apiErrorCallBack({
+          ? setApiErrorMessage({
               status: STATUS.ERROR_API_PRICE,
               source: "ApiFetcher: ",
               errCode: data.code,
@@ -166,7 +166,7 @@ function usePriceAPI({
             })
           : setBuyAmount(data.buyAmount || 0n),
       onError: (error) =>
-        apiErrorCallBack({
+        setApiErrorMessage({
           status: STATUS.ERROR_API_PRICE,
           source: "ApiFetcher: ",
           errCode: error.code,

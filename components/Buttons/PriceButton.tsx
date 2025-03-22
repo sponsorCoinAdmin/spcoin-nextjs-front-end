@@ -7,17 +7,14 @@ import { useExchangeContext } from '@/lib/context/contextHooks'
 import DumpContextButton from './DumpContextButton';
 import { useAccount } from 'wagmi';
 import { Address } from 'viem';
-import { ErrorMessage } from '@/lib/structure/types';
 
 type Props = {
     isLoadingPrice: boolean,
-    errorMessage: ErrorMessage | undefined,
-    setErrorMessage: (errorMessage: ErrorMessage | undefined) => void,
     setResetAmounts: (resetAmounts: boolean) => void,
     toggleButton: boolean
 }
 
-const PriceButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setResetAmounts, toggleButton }: Props) => {    
+const PriceButton = ({ isLoadingPrice, setResetAmounts, toggleButton }: Props) => {    
     const { exchangeContext } = useExchangeContext();
     const ACTIVE_ACCOUNT = useAccount();
     
@@ -40,8 +37,6 @@ const PriceButton = ({ isLoadingPrice, errorMessage, setErrorMessage, setResetAm
             ) : (
                 <ExchangeButton
                     isLoadingPrice={isLoadingPrice}
-                    errorMessage={errorMessage}
-                    setErrorMessage={setErrorMessage}
                     setResetAmounts={setResetAmounts}
                     toggleButton={toggleButton}
                 />

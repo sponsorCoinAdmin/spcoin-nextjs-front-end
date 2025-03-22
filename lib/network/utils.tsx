@@ -125,9 +125,9 @@ const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress:
   const chainId = exchangeContext.tradeData.chainId;
   const ethAct = exchangeContext.activeAccountAddress;
 
-  console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
-               Ethereum Account Address = ${ethAct} 
-               Token Account Address = ${tokenAddress}`);
+  // console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
+  //              Ethereum Account Address = ${ethAct} 
+  //              Token Account Address = ${tokenAddress}`);
 
   return ethAct === tokenAddress ? getNetworkWethAddress(chainId) : tokenAddress;
 };

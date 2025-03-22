@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { ethers } from "ethers";
 import { parseUnits } from "ethers";
 import { useAccount } from "wagmi";
-import { Address } from "viem";
+import { Address, formatUnits } from "viem";
 
 // Wagmi & Custom Hooks
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import styles from "@/styles/Exchange.module.css";
 
 // Context & Styles
 import {
@@ -16,11 +16,10 @@ import {
   useSellAmount,
   useSlippageBps,
   useTradeData,
-  useTransactionType,
+  useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract
 } from "@/lib/context/contextHooks";
-import styles from "@/styles/Exchange.module.css";
 
 // Components
 import AddSponsorButton from "../Buttons/AddSponsorButton";
@@ -35,8 +34,9 @@ import {
 import {
   decimalAdjustTokenAmount,
   getValidBigIntToFormattedValue,
-  getValidFormattedPrice,
+  parseValidFormattedAmount,
   isSpCoin,
+  logAlert,
 } from "@/lib/spCoin/utils";
 
 // Types & Constants
@@ -57,22 +57,22 @@ const TokenSelectContainer = ({ containerType }: Props) => {
   const tradeData: TradeData = useTradeData();
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
-  const [transactionType, setTransDirection] = useTransactionType();
+  const [transactionType, setTradeDirection] = useTradeDirection();
   const [slippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   const [formattedAmount, setFormattedAmount] = useState<string | undefined>();
   const [formattedBalance, setFormattedBalance] = useState<string>();
-  const [balanceInWei, setBalanceInWei] = useState<bigint>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? sellTokenContract || undefined
       : buyTokenContract || undefined
   );
 
-  const [amount, setAmount] = useState<bigint>(0n);
-  const debouncedAmount = useDebounce(amount, 600);
+  // bigIntInputAmount useState variable for debouncedAmount update only.
+  const [bigIntInputAmount, setBigIntInputAmount] = useState<bigint>(0n);
+  const debouncedAmount = useDebounce(bigIntInputAmount, 600);
 
   const ACTIVE_ACCOUNT = useAccount();
   const ACTIVE_ACCOUNT_ADDRESS: Address = ACTIVE_ACCOUNT.address || BURN_ADDRESS;
@@ -80,55 +80,69 @@ const TokenSelectContainer = ({ containerType }: Props) => {
 
   // Set amount on tokenContract change
   useEffect(() => {
-    if (tokenContract?.amount && amount === 0n) {
-      setAmount(tokenContract.amount);
-    }
+    //   setBigIntInputAmount(tokenContract.amount);
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) { 
+      setSellTokenContract(tokenContract);}
+    else { 
+      setBuyTokenContract(tokenContract); }
   }, [tokenContract]);
 
-  // Sync tokenContract to context
-  useEffect(() => {
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      setSellTokenContract(tokenContract);
-    } else {
-      setBuyTokenContract(tokenContract);
+  const setDecimalAdjustedContract = ( newTokenContract: TokenContract | undefined ) => {
+    alert(`Setting Token Contract ${newTokenContract?.symbol}`)
+    if (newTokenContract) {
+      const adjusted = decimalAdjustTokenAmount(bigIntInputAmount, newTokenContract, tokenContract);
+      newTokenContract.amount = adjusted;
+      setTokenContract(newTokenContract);
     }
-  }, [tokenContract]);
-
-
-  const setDecimalAdjustedContract = (
-    newTokenContract: TokenContract | undefined
-  ) => {
-    const adjusted = decimalAdjustTokenAmount(amount, newTokenContract, tokenContract);
-    setAmount(adjusted);
-    setTokenContract(newTokenContract);
   };
 
+  useEffect(() => {
+    if (tokenContract) {
+      const decimals:number = tokenContract.decimals || 0;
+      const formatted:string = formatUnits(bigIntInputAmount, decimals);
+      setFormattedAmount(formatted);
+    }
+  }, [bigIntInputAmount]);
+
+  useEffect(() => {
+    // if (sellTokenContract?.amount !== sellAmount)
+    logAlert(`sellTokenContract?.amount = ${sellTokenContract?.amount}`,`useEffect([sellAmount])`)
+    logAlert(`sellAmount                = ${sellAmount}`,`useEffect([sellAmount])`)
+  }, [sellAmount]);
+
+  useEffect(() => {
+    logAlert(`------------------------------------------------------------------------`)
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+      logAlert(`SELL_SELECT_CONTAINER`)
+    else
+      logAlert(`BUY_SELECT_CONTAINER`)
+
+    if (buyTokenContract) {
+      const decimals:number = buyTokenContract?.decimals || 0;
+      const formatted:string = formatUnits(buyAmount, decimals);
+      setFormattedAmount(formatted);
+    }
+    else {
+      logAlert(`buyTokenContract = ${buyTokenContract}`)
+    }
+
+    logAlert(`buyTokenContract?.amount = ${buyTokenContract?.amount}`)
+    logAlert(`buyAmount                = ${buyAmount}`,`useEffect([buyAmount])`)
+    logAlert(`=======================================================================`)
+
+  }, [buyAmount]);
+
   const setTextInputValue = (stringValue: string) => {
-    const decimals = tokenContract?.decimals;
-    const formatted = getValidFormattedPrice(stringValue, decimals);
-    const bigIntValue = parseUnits(formatted, decimals);
+    if (tokenContract) {
+      const decimals:number = tokenContract.decimals || 0;
+      const formatted:string = parseValidFormattedAmount(stringValue, decimals);
+      const bigIntInputAmount:bigint = parseUnits(formatted, decimals);
+      setBigIntInputAmount(bigIntInputAmount); // ✅ always update bigIntInputAmount
 
-    setFormattedAmount(formatted);
-    setAmount(bigIntValue); // ✅ always update amount
-
-    const tradeDirection = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? TRADE_DIRECTION.SELL_EXACT_OUT
-      : TRADE_DIRECTION.BUY_EXACT_IN;
-
-    setTransDirection(tradeDirection);
-
-    const contType = `setTextInputValue:TransSelectContainer Type = ${
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? 'SELL_SELECT_CONTAINER'
-        : 'BUY_SELECT_CONTAINER'
-    }\n`;
-
-    const direction = `setTextInputValue:TRADE_DIRECTION  = ${
-      tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-        ? 'BUY_EXACT_IN'
-        : 'SELL_EXACT_OUT'
-    }\n`;
-
+      setTradeDirection(CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? TRADE_DIRECTION.SELL_EXACT_OUT
+        : TRADE_DIRECTION.BUY_EXACT_IN);
+    }
     // alert(`setTextInputValue:\ncontainerType = ${contType}${direction}`);
   };
 
@@ -150,43 +164,48 @@ const TokenSelectContainer = ({ containerType }: Props) => {
 
       msg += `TransSelectContainer Type = ${
         containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? 'SELL_SELECT_CONTAINER'
-          : 'BUY_SELECT_CONTAINER'}\n`;
+          ? 'SELL_SELECT_CONTAINER' : 'BUY_SELECT_CONTAINER'}\n`;
 
-      msg += `TRADE_DIRECTION           = ${
+      msg += `TRADE_DIRECTION = ${
         tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN
-          ? 'BUY_EXACT_IN'
-          : 'SELL_EXACT_OUT'}\n`;
+          ? 'BUY_EXACT_IN' : 'SELL_EXACT_OUT'}\n`;
 
       msg += `sellAmount                  = ${sellAmount}\n`;
       msg += `buyAmount                   = ${buyAmount}\n`;
       msg += `formattedAmount             = ${formattedAmount}\n`;
 
-      alert(msg);
+      logAlert(msg,"dumpParms");
     }
   };
 
     // useEffect for debouncedAmount
     // const prevRef = useRef<bigint | undefined>();
-    useEffect(() => {
-    //   if (debouncedAmount === prevRef.current) return;
-    //   prevRef.current = debouncedAmount;
-  
-    //   const decimals = tokenContract?.decimals || 0;
-    //   const formatted = getValidBigIntToFormattedValue(debouncedAmount, decimals);
-    //   setFormattedAmount(formatted);
-  
-    //   if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-    //     setSellAmount(debouncedAmount);
-    //   } else {
-    //     setBuyAmount(debouncedAmount);
-    //   }
-  
-    //   alert(`🔥 Debounced Amount Updated:\n${debouncedAmount.toString()}`);
-  
-      dumpParms(CONTAINER_TYPE.SELL_SELECT_CONTAINER);
-      dumpParms(CONTAINER_TYPE.BUY_SELECT_CONTAINER);
-    }, [debouncedAmount]);
+  useEffect(() => {
+  //   if (debouncedAmount === prevRef.current) return;
+  //   prevRef.current = debouncedAmount;
+
+    const decimals = tokenContract?.decimals || 0;
+    // const formatted = getValidBigIntToFormattedValue(debouncedAmount, decimals);
+    // setFormattedAmount(formatted);
+
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      if (sellTokenContract) {
+        sellTokenContract.amount = debouncedAmount
+      }
+      setSellAmount(debouncedAmount);
+    } else {
+      setBuyAmount(debouncedAmount);
+      if (buyTokenContract) {
+        buyTokenContract.amount = debouncedAmount
+      }
+    }
+    setBuyAmount(debouncedAmount);
+
+  //   alert(`🔥 Debounced Amount Updated:\n${debouncedAmount.toString()}`);
+
+    dumpParms(CONTAINER_TYPE.SELL_SELECT_CONTAINER);
+    dumpParms(CONTAINER_TYPE.BUY_SELECT_CONTAINER);
+  }, [debouncedAmount]);
 
   const fmt = (fmt: string): string => fmt;
 

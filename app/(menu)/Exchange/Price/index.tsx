@@ -20,7 +20,14 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { useBuyAmount, useBuyTokenContract, useExchangeContext, useSellAmount, useSellTokenContract, useSlippageBps} from "@/lib/context/contextHooks";  
+import {
+  useBuyAmount,
+  useBuyTokenContract,
+  useErrorMessage,
+  useExchangeContext,
+  useSellAmount,
+  useSellTokenContract,
+  useSlippageBps} from "@/lib/context/contextHooks";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { Address } from 'viem';
 import { isWrappingTransaction } from '@/lib/network/utils';
@@ -36,9 +43,8 @@ export default function PriceView() {
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
-  const [slippageBps, setSlippageBps] = useSlippageBps();
   const [showError, setShowError] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
+  const [errorMessage, setErrorMessage] = useErrorMessage();
   const [resetAmounts, setResetAmounts] = useState<boolean>(false);
   const [toggleButton, setToggleButton] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
@@ -52,11 +58,17 @@ export default function PriceView() {
     return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(exchangeContext) : false;
   }, [sellTokenAddress, buyTokenAddress]);
 
+  const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
+    setErrorMessage({
+      errCode: apiErrorObj.errCode,
+      msg: stringifyBigInt(apiErrorObj.msg),
+      source: apiErrorObj.source,
+      status: STATUS.ERROR_API_PRICE,
+    });
+  }, []);
+
   // ✅ Ensure `usePriceAPI` is called at the top level
-  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI({
-    setErrorMessage,
-    apiErrorCallBack
-  });
+  const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI();
 
   // ✅ Ensure `useEffect` only references values, not hooks
   useEffect(() => {
@@ -78,7 +90,7 @@ export default function PriceView() {
     exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
   }, [ACTIVE_ACCOUNT.address, sellTokenContract, buyTokenContract, exchangeContext]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (resetAmounts) {
       setBuyAmount(0n);
       setSellAmount(0n);
@@ -105,7 +117,7 @@ export default function PriceView() {
 
   return (
     <form autoComplete="off">
-      <ErrorDialog errMsg={errorMessage} showDialog={showError} />
+      <ErrorDialog showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
         <TradeContainerHeader />
         <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
@@ -113,8 +125,6 @@ export default function PriceView() {
         <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
         <PriceButton 
           isLoadingPrice={isLoadingPrice} 
-          errorMessage={errorMessage} 
-          setErrorMessage={setErrorMessage} 
           setResetAmounts={setResetAmounts} 
           toggleButton={toggleButton} 
         />
