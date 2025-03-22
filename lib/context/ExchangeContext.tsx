@@ -1,4 +1,4 @@
-// File: ExchangeContext.tsx
+// File: ExchangeContext.tsx (Corrected for Nested Amounts in TokenContracts)
 "use client";
 
 import React, { createContext, useEffect, useState, ReactNode } from "react";
@@ -8,9 +8,14 @@ import {
   saveExchangeContext,
   loadStoredExchangeContext,
 } from "@/lib/context/ExchangeHelpers";
-import { ExchangeContext, TRADE_DIRECTION, TokenContract, ErrorMessage, STATUS } from "@/lib/structure/types";
+import {
+  ExchangeContext,
+  TRADE_DIRECTION,
+  TokenContract,
+  ErrorMessage,
+  STATUS,
+} from "@/lib/structure/types";
 
-// Define Context Type
 export type ExchangeContextType = {
   exchangeContext: ExchangeContext;
   setExchangeContext: (context: ExchangeContext) => void;
@@ -32,83 +37,128 @@ export type ExchangeContextType = {
   setApiErrorMessage: (error: ErrorMessage | undefined) => void;
 };
 
-// Export ExchangeContextState
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
-// Provider Component
 export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const chainId = useChainId();
   const [exchangeContext, setExchangeContext] = useState<ExchangeContext | null>(null);
-  const [sellAmount, setSellAmount] = useState<bigint>(BigInt(0));
-  const [buyAmount, setBuyAmount] = useState<bigint>(BigInt(0));
-  const [transactionType, setTransactionTypeState] = useState<TRADE_DIRECTION>(
-    exchangeContext?.tradeData?.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN
-  );
-  const [slippageBps, setSlippageBps] = useState<number>(exchangeContext?.tradeData?.slippageBps ?? 0);
-  const [sellTokenContract, setSellTokenContract] = useState<TokenContract | undefined>(exchangeContext?.tradeData?.sellTokenContract ?? undefined);
-  const [buyTokenContract, setBuyTokenContract] = useState<TokenContract | undefined>(exchangeContext?.tradeData?.buyTokenContract ?? undefined);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>(undefined);
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>(undefined);
 
-  // Custom function to update `transactionType` and `exchangeContext`
-  const setTradeDirection = (type: TRADE_DIRECTION) => {
-    setTransactionTypeState(type);
-
-    setExchangeContext((prevContext) => {
-      if (!prevContext) return prevContext;
-
+  const setSellAmount = (amount: bigint) => {
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
       return {
-        ...prevContext,
+        ...prev,
         tradeData: {
-          ...prevContext.tradeData,
-          transactionType: type, // Update tradeData.transactionType
+          ...prev.tradeData,
+          sellTokenContract: prev.tradeData.sellTokenContract
+            ? {
+                ...prev.tradeData.sellTokenContract,
+                amount,
+              }
+            : undefined,
         },
       };
     });
   };
 
-  // Load initial context once `chainId` is available
+  const setBuyAmount = (amount: bigint) => {
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          buyTokenContract: prev.tradeData.buyTokenContract
+            ? {
+                ...prev.tradeData.buyTokenContract,
+                amount,
+              }
+            : undefined,
+        },
+      };
+    });
+  };
+
+  const setTradeDirection = (type: TRADE_DIRECTION) => {
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          transactionType: type,
+        },
+      };
+    });
+  };
+
+  const setSlippageBps = (bps: number) => {
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          slippageBps: bps,
+        },
+      };
+    });
+  };
+
+  const setSellTokenContract = (contract: TokenContract | undefined) => {
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          sellTokenContract: contract,
+        },
+      };
+    });
+  };
+
+  const setBuyTokenContract = (contract: TokenContract | undefined) => {
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          buyTokenContract: contract,
+        },
+      };
+    });
+  };
+
   useEffect(() => {
     if (chainId) {
-      console.log("🔍 Initializing ExchangeContext with chainId:", chainId);
       const storedContext = loadStoredExchangeContext();
       const initialContext = storedContext || getInitialContext(chainId);
       setExchangeContext(initialContext);
     }
   }, [chainId]);
 
-  // Sync state with tradeData
-  useEffect(() => {
-    if (exchangeContext?.tradeData) {
-      setSellAmount(exchangeContext.tradeData.sellTokenContract?.amount ?? BigInt(0));
-      setBuyAmount(exchangeContext.tradeData.buyTokenContract?.amount ?? BigInt(0));
-      setTransactionTypeState(exchangeContext.tradeData.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN);
-      setSlippageBps(exchangeContext.tradeData.slippageBps ?? 0);
-      setSellTokenContract(exchangeContext.tradeData.sellTokenContract ?? undefined);
-      setBuyTokenContract(exchangeContext.tradeData.buyTokenContract ?? undefined);
-    }
-  }, [exchangeContext]);
-
-  if (!exchangeContext) {
-    return null;
-  }
+  if (!exchangeContext) return null;
 
   return (
     <ExchangeContextState.Provider
       value={{
         exchangeContext,
         setExchangeContext,
-        sellAmount,
+        sellAmount: exchangeContext.tradeData.sellTokenContract?.amount ?? BigInt(0),
         setSellAmount,
-        buyAmount,
+        buyAmount: exchangeContext.tradeData.buyTokenContract?.amount ?? BigInt(0),
         setBuyAmount,
-        transactionType,
+        transactionType: exchangeContext.tradeData.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN,
         setTradeDirection,
-        slippageBps,
+        slippageBps: exchangeContext.tradeData.slippageBps ?? 0,
         setSlippageBps,
-        sellTokenContract,
+        sellTokenContract: exchangeContext.tradeData.sellTokenContract,
         setSellTokenContract,
-        buyTokenContract,
+        buyTokenContract: exchangeContext.tradeData.buyTokenContract,
         setBuyTokenContract,
         errorMessage,
         setErrorMessage,

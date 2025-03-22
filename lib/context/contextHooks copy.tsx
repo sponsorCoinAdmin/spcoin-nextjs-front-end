@@ -1,15 +1,9 @@
-// File: contextHooks.tsx
+// ✅ contextHooks.tsx – Full Version with Example Usage (Option 2)
 "use client";
 
 import { useContext, useMemo } from "react";
 import { ExchangeContextState } from "@/lib/context/ExchangeContext";
-import {
-  TokenContract,
-  TRADE_DIRECTION,
-  ErrorMessage,
-  STATUS,
-  TradeData,
-} from "@/lib/structure/types";
+import { TokenContract, TRADE_DIRECTION, ErrorMessage, STATUS, TradeData } from "@/lib/structure/types";
 
 // ✅ Hook to use Exchange Context
 export const useExchangeContext = () => {
@@ -23,27 +17,24 @@ export const useExchangeContext = () => {
 // ✅ Hook to derive tradeData (single source of truth)
 export const useTradeData = (): TradeData => {
   const context = useExchangeContext();
-  return useMemo(
-    () => ({
-      transactionType: context.transactionType,
-      buyTokenContract: context.buyTokenContract,
-      sellTokenContract: context.sellTokenContract,
-      buyAmount: context.buyAmount,
-      sellAmount: context.sellAmount,
-      slippageBps: context.slippageBps,
-    }),
-    [
-      context.transactionType,
-      context.buyTokenContract,
-      context.sellTokenContract,
-      context.buyAmount,
-      context.sellAmount,
-      context.slippageBps,
-    ]
-  );
+  return useMemo(() => ({
+    transactionType: context.transactionType,
+    buyTokenContract: context.buyTokenContract,
+    sellTokenContract: context.sellTokenContract,
+    buyAmount: context.buyAmount,
+    sellAmount: context.sellAmount,
+    slippageBps: context.slippageBps,
+  }), [
+    context.transactionType,
+    context.buyTokenContract,
+    context.sellTokenContract,
+    context.buyAmount,
+    context.sellAmount,
+    context.slippageBps
+  ]);
 };
 
-// ✅ Custom hooks for using various exchange values
+// ✅ Individual value hooks
 export const useSellAmount = () => {
   const context = useExchangeContext();
   return [context.sellAmount, context.setSellAmount] as [bigint, (amount: bigint) => void];
@@ -84,8 +75,8 @@ export const useApiErrorMessage = () => {
   return [context.apiErrorMessage, context.setApiErrorMessage] as [ErrorMessage | undefined, (error: ErrorMessage | undefined) => void];
 };
 
-// ✅ Example usage component for all hooks
-export const AllHookExample = () => {
+// ✅ Example usage component – shows how to use all hooks
+export const PriceDisplay = () => {
   const { exchangeContext } = useExchangeContext();
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -93,9 +84,9 @@ export const AllHookExample = () => {
   const [slippageBps, setSlippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-  const [errorMessage, setErrorMessage] = useErrorMessage();
-  const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const tradeData = useTradeData();
+  const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
+  const [errorMessage, setErrorMessage] = useErrorMessage();
 
   return (
     <div>
@@ -103,46 +94,39 @@ export const AllHookExample = () => {
       <h2>Buy Amount: {buyAmount.toString()}</h2>
       <h2>Transaction Type: {transactionType}</h2>
       <h2>Slippage Bps: {slippageBps}</h2>
-      <h2>Sell Token: {sellTokenContract?.symbol ?? "None"}</h2>
-      <h2>Buy Token: {buyTokenContract?.symbol ?? "None"}</h2>
-      <h2>Trade Data: {JSON.stringify(tradeData, null, 2)}</h2>
-      <h2>Exchange Context: {JSON.stringify(exchangeContext, null, 2)}</h2>
-      <h2>Error: {JSON.stringify(errorMessage)}</h2>
-      <h2>API Error: {JSON.stringify(apiErrorMessage)}</h2>
+      <h2>Sell Token Contract: {sellTokenContract?.symbol ?? "None"}</h2>
+      <h2>Buy Token Contract: {buyTokenContract?.symbol ?? "None"}</h2>
 
-      <button onClick={() => setSellAmount(sellAmount + BigInt(1))}>+1 Sell Amount</button>
-      <button onClick={() => setBuyAmount(buyAmount + BigInt(1))}>+1 Buy Amount</button>
+      <h2>Derived Trade Data:</h2>
+      <pre>{JSON.stringify(tradeData, null, 2)}</pre>
+
+      <h2>Exchange Context:</h2>
+      <pre>{JSON.stringify(exchangeContext, null, 2)}</pre>
+
+      <h2>API Error: {JSON.stringify(apiErrorMessage, null, 2)}</h2>
+      <h2>General Error: {JSON.stringify(errorMessage, null, 2)}</h2>
+
       <button onClick={() => setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT)}>
         Set SELL_EXACT_OUT
       </button>
-      <button onClick={() => setSlippageBps(slippageBps + 10)}>Increase Slippage</button>
-      <button onClick={() => setSellTokenContract({
-        address: "0x123",
-        amount: BigInt(1000),
-        balance: BigInt(5000),
-        symbol: "ETH",
-        name: "Ethereum",
-        totalSupply: BigInt(1000000),
-      })}>
-        Set Sell Token
+      <button onClick={() => setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN)}>
+        Set BUY_EXACT_IN
       </button>
-      <button onClick={() => setBuyTokenContract({
-        address: "0x456",
-        amount: BigInt(2000),
-        balance: BigInt(8000),
-        symbol: "DAI",
-        name: "Dai Stablecoin",
-        totalSupply: BigInt(5000000),
-      })}>
-        Set Buy Token
-      </button>
-      <button onClick={() => setErrorMessage({ errCode: 100, msg: "Error occurred", source: "hook", status: STATUS.FAILED })}>
-        Trigger Error
-      </button>
-      <button onClick={() => setApiErrorMessage({ errCode: 200, msg: "API failed", source: "hook", status: STATUS.FAILED })}>
+      <button
+        onClick={() =>
+          setApiErrorMessage({ errCode: 123, msg: "API Error!", source: "button", status: STATUS.FAILED })
+        }
+      >
         Trigger API Error
       </button>
-      <button onClick={() => { setErrorMessage(undefined); setApiErrorMessage(undefined); }}>
+      <button
+        onClick={() =>
+          setErrorMessage({ errCode: 456, msg: "General Error", source: "button", status: STATUS.FAILED })
+        }
+      >
+        Trigger General Error
+      </button>
+      <button onClick={() => { setApiErrorMessage(undefined); setErrorMessage(undefined); }}>
         Clear Errors
       </button>
     </div>
