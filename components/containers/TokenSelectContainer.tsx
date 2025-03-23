@@ -112,10 +112,12 @@ const TokenSelectContainer = ({ containerType }: Props) => {
 
   useEffect(() => {
     logAlert(`------------------------------------------------------------------------`)
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER)
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
       logAlert(`SELL_SELECT_CONTAINER`)
-    else
+    }
+    else {
       logAlert(`BUY_SELECT_CONTAINER`)
+    }
 
     if (buyTokenContract) {
       const decimals:number = buyTokenContract?.decimals || 0;

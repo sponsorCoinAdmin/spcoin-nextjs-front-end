@@ -2,17 +2,17 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { WalletAccount, WalletAddress } from "../structure/types";
+import { WalletAccount, AccountAddress } from "../structure/types";
 
 /**
  * Reads account file list from JSON and loads corresponding account data.
  * If jsonAccountFileList is provided, it loads specific accounts.
  * Otherwise, it scans `public/assets/accounts/` for wallet.json files.
  *
- * @param jsonAccountFileList - Optional list of WalletAddress objects.
+ * @param jsonAccountFileList - Optional list of AccountAddress objects.
  * @returns Promise<WalletAccount[]>
  */
-export async function loadAccounts(jsonAccountFileList?: WalletAddress[]): Promise<WalletAccount[]> {
+export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Promise<WalletAccount[]> {
     console.log("🔄 Starting loadAccounts on the server...");
 
     const accounts: WalletAccount[] = [];
