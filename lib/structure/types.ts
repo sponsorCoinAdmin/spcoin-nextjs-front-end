@@ -86,8 +86,8 @@ enum SWAP_TYPE {
 
 // Transaction Types
 enum TRADE_DIRECTION {
-  BUY_EXACT_IN,
-  SELL_EXACT_OUT
+  SELL_EXACT_OUT,
+  BUY_EXACT_IN
 }
 
 // Network Constants

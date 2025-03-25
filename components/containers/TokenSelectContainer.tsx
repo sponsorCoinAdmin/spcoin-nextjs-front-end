@@ -23,6 +23,7 @@ import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 // Utilities
 import { isWrappingTransaction, BURN_ADDRESS } from "@/lib/network/utils";
 import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/utils";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Types & Constants
 import {
@@ -46,14 +47,37 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       ? sellTokenContract
       : buyTokenContract;
 
-  const tokenAmount =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellAmount : buyAmount;
-
   const [inputValue, setInputValue] = useState<string>("0");
+  const debouncedSellAmount = useDebounce(sellAmount, 600);
+  const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
   useEffect(() => {
-    setInputValue(tokenContract && tokenAmount ? formatUnits(tokenAmount, tokenContract.decimals || 18) : "0");
-  }, [tokenAmount, tokenContract]);
+    if (!tokenContract) return;
+
+    const amountToUse =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? sellAmount
+        : buyAmount;
+
+    setInputValue(formatUnits(amountToUse, tokenContract.decimals || 18));
+  }, [sellAmount, buyAmount, containerType, tokenContract]);
+
+  useEffect(() => {
+    if (
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
+      transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
+    ) {
+      setSellAmount(debouncedSellAmount); // ✅ trigger SWR
+    }
+  
+    if (
+      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
+      transactionType === TRADE_DIRECTION.BUY_EXACT_IN
+    ) {
+      setBuyAmount(debouncedBuyAmount); // ✅ trigger SWR
+    }
+  }, [debouncedSellAmount, debouncedBuyAmount]);
+  
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -72,6 +96,14 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       setBuyAmount(bigIntValue);
     }
   };
+
+  useEffect(() => {
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) {
+      console.log("Debounced Sell Amount:", debouncedSellAmount.toString());
+    } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.BUY_EXACT_IN) {
+      console.log("Debounced Buy Amount:", debouncedBuyAmount.toString());
+    }
+  }, [debouncedSellAmount, debouncedBuyAmount, containerType, transactionType]);
 
   const buySellText = isWrappingTransaction(exchangeContext)
     ? containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER

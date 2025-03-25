@@ -34,8 +34,7 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   const query = qs.stringify(params);
   const apiCall = `${endpoint}?${query}`;
 
-  // ✅ Added console.log to show the actual API call
-  console.log("Executing API Call:", apiCall);
+  console.log(JSON.stringify(apiCall));
 
   const response = await fetch(apiCall);
   return response.json();
@@ -142,9 +141,8 @@ function usePriceAPI() {
       buyAmount,
       tradeData.slippageBps)
     : null;
-    // console.log(`exchangeContext: ${stringifyBigInt(exchangeContext)}`)
-    // console.log(`tradeData:       ${stringifyBigInt(tradeData)}`)
-    useWhyDidYouUpdate('usePriceAPI', {
+
+  useWhyDidYouUpdate('usePriceAPI', {
     exchangeContext,
     tradeData,
     chainId,
@@ -157,23 +155,29 @@ function usePriceAPI() {
     swrKey
   });
 
-  console.log(`useSWR:Fetcher tradeData before API Call: ${stringifyBigInt(tradeData)}`)
-
   return useSWR(swrKey, fetcher, {
-    onSuccess: (data) =>
-      data.code
-        ? setApiErrorMessage({
-            status: STATUS.ERROR_API_PRICE,
-            source: "ApiFetcher",
-            errCode: data.code,
-            msg: getApiErrorTransactionData(
-              exchangeContext,
-              sellTokenAddress,
-              buyTokenAddress,
-              sellAmount,
-              data),
-          })
-        : setBuyAmount(data.buyAmount || 0n),
+    onSuccess: (data) => {
+      if (data.code) {
+        setApiErrorMessage({
+          status: STATUS.ERROR_API_PRICE,
+          source: "ApiFetcher",
+          errCode: data.code,
+          msg: getApiErrorTransactionData(
+            exchangeContext,
+            sellTokenAddress,
+            buyTokenAddress,
+            tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
+            data
+          ),
+        });
+      } else {
+        if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) {
+          setBuyAmount(BigInt(data.buyAmount));
+        } else if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN) {
+          setSellAmount(BigInt(data.sellAmount));
+        }
+      }
+    },
     onError: (error) =>
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
