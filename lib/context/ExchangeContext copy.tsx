@@ -1,113 +1,133 @@
-// File: ExchangeContext.tsx (Single Source of Truth for TokenContract)
+// File: ExchangeContext.tsx
 "use client";
 
 import React, { createContext, useEffect, useState, ReactNode } from "react";
 import { useChainId } from "wagmi";
+
 import {
-  getInitialContext,
-  saveExchangeContext,
-  loadStoredExchangeContext,
-} from "@/lib/context/ExchangeHelpers";
-import {
-  ExchangeContext,
+  ExchangeContext as ExchangeContextTypeOnly,
   TRADE_DIRECTION,
   TokenContract,
   ErrorMessage,
-  STATUS,
 } from "@/lib/structure/types";
 
+import {
+  getInitialContext,
+  loadStoredExchangeContext,
+  sanitizeExchangeContext,
+} from "@/lib/context/ExchangeHelpers";
+
+// Full context shape for use in the provider
 export type ExchangeContextType = {
-  exchangeContext: ExchangeContext;
-  setExchangeContext: (context: ExchangeContext) => void;
-  sellAmount: bigint;
+  exchangeContext: ExchangeContextTypeOnly;
+  setExchangeContext: (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => void;
+
   setSellAmount: (amount: bigint) => void;
-  buyAmount: bigint;
   setBuyAmount: (amount: bigint) => void;
-  transactionType: TRADE_DIRECTION;
-  setTradeDirection: (type: TRADE_DIRECTION) => void;
-  slippageBps: number;
-  setSlippageBps: (bps: number) => void;
-  sellTokenContract: TokenContract | undefined;
   setSellTokenContract: (contract: TokenContract | undefined) => void;
-  buyTokenContract: TokenContract | undefined;
   setBuyTokenContract: (contract: TokenContract | undefined) => void;
+  setTradeDirection: (type: TRADE_DIRECTION) => void;
+  setSlippageBps: (bps: number) => void;
+
   errorMessage: ErrorMessage | undefined;
   setErrorMessage: (error: ErrorMessage | undefined) => void;
   apiErrorMessage: ErrorMessage | undefined;
   setApiErrorMessage: (error: ErrorMessage | undefined) => void;
 };
 
+// Create the context
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
+// Main provider
 export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const chainId = useChainId();
-  const [exchangeContext, setExchangeContext] = useState<ExchangeContext | null>(null);
-  const [sellAmount, setSellAmount] = useState<bigint>(BigInt(0));
-  const [buyAmount, setBuyAmount] = useState<bigint>(BigInt(0));
-  const [transactionType, setTransactionTypeState] = useState<TRADE_DIRECTION>(
-    exchangeContext?.tradeData?.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN
-  );
-  const [slippageBps, setSlippageBps] = useState<number>(exchangeContext?.tradeData?.slippageBps ?? 0);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>(undefined);
-  const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>(undefined);
+  const [exchangeContext, setExchangeContextInternal] = useState<ExchangeContextTypeOnly | null>(null);
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
+  const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
 
-  const setTradeDirection = (type: TRADE_DIRECTION) => {
-    setTransactionTypeState(type);
+  // ✅ Wrapper setter to mutate context safely
+  const setExchangeContext = (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => {
+    setExchangeContextInternal((prev) => (prev ? updater(prev) : prev));
+  };
+
+  // ✅ Individual field setters
+  const setSellAmount = (amount: bigint) => {
     setExchangeContext((prev) => {
-      if (!prev) return prev;
+      const token = prev.tradeData.sellTokenContract;
       return {
         ...prev,
         tradeData: {
           ...prev.tradeData,
-          transactionType: type,
+          sellTokenContract: token ? { ...token, amount } : undefined,
+        },
+      };
+    });
+  };
+
+  const setBuyAmount = (amount: bigint) => {
+    setExchangeContext((prev) => {
+      const token = prev.tradeData.buyTokenContract;
+      return {
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          buyTokenContract: token ? { ...token, amount } : undefined,
         },
       };
     });
   };
 
   const setSellTokenContract = (contract: TokenContract | undefined) => {
-    setExchangeContext((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        tradeData: {
-          ...prev.tradeData,
-          sellTokenContract: contract,
-        },
-      };
-    });
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        sellTokenContract: contract,
+      },
+    }));
   };
 
   const setBuyTokenContract = (contract: TokenContract | undefined) => {
-    setExchangeContext((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        tradeData: {
-          ...prev.tradeData,
-          buyTokenContract: contract,
-        },
-      };
-    });
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        buyTokenContract: contract,
+      },
+    }));
   };
 
-  useEffect(() => {
-    if (chainId) {
-      const storedContext = loadStoredExchangeContext();
-      const initialContext = storedContext || getInitialContext(chainId);
-      setExchangeContext(initialContext);
-    }
-  }, [chainId]);
+  const setTradeDirection = (type: TRADE_DIRECTION) => {
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        transactionType: type,
+      },
+    }));
+  };
 
-  useEffect(() => {
-    if (exchangeContext?.tradeData) {
-      setSellAmount(exchangeContext.tradeData.sellTokenContract?.amount ?? BigInt(0));
-      setBuyAmount(exchangeContext.tradeData.buyTokenContract?.amount ?? BigInt(0));
-      setTransactionTypeState(exchangeContext.tradeData.transactionType ?? TRADE_DIRECTION.BUY_EXACT_IN);
-      setSlippageBps(exchangeContext.tradeData.slippageBps ?? 0);
-    }
-  }, [exchangeContext]);
+  const setSlippageBps = (bps: number) => {
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        slippageBps: bps,
+      },
+    }));
+  };
 
+  // ✅ Initialize once chainId is available
+  useEffect(() => {
+    if (chainId && !exchangeContext) {
+      const stored = loadStoredExchangeContext();
+      const initial = getInitialContext(chainId);
+      const sanitized = sanitizeExchangeContext(stored, chainId);
+      setExchangeContextInternal({ ...initial, ...sanitized });
+    }
+  }, [chainId, exchangeContext]);
+
+  // Block rendering until initialized
   if (!exchangeContext) return null;
 
   return (
@@ -115,18 +135,14 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       value={{
         exchangeContext,
         setExchangeContext,
-        sellAmount,
+
         setSellAmount,
-        buyAmount,
         setBuyAmount,
-        transactionType,
-        setTradeDirection,
-        slippageBps,
-        setSlippageBps,
-        sellTokenContract: exchangeContext.tradeData.sellTokenContract,
         setSellTokenContract,
-        buyTokenContract: exchangeContext.tradeData.buyTokenContract,
         setBuyTokenContract,
+        setTradeDirection,
+        setSlippageBps,
+
         errorMessage,
         setErrorMessage,
         apiErrorMessage,

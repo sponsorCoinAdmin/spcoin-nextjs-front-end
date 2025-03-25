@@ -93,7 +93,7 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
     [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
   };
   const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
-  console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
+  // console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS || BURN_ADDRESS;
 };
 

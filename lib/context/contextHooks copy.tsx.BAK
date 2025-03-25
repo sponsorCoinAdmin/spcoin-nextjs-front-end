@@ -1,3 +1,4 @@
+// File: contextHooks.tsx
 "use client";
 
 import { useContext, useMemo } from "react";
@@ -10,6 +11,7 @@ import {
   TradeData,
 } from "@/lib/structure/types";
 
+// ✅ Base context access
 export const useExchangeContext = () => {
   const context = useContext(ExchangeContextState);
   if (!context) {
@@ -18,6 +20,7 @@ export const useExchangeContext = () => {
   return context;
 };
 
+// ✅ Sell Amount Hook
 export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const sellAmount = exchangeContext.tradeData.sellTokenContract?.amount ?? 0n;
@@ -40,28 +43,34 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
   return [sellAmount, setSellAmount];
 };
 
-export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
+// ✅ Buy Amount Hook
+export const useBuyAmount = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+
   const buyAmount = exchangeContext.tradeData.buyTokenContract?.amount ?? 0n;
 
   const setBuyAmount = (amount: bigint) => {
     const token = exchangeContext.tradeData.buyTokenContract;
-    if (!token) {
-      console.warn("Cannot set buyAmount — buyTokenContract is undefined.");
-      return;
-    }
-    setExchangeContext((prev) => ({
-      ...prev,
+    if (!token) return;
+
+    const updated = {
+      ...exchangeContext,
       tradeData: {
-        ...prev.tradeData,
-        buyTokenContract: { ...token, amount },
+        ...exchangeContext.tradeData,
+        buyTokenContract: {
+          ...token,
+          amount,
+        },
       },
-    }));
+    };
+    setExchangeContext(() => updated);
   };
 
-  return [buyAmount, setBuyAmount];
+  return [buyAmount, setBuyAmount] as const;
 };
 
+
+// ✅ Sell Token Contract
 export const useSellTokenContract = (): [TokenContract | undefined, (contract: TokenContract | undefined) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
@@ -77,6 +86,7 @@ export const useSellTokenContract = (): [TokenContract | undefined, (contract: T
   ];
 };
 
+// ✅ Buy Token Contract
 export const useBuyTokenContract = (): [TokenContract | undefined, (contract: TokenContract | undefined) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
@@ -92,6 +102,7 @@ export const useBuyTokenContract = (): [TokenContract | undefined, (contract: To
   ];
 };
 
+// ✅ Slippage Bps
 export const useSlippageBps = (): [number, (bps: number) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
@@ -107,6 +118,7 @@ export const useSlippageBps = (): [number, (bps: number) => void] => {
   ];
 };
 
+// ✅ Trade Direction
 export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
@@ -122,21 +134,27 @@ export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) =
   ];
 };
 
+// ✅ Derived tradeData object
 export const useTradeData = (): TradeData => {
   const { exchangeContext } = useExchangeContext();
-  return useMemo(() => exchangeContext.tradeData, [exchangeContext.tradeData]);
+  return exchangeContext.tradeData;
 };
 
+// ✅ Error Message
 export const useErrorMessage = (): [ErrorMessage | undefined, (error: ErrorMessage | undefined) => void] => {
   const { errorMessage, setErrorMessage } = useExchangeContext();
   return [errorMessage, setErrorMessage];
 };
 
+// ✅ API Error Message
 export const useApiErrorMessage = (): [ErrorMessage | undefined, (error: ErrorMessage | undefined) => void] => {
   const { apiErrorMessage, setApiErrorMessage } = useExchangeContext();
   return [apiErrorMessage, setApiErrorMessage];
 };
 
+//
+// ✅ AllHookExample: test/demo component for dev
+//
 export const AllHookExample = () => {
   const { exchangeContext } = useExchangeContext();
 
@@ -178,7 +196,6 @@ export const AllHookExample = () => {
           balance: 1000000000000000000n,
           amount: sellAmount,
           totalSupply: 100000000000000000000n,
-          chainId: 1,
         })
       }>
         Set Sell Token (ETH)
@@ -193,7 +210,6 @@ export const AllHookExample = () => {
           balance: 5000000000000000000n,
           amount: buyAmount,
           totalSupply: 100000000000000000000n,
-          chainId: 1,
         })
       }>
         Set Buy Token (DAI)

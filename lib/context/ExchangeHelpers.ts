@@ -1,6 +1,6 @@
 "use client";
 
-import { ExchangeContext } from "@/lib/structure/types"; // ✅ Import the type only
+import { ExchangeContext, TradeData } from "@/lib/structure/types"; // ✅ Import the type only
 import defaultEthereumSettings from "@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json";
 import defaultPolygonSettings from "@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json";
 import defaultHardHatSettings from "@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json";
@@ -46,27 +46,61 @@ export const saveExchangeContext = (contextData: ExchangeContext): void => {  //
 };
 
 // ✅ Get initial exchange context dynamically
+// File: ExchangeHelpers.ts
+
 export const getInitialContext = (chainId: number): ExchangeContext => {
     const initialContextMap = getInitialContextMap(chainId);
-
+  
     return {
-        activeAccountAddress: undefined,
-        network: initialContextMap.get("networkHeader") as NetworkElement,
-        recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
-        agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
-        tradeData: {
-            signer: undefined,
-            chainId,
-            transactionType: TRADE_DIRECTION.SELL_EXACT_OUT,
-            swapType: SWAP_TYPE.UNDEFINED,
-            slippageBps: 100,
-            sellTokenContract: undefined,
-            buyTokenContract: undefined,
-        },
-        spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
-        test: { dumpContextButton: false }
+      activeAccountAddress: undefined,
+      network: initialContextMap.get("networkHeader") as NetworkElement,
+      recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
+      agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+      tradeData: {
+        signer: undefined,
+        chainId, // ✅ ensure this is always set
+        transactionType: TRADE_DIRECTION.SELL_EXACT_OUT,
+        swapType: SWAP_TYPE.UNDEFINED,
+        slippageBps: 100,
+        sellTokenContract: undefined,
+        buyTokenContract: undefined,
+      },
+      spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
+      test: { dumpContextButton: false },
     };
-};
+  };
+
+// File: ExchangeHelpers.ts
+
+// Fallback in case tradeData is partially missing
+export const sanitizeExchangeContext = (
+  raw: Partial<ExchangeContext> | null,
+  chainId: number
+): ExchangeContext => {
+  const fallbackTradeData: TradeData = {
+    chainId,
+    transactionType: TRADE_DIRECTION.SELL_EXACT_OUT,
+    swapType: SWAP_TYPE.UNDEFINED,
+    slippageBps: 100,
+    sellTokenContract: undefined,
+    buyTokenContract: undefined,
+    signer: undefined,
+  };
+
+  return {
+    activeAccountAddress: raw?.activeAccountAddress ?? undefined,
+    network: raw?.network!,
+    recipientWallet: raw?.recipientWallet ?? undefined,
+    agentAccount: raw?.agentAccount ?? undefined,
+    tradeData: {
+      ...fallbackTradeData,
+      ...raw?.tradeData,
+      chainId: chainId, // ✅ enforce current chainId
+    },
+    spCoinPanels: raw?.spCoinPanels ?? 1,
+    test: raw?.test ?? { dumpContextButton: false },
+  };
+}; 
 
 // ✅ Get network settings based on chain ID
 function getInitialContextMap(chain: number) {
