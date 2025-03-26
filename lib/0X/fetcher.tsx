@@ -29,9 +29,17 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
   const { sellAmount, buyAmount } = params;
 
+  // ✅ Skip fetch if no amounts
   if (!sellAmount && !buyAmount) return;
 
-  const query = qs.stringify(params);
+  // ✅ Strip out undefined, null, or empty string values
+  const cleanParams = Object.fromEntries(
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== null && value !== ''
+    )
+  );
+
+  const query = qs.stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
 
   console.log(JSON.stringify(apiCall));
@@ -65,21 +73,25 @@ const getPriceApiCall = (
   sellAmount: bigint,
   buyAmount: bigint,
   slippageBps?: number
-) => {
-  return (sellAmount === 0n && transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) ||
-    (buyAmount === 0n && transactionType === TRADE_DIRECTION.BUY_EXACT_IN)
-    ? undefined
-    : [
-      apiPriceBase,
-      {
-        chainId,
-        sellToken: sellTokenAddress,
-        buyToken: buyTokenAddress,
-        sellAmount: transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount.toString() : undefined,
-        buyAmount: transactionType === TRADE_DIRECTION.BUY_EXACT_IN ? buyAmount.toString() : undefined,
-        slippageBps
-      },
-    ];
+): [string, PriceRequestParams] | undefined => {
+  if (!sellTokenAddress || !buyTokenAddress) return undefined;
+
+  const params: PriceRequestParams = {
+    chainId,
+    sellToken: sellTokenAddress,
+    buyToken: buyTokenAddress,
+    ...(transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount !== 0n
+      ? { sellAmount: sellAmount.toString() }
+      : {}),
+    ...(transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount !== 0n
+      ? { buyAmount: buyAmount.toString() }
+      : {}),
+    ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
+      ? { slippageBps }
+      : {}),
+  };
+
+  return [apiPriceBase, params];
 };
 
 function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
@@ -139,7 +151,7 @@ function usePriceAPI() {
       buyTokenAddress,
       sellAmount,
       buyAmount,
-      tradeData.slippageBps)
+      Number.isFinite(tradeData.slippageBps) ? tradeData.slippageBps : 100)
     : null;
 
   useWhyDidYouUpdate('usePriceAPI', {
@@ -157,6 +169,8 @@ function usePriceAPI() {
 
   return useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
+      console.log(`[API SUCCESS] Direction: ${tradeData.transactionType}, Response:`, data);
+
       if (data.code) {
         setApiErrorMessage({
           status: STATUS.ERROR_API_PRICE,
@@ -171,10 +185,10 @@ function usePriceAPI() {
           ),
         });
       } else {
-        if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) {
-          setBuyAmount(BigInt(data.buyAmount));
-        } else if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN) {
-          setSellAmount(BigInt(data.sellAmount));
+        if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
+          setBuyAmount(BigInt(data.buyAmount ?? 0));
+        } else if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
+          setSellAmount(BigInt(data.sellAmount ?? 0));
         }
       }
     },

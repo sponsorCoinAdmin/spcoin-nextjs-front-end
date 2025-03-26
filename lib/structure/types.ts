@@ -106,11 +106,13 @@ const SEPOLIA_WETH_ADDRESS: Address = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B1
 
 // Interfaces and Types
 interface PriceRequestParams {
-  buyAmount: string;
+  chainId: number;
+  buyAmount?: string;
   buyToken: Address | string;
   connectedAccountAddr?: string;
-  sellAmount: string;
+  sellAmount?: string;
   sellToken: Address | string;
+  slippageBps?: number;
 }
 
 type ContractRecs = {
