@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
-import { useApiProvider } from '@/lib/context/contextHooks';
+import { useBalance, useAccount } from "wagmi";
+import { useApiProvider, useBuyBalance, useSellBalance } from '@/lib/context/contextHooks';
 
 // Context & Hooks
 import {
@@ -35,6 +36,7 @@ import styles from "@/styles/Exchange.module.css";
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
   const apiProvider = useApiProvider();
+  const account = useAccount();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -42,13 +44,21 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [slippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
+  const [sellBalance, setSellBalance] = useSellBalance();
+  const [buyBalance, setBuyBalance] = useBuyBalance();
 
-  const [localContainerType, setLocalContainerType] = useState(containerType);
+  const [localContainerType, setLocalContainerType] = useState<CONTAINER_TYPE>(containerType);
 
   const tokenContract =
     localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? sellTokenContract
       : buyTokenContract;
+
+  const { data: wagmiBalance } = useBalance({
+    address: account.address,
+    chainId: tokenContract?.chainId,
+    token: tokenContract?.symbol === 'ETH' ? undefined : tokenContract?.address,
+  });
 
   const [inputValue, setInputValue] = useState<string>("0");
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -80,6 +90,16 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       setBuyAmount(debouncedBuyAmount);
     }
   }, [debouncedSellAmount, debouncedBuyAmount]);
+
+  useEffect(() => {
+    if (!wagmiBalance || !wagmiBalance.value) return;
+
+    if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      setSellBalance(wagmiBalance.value);
+    } else {
+      setBuyBalance(wagmiBalance.value);
+    }
+  }, [wagmiBalance, localContainerType]);
 
   const handleInputChange = (value: string) => {
     setInputValue(value);

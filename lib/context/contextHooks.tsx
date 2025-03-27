@@ -41,6 +41,28 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
   return [sellAmount, setSellAmount];
 };
 
+export const useSellBalance = (): [bigint, (balance: bigint) => void] => {
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const sellBalance = exchangeContext.tradeData.sellTokenContract?.balance ?? 0n;
+
+  const setSellBalance = (balance: bigint) => {
+    const token = exchangeContext.tradeData.sellTokenContract;
+    if (!token) {
+      console.warn("Cannot set sellBalance — sellTokenContract is undefined.");
+      return;
+    }
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        sellTokenContract: { ...token, balance },
+      },
+    }));
+  };
+
+  return [sellBalance, setSellBalance];
+};
+
 export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const buyAmount = exchangeContext.tradeData.buyTokenContract?.amount ?? 0n;
@@ -61,6 +83,28 @@ export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
   };
 
   return [buyAmount, setBuyAmount];
+};
+
+export const useBuyBalance = (): [bigint, (balance: bigint) => void] => {
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const buyBalance = exchangeContext.tradeData.buyTokenContract?.balance ?? 0n;
+
+  const setBuyBalance = (balance: bigint) => {
+    const token = exchangeContext.tradeData.buyTokenContract;
+    if (!token) {
+      console.warn("Cannot set buyBalance — buyTokenContract is undefined.");
+      return;
+    }
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        buyTokenContract: { ...token, balance },
+      },
+    }));
+  };
+
+  return [buyBalance, setBuyBalance];
 };
 
 export const useSellTokenContract = (): [TokenContract | undefined, (contract: TokenContract | undefined) => void] => {
@@ -143,11 +187,13 @@ export const useApiProvider = (): API_TRADING_PROVIDER | undefined => {
   return exchangeContext.apiTradingProvider;
 };
 
-export const AllHookExample = () => {
+export const AllHooksExample = () => {
   const { exchangeContext } = useExchangeContext();
 
   const [sellAmount, setSellAmount] = useSellAmount();
+  const [sellBalance, setSellBalance] = useSellBalance();
   const [buyAmount, setBuyAmount] = useBuyAmount();
+  const [buyBalance, setBuyBalance] = useBuyBalance();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [transactionType, setTradeDirection] = useTradeDirection();
@@ -161,7 +207,9 @@ export const AllHookExample = () => {
     <div style={{ fontFamily: "monospace", padding: "1rem" }}>
       <h2>🧪 Hook Test Output</h2>
       <div>Sell Amount: {sellAmount.toString()}</div>
+      <div>Sell Balance: {sellBalance.toString()}</div>
       <div>Buy Amount: {buyAmount.toString()}</div>
+      <div>Buy Balance: {buyBalance.toString()}</div>
       <div>Slippage Bps: {slippageBps}</div>
       <div>Transaction Type: {transactionType}</div>
       <div>API Provider: {apiProvider}</div>
@@ -175,7 +223,9 @@ export const AllHookExample = () => {
       <hr />
 
       <button onClick={() => setSellAmount(sellAmount + 1n)}>+1 Sell</button>
+      <button onClick={() => setSellBalance(sellBalance + 1000000000000000000n)}>+1 ETH Balance</button>
       <button onClick={() => setBuyAmount(buyAmount + 1n)}>+1 Buy</button>
+      <button onClick={() => setBuyBalance(buyBalance + 2000000000000000000n)}>+2 DAI Balance</button>
 
       <button onClick={() =>
         setSellTokenContract({
