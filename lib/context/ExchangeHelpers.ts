@@ -1,6 +1,6 @@
 "use client";
 
-import { ExchangeContext, TradeData } from "@/lib/structure/types"; // ✅ Import the type only
+import { API_TRADING_PROVIDER, ExchangeContext, TradeData } from "@/lib/structure/types"; // ✅ Import the type only
 import defaultEthereumSettings from "@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json";
 import defaultPolygonSettings from "@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json";
 import defaultHardHatSettings from "@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json";
@@ -56,6 +56,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       network: initialContextMap.get("networkHeader") as NetworkElement,
       recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
       agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+      apiTradingProvider: API_TRADING_PROVIDER.API_0X,
       tradeData: {
         signer: undefined,
         chainId, // ✅ ensure this is always set
@@ -88,18 +89,29 @@ export const sanitizeExchangeContext = (
   };
 
   return {
-    activeAccountAddress: raw?.activeAccountAddress ?? undefined,
-    network: raw?.network!,
-    recipientWallet: raw?.recipientWallet ?? undefined,
-    agentAccount: raw?.agentAccount ?? undefined,
-    tradeData: {
-      ...fallbackTradeData,
-      ...raw?.tradeData,
-      chainId: chainId, // ✅ enforce current chainId
+    apiTradingProvider: API_TRADING_PROVIDER.API_0X,
+    activeAccountAddress: undefined,
+    network: {
+        chainId: 0,
+        img: "",
+        name: "",
+        symbol: "",
+        url: ""
     },
-    spCoinPanels: raw?.spCoinPanels ?? 1,
-    test: raw?.test ?? { dumpContextButton: false },
-  };
+    spCoinPanels: SP_COIN_DISPLAY.RECIPIENT_CONTAINER,
+    test: {
+        dumpContextButton: false
+    },
+    tradeData: {
+        buyTokenContract: undefined,
+        chainId: 0,
+        sellTokenContract: undefined,
+        signer: undefined,
+        slippageBps: 0,
+        swapType: SWAP_TYPE.SWAP,
+        transactionType: TRADE_DIRECTION.SELL_EXACT_OUT
+    }
+};
 }; 
 
 // ✅ Get network settings based on chain ID

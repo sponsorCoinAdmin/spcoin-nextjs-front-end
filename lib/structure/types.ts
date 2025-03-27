@@ -90,6 +90,11 @@ enum TRADE_DIRECTION {
   BUY_EXACT_IN
 }
 
+export enum API_TRADING_PROVIDER {
+  API_0X,
+  API_1INCH
+ }
+
 // Network Constants
 const ETHEREUM = 1;
 const BASE = 8453;
@@ -130,6 +135,7 @@ type ErrorMessage = {
 };
 
 type ExchangeContext = {
+  apiTradingProvider: API_TRADING_PROVIDER;
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
   agentAccount?: WalletAccount;
   network: NetworkElement;

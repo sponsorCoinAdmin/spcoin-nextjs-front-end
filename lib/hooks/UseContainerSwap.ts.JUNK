@@ -1,0 +1,21 @@
+"use client";
+
+import { useState } from "react";
+
+let sharedState = false;
+let subscribers: ((val: boolean) => void)[] = [];
+
+export function useBuySellSwap(): [boolean, (val: boolean) => void] {
+  const [value, setValue] = useState(sharedState);
+
+  const updateState = (val: boolean) => {
+    sharedState = val;
+    subscribers.forEach((cb) => cb(sharedState));
+  };
+
+  if (!subscribers.includes(setValue)) {
+    subscribers.push(setValue);
+  }
+
+  return [value, updateState];
+}

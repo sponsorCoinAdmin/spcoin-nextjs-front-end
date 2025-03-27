@@ -1,6 +1,6 @@
 /// START DROPDOWN STUFF
 
-import { useExchangeContext } from "../context/ExchangeContext";
+import { useExchangeContext } from '@/lib/context/contextHooks'
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 
 const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY, exchangeContext: any) => {

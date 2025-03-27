@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import styles from '@/styles/Exchange.module.css';
 import { ErrorDialog } from '@/components/Dialogs/Dialogs';
@@ -16,7 +16,7 @@ import {
 } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
-import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
+import BuySellSwapArrowButton, { useBuySellSwap } from '@/components/Buttons/BuySellSwapArrowButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import PriceButton from '@/components/Buttons/PriceButton';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
@@ -27,17 +27,16 @@ import {
   useExchangeContext,
   useSellAmount,
   useSellTokenContract,
-  useSlippageBps} from "@/lib/context/contextHooks";  
+  useSlippageBps
+} from "@/lib/context/contextHooks";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
-import { Address } from 'viem';
-import { isWrappingTransaction } from '@/lib/network/utils';
+
 import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
   const signer = useEthersSigner();
   
-  // ✅ Ensure all hooks are at the top level
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
 
@@ -49,14 +48,7 @@ export default function PriceView() {
   const [toggleButton, setToggleButton] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-
-  const sellTokenAddress = sellTokenContract?.address;
-  const buyTokenAddress = buyTokenContract?.address;
-
-  // ✅ Move `useMemo` to top level
-  const isWrapTransaction = useMemo(() => {
-    return sellTokenAddress && buyTokenAddress ? isWrappingTransaction(exchangeContext) : false;
-  }, [sellTokenAddress, buyTokenAddress]);
+  const [containerSwapStatus, setContainerSwapStatus] = useBuySellSwap();
 
   const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
     setErrorMessage({
@@ -67,10 +59,8 @@ export default function PriceView() {
     });
   }, []);
 
-  // ✅ Ensure `usePriceAPI` is called at the top level
   const { isLoading: isLoadingPrice, data: priceData, error: PriceError } = usePriceAPI();
 
-  // ✅ Ensure `useEffect` only references values, not hooks
   useEffect(() => {
     if (!ACTIVE_ACCOUNT.chainId || ACTIVE_ACCOUNT.chainId === tradeData?.chainId) return;
     tradeData.chainId = ACTIVE_ACCOUNT.chainId;
@@ -81,16 +71,6 @@ export default function PriceView() {
   }, [ACTIVE_ACCOUNT.chainId]);
 
   useEffect(() => {
-    if (!ACTIVE_ACCOUNT.address) return;
-    if (sellTokenContract && sellTokenContract.address === exchangeContext.activeAccountAddress) {
-      sellTokenContract.address = ACTIVE_ACCOUNT.address;
-    } else if (buyTokenContract && buyTokenContract.address === exchangeContext.activeAccountAddress) {
-      buyTokenContract.address = ACTIVE_ACCOUNT.address;
-    }
-    exchangeContext.activeAccountAddress = ACTIVE_ACCOUNT.address as Address;
-  }, [ACTIVE_ACCOUNT.address, sellTokenContract, buyTokenContract, exchangeContext]);
-
-  useEffect(() => {
     if (resetAmounts) {
       setBuyAmount(0n);
       setSellAmount(0n);
@@ -98,22 +78,13 @@ export default function PriceView() {
     }
   }, [resetAmounts]);
 
-  // useEffect(() => {
-  //   if (PriceError && !isWrapTransaction) {
-  //     setErrorMessage({
-  //       status: tradeData.chainId === HARDHAT ? STATUS.WARNING_HARDHAT : STATUS.ERROR_API_PRICE,
-  //       source: "PriceError: ",
-  //       errCode: PriceError.errCode,
-  //       msg: PriceError.errMsg,
-  //     });
-  //   }
-  // }, [PriceError, isWrapTransaction, tradeData.chainId]);
-
-  const swapBuySellTokens = useCallback(() => {
-    if (!tradeData.buyTokenContract || !tradeData.sellTokenContract) return;
-    setSellTokenContract(tradeData.buyTokenContract);
-    setBuyTokenContract(tradeData.sellTokenContract);
-  }, [tradeData.buyTokenContract, tradeData.sellTokenContract]);
+  useEffect(() => {
+    if (containerSwapStatus) {
+      setSellTokenContract(tradeData.buyTokenContract);
+      setBuyTokenContract(tradeData.sellTokenContract);
+      setContainerSwapStatus(false);
+    }
+  }, [containerSwapStatus]);
 
   return (
     <form autoComplete="off">
@@ -122,7 +93,7 @@ export default function PriceView() {
         <TradeContainerHeader />
         <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
         <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-        <BuySellSwapArrowButton swapBuySellTokens={swapBuySellTokens} />
+        <BuySellSwapArrowButton />
         <PriceButton 
           isLoadingPrice={isLoadingPrice} 
           setResetAmounts={setResetAmounts} 

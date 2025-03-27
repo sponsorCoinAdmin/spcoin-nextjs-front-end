@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure/types';
-import qs from "qs";
+import { PriceRequestParams, HARDHAT, STATUS } from '@/lib/structure/types';
+import qs from 'qs';
 import useSWR from 'swr';
 import {
   useApiErrorMessage,
@@ -13,13 +13,13 @@ import {
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
-import { useChainId } from "wagmi";
+import { useChainId } from 'wagmi';
 import { stringifyBigInt } from '../spCoin/utils';
 
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER;
-const apiPriceBase = "/price";
+const apiPriceBase = '/price';
 
-const WRAPPED_ETHEREUM_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+const WRAPPED_ETHEREUM_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
   return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;
@@ -27,12 +27,10 @@ const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Ad
 
 const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
-  const { sellAmount, buyAmount } = params;
+  const { sellAmount } = params;
 
-  // ✅ Skip fetch if no amounts
-  if (!sellAmount && !buyAmount) return;
+  if (!sellAmount) return;
 
-  // ✅ Strip out undefined, null, or empty string values
   const cleanParams = Object.fromEntries(
     Object.entries(params).filter(
       ([, value]) => value !== undefined && value !== null && value !== ''
@@ -41,8 +39,7 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
 
   const query = qs.stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
-
-  console.log(JSON.stringify(apiCall));
+  console.log('[Fetcher] API Call:', apiCall);
 
   const response = await fetch(apiCall);
   return response.json();
@@ -66,29 +63,22 @@ const getApiErrorTransactionData = (
 });
 
 const getPriceApiCall = (
-  transactionType: TRADE_DIRECTION,
   chainId: number,
   sellTokenAddress: Address | undefined,
   buyTokenAddress: Address | undefined,
   sellAmount: bigint,
-  buyAmount: bigint,
   slippageBps?: number
 ): [string, PriceRequestParams] | undefined => {
-  if (!sellTokenAddress || !buyTokenAddress) return undefined;
+  if (!sellTokenAddress || !buyTokenAddress || sellAmount <= 0n) return undefined;
 
   const params: PriceRequestParams = {
     chainId,
     sellToken: sellTokenAddress,
     buyToken: buyTokenAddress,
-    ...(transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount !== 0n
-      ? { sellAmount: sellAmount.toString() }
-      : {}),
-    ...(transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount !== 0n
-      ? { buyAmount: buyAmount.toString() }
-      : {}),
+    sellAmount: sellAmount.toString(),
     ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
       ? { slippageBps }
-      : {}),
+      : {})
   };
 
   return [apiPriceBase, params];
@@ -145,14 +135,15 @@ function usePriceAPI() {
 
   const swrKey = shouldFetch(sellTokenAddress, buyTokenAddress)
     ? getPriceApiCall(
-      tradeData.transactionType,
-      chainId,
-      sellTokenAddress,
-      buyTokenAddress,
-      sellAmount,
-      buyAmount,
-      Number.isFinite(tradeData.slippageBps) ? tradeData.slippageBps : 100)
+        chainId,
+        sellTokenAddress,
+        buyTokenAddress,
+        sellAmount,
+        Number.isFinite(tradeData.slippageBps) ? tradeData.slippageBps : 100
+      )
     : null;
+
+  console.log('[usePriceAPI] SWR key:', swrKey);
 
   useWhyDidYouUpdate('usePriceAPI', {
     exchangeContext,
@@ -164,38 +155,34 @@ function usePriceAPI() {
     sellAmount,
     errorMessage,
     apiErrorMessage,
-    swrKey
+    swrKey,
   });
 
   return useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
-      console.log(`[API SUCCESS] Direction: ${tradeData.transactionType}, Response:`, data);
+      console.log(`[API SUCCESS] Response:`, data);
 
       if (data.code) {
         setApiErrorMessage({
           status: STATUS.ERROR_API_PRICE,
-          source: "ApiFetcher",
+          source: 'ApiFetcher',
           errCode: data.code,
           msg: getApiErrorTransactionData(
             exchangeContext,
             sellTokenAddress,
             buyTokenAddress,
-            tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
+            sellAmount,
             data
           ),
         });
-      } else {
-        if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
-          setBuyAmount(BigInt(data.buyAmount ?? 0));
-        } else if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
-          setSellAmount(BigInt(data.sellAmount ?? 0));
-        }
+      } else if (data?.buyAmount !== undefined) {
+        setBuyAmount(BigInt(data.buyAmount ?? 0));
       }
     },
     onError: (error) =>
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
-        source: "ApiFetcher",
+        source: 'ApiFetcher',
         errCode: error.code,
         msg: error,
       }),

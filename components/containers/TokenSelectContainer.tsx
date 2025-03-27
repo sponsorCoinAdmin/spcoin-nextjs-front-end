@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
-import { useAccount } from "wagmi";
+import { useApiProvider } from '@/lib/context/contextHooks';
 
 // Context & Hooks
 import {
@@ -21,7 +21,6 @@ import TokenSelect from "./TokenSelectDropDown";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
-import { isWrappingTransaction, BURN_ADDRESS } from "@/lib/network/utils";
 import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/utils";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
@@ -29,11 +28,13 @@ import { useDebounce } from "@/lib/hooks/useDebounce";
 import {
   CONTAINER_TYPE,
   TRADE_DIRECTION,
+  API_TRADING_PROVIDER,
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
+  const apiProvider = useApiProvider();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -42,8 +43,10 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
+  const [localContainerType, setLocalContainerType] = useState(containerType);
+
   const tokenContract =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+    localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? sellTokenContract
       : buyTokenContract;
 
@@ -55,29 +58,28 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     if (!tokenContract) return;
 
     const amountToUse =
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
         ? sellAmount
         : buyAmount;
 
     setInputValue(formatUnits(amountToUse, tokenContract.decimals || 18));
-  }, [sellAmount, buyAmount, containerType, tokenContract]);
+  }, [sellAmount, buyAmount, localContainerType, tokenContract]);
 
   useEffect(() => {
     if (
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
+      localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
       transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
     ) {
-      setSellAmount(debouncedSellAmount); // ✅ trigger SWR
+      setSellAmount(debouncedSellAmount);
     }
-  
+
     if (
-      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
+      localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
       transactionType === TRADE_DIRECTION.BUY_EXACT_IN
     ) {
-      setBuyAmount(debouncedBuyAmount); // ✅ trigger SWR
+      setBuyAmount(debouncedBuyAmount);
     }
   }, [debouncedSellAmount, debouncedBuyAmount]);
-  
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -88,7 +90,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     const formatted = parseValidFormattedAmount(value, decimals);
     const bigIntValue = parseUnits(formatted, decimals);
 
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+    if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
       setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
       setSellAmount(bigIntValue);
     } else {
@@ -98,45 +100,41 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   };
 
   useEffect(() => {
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) {
+    if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) {
       console.log("Debounced Sell Amount:", debouncedSellAmount.toString());
-    } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.BUY_EXACT_IN) {
+    } else if (localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.BUY_EXACT_IN) {
       console.log("Debounced Buy Amount:", debouncedBuyAmount.toString());
     }
-  }, [debouncedSellAmount, debouncedBuyAmount, containerType, transactionType]);
+  }, [debouncedSellAmount, debouncedBuyAmount, localContainerType, transactionType]);
 
-  const buySellText = isWrappingTransaction(exchangeContext)
-    ? containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? "You Exactly Pay"
-      : "You Exactly Receive"
-    : transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
-      ? containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? "You Exactly Pay"
-        : `You Receive +-${slippageBps * 100}%`
-      : containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? `You Pay +-${slippageBps * 100}%`
-        : "You Exactly Receive";
+  const buySellText = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+    ? "You Exactly Pay"
+    : "You Receive";
 
   const formattedBalance = tokenContract && tokenContract.balance !== undefined
     ? formatUnits(tokenContract.balance, tokenContract.decimals || 18)
     : "0.0";
+
+  const isInputDisabled =
+    !tokenContract ||
+    (apiProvider === API_TRADING_PROVIDER.API_0X && localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER);
 
   return (
     <div className={`${styles.inputs} ${styles.tokenSelectContainer}`}>
       <input
         className={styles.priceInput}
         placeholder="0"
-        disabled={!tokenContract}
+        disabled={isInputDisabled}
         value={inputValue}
         onChange={(e) => handleInputChange(e.target.value)}
         onBlur={() => setInputValue(inputValue ? parseFloat(inputValue).toString() : "0")}
       />
       <TokenSelect
         exchangeContext={exchangeContext}
-        containerType={containerType}
+        containerType={localContainerType}
         tokenContract={tokenContract}
         setDecimalAdjustedContract={
-          containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
             ? setSellTokenContract
             : setBuyTokenContract
         }
@@ -144,7 +142,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
       {isSpCoin(tokenContract) &&
-        (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
+        (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorButton />

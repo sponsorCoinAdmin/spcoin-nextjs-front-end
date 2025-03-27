@@ -8,6 +8,7 @@ import {
   ErrorMessage,
   STATUS,
   TradeData,
+  API_TRADING_PROVIDER,
 } from "@/lib/structure/types";
 
 export const useExchangeContext = () => {
@@ -137,6 +138,11 @@ export const useApiErrorMessage = (): [ErrorMessage | undefined, (error: ErrorMe
   return [apiErrorMessage, setApiErrorMessage];
 };
 
+export const useApiProvider = (): API_TRADING_PROVIDER | undefined => {
+  const { exchangeContext } = useExchangeContext();
+  return exchangeContext.apiTradingProvider;
+};
+
 export const AllHookExample = () => {
   const { exchangeContext } = useExchangeContext();
 
@@ -148,6 +154,7 @@ export const AllHookExample = () => {
   const [slippageBps, setSlippageBps] = useSlippageBps();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
+  const apiProvider = useApiProvider();
   const tradeData = useTradeData();
 
   return (
@@ -157,6 +164,7 @@ export const AllHookExample = () => {
       <div>Buy Amount: {buyAmount.toString()}</div>
       <div>Slippage Bps: {slippageBps}</div>
       <div>Transaction Type: {transactionType}</div>
+      <div>API Provider: {apiProvider}</div>
       <div>Sell Token: {sellTokenContract?.symbol ?? "None"}</div>
       <div>Buy Token: {buyTokenContract?.symbol ?? "None"}</div>
       <div>Trade Data: {JSON.stringify(tradeData, null, 2)}</div>
