@@ -1,13 +1,21 @@
 [
-    {
-        "chainId": 137,
-        "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
-        "name": "Sponsor Coin",
-        "symbol": "SpCoin",
-        "decimals": 18,
-        "img": "assets/blockchains/0xToDo_SpCoin.png"
-    },
-    {
+{
+    "chainId": 137,
+    "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "name": "Polygon",
+    "symbol": "MATIC",
+    "decimals": 18,
+    "img": "assets/blockchains/0xToDo_SpCoin.png"
+},
+{
+    "chainId": 137,
+    "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
+    "name": "Sponsor Coin",
+    "symbol": "SpCoin",
+    "decimals": 18,
+    "img": "assets/blockchains/0xToDo_SpCoin.png"
+},
+{
         "chainId": 137,
         "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
         "name": "USD Coin",

@@ -195,6 +195,7 @@ function delay(ms: number | undefined) {
 
 export {
   BURN_ADDRESS,
+  NATIVE_TOKEN_ADDRESS,
   // createNetworkJsonList,
   defaultMissingImage,
   delay,

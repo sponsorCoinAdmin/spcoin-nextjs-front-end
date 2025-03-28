@@ -13,24 +13,24 @@ import ReadWagmiERC20ContractName from '@/components/ERC20/ReadWagmiERC20Contrac
 import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20ContractSymbol'
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals'
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
+import { BURN_ADDRESS, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
 
 // let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
 const USDT_TON_CONTRACT:Address  = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1'
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
 const CHKN_ETHEREUM_CONTRACT:Address = USDT_TON_CONTRACT
-const NULL_CONTRACT                  = '0x0000000000000000000000000000000000000000';
 let ACTIVE_ACCOUNT: UseAccountReturnType<Config>;
 
 function App() {
   ACTIVE_ACCOUNT = useAccount()
-  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(NULL_CONTRACT)
-  const [ TOKEN_CONTRACT_ADDRESS, setDefaultTokenContractAddress ] = useState<Address>(NULL_CONTRACT)
+  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
+  const [ TOKEN_CONTRACT_ADDRESS, setDefaultTokenContractAddress ] = useState<Address>(BURN_ADDRESS)
 
   useEffect(() => {
       switch(ACTIVE_ACCOUNT.chainId) {
         case 1: setDefaultTokenContractAddress(CHKN_ETHEREUM_CONTRACT); break;
         case 137: setDefaultTokenContractAddress(USDT_POLYGON_CONTRACT); break;
-        default: setDefaultTokenContractAddress(NULL_CONTRACT); break;
+        default: setDefaultTokenContractAddress(NATIVE_TOKEN_ADDRESS); break;
     }
   }, [ACTIVE_ACCOUNT.chainId]);
   

@@ -3,7 +3,7 @@ import defaultPolygonSettings from '@/resources/data/networks//polygon/initializ
 import defaultHardHatSettings from '@/resources/data/networks//hardhat/initialize/defaultNetworkSettings.json';
 import defaultSoliditySettings from '@/resources/data/networks//sepolia/initialize/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
-import { TradeData, SWAP_TYPE, TRADE_DIRECTION, ExchangeContext, NetworkElement, WalletAccount, TokenContract, SP_COIN_DISPLAY, ETHEREUM, HARDHAT, POLYGON, SEPOLIA } from '@/lib/structure/types';
+import { TradeData, SWAP_TYPE, TRADE_DIRECTION, ExchangeContext, NetworkElement, WalletAccount, TokenContract, SP_COIN_DISPLAY, ETHEREUM, HARDHAT, POLYGON, SEPOLIA, API_TRADING_PROVIDER } from '@/lib/structure/types';
 
 const defaultInitialTradeData:TradeData = {
   signer: undefined,
@@ -29,13 +29,14 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
   const chainId:number = chain || 1;
   const initialContextMap = getInitialContextMap(chainId);
   const initialContext:ExchangeContext = {
-      activeAccountAddress : undefined,
-      network: initialContextMap.get("networkHeader") as NetworkElement,
-      recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
-      agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
-      tradeData: defaultInitialTradeData,
-      spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
-      test : {dumpContextButton:false}
+    activeAccountAddress: undefined,
+    network: initialContextMap.get("networkHeader") as NetworkElement,
+    recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
+    agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+    tradeData: defaultInitialTradeData,
+    spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
+    test: { dumpContextButton: false },
+    apiTradingProvider: API_TRADING_PROVIDER.API_0X
   }
   // alert(`***Context.getInitialContext:sellTokenContract: ${JSON.stringify(defaultNetworkSettings.defaultSellToken,null,2)}`)
   // alert(`***Context.getInitialContext: ${JSON.stringify(defaultNetworkSettings,null,2)}`)

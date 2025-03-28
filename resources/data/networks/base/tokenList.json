@@ -9,7 +9,7 @@
     },
     {
         "chainId": 84531,
-        "address": "0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2",
+        "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         "name": "Ethereum",
         "symbol": "ETH",
         "decimals": 18,

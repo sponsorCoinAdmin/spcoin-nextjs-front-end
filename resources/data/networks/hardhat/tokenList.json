@@ -1,7 +1,7 @@
 [
     {
         "chainId": 31337,
-        "address": "0x0000000000000000000000000000000000000000",
+        "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         "name": "Ethereum",
         "symbol": "ETH",
         "decimals": 18,
