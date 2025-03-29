@@ -7,18 +7,18 @@ import {
   useErrorMessage,
   useExchangeContext,
   useSellAmount,
-  useTradeData
+  useTradeData,
 } from '@/lib/context/contextHooks';
-import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
+import { useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
-import { useChainId } from "wagmi";
+import { useAccount, useChainId } from 'wagmi';
 
-const ONE_INCH_API_BASE = 'https://api.1inch.io/v5.0';
-const WRAPPED_ETHEREUM_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+const API_PROVIDER = '1Inch/';
+const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
+const apiPriceBase = '/quote';
 
-const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
-  return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;
-};
+const WRAPPED_ETHEREUM_ADDRESS: Address = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
 
 const fetcher = async ([url]: [string]) => {
   console.log(`[1inch Fetch] ${url}`);
@@ -54,39 +54,56 @@ function usePriceAPI() {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
   const chainId = useChainId();
+  const { address: userAddress } = useAccount();
   const [errorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount] = useSellAmount();
 
-  let sellTokenAddress = tradeData.sellTokenContract?.address;
-  let buyTokenAddress = tradeData.buyTokenContract?.address;
-  const userAddress = exchangeContext.activeAccountAddress as Address;
+  const rawSellTokenAddress = tradeData.sellTokenContract?.address;
+  const rawBuyTokenAddress = tradeData.buyTokenContract?.address;
 
-  const isActiveSellAccount = useIsActiveAccountAddress(sellTokenAddress as Address);
-  const isActiveBuyAccount = useIsActiveAccountAddress(buyTokenAddress as Address);
+  const mappedSellTokenAddress = useMapAccountAddrToWethAddr(
+    rawSellTokenAddress ?? ZERO_ADDRESS
+  );
 
-  sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount));
-  buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount));
+  const mappedBuyTokenAddress = useMapAccountAddrToWethAddr(
+    rawBuyTokenAddress ?? ZERO_ADDRESS
+  );
 
-  const shouldFetch = sellTokenAddress && buyTokenAddress && sellTokenAddress !== buyTokenAddress && sellAmount !== 0n && userAddress && chainId !== HARDHAT;
+  const slippagePercentage = Number.isFinite(tradeData.slippageBps)
+    ? (tradeData.slippageBps! / 100).toString()
+    : '1';
 
-  const slippagePercentage = Number.isFinite(tradeData.slippageBps) ? (tradeData.slippageBps! / 100).toString() : '1';
+  const shouldFetch =
+    !!rawSellTokenAddress &&
+    !!rawBuyTokenAddress &&
+    mappedSellTokenAddress !== mappedBuyTokenAddress &&
+    sellAmount > 0n &&
+    !!userAddress &&
+    chainId !== HARDHAT;
 
   const swrKey = shouldFetch
-    ? [`${ONE_INCH_API_BASE}/${chainId}/swap?fromTokenAddress=${sellTokenAddress}&toTokenAddress=${buyTokenAddress}&amount=${sellAmount.toString()}&fromAddress=${userAddress}&slippage=${slippagePercentage}`]
+    ? [
+        `${NEXT_PUBLIC_API_SERVER}${apiPriceBase}?chainId=${chainId}` +
+          `&fromTokenAddress=${mappedSellTokenAddress}` +
+          `&toTokenAddress=${mappedBuyTokenAddress}` +
+          `&amount=${sellAmount.toString()}` +
+          `&fromAddress=${userAddress}` +
+          `&slippage=${slippagePercentage}`,
+      ]
     : null;
 
   useWhyDidYouUpdate('usePriceAPI_1inch', {
     tradeData,
     chainId,
-    sellTokenAddress,
-    buyTokenAddress,
+    rawSellTokenAddress,
+    rawBuyTokenAddress,
     sellAmount,
     buyAmount,
     errorMessage,
     apiErrorMessage,
-    swrKey
+    swrKey,
   });
 
   return useSWR(swrKey, fetcher, {
@@ -100,8 +117,8 @@ function usePriceAPI() {
     onError: (error) => {
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
-        source: "1inchFetcher",
-        errCode: error.code,
+        source: '1inchFetcher',
+        errCode: error.code ?? 500,
         msg: error,
       });
     },
