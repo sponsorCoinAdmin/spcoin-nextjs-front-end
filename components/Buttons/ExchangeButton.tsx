@@ -8,12 +8,10 @@ import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, i
 
 // import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
-  isLoadingPrice: boolean,
-  setResetAmounts: (resetAmounts: boolean) => void,
-  toggleButton: boolean
+  isLoadingPrice: boolean
 }
 
-const ExchangeButton = ({ isLoadingPrice,  setResetAmounts, toggleButton }: Props) => {
+const ExchangeButton = ({ isLoadingPrice }: Props) => {
   // ✅ Use useExchangeContext() instead of direct reference
   const { exchangeContext } = useExchangeContext();
   const tradeData: TradeData = exchangeContext.tradeData;
@@ -182,7 +180,6 @@ const ExchangeButton = ({ isLoadingPrice,  setResetAmounts, toggleButton }: Prop
   // ✅ Validate and perform swap
   const validateAndSwap = async () => {
     swap();
-    setResetAmounts(true);
   }
 
   setButtonType(getButtonType())

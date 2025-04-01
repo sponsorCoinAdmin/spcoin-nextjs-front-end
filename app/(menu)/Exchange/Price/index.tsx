@@ -2,17 +2,14 @@
 
 import styles from '@/styles/Exchange.module.css';
 import { ErrorDialog } from '@/components/Dialogs/Dialogs';
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccount } from 'wagmi';
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
 import { 
-  TokenContract,
   ErrorMessage,
-  TRADE_DIRECTION,
   CONTAINER_TYPE, 
   STATUS,
-  TradeData,
-  HARDHAT
+  TradeData
 } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/fetcher';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -44,8 +41,6 @@ export default function PriceView() {
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useErrorMessage();
-  const [resetAmounts, setResetAmounts] = useState<boolean>(false);
-  const [toggleButton, setToggleButton] = useState<boolean>(false);
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [containerSwapStatus, setContainerSwapStatus] = useBuySellSwap();
@@ -65,18 +60,10 @@ export default function PriceView() {
     if (!ACTIVE_ACCOUNT.chainId || ACTIVE_ACCOUNT.chainId === tradeData?.chainId) return;
     tradeData.chainId = ACTIVE_ACCOUNT.chainId;
     setSellAmount(0n);
-    setBuyAmount(0n);
     setSellTokenContract(undefined);
+    setBuyAmount(0n);
     setBuyTokenContract(undefined);
   }, [ACTIVE_ACCOUNT.chainId]);
-
-  useEffect(() => {
-    if (resetAmounts) {
-      setBuyAmount(0n);
-      setSellAmount(0n);
-      setResetAmounts(false);
-    }
-  }, [resetAmounts]);
 
   useEffect(() => {
     if (containerSwapStatus) {
@@ -96,8 +83,6 @@ export default function PriceView() {
         <BuySellSwapArrowButton />
         <PriceButton 
           isLoadingPrice={isLoadingPrice} 
-          setResetAmounts={setResetAmounts} 
-          toggleButton={toggleButton} 
         />
         <AffiliateFee priceResponse={priceData} />
       </div>

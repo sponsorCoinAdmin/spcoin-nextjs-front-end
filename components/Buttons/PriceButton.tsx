@@ -9,12 +9,10 @@ import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 
 type Props = {
-    isLoadingPrice: boolean,
-    setResetAmounts: (resetAmounts: boolean) => void,
-    toggleButton: boolean
+    isLoadingPrice: boolean
 }
 
-const PriceButton = ({ isLoadingPrice, setResetAmounts, toggleButton }: Props) => {    
+const PriceButton = ({ isLoadingPrice }: Props) => {    
     const { exchangeContext } = useExchangeContext();
     const ACTIVE_ACCOUNT = useAccount();
     
@@ -37,8 +35,6 @@ const PriceButton = ({ isLoadingPrice, setResetAmounts, toggleButton }: Props) =
             ) : (
                 <ExchangeButton
                     isLoadingPrice={isLoadingPrice}
-                    setResetAmounts={setResetAmounts}
-                    toggleButton={toggleButton}
                 />
             )}
             {!displayDumpContextButton || <DumpContextButton />}

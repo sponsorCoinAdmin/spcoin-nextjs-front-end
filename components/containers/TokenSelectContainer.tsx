@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
-import { useApiProvider, useBuyBalance, useSellBalance } from '@/lib/context/contextHooks';
+import { useApiProvider, useBuyBalance, useSellBalance, useTradeData } from '@/lib/context/contextHooks';
 
 // Context & Hooks
 import {
@@ -35,12 +35,13 @@ import styles from "@/styles/Exchange.module.css";
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
+  const tradeData = useTradeData();
   const apiProvider = useApiProvider();
   const account = useAccount();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
-  const [transactionType, setTradeDirection] = useTradeDirection();
+  const [tradeDirection, setTradeDirection] = useTradeDirection();
   const [slippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
@@ -78,18 +79,28 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   useEffect(() => {
     if (
       localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
-      transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
+      tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
     ) {
       setSellAmount(debouncedSellAmount);
     }
 
     if (
       localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
-      transactionType === TRADE_DIRECTION.BUY_EXACT_IN
+      tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
     ) {
       setBuyAmount(debouncedBuyAmount);
     }
   }, [debouncedSellAmount, debouncedBuyAmount]);
+
+    useEffect(() => {
+    if (!account.chainId || account.chainId === exchangeContext?.tradeData?.chainId) return;
+    tradeData.chainId = account.chainId;
+    setSellAmount(0n);
+    setSellTokenContract(undefined);
+    setBuyAmount(0n);
+    setBuyTokenContract(undefined);
+  }, [account.chainId]);
+
 
   useEffect(() => {
     if (!wagmiBalance || !wagmiBalance.value) return;
@@ -120,16 +131,22 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   };
 
   useEffect(() => {
-    if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.SELL_EXACT_OUT) {
+    if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) {
       console.log("Debounced Sell Amount:", debouncedSellAmount.toString());
-    } else if (localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && transactionType === TRADE_DIRECTION.BUY_EXACT_IN) {
+    } else if (localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN) {
       console.log("Debounced Buy Amount:", debouncedBuyAmount.toString());
     }
-  }, [debouncedSellAmount, debouncedBuyAmount, localContainerType, transactionType]);
+  }, [debouncedSellAmount, debouncedBuyAmount, localContainerType, tradeDirection]);
+
+  console.log(`slippageBps = ${slippageBps}`)
 
   const buySellText = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    ? "You Exactly Pay"
-    : "You Receive";
+  ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN 
+      ? `You Pay ± ${slippageBps/100}%` 
+      : `You Exactly Pay:`)
+  : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT 
+      ? `You Receive ± ${slippageBps/100}%` 
+      : `You Exactly Receive:`);
 
   const formattedBalance = tokenContract && tokenContract.balance !== undefined
     ? formatUnits(tokenContract.balance, tokenContract.decimals || 18)

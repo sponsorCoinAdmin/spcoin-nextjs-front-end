@@ -8,7 +8,7 @@ import {
   ErrorMessage,
   STATUS,
   TradeData,
-  API_TRADING_PROVIDER,
+  API_TRADING_PROVIDER
 } from "@/lib/structure/types";
 
 export const useExchangeContext = () => {
@@ -37,14 +37,12 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
       },
     }));
   };
-
   return [sellAmount, setSellAmount];
 };
 
 export const useSellBalance = (): [bigint, (balance: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const sellBalance = exchangeContext.tradeData.sellTokenContract?.balance ?? 0n;
-
   const setSellBalance = (balance: bigint) => {
     const token = exchangeContext.tradeData.sellTokenContract;
     if (!token) {
@@ -59,14 +57,12 @@ export const useSellBalance = (): [bigint, (balance: bigint) => void] => {
       },
     }));
   };
-
   return [sellBalance, setSellBalance];
 };
 
 export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const buyAmount = exchangeContext.tradeData.buyTokenContract?.amount ?? 0n;
-
   const setBuyAmount = (amount: bigint) => {
     const token = exchangeContext.tradeData.buyTokenContract;
     if (!token) {
@@ -81,7 +77,6 @@ export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
       },
     }));
   };
-
   return [buyAmount, setBuyAmount];
 };
 
@@ -152,6 +147,24 @@ export const useSlippageBps = (): [number, (bps: number) => void] => {
   ];
 };
 
+export const useSlippagePercent = (): [string, (percent: string) => void] => {
+  const [slippageBps, setSlippageBps] = useSlippageBps();
+
+  const slippagePercent = `${(slippageBps / 100)
+    .toLocaleString(undefined, { maximumFractionDigits: 2 })
+    .replace(/\.?0+$/, '')}%`;
+
+  const setSlippagePercent = (percent: string) => {
+    const cleaned = percent.replace('%', '').trim();
+    const parsed = parseFloat(cleaned);
+    if (!isNaN(parsed)) {
+      setSlippageBps(Math.round(parsed * 100));
+    }
+  };
+
+  return [slippagePercent, setSlippagePercent];
+};
+
 export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
@@ -189,7 +202,6 @@ export const useApiProvider = (): API_TRADING_PROVIDER | undefined => {
 
 export const AllHooksExample = () => {
   const { exchangeContext } = useExchangeContext();
-
   const [sellAmount, setSellAmount] = useSellAmount();
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyAmount, setBuyAmount] = useBuyAmount();

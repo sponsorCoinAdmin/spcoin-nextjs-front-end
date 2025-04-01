@@ -1,4 +1,4 @@
-import Config from './ConfigDialog';
+import Config from './Popup/ConfigDialog';
 import ErrorDialog from './ErrorDialog';
 import RecipientDialog from './WalletSelectDialog';
 import TokenSelectDialog from './AssetSelectDialog';

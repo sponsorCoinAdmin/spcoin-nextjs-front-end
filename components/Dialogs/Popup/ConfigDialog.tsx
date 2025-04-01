@@ -1,8 +1,7 @@
 "use client"
 import { useEffect, useRef } from 'react';
 import styles from '@/styles/Modal.module.css';
-import SlippageBps from '../Popover/SlippageBps';
-// const [slippageBps, setSlippageBps] = useSlippageBps();
+import SlippageBpsRadioButtons from './SlippageBpsRadioButtons';
 
 type Props = {
     showDialog:boolean
@@ -36,7 +35,7 @@ export default function Dialog({showDialog}:Props) {
             </div>
             <div >
                 <div className={styles.modalScrollBar}>
-                <SlippageBps />
+                <SlippageBpsRadioButtons />
                     {/* <h1>{slippageBps}</h1> */}
                 </div>
             </div>
