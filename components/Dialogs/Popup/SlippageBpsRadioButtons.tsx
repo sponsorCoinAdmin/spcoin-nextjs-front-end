@@ -7,12 +7,12 @@ function SlippageBpsRadioButtons() {
   const [value, setValue] = useState("");
 
   useEffect(() => {
-    const newValue = (slippageBps / 100).toString();
+    const newValue = (slippageBps / 10000).toString();
     setValue(newValue);
   }, [slippageBps]);
 
   const setRadioButton = ({ target: { value } }: RadioChangeEvent) => {
-    const bps = Math.round(parseFloat(value) * 100);
+    const bps = Math.round(parseFloat(value) * 10000);
     setValue(value);
     if (bps !== slippageBps) {
       console.log('📦 setSlippageBps called with', bps);

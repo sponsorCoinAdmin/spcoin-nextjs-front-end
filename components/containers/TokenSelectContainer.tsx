@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
-import { useApiProvider, useBuyBalance, useSellBalance, useTradeData } from '@/lib/context/contextHooks';
+import { useApiProvider, useBuyBalance, useSellBalance, useSlippagePercent, useTradeData } from '@/lib/context/contextHooks';
 
 // Context & Hooks
 import {
@@ -42,7 +42,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
-  const [slippageBps] = useSlippageBps();
+  const [slippagePercent] = useSlippagePercent();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [sellBalance, setSellBalance] = useSellBalance();
@@ -138,14 +138,14 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     }
   }, [debouncedSellAmount, debouncedBuyAmount, localContainerType, tradeDirection]);
 
-  console.log(`slippageBps = ${slippageBps}`)
+  console.log(`slippagePercent = ${slippagePercent}`)
 
   const buySellText = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
   ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN 
-      ? `You Pay ± ${slippageBps/100}%` 
+      ? `You Pay ± ${slippagePercent}` 
       : `You Exactly Pay:`)
   : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT 
-      ? `You Receive ± ${slippageBps/100}%` 
+      ? `You Receive ± ${slippagePercent}` 
       : `You Exactly Receive:`);
 
   const formattedBalance = tokenContract && tokenContract.balance !== undefined

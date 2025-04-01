@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "@/styles/Header.module.css"
 import { config } from '@/lib/wagmi/wagmiConfig'
-import spCoin_png from '@/public/assets/miscellaneous/spCoin.png'
+import spCoin_png from '@/public/SpCoin/avatar.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
