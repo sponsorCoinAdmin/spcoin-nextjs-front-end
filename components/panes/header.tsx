@@ -3,12 +3,11 @@
 import React, { useEffect, useState } from "react";
 import styles from "@/styles/Header.module.css"
 import { config } from '@/lib/wagmi/wagmiConfig'
-import spCoin_png from '@/public/SpCoin/avatar.png'
+import spCoin_png from '@/resources/SpCoin/images/avatar.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
 import { defaultMissingImage, getBlockChainName, getBlockChainAvatar } from "@/lib/network/utils";
-// import { useExchangeContext } from '@/lib/context/contextHooks'
 
 import { useChainId } from "wagmi";
 

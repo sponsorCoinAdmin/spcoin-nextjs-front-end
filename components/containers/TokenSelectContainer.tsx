@@ -10,7 +10,6 @@ import {
   useBuyAmount,
   useExchangeContext,
   useSellAmount,
-  useSlippageBps,
   useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract,

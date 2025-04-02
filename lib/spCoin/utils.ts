@@ -155,8 +155,8 @@ const logAlert = (obj: any, name: string = "", logAlert: boolean = false, logCon
 };
 
 const getPublicFileUrl = (fileName: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  if (!baseUrl) throw new Error("NEXT_PUBLIC_BASE_URL is not defined in environment variables.");
+  const baseUrl = process.env.NEXT_PUBLIC_SPCOIN_HOSTNAME;
+  if (!baseUrl) throw new Error("NEXT_PUBLIC_SPCOIN_HOSTNAME is not defined in environment variables.");
   return `${baseUrl}/${fileName}`;
 };
 
