@@ -2,7 +2,8 @@
 
 import { SWAP_TYPE, TradeData } from "@/lib/structure/types";
 import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/contextHooks";
-import { stringifyBigInt } from "../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils";
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
+;
 
 // import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6";
 import { WethMethods, weth9ABI } from '@sponsorcoin/weth-access-module-es6';

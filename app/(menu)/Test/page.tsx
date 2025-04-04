@@ -23,7 +23,7 @@ let ACTIVE_ACCOUNT: UseAccountReturnType<Config<readonly [{ blockExplorers: { re
 function App() {
   // console.debug("*** page:BEFORE ACTIVE_ACCOUNT = " + stringifyBigInt(ACTIVE_ACCOUNT || "UNDEFINED"))
   ACTIVE_ACCOUNT = useAccount()
-  // console.debug("*** page:AFTER ACTIVE_ACCOUNT = " + stringifyBigInt(ACTIVE_ACCOUNT || "UNDEFINED"))
+  // console.debug("*** page:AFTER ACTIVE_ACCOUNT = " + (ACTIVE_ACCOUNT || "UNDEFINED"))
   const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(NATIVE_TOKEN_ADDRESS)
   const [ TOKEN_CONTRACT_ADDRESS, setDefaultTokenContractAddress ] = useState<Address>(NATIVE_TOKEN_ADDRESS)
 

@@ -20,7 +20,8 @@ import InputSelect from "@/components/panes/InputSelect";
 
 // Utilities & Context
 import { useExchangeContext } from "@/lib/context/contextHooks"; // ✅ Updated import
-import { stringifyBigInt } from "../../../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils";
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+;
 import { TokenContract } from "@/lib/structure/types";
 
 // Constants

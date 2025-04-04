@@ -1,6 +1,6 @@
 import React, { createContext } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 
 import { useExchangeContext } from '@/lib/context/contextHooks'; // ✅ Updated import
 

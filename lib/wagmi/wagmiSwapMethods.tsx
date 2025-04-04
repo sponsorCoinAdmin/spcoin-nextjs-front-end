@@ -1,16 +1,15 @@
 import { useBalance, useChainId, useReadContract, useWriteContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
-// import { erc20Abi } from 'viem'
-// import erc20Abi from '@/resources/data/ABIs/erc20ABI.json'
+// import { erc20ABI } from 'viem'
+// import erc20ABI from '@/resources/data/ABIs/erc20ABI.json'
 import { wethAbi } from '@/resources/data/ABIs/wethABI'
-import { erc20Abi } from '@/resources/data/ABIs/erc20ABI'
+import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
-import { stringifyBigInt } from '../spCoin/utils'
 
-// console.log(`AAAAAAAAA erc20Abi = ${JSON.stringify(erc20Abi)}`)
-// console.log(`BBBBBBBBB erc20Abi2 = ${JSON.stringify(erc20Abi2)}`)
+// console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)
+// console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
 
 const useWagmiWrapDeposit = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
@@ -31,7 +30,7 @@ const useWagmiWrapDeposit = (connectedAccountAddr: Address | undefined, contract
 
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
   const wagmiDecimalsRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'decimals',
     config: config, 
@@ -41,7 +40,7 @@ const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
 
 const useWagmiERC20TokenNameRec = (contractAddress:Address | undefined) => {
   const wagmiNameRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'name',
     config: config, 
@@ -51,7 +50,7 @@ const useWagmiERC20TokenNameRec = (contractAddress:Address | undefined) => {
 
 const useWagmiERC20TokenSymbolRec = (contractAddress:Address | undefined) => {
   const wagmiSymbolRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'symbol',
     config: config, 
@@ -61,7 +60,7 @@ const useWagmiERC20TokenSymbolRec = (contractAddress:Address | undefined) => {
 
 const useWagmiERC20TokenTotalSupplyRec = (contractAddress:Address | undefined) => {
   const wagmiTotalSupplyRec = useReadContract({
-    abi: erc20Abi,
+    abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'totalSupply',
     config: config, 
@@ -97,7 +96,7 @@ const useWagmiERC20TokenTotalSupply = (contractAddress:Address | undefined) => {
   return useWagmiERC20TokenTotalSupplyRec(contractAddress).data;
 }
 
-const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
+const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): TokenContract|undefined => {
   const chainId = useChainId();
   const name = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
   const symbol = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
@@ -113,6 +112,8 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       symbol:symbol,
       decimals:decimals,
       totalSupply:totalSupply,
+      amount:0n,
+      balance:0n,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
@@ -121,7 +122,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
   return contractResponse
 }
 
-const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => {
+const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined):TokenContract|undefined => {
   const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
   const chainId:number            = useChainId();
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
@@ -138,6 +139,8 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       symbol:symbol,
       decimals:decimals,
       totalSupply:undefined,
+      amount:0n,
+      balance:0n,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
   }

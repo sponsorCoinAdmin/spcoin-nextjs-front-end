@@ -3,7 +3,7 @@ import { getWagmiBalanceOfRec } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import { ExchangeContext, SWAP_TYPE, TokenContract } from "@/lib/structure/types";
 import { toggleElement } from "./guiControl";
 import { Address, formatUnits, getAddress } from "viem";
-import { stringifyBigInt } from '../../../node_modules-dev/spcoin-common/spcoin-lib-es6/utils';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 import { BURN_ADDRESS } from "../network/utils";
 
 const dumpSwapState = (swapType: SWAP_TYPE) => {

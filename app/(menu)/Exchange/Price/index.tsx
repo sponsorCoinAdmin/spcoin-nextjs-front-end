@@ -5,6 +5,7 @@ import { ErrorDialog } from '@/components/Dialogs/Dialogs';
 import { useState, useEffect, useCallback } from "react";
 import { useAccount } from 'wagmi';
 import { useEthersSigner } from '@/lib/hooks/useEthersSigner';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { 
   ErrorMessage,
   CONTAINER_TYPE, 
@@ -27,8 +28,6 @@ import {
   useSlippageBps
 } from "@/lib/context/contextHooks";  
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
-
-import { stringifyBigInt } from '@/lib/spCoin/utils';
 
 export default function PriceView() {
   const ACTIVE_ACCOUNT = useAccount();
