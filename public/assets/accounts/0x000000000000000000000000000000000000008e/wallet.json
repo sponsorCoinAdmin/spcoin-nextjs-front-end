@@ -1,0 +1,9 @@
+{
+  "name": "TweetyBird",
+  "symbol": "TweetyBird",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site TweetyBird",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000008e"
+}

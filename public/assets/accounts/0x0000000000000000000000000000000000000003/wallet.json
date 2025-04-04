@@ -1,0 +1,9 @@
+{
+  "name": "Progressive Conservatives",
+  "symbol": "PC_3",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site PC_3",
+  "status": "test",
+  "address": "0x0000000000000000000000000000000000000003"
+}

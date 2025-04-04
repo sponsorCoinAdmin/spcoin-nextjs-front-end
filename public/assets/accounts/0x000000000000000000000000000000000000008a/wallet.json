@@ -1,0 +1,9 @@
+{
+  "name": "MoeHoward",
+  "symbol": "MoeHoward",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site MoeHoward",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000008a"
+}

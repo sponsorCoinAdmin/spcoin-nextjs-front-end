@@ -1,0 +1,9 @@
+{
+  "name": "Clean The Parks",
+  "symbol": "PARKS",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site CleanTheParks",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000001e"
+}

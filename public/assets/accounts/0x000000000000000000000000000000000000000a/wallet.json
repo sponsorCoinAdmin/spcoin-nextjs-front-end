@@ -1,0 +1,9 @@
+{
+  "name": "Paws Prints Shelter",
+  "symbol": "PAW",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site AnimalShelter1",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000000a"
+}
