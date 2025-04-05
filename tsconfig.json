@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,20 +14,23 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+
+    // Enable path aliases like @/lib/structure/types
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
-    "typeRoots": [
-      "./types",
-      "./node_modules/@types"
-    ],
+
+    // Next.js TypeScript plugin
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+
+    // Optional stricter cleanup checks (uncomment if desired)
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true
   },
   "include": [
     "next-env.d.ts",
@@ -39,7 +38,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
