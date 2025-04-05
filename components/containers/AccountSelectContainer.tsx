@@ -26,10 +26,10 @@ const AccountSelectContainer: React.FC = () => {
   useEffect(() => {
     // ✅ Update global ExchangeContext when recipientWallet changes
     if (exchangeContext.recipientWallet !== recipientWallet) {
-      setExchangeContext({
-        ...exchangeContext,
+      setExchangeContext(prev => ({
+        ...prev,
         recipientWallet,
-      });
+      }));
     }
   }, [recipientWallet, exchangeContext, setExchangeContext]);
 

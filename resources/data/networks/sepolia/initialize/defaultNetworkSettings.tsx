@@ -1,17 +1,18 @@
 import {  SEPOLIA, TokenContract } from '@/lib/structure/types'
  
- const defaultSellToken: TokenContract = { 
-  chainId: SEPOLIA,
-  address: "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
-  name: "Wrapped Bitcoin",
-  symbol: "WBTC",
-  decimals: 8,
-  balance: 0n,
-  totalSupply: null,
-  img: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+ const defaultSellToken: TokenContract = {
+   chainId: SEPOLIA,
+   address: "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
+   name: "Wrapped Bitcoin",
+   symbol: "WBTC",
+   decimals: 8,
+   balance: 0n,
+   totalSupply: null,
+   img: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+   amount: 0n
  };
 
-const defaultBuyToken: TokenContract = { 
+const defaultBuyToken: TokenContract = {
   chainId: SEPOLIA,
   address: "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
   name: "Tether USD",
@@ -19,7 +20,8 @@ const defaultBuyToken: TokenContract = {
   decimals: 6,
   balance: 0n,
   totalSupply: null,
-  img: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+  img: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
+  amount: 0n
 };
 
 const defaultRecipient = { 

@@ -10,8 +10,6 @@ const defaultInitialTradeData:TradeData = {
   chainId: 1,
   transactionType: TRADE_DIRECTION.SELL_EXACT_OUT,
   swapType: SWAP_TYPE.UNDEFINED,
-  sellAmount: 0n,
-  buyAmount: 0n,
   slippageBps: 100,
   sellTokenContract: undefined,
   buyTokenContract: undefined

@@ -14,7 +14,7 @@ import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../netwo
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from "wagmi";
-import { stringifyBigInt } from '../spCoin/utils';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER;
 const apiPriceBase = "/price";

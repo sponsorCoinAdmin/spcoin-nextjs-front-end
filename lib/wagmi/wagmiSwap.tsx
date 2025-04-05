@@ -6,7 +6,7 @@ import { Address, formatUnits } from 'viem'
 import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
-import { stringifyBigInt } from '../spCoin/utils'
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
@@ -114,8 +114,9 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       chainId: chainId,
       address:TOKEN_CONTRACT_ADDRESS,
       name:name || "2. CONTRACT NOT FOUND AT ADDRESS",
-      balance:0n,
       symbol:symbol,
+      amount:0n,
+      balance:0n,
       decimals:decimals,
       totalSupply:totalSupply,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
@@ -141,6 +142,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       address:ACTIVE_NETWORK_ADDRESS,
       name:name || "NETWORK NOT FOUND AT ADDRESS",
       symbol:symbol,
+      amount:0n,
       decimals:decimals,
       balance:0n,
       totalSupply:undefined,

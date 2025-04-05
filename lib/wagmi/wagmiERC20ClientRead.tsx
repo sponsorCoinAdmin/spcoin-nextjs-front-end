@@ -8,7 +8,7 @@ import { Address, formatUnits } from 'viem'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
-import { stringifyBigInt } from '../spCoin/utils'
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 // console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)
 // console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
@@ -120,6 +120,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       name:name || "1. CONTRACT NOT FOUND AT ADDRESS",
       symbol:symbol,
       decimals:decimals,
+      amount:0n,
       balance:0n,
       totalSupply:totalSupply,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
@@ -147,6 +148,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       balance:0n,
       symbol:symbol,
       decimals:decimals,
+      amount:0n,
       totalSupply:undefined,
       img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
