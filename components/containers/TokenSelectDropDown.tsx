@@ -5,7 +5,6 @@ import styles from "@/styles/Exchange.module.css";
 import { TokenSelectDialog } from "../Dialogs/Dialogs";
 import { DownOutlined } from "@ant-design/icons";
 import { CONTAINER_TYPE, ExchangeContext, TokenContract } from "@/lib/structure/types";
-import { stringifyBigInt } from "@/lib/spCoin/utils";
 import {
     defaultMissingImage,
     getBlockChainAvatar,

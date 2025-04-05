@@ -132,18 +132,19 @@ const getValidAddress = (addrType: any, chainId?: number) => {
   }
 };
 
-const invalidTokenContract = (textInputField: string | undefined, chainId: any) => {
+const invalidTokenContract = (textInputField: string | undefined, chainId: number):TokenContract|undefined => {
   return textInputField
     ? {
-        chainId,
-        address: BURN_ADDRESS,
-        name: "Invalid Network/Token Address",
-        symbol: "Please Enter Valid Token Address",
-        decimals: undefined,
-        balance: 0n,
-        totalSupply: undefined,
-        img: undefined
-      }
+      chainId,
+      address: BURN_ADDRESS,
+      name: "Invalid Network/Token Address",
+      symbol: "Please Enter Valid Token Address",
+      decimals: undefined,
+      balance: 0n,
+      totalSupply: undefined,
+      img: undefined,
+      amount: 0n
+    }
     : undefined;
 };
 
@@ -176,6 +177,5 @@ export {
   isSpCoin,
   logAlert,
   setValidPriceInput,
-  updateBalance,
-  stringifyBigInt
+  updateBalance
 };

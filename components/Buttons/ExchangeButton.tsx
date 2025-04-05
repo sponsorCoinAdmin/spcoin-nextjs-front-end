@@ -6,7 +6,6 @@ import { BUTTON_TYPE, ErrorMessage, ExchangeContext, STATUS, TRADE_DIRECTION, To
 import swap from '@/lib/spCoin/swap';
 import { isActiveAccountBuyToken, isWrappedBuyToken, isActiveAccountSellToken, isWrappedSellToken } from '@/lib/network/utils';
 
-// import { stringifyBigInt } from '@sponsorcoin/spcoin-lib-es6'
 type Props = {
   isLoadingPrice: boolean
 }

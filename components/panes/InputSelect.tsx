@@ -7,7 +7,8 @@ import styles from '@/styles/Modal.module.css';
 // import searchMagGlassWhite_png from './assets/searchMagGlassWhite.png'
 // import searchMagGlassGrey_png from '../../../assets/SearchMagGlassGrey.png'
 // import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
-import { getValidAddress, invalidTokenContract, stringifyBigInt } from '@/lib/spCoin/utils';
+import { getValidAddress, invalidTokenContract } from '@/lib/spCoin/utils';
+
 import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
 import Image from 'next/image'
 import { TokenContract, useErc20NetworkContract, useErc20TokenContract } from "@/lib/wagmi/wagmiERC20ClientRead";
@@ -24,7 +25,7 @@ type Props = {
 }
 
 function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }:Props) {
-  const chainId = useChainId();
+  const chainId:number = useChainId();
   const [ textInputField, setTextInputField ] = useState<any>();
   const [ validAddress, setValidAddress ] = useState<Address|undefined>();
   const [ tokenAddress, setTokenAddress ] = useState<Address|undefined>();
@@ -32,7 +33,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   const tokenContract:TokenContract|undefined = useErc20TokenContract(tokenAddress);
   const networkContract:TokenContract|undefined = useErc20NetworkContract(networkAddress);
   // const ACTIVE_ACCOUNT_ADDRESS = useAccount().address;
-  const debouncedText = useDebounce(textInputField);
+  const debouncedText:string = useDebounce(textInputField);
   const { exchangeContext } = useExchangeContext();
 
   // const getActiveAccountAddress = () => {
@@ -74,7 +75,8 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     if (validAddress) {
       setContractType(validAddress)
     } else {
-      const invalidToken:TokenContract|undefined = invalidTokenContract(debouncedText, chainId)
+      const invalidToken:TokenContract|undefined = invalidTokenContract(
+        debouncedText, chainId)
       setTokenContractCallBack(invalidToken);
     }
   }, [debouncedText])
