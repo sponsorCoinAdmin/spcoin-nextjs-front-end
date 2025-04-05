@@ -7,7 +7,7 @@ import { isAddress } from "ethers";
 import { useAccount } from "wagmi";
 
 import { useExchangeContext } from '@/lib/context/contextHooks'
-import { stringifyBigInt } from "@/lib/spCoin/utils";
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
