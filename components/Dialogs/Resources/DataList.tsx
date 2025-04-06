@@ -20,7 +20,7 @@ import {
 import {
   BURN_ADDRESS,
   defaultMissingImage,
-  getAddressAvatar
+  getAvatarAddress
 } from "@/lib/network/utils";
 import { loadAccounts } from "@/lib/spCoin/loadAccounts";
 
@@ -137,7 +137,7 @@ const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TY
   const avatars = useMemo(() => {
     return dataFeedList.map((listElement) => ({
       ...listElement,
-      avatar: getAddressAvatar(exchangeContext, listElement.address as Address, dataFeedType),
+      avatar: getAvatarAddress(exchangeContext, listElement.address as Address, dataFeedType),
     }));
   }, [dataFeedList, exchangeContext, dataFeedType]);
 

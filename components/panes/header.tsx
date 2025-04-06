@@ -7,7 +7,7 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
-import { defaultMissingImage, getBlockChainName, getBlockChainAvatar } from "@/lib/network/utils";
+import { defaultMissingImage, getBlockChainName, getNativeAvatar } from "@/lib/network/utils";
 // import { useExchangeContext } from '@/lib/context/contextHooks'
 
 import { useChainId } from "wagmi";
@@ -15,16 +15,16 @@ import { useChainId } from "wagmi";
 export default () => {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
   const chainId = useChainId({ config });
-  const [avatar, setAvatar] = useState<string>(getBlockChainAvatar(chainId));
+  const [avatar, setAvatar] = useState<string>(getNativeAvatar(chainId));
   // const { exchangeContext } = useExchangeContext();
 
-  // setAvatar(getBlockChainAvatar())
+  // setAvatar(getNativeAvatar())
   // ToDo Optimize this: useEffect is used to set the network and image for the set chainId when
   // the networkName async is complete.
   // This is required because NextJS Currently does not allow async functions in client components.
   useEffect(() => {
     let network: string = getBlockChainName(chainId) || ""
-    setAvatar(getBlockChainAvatar(chainId));
+    setAvatar(getNativeAvatar(chainId));
     setNetworkName(network);
   }, [chainId]);
 

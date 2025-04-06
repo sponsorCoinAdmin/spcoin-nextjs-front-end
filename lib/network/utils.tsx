@@ -97,7 +97,7 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
   return WETH_ADDRESS || BURN_ADDRESS;
 };
 
-const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
+const getAvatarAddress = (exchangeContext:ExchangeContext, tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
   const chainId = exchangeContext.tradeData.chainId;
   const isNativeToken = isActiveAccountAddress(exchangeContext, tokenAddress);
 
@@ -109,8 +109,8 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
       return `assets/accounts/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
       return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
-        ? getBlockChainAvatar(chainId)
-        : `assets/blockchains/${chainId}/${tokenAddress}/avatar.png`;
+        ? getNativeAvatar(chainId)
+        : `assets/blockchains/${chainId}/tokens/${tokenAddress}/avatar.png`;
         default:
       return defaultMissingImage;
   }
@@ -156,7 +156,7 @@ const getChainMap = (chainList: any[]): Map<number, any> =>
 
 const chainIdMap = getChainMap(chainIdList);
 
-const getBlockChainAvatar = (chainId:number): string => 
+const getNativeAvatar = (chainId:number): string => 
   `assets/blockchains/${chainId}/info/network.png`;
 
 const getBlockChainName = (chainId: number): string | undefined => 
@@ -199,8 +199,8 @@ export {
   // createNetworkJsonList,
   defaultMissingImage,
   delay,
-  getAddressAvatar,
-  getBlockChainAvatar,
+  getAvatarAddress,
+  getNativeAvatar,
   getBlockChainName,
   getNetworkWethAddress,
   getTokenAvatar,

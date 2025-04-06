@@ -7,7 +7,7 @@ import { DownOutlined } from "@ant-design/icons";
 import { CONTAINER_TYPE, ExchangeContext, TokenContract } from "@/lib/structure/types";
 import {
     defaultMissingImage,
-    getBlockChainAvatar,
+    getNativeAvatar,
     getTokenAvatar,
     isBlockChainToken
 } from "@/lib/network/utils";
@@ -32,7 +32,7 @@ function AssetSelect({ containerType, tokenContract, setDecimalAdjustedContract,
     const avatarSrc = useMemo(() => {
         if (!tokenContract || !tokenContract.address) return defaultMissingImage;
         return isBlockChainToken(exchangeContext, tokenContract)
-            ? getBlockChainAvatar(tokenContract.chainId || 1 )
+            ? getNativeAvatar(tokenContract.chainId || 1 )
             : getTokenAvatar(tokenContract);
     }, [tokenContract]);
 
