@@ -9,9 +9,10 @@ import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
-import { getTokenDetails } from '@/lib/spCoin/coreUtils';
+import { getTokenDetails } from '@/lib/spCoin/guiUtils'
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
+import { Address } from 'viem';
 
 const TITLE_NAME = "Select a token to buy";
 const INPUT_PLACE_HOLDER = 'Manage Sponsorships';
@@ -48,7 +49,7 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
         // alert("tokenInput Changed "+tokenInput)
         tokenInput === "" ? hideElement('buySelectGroup_ID') : showElement('buySelectGroup_ID')
         if (isAddress(tokenInput)) {
-            setTokenDetails(tokenInput, setTokenContract)
+            setTokenDetails(tokenInput as Address, setTokenContract)
         }
         else
             setTokenSelect("Invalid Token Address");
@@ -64,9 +65,13 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
         setTokenInput(event.target.value)
     }
 
-    const setTokenDetails = async(tokenAddr: any, setTokenContract:any) => {
-        return getTokenDetails(chainId, tokenAddr, setTokenContract)
-    }
+    const setTokenDetails = async(tokenAddr: Address, setTokenContract:any) => {
+        if (typeof chainId === 'number') {
+            return getTokenDetails(chainId, tokenAddr, setTokenContract)
+          } else {
+            console.error(`Missing chainId for getTokenDetails(${tokenAddr}, setTokenContract())`)
+            return
+          }    }
 
     const displayElementDetail = async(tokenAddr:any) => {
         try {

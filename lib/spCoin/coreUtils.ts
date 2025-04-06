@@ -3,23 +3,10 @@ import { Address, formatUnits, getAddress } from 'viem'
 import { TokenContract } from '@/lib/structure/types'
 import { BURN_ADDRESS } from '@/lib/network/utils'
 
-const getQueryVariable = (_urlParams: string, _searchParam: string) => {
-  const vars = _urlParams.split('&')
-  for (const param of vars) {
-    const pair = param.split('=')
-    if (pair[0] === _searchParam) return pair[1]
-  }
-  console.error('*** ERROR *** Search Param Not Found:', _searchParam)
-  return ''
-}
-
-const getValidBigIntToFormattedValue = (value: bigint | undefined, decimals: number | undefined) => {
-  decimals = decimals || 0
-  let stringValue: string = formatUnits(value || 0n, decimals)
-  return parseValidFormattedAmount(stringValue, decimals)
-}
-
-const parseValidFormattedAmount = (value: string | bigint, decimals: number | undefined) => {
+/**
+ * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
+ */
+const parseValidFormattedAmount = (value: string | bigint, decimals: number | undefined): string => {
   decimals = decimals || 0
   const price: string = typeof value === 'string' ? value : formatUnits(value || 0n, decimals)
   const re = /^-?\d+(?:[.,]\d*?)?$/
@@ -34,13 +21,43 @@ const parseValidFormattedAmount = (value: string | bigint, decimals: number | un
   return '0'
 }
 
-const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (amount: bigint) => void) => {
+/**
+ * Given a bigint and decimals, return a formatted string and parse it back to bigint.
+ */
+const getValidBigIntToFormattedValue = (value: bigint | undefined, decimals: number | undefined): string => {
+  decimals = decimals || 0
+  const stringValue = formatUnits(value || 0n, decimals)
+  return parseValidFormattedAmount(stringValue, decimals)
+}
+
+/**
+ * Format and parse user-entered token values, enforcing precision, then convert to bigint.
+ */
+const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (amount: bigint) => void): string => {
   txt = parseValidFormattedAmount(txt, decimals)
-  if (!isNaN(Number(txt))) setSellAmount(parseUnits(txt, decimals))
+  if (!isNaN(Number(txt))) {
+    setSellAmount(parseUnits(txt, decimals))
+  }
   return txt
 }
 
-const getValidAddress = (addrType: any, chainId?: number) => {
+/**
+ * Parses a query string param from the URL.
+ */
+const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
+  const vars = _urlParams.split('&')
+  for (const param of vars) {
+    const pair = param.split('=')
+    if (pair[0] === _searchParam) return pair[1]
+  }
+  console.error('*** ERROR *** Search Param Not Found:', _searchParam)
+  return ''
+}
+
+/**
+ * Get a normalized address if valid, otherwise return undefined.
+ */
+const getValidAddress = (addrType: any, chainId?: number): Address | undefined => {
   try {
     return getAddress(addrType.trim(), chainId)
   } catch (err: any) {
@@ -51,16 +68,17 @@ const getValidAddress = (addrType: any, chainId?: number) => {
   }
 }
 
-const decimalAdjustTokenAmount = (
-  amount: bigint,
-  newTokenContract: TokenContract | undefined,
-  prevTokenContract: TokenContract | undefined
-) => {
-  const decimalShift: number = (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0)
-  return bigIntDecimalShift(amount, decimalShift)
+/**
+ * Check if a TokenContract is recognized as SpCoin.
+ */
+const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
+  return tokenContract?.symbol === 'SpCoin'
 }
 
-const bigIntDecimalShift = (value: bigint, decimalShift: number) => {
+/**
+ * Convert between different token decimals using a bigint shift.
+ */
+const bigIntDecimalShift = (value: bigint, decimalShift: number): bigint => {
   return decimalShift === 0
     ? BigInt(value)
     : decimalShift >= 0
@@ -68,6 +86,21 @@ const bigIntDecimalShift = (value: bigint, decimalShift: number) => {
     : BigInt(value) / BigInt(10 ** Math.abs(decimalShift))
 }
 
+/**
+ * Apply decimal adjustment between two TokenContracts.
+ */
+const decimalAdjustTokenAmount = (
+  amount: bigint,
+  newTokenContract: TokenContract | undefined,
+  prevTokenContract: TokenContract | undefined
+): bigint => {
+  const decimalShift: number = (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0)
+  return bigIntDecimalShift(amount, decimalShift)
+}
+
+/**
+ * Return a stub TokenContract when the address is invalid.
+ */
 const invalidTokenContract = (textInputField: string | undefined, chainId: number): TokenContract | undefined => {
   return textInputField
     ? {
@@ -85,12 +118,13 @@ const invalidTokenContract = (textInputField: string | undefined, chainId: numbe
 }
 
 export {
-  bigIntDecimalShift,
-  decimalAdjustTokenAmount,
+  parseValidFormattedAmount,
+  getValidBigIntToFormattedValue,
+  setValidPriceInput,
   getQueryVariable,
   getValidAddress,
-  getValidBigIntToFormattedValue,
-  parseValidFormattedAmount,
-  setValidPriceInput,
+  isSpCoin,
+  bigIntDecimalShift,
+  decimalAdjustTokenAmount,
   invalidTokenContract,
 }
