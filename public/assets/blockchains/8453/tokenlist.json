@@ -20,7 +20,7 @@
             "name": "Baseswap",
             "symbol": "BSWAP",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/tokens/0x78a087d713Be963Bf307b18F2Ff8122EF9A63ae9/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/contractss/0x78a087d713Be963Bf307b18F2Ff8122EF9A63ae9/avatar.png",
             "pairs": []
         },
         {
@@ -30,7 +30,7 @@
             "name": "Axelar Wrapped USDC",
             "symbol": "axlUSDC",
             "decimals": 6,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/tokens/0xEB466342C4d449BC9f53A865D5Cb90586f405215/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/contractss/0xEB466342C4d449BC9f53A865D5Cb90586f405215/avatar.png",
             "pairs": []
         },
         {
@@ -40,7 +40,7 @@
             "name": "Dai",
             "symbol": "DAI",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/tokens/0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/contractss/0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb/avatar.png",
             "pairs": []
         },
         {
@@ -50,7 +50,7 @@
             "name": "yearn.finance",
             "symbol": "YFI",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/tokens/0x9EaF8C1E34F05a589EDa6BAfdF391Cf6Ad3CB239/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/contractss/0x9EaF8C1E34F05a589EDa6BAfdF391Cf6Ad3CB239/avatar.png",
             "pairs": []
         },
         {
@@ -60,7 +60,7 @@
             "name": "Rocket Pool ETH",
             "symbol": "rETH",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/tokens/0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/contractss/0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c/avatar.png",
             "pairs": []
         },
         {
@@ -70,7 +70,7 @@
             "name": "FOMO BULL CLUB",
             "symbol": "FOMO",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/tokens/0x9A86980D3625b4A6E69D8a4606D51cbc019e2002/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/base/contractss/0x9A86980D3625b4A6E69D8a4606D51cbc019e2002/avatar.png",
             "pairs": []
         }
        

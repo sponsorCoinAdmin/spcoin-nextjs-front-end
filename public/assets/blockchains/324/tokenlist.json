@@ -10,7 +10,7 @@
             "name": "Wrapped Ether",
             "symbol": "WETH",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/tokens/0x0000000000000000000000000000000000000000/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/contractss/0x0000000000000000000000000000000000000000/avatar.png",
             "pairs": []
         },
         {
@@ -20,7 +20,7 @@
             "name": "USD Coin Bridged",
             "symbol": "USDC",
             "decimals": 6,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/tokens/0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/contractss/0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4/avatar.png",
             "pairs": []
         },
         {
@@ -30,7 +30,7 @@
             "name": "zkSwap Finance",
             "symbol": "ZF",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/tokens/0x31C2c031fDc9d33e974f327Ab0d9883Eae06cA4A/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/contractss/0x31C2c031fDc9d33e974f327Ab0d9883Eae06cA4A/avatar.png",
             "pairs": []
         },
         {
@@ -40,7 +40,7 @@
             "name": "Symbiosis",
             "symbol": "SIS",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/tokens/0xdd9f72afED3631a6C85b5369D84875e6c42f1827/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/zksync/contractss/0xdd9f72afED3631a6C85b5369D84875e6c42f1827/avatar.png",
             "pairs": []
         }
        
