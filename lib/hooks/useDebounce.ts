@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 
 const defaultMilliSeconds = 600
-
 const isDebug = process.env.NEXT_PUBLIC_DEBUG === 'true'
 
 /**

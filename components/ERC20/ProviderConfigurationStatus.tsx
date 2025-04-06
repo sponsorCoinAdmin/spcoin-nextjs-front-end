@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { BLOCKCHAIN_PROVIDER } from '@/lib/wagmi/wagmiConfig';
 
 const ProviderConfigurationStatus = () => {

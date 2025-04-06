@@ -58,6 +58,13 @@ const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
  * Get a normalized address if valid, otherwise return undefined.
  */
 const getValidAddress = (addrType: any, chainId?: number): Address | undefined => {
+  if (!addrType || typeof addrType !== 'string') {
+    if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
+      console.warn(`WARN: getValidAddress called with invalid addrType:`, addrType)
+    }
+    return undefined
+  }
+
   try {
     return getAddress(addrType.trim(), chainId)
   } catch (err: any) {
@@ -67,6 +74,7 @@ const getValidAddress = (addrType: any, chainId?: number): Address | undefined =
     return undefined
   }
 }
+
 
 /**
  * Check if a TokenContract is recognized as SpCoin.

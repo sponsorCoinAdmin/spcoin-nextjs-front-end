@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 
 const WagmiConnect = () => {

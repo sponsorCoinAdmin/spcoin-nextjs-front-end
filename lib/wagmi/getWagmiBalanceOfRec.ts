@@ -1,9 +1,7 @@
-// File: lib/wagmi/getWagmiBalanceOfRec.ts
-
-import { config } from './wagmiConfig' // ✅ This should be your Wagmi client
 import { Address, getAddress, formatUnits } from 'viem'
-import { getBalance, readContract } from '@wagmi/core' // ✅ ONLY use @wagmi/core
+import { getBalance, readContract } from '@wagmi/core'
 import { erc20Abi } from 'viem'
+import { wagmiServerConfig } from './wagmiServerConfig' // ✅ Server-safe config
 
 /**
  * Reads native token balance (like ETH or MATIC) using wagmi/core getBalance.
@@ -15,7 +13,7 @@ const getWagmiBalanceOfRec = async (
     throw new Error(`ERROR: getWagmiBalanceOfRec(tokenAddr) is undefined`)
   }
 
-  const resp = await getBalance(config, {
+  const resp = await getBalance(wagmiServerConfig, {
     address: getAddress(tokenAddr),
   })
 
@@ -35,7 +33,7 @@ const readContractBalanceOf = async (
   contractAddress: Address | string,
   walletAddress: Address | string
 ) => {
-  const result = await readContract(config, {
+  const result = await readContract(wagmiServerConfig, {
     abi: erc20Abi,
     address: getAddress(contractAddress),
     functionName: 'balanceOf',

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from '@/styles/Exchange.module.css';
 import { ArrowDownOutlined } from "@ant-design/icons";
-import React from 'react';
+import * as React from 'react';
 
 let sharedState = false;
 let subscribers: ((val: boolean) => void)[] = [];

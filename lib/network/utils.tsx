@@ -110,8 +110,8 @@ const getAddressAvatar = (exchangeContext:ExchangeContext, tokenAddress: Address
     case FEED_TYPE.TOKEN_LIST:
       return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
         ? getBlockChainAvatar(chainId)
-        : `assets/blockchains/${chainId}/assets/${tokenAddress}/avatar.png`;
-    default:
+        : `assets/blockchains/${chainId}/${tokenAddress}/avatar.png`;
+        default:
       return defaultMissingImage;
   }
 };
