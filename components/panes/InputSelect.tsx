@@ -7,7 +7,7 @@ import styles from '@/styles/Modal.module.css';
 // import searchMagGlassWhite_png from './assets/searchMagGlassWhite.png'
 // import searchMagGlassGrey_png from '../../../assets/SearchMagGlassGrey.png'
 // import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
-import { getValidAddress, invalidTokenContract } from '@/lib/spCoin/utils';
+import { getValidAddress, invalidTokenContract } from '@/lib/spCoin/coreUtils';
 
 import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
 import Image from 'next/image'

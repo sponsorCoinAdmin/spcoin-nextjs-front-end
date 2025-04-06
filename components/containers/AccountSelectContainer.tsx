@@ -13,7 +13,7 @@ import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/contextHooks' // ✅ Use context
 import RecipientSelect from "./AccountSelectDropDown";
 import { displaySpCoinContainers, toggleSponsorRateConfig } from "@/lib/spCoin/guiControl";
-import { getPublicFileUrl } from "@/lib/spCoin/utils";
+import { getPublicFileUrl } from "@/lib/spCoin/coreUtils";
 
 const AccountSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Access global context

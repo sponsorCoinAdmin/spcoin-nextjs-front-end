@@ -5,7 +5,7 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/Popup/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
-import { exchangeContextDump } from '@/lib/spCoin/utils';
+import { exchangeContextDump } from '@/lib/spCoin/coreUtils';
 import { toggleElement, toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
 import { useExchangeContext } from '@/lib/context/contextHooks'
 

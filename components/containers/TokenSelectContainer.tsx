@@ -22,7 +22,7 @@ import TokenSelect from "./TokenSelectDropDown";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
-import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/utils";
+import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/coreUtils";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 // Types & Constants

@@ -1,44 +1,48 @@
-import { config } from './wagmiConfig'
-import { Address, getAddress } from "viem";
-import { formatUnits } from 'viem' 
-import { getBalance } from '@wagmi/core'
-import { useReadContract } from 'wagmi'
-import { erc20Abi} from 'viem' 
+// File: lib/wagmi/getWagmiBalanceOfRec.ts
 
-function readContractBalanceOf(contractAddress:Address|string) {
-  const result = useReadContract({
-    abi: erc20Abi,
-    address: '0x${contractAddress.toString()}',
-    functionName: 'balanceOf',
-  })
-  alert(`result = ${JSON.stringify(result,null,2)}`)
-  return result;
-}
+import { config } from './wagmiConfig' // ✅ This should be your Wagmi client
+import { Address, getAddress, formatUnits } from 'viem'
+import { getBalance, readContract } from '@wagmi/core' // ✅ ONLY use @wagmi/core
+import { erc20Abi } from 'viem'
 
-const getWagmiBalanceOfRec = async(tokenAddr:Address|string|undefined) => {
-  if (tokenAddr === undefined) {
-    throw `ERROR: getWagmiBalanceOfRec(tokenAddr:Address = ${tokenAddr})`
+/**
+ * Reads native token balance (like ETH or MATIC) using wagmi/core getBalance.
+ */
+const getWagmiBalanceOfRec = async (
+  tokenAddr: Address | string | undefined
+) => {
+  if (!tokenAddr) {
+    throw new Error(`ERROR: getWagmiBalanceOfRec(tokenAddr) is undefined`)
   }
-
-  // console.debug(`BEFORE: getWagmiBalanceOfRec:tokenAddr = :\n${JSON.stringify(tokenAddr,null,2)}`)
 
   const resp = await getBalance(config, {
     address: getAddress(tokenAddr),
   })
 
-  const retResponse = {
-    tokenAddr: tokenAddr,
+  return {
+    tokenAddr,
     decimals: resp.decimals,
     formatted: formatUnits(resp.value, resp.decimals),
     symbol: resp.symbol,
-    value: resp.value.toString()
+    value: resp.value.toString(),
   }
-  // alert(`getWagmiBalanceOfRec:config:\n${JSON.stringify(config,null,2)}`)
-  // console.debug(`getWagmiBalanceOfRec:config:\n${JSON.stringify(config,null,2)}`)
-  // console.debug(`getWagmiBalanceOfRec:resp:\n${JSON.stringify(resp,(key, value) => (typeof value === "bigint" ? value.toString() : value),2)}`)
-  // console.debug(`AFTER: getWagmiBalanceOfRec:retResponse:\n${JSON.stringify(retResponse,null,2)}`)
+}
 
-  return retResponse
+/**
+ * Reads ERC-20 token balance using wagmi/core readContract.
+ */
+const readContractBalanceOf = async (
+  contractAddress: Address | string,
+  walletAddress: Address | string
+) => {
+  const result = await readContract(config, {
+    abi: erc20Abi,
+    address: getAddress(contractAddress),
+    functionName: 'balanceOf',
+    args: [getAddress(walletAddress)],
+  })
+
+  return result as bigint
 }
 
 export { getWagmiBalanceOfRec, readContractBalanceOf }

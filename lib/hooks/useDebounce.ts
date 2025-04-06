@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { logAlert } from '../spCoin/utils';
+import { logAlert } from '../spCoin/coreUtils';
 
 const defaultMilliSeconds = 600;
 

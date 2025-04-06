@@ -9,7 +9,7 @@ import Image from 'next/image'
 import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
-import { getTokenDetails } from '@/lib/spCoin/utils';
+import { getTokenDetails } from '@/lib/spCoin/coreUtils';
 import DataList from './Resources/DataList';
 import { useAccount } from 'wagmi';
 
