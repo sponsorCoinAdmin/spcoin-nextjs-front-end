@@ -164,7 +164,7 @@ const getBlockChainName = (chainId: number): string | undefined =>
 
 const getTokenAvatar = (tokenContract?: TokenContract): string => {
   return tokenContract 
-    ? `assets/blockchains/${tokenContract.chainId}/assets/${tokenContract.address}/avatar.png` 
+    ? `assets/blockchains/${tokenContract.chainId}/tokens/${tokenContract.address}/avatar.png` 
     : defaultMissingImage;
 };
 
