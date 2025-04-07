@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { ArrowDownOutlined } from "@ant-design/icons";
+import { ArrowDown } from 'lucide-react';
 import * as React from 'react';
 
 let sharedState = false;
@@ -11,29 +11,39 @@ let subscribers: ((val: boolean) => void)[] = [];
 export function useBuySellSwap(): [boolean, (val: boolean) => void] {
   const [value, setValue] = useState(sharedState);
 
+  useEffect(() => {
+    const cb = setValue;
+    subscribers.push(cb);
+
+    return () => {
+      const i = subscribers.indexOf(cb);
+      if (i !== -1) subscribers.splice(i, 1);
+    };
+  }, []);
+
   const updateState = (val: boolean) => {
     sharedState = val;
     subscribers.forEach((cb) => cb(sharedState));
   };
 
-  if (!subscribers.includes(setValue)) {
-    subscribers.push(setValue);
-  }
-
   return [value, updateState];
 }
 
 const BuySellSwapArrowButton = () => {
-  const [, setContainerSwap] = useBuySellSwap();
+  const [, setSwapTriggered] = useBuySellSwap();
 
-  const handleClick = (e: React.MouseEvent<HTMLSpanElement>) => {
+  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
     e.preventDefault();
-    setContainerSwap(true);
+    setSwapTriggered(true);
   };
 
   return (
     <div className={styles.switchButton}>
-      <ArrowDownOutlined className={styles.switchArrow} onClick={handleClick} />
+      <ArrowDown
+        size={20}
+        className={styles.switchArrow}
+        onClick={handleClick}
+      />
     </div>
   );
 };

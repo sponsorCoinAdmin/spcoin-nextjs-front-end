@@ -27,6 +27,7 @@
     "cors": "^2.8.5",
     "ethers": "^6.12.0",
     "fs": "^0.0.1-security",
+    "lucide-react": "^0.487.0",
     "next": "^15.3.0-canary.32",
     "qs": "^6.12.1",
     "react": "^18",

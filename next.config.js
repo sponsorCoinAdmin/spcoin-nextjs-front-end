@@ -1,13 +1,11 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  productionBrowserSourceMaps: true, // ✅ Enable source maps for Chrome DevTools
-  webpack: (config) => {
+  productionBrowserSourceMaps: true,
+  webpack: (config, { dev }) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
 
-    // Optional: Explicitly set source map mode for frontend builds
-    if (!config.devtool) {
-      config.devtool = 'source-map';
+    if (dev) {
+      config.devtool = 'source-map'; // or 'eval-source-map' for faster rebuilds
     }
 
     return config;
@@ -22,5 +20,3 @@ const nextConfig = {
     ];
   },
 };
-
-export default nextConfig;
