@@ -11,6 +11,7 @@ import {
     getTokenAvatar,
     isBlockChainToken
 } from "@/lib/network/utils";
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 type Props = {
     containerType: CONTAINER_TYPE;
@@ -46,11 +47,13 @@ function AssetSelect({ containerType, tokenContract, setDecimalAdjustedContract,
 
     /** ✅ Ensure `setDecimalAdjustedContract` is always called safely */
     const handleTokenSelect = useCallback(() => {
+        //ToDo: Check if this is still required
         if (tokenContract) {
             setDecimalAdjustedContract(tokenContract);
         } else {
             console.warn("No token contract selected");
         }
+        alert(`handleTokenSelect ${stringifyBigInt(tokenContract)}`)
     }, [tokenContract, setDecimalAdjustedContract]);
 
     return (

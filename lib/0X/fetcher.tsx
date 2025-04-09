@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure/types';
-import qs from "qs";
-import useSWR from 'swr';
+import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS, ERROR_CODES, ErrorMessage } from '@/lib/structure/types';
+import qs from 'qs';
+import useSWR, { mutate } from 'swr';
 import {
   useApiErrorMessage,
   useBuyAmount,
@@ -13,14 +13,15 @@ import {
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
-import { useChainId } from "wagmi";
+import { useChainId } from 'wagmi';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 
-const API_PROVIDER="0X/"
-const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER+API_PROVIDER;
-const apiPriceBase = "/price";
+const API_PROVIDER = '0X/';
+const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
+const apiPriceBase = '/price';
 
-const WRAPPED_ETHEREUM_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+const WRAPPED_ETHEREUM_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
   return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;
@@ -30,10 +31,8 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
   const { sellAmount, buyAmount } = params;
 
-  // ✅ Skip fetch if no amounts
   if (!sellAmount && !buyAmount) return;
 
-  // ✅ Strip out undefined, null, or empty string values
   const cleanParams = Object.fromEntries(
     Object.entries(params).filter(
       ([, value]) => value !== undefined && value !== null && value !== ''
@@ -43,7 +42,7 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   const query = qs.stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
 
-  console.log(JSON.stringify(apiCall));
+  console.log(`[📡 Fetching]: ${JSON.stringify(apiCall)}`);
 
   const response = await fetch(apiCall);
   return response.json();
@@ -56,7 +55,7 @@ const getApiErrorTransactionData = (
   sellAmount: any,
   data: PriceResponse
 ) => ({
-  ERROR: `API Call`,
+  ERROR: 'API Call',
   Server: `${process.env.NEXT_PUBLIC_API_SERVER}`,
   netWork: `${exchangeContext.network.name.toLowerCase()}`,
   apiPriceBase,
@@ -77,14 +76,21 @@ const getPriceApiCall = (
 ): [string, PriceRequestParams] | undefined => {
   if (!sellTokenAddress || !buyTokenAddress) return undefined;
 
+  if (
+    (transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) ||
+    (transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n)
+  ) {
+    return undefined;
+  }
+
   const params: PriceRequestParams = {
     chainId,
     sellToken: sellTokenAddress,
     buyToken: buyTokenAddress,
-    ...(transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount !== 0n
+    ...(transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
       ? { sellAmount: sellAmount.toString() }
       : {}),
-    ...(transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount !== 0n
+    ...(transactionType === TRADE_DIRECTION.BUY_EXACT_IN
       ? { buyAmount: buyAmount.toString() }
       : {}),
     ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
@@ -137,6 +143,16 @@ function usePriceAPI() {
   sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount));
   buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount));
 
+  // 🕓 Debounce inputs to reduce fetch noise during rapid changes
+  const debouncedSellToken = useDebounce(sellTokenAddress, 450);
+  const debouncedBuyToken = useDebounce(buyTokenAddress, 450);
+  const debouncedSellAmount = useDebounce(sellAmount, 450);
+  const debouncedBuyAmount = useDebounce(buyAmount, 450);
+  const debouncedSlippage = useDebounce(
+    Number.isFinite(tradeData.slippageBps) ? tradeData.slippageBps : 100,
+    200
+  );
+
   const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => (
     sellTokenAddress !== undefined &&
     buyTokenAddress !== undefined &&
@@ -144,15 +160,25 @@ function usePriceAPI() {
     chainId !== HARDHAT
   );
 
-  const swrKey = shouldFetch(sellTokenAddress, buyTokenAddress)
+  useEffect(() => {
+    if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
+      setBuyAmount(0n);
+    }
+    if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n) {
+      setSellAmount(0n);
+    }
+  }, [tradeData.transactionType, sellAmount, buyAmount]);
+
+  const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken)
     ? getPriceApiCall(
-      tradeData.transactionType,
-      chainId,
-      sellTokenAddress,
-      buyTokenAddress,
-      sellAmount,
-      buyAmount,
-      Number.isFinite(tradeData.slippageBps) ? tradeData.slippageBps : 100)
+        tradeData.transactionType,
+        chainId,
+        debouncedSellToken,
+        debouncedBuyToken,
+        debouncedSellAmount,
+        debouncedBuyAmount,
+        debouncedSlippage
+      )
     : null;
 
   useWhyDidYouUpdate('usePriceAPI', {
@@ -168,14 +194,14 @@ function usePriceAPI() {
     swrKey
   });
 
-  return useSWR(swrKey, fetcher, {
+  const swr = useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
-      console.log(`[API SUCCESS] Direction: ${tradeData.transactionType}, Response:`, data);
+      console.log(`[✅ API SUCCESS] Direction: ${tradeData.transactionType}`, data);
 
       if (data.code) {
         setApiErrorMessage({
           status: STATUS.ERROR_API_PRICE,
-          source: "ApiFetcher",
+          source: 'ApiFetcher',
           errCode: data.code,
           msg: getApiErrorTransactionData(
             exchangeContext,
@@ -196,11 +222,16 @@ function usePriceAPI() {
     onError: (error) =>
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
-        source: "ApiFetcher",
+        source: 'ApiFetcher',
         errCode: error.code,
         msg: error,
       }),
   });
+
+  return {
+    ...swr,
+    swrKey // return this if you want to mutate manually after swap
+  };
 }
 
 export { usePriceAPI };

@@ -6,13 +6,13 @@ function SlippageBpsRadioButtons() {
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    const newValue = (slippageBps / 100).toString();
+    const newValue = (slippageBps).toString();
     setValue(newValue);
   }, [slippageBps]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
-    const bps = Math.round(parseFloat(newValue) * 100);
+    const bps = Math.round(parseFloat(newValue));
     setValue(newValue);
     if (bps !== slippageBps) {
       console.log('📦 setSlippageBps called with', bps);
@@ -21,17 +21,17 @@ function SlippageBpsRadioButtons() {
   };
 
   const options = [
-    { label: '0.5%', value: '0.005' },
-    { label: '1%', value: '0.01' },
-    { label: '2%', value: '0.02' },
-    { label: '3%', value: '0.03' },
-    { label: '4%', value: '0.04' },
-    { label: '5%', value: '0.05' },
+    { label: '0.5%', value: '50' },
+    { label: '1%', value: '100' },
+    { label: '2%', value: '200' },
+    { label: '3%', value: '300' },
+    { label: '4%', value: '400' },
+    { label: '5%', value: '500' },
   ];
 
   return (
     <div className="inline-block m-2 p-2 border rounded bg-gray-50">
-      <div className="font-semibold mb-2">Slippage Bps Tolerance</div>
+      <div className="font-semibold mb-2">Slippage Tolerance</div>
       <div className="flex flex-wrap gap-2">
         {options.map(opt => (
           <label

@@ -6,20 +6,42 @@ import { BURN_ADDRESS } from '@/lib/network/utils'
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
  */
-const parseValidFormattedAmount = (value: string | bigint, decimals: number | undefined): string => {
-  decimals = decimals || 0
-  const price: string = typeof value === 'string' ? value : formatUnits(value || 0n, decimals)
-  const re = /^-?\d+(?:[.,]\d*?)?$/
-  if (price === '' || re.test(price)) {
-    let splitText = price.split('.')
-    let formattedValue: string = splitText[0].replace(/^0+/, '') || '0'
-    if (splitText[1] !== undefined) {
-      formattedValue += '.' + splitText[1].substring(0, decimals)
-    }
-    return formattedValue
+
+export const parseValidFormattedAmount = (
+  value: string | bigint,
+  decimals: number | undefined
+): string => {
+  decimals = decimals || 0;
+
+  let price: string;
+
+  if (typeof value === 'string') {
+    price = value.startsWith('.') ? '0' + value : value;
+  } else {
+    price = formatUnits(value || 0n, decimals);
   }
-  return '0'
-}
+
+  // Accepts "", "0", "0.", ".1", "2.000", etc.
+  const re = /^\d*(?:[.,]\d*)?$/;
+
+  if (price === '' || re.test(price)) {
+    const [intPart, decimalPart] = price.replace(',', '.').split('.');
+
+    let formattedValue = (intPart || '0').replace(/^0+/, '') || '0';
+
+    if (decimalPart !== undefined) {
+      // ✅ Preserve trailing zeros — don't trim them during input
+      formattedValue += '.' + decimalPart; // Do NOT truncate with substring()
+    } else if (price.endsWith('.')) {
+      // ✅ Preserve the trailing decimal
+      formattedValue += '.';
+    }
+
+    return formattedValue;
+  }
+
+  return '0';
+};
 
 /**
  * Given a bigint and decimals, return a formatted string and parse it back to bigint.
@@ -126,7 +148,7 @@ const invalidTokenContract = (textInputField: string | undefined, chainId: numbe
 }
 
 export {
-  parseValidFormattedAmount,
+  // parseValidFormattedAmount,
   getValidBigIntToFormattedValue,
   setValidPriceInput,
   getQueryVariable,

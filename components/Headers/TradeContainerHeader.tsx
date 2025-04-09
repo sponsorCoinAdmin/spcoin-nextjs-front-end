@@ -28,9 +28,9 @@ const TradeContainerHeader = () => {
 
       <h4 className={styles.center}>Sponsor Coin Exchange</h4>
 
-      <div>
+      {/* <div>
         <Settings size={20} className={styles.cog} />
-      </div>
+      </div> */}
 
       <div>
         <Image

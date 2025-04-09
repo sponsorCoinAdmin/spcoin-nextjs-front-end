@@ -65,13 +65,21 @@ enum SP_COIN_DISPLAY {
   SPONSOR_RATE_CONFIG
 }
 
+const ERROR_CODES = {
+  CHAIN_SWITCH: 1001,
+  PRICE_FETCH_ERROR: 2001,
+  INVALID_TOKENS: 3001
+  // Add more codes as needed
+};
+
 // Status Types
 enum STATUS {
   ERROR_API_PRICE,
   FAILED,
   MESSAGE_ERROR,
   SUCCESS,
-  WARNING_HARDHAT
+  WARNING_HARDHAT,
+  INFO
 }
 
 // Swap Types
@@ -185,6 +193,7 @@ export {
   STATUS,
   SWAP_TYPE,
   TRADE_DIRECTION,
+  ERROR_CODES,
   BASE,
   ETHEREUM,
   HARDHAT,
