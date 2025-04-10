@@ -4,6 +4,8 @@ alias m=". \$ACTIVE_ENV_PATH/.m"
 alias va="vi \$ACTIVE_ENV_PATH/.a;a"
 alias ve="vi \$ACTIVE_ENV_PATH/.e;e"
 alias vm="vi \$ACTIVE_ENV_PATH/.m;m"
+alias killport=". \$ACTIVE_SCRIPTS_PATH/killport.sh"
+alias kp3000="killport 3000"
 
 alias runfe="cdfe; clear; clear; npm run dev 2>&1 | tee run.out"
 
