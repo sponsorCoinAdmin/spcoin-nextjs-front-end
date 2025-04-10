@@ -3,7 +3,6 @@
 import styles from "@/styles/Modal.module.css";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { isAddress } from "ethers";
 import { useAccount } from "wagmi";
 
 import { useExchangeContext } from '@/lib/context/contextHooks'
@@ -11,8 +10,8 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "../panes/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
-import { BURN_ADDRESS, defaultMissingImage, getTokenAvatar } from "@/lib/network/utils";
-import { Address } from "viem";
+import { BURN_ADDRESS, defaultMissingImage, badTokenAddressImage, getTokenAvatar } from "@/lib/network/utils";
+import { isAddress, Address } from "viem";
 
 import info_png from "@/public/assets/miscellaneous/info1.png";
 
@@ -108,6 +107,13 @@ export default function Dialog({ containerType, showDialog, setShowDialog, callB
     [inputField, cloneIfNetworkToken, isDuplicateToken, callBackSetter, closeDialog]
   );
 
+  const getErrorImage = (tokenContract?: TokenContract): string => {
+    if (tokenContract?.address && isAddress(tokenContract.address)) {
+      return defaultMissingImage
+    }
+    return badTokenAddressImage
+  }
+
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
@@ -123,8 +129,19 @@ export default function Dialog({ containerType, showDialog, setShowDialog, callB
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
               <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract)}>
-                <Image id="tokenImage" src={getTokenAvatar(tokenContract) || defaultMissingImage} height={40} width={40} alt="Token Image" />
-                <div>
+                <Image
+                  id="tokenImage"
+                  src={getTokenAvatar(tokenContract)}
+                  height={40}
+                  width={40}
+                  alt="Token Image"
+                  onError={(e) => {
+                    const fallback = getErrorImage(tokenContract)
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.src = fallback
+                    }
+                  }}
+                />                <div>
                   <div className={styles.elementName}>{tokenContract?.name}</div>
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
                 </div>

@@ -77,28 +77,6 @@ const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
 }
 
 /**
- * Get a normalized address if valid, otherwise return undefined.
- */
-const getValidAddress = (addrType: any, chainId?: number): Address | undefined => {
-  if (!addrType || typeof addrType !== 'string') {
-    if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
-      console.warn(`WARN: getValidAddress called with invalid addrType:`, addrType)
-    }
-    return undefined
-  }
-
-  try {
-    return getAddress(addrType.trim(), chainId)
-  } catch (err: any) {
-    if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
-      console.error(`ERROR: getAddress(${addrType}, ${chainId})`, err.message)
-    }
-    return undefined
-  }
-}
-
-
-/**
  * Check if a TokenContract is recognized as SpCoin.
  */
 const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
@@ -152,7 +130,6 @@ export {
   getValidBigIntToFormattedValue,
   setValidPriceInput,
   getQueryVariable,
-  getValidAddress,
   isSpCoin,
   bigIntDecimalShift,
   decimalAdjustTokenAmount,

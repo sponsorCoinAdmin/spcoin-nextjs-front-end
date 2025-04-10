@@ -26,7 +26,7 @@ export default function Dialog({showDialog}:Props) {
     }
 
     const Dialog = (
-        <dialog id="configDialog" ref={dialogRef} className={styles.popupContainer}>
+        <dialog id="onfigDialog" ref={dialogRef} className={styles.popupContainer}>
             <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-white">
                 <h1 className="text-md indent-39 mt-1 text-bg-txt-ltgry">Settings</h1>
                 <div className="cursor-pointer rounded border-none w-5 text-xl text-bg-txt-ltgry"

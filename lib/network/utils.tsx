@@ -19,10 +19,12 @@ import {
   TradeData,
   WalletAccount
 } from '@/lib/structure/types';
-import { useChainId } from 'wagmi';
-import { useMemo } from "react";
+import { isAddress } from 'viem'
+
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
+const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png'
+
 const BURN_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 const NATIVE_TOKEN_ADDRESS: Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -162,11 +164,21 @@ const getNativeAvatar = (chainId:number): string =>
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
+
 const getTokenAvatar = (tokenContract?: TokenContract): string => {
-  return tokenContract 
-    ? `assets/blockchains/${tokenContract.chainId}/contracts/${tokenContract.address}/avatar.png` 
-    : defaultMissingImage;
-};
+  if (!tokenContract) {
+    return badTokenAddressImage
+  }
+
+  const { chainId, address } = tokenContract
+
+  if (isAddress(address)) {
+    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+  }
+
+  return badTokenAddressImage
+}
+
 
 const getWalletAvatar = (wallet?: WalletAccount): string => 
   wallet ? `/assets/accounts/${wallet.address}/avatar.png` : defaultMissingImage;
@@ -197,6 +209,7 @@ export {
   BURN_ADDRESS,
   NATIVE_TOKEN_ADDRESS,
   // createNetworkJsonList,
+  badTokenAddressImage,
   defaultMissingImage,
   delay,
   getAvatarAddress,

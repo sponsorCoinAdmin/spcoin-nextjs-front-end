@@ -39,7 +39,7 @@ const TradeContainerHeader = () => {
           width={20}
           height={20}
           alt="Info Image"
-          onClick={() => openDialog('#configDialog')}
+          onClick={() => openDialog('#ConfigDialog')}
         />
       </div>
 
