@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react"
 import { invalidTokenContract } from '@/lib/spCoin/coreUtils'
 import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png'
 import badTokenAddressImage from '@/public/assets/miscellaneous/badTokenAddressImage.png'
-import Image from 'next/image'
 import {
   TokenContract,
   useErc20NetworkContract,
@@ -53,23 +52,11 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
   }, [passedInputField])
 
   useEffect(() => {
-    if (tokenContract?.address) {
-      getTokenAvatar(tokenContract)
-    } else {
-      setTokenContractCallBack(tokenContract, InputState.EMPTY_INPUT)
-    }
-  }, [
-    tokenContract?.name,
-    tokenContract?.symbol,
-    tokenContract?.decimals,
-    tokenContract?.totalSupply
-  ])
-
-  useEffect(() => {
     if (networkContract?.address) {
-      getTokenAvatar(tokenContract)
+      getTokenAvatar(networkContract)
     } else {
       setTokenContractCallBack(networkContract, InputState.TOKEN_NOT_FOUND_INPUT)
+      setInputState(InputState.TOKEN_NOT_FOUND_INPUT)
     }
   }, [
     networkContract?.name,
@@ -90,14 +77,20 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     }
   }, [validAddress])
 
+  // ✅ This effect waits for tokenContract to resolve and match validAddress
+  useEffect(() => {
+    if (validAddress && tokenContract?.address === validAddress) {
+      setTokenContractCallBack(tokenContract, InputState.VALID_INPUT)
+      setInputState(InputState.VALID_INPUT)
+    }
+  }, [tokenContract, validAddress])
+
   const setContractType = (passedValidAddress: Address | undefined) => {
     if (!isActiveNetworkAddress(validAddress)) {
-      if (passedValidAddress === validAddress) {
-        setTokenContractCallBack(tokenContract, InputState.VALID_INPUT)
-        setInputState(InputState.VALID_INPUT)
-      } else {
+      if (passedValidAddress !== validAddress) {
         setValidAddress(passedValidAddress)
       }
+      // We wait to fire the callback until tokenContract resolves in the effect above
     }
   }
 
@@ -120,22 +113,26 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     setContractType(trimmedInput as Address)
   }
 
-  const getInputIcon = (): string => {
-    return inputState === InputState.BAD_ADDRESS_INPUT
-      ? badTokenAddressImage.src
-      : searchMagGlassGrey_png.src
+  const getInputEmoji = (): string => {
+    switch (inputState) {
+      case InputState.VALID_INPUT:
+        return '✅'
+      case InputState.BAD_ADDRESS_INPUT:
+        return '🐞'
+      case InputState.EMPTY_INPUT:
+        return '🔍'
+      case InputState.TOKEN_NOT_FOUND_INPUT:
+      default:
+        return '🕵️'
+    }
   }
 
   return (
     <div className={styles.modalElementSelect}>
       <div className={styles.leftH}>
-        <Image
-          src={getInputIcon()}
-          className={styles.searchImage}
-          alt="Search Icon"
-          width={20} // ✅ Adjust these values as needed
-          height={20}
-        />
+        <div className={styles.searchImage} style={{ fontSize: '1.2rem' }}>
+          {getInputEmoji()}
+        </div>
         <input
           className={styles.modalElementSelect}
           autoComplete="off"

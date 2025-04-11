@@ -11,7 +11,6 @@ import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect, { InputState } from "@/components/panes/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
 import {
-  BURN_ADDRESS,
   defaultMissingImage,
   badTokenAddressImage,
   getTokenAvatar
@@ -43,21 +42,18 @@ export default function AssetSelectDialog({
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
 
-  /** 📌 Dialog open/close behavior */
   useEffect(() => {
     if (dialogRef.current) {
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
   }, [showDialog]);
 
-  /** 📌 Set active wallet address for context */
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
       setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
 
-  /** 📌 Update input field value when token changes */
   useEffect(() => {
     setInputField(tokenContract?.address);
   }, [tokenContract]);
@@ -78,29 +74,19 @@ export default function AssetSelectDialog({
     [containerType, exchangeContext.tradeData]
   );
 
-  const cloneIfNetworkToken = useCallback(
-    (tokenContract: TokenContract): TokenContract => {
-      return tokenContract.address === BURN_ADDRESS
-        ? { ...tokenContract, address: ACTIVE_ACCOUNT_ADDRESS as Address }
-        : tokenContract;
-    },
-    [ACTIVE_ACCOUNT_ADDRESS]
-  );
-
-  /** 📌 Main callback from InputSelect */
   const updateTokenCallback = useCallback(
-    (tokenContract: TokenContract | undefined, state: InputState): boolean => {
+    (tokenContract: TokenContract | undefined, state: InputState, shouldClose: boolean = false): boolean => {
       setTokenContract(tokenContract);
       setInputState(state);
 
       if (state !== InputState.VALID_INPUT) {
-        if (state === InputState.BAD_ADDRESS_INPUT) {
-          alert(`SELECT_ERROR: Bad token address: ${inputField}`);
-        } else if (state === InputState.EMPTY_INPUT) {
-          alert(`SELECT_ERROR: Input is empty.`);
-        } else {
-          alert(`SELECT_ERROR: Token not found or undefined: ${inputField}`);
-        }
+        // if (state === InputState.BAD_ADDRESS_INPUT) {
+        //   alert(`SELECT_ERROR: Bad token address: ${inputField}`);
+        // } else if (state === InputState.EMPTY_INPUT) {
+        //   alert(`SELECT_ERROR: Input is empty.`);
+        // } else {
+        //   alert(`SELECT_ERROR: Token not found or undefined: ${inputField}`);
+        // }
         return false;
       }
 
@@ -109,18 +95,16 @@ export default function AssetSelectDialog({
         return false;
       }
 
-      const newToken = cloneIfNetworkToken(tokenContract);
-
-      if (isDuplicateToken(newToken.address)) {
-        alert(`SELECT_ERROR: Duplicate token: ${newToken.symbol}`);
+      if (isDuplicateToken(tokenContract.address)) {
+        alert(`SELECT_ERROR: Duplicate token: ${tokenContract.symbol}`);
         return false;
       }
 
-      callBackSetter(newToken);
-      closeDialog();
+      callBackSetter(tokenContract);
+      if (shouldClose) closeDialog();
       return true;
     },
-    [inputField, cloneIfNetworkToken, isDuplicateToken, callBackSetter, closeDialog]
+    [inputField, isDuplicateToken, callBackSetter, closeDialog]
   );
 
   const getErrorImage = (tokenContract?: TokenContract): string => {
@@ -142,13 +126,13 @@ export default function AssetSelectDialog({
         <InputSelect
           placeHolder={INPUT_PLACE_HOLDER}
           passedInputField={inputField || ""}
-          setTokenContractCallBack={updateTokenCallback}
+          setTokenContractCallBack={(tc, state) => updateTokenCallback(tc, state, false)}
         />
 
         {inputField && inputState === InputState.VALID_INPUT && (
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-              <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract, inputState)}>
+              <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract, inputState, true)}>
                 <Image
                   id="tokenImage"
                   src={getTokenAvatar(tokenContract)}
@@ -167,7 +151,6 @@ export default function AssetSelectDialog({
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
                 </div>
               </div>
-
               <div
                 className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
                 onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}
@@ -181,7 +164,7 @@ export default function AssetSelectDialog({
         <div className={styles.modalScrollBar}>
           <DataList
             dataFeedType={FEED_TYPE.TOKEN_LIST}
-            updateTokenCallback={(tc) => updateTokenCallback(tc, InputState.VALID_INPUT)}
+            updateTokenCallback={(tc) => updateTokenCallback(tc, InputState.VALID_INPUT, true)}
           />
         </div>
       </div>
