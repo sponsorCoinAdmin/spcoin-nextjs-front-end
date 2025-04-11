@@ -10,6 +10,7 @@ import {
   TradeData,
   API_TRADING_PROVIDER
 } from "@/lib/structure/types";
+import { tokenContractsEqual } from '@/lib/network/utils';
 
 export const useExchangeContext = () => {
   const context = useContext(ExchangeContextState);
@@ -107,13 +108,18 @@ export const useSellTokenContract = (): [TokenContract | undefined, (contract: T
   return [
     exchangeContext.tradeData.sellTokenContract,
     (contract) =>
-      setExchangeContext((prev) => ({
-        ...prev,
-        tradeData: {
-          ...prev.tradeData,
-          sellTokenContract: contract,
-        },
-      })),
+      setExchangeContext((prev) => {
+        if (tokenContractsEqual(prev.tradeData.sellTokenContract, contract)) {
+          return prev;
+        }
+        return {
+          ...prev,
+          tradeData: {
+            ...prev.tradeData,
+            sellTokenContract: contract,
+          },
+        };
+      }),
   ];
 };
 
@@ -122,13 +128,18 @@ export const useBuyTokenContract = (): [TokenContract | undefined, (contract: To
   return [
     exchangeContext.tradeData.buyTokenContract,
     (contract) =>
-      setExchangeContext((prev) => ({
-        ...prev,
-        tradeData: {
-          ...prev.tradeData,
-          buyTokenContract: contract,
-        },
-      })),
+      setExchangeContext((prev) => {
+        if (tokenContractsEqual(prev.tradeData.buyTokenContract, contract)) {
+          return prev;
+        }
+        return {
+          ...prev,
+          tradeData: {
+            ...prev.tradeData,
+            buyTokenContract: contract,
+          },
+        };
+      }),
   ];
 };
 

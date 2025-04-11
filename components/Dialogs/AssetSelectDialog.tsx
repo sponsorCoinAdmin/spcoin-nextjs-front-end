@@ -54,10 +54,6 @@ export default function AssetSelectDialog({
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
 
-  useEffect(() => {
-    setInputField(tokenContract?.address);
-  }, [tokenContract]);
-
   const closeDialog = useCallback(() => {
     setInputField(undefined);
     setShowDialog(false);
@@ -76,19 +72,7 @@ export default function AssetSelectDialog({
 
   const updateTokenCallback = useCallback(
     (tokenContract: TokenContract | undefined, state: InputState, shouldClose: boolean = false): boolean => {
-      setTokenContract(tokenContract);
-      setInputState(state);
-
-      if (state !== InputState.VALID_INPUT) {
-        // if (state === InputState.BAD_ADDRESS_INPUT) {
-        //   alert(`SELECT_ERROR: Bad token address: ${inputField}`);
-        // } else if (state === InputState.EMPTY_INPUT) {
-        //   alert(`SELECT_ERROR: Input is empty.`);
-        // } else {
-        //   alert(`SELECT_ERROR: Token not found or undefined: ${inputField}`);
-        // }
-        return false;
-      }
+      if (state !== InputState.VALID_INPUT) return false;
 
       if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
         alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
@@ -100,11 +84,14 @@ export default function AssetSelectDialog({
         return false;
       }
 
+      setTokenContract(tokenContract);
+      setInputState(state);
+
       callBackSetter(tokenContract);
       if (shouldClose) closeDialog();
       return true;
     },
-    [inputField, isDuplicateToken, callBackSetter, closeDialog]
+    [isDuplicateToken, callBackSetter, closeDialog]
   );
 
   const getErrorImage = (tokenContract?: TokenContract): string => {
@@ -129,7 +116,7 @@ export default function AssetSelectDialog({
           setTokenContractCallBack={(tc, state) => updateTokenCallback(tc, state, false)}
         />
 
-        {inputField && inputState === InputState.VALID_INPUT && (
+        {tokenContract?.address && inputState === InputState.VALID_INPUT && (
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
               <div className="cursor-pointer flex flex-row justify-between" onClick={() => updateTokenCallback(tokenContract, inputState, true)}>

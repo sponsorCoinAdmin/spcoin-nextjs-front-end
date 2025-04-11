@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS, ERROR_CODES, ErrorMessage } from '@/lib/structure/types';
 import qs from 'qs';
 import useSWR, { mutate } from 'swr';
+import { isAddress } from 'viem';
 import {
   useApiErrorMessage,
   useBuyAmount,
@@ -143,7 +144,6 @@ function usePriceAPI() {
   sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount));
   buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount));
 
-  // 🕓 Debounce inputs to reduce fetch noise during rapid changes
   const debouncedSellToken = useDebounce(sellTokenAddress, 450);
   const debouncedBuyToken = useDebounce(buyTokenAddress, 450);
   const debouncedSellAmount = useDebounce(sellAmount, 450);
@@ -153,12 +153,38 @@ function usePriceAPI() {
     200
   );
 
-  const shouldFetch = (sellTokenAddress?: Address, buyTokenAddress?: Address): boolean => (
-    sellTokenAddress !== undefined &&
-    buyTokenAddress !== undefined &&
-    sellTokenAddress !== buyTokenAddress &&
-    chainId !== HARDHAT
-  );
+  const shouldFetch = (
+    sellTokenAddress?: Address,
+    buyTokenAddress?: Address,
+    amount?: bigint
+  ): boolean => {
+    if (!isAddress(sellTokenAddress ?? '')) {
+      console.warn(`[🚫 shouldFetch] Invalid or missing sellTokenAddress:`, sellTokenAddress);
+      return false;
+    }
+
+    if (!isAddress(buyTokenAddress ?? '')) {
+      console.warn(`[🚫 shouldFetch] Invalid or missing buyTokenAddress:`, buyTokenAddress);
+      return false;
+    }
+
+    if (sellTokenAddress!.toLowerCase() === buyTokenAddress!.toLowerCase()) {
+      console.warn(`[🚫 shouldFetch] Tokens are the same — skipping fetch.`);
+      return false;
+    }
+
+    if (!amount || amount === 0n) {
+      console.warn(`[🚫 shouldFetch] Skipping — amount is 0`);
+      return false;
+    }
+
+    if (chainId === HARDHAT) {
+      console.warn(`[🚫 shouldFetch] Chain is HARDHAT — skipping fetch.`);
+      return false;
+    }
+
+    return true;
+  };
 
   useEffect(() => {
     if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
@@ -169,7 +195,7 @@ function usePriceAPI() {
     }
   }, [tradeData.transactionType, sellAmount, buyAmount]);
 
-  const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken)
+  const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken, debouncedSellAmount)
     ? getPriceApiCall(
         tradeData.transactionType,
         chainId,
@@ -230,7 +256,7 @@ function usePriceAPI() {
 
   return {
     ...swr,
-    swrKey // return this if you want to mutate manually after swap
+    swrKey
   };
 }
 

@@ -205,6 +205,14 @@ function delay(ms: number | undefined) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const tokenContractsEqual = (a?: TokenContract, b?: TokenContract): boolean => {
+  return (
+    a?.address === b?.address &&
+    a?.symbol === b?.symbol &&
+    a?.decimals === b?.decimals
+  );
+};
+
 export {
   BURN_ADDRESS,
   NATIVE_TOKEN_ADDRESS,
@@ -237,6 +245,7 @@ export {
   isWrappedToken,
   isWrappedSellToken,
   mapAccountAddrToWethAddr,
+  tokenContractsEqual,
   useIsActiveAccountAddress,
   useMapAccountAddrToWethAddr,
 };
