@@ -77,11 +77,13 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     }
   }, [validAddress])
 
-  // ✅ This effect waits for tokenContract to resolve and match validAddress
+  // ✅ FIXED: Avoid callback loop for VALID_INPUT
   useEffect(() => {
     if (validAddress && tokenContract?.address === validAddress) {
-      setTokenContractCallBack(tokenContract, InputState.VALID_INPUT)
-      setInputState(InputState.VALID_INPUT)
+      if (inputState !== InputState.VALID_INPUT) {
+        setTokenContractCallBack(tokenContract, InputState.VALID_INPUT)
+        setInputState(InputState.VALID_INPUT)
+      }
     }
   }, [tokenContract, validAddress])
 
