@@ -3,15 +3,10 @@
 import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
-// import { erc20ABI } from 'viem'
-// import erc20ABI from '@/resources/data/ABIs/erc20ABI.json'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure/types'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
-// console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)
-// console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
   const wagmiBalanceOfRec = useReadContract({
@@ -227,7 +222,3 @@ export {
   useFormattedClientTotalSupply,
   useFormattedClientBalanceOf
 }
-function useNetwork(): { chain: any; chains: any } {
-  throw new Error('Function not implemented.')
-}
-

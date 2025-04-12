@@ -38,9 +38,11 @@ export default function AssetSelectDialog({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
-  const [inputState, setInputState] = useState<InputState>(InputState.TOKEN_NOT_FOUND_INPUT);
+  const [inputState, setInputState] = useState<InputState>(InputState.CONTRACT_NOT_FOUND_INPUT);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
+
+  const prevAddressRef = useRef<string | undefined>();
 
   useEffect(() => {
     if (dialogRef.current) {
@@ -84,6 +86,12 @@ export default function AssetSelectDialog({
         return false;
       }
 
+      // 🛑 Prevent re-calling for the same token
+      if (prevAddressRef.current === tokenContract.address) {
+        return false;
+      }
+
+      prevAddressRef.current = tokenContract.address;
       setTokenContract(tokenContract);
       setInputState(state);
 
@@ -113,9 +121,10 @@ export default function AssetSelectDialog({
         <InputSelect
           placeHolder={INPUT_PLACE_HOLDER}
           passedInputField={inputField || ""}
+          inputState={inputState}
+          setInputState={setInputState}
           setTokenContractCallBack={(tc, state) => updateTokenCallback(tc, state, false)}
         />
-
         {tokenContract?.address && inputState === InputState.VALID_INPUT && (
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">

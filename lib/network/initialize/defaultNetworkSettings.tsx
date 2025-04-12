@@ -3,7 +3,7 @@ import defaultPolygonSettings from '@/resources/data/networks//polygon/initializ
 import defaultHardHatSettings from '@/resources/data/networks//hardhat/initialize/defaultNetworkSettings.json';
 import defaultSoliditySettings from '@/resources/data/networks//sepolia/initialize/defaultNetworkSettings.json';
 import { isLowerCase } from '../utils';
-import { TradeData, SWAP_TYPE, TRADE_DIRECTION, ExchangeContext, NetworkElement, WalletAccount, TokenContract, SP_COIN_DISPLAY, ETHEREUM, HARDHAT, POLYGON, SEPOLIA, API_TRADING_PROVIDER } from '@/lib/structure/types';
+import { TradeData, SWAP_TYPE, TRADE_DIRECTION, ExchangeContext, NetworkElement, WalletAccount, SP_COIN_DISPLAY, ETHEREUM, HARDHAT, POLYGON, SEPOLIA, API_TRADING_PROVIDER } from '@/lib/structure/types';
 
 const defaultInitialTradeData:TradeData = {
   signer: undefined,

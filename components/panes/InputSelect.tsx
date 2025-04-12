@@ -17,89 +17,52 @@ import { useDebounce } from "@/lib/hooks/useDebounce"
 import { getTokenAvatar, isActiveAccountAddress } from "@/lib/network/utils"
 import { useExchangeContext } from '@/lib/context/contextHooks'
 import { isAddress } from 'viem'
+import { useMappedTokenContract } from '@/lib/hooks/wagmiERC20hooks'
 
 export enum InputState {
   EMPTY_INPUT = 'EMPTY_INPUT',
   VALID_INPUT = 'VALID_INPUT',
   BAD_ADDRESS_INPUT = 'BAD_ADDRESS_INPUT',
-  TOKEN_NOT_FOUND_INPUT = 'TOKEN_NOT_FOUND_INPUT',
+  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
 }
 
 type Props = {
   placeHolder: string
   passedInputField: any
+  inputState: InputState
+  setInputState: (state: InputState) => void
   setTokenContractCallBack: (tokenContract: TokenContract | undefined, state: InputState) => void
 }
 
-function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }: Props) {
+function InputSelect({ placeHolder, passedInputField, inputState, setInputState, setTokenContractCallBack }: Props) {
   const chainId: number = useChainId()
   const [textInputField, setTextInputField] = useState<any>()
-  const [validAddress, setValidAddress] = useState<Address | undefined>()
   const [tokenAddress, setTokenAddress] = useState<Address | undefined>()
-  const [networkAddress, setNetworkAddress] = useState<Address | undefined>()
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT)
-  const networkContract: TokenContract | undefined = useErc20NetworkContract(networkAddress)
+  const tokenContract: TokenContract|undefined  = useMappedTokenContract(tokenAddress)
   const { exchangeContext } = useExchangeContext()
 
   const debouncedInput: string = useDebounce(textInputField)
-  const tokenContract: TokenContract | undefined = useErc20TokenContract(tokenAddress)
-  const isActiveNetworkAddress = (address: Address | undefined) => {
-    return isActiveAccountAddress(exchangeContext, address)
-  }
 
   useEffect(() => {
     setTextInputField(passedInputField)
   }, [passedInputField])
 
   useEffect(() => {
-    if (networkContract?.address) {
-      getTokenAvatar(networkContract)
-    } else {
-      setTokenContractCallBack(networkContract, InputState.TOKEN_NOT_FOUND_INPUT)
-      setInputState(InputState.TOKEN_NOT_FOUND_INPUT)
-    }
-  }, [
-    networkContract?.name,
-    networkContract?.symbol,
-    networkContract?.decimals,
-    networkContract?.totalSupply
-  ])
-
-  useEffect(() => {
     validateDebouncedInput(debouncedInput)
   }, [debouncedInput])
 
   useEffect(() => {
-    if (validAddress) {
-      isActiveNetworkAddress(validAddress)
-        ? setNetworkAddress(validAddress)
-        : setTokenAddress(validAddress)
-    }
-  }, [validAddress])
-
-  // ✅ FIXED: Avoid callback loop for VALID_INPUT
-  useEffect(() => {
-    if (validAddress && tokenContract?.address === validAddress) {
-      if (inputState !== InputState.VALID_INPUT) {
-        setTokenContractCallBack(tokenContract, InputState.VALID_INPUT)
-        setInputState(InputState.VALID_INPUT)
-      }
-    }
-  }, [tokenContract, validAddress])
-
-  const setContractType = (passedValidAddress: Address | undefined) => {
-    if (!isActiveNetworkAddress(validAddress)) {
-      if (passedValidAddress !== validAddress) {
-        setValidAddress(passedValidAddress)
-      }
-      // We wait to fire the callback until tokenContract resolves in the effect above
-    }
-  }
+    setTokenContractCallBack(
+      tokenContract,
+      tokenContract ? InputState.VALID_INPUT : InputState.CONTRACT_NOT_FOUND_INPUT
+    )
+  }, [tokenContract])
 
   const validateDebouncedInput = (input: string) => {
+    console.log(`🔍 validateDebouncedInput called with: ${input}\n`);
     if (!input || typeof input !== 'string') {
       setTokenContractCallBack(undefined, InputState.EMPTY_INPUT)
-      setInputState(InputState.EMPTY_INPUT)
+      console.log(`🔍 🎯 inputState set to: ${InputState.EMPTY_INPUT}`)
       return
     }
 
@@ -108,11 +71,13 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
     if (!isAddress(trimmedInput)) {
       const invalidToken: TokenContract | undefined = invalidTokenContract(trimmedInput, chainId)
       setTokenContractCallBack(invalidToken, InputState.BAD_ADDRESS_INPUT)
-      setInputState(InputState.BAD_ADDRESS_INPUT)
+      console.log(`🔍 🎯 inputState set to: ${InputState.BAD_ADDRESS_INPUT}`)
       return
     }
 
-    setContractType(trimmedInput as Address)
+    setTokenAddress(trimmedInput)
+
+    setInputState(InputState.VALID_INPUT)
   }
 
   const getInputEmoji = (): string => {
@@ -123,7 +88,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
         return '🐞'
       case InputState.EMPTY_INPUT:
         return '🔍'
-      case InputState.TOKEN_NOT_FOUND_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_INPUT:
       default:
         return '🕵️'
     }
