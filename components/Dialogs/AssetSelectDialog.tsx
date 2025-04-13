@@ -8,15 +8,15 @@ import { useAccount } from "wagmi";
 import { useExchangeContext } from '@/lib/context/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import DataList, { setActiveAccount } from "./Resources/DataList";
-import InputSelect, { InputState } from "@/components/panes/InputSelect";
+import InputSelect, { InputState } from "@/components/Dialogs/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
 import {
   defaultMissingImage,
   badTokenAddressImage,
   getTokenAvatar
 } from "@/lib/network/utils";
-import { isAddress, Address } from "viem";
 
+import { isAddress, Address } from "viem";
 import info_png from "@/public/assets/miscellaneous/info1.png";
 
 const TITLE_NAME = "Select a token to select";
@@ -41,7 +41,6 @@ export default function AssetSelectDialog({
   const [inputState, setInputState] = useState<InputState>(InputState.CONTRACT_NOT_FOUND_INPUT);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
-
   const prevAddressRef = useRef<string | undefined>();
 
   useEffect(() => {
@@ -74,7 +73,10 @@ export default function AssetSelectDialog({
 
   const updateTokenCallback = useCallback(
     (tokenContract: TokenContract | undefined, state: InputState, shouldClose: boolean = false): boolean => {
-      if (state !== InputState.VALID_INPUT) return false;
+      setInputState(state);
+      if (state !== InputState.VALID_INPUT) 
+        return false;
+      updateTokenCallback
 
       if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
         alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
@@ -121,8 +123,6 @@ export default function AssetSelectDialog({
         <InputSelect
           placeHolder={INPUT_PLACE_HOLDER}
           passedInputField={inputField || ""}
-          inputState={inputState}
-          setInputState={setInputState}
           setTokenContractCallBack={(tc, state) => updateTokenCallback(tc, state, false)}
         />
         {tokenContract?.address && inputState === InputState.VALID_INPUT && (

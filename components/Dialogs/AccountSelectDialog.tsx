@@ -141,8 +141,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
               </div>
               <div
                 className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() => alert(`Wallet Address = ${walletElement?.address}`)}
-              >
+                  onClick={() => alert(`Wallet Address = ${walletElement?.address}`)}>
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
               </div>
             </div>
