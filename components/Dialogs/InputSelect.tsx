@@ -62,19 +62,14 @@ function InputSelect({
     validateDebouncedInput(debouncedInput)
   }, [debouncedInput])
 
+  // ✅ Always notify parent of latest inputState and tokenContract
   useEffect(() => {
-    if (inputState === InputState.VALID_INPUT || inputState === InputState.CONTRACT_NOT_FOUND_INPUT) {
-      setTokenContractCallBack(
-        tokenContract,
-        tokenContract ? InputState.VALID_INPUT : InputState.CONTRACT_NOT_FOUND_INPUT
-      )
-    }
-  }, [tokenContract])
+    setTokenContractCallBack(tokenContract, inputState)
+  }, [tokenContract, inputState])
 
   const validateDebouncedInput = (input: string) => {
     if (!input || typeof input !== 'string') {
       updateInputState(InputState.EMPTY_INPUT)
-      setTokenContractCallBack(undefined, InputState.EMPTY_INPUT)
       return
     }
 
@@ -83,7 +78,6 @@ function InputSelect({
     if (!isAddress(trimmedInput)) {
       const invalidToken: TokenContract | undefined = invalidTokenContract(trimmedInput, chainId)
       updateInputState(InputState.BAD_ADDRESS_INPUT)
-      setTokenContractCallBack(invalidToken, InputState.BAD_ADDRESS_INPUT)
       return
     }
 

@@ -19,7 +19,21 @@ import {
 import { isAddress, Address } from "viem";
 import info_png from "@/public/assets/miscellaneous/info1.png";
 
-const TITLE_NAME = "Select a token to select";
+const getTitleFromState = (state: InputState): string => {
+  switch (state) {
+    case InputState.VALID_INPUT:
+      return 'Valid ✅';
+    case InputState.EMPTY_INPUT:
+      return 'Empty 🔍';
+    case InputState.BAD_ADDRESS_INPUT:
+      return 'Bad Address 🚫';
+    case InputState.CONTRACT_NOT_FOUND_INPUT:
+      return 'Not Found ⚠️';
+    default:
+      return 'Unknown ❓';
+  }
+};
+
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
 
 type Props = {
@@ -109,7 +123,7 @@ export default function AssetSelectDialog({
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-        <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
+        <h1 className="text-sm indent-9 mt-1">{`Select a Token to Trade (Status = ${getTitleFromState(inputState)})`}</h1>
         <div className="cursor-pointer rounded border-none w-5 text-xl text-white" onClick={closeDialog}>
           X
         </div>
