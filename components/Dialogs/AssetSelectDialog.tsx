@@ -74,9 +74,8 @@ export default function AssetSelectDialog({
   const updateTokenCallback = useCallback(
     (tokenContract: TokenContract | undefined, state: InputState, shouldClose: boolean = false): boolean => {
       setInputState(state);
-      if (state !== InputState.VALID_INPUT) 
-        return false;
-      updateTokenCallback
+
+      if (state !== InputState.VALID_INPUT) return false;
 
       if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
         alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
@@ -88,15 +87,12 @@ export default function AssetSelectDialog({
         return false;
       }
 
-      // 🛑 Prevent re-calling for the same token
       if (prevAddressRef.current === tokenContract.address) {
         return false;
       }
 
       prevAddressRef.current = tokenContract.address;
       setTokenContract(tokenContract);
-      setInputState(state);
-
       callBackSetter(tokenContract);
       if (shouldClose) closeDialog();
       return true;
@@ -124,6 +120,7 @@ export default function AssetSelectDialog({
           placeHolder={INPUT_PLACE_HOLDER}
           passedInputField={inputField || ""}
           setTokenContractCallBack={(tc, state) => updateTokenCallback(tc, state, false)}
+          setInputState={setInputState}
         />
         {tokenContract?.address && inputState === InputState.VALID_INPUT && (
           <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>

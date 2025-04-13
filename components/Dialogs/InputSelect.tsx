@@ -32,16 +32,27 @@ type Props = {
     tokenContract: TokenContract | undefined,
     state: InputState
   ) => void
+  setInputState?: (state: InputState) => void
 }
 
-function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }: Props) {
+function InputSelect({
+  placeHolder,
+  passedInputField,
+  setTokenContractCallBack,
+  setInputState: notifyParent
+}: Props) {
   const chainId: number = useChainId()
   const [textInputField, setTextInputField] = useState<any>()
   const [tokenAddress, setTokenAddress] = useState<Address | undefined>()
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT)
+  const [inputState, setInputStateLocal] = useState<InputState>(InputState.EMPTY_INPUT)
   const tokenContract: TokenContract | undefined = useMappedTokenContract(tokenAddress)
 
   const debouncedInput: string = useDebounce(textInputField)
+
+  const updateInputState = (state: InputState) => {
+    setInputStateLocal(state)
+    if (notifyParent) notifyParent(state)
+  }
 
   useEffect(() => {
     setTextInputField(passedInputField)
@@ -62,7 +73,7 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
 
   const validateDebouncedInput = (input: string) => {
     if (!input || typeof input !== 'string') {
-      setInputState(InputState.EMPTY_INPUT)
+      updateInputState(InputState.EMPTY_INPUT)
       setTokenContractCallBack(undefined, InputState.EMPTY_INPUT)
       return
     }
@@ -71,26 +82,26 @@ function InputSelect({ placeHolder, passedInputField, setTokenContractCallBack }
 
     if (!isAddress(trimmedInput)) {
       const invalidToken: TokenContract | undefined = invalidTokenContract(trimmedInput, chainId)
-      setInputState(InputState.BAD_ADDRESS_INPUT)
+      updateInputState(InputState.BAD_ADDRESS_INPUT)
       setTokenContractCallBack(invalidToken, InputState.BAD_ADDRESS_INPUT)
       return
     }
 
     setTokenAddress(trimmedInput)
-    setInputState(InputState.VALID_INPUT)
+    updateInputState(InputState.VALID_INPUT)
   }
 
   const getInputEmoji = (): string => {
     switch (inputState) {
       case InputState.VALID_INPUT:
-        return '✅' // Success
+        return '✅'
       case InputState.BAD_ADDRESS_INPUT:
-        return '🚫' // Blocked / Invalid
+        return '❌'
       case InputState.EMPTY_INPUT:
-        return '🔍' // Searching
+        return '🔍'
       case InputState.CONTRACT_NOT_FOUND_INPUT:
       default:
-        return '❗' // Not found / Warning
+        return '❓'
     }
   }
 
