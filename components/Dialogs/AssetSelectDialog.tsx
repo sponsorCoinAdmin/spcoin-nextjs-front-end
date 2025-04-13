@@ -146,6 +146,10 @@ export default function AssetSelectDialog({
                   height={40}
                   width={40}
                   alt="Token Image"
+                  onClick={() => {
+                    alert(`Clicked image for ${tokenContract?.symbol}`)
+                    updateTokenCallback(tokenContract, InputState.VALID_INPUT, true)}
+                  }
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {

@@ -114,7 +114,8 @@ const displayElementDetail = (tokenContract: any) => {
 };
 
 // 🔹 Optimized `DataList` component
-const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TYPE; updateTokenCallback: (listElement: any) => void }) => {
+const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TYPE; 
+                    updateTokenCallback: (listElement: any) => void }) => {
   const [isClient, setIsClient] = useState(false);
   const chainId = useChainId(); // ✅ Ensure it's not used on SSR
   const walletLists = useWalletLists();
