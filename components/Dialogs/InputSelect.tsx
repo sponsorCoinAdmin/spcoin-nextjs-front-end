@@ -139,14 +139,20 @@ function InputSelect({
   };
 
   const validateInputStatus = (state: InputState): string | JSX.Element => {
-    const emojiStyle = { fontSize: '33px', lineHeight: '1', marginRight: '6px' };
-  
+    const emojiStyle: React.CSSProperties = {
+      fontSize: 36,
+      lineHeight: 1,
+      marginRight: 6
+    };    const textStyle: React.CSSProperties = {
+      position: 'relative',
+      top: -6 // ✅ number instead of string
+    };  
     switch (state) {
       case InputState.INVALID_ADDRESS_INPUT:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>❓</span>
-            Entering a Valid Token Hex Address!
+            <span style={textStyle}>Enter a Valid Token Hex Address !</span>
           </span>
         );
   
@@ -154,9 +160,11 @@ function InputSelect({
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>❌</span>
-            {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-              ? 'Sell Address Cannot Be the Same as Buy Address'
-              : 'Buy Address Cannot Be the Same as Sell Address'}
+            <span style={textStyle}>
+              {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+                ? 'Sell Address Cannot Be the Same as Buy Address'
+                : 'Buy Address Cannot Be the Same as Sell Address'}
+            </span>
           </span>
         );
   
@@ -164,7 +172,7 @@ function InputSelect({
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>⚠️</span>
-            Contract Not Found on BlockChain
+            <span style={textStyle}>Contract Not Found on BlockChain</span>
           </span>
         );
   
@@ -172,6 +180,7 @@ function InputSelect({
         return <span></span>;
     }
   };
+  
   
 
   return (
@@ -220,8 +229,9 @@ function InputSelect({
               </div>
             </div>
           ) : (
-            <h1 className="indent-5 mt-4">{validateInputStatus(inputState)}</h1>
-          )}
+<h1 className="indent-5 my-[9px]">
+  {validateInputStatus(inputState)}
+</h1>          )}
         </div>
       )}
     </div>

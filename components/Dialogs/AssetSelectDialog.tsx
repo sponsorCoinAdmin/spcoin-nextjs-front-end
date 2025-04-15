@@ -92,13 +92,13 @@ export default function AssetSelectDialog({
 
       if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
         console.log("[updateTokenCallback] Exiting: Invalid token or address", tokenContract);
-        alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
+        // alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
         return false;
       }
 
       if (isDuplicateToken(tokenContract.address)) {
         console.log("[updateTokenCallback] Exiting: Duplicate token", tokenContract.symbol);
-        alert(`SELECT_ERROR: Duplicate token: ${tokenContract.symbol}`);
+        // alert(`SELECT_ERROR: Duplicate token: ${tokenContract.symbol}`);
         return false;
       }
 
