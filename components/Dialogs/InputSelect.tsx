@@ -138,26 +138,41 @@ function InputSelect({
       : badTokenAddressImage;
   };
 
-  const getTitleFromState = (state: InputState): string | JSX.Element => {
+  const validateInputStatus = (state: InputState): string | JSX.Element => {
+    const emojiStyle = { fontSize: '33px', lineHeight: '1', marginRight: '6px' };
+  
     switch (state) {
-      case InputState.VALID_INPUT:
-        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? "Select a Token to Sell" : "Select a Token to to Buy";
-      case InputState.EMPTY_INPUT:
-        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? "Select a Token to Sell" : "Select a Token to to Buy";
       case InputState.INVALID_ADDRESS_INPUT:
-        return <span style={{ color: 'orange' }}>Entering a Valid Token Hex Address!</span>;
+        return (
+          <span style={{ color: 'orange' }}>
+            <span style={emojiStyle}>❓</span>
+            Entering a Valid Token Hex Address!
+          </span>
+        );
+  
       case InputState.DUPLICATE_INPUT:
-        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? <span style={{ color: 'orange' }}>Sell Address Cannot Be the Same as Buy Address</span>
-          : <span style={{ color: 'orange' }}>Buy Address Cannot Be the Same as Sell Address</span>;
+        return (
+          <span style={{ color: 'orange' }}>
+            <span style={emojiStyle}>❌</span>
+            {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+              ? 'Sell Address Cannot Be the Same as Buy Address'
+              : 'Buy Address Cannot Be the Same as Sell Address'}
+          </span>
+        );
+  
       case InputState.CONTRACT_NOT_FOUND_INPUT:
-        return <span style={{ color: 'orange' }}>⚠️ Contract Not Found on BlockChain</span>;
+        return (
+          <span style={{ color: 'orange' }}>
+            <span style={emojiStyle}>⚠️</span>
+            Contract Not Found on BlockChain
+          </span>
+        );
+  
       default:
-        return <span style={{ color: 'red' }}>(Unknown Error ❓)</span>;
+        return <span></span>;
     }
   };
+  
 
   return (
     <div className={styles.inputSelectWrapper}>
@@ -173,9 +188,10 @@ function InputSelect({
           onChange={(e) => validateTextInput(e.target.value)}
         />
       </div>
-      <h1 className="indent-8 mt-4">{getTitleFromState(inputState)}</h1>
-        {inputState === InputState.VALID_INPUT && (
-          <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
+
+      {inputState !== InputState.EMPTY_INPUT && (
+        <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
+          {inputState === InputState.VALID_INPUT ? (
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
               <div className="cursor-pointer flex flex-row justify-between">
                 <Image
@@ -184,7 +200,7 @@ function InputSelect({
                   height={40}
                   width={40}
                   alt="Token Image"
-                  onClick={() => { closeDialog() }}
+                  onClick={closeDialog}
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {
@@ -197,13 +213,17 @@ function InputSelect({
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
                 </div>
               </div>
-              <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+              <div
+                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
                 onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <h1 className="indent-5 mt-4">{validateInputStatus(inputState)}</h1>
+          )}
+        </div>
+      )}
     </div>
   );
 }
