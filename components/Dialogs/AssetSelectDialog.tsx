@@ -127,13 +127,17 @@ export default function AssetSelectDialog({
 
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
-      <div className="relative h-12 px-3 mb-1 text-gray-600">
-        <h1 className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-lg">
+      <div className="relative h-8 px-3 mb-1 text-gray-600">
+        <h1 className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg">
           {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-            ? "Select a Token to Sell" : "Select a Token to to Buy"}
+            ? "Select a Token to Sell"
+            : "Select a Token to to Buy"}
         </h1>
-        <div  className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white"
-              onClick={closeDialog}>
+
+        <div
+          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white"
+          onClick={closeDialog}
+        >
           X
         </div>
       </div>
