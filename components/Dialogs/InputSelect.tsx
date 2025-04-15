@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import { invalidTokenContract } from '@/lib/spCoin/coreUtils';
-import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 
 import {
@@ -20,6 +19,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { isAddress } from 'viem';
 import { useMappedTokenContract } from '@/lib/hooks/wagmiERC20hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { CONTAINER_TYPE } from '@/lib/structure/types';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
@@ -33,6 +33,7 @@ export enum InputState {
 }
 
 type Props = {
+  containerType: CONTAINER_TYPE;
   placeHolder: string;
   passedInputField: any;
   setTokenContractCallBack: (
@@ -44,6 +45,7 @@ type Props = {
 };
 
 function InputSelect({
+  containerType,
   placeHolder,
   passedInputField,
   setTokenContractCallBack,
@@ -136,6 +138,27 @@ function InputSelect({
       : badTokenAddressImage;
   };
 
+  const getTitleFromState = (state: InputState): string | JSX.Element => {
+    switch (state) {
+      case InputState.VALID_INPUT:
+        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          ? "Select a Token to Sell" : "Select a Token to to Buy";
+      case InputState.EMPTY_INPUT:
+        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          ? "Select a Token to Sell" : "Select a Token to to Buy";
+      case InputState.INVALID_ADDRESS_INPUT:
+        return <span style={{ color: 'orange' }}>Entering a Valid Token Hex Address!</span>;
+      case InputState.DUPLICATE_INPUT:
+        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          ? <span style={{ color: 'orange' }}>Sell Address Cannot Be the Same as Buy Address</span>
+          : <span style={{ color: 'orange' }}>Buy Address Cannot Be the Same as Sell Address</span>;
+      case InputState.CONTRACT_NOT_FOUND_INPUT:
+        return <span style={{ color: 'orange' }}>⚠️ Contract Not Found on BlockChain</span>;
+      default:
+        return <span style={{ color: 'red' }}>(Unknown Error ❓)</span>;
+    }
+  };
+
   return (
     <div className={styles.inputSelectWrapper}>
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH}`}>
@@ -150,36 +173,37 @@ function InputSelect({
           onChange={(e) => validateTextInput(e.target.value)}
         />
       </div>
-      {/* <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-          <div className="cursor-pointer flex flex-row justify-between">
-            <Image
-              id="tokenImage"
-              src={getTokenAvatar(tokenContract)}
-              height={40}
-              width={40}
-              alt="Token Image"
-              onClick={() => { closeDialog(); }}
-              onError={(e) => {
-                const fallback = getErrorImage(tokenContract);
-                if (e.currentTarget.src !== fallback) {
-                  e.currentTarget.src = fallback;
-                }
-              }}
-            />
-            <div>
-              <div className={styles.elementName}>{tokenContract?.name}</div>
-              <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
+      <h1 className="indent-8 mt-4">{getTitleFromState(inputState)}</h1>
+        {inputState === InputState.VALID_INPUT && (
+          <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
+            <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
+              <div className="cursor-pointer flex flex-row justify-between">
+                <Image
+                  id="tokenImage"
+                  src={getTokenAvatar(tokenContract)}
+                  height={40}
+                  width={40}
+                  alt="Token Image"
+                  onClick={() => { closeDialog() }}
+                  onError={(e) => {
+                    const fallback = getErrorImage(tokenContract);
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
+                />
+                <div>
+                  <div className={styles.elementName}>{tokenContract?.name}</div>
+                  <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
+                </div>
+              </div>
+              <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
+                <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+              </div>
             </div>
           </div>
-          <div
-            className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-            onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}
-          >
-            <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
-          </div>
-        </div>
-      </div> */}
+        )}
     </div>
   );
 }
