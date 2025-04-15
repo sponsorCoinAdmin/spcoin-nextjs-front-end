@@ -92,12 +92,13 @@ export function useMappedTokenContract(
 }
 
 // ---------------------------------------------
-// 💡 TokenFetchGuiExample — Fully Interactive Demo
+// 💡 TokenFetchGuiExamples — Fully Interactive Demo
 // ---------------------------------------------
-export function TokenFetchGuiExample() {
+export function TokenFetchGuiExamples() {
   const [tokenAddressInput, setTokenAddressInput] = useState('');
   const [accountAddressInput, setAccountAddressInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [notFoundMessage, setNotFoundMessage] = useState('');
   const account = useAccount();
 
   const tokenAddress = isAddress(tokenAddressInput) ? (tokenAddressInput as Address) : undefined;
@@ -109,11 +110,15 @@ export function TokenFetchGuiExample() {
   const tokenResult = useMappedTokenContract(submitted ? tokenAddress : undefined, accountAddress);
 
   useEffect(() => {
-    if (submitted && !tokenResult) {
-      alert('TOKEN NOT FOUND ON BLOCK CHAIN');
-      setSubmitted(false); // prevent repeated alerts
+    if (submitted) {
+      if (!tokenResult && tokenAddressInput) {
+        setNotFoundMessage(`❌ Token not found at address ${tokenAddressInput}`);
+      } else {
+        setNotFoundMessage('');
+      }
+      setSubmitted(false); // prevent repeated alerts or stale results
     }
-  }, [submitted, tokenResult]);
+  }, [submitted, tokenResult, tokenAddressInput]);
 
   const handleFetch = () => {
     if (!tokenAddressInput) {
@@ -167,10 +172,16 @@ export function TokenFetchGuiExample() {
       <button
         onClick={handleFetch}
         disabled={!tokenAddressInput}
-        style={{ padding: '0.5rem 1rem', marginBottom: '2rem' }}
+        style={{ padding: '0.5rem 1rem', marginBottom: '1rem' }}
       >
         Fetch
       </button>
+
+      {notFoundMessage && (
+        <div style={{ color: 'red', marginBottom: '1rem' }}>
+          {notFoundMessage}
+        </div>
+      )}
 
       {tokenResult && (
         <div style={{ border: '1px solid #ccc', padding: '1rem' }}>

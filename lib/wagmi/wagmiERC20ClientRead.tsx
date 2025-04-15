@@ -101,11 +101,11 @@ const useWagmiERC20TokenBalanceOfStr = (connectedAccountAddr: Address | undefine
 }
 
 const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
-  const chainId = useChainId();
-  const name = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
-  const symbol = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
-  const decimals = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
-  const totalSupply = useWagmiERC20TokenTotalSupply(TOKEN_CONTRACT_ADDRESS);
+  const chainId:number = useChainId();
+  const name:string|undefined = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
+  const symbol:string|undefined = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
+  const decimals:number|undefined = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
+  const totalSupply:bigint|undefined = useWagmiERC20TokenTotalSupply(TOKEN_CONTRACT_ADDRESS);
   let contractResponse:TokenContract|undefined;
   if ( TOKEN_CONTRACT_ADDRESS ) {
     contractResponse =
@@ -131,7 +131,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
   const chainId:number            = useChainId();
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
-  const name                      = getBlockChainName(chainId);
+  const name:string|undefined     = getBlockChainName(chainId);
 
   let networkResponse:TokenContract|undefined;
   if ( ACTIVE_NETWORK_ADDRESS ) {
