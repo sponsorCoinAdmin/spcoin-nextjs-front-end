@@ -4,24 +4,63 @@
   color: #5981F3;
   height: 40px !important;
   width: 100%;
-  margin-bottom: 5px;
+  margin-bottom: 1px;
   border-radius: 22px !important;
 }
 
 .modalInputSelect {
   background-color: lightblue;
-  padding: 10px;
+  padding: 5px;
   background-color: #243056; 
   color: #5981F3;
   border-width: 0px !important;
   width: 100%;
-  margin-bottom: 5px;
+  margin-bottom: 0px;
   border-radius: 22px !important; 
+}
+
+.modalElementSelectContainer {
+  background-color: #243056;
+  color: #5981F3;
+  height: 40px !important;
+  width: 100%;
+  margin-bottom: 0px;
+  border-radius: 22px !important;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem; /* Optional horizontal spacing */
+}
+
+.modalElementInput {
+  outline: none;
+  background: transparent;
+  border: none;
+}
+
+.inputSelectWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.2rem;
+}
+
+.inputSelectSize {
+  font-size: 7px;
+}
+
+.stackContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem; /* optional spacing between sections */
+}
+
+.inputSelectSize {
+  font-size: 15px;
 }
 
 .modalContainer{
   position:absolute;
-  transform: translate(10px, -24px);
+  transform: translate(0px, 0px);
   font-weight: bold;
   width: 520px;
   color: white;
@@ -51,7 +90,6 @@
   border-radius: 15px;
 }
 
-
 .buySell {
   position: absolute;
   justify-content: flex-start;
@@ -79,7 +117,14 @@
     border-radius: 15px;
 }
 
+.stackContainer {
+}
+
 .modalBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem; /* optional spacing between sections */
+  
   font-weight: bold;
   overflow: hidden;
   height: 516px;
@@ -100,6 +145,7 @@
   height: 100%;
   width: 100%;
   overflow: hidden;
+  overflow-y: scroll;
   overflow-y: scroll;
   scrollbar-width: none;
   padding: 10px;
