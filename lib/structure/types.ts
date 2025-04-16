@@ -6,6 +6,15 @@ export interface AccountAddress {
     address: string;
 }
 
+// Toke Input Select Types
+export enum InputState {
+  EMPTY_INPUT = 'EMPTY_INPUT',
+  VALID_INPUT = 'VALID_INPUT',
+  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',
+  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
+  DUPLICATE_INPUT = 'DUPLICATE_INPUT'
+}
+
 // Define Wallet type
 interface WalletAccount {
     name: string;
@@ -38,7 +47,9 @@ enum BUTTON_TYPE {
 // Container Types
 enum CONTAINER_TYPE {
   SELL_SELECT_CONTAINER,
-  BUY_SELECT_CONTAINER
+  BUY_SELECT_CONTAINER,
+  ASSET_SELECT_DIALOG,
+  UNDEFINED
 }
 
 // Exchange States
@@ -143,6 +154,7 @@ type ErrorMessage = {
 };
 
 type ExchangeContext = {
+  containerType:CONTAINER_TYPE | undefined;
   apiTradingProvider: API_TRADING_PROVIDER;
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
   agentAccount?: WalletAccount;

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
-import { useApiProvider, useBuyBalance, useSellBalance, useTradeData } from '@/lib/context/contextHooks';
+import { useApiProvider, useBuyBalance, useContainerType, useSellBalance, useTradeData } from '@/lib/context/contextHooks';
 
 // Context & Hooks
 import {
@@ -33,7 +33,7 @@ import {
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
 
-const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
+const TokenSelectContainer = ({ containerType:selectContainerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
   const apiProvider = useApiProvider();
@@ -47,11 +47,10 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyBalance, setBuyBalance] = useBuyBalance();
-
-  const [localContainerType, setLocalContainerType] = useState<CONTAINER_TYPE>(containerType);
+  const [containerType, setContainerType] = useContainerType(selectContainerType);
 
   const tokenContract =
-    localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? sellTokenContract
       : buyTokenContract;
 
@@ -69,7 +68,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     if (!tokenContract) return;
 
     const amountToUse =
-      localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
         ? sellAmount
         : buyAmount;
 
@@ -86,18 +85,18 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     if (!isNumericallyEqual && inputValue !== formatted) {
       setInputValue(formatted);
     }
-  }, [sellAmount, buyAmount, localContainerType, tokenContract]);
+  }, [sellAmount, buyAmount, containerType, tokenContract]);
 
   useEffect(() => {
     if (
-      localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
       tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
     ) {
       setSellAmount(debouncedSellAmount);
     }
 
     if (
-      localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
+      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
       tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
     ) {
       setBuyAmount(debouncedBuyAmount);
@@ -116,12 +115,12 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   useEffect(() => {
     if (!wagmiBalance || !wagmiBalance.value) return;
 
-    if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
       setSellBalance(wagmiBalance.value);
     } else {
       setBuyBalance(wagmiBalance.value);
     }
-  }, [wagmiBalance, localContainerType]);
+  }, [wagmiBalance, containerType]);
 
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
@@ -141,7 +140,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     try {
       const bigIntValue = parseUnits(formatted, decimals);
 
-      if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         setSellAmount(bigIntValue);
       } else {
@@ -153,7 +152,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     }
   };
 
-  const buySellText = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+  const buySellText = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
     ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
         ? `You Pay ± ${slippageBps / 100}%`
         : `You Exactly Pay:`)
@@ -168,7 +167,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const isInputDisabled =
     !tokenContract ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
-      localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER);
+      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER);
 
   return (
     <div className={`${styles.inputs} ${styles.tokenSelectContainer}`}>
@@ -189,10 +188,9 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       />
       <TokenSelect
         exchangeContext={exchangeContext}
-        containerType={localContainerType}
         tokenContract={tokenContract}
         setDecimalAdjustedContract={
-          localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
             ? setSellTokenContract
             : setBuyTokenContract
         }
@@ -200,7 +198,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
       {isSpCoin(tokenContract) &&
-        (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
+        (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorButton />

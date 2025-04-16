@@ -19,14 +19,12 @@ import {
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 type Props = {
-  containerType: CONTAINER_TYPE;
   tokenContract: TokenContract | undefined;
   setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
   exchangeContext: ExchangeContext;
 };
 
 function AssetSelect({
-  containerType,
   tokenContract,
   setDecimalAdjustedContract,
   exchangeContext,
@@ -63,7 +61,6 @@ function AssetSelect({
   return (
     <>
       <TokenSelectDialog
-        containerType={containerType}
         showDialog={showDialog}
         setShowDialog={setShowDialog}
         callBackSetter={setDecimalAdjustedContract}

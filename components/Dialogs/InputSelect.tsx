@@ -19,57 +19,41 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { isAddress } from 'viem';
 import { useMappedTokenContract } from '@/lib/hooks/wagmiERC20hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { CONTAINER_TYPE } from '@/lib/structure/types';
+import { CONTAINER_TYPE, InputState } from '@/lib/structure/types';
+import { useContainerType } from '@/lib/context/contextHooks';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
-export enum InputState {
-  EMPTY_INPUT = 'EMPTY_INPUT',
-  VALID_INPUT = 'VALID_INPUT',
-  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',
-  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
-  DUPLICATE_INPUT = 'DUPLICATE_INPUT'
-}
-
 type Props = {
-  containerType: CONTAINER_TYPE;
   placeHolder: string;
   passedInputField: any;
-  setTokenContractCallBack: (
-    tokenContract: TokenContract | undefined,
-    state: InputState
-  ) => void;
-  setInputState?: (state: InputState) => void;
+  // updateTokenCallback: (
+  //   tokenContract: TokenContract | undefined,
+  //   state: InputState
+  // ) => void;
   closeDialog: () => void;
 };
 
 function InputSelect({
-  containerType,
   placeHolder,
   passedInputField,
-  setTokenContractCallBack,
-  setInputState: notifyParent,
+  // updateTokenCallback,
   closeDialog
 }: Props) {
-  const chainId: number = useChainId();
   const [textInputField, setTextInputField] = useState<any>();
   const [tokenAddress, setTokenAddress] = useState<Address | undefined>();
-  const [inputState, setInputStateLocal] = useState<InputState>(InputState.EMPTY_INPUT);
+  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const tokenContract: TokenContract | undefined = useMappedTokenContract(tokenAddress);
+  const [containerType, setContainerType] = useContainerType();
 
   useEffect(() => {
     if (!tokenContract && tokenAddress) {
-      updateInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+      setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
     }
   }, [tokenContract]);
 
   const debouncedInput: string = useDebounce(textInputField);
-
-  const updateInputState = (state: InputState) => {
-    setInputStateLocal(state);
-    if (notifyParent) notifyParent(state);
-  };
 
   useEffect(() => {
     setTextInputField(passedInputField);
@@ -81,25 +65,25 @@ function InputSelect({
 
   useEffect(() => {
     if (tokenContract) {
-      setTokenContractCallBack(tokenContract, inputState);
+      alert(`InputSelect.updateTokenCallback(${tokenContract.name}, ${inputState});`);
     }
   }, [tokenContract, inputState]);
 
   const validateDebouncedInput = (input: string) => {
     if (!input || typeof input !== 'string') {
-      updateInputState(InputState.EMPTY_INPUT);
+      setInputState(InputState.EMPTY_INPUT);
       return;
     }
 
     const trimmedInput: string = input.trim();
 
     if (!isAddress(trimmedInput)) {
-      updateInputState(InputState.INVALID_ADDRESS_INPUT);
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
 
     setTokenAddress(trimmedInput);
-    updateInputState(InputState.VALID_INPUT);
+    setInputState(InputState.VALID_INPUT);
   };
 
   const getInputEmoji = (): string => {
@@ -180,8 +164,6 @@ function InputSelect({
         return <span></span>;
     }
   };
-  
-  
 
   return (
     <div className={styles.inputSelectWrapper}>
@@ -190,7 +172,7 @@ function InputSelect({
           {getInputEmoji()}
         </div>
         <input
-          className={`${styles.modalElementInput} w-full`}
+          className={`${styles.modalElementInput} w-full text-[14.2px]`}
           autoComplete="off"
           placeholder={placeHolder}
           value={textInputField || ''}
@@ -229,9 +211,7 @@ function InputSelect({
               </div>
             </div>
           ) : (
-<h1 className="indent-5 my-[9px]">
-  {validateInputStatus(inputState)}
-</h1>          )}
+            <h1 className="indent-5 my-[9px]">{validateInputStatus(inputState)}</h1>)}
         </div>
       )}
     </div>
