@@ -55,7 +55,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     tradeData: {
       signer: undefined,
       chainId,
-      transactionType: TRADE_DIRECTION.SELL_EXACT_OUT,
+      tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT,
       swapType: SWAP_TYPE.UNDEFINED,
       slippageBps: 200,
       sellTokenContract: undefined,
@@ -82,7 +82,7 @@ export const sanitizeExchangeContext = (
       agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
       tradeData: {
         chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
-        transactionType: raw?.tradeData?.transactionType ?? defaultContext.tradeData.transactionType,
+        tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
         swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
         slippageBps: raw?.tradeData?.slippageBps !== undefined
           ? raw.tradeData.slippageBps

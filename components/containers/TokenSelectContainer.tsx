@@ -33,7 +33,11 @@ import {
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
 
-const TokenSelectContainer = ({ containerType:selectContainerType }: { containerType: CONTAINER_TYPE }) => {
+interface TokenSelectContainerProps {
+  containerType: CONTAINER_TYPE;
+}
+
+const TokenSelectContainer = ({ containerType:selectContainerType }: TokenSelectContainerProps) => {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
   const apiProvider = useApiProvider();
@@ -48,6 +52,10 @@ const TokenSelectContainer = ({ containerType:selectContainerType }: { container
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyBalance, setBuyBalance] = useBuyBalance();
   const [containerType, setContainerType] = useContainerType(selectContainerType);
+
+  useEffect(() => {
+    setContainerType(selectContainerType)
+  }, []);
 
   const tokenContract =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER

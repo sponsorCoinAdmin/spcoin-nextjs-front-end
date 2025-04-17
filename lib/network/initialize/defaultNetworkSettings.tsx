@@ -8,7 +8,7 @@ import { TradeData, SWAP_TYPE, TRADE_DIRECTION, ExchangeContext, NetworkElement,
 const defaultInitialTradeData:TradeData = {
   signer: undefined,
   chainId: 1,
-  transactionType: TRADE_DIRECTION.SELL_EXACT_OUT,
+  tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT,
   swapType: SWAP_TYPE.UNDEFINED,
   slippageBps: 100,
   sellTokenContract: undefined,

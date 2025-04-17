@@ -128,11 +128,11 @@ useEffect(() => {
   const sellTokenChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
   const buyTokenChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
 
-  if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
+  if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
     setBuyAmount(0n);
   }
 
-  if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
+  if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
     setSellAmount(0n);
   }
 
@@ -141,19 +141,19 @@ useEffect(() => {
 }, [
   tradeData.sellTokenContract,
   tradeData.buyTokenContract,
-  tradeData.transactionType
+  tradeData.tradeDirection
 ]);
 
 useEffect(() => {
   const sellTokenChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
   const buyTokenChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
 
-  if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
+  if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
     alert('[⚠️ PriceView] Resetting buy amount due to token change');
     setBuyAmount(0n);
   }
 
-  if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
+  if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
     alert('[⚠️ PriceView] Resetting sell amount due to token change');
     setSellAmount(0n);
   }
@@ -163,7 +163,7 @@ useEffect(() => {
 }, [
   tradeData.sellTokenContract,
   tradeData.buyTokenContract,
-  tradeData.transactionType
+  tradeData.tradeDirection
 ]);
 
 

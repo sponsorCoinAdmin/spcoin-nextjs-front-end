@@ -5,7 +5,7 @@ import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
 import { useChainId } from "wagmi";
-import { useExchangeContext } from '@/lib/context/contextHooks'  // ✅ Use Hook
+import { useContainerType, useExchangeContext } from '@/lib/context/contextHooks'  // ✅ Use Hook
 import {
   BASE,
   ETHEREUM,
@@ -123,6 +123,8 @@ const DataList = ({ dataFeedType }: Props) => {
   const chainId = useChainId(); // ✅ Ensure it's not used on SSR
   const walletLists = useWalletLists();
   const { exchangeContext } = useExchangeContext();
+  const [containerType] = useContainerType();
+  
 
   /** ✅ Prevent SSR Mismatch */
   useEffect(() => {
@@ -161,7 +163,7 @@ const DataList = ({ dataFeedType }: Props) => {
                  onClick={() => {
                    console.log(`🖱 Clicked Element Index: ${i}`);
                    console.log(`🖱 Clicked Element Data:`, dataFeedList[i]);  // Debug Step 1 ✅
-                   alert(`updateTokenCallback(${dataFeedList[i].name});`)
+                   alert(`DataList.updateTokenCallback(${dataFeedList[i].name}) containerType =${containerType}`)
                  }}>
               <img className={styles.elementLogo} src={listElement.avatar || defaultMissingImage} alt={`${listElement.name} Token Avatar`} />
               <div>

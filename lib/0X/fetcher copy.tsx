@@ -65,7 +65,7 @@ const getApiErrorTransactionData = (
 });
 
 const getPriceApiCall = (
-  transactionType: TRADE_DIRECTION,
+  tradeDirection: TRADE_DIRECTION,
   chainId: number,
   sellTokenAddress: Address | undefined,
   buyTokenAddress: Address | undefined,
@@ -79,10 +79,10 @@ const getPriceApiCall = (
     chainId,
     sellToken: sellTokenAddress,
     buyToken: buyTokenAddress,
-    ...(transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount !== 0n
+    ...(tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount !== 0n
       ? { sellAmount: sellAmount.toString() }
       : {}),
-    ...(transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount !== 0n
+    ...(tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount !== 0n
       ? { buyAmount: buyAmount.toString() }
       : {}),
     ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
@@ -144,7 +144,7 @@ function usePriceAPI() {
 
   const swrKey = shouldFetch(sellTokenAddress, buyTokenAddress)
     ? getPriceApiCall(
-      tradeData.transactionType,
+      tradeData.tradeDirection,
       chainId,
       sellTokenAddress,
       buyTokenAddress,
@@ -168,7 +168,7 @@ function usePriceAPI() {
 
   return useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
-      console.log(`[API SUCCESS] Direction: ${tradeData.transactionType}, Response:`, data);
+      console.log(`[API SUCCESS] Direction: ${tradeData.tradeDirection}, Response:`, data);
 
       if (data.code) {
         setApiErrorMessage({
@@ -179,14 +179,14 @@ function usePriceAPI() {
             exchangeContext,
             sellTokenAddress,
             buyTokenAddress,
-            tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
+            tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
             data
           ),
         });
       } else {
-        if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
+        if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
           setBuyAmount(BigInt(data.buyAmount ?? 0));
-        } else if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
+        } else if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
           setSellAmount(BigInt(data.sellAmount ?? 0));
         }
       }

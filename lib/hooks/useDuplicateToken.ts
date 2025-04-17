@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useContainerType, useExchangeContext } from "../context/contextHooks";
-import { CONTAINER_TYPE } from "../structure/types";
+import { useContainerType, useExchangeContext } from "@/lib/context/contextHooks";
+import { CONTAINER_TYPE } from "@/lib/structure/types";
 
 export const useIsDuplicateToken = (tokenAddress?: string): boolean => {
     const { exchangeContext } = useExchangeContext();

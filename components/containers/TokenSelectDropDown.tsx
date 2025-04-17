@@ -30,8 +30,6 @@ function AssetSelect({
   exchangeContext,
 }: Props) {
   const [showDialog, setShowDialog] = useState<boolean>(false);
-  const { tradeData } = exchangeContext;
-
   const avatarSrc = useMemo(() => {
     if (!tokenContract || !tokenContract.address) return defaultMissingImage;
     return isBlockChainToken(exchangeContext, tokenContract)

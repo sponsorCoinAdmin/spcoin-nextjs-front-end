@@ -192,7 +192,7 @@ type TradeData = {
   signer: any;
   slippageBps: number;
   swapType: SWAP_TYPE;
-  transactionType: TRADE_DIRECTION;
+  tradeDirection: TRADE_DIRECTION;
 };
 
 // Exports
