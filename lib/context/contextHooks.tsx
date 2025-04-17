@@ -8,7 +8,8 @@ import {
   ErrorMessage,
   STATUS,
   TradeData,
-  API_TRADING_PROVIDER
+  API_TRADING_PROVIDER,
+  CONTAINER_TYPE
 } from "@/lib/structure/types";
 import { tokenContractsEqual } from '@/lib/network/utils';
 
@@ -191,6 +192,27 @@ export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) =
   ];
 };
 
+export const useContainerType = (initialType?: CONTAINER_TYPE): [CONTAINER_TYPE | undefined, (type: CONTAINER_TYPE) => void] => {
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+
+  // Initialize containerType if undefined and initialType is provided
+  if (exchangeContext.containerType === undefined && initialType !== undefined) {
+    setExchangeContext((prev) => ({
+      ...prev,
+      containerType: initialType,
+    }));
+  }
+
+  return [
+    exchangeContext.containerType,
+    (type) =>
+      setExchangeContext((prev) => ({
+        ...prev,
+        containerType: type,
+      })),
+  ];
+};
+
 export const useTradeData = (): TradeData => {
   const { exchangeContext } = useExchangeContext();
   return useMemo(() => exchangeContext.tradeData, [exchangeContext.tradeData]);
@@ -221,6 +243,7 @@ export const AllHooksExample = () => {
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
   const [slippageBps, setSlippageBps] = useSlippageBps();
+  const [containerType, setContainerType] = useContainerType();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const apiProvider = useApiProvider();
@@ -235,6 +258,7 @@ export const AllHooksExample = () => {
       <div>Buy Balance: {buyBalance.toString()}</div>
       <div>Slippage Bps: {slippageBps}</div>
       <div>Transaction Type: {tradeDirection}</div>
+      <div>Container Type: {containerType}</div>
       <div>API Provider: {apiProvider}</div>
       <div>Sell Token: {sellTokenContract?.symbol ?? "None"}</div>
       <div>Buy Token: {buyTokenContract?.symbol ?? "None"}</div>
@@ -282,6 +306,10 @@ export const AllHooksExample = () => {
 
       <button onClick={() => setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN)}>
         Set Direction: BUY_EXACT_IN
+      </button>
+
+      <button onClick={() => setContainerType(CONTAINER_TYPE.SELL_SELECT_CONTAINER)}>
+        Set Container Type: SELL_SELECT_CONTAINER
       </button>
 
       <button onClick={() => setSlippageBps(slippageBps + 10)}>
