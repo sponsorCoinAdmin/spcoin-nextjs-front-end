@@ -180,8 +180,6 @@ function InputSelect({
         return <span></span>;
     }
   };
-  
-  
 
   return (
     <div className={styles.inputSelectWrapper}>
