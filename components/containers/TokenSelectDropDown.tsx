@@ -17,6 +17,7 @@ import {
   isBlockChainToken,
 } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { useContainerType } from '@/lib/context/contextHooks'; // ✅ Added import
 
 type Props = {
   containerType: CONTAINER_TYPE;
@@ -25,7 +26,7 @@ type Props = {
   exchangeContext: ExchangeContext;
 };
 
-function AssetSelect({
+function TokenSelect({
   containerType,
   tokenContract,
   setDecimalAdjustedContract,
@@ -33,6 +34,7 @@ function AssetSelect({
 }: Props) {
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const { tradeData } = exchangeContext;
+  const [_, setContainerType] = useContainerType(); // ✅ useContainerType hook
 
   const avatarSrc = useMemo(() => {
     if (!tokenContract || !tokenContract.address) return defaultMissingImage;
@@ -60,10 +62,15 @@ function AssetSelect({
     alert(`handleTokenSelect ${stringifyBigInt(tokenContract)}`);
   }, [tokenContract, setDecimalAdjustedContract]);
 
+  // ✅ Handles both containerType update + dialog show
+  const handleDialogOpen = useCallback(() => {
+    setContainerType(containerType);
+    setShowDialog(true);
+  }, [containerType, setContainerType]);
+
   return (
     <>
       <TokenSelectDialog
-        containerType={containerType}
         showDialog={showDialog}
         setShowDialog={setShowDialog}
         callBackSetter={setDecimalAdjustedContract}
@@ -86,11 +93,11 @@ function AssetSelect({
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={() => setShowDialog(true)}
+          onClick={handleDialogOpen} // ✅ updated click handler
         />
       </div>
     </>
   );
 }
 
-export default AssetSelect;
+export default TokenSelect;

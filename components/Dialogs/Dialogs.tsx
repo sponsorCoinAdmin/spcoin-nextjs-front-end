@@ -3,7 +3,7 @@
 import ConfigDialog from './Popup/ConfigDialog'
 import ErrorDialog from './ErrorDialog'
 import RecipientDialog from './AccountSelectDialog'
-import TokenSelectDialog from './AssetSelectDialog'
+import TokenSelectDialog from './TokenSelectDialog'
 
 /** 
  * List of allowed dialog CSS ID selectors.

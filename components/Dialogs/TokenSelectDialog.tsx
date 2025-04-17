@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { useAccount } from "wagmi";
 
-import { useExchangeContext } from '@/lib/context/contextHooks';
+import { useContainerType, useExchangeContext } from '@/lib/context/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect, { InputState } from "@/components/Dialogs/InputSelect";
@@ -22,14 +22,12 @@ import info_png from "@/public/assets/miscellaneous/info1.png";
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
 
 type Props = {
-  containerType: CONTAINER_TYPE;
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;
   callBackSetter: (tokenContract: TokenContract) => void;
 };
 
-export default function AssetSelectDialog({
-  containerType,
+export default function TokenSelectDialog({
   showDialog,
   setShowDialog,
   callBackSetter,
@@ -40,7 +38,22 @@ export default function AssetSelectDialog({
   const [inputState, setInputState] = useState<InputState>(InputState.CONTRACT_NOT_FOUND_INPUT);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
-  const prevAddressRef = useRef<string | undefined>();
+  const [containerType, setContainerType] = useContainerType();
+
+    const prevAddressRef = useRef<string | undefined>();
+
+  useEffect(() => {
+    setInputState(InputState.EMPTY_INPUT)
+    if (dialogRef.current) {
+      showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
+    }
+  }, [showDialog]);
+
+  useEffect(() => {
+    if (ACTIVE_ACCOUNT_ADDRESS) {
+      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
+    }
+  }, [ACTIVE_ACCOUNT_ADDRESS]);
 
   const getTitleFromState = (state: InputState): string | JSX.Element => {
     switch (state) {
@@ -62,19 +75,6 @@ export default function AssetSelectDialog({
         return <span style={{ color: 'red' }}>(Unknown Error ❓)</span>;
     }
   };
-
-  useEffect(() => {
-    setInputState(InputState.EMPTY_INPUT)
-    if (dialogRef.current) {
-      showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
-    }
-  }, [showDialog]);
-
-  useEffect(() => {
-    if (ACTIVE_ACCOUNT_ADDRESS) {
-      setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
-    }
-  }, [ACTIVE_ACCOUNT_ADDRESS]);
 
   const closeDialog = useCallback(() => {
     console.log(`closeDialog:updateTokenCallbackClosing AssertSelectDialog`)
@@ -221,6 +221,7 @@ export default function AssetSelectDialog({
 
         <div className={styles.modalScrollBar}>
           <DataList
+            closeDialog={() => closeDialog()}
             dataFeedType={FEED_TYPE.TOKEN_LIST}
             updateTokenCallback={(tc) => updateTokenCallback(tc, InputState.VALID_INPUT, true)}
           />

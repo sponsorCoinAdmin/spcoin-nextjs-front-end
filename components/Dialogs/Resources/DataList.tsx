@@ -4,11 +4,12 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 import { useChainId } from "wagmi";
-import { useExchangeContext } from '@/lib/context/contextHooks'  // ✅ Use Hook
-
+import { useBuyTokenContract, useContainerType, useExchangeContext, useSellTokenContract } from '@/lib/context/contextHooks'  // ✅ Use Hook
 import {
   BASE,
+  CONTAINER_TYPE,
   ETHEREUM,
   FEED_TYPE,
   HARDHAT,
@@ -46,6 +47,7 @@ const useWalletLists = () => {
   const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
   const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
   const [isClient, setIsClient] = useState(false);
+
   const previous = useRef<bigint | undefined>(undefined);
 
   useEffect(() => {
@@ -114,12 +116,19 @@ const displayElementDetail = (tokenContract: any) => {
 };
 
 // 🔹 Optimized `DataList` component
-const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TYPE; 
-                    updateTokenCallback: (listElement: any) => void }) => {
-  const [isClient, setIsClient] = useState(false);
+type Props = {
+  closeDialog:() => void;
+  dataFeedType: FEED_TYPE;
+  updateTokenCallback: (listElement: any) => void;
+};
+
+const DataList = ({ closeDialog, dataFeedType, updateTokenCallback }: Props) => {  const [isClient, setIsClient] = useState(false);
   const chainId = useChainId(); // ✅ Ensure it's not used on SSR
   const walletLists = useWalletLists();
   const { exchangeContext } = useExchangeContext();
+  const [containerType] = useContainerType();
+  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
+  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   /** ✅ Prevent SSR Mismatch */
   useEffect(() => {
@@ -156,9 +165,12 @@ const DataList = ({ dataFeedType, updateTokenCallback }: { dataFeedType: FEED_TY
           <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900" key={listElement.address}>
             <div className="cursor-pointer flex flex-row justify-between"
                  onClick={() => {
-                   console.log(`🖱 Clicked Element Index: ${i}`);
-                   console.log(`🖱 Clicked Element Data:`, dataFeedList[i]);  // Debug Step 1 ✅
-                   updateTokenCallback(dataFeedList[i]);
+                   console.log(`🖱 Clicked Element Data: dataFeedList[${i}] = ${stringifyBigInt(dataFeedList[i])}`);  // Debug Step 1 ✅
+                   containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+                   ? setSellTokenContract(dataFeedList[i] as TokenContract)
+                   : setBuyTokenContract(dataFeedList[i]as TokenContract);
+                   closeDialog()
+                  //  updateTokenCallback(dataFeedList[i]);
                  }}>
               <img className={styles.elementLogo} src={listElement.avatar || defaultMissingImage} alt={`${listElement.name} Token Avatar`} />
               <div>
