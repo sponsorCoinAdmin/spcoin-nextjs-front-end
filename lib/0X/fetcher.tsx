@@ -67,7 +67,7 @@ const getApiErrorTransactionData = (
 });
 
 const getPriceApiCall = (
-  transactionType: TRADE_DIRECTION,
+  tradeDirection: TRADE_DIRECTION,
   chainId: number,
   sellTokenAddress: Address | undefined,
   buyTokenAddress: Address | undefined,
@@ -78,8 +78,8 @@ const getPriceApiCall = (
   if (!sellTokenAddress || !buyTokenAddress) return undefined;
 
   if (
-    (transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) ||
-    (transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n)
+    (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) ||
+    (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n)
   ) {
     return undefined;
   }
@@ -88,10 +88,10 @@ const getPriceApiCall = (
     chainId,
     sellToken: sellTokenAddress,
     buyToken: buyTokenAddress,
-    ...(transactionType === TRADE_DIRECTION.SELL_EXACT_OUT
+    ...(tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
       ? { sellAmount: sellAmount.toString() }
       : {}),
-    ...(transactionType === TRADE_DIRECTION.BUY_EXACT_IN
+    ...(tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
       ? { buyAmount: buyAmount.toString() }
       : {}),
     ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
@@ -187,17 +187,17 @@ function usePriceAPI() {
   };
 
   useEffect(() => {
-    if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
+    if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
       setBuyAmount(0n);
     }
-    if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n) {
+    if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n) {
       setSellAmount(0n);
     }
-  }, [tradeData.transactionType, sellAmount, buyAmount]);
+  }, [tradeData.tradeDirection, sellAmount, buyAmount]);
 
   const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken, debouncedSellAmount)
     ? getPriceApiCall(
-        tradeData.transactionType,
+        tradeData.tradeDirection,
         chainId,
         debouncedSellToken,
         debouncedBuyToken,
@@ -222,7 +222,7 @@ function usePriceAPI() {
 
   const swr = useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
-      console.log(`[✅ API SUCCESS] Direction: ${tradeData.transactionType}`, data);
+      console.log(`[✅ API SUCCESS] Direction: ${tradeData.tradeDirection}`, data);
 
       if (data.code) {
         setApiErrorMessage({
@@ -233,14 +233,14 @@ function usePriceAPI() {
             exchangeContext,
             sellTokenAddress,
             buyTokenAddress,
-            tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
+            tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
             data
           ),
         });
       } else {
-        if (tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
+        if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
           setBuyAmount(BigInt(data.buyAmount ?? 0));
-        } else if (tradeData.transactionType === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
+        } else if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
           setSellAmount(BigInt(data.sellAmount ?? 0));
         }
       }

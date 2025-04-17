@@ -20,7 +20,7 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
   
   const tokenContract: TokenContract | undefined = tradeData.sellTokenContract as TokenContract | undefined;
   let buttonType: BUTTON_TYPE = BUTTON_TYPE.UNDEFINED;
-  const transactionType: string = tradeData.transactionType === TRADE_DIRECTION.SELL_EXACT_OUT ?
+  const tradeDirection: string = tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ?
     "EXACT OUT " : "EXACT IN "
 
   // ✅ Set the button type dynamically
@@ -37,16 +37,16 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
     if (isActiveAccountSellToken(exchangeContext)) {
       return isWrappedBuyToken(tradeData)
         ? "SWAP WRAP ( ETH -> WETH )"
-        : `${transactionType} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
+        : `${tradeDirection} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
     }
   
     if (isActiveAccountBuyToken(exchangeContext)) {
       return isWrappedSellToken(tradeData)
         ? "SWAP UN-WRAP\n( WETH -> ETH )"
-        : `${transactionType} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
+        : `${tradeDirection} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
     }
   
-    return `${transactionType} SWAP`;
+    return `${tradeDirection} SWAP`;
   };
   
   // ✅ Button text based on state

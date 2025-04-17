@@ -154,6 +154,7 @@ type ErrorMessage = {
 };
 
 type ExchangeContext = {
+  containerType:CONTAINER_TYPE | undefined;
   apiTradingProvider: API_TRADING_PROVIDER;
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
   agentAccount?: WalletAccount;
@@ -191,7 +192,7 @@ type TradeData = {
   signer: any;
   slippageBps: number;
   swapType: SWAP_TYPE;
-  transactionType: TRADE_DIRECTION;
+  tradeDirection: TRADE_DIRECTION;
 };
 
 // Exports

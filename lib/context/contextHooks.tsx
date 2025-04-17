@@ -179,13 +179,13 @@ export const useSlippagePercent = (): [string, (percent: string) => void] => {
 export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
-    exchangeContext.tradeData.transactionType,
+    exchangeContext.tradeData.tradeDirection,
     (type) =>
       setExchangeContext((prev) => ({
         ...prev,
         tradeData: {
           ...prev.tradeData,
-          transactionType: type,
+          tradeDirection: type,
         },
       })),
   ];
@@ -219,7 +219,7 @@ export const AllHooksExample = () => {
   const [buyBalance, setBuyBalance] = useBuyBalance();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-  const [transactionType, setTradeDirection] = useTradeDirection();
+  const [tradeDirection, setTradeDirection] = useTradeDirection();
   const [slippageBps, setSlippageBps] = useSlippageBps();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
@@ -234,7 +234,7 @@ export const AllHooksExample = () => {
       <div>Buy Amount: {buyAmount.toString()}</div>
       <div>Buy Balance: {buyBalance.toString()}</div>
       <div>Slippage Bps: {slippageBps}</div>
-      <div>Transaction Type: {transactionType}</div>
+      <div>Transaction Type: {tradeDirection}</div>
       <div>API Provider: {apiProvider}</div>
       <div>Sell Token: {sellTokenContract?.symbol ?? "None"}</div>
       <div>Buy Token: {buyTokenContract?.symbol ?? "None"}</div>
