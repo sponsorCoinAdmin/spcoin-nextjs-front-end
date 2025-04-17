@@ -3,8 +3,6 @@
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-
-import { invalidTokenContract } from '@/lib/spCoin/coreUtils';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 
 import {
@@ -36,10 +34,10 @@ export enum InputState {
 type Props = {
   placeHolder: string;
   passedInputField: any;
-  setTokenContractCallBack: (
-    tokenContract: TokenContract | undefined,
-    state: InputState
-  ) => void;
+  // setTokenContractCallBack: (
+  //   tokenContract: TokenContract | undefined,
+  //   state: InputState
+  // ) => void;
   setInputState?: (state: InputState) => void;
   closeDialog: () => void;
 };
@@ -47,7 +45,7 @@ type Props = {
 function InputSelect({
   placeHolder,
   passedInputField,
-  setTokenContractCallBack,
+  // setTokenContractCallBack,
   setInputState: notifyParent,
   closeDialog
 }: Props) {
@@ -79,11 +77,11 @@ function InputSelect({
     validateDebouncedInput(debouncedInput);
   }, [debouncedInput]);
 
-  useEffect(() => {
-    if (tokenContract) {
-      setTokenContractCallBack(tokenContract, inputState);
-    }
-  }, [tokenContract, inputState]);
+  // useEffect(() => {
+  //   if (tokenContract) {
+  //     setTokenContractCallBack(tokenContract, inputState);
+  //   }
+  // }, [tokenContract, inputState]);
 
   const validateDebouncedInput = (input: string) => {
     if (!input || typeof input !== 'string') {
@@ -180,8 +178,6 @@ function InputSelect({
         return <span></span>;
     }
   };
-  
-  
 
   return (
     <div className={styles.inputSelectWrapper}>

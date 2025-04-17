@@ -119,10 +119,9 @@ const displayElementDetail = (tokenContract: any) => {
 type Props = {
   closeDialog:() => void;
   dataFeedType: FEED_TYPE;
-  updateTokenCallback: (listElement: any) => void;
 };
 
-const DataList = ({ closeDialog, dataFeedType, updateTokenCallback }: Props) => {  const [isClient, setIsClient] = useState(false);
+const DataList = ({ closeDialog, dataFeedType }: Props) => {  const [isClient, setIsClient] = useState(false);
   const chainId = useChainId(); // ✅ Ensure it's not used on SSR
   const walletLists = useWalletLists();
   const { exchangeContext } = useExchangeContext();

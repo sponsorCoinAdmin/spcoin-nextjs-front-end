@@ -2,35 +2,25 @@
 
 import styles from "@/styles/Modal.module.css";
 import { useEffect, useRef, useState, useCallback } from "react";
-import Image from "next/image";
 import { useAccount } from "wagmi";
 
 import { useContainerType, useExchangeContext } from '@/lib/context/contextHooks';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect, { InputState } from "@/components/Dialogs/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
-import {
-  defaultMissingImage,
-  badTokenAddressImage,
-  getTokenAvatar
-} from "@/lib/network/utils";
 
 import { isAddress, Address } from "viem";
-import info_png from "@/public/assets/miscellaneous/info1.png";
 
 const INPUT_PLACE_HOLDER = "Type or paste token to select address";
 
 type Props = {
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;
-  callBackSetter: (tokenContract: TokenContract) => void;
 };
 
 export default function TokenSelectDialog({
   showDialog,
-  setShowDialog,
-  callBackSetter,
+  setShowDialog
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
@@ -39,8 +29,6 @@ export default function TokenSelectDialog({
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const [containerType, setContainerType] = useContainerType();
-
-    const prevAddressRef = useRef<string | undefined>();
 
   useEffect(() => {
     setInputState(InputState.EMPTY_INPUT)
@@ -77,7 +65,6 @@ export default function TokenSelectDialog({
   };
 
   const closeDialog = useCallback(() => {
-    console.log(`closeDialog:updateTokenCallbackClosing AssertSelectDialog`)
     setInputField(undefined);
     setInputState(InputState.EMPTY_INPUT)
     setShowDialog(false);
@@ -105,63 +92,6 @@ export default function TokenSelectDialog({
     [containerType, exchangeContext.tradeData, setInputState]
   );
 
-  const updateTokenCallback = useCallback(
-    (
-      tokenContract: TokenContract | undefined,
-      state: InputState,
-      shouldClose: boolean,
-      ignorePrevSelection: boolean = false
-    ): boolean => {
-      console.log("[updateTokenCallback] tokenContract:", tokenContract, "state:", state, "shouldClose:", shouldClose);
-
-      setInputState(state);
-
-      if (state !== InputState.VALID_INPUT) {
-        console.log("[updateTokenCallback] Exiting: Invalid state", state);
-        return false;
-      }
-
-      if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
-        console.log("[updateTokenCallback] Exiting: Invalid token or address", tokenContract);
-        // alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
-        return false;
-      }
-
-      if (isDuplicateToken(tokenContract.address)) {
-        console.log("[updateTokenCallback] Exiting: Duplicate token", tokenContract.symbol);
-        // alert(`SELECT_ERROR: Duplicate token: ${tokenContract.symbol}`);
-        return false;
-      }
-
-      if (!ignorePrevSelection && prevAddressRef.current === tokenContract.address) {
-        if (shouldClose) {
-          console.log("[updateTokenCallback] Previously selected token, but closing anyway:", tokenContract.address);
-          closeDialog();
-          return true; // ✅ Allow closure even if previously selected
-        } else {
-          console.log("[updateTokenCallback] Exiting: Previously selected token", tokenContract.address);
-          return false;
-        }
-      }
-
-      prevAddressRef.current = tokenContract.address;
-      setTokenContract(tokenContract);
-      callBackSetter(tokenContract);
-
-      if (shouldClose) {
-        closeDialog();
-      }
-      return true;
-    },
-    [isDuplicateToken, callBackSetter, closeDialog]
-  );
-
-  const getErrorImage = (tokenContract?: TokenContract): string => {
-    return tokenContract?.address && isAddress(tokenContract.address)
-      ? defaultMissingImage
-      : badTokenAddressImage;
-  };
-
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
       <div className="relative h-8 px-3 mb-1 text-gray-600">
@@ -170,11 +100,9 @@ export default function TokenSelectDialog({
             ? "Select a Token to Sell"
             : "Select a Token to to Buy"}
         </h1>
-
         <div
           className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white"
-          onClick={closeDialog}
-        >
+          onClick={closeDialog}>
           X
         </div>
       </div>
@@ -183,51 +111,70 @@ export default function TokenSelectDialog({
           <InputSelect
             placeHolder={INPUT_PLACE_HOLDER}
             passedInputField={inputField || ""}
-            setTokenContractCallBack={(tc, state) => updateTokenCallback(tc, state, false)}
             setInputState={setInputState}
             closeDialog={() => closeDialog()}
           />
-
-        {inputState === InputState.VALID_INPUT && (
-          <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-            <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-              <div className="cursor-pointer flex flex-row justify-between">
-                <Image
-                  id="tokenImage"
-                  src={getTokenAvatar(tokenContract)}
-                  height={40}
-                  width={40}
-                  alt="Token Image"
-                  onClick={() => { closeDialog() }}
-                  onError={(e) => {
-                    const fallback = getErrorImage(tokenContract);
-                    if (e.currentTarget.src !== fallback) {
-                      e.currentTarget.src = fallback;
-                    }
-                  }}
-                />
-                <div>
-                  <div className={styles.elementName}>{tokenContract?.name}</div>
-                  <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
-                </div>
-              </div>
-              <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
-                <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className={styles.modalScrollBar}>
           <DataList
             closeDialog={() => closeDialog()}
             dataFeedType={FEED_TYPE.TOKEN_LIST}
-            updateTokenCallback={(tc) => updateTokenCallback(tc, InputState.VALID_INPUT, true)}
           />
         </div>
       </div>
-
     </dialog>
   );
+
+
+/*
+const updateTokenCallback = useCallback(
+  (
+    tokenContract: TokenContract | undefined,
+    state: InputState,
+    shouldClose: boolean,
+    ignorePrevSelection: boolean = false
+  ): boolean => {
+    console.log("[updateTokenCallback] tokenContract:", tokenContract, "state:", state, "shouldClose:", shouldClose);
+
+    setInputState(state);
+
+    if (state !== InputState.VALID_INPUT) {
+      console.log("[updateTokenCallback] Exiting: Invalid state", state);
+      return false;
+    }
+
+    if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
+      console.log("[updateTokenCallback] Exiting: Invalid token or address", tokenContract);
+      // alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
+      return false;
+    }
+
+    if (isDuplicateToken(tokenContract.address)) {
+      console.log("[updateTokenCallback] Exiting: Duplicate token", tokenContract.symbol);
+      // alert(`SELECT_ERROR: Duplicate token: ${tokenContract.symbol}`);
+      return false;
+    }
+
+    if (!ignorePrevSelection && prevAddressRef.current === tokenContract.address) {
+      if (shouldClose) {
+        console.log("[updateTokenCallback] Previously selected token, but closing anyway:", tokenContract.address);
+        closeDialog();
+        return true; // ✅ Allow closure even if previously selected
+      } else {
+        console.log("[updateTokenCallback] Exiting: Previously selected token", tokenContract.address);
+        return false;
+      }
+    }
+
+    prevAddressRef.current = tokenContract.address;
+    setTokenContract(tokenContract);
+    callBackSetter(tokenContract);
+
+    if (shouldClose) {
+      closeDialog();
+    }
+    return true;
+  },
+  [isDuplicateToken, callBackSetter, closeDialog]
+);
+*/
 }
