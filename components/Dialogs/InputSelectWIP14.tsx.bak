@@ -20,7 +20,6 @@ import { isAddress } from 'viem';
 import { useMappedTokenContract } from '@/lib/hooks/wagmiERC20hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { CONTAINER_TYPE } from '@/lib/structure/types';
-import { useContainerType } from '@/lib/context/contextHooks';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
@@ -34,6 +33,7 @@ export enum InputState {
 }
 
 type Props = {
+  containerType: CONTAINER_TYPE;
   placeHolder: string;
   passedInputField: any;
   setTokenContractCallBack: (
@@ -45,6 +45,7 @@ type Props = {
 };
 
 function InputSelect({
+  containerType,
   placeHolder,
   passedInputField,
   setTokenContractCallBack,
@@ -56,7 +57,6 @@ function InputSelect({
   const [tokenAddress, setTokenAddress] = useState<Address | undefined>();
   const [inputState, setInputStateLocal] = useState<InputState>(InputState.EMPTY_INPUT);
   const tokenContract: TokenContract | undefined = useMappedTokenContract(tokenAddress);
-  const [containerType] = useContainerType();
 
   useEffect(() => {
     if (!tokenContract && tokenAddress) {
@@ -197,7 +197,7 @@ function InputSelect({
           onChange={(e) => validateTextInput(e.target.value)}
         />
       </div>
-  
+
       {inputState !== InputState.EMPTY_INPUT && (
         <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
           {inputState === InputState.VALID_INPUT ? (
@@ -224,22 +224,19 @@ function InputSelect({
               </div>
               <div
                 className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() =>
-                  alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)
-                }
-              >
+                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
               </div>
             </div>
-          ) : (
-            <h1 className="indent-5 my-[9px]">
-              {validateInputStatus(inputState)}
-            </h1>
-          )}
-        </div>
-      )}
-    </div>
-  );
+        ) : (
+          <h1 className="indent-5 my-[9px]">
+            {validateInputStatus(inputState)}
+          </h1>)}
+        )}
+      </div>
+    )}
+  </div>
+);
 }
 
 export default InputSelect;

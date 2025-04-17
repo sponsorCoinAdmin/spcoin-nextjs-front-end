@@ -197,47 +197,36 @@ function InputSelect({
           onChange={(e) => validateTextInput(e.target.value)}
         />
       </div>
-  
-      {inputState !== InputState.EMPTY_INPUT && (
-        <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-          {inputState === InputState.VALID_INPUT ? (
-            <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-              <div className="cursor-pointer flex flex-row justify-between">
-                <Image
-                  id="tokenImage"
-                  src={getTokenAvatar(tokenContract)}
-                  height={40}
-                  width={40}
-                  alt="Token Image"
-                  onClick={closeDialog}
-                  onError={(e) => {
-                    const fallback = getErrorImage(tokenContract);
-                    if (e.currentTarget.src !== fallback) {
-                      e.currentTarget.src = fallback;
-                    }
-                  }}
-                />
-                <div>
-                  <div className={styles.elementName}>{tokenContract?.name}</div>
-                  <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
-                </div>
-              </div>
-              <div
-                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() =>
-                  alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)
+      {/* <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
+        <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
+          <div className="cursor-pointer flex flex-row justify-between">
+            <Image
+              id="tokenImage"
+              src={getTokenAvatar(tokenContract)}
+              height={40}
+              width={40}
+              alt="Token Image"
+              onClick={() => { closeDialog(); }}
+              onError={(e) => {
+                const fallback = getErrorImage(tokenContract);
+                if (e.currentTarget.src !== fallback) {
+                  e.currentTarget.src = fallback;
                 }
-              >
-                <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
-              </div>
+              }}
+            />
+            <div>
+              <div className={styles.elementName}>{tokenContract?.name}</div>
+              <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
             </div>
-          ) : (
-            <h1 className="indent-5 my-[9px]">
-              {validateInputStatus(inputState)}
-            </h1>
-          )}
+          </div>
+          <div
+            className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+            onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}
+          >
+            <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+          </div>
         </div>
-      )}
+      </div> */}
     </div>
   );
 }
