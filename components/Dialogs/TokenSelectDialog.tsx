@@ -4,7 +4,7 @@ import styles from "@/styles/Modal.module.css";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAccount } from "wagmi";
 
-import { useContainerType, useExchangeContext } from '@/lib/context/contextHooks';
+import { useBuyTokenContract, useContainerType, useExchangeContext, useSellTokenContract } from '@/lib/context/contextHooks';
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "@/components/Dialogs/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
@@ -36,6 +36,8 @@ export default function TokenSelectDialog({
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const [containerType, setContainerType] = useContainerType();
+  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
+  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   useEffect(() => {
     setInputState(InputState.EMPTY_INPUT)
