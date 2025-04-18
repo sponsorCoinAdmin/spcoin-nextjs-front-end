@@ -34,6 +34,7 @@ import ethereumTokenList from "@/resources/data/networks/ethereum/tokenList.json
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
 import { Address } from "viem";
+import { InputState } from "../TokenSelectDialog";
 
 // 🔹 Store active account address globally
 let ACTIVE_ACCOUNT_ADDRESS: Address;
@@ -117,11 +118,13 @@ const displayElementDetail = (tokenContract: any) => {
 
 // 🔹 Optimized `DataList` component
 type Props = {
-  closeDialog:() => void;
+  inputState: InputState;
+  setInputState: (state: InputState) => void;
   dataFeedType: FEED_TYPE;
 };
 
-const DataList = ({ closeDialog, dataFeedType }: Props) => {  const [isClient, setIsClient] = useState(false);
+const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
+  const [isClient,  setIsClient] = useState(false);
   const chainId = useChainId(); // ✅ Ensure it's not used on SSR
   const walletLists = useWalletLists();
   const { exchangeContext } = useExchangeContext();
@@ -167,8 +170,8 @@ const DataList = ({ closeDialog, dataFeedType }: Props) => {  const [isClient, s
                    console.log(`🖱 Clicked Element Data: dataFeedList[${i}] = ${stringifyBigInt(dataFeedList[i])}`);  // Debug Step 1 ✅
                    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
                    ? setSellTokenContract(dataFeedList[i] as TokenContract)
-                   : setBuyTokenContract(dataFeedList[i]as TokenContract);
-                   closeDialog()
+                   : setBuyTokenContract(dataFeedList[i] as TokenContract);
+                  setInputState(InputState.CLOSE_INPUT)
                   //  updateTokenCallback(dataFeedList[i]);
                  }}>
               <img className={styles.elementLogo} src={listElement.avatar || defaultMissingImage} alt={`${listElement.name} Token Avatar`} />

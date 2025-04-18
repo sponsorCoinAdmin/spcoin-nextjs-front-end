@@ -19,61 +19,32 @@ import { useMappedTokenContract } from '@/lib/hooks/wagmiERC20hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { CONTAINER_TYPE } from '@/lib/structure/types';
 import { useContainerType } from '@/lib/context/contextHooks';
+import { InputState } from './TokenSelectDialog';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
-
-export enum InputState {
-  EMPTY_INPUT = 'EMPTY_INPUT',
-  VALID_INPUT = 'VALID_INPUT',
-  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',
-  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
-  DUPLICATE_INPUT = 'DUPLICATE_INPUT'
-}
+const INPUT_PLACE_HOLDER = "Type or paste token to select address";
 
 type Props = {
-  placeHolder: string;
-  passedInputField: any;
-  // setTokenContractCallBack: (
-  //   tokenContract: TokenContract | undefined,
-  //   state: InputState
-  // ) => void;
-  setInputState?: (state: InputState) => void;
-  closeDialog: () => void;
+  inputState: InputState;
+  setInputState: (state: InputState) => void;
 };
 
-function InputSelect({
-  placeHolder,
-  passedInputField,
-  // setTokenContractCallBack,
-  setInputState: notifyParent,
-  closeDialog
-}: Props) {
-  const chainId: number = useChainId();
+function InputSelect({ inputState, setInputState}: Props) {
   const [textInputField, setTextInputField] = useState<any>();
   const [tokenAddress, setTokenAddress] = useState<Address | undefined>();
-  const [inputState, setInputStateLocal] = useState<InputState>(InputState.EMPTY_INPUT);
   const tokenContract: TokenContract | undefined = useMappedTokenContract(tokenAddress);
   const [containerType] = useContainerType();
 
   useEffect(() => {
     if (!tokenContract && tokenAddress) {
-      updateInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+      setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
     }
   }, [tokenContract]);
 
   const debouncedInput: string = useDebounce(textInputField);
 
-  const updateInputState = (state: InputState) => {
-    setInputStateLocal(state);
-    if (notifyParent) notifyParent(state);
-  };
-
-  useEffect(() => {
-    setTextInputField(passedInputField);
-  }, [passedInputField]);
-
-  useEffect(() => {
+    useEffect(() => {
     validateDebouncedInput(debouncedInput);
   }, [debouncedInput]);
 
@@ -85,19 +56,19 @@ function InputSelect({
 
   const validateDebouncedInput = (input: string) => {
     if (!input || typeof input !== 'string') {
-      updateInputState(InputState.EMPTY_INPUT);
+      setInputState(InputState.EMPTY_INPUT);
       return;
     }
 
     const trimmedInput: string = input.trim();
 
     if (!isAddress(trimmedInput)) {
-      updateInputState(InputState.INVALID_ADDRESS_INPUT);
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
 
     setTokenAddress(trimmedInput);
-    updateInputState(InputState.VALID_INPUT);
+    setInputState(InputState.VALID_INPUT);
   };
 
   const getInputEmoji = (): string => {
@@ -188,7 +159,7 @@ function InputSelect({
         <input
           className={`${styles.modalElementInput} w-full`}
           autoComplete="off"
-          placeholder={placeHolder}
+          placeholder={INPUT_PLACE_HOLDER}
           value={textInputField || ''}
           onChange={(e) => validateTextInput(e.target.value)}
         />
@@ -205,7 +176,7 @@ function InputSelect({
                   height={40}
                   width={40}
                   alt="Token Image"
-                  onClick={closeDialog}
+                  onClick={() => setInputState(InputState.CLOSE_INPUT)}
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {

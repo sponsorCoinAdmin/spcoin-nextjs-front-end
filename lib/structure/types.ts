@@ -6,15 +6,6 @@ export interface AccountAddress {
     address: string;
 }
 
-// Toke Input Select Types
-export enum InputState {
-  EMPTY_INPUT = 'EMPTY_INPUT',
-  VALID_INPUT = 'VALID_INPUT',
-  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',
-  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
-  DUPLICATE_INPUT = 'DUPLICATE_INPUT'
-}
-
 // Define Wallet type
 interface WalletAccount {
     name: string;

@@ -6,12 +6,19 @@ import { useAccount } from "wagmi";
 
 import { useContainerType, useExchangeContext } from '@/lib/context/contextHooks';
 import DataList, { setActiveAccount } from "./Resources/DataList";
-import InputSelect, { InputState } from "@/components/Dialogs/InputSelect";
+import InputSelect from "@/components/Dialogs/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
-
 import { isAddress, Address } from "viem";
 
-const INPUT_PLACE_HOLDER = "Type or paste token to select address";
+// Token Address Input Select States
+export enum InputState {
+  EMPTY_INPUT = 'EMPTY_INPUT',
+  VALID_INPUT = 'VALID_INPUT',
+  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',
+  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
+  DUPLICATE_INPUT = 'DUPLICATE_INPUT',
+  CLOSE_INPUT = 'CLOSE_INPUT'
+}
 
 type Props = {
   showDialog: boolean;
@@ -25,7 +32,7 @@ export default function TokenSelectDialog({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
-  const [inputState, setInputState] = useState<InputState>(InputState.CONTRACT_NOT_FOUND_INPUT);
+  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const [containerType, setContainerType] = useContainerType();
@@ -36,6 +43,12 @@ export default function TokenSelectDialog({
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
   }, [showDialog]);
+
+  useEffect(() => {
+    if (inputState === InputState.CLOSE_INPUT) {
+      closeDialog();
+    }
+  }, [inputState]);
 
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
@@ -109,14 +122,13 @@ export default function TokenSelectDialog({
 
       <div className={styles.modalBox}>
           <InputSelect
-            placeHolder={INPUT_PLACE_HOLDER}
-            passedInputField={inputField || ""}
+            inputState={inputState}
             setInputState={setInputState}
-            closeDialog={() => closeDialog()}
           />
         <div className={styles.modalScrollBar}>
           <DataList
-            closeDialog={() => closeDialog()}
+            inputState={inputState}
+            setInputState={setInputState}
             dataFeedType={FEED_TYPE.TOKEN_LIST}
           />
         </div>
