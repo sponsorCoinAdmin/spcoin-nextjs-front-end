@@ -86,18 +86,13 @@ function InputSelect({ inputState, setInputState }: Props) {
     setDebouncedState(debouncedInput);
   }, [debouncedInput]);
 
-  const setDebouncedState = (debouncedString: string) => {
-    if (isEmptyInput) {
-      setInputState(InputState.EMPTY_INPUT);
-      return;
-    }
+  useEffect(() => {
+    if (!validTokenAddress) return;
 
     if (!isAddressInput) {
       setInputState(InputState.INVALID_ADDRESS_INPUT);
-      setValidTokenAddress(debouncedString as Address);
       return;
     }
-    setValidTokenAddress(debouncedString as Address);
 
     if (isDuplicate) {
       setInputState(InputState.DUPLICATE_INPUT);
@@ -106,9 +101,23 @@ function InputSelect({ inputState, setInputState }: Props) {
 
     if (!isTokenContractResolved) {
       setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
-      return
+      return;
     }
+
     setInputState(InputState.VALID_INPUT);
+  }, [validTokenAddress, isAddressInput, isDuplicate, isTokenContractResolved]);
+
+  const setDebouncedState = (debouncedString: string) => {
+    if (isEmptyInput) {
+      setInputState(InputState.EMPTY_INPUT);
+      return;
+    }
+
+    if (isAddress(debouncedString)) {
+      setValidTokenAddress(debouncedString as Address);
+    } else {
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
+    }
   };
 
   const getInputEmoji = (): string => {
