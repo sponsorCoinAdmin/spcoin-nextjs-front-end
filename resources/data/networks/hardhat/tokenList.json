@@ -4,55 +4,48 @@
         "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         "name": "Ethereum",
         "symbol": "ETH",
-        "decimals": 18,
-        "img": "/assets/blockchains/1/info/1.png"
+        "decimals": 18
     },
     {
         "chainId": 31337,
         "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
         "name": "Sponsor Coin",
         "symbol": "SpCoin",
-        "decimals": 18,
-        "img": "assets/blockchains/0xToDo_SpCoin.png"
+        "decimals": 18
     },
     {
         "chainId": 31337,
         "address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
         "name": "Wrapped Ethereum",
         "symbol": "WETH",
-        "decimals": 18,
-        "img": "assets/blockchains/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
+        "decimals": 18
     },
     {
         "chainId": 31337,
         "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
         "name": "Bad Token Address",
         "symbol": "BAD",
-        "decimals": 18,
-        "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1.png"
+        "decimals": 18
     },
     {
         "chainId": 31337,
         "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
         "name": "Chicken Coin",
         "symbol": "CHKN",
-        "decimals": 18,
-        "img": "assets/blockchains/0xD55210Bb6898C021a19de1F58d27b71f095921Ee.png"
+        "decimals": 18
     },
     {
         "chainId": 31337,
         "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
         "name": "USD Coin",
         "symbol": "USDC",
-        "decimals": 6,
-        "img": "assets/blockchains/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
+        "decimals": 6
     },
     {
         "chainId": 31337,
         "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
         "name": "Tether USD",
         "symbol": "USDT",
-        "decimals": 6,
-        "img": "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+        "decimals": 6
     }
 ]

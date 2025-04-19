@@ -4,159 +4,139 @@
         "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         "name": "Ethereum",
         "symbol": "ETH",
-        "decimals": 18,
-        "img": "/assets/blockchains/1/info/1.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
         "name": "Sponsor Coin",
         "symbol": "SpCoin",
-        "decimals": 18,
-        "img": "assets/blockchains/0xToDo_SpCoin.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E",
         "name": "Floki",
         "symbol": "FLOKI",
-        "decimals": 9,
-        "img": "assets/blockchains/0xcf0C122c6b73ff809C693DB761e7BaeBe62b6a2E.png"
+        "decimals": 9
     },
     {
         "chainId": 1,
         "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
         "name": "Wrapped Ethereum",
         "symbol": "WETH",
-        "decimals": 18,
-        "img": "assets/blockchains/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
         "name": "AAVE",
         "symbol": "AAVE",
-        "decimals": 18,
-        "img": "assets/blockchains/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
         "name": "Bad Token Address",
         "symbol": "BAD",
-        "decimals": 18,
-        "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
         "name": "Chainlink",
         "symbol": "LINK",
-        "decimals": 18,
-        "img": "assets/blockchains/0x514910771af9ca656af840dff83e8264ecf986ca.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0xD55210Bb6898C021a19de1F58d27b71f095921Ee",
         "name": "Chicken Coin",
         "symbol": "CHKN",
-        "decimals": 18,
-        "img": "assets/blockchains/0xD55210Bb6898C021a19de1F58d27b71f095921Ee.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0xd533a949740bb3306d119cc777fa900ba034cd52",
         "name": "Curve DAO Token",
         "symbol": "CRV",
-        "decimals": 18,
-        "img": "assets/blockchains/0xd533a949740bb3306d119cc777fa900ba034cd52.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
         "name": "Dai Stablecoin",
         "symbol": "DAI",
-        "decimals": 18,
-        "img": "assets/blockchains/0x6b175474e89094c44da98b954eedeac495271d0f.png"
+        "decimals": 18
     },
     {
         "name": "Gemini USD",
         "address": "0x056fd409e1d7a124bd7017459dfea2f387b6d5cd",
         "chainId": 1,
         "symbol": "GUSD",
-        "decimals": 2,
-        "img": "assets/blockchains/0x056fd409e1d7a124bd7017459dfea2f387b6d5cd.png"
+        "decimals": 2
     },
     {
         "chainId": 1,
         "address": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
         "name": "Maker",
         "symbol": "MKR",
-        "decimals": 18,
-        "img": "assets/blockchains/0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2.png"
+        "decimals": 18
     },
     {
         "name": "Matic Token",
         "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
         "symbol": "MATIC",
         "chainId": 1,
-        "decimals": 18,
-        "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x6982508145454Ce325dDbE47a25d4ec3d2311933",
         "name": "Pepe",
         "symbol": "PEPE",
-        "decimals": 18,
-        "img": "assets/blockchains/0x6982508145454Ce325dDbE47a25d4ec3d2311933.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
         "name": "Shiba Inu",
         "symbol": "SHIB",
-        "decimals": 18,
-        "img": "assets/blockchains/0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
         "name": "Tether USD",
         "symbol": "USDT",
-        "decimals": 6,
-        "img": "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+        "decimals": 6
     },
     {
         "chainId": 1,
         "address": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
         "name": "TONCOIN",
         "symbol": "TON",
-        "decimals": 9,
-        "img": "assets/blockchains/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
+        "decimals": 9
     },
     {
         "chainId": 1,
         "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
         "name": "USD Coin",
         "symbol": "USDC",
-        "decimals": 6,
-        "img": "assets/blockchains/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png"
+        "decimals": 6
     },
     {
         "chainId": 1,
         "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
         "name": "Uniswap",
         "symbol": "UNI",
-        "decimals": 18,
-        "img": "assets/blockchains/0x1f9840a85d5af5bf1d1762f925bdaddc4201f984.png"
+        "decimals": 18
     },
     {
         "chainId": 1,
         "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
         "name": "Wrapped Bitcoin",
         "symbol": "WBTC",
-        "decimals": 8,
-        "img": "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+        "decimals": 8
     }
 ]
