@@ -4,7 +4,6 @@ import { isAddress } from 'viem';
 import { useMemo } from 'react';
 import { useChainId } from 'wagmi';
 import { TokenContract } from '@/lib/structure/types';
-import React from 'react';
 import { useMappedTokenContract } from './wagmiERC20hooks';
 
 export function useIsDuplicateToken(tokenAddress?: string): boolean {
