@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS, ERROR_CODES, ErrorMessage } from '@/lib/structure/types';
-import qs from 'qs';
+import { stringify } from 'qs';
 import useSWR, { mutate } from 'swr';
 import { isAddress } from 'viem';
 import {
@@ -28,6 +28,20 @@ const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Ad
   return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;
 };
 
+/**
+ * fetcher: Builds a URL with query string parameters using qs.stringify
+ * 
+ * Example:
+ *   const params = {
+ *     chainId: 1,
+ *     sellToken: '0x123...',
+ *     buyToken: '0x456...',
+ *     sellAmount: '1000000000000000000',
+ *     slippageBps: 50
+ *   };
+ *   const query = stringify(params); // => "chainId=1&sellToken=...&..."
+ *   const apiCall = `/price?${query}`;
+ */
 const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
   const { sellAmount, buyAmount } = params;
@@ -40,7 +54,7 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
     )
   );
 
-  const query = qs.stringify(cleanParams);
+  const query = stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
 
   console.log(`[📡 Fetching]: ${JSON.stringify(apiCall)}`);
