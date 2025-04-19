@@ -42,8 +42,8 @@ const setActiveAccount = (address: Address) => {
 
 // 🔹 Hook to fetch wallets only once
 const useWalletLists = () => {
-  const [recipientWalletList, setRecipientWalletList] = useState<WalletAccount[]>([]);
-  const [agentWalletList, setAgentWalletList] = useState<WalletAccount[]>([]);
+  const [recipientAccountList, setRecipientAccountList] = useState<WalletAccount[]>([]);
+  const [agentAccountList, setAgentAccountList] = useState<WalletAccount[]>([]);
   const [isClient, setIsClient] = useState(false);
   const previous = useRef<bigint | undefined>(undefined);
 
@@ -56,8 +56,8 @@ const useWalletLists = () => {
           loadAccounts(agentJsonList),
           loadAccounts(recipientJsonList),
         ]);
-        setAgentWalletList(agents || []);
-        setRecipientWalletList(recipients || []);
+        setAgentAccountList(agents || []);
+        setRecipientAccountList(recipients || []);
         // console.log("🔹 Loaded Recipient Wallets:", recipients);  // Debug Step 1 ✅
       } catch (error) {
         console.error("❌ Error loading wallets:", error);
@@ -67,19 +67,19 @@ const useWalletLists = () => {
   }, []);
 
   if (!isClient) {
-    return { recipientWalletList: [], agentWalletList: [] }; // Ensures consistent SSR/CSR output
+    return { recipientAccountList: [], agentAccountList: [] }; // Ensures consistent SSR/CSR output
   }
 
-  return { recipientWalletList, agentWalletList };
+  return { recipientAccountList, agentAccountList };
 };
 
 // 🔹 Function to get data feed list
-const getDataFeedList = (feedType: FEED_TYPE, chainId: number, walletLists: { recipientWalletList: WalletAccount[], agentWalletList: WalletAccount[] }) => {
+const getDataFeedList = (feedType: FEED_TYPE, chainId: number, walletLists: { recipientAccountList: WalletAccount[], agentAccountList: WalletAccount[] }) => {
   switch (feedType) {
     case FEED_TYPE.AGENT_WALLETS:
-      return walletLists.agentWalletList;
+      return walletLists.agentAccountList;
     case FEED_TYPE.RECIPIENT_WALLETS:
-      return walletLists.recipientWalletList;
+      return walletLists.recipientAccountList;
     case FEED_TYPE.TOKEN_LIST:
       switch (chainId) {
         case BASE:

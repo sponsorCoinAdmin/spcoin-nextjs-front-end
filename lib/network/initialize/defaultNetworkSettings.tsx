@@ -29,7 +29,7 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
   const initialContext:ExchangeContext = {
     activeAccountAddress: undefined,
     network: initialContextMap.get("networkHeader") as NetworkElement,
-    recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
+    recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
     agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
     tradeData: defaultInitialTradeData,
     spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,

@@ -49,7 +49,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
   return {
     activeAccountAddress: undefined,
     network: initialContextMap.get("networkHeader") as NetworkElement,
-    recipientWallet: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
+    recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
     agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
     apiTradingProvider: API_TRADING_PROVIDER.API_0X,
     tradeData: {
@@ -78,7 +78,7 @@ export const sanitizeExchangeContext = (
       network: raw?.network ?? defaultContext.network,
       spCoinPanels: raw?.spCoinPanels ?? defaultContext.spCoinPanels,
       test: raw?.test ?? defaultContext.test,
-      recipientWallet: raw?.recipientWallet ?? defaultContext.recipientWallet,
+      recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
       agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
       tradeData: {
         chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,

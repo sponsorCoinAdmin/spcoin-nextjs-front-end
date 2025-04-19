@@ -42,7 +42,8 @@ function InputSelect({ inputState, setInputState }: Props) {
   const isAddressInput: boolean = useIsAddressInput(debouncedInput);
   const isDuplicate: boolean = useIsDuplicateToken(debouncedInput);
   const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
-  const [tokenContract, isTokenContractResolved, tokenContractMessage] = useResolvedTokenContractInfo(validTokenAddress);
+  const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
+    useResolvedTokenContractInfo(validTokenAddress);
 
   const getInputStateString = (state: InputState): string => {
     switch (state) {
@@ -56,6 +57,8 @@ function InputSelect({ inputState, setInputState }: Props) {
         return 'CONTRACT_NOT_FOUND_INPUT';
       case InputState.DUPLICATE_INPUT:
         return 'DUPLICATE_INPUT';
+      case InputState.IS_LOADING:
+        return 'IS_LOADING';
       case InputState.CLOSE_INPUT:
         return 'CLOSE_INPUT';
       default:
@@ -75,8 +78,9 @@ function InputSelect({ inputState, setInputState }: Props) {
     console.log(`[DEBUG] isTokenContractResolved: ${isTokenContractResolved}`);
     console.log(`[DEBUG] tokenContract: ${stringifyBigInt(tokenContract)}`);
     console.log(`[DEBUG] tokenContractMessage: ${tokenContractMessage}`);
+    console.log(`[DEBUG] isLoading: ${isLoading}`);
     console.log(`-------------------------------------------------------------------------------------`);
-  }
+  };
 
   useEffect(() => {
     dumpStateVars();
@@ -99,13 +103,18 @@ function InputSelect({ inputState, setInputState }: Props) {
       return;
     }
 
+    if (isLoading) {
+      // setInputState(InputState.IS_LOADING);
+      return;
+    }
+
     if (!isTokenContractResolved) {
       setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
       return;
     }
 
     setInputState(InputState.VALID_INPUT);
-  }, [validTokenAddress, isAddressInput, isDuplicate, isTokenContractResolved]);
+  }, [validTokenAddress, isAddressInput, isDuplicate, isTokenContractResolved, isLoading]);
 
   const setDebouncedState = (debouncedString: string) => {
     if (isEmptyInput) {
@@ -130,6 +139,8 @@ function InputSelect({ inputState, setInputState }: Props) {
         return '⚠️';
       case InputState.EMPTY_INPUT:
         return '🔍';
+      case InputState.IS_LOADING:
+        return '⏳';
       case InputState.CONTRACT_NOT_FOUND_INPUT:
       default:
         return '❓';
@@ -197,6 +208,14 @@ function InputSelect({ inputState, setInputState }: Props) {
             <span style={textStyle}>Contract Not Found on BlockChain</span>
           </span>
         );
+
+      // case InputState.IS_LOADING:
+        // return (
+        //   <span style={{ color: 'orange' }}>
+        //     <span style={emojiStyle}>⏳</span>
+        //     <span style={textStyle}>Token at address <code>{validTokenAddress}</code> is loading...</span>
+        //   </span>
+        // );
 
       default:
         return <span></span>;

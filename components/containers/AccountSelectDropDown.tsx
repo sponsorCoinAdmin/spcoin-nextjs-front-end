@@ -5,38 +5,38 @@ import { WalletAccount } from '@/lib/structure/types';
 import { defaultMissingImage } from '@/lib/network/utils';
 
 type Props = {
-  recipientWallet: WalletAccount | undefined;
+  recipientAccount: WalletAccount | undefined;
   callBackWallet: (walletAccount: WalletAccount) => void;
 };
 
-const WalletSelect: React.FC<Props> = ({ recipientWallet, callBackWallet }) => {
+const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackWallet }) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
 
   const handleAvatarError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
-      if (recipientWallet) {
+      if (recipientAccount) {
         event.currentTarget.src = defaultMissingImage;
-        recipientWallet.avatar = `***ERROR: MISSING AVATAR FILE*** -> ${recipientWallet.avatar}`;
+        recipientAccount.avatar = `***ERROR: MISSING AVATAR FILE*** -> ${recipientAccount.avatar}`;
       }
     },
-    [recipientWallet]
+    [recipientAccount]
   );
 
   return (
     <>
       <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackWallet={callBackWallet} />
-      {recipientWallet ? (
+      {recipientAccount ? (
         <>
           <img
-            alt={recipientWallet.name}
+            alt={recipientAccount.name}
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            src={recipientWallet.avatar}
-            onClick={() => alert(`Recipient Data: ${JSON.stringify(recipientWallet, null, 2)}`)}
+            src={recipientAccount.avatar}
+            onClick={() => alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`)}
             onError={handleAvatarError}
           />
-          {recipientWallet.symbol}
+          {recipientAccount.symbol}
         </>
       ) : (
         <> &nbsp; Select Recipient: </>

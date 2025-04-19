@@ -4,7 +4,7 @@ import { useReadContract, useReadContracts, useAccount, useChainId } from 'wagmi
 import { erc20Abi } from 'viem';
 import { isAddress, Address } from 'viem';
 import { useState, useEffect } from 'react';
-import { TokenContract as MappedTokenContract } from '@/lib/structure/types';
+import { TokenContract as MappedTokenContract, TokenContract } from '@/lib/structure/types';
 
 // ---------------------------------------------
 // 🔁 Local TokenContract used in hook
@@ -86,7 +86,7 @@ export function useMappedTokenContract(
     symbol: token.symbol,
     name: token.name,
     totalSupply: token.totalSupply,
-    img: undefined,
+    img: `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`,
     chainId,
   };
 }
@@ -107,7 +107,7 @@ export function TokenFetchGuiExamples() {
       ? (accountAddressInput as Address)
       : account.address;
 
-  const tokenResult = useMappedTokenContract(submitted ? tokenAddress : undefined, accountAddress);
+  const tokenResult:TokenContract|undefined = useMappedTokenContract(submitted ? tokenAddress : undefined, accountAddress);
 
   useEffect(() => {
     if (submitted) {

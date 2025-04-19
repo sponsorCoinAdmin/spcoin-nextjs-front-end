@@ -9,7 +9,7 @@ import {
   TRADE_DIRECTION,
   TokenContract,
   ErrorMessage,
-  WalletAccount, // ✅ needed for recipientWallet
+  WalletAccount, // ✅ needed for recipientAccount
 } from '@/lib/structure/types'
 
 import {
@@ -27,7 +27,7 @@ export type ExchangeContextType = {
   setBuyTokenContract: (contract: TokenContract | undefined) => void
   setTradeDirection: (type: TRADE_DIRECTION) => void
   setSlippageBps: (bps: number) => void
-  setRecipientWallet: (wallet: WalletAccount | undefined) => void // ✅
+  setRecipientAccount: (wallet: WalletAccount | undefined) => void // ✅
 
   errorMessage: ErrorMessage | undefined
   setErrorMessage: (error: ErrorMessage | undefined) => void
@@ -52,10 +52,10 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
     })
   }
 
-  const setRecipientWallet = (wallet: WalletAccount | undefined) => {
+  const setRecipientAccount = (wallet: WalletAccount | undefined) => {
     setExchangeContext((prev) => ({
       ...prev,
-      recipientWallet: wallet,
+      recipientAccount: wallet,
     }))
   }
 
@@ -140,7 +140,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
         setBuyTokenContract,
         setTradeDirection,
         setSlippageBps,
-        setRecipientWallet, // ✅ exposed
+        setRecipientAccount, // ✅ exposed
         errorMessage,
         setErrorMessage,
         apiErrorMessage,

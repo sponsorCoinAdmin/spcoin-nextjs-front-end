@@ -42,7 +42,7 @@ export function useIsEmptyInput(input?: string): boolean {
 
 export function useResolvedTokenContractInfo(
   tokenAddress?: string
-): [TokenContract | undefined, boolean, string] {
+): [TokenContract | undefined, boolean, string, boolean] {
   const chainId = useChainId();
 
   const validAddress = useMemo(() => {
@@ -51,6 +51,7 @@ export function useResolvedTokenContractInfo(
 
   const tokenContract: TokenContract | undefined = useMappedTokenContract(validAddress);
   const isTokenContractResolved = !!tokenContract;
+  const isLoading = !!validAddress && tokenContract === undefined;
 
   const tokenContractMessage: string = useMemo(() => {
     if (isTokenContractResolved) {
@@ -60,5 +61,5 @@ export function useResolvedTokenContractInfo(
     return `TokenContract at address ${tokenAddress} NOT found on blockchain ${chainId}`;
   }, [isTokenContractResolved, tokenContract?.name, tokenAddress, chainId]);
 
-  return [tokenContract, isTokenContractResolved, tokenContractMessage];
+  return [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading];
 }

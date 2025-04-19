@@ -150,7 +150,7 @@ type ExchangeContext = {
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
   agentAccount?: WalletAccount;
   network: NetworkElement;
-  recipientWallet?: WalletAccount;
+  recipientAccount?: WalletAccount;
   spCoinPanels: SP_COIN_DISPLAY;
   test: { dumpContextButton: boolean };
   tradeData: TradeData;

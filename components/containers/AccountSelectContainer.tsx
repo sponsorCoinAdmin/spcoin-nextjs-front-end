@@ -18,34 +18,34 @@ import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 const AccountSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Access global context
 
-  const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
-    exchangeContext.recipientWallet
+  const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
+    exchangeContext.recipientAccount
   );
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   useEffect(() => {
-    // ✅ Update global ExchangeContext when recipientWallet changes
-    if (exchangeContext.recipientWallet !== recipientWallet) {
+    // ✅ Update global ExchangeContext when recipientAccount changes
+    if (exchangeContext.recipientAccount !== recipientAccount) {
       setExchangeContext(prev => ({
         ...prev,
-        recipientWallet,
+        recipientAccount,
       }));
     }
-  }, [recipientWallet, exchangeContext, setExchangeContext]);
+  }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const closeRecipientSelect = useCallback(() => {
     displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON, exchangeContext);
-    setRecipientWallet(undefined);
+    setRecipientAccount(undefined);
   }, []);
 
   // ✅ Default URL if recipient website does not exist
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
-  const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : "";
+  const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
   let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
   // ✅ Check if recipient's website exists
   useEffect(() => {
-    const website = recipientWallet?.website;
+    const website = recipientAccount?.website;
     if (website && website !== "N/A" && website.trim() !== "") {
       fetch(website, { method: "HEAD", mode: "no-cors" })
         .then(() => {
@@ -59,24 +59,24 @@ const AccountSelectContainer: React.FC = () => {
     } else {
       setSiteExists(false);
     }
-  }, [recipientWallet?.website]); // Keep dependency array unchanged
+  }, [recipientAccount?.website]); // Keep dependency array unchanged
 
   return (
     <>
       <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.AccountSelectContainer)}>
         <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
-        {recipientWallet && siteExists ? (
-          <Link href={`Recipient?url=${recipientWallet.website}`} className={styles.recipientName}>
-            {recipientWallet.name}
+        {recipientAccount && siteExists ? (
+          <Link href={`Recipient?url=${recipientAccount.website}`} className={styles.recipientName}>
+            {recipientAccount.name}
           </Link>
         ) : (
           <Link href={defaultStaticFileUrl} className={styles.recipientName}>
-            {recipientWallet?.name || "No recipient selected"}
+            {recipientAccount?.name || "No recipient selected"}
           </Link>
         )}
         <div className={styles.recipientSelect}>
-          <RecipientSelect recipientWallet={recipientWallet} callBackWallet={setRecipientWallet} />
+          <RecipientSelect recipientAccount={recipientAccount} callBackWallet={setRecipientAccount} />
         </div>
         <div>
           <Image
