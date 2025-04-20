@@ -44,10 +44,8 @@ function InputSelect({ inputState, setInputState }: Props) {
   const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
   const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
     useResolvedTokenContractInfo(validTokenAddress);
-
-  const selectTokenAndClose = useSelectTokenAndClose(setInputState);
-
-  const dumpStateVars = () => {
+    const selectTokenAndClose = useSelectTokenAndClose(inputState, setInputState);
+    const dumpStateVars = () => {
     console.log(`=====================================================================================`);
     console.log(`[DEBUG] inputState: ${getInputStateString(inputState)}`);
     console.log(`[DEBUG] textInputField: ${textInputField}`);
@@ -215,10 +213,7 @@ function InputSelect({ inputState, setInputState }: Props) {
               </div>
               <div
                 className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() =>
-                  alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)
-                }
-              >
+                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
                 <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
               </div>
             </div>

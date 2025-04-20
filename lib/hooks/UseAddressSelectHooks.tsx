@@ -8,7 +8,6 @@ import { useMappedTokenContract } from './wagmiERC20hooks';
 import { useCallback } from 'react';
 import { InputState } from '@/components/Dialogs/TokenSelectDialog';
 
-
 export function useIsDuplicateToken(tokenAddress?: string): boolean {
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
@@ -73,6 +72,7 @@ export function useResolvedTokenContractInfo(
  * @returns A callback that sets the selected token and triggers CLOSE_INPUT state
  */
 export const useSelectTokenAndClose = (
+  inputState: InputState,
   setInputState: (state: InputState) => void
 ): ((tokenContract: TokenContract) => void) => {
   const [containerType] = useContainerType();
@@ -83,6 +83,11 @@ export const useSelectTokenAndClose = (
     (tokenContract: TokenContract) => {
       console.log(`🖱 Clicked Element Data: ${tokenContract.symbol} @ ${tokenContract.address}`);
 
+      if (inputState !== InputState.VALID_INPUT) {
+        console.warn(`[selectTokenAndClose] Aborting: inputState is not valid (${InputState[inputState]})`);
+        return;
+      }
+
       if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
         setSellTokenContract(tokenContract);
       } else {
@@ -91,6 +96,6 @@ export const useSelectTokenAndClose = (
 
       setInputState(InputState.CLOSE_INPUT);
     },
-    [containerType, setSellTokenContract, setBuyTokenContract, setInputState]
+    [containerType, setSellTokenContract, setBuyTokenContract, setInputState, inputState]
   );
 };

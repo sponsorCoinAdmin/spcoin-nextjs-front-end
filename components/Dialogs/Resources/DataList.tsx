@@ -36,7 +36,7 @@ import sepoliaTokenList from "@/resources/data/networks/sepolia/tokenList.json";
 import ethereumTokenList from "@/resources/data/networks/ethereum/tokenList.json";
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
-import { Address } from "viem";
+import { Address, isAddress } from "viem";
 import { InputState } from "../TokenSelectDialog";
 import { useSelectTokenAndClose } from '@/lib/hooks/UseAddressSelectHooks';
 
@@ -140,7 +140,7 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const [containerType] = useContainerType();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-  const selectTokenAndClose = useSelectTokenAndClose(setInputState);
+  const selectTokenAndClose = useSelectTokenAndClose(inputState, setInputState);
 
   useEffect(() => {
     setIsClient(true);
@@ -163,6 +163,27 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
     return <p>Loading data...</p>;
   }
 
+  const validateTokenAddress = (token: TokenContract): boolean => {
+    if (!token?.address || !isAddress(token.address)) {
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
+      return false;
+    }
+  
+    const oppositeAddress =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? exchangeContext.tradeData.buyTokenContract?.address
+        : exchangeContext.tradeData.sellTokenContract?.address;
+  
+    if (token.address === oppositeAddress) {
+      setInputState(InputState.DUPLICATE_INPUT);
+      return false;
+    }
+  
+    // Assume all listed tokens are valid on chain
+    setInputState(InputState.VALID_INPUT);
+    return true;
+  };
+  
   return (
     <>
       {avatars.length === 0 ? (
@@ -175,8 +196,12 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
           >
             <div
               className="cursor-pointer flex flex-row justify-between"
-              onClick={() => selectTokenAndClose(dataFeedList[i] as TokenContract)}
-            >
+              onClick={() => {
+                const token = dataFeedList[i] as TokenContract;
+                if (validateTokenAddress(token)) {
+                  selectTokenAndClose(token);
+                }
+              }}            >
               <img
                 className={styles.elementLogo}
                 src={listElement.avatar || defaultMissingImage}
@@ -187,10 +212,8 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
                 <div className={styles.elementSymbol}>{listElement.symbol}</div>
               </div>
             </div>
-            <div
-              className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-              onClick={() => alert(`${listElement.name} Address: ${listElement.address}`)}
-            >
+            <div  className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                  onClick={() => alert(`${listElement.name} Address: ${listElement.address}`)}>
               <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
             </div>
           </div>
