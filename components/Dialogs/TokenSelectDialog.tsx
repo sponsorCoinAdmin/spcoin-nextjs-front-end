@@ -21,6 +21,27 @@ export enum InputState {
   CLOSE_INPUT,
 }
 
+export const getInputStateString = (state: InputState): string => {
+  switch (state) {
+    case InputState.EMPTY_INPUT:
+      return 'EMPTY_INPUT';
+    case InputState.VALID_INPUT:
+      return 'VALID_INPUT';
+    case InputState.INVALID_ADDRESS_INPUT:
+      return 'INVALID_ADDRESS_INPUT';
+    case InputState.CONTRACT_NOT_FOUND_INPUT:
+      return 'CONTRACT_NOT_FOUND_INPUT';
+    case InputState.DUPLICATE_INPUT:
+      return 'DUPLICATE_INPUT';
+    case InputState.IS_LOADING:
+      return 'IS_LOADING';
+    case InputState.CLOSE_INPUT:
+      return 'CLOSE_INPUT';
+    default:
+      return 'UNKNOWN_INPUT_STATE';
+  }
+};
+
 type Props = {
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;

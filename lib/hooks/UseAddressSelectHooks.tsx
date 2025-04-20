@@ -5,6 +5,9 @@ import { useMemo } from 'react';
 import { useChainId } from 'wagmi';
 import { TokenContract } from '@/lib/structure/types';
 import { useMappedTokenContract } from './wagmiERC20hooks';
+import { useCallback } from 'react';
+import { InputState } from '@/components/Dialogs/TokenSelectDialog';
+
 
 export function useIsDuplicateToken(tokenAddress?: string): boolean {
   const [sellTokenContract] = useSellTokenContract();
@@ -63,3 +66,31 @@ export function useResolvedTokenContractInfo(
 
   return [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading];
 }
+
+/**
+ * Hook to select a token (buy or sell based on containerType) and close the input dialog.
+ * @param setInputState - Function to update the input validation state
+ * @returns A callback that sets the selected token and triggers CLOSE_INPUT state
+ */
+export const useSelectTokenAndClose = (
+  setInputState: (state: InputState) => void
+): ((tokenContract: TokenContract) => void) => {
+  const [containerType] = useContainerType();
+  const [, setSellTokenContract] = useSellTokenContract();
+  const [, setBuyTokenContract] = useBuyTokenContract();
+
+  return useCallback(
+    (tokenContract: TokenContract) => {
+      console.log(`🖱 Clicked Element Data: ${tokenContract.symbol} @ ${tokenContract.address}`);
+
+      if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+        setSellTokenContract(tokenContract);
+      } else {
+        setBuyTokenContract(tokenContract);
+      }
+
+      setInputState(InputState.CLOSE_INPUT);
+    },
+    [containerType, setSellTokenContract, setBuyTokenContract, setInputState]
+  );
+};

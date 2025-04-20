@@ -11,18 +11,18 @@ import {
   useErc20TokenContract,
 } from '@/lib/wagmi/wagmiERC20ClientRead';
 import { getTokenAvatar } from '@/lib/network/utils';
-import { Address } from 'viem';
+import { Address, isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { CONTAINER_TYPE } from '@/lib/structure/types';
 import { useContainerType } from '@/lib/context/contextHooks';
-import { InputState } from './TokenSelectDialog';
+import { getInputStateString, InputState } from './TokenSelectDialog';
 import {
   useIsAddressInput,
   useIsDuplicateToken,
   useIsEmptyInput,
   useResolvedTokenContractInfo,
+  useSelectTokenAndClose
 } from '@/lib/hooks/UseAddressSelectHooks';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
@@ -35,36 +35,17 @@ type Props = {
 };
 
 function InputSelect({ inputState, setInputState }: Props) {
-  const [textInputField, setTextInputField] = useState<any>();
+  const [textInputField, setTextInputField] = useState<string>('');
   const [containerType] = useContainerType();
-  const debouncedInput: string = useDebounce(textInputField);
-  const isEmptyInput: boolean = useIsEmptyInput(debouncedInput);
-  const isAddressInput: boolean = useIsAddressInput(debouncedInput);
-  const isDuplicate: boolean = useIsDuplicateToken(debouncedInput);
+  const debouncedInput = useDebounce(textInputField);
+  const isEmptyInput = useIsEmptyInput(debouncedInput);
+  const isAddressInput = useIsAddressInput(debouncedInput);
+  const isDuplicate = useIsDuplicateToken(debouncedInput);
   const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
   const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
     useResolvedTokenContractInfo(validTokenAddress);
 
-  const getInputStateString = (state: InputState): string => {
-    switch (state) {
-      case InputState.EMPTY_INPUT:
-        return 'EMPTY_INPUT';
-      case InputState.VALID_INPUT:
-        return 'VALID_INPUT';
-      case InputState.INVALID_ADDRESS_INPUT:
-        return 'INVALID_ADDRESS_INPUT';
-      case InputState.CONTRACT_NOT_FOUND_INPUT:
-        return 'CONTRACT_NOT_FOUND_INPUT';
-      case InputState.DUPLICATE_INPUT:
-        return 'DUPLICATE_INPUT';
-      case InputState.IS_LOADING:
-        return 'IS_LOADING';
-      case InputState.CLOSE_INPUT:
-        return 'CLOSE_INPUT';
-      default:
-        return 'UNKNOWN_INPUT_STATE';
-    }
-  };
+  const selectTokenAndClose = useSelectTokenAndClose(setInputState);
 
   const dumpStateVars = () => {
     console.log(`=====================================================================================`);
@@ -103,10 +84,7 @@ function InputSelect({ inputState, setInputState }: Props) {
       return;
     }
 
-    if (isLoading) {
-      // setInputState(InputState.IS_LOADING);
-      return;
-    }
+    if (isLoading) return;
 
     if (!isTokenContractResolved) {
       setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
@@ -131,30 +109,22 @@ function InputSelect({ inputState, setInputState }: Props) {
 
   const getInputEmoji = (): string => {
     switch (inputState) {
-      case InputState.VALID_INPUT:
-        return '✅';
-      case InputState.INVALID_ADDRESS_INPUT:
-        return '❌';
-      case InputState.DUPLICATE_INPUT:
-        return '⚠️';
-      case InputState.EMPTY_INPUT:
-        return '🔍';
-      case InputState.IS_LOADING:
-        return '⏳';
+      case InputState.VALID_INPUT: return '✅';
+      case InputState.INVALID_ADDRESS_INPUT: return '⚠️';
+      case InputState.DUPLICATE_INPUT: return '❌';
+      case InputState.EMPTY_INPUT: return '🔍';
+      case InputState.IS_LOADING: return '⏳';
       case InputState.CONTRACT_NOT_FOUND_INPUT:
-      default:
-        return '❓';
+      default: return '❓';
     }
   };
 
   const validateTextInput = (input: string) => {
     const trimmed = input.trim();
-
     if (trimmed === '') {
       setTextInputField(trimmed);
       return;
     }
-
     const isPartialHex = /^0x?[0-9a-fA-F]*$/.test(trimmed);
     if (isPartialHex) {
       setTextInputField(trimmed);
@@ -167,19 +137,12 @@ function InputSelect({ inputState, setInputState }: Props) {
       : badTokenAddressImage;
   };
 
-  const validateInputStatus = (state: InputState): string | JSX.Element => {
+  const validateInputStatus = (state: InputState): JSX.Element => {
     console.log(`[DEBUG] validateInputStatus.inputState: ${getInputStateString(state)}`);
 
-    const emojiStyle: React.CSSProperties = {
-      fontSize: 36,
-      lineHeight: 1,
-      marginRight: 6,
-    };
-    const textStyle: React.CSSProperties = {
-      fontSize: '15px',
-      position: 'relative',
-      top: -6,
-    };
+    const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
+    const textStyle: React.CSSProperties = { fontSize: '15px', position: 'relative', top: -6 };
+
     switch (state) {
       case InputState.INVALID_ADDRESS_INPUT:
         return (
@@ -188,7 +151,6 @@ function InputSelect({ inputState, setInputState }: Props) {
             <span style={textStyle}>Enter a Valid Token Hex Address !</span>
           </span>
         );
-
       case InputState.DUPLICATE_INPUT:
         return (
           <span style={{ color: 'orange' }}>
@@ -200,7 +162,6 @@ function InputSelect({ inputState, setInputState }: Props) {
             </span>
           </span>
         );
-
       case InputState.CONTRACT_NOT_FOUND_INPUT:
         return (
           <span style={{ color: 'orange' }}>
@@ -208,15 +169,6 @@ function InputSelect({ inputState, setInputState }: Props) {
             <span style={textStyle}>Contract Not Found on BlockChain</span>
           </span>
         );
-
-      // case InputState.IS_LOADING:
-        // return (
-        //   <span style={{ color: 'orange' }}>
-        //     <span style={emojiStyle}>⏳</span>
-        //     <span style={textStyle}>Token at address <code>{validTokenAddress}</code> is loading...</span>
-        //   </span>
-        // );
-
       default:
         return <span></span>;
     }
@@ -232,7 +184,7 @@ function InputSelect({ inputState, setInputState }: Props) {
           className={`${styles.modalElementInput} w-full`}
           autoComplete="off"
           placeholder={INPUT_PLACE_HOLDER}
-          value={textInputField || ''}
+          value={textInputField}
           onChange={(e) => validateTextInput(e.target.value)}
         />
       </div>
@@ -248,7 +200,7 @@ function InputSelect({ inputState, setInputState }: Props) {
                   height={40}
                   width={40}
                   alt="Token Image"
-                  onClick={() => setInputState(InputState.CLOSE_INPUT)}
+                  onClick={() => selectTokenAndClose(tokenContract as TokenContract)} // ✅ Hook used here
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {
