@@ -53,7 +53,7 @@ export function useResolvedTokenContractInfo(
 
   const tokenContract: TokenContract | undefined = useMappedTokenContract(validAddress);
   const isTokenContractResolved = !!tokenContract;
-  const isLoading = !!validAddress && tokenContract === undefined;
+  const isTokenLoading = !!validAddress && tokenContract === undefined;
 
   const tokenContractMessage: string = useMemo(() => {
     if (isTokenContractResolved) {
@@ -63,7 +63,7 @@ export function useResolvedTokenContractInfo(
     return `TokenContract at address ${tokenAddress} NOT found on blockchain ${chainId}`;
   }, [isTokenContractResolved, tokenContract?.name, tokenAddress, chainId]);
 
-  return [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading];
+  return [tokenContract, isTokenContractResolved, tokenContractMessage, isTokenLoading];
 }
 
 // /**
@@ -140,14 +140,21 @@ export function validateTokenSelection(
  */
 export const useValidatedTokenSelect = (
   inputState: InputState,
+  isTokenContractResolved: boolean,
   setInputState: (state: InputState) => void
-): ((token: TokenContract) => void) => {
-  const [containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER] = useContainerType(); // ✅ fallback default
+): ((token: TokenContract | undefined) => void) => {
+  const [containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER] = useContainerType();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   return useCallback(
-    (token: TokenContract) => {
+    (token: TokenContract | undefined) => {
+      if (!token || !isTokenContractResolved) {
+        console.warn(`⚠️ Token not resolved on chain`);
+        setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+        return;
+      }
+
       const resultState = validateTokenSelection(
         token,
         containerType,
@@ -171,6 +178,7 @@ export const useValidatedTokenSelect = (
     },
     [
       containerType,
+      isTokenContractResolved,
       sellTokenContract?.address,
       buyTokenContract?.address,
       setSellTokenContract,

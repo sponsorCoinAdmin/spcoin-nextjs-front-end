@@ -28,10 +28,24 @@
         "decimals": 18
     },
     {
-        "chainId": 11155111,
-        "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+        "chainId": 8453,
+        "address": "0x123456789ABCDEF",
         "name": "Bad Token Address",
         "symbol": "BAD",
+        "decimals": 18
+    },
+    {
+        "chainId": 8453,
+        "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+        "name": "Missing Token Address",
+        "symbol": "MISSING",
+        "decimals": 18
+    },
+    {
+        "chainId": 8453,
+        "address": "",
+        "name": "Empty Token Address",
+        "symbol": "EMPTY",
         "decimals": 18
     },
     {

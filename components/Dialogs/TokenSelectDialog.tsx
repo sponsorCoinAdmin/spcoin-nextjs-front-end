@@ -58,8 +58,6 @@ export default function TokenSelectDialog({
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const [containerType, setContainerType] = useContainerType();
-  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
-  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   useEffect(() => {
     setInputState(InputState.EMPTY_INPUT)

@@ -44,8 +44,9 @@ function InputSelect({ inputState, setInputState }: Props) {
   const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
   const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
     useResolvedTokenContractInfo(validTokenAddress);
-    const selectTokenAndClose = useValidatedTokenSelect(inputState, setInputState);
-    const dumpStateVars = () => {
+  const selectTokenAndClose = useValidatedTokenSelect(inputState, isTokenContractResolved, setInputState);
+
+  const dumpStateVars = () => {
     console.log(`=====================================================================================`);
     console.log(`[DEBUG] inputState: ${getInputStateString(inputState)}`);
     console.log(`[DEBUG] textInputField: ${textInputField}`);
@@ -198,7 +199,7 @@ function InputSelect({ inputState, setInputState }: Props) {
                   height={40}
                   width={40}
                   alt="Token Image"
-                  onClick={() => selectTokenAndClose(tokenContract as TokenContract)} // ✅ Hook used here
+                  onClick={() => selectTokenAndClose(tokenContract)} // ✅ Will only close if resolved
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {

@@ -1,16 +1,16 @@
-'use client';
+'use client'; 
 
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useChainId } from "wagmi";
 import {
   useBuyTokenContract,
   useContainerType,
   useExchangeContext,
-  useSellTokenContract
+  useSellTokenContract,
+  useSlippageBps
 } from '@/lib/context/contextHooks';
 import {
   BASE,
@@ -21,7 +21,8 @@ import {
   POLYGON,
   SEPOLIA,
   TokenContract,
-  WalletAccount
+  WalletAccount,
+  TRADE_DIRECTION
 } from "@/lib/structure/types";
 import {
   BURN_ADDRESS,
@@ -38,16 +39,14 @@ import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
 import { Address, isAddress } from "viem";
 import { InputState } from "../TokenSelectDialog";
-import { useValidatedTokenSelect } from '@/lib/hooks/UseAddressSelectHooks';
+import { useResolvedTokenContractInfo, useValidatedTokenSelect } from '@/lib/hooks/UseAddressSelectHooks';
 
-// 🔹 Store active account address globally
 let ACTIVE_ACCOUNT_ADDRESS: Address;
 
 const setActiveAccount = (address: Address) => {
   ACTIVE_ACCOUNT_ADDRESS = address;
 };
 
-// 🔹 Hook to fetch wallets only once
 const useWalletLists = () => {
   const [recipientAccountList, setRecipientAccountList] = useState<WalletAccount[]>([]);
   const [agentAccountList, setAgentAccountList] = useState<WalletAccount[]>([]);
@@ -77,7 +76,6 @@ const useWalletLists = () => {
   return { recipientAccountList, agentAccountList };
 };
 
-// 🔹 Function to get data feed list
 const getDataFeedList = (
   feedType: FEED_TYPE,
   chainId: number,
@@ -108,7 +106,6 @@ const getDataFeedList = (
   }
 };
 
-// 🔹 Get data map (improved)
 const getDataFeedMap = (feedType: FEED_TYPE, chainId: number, walletLists: any) => {
   return new Map(
     getDataFeedList(feedType, chainId, walletLists).map((element: { address: any }) => [
@@ -118,14 +115,12 @@ const getDataFeedMap = (feedType: FEED_TYPE, chainId: number, walletLists: any) 
   );
 };
 
-// 🔹 Display token details
 const displayElementDetail = (tokenContract: any) => {
   const clone = { ...tokenContract } as TokenContract;
   clone.address = clone.address === BURN_ADDRESS ? ACTIVE_ACCOUNT_ADDRESS : clone.address;
   alert(`${tokenContract?.name} Token Address = ${clone.address}`);
 };
 
-// 🔹 Optimized DataList component
 type Props = {
   inputState: InputState;
   setInputState: (state: InputState) => void;
@@ -134,13 +129,18 @@ type Props = {
 
 const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const [isClient, setIsClient] = useState(false);
+  const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
   const chainId = useChainId();
   const walletLists = useWalletLists();
   const { exchangeContext } = useExchangeContext();
   const [containerType] = useContainerType();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-  const selectTokenAndClose = useValidatedTokenSelect(inputState, setInputState);
+  const [slippageBpsRaw] = useSlippageBps();
+  const slippageBps = slippageBpsRaw ?? 200;
+  const tradeDirection = exchangeContext.tradeData.tradeDirection ?? TRADE_DIRECTION.SELL_EXACT_OUT;
+  const [tokenContract, isTokenContractResolved] = useResolvedTokenContractInfo(validTokenAddress);
+  const selectTokenAndClose = useValidatedTokenSelect(inputState, isTokenContractResolved, setInputState);
 
   useEffect(() => {
     setIsClient(true);
@@ -154,10 +154,23 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const avatars = useMemo(() => {
     return dataFeedList.map((listElement) => ({
       ...listElement,
-      avatar: getAvatarAddress(exchangeContext, listElement.address as Address, dataFeedType),
+      avatar: getAvatarAddress(
+        {
+          ...exchangeContext,
+          tradeData: {
+            ...exchangeContext.tradeData,
+            chainId,
+            sellTokenContract,
+            buyTokenContract,
+            slippageBps,
+            tradeDirection,
+          },
+        },
+        listElement.address as Address,
+        dataFeedType
+      ),
     }));
-  }, [dataFeedList, exchangeContext, dataFeedType]);
-
+  }, [dataFeedList, exchangeContext, chainId, sellTokenContract, buyTokenContract, slippageBps, tradeDirection, dataFeedType]);
 
   if (!isClient) {
     return <p>Loading data...</p>;
@@ -168,56 +181,58 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
       setInputState(InputState.INVALID_ADDRESS_INPUT);
       return false;
     }
-  
+    setValidTokenAddress(token.address);
+
     const oppositeAddress =
       containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
         ? exchangeContext.tradeData.buyTokenContract?.address
         : exchangeContext.tradeData.sellTokenContract?.address;
-  
+
     if (token.address === oppositeAddress) {
       setInputState(InputState.DUPLICATE_INPUT);
       return false;
     }
-  
-    // Assume all listed tokens are valid on chain
+
     setInputState(InputState.VALID_INPUT);
     return true;
   };
-  
+
   return (
     <>
       {avatars.length === 0 ? (
         <p>No data available.</p>
       ) : (
-        avatars.map((listElement, i) => (
-          <div
-            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
-            key={listElement.address}
-          >
+        avatars.map((listElement, i) => {
+          const token = dataFeedList[i] as TokenContract;
+          return (
             <div
-              className="cursor-pointer flex flex-row justify-between"
-              onClick={() => {
-                const token = dataFeedList[i] as TokenContract;
-                if (validateTokenAddress(token)) {
-                  selectTokenAndClose(token);
-                }
-              }}>
-              <img
-                className={styles.elementLogo}
-                src={listElement.avatar || defaultMissingImage}
-                alt={`${listElement.name} Token Avatar`}
-              />
-              <div>
-                <div className={styles.elementName}>{listElement.name}</div>
-                <div className={styles.elementSymbol}>{listElement.symbol}</div>
+              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+              key={listElement.address}
+            >
+              <div
+                className="cursor-pointer flex flex-row justify-between"
+                onClick={() => {
+                  if (validateTokenAddress(token)) {
+                    selectTokenAndClose(token);
+                  }
+                }}>
+                <img
+                  className={styles.elementLogo}
+                  src={listElement.avatar || defaultMissingImage}
+                  alt={`${listElement.name} Token Avatar`}
+                />
+                <div>
+                  <div className={styles.elementName}>{listElement.name}</div>
+                  <div className={styles.elementSymbol}>{listElement.symbol}</div>
+                </div>
+              </div>
+              <div className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                   onClick={() => alert(`${listElement.name} Address: ${listElement.address}`)}>
+                <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
               </div>
             </div>
-            <div  className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                  onClick={() => alert(`${listElement.name} Address: ${listElement.address}`)}>
-              <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
-            </div>
-          </div>
-        ))
+          );
+        })
       )}
     </>
   );

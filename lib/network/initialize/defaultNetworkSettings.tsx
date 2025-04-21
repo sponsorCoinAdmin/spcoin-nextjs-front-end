@@ -34,7 +34,8 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
     tradeData: defaultInitialTradeData,
     spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
     test: { dumpContextButton: false },
-    apiTradingProvider: API_TRADING_PROVIDER.API_0X
+    apiTradingProvider: API_TRADING_PROVIDER.API_0X,
+    containerType: undefined
   }
   // alert(`***Context.getInitialContext:sellTokenContract: ${JSON.stringify(defaultNetworkSettings.defaultSellToken,null,2)}`)
   // alert(`***Context.getInitialContext: ${JSON.stringify(defaultNetworkSettings,null,2)}`)
