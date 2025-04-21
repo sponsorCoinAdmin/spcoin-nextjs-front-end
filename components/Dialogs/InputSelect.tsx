@@ -44,7 +44,7 @@ function InputSelect({ inputState, setInputState }: Props) {
   const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
   const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
     useResolvedTokenContractInfo(validTokenAddress);
-  const selectTokenAndClose = useValidatedTokenSelect(inputState, isTokenContractResolved, setInputState);
+  const selectTokenAndClose = useValidatedTokenSelect(isTokenContractResolved, setInputState);
 
   const dumpStateVars = () => {
     console.log(`=====================================================================================`);

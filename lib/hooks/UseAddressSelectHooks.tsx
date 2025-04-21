@@ -127,19 +127,11 @@ export function validateTokenSelection(
   return InputState.VALID_INPUT;
 }
 
-
 /**
- * Combined hook: validates the token contract, sets the container, updates state, and closes if valid.
- */
-/**
- * Hook to validate a token, update the appropriate context (buy/sell), and close the dialog on success.
- */
-
-/**
- * Hook to validate a token, update the appropriate context (buy/sell), and close the dialog on success.
+ * Hook to validate a token, update the appropriate context (buy/sell),
+ * and close the dialog on success. Validation assumes the token is already resolved.
  */
 export const useValidatedTokenSelect = (
-  inputState: InputState,
   isTokenContractResolved: boolean,
   setInputState: (state: InputState) => void
 ): ((token: TokenContract | undefined) => void) => {

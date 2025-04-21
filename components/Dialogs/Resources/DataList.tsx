@@ -140,7 +140,7 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const slippageBps = slippageBpsRaw ?? 200;
   const tradeDirection = exchangeContext.tradeData.tradeDirection ?? TRADE_DIRECTION.SELL_EXACT_OUT;
   const [tokenContract, isTokenContractResolved] = useResolvedTokenContractInfo(validTokenAddress);
-  const selectTokenAndClose = useValidatedTokenSelect(inputState, isTokenContractResolved, setInputState);
+  const selectTokenAndClose = useValidatedTokenSelect(isTokenContractResolved, setInputState);
 
   useEffect(() => {
     setIsClient(true);
