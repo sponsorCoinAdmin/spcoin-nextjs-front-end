@@ -66,36 +66,116 @@ export function useResolvedTokenContractInfo(
   return [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading];
 }
 
+// /**
+//  * Hook to select a token (buy or sell based on containerType) and close the input dialog.
+//  * @param setInputState - Function to update the input validation state
+//  * @returns A callback that sets the selected token and triggers CLOSE_INPUT state
+//  */
+// export const useSelectTokenAndClose = (
+//   inputState: InputState,
+//   setInputState: (state: InputState) => void
+// ): ((tokenContract: TokenContract) => void) => {
+//   const [containerType] = useContainerType();
+//   const [, setSellTokenContract] = useSellTokenContract();
+//   const [, setBuyTokenContract] = useBuyTokenContract();
+
+//   return useCallback(
+//     (tokenContract: TokenContract) => {
+//       console.log(`🖱 Clicked Element Data: ${tokenContract.symbol} @ ${tokenContract.address}`);
+
+//       if (inputState !== InputState.VALID_INPUT) {
+//         console.warn(`[selectTokenAndClose] Aborting: inputState is not valid (${InputState[inputState]})`);
+//         return;
+//       }
+
+//       if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+//         setSellTokenContract(tokenContract);
+//       } else {
+//         setBuyTokenContract(tokenContract);
+//       }
+
+//       setInputState(InputState.CLOSE_INPUT);
+//     },
+//     [containerType, setSellTokenContract, setBuyTokenContract, setInputState, inputState]
+//   );
+// };
+
+
 /**
- * Hook to select a token (buy or sell based on containerType) and close the input dialog.
- * @param setInputState - Function to update the input validation state
- * @returns A callback that sets the selected token and triggers CLOSE_INPUT state
+ * Checks whether the token is valid and not a duplicate of the opposite container token.
+ * @returns {InputState} - the appropriate validation result
  */
-export const useSelectTokenAndClose = (
+export function validateTokenSelection(
+  token: TokenContract,
+  containerType: CONTAINER_TYPE,
+  sellTokenContract?: TokenContract,
+  buyTokenContract?: TokenContract
+): InputState {
+  if (!token?.address || !isAddress(token.address)) {
+    return InputState.INVALID_ADDRESS_INPUT;
+  }
+
+  const oppositeAddress =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyTokenContract?.address
+      : sellTokenContract?.address;
+
+  if (token.address === oppositeAddress) {
+    return InputState.DUPLICATE_INPUT;
+  }
+
+  return InputState.VALID_INPUT;
+}
+
+
+/**
+ * Combined hook: validates the token contract, sets the container, updates state, and closes if valid.
+ */
+/**
+ * Hook to validate a token, update the appropriate context (buy/sell), and close the dialog on success.
+ */
+
+/**
+ * Hook to validate a token, update the appropriate context (buy/sell), and close the dialog on success.
+ */
+export const useValidatedTokenSelect = (
   inputState: InputState,
   setInputState: (state: InputState) => void
-): ((tokenContract: TokenContract) => void) => {
-  const [containerType] = useContainerType();
-  const [, setSellTokenContract] = useSellTokenContract();
-  const [, setBuyTokenContract] = useBuyTokenContract();
+): ((token: TokenContract) => void) => {
+  const [containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER] = useContainerType(); // ✅ fallback default
+  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
+  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
   return useCallback(
-    (tokenContract: TokenContract) => {
-      console.log(`🖱 Clicked Element Data: ${tokenContract.symbol} @ ${tokenContract.address}`);
+    (token: TokenContract) => {
+      const resultState = validateTokenSelection(
+        token,
+        containerType,
+        sellTokenContract,
+        buyTokenContract
+      );
 
-      if (inputState !== InputState.VALID_INPUT) {
-        console.warn(`[selectTokenAndClose] Aborting: inputState is not valid (${InputState[inputState]})`);
+      if (resultState !== InputState.VALID_INPUT) {
+        console.warn(`❌ Token validation failed: ${InputState[resultState]}`);
+        setInputState(resultState);
         return;
       }
 
       if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-        setSellTokenContract(tokenContract);
+        setSellTokenContract(token);
       } else {
-        setBuyTokenContract(tokenContract);
+        setBuyTokenContract(token);
       }
 
       setInputState(InputState.CLOSE_INPUT);
     },
-    [containerType, setSellTokenContract, setBuyTokenContract, setInputState, inputState]
+    [
+      containerType,
+      sellTokenContract?.address,
+      buyTokenContract?.address,
+      setSellTokenContract,
+      setBuyTokenContract,
+      setInputState,
+    ]
   );
 };

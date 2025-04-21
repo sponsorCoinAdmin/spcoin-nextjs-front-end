@@ -22,7 +22,7 @@ import {
   useIsDuplicateToken,
   useIsEmptyInput,
   useResolvedTokenContractInfo,
-  useSelectTokenAndClose
+  useValidatedTokenSelect
 } from '@/lib/hooks/UseAddressSelectHooks';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
@@ -44,7 +44,7 @@ function InputSelect({ inputState, setInputState }: Props) {
   const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
   const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
     useResolvedTokenContractInfo(validTokenAddress);
-    const selectTokenAndClose = useSelectTokenAndClose(inputState, setInputState);
+    const selectTokenAndClose = useValidatedTokenSelect(inputState, setInputState);
     const dumpStateVars = () => {
     console.log(`=====================================================================================`);
     console.log(`[DEBUG] inputState: ${getInputStateString(inputState)}`);

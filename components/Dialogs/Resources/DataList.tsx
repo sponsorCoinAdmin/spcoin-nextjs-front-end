@@ -38,7 +38,7 @@ import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
 import { Address, isAddress } from "viem";
 import { InputState } from "../TokenSelectDialog";
-import { useSelectTokenAndClose } from '@/lib/hooks/UseAddressSelectHooks';
+import { useValidatedTokenSelect } from '@/lib/hooks/UseAddressSelectHooks';
 
 // 🔹 Store active account address globally
 let ACTIVE_ACCOUNT_ADDRESS: Address;
@@ -140,7 +140,7 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const [containerType] = useContainerType();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-  const selectTokenAndClose = useSelectTokenAndClose(inputState, setInputState);
+  const selectTokenAndClose = useValidatedTokenSelect(inputState, setInputState);
 
   useEffect(() => {
     setIsClient(true);
@@ -201,7 +201,7 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
                 if (validateTokenAddress(token)) {
                   selectTokenAndClose(token);
                 }
-              }}            >
+              }}>
               <img
                 className={styles.elementLogo}
                 src={listElement.avatar || defaultMissingImage}
