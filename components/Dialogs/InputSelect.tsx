@@ -5,11 +5,6 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 
-import {
-  TokenContract,
-  useErc20NetworkContract,
-  useErc20TokenContract,
-} from '@/lib/wagmi/wagmiERC20ClientRead';
 import { getTokenAvatar } from '@/lib/network/utils';
 import { Address, isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -21,8 +16,7 @@ import {
   useIsAddressInput,
   useIsDuplicateToken,
   useIsEmptyInput,
-  useResolvedTokenContractInfo,
-  useValidatedTokenSelect
+  useValidateTokenAddress
 } from '@/lib/hooks/UseAddressSelectHooks';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
@@ -41,23 +35,17 @@ function InputSelect({ inputState, setInputState }: Props) {
   const isEmptyInput = useIsEmptyInput(debouncedInput);
   const isAddressInput = useIsAddressInput(debouncedInput);
   const isDuplicate = useIsDuplicateToken(debouncedInput);
-  const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
-  const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
-    useResolvedTokenContractInfo(validTokenAddress);
-  const selectTokenAndClose = useValidatedTokenSelect(isTokenContractResolved, setInputState);
+  const [tokenContract, , , isLoading] = useValidateTokenAddress(debouncedInput, setInputState);
 
   const dumpStateVars = () => {
     console.log(`=====================================================================================`);
     console.log(`[DEBUG] inputState: ${getInputStateString(inputState)}`);
     console.log(`[DEBUG] textInputField: ${textInputField}`);
     console.log(`[DEBUG] debouncedInput: ${debouncedInput}`);
-    console.log(`[DEBUG] validTokenAddress: ${validTokenAddress}`);
     console.log(`[DEBUG] isEmptyInput: ${isEmptyInput}`);
     console.log(`[DEBUG] isAddressInput: ${isAddressInput}`);
     console.log(`[DEBUG] isDuplicate: ${isDuplicate}`);
-    console.log(`[DEBUG] isTokenContractResolved: ${isTokenContractResolved}`);
     console.log(`[DEBUG] tokenContract: ${stringifyBigInt(tokenContract)}`);
-    console.log(`[DEBUG] tokenContractMessage: ${tokenContractMessage}`);
     console.log(`[DEBUG] isLoading: ${isLoading}`);
     console.log(`-------------------------------------------------------------------------------------`);
   };
@@ -67,11 +55,10 @@ function InputSelect({ inputState, setInputState }: Props) {
   }, [inputState]);
 
   useEffect(() => {
-    setDebouncedState(debouncedInput);
-  }, [debouncedInput]);
-
-  useEffect(() => {
-    if (!validTokenAddress) return;
+    if (isEmptyInput) {
+      setInputState(InputState.EMPTY_INPUT);
+      return;
+    }
 
     if (!isAddressInput) {
       setInputState(InputState.INVALID_ADDRESS_INPUT);
@@ -85,26 +72,13 @@ function InputSelect({ inputState, setInputState }: Props) {
 
     if (isLoading) return;
 
-    if (!isTokenContractResolved) {
+    if (!tokenContract) {
       setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
       return;
     }
 
     setInputState(InputState.VALID_INPUT);
-  }, [validTokenAddress, isAddressInput, isDuplicate, isTokenContractResolved, isLoading]);
-
-  const setDebouncedState = (debouncedString: string) => {
-    if (isEmptyInput) {
-      setInputState(InputState.EMPTY_INPUT);
-      return;
-    }
-
-    if (isAddress(debouncedString)) {
-      setValidTokenAddress(debouncedString as Address);
-    } else {
-      setInputState(InputState.INVALID_ADDRESS_INPUT);
-    }
-  };
+  }, [debouncedInput, isAddressInput, isDuplicate, isLoading, tokenContract, isEmptyInput]);
 
   const getInputEmoji = (): string => {
     switch (inputState) {
@@ -130,7 +104,7 @@ function InputSelect({ inputState, setInputState }: Props) {
     }
   };
 
-  const getErrorImage = (tokenContract?: TokenContract): string => {
+  const getErrorImage = (tokenContract?: any): string => {
     return tokenContract?.address && isAddress(tokenContract.address)
       ? defaultMissingImage
       : badTokenAddressImage;
@@ -199,7 +173,7 @@ function InputSelect({ inputState, setInputState }: Props) {
                   height={40}
                   width={40}
                   alt="Token Image"
-                  onClick={() => selectTokenAndClose(tokenContract)} // ✅ Will only close if resolved
+                  onClick={() => setInputState(InputState.CLOSE_INPUT)}
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {

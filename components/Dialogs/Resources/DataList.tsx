@@ -1,6 +1,6 @@
 'use client'; 
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
@@ -24,6 +24,7 @@ import {
   WalletAccount,
   TRADE_DIRECTION
 } from "@/lib/structure/types";
+import { InputState } from "@/components/Dialogs/TokenSelectDialog";
 import {
   BURN_ADDRESS,
   defaultMissingImage,
@@ -37,9 +38,8 @@ import sepoliaTokenList from "@/resources/data/networks/sepolia/tokenList.json";
 import ethereumTokenList from "@/resources/data/networks/ethereum/tokenList.json";
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
-import { Address, isAddress } from "viem";
-import { InputState } from "../TokenSelectDialog";
-import { useResolvedTokenContractInfo, useValidatedTokenSelect } from '@/lib/hooks/UseAddressSelectHooks';
+import { Address } from "viem";
+import { useResolvedTokenContractInfo, validateTokenSelection } from '@/lib/hooks/UseAddressSelectHooks';
 
 let ACTIVE_ACCOUNT_ADDRESS: Address;
 
@@ -88,18 +88,12 @@ const getDataFeedList = (
       return walletLists.recipientAccountList;
     case FEED_TYPE.TOKEN_LIST:
       switch (chainId) {
-        case BASE:
-          return baseTokenList;
-        case ETHEREUM:
-          return ethereumTokenList;
-        case POLYGON:
-          return polygonTokenList;
-        case HARDHAT:
-          return hardhatTokenList;
-        case SEPOLIA:
-          return sepoliaTokenList;
-        default:
-          return ethereumTokenList;
+        case BASE: return baseTokenList;
+        case ETHEREUM: return ethereumTokenList;
+        case POLYGON: return polygonTokenList;
+        case HARDHAT: return hardhatTokenList;
+        case SEPOLIA: return sepoliaTokenList;
+        default: return ethereumTokenList;
       }
     default:
       return ethereumTokenList;
@@ -121,15 +115,16 @@ const displayElementDetail = (tokenContract: any) => {
   alert(`${tokenContract?.name} Token Address = ${clone.address}`);
 };
 
-type Props = {
+interface Props {
   inputState: InputState;
   setInputState: (state: InputState) => void;
   dataFeedType: FEED_TYPE;
-};
+}
 
 const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const [isClient, setIsClient] = useState(false);
-  const [validTokenAddress, setValidTokenAddress] = useState<Address | undefined>();
+  const [selectedAddress, setSelectedAddress] = useState<Address | undefined>();
+  const prevResolvedRef = useRef<string | undefined>(undefined);
   const chainId = useChainId();
   const walletLists = useWalletLists();
   const { exchangeContext } = useExchangeContext();
@@ -139,8 +134,35 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const [slippageBpsRaw] = useSlippageBps();
   const slippageBps = slippageBpsRaw ?? 200;
   const tradeDirection = exchangeContext.tradeData.tradeDirection ?? TRADE_DIRECTION.SELL_EXACT_OUT;
-  const [tokenContract, isTokenContractResolved] = useResolvedTokenContractInfo(validTokenAddress);
-  const selectTokenAndClose = useValidatedTokenSelect(isTokenContractResolved, setInputState);
+
+  const [tokenContract, isResolved, tokenContractMessage, isLoading] = useResolvedTokenContractInfo(selectedAddress);
+
+  useEffect(() => {
+    console.log(`[DataList] useEffect → selectedAddress: ${selectedAddress}`);
+    console.log(`[DataList] → isResolved: ${isResolved}`);
+    console.log(`[DataList] → isLoading: ${isLoading}`);
+    console.log(`[DataList] → tokenContractMessage: ${tokenContractMessage}`);
+    console.log(`[DataList] → tokenContract:`, tokenContract);
+
+    if (!isLoading && selectedAddress) {
+      if (!tokenContract) {
+        setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+        return;
+      }
+      const validationResult = validateTokenSelection(tokenContract, containerType, sellTokenContract, buyTokenContract);
+      if (validationResult === InputState.VALID_INPUT && tokenContract.address !== prevResolvedRef.current) {
+        prevResolvedRef.current = tokenContract.address;
+        if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+          setSellTokenContract(tokenContract);
+        } else {
+          setBuyTokenContract(tokenContract);
+        }
+        setInputState(InputState.CLOSE_INPUT);
+      } else {
+        setInputState(validationResult);
+      }
+    }
+  }, [isResolved, isLoading, tokenContract]);
 
   useEffect(() => {
     setIsClient(true);
@@ -176,27 +198,6 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
     return <p>Loading data...</p>;
   }
 
-  const validateTokenAddress = (token: TokenContract): boolean => {
-    if (!token?.address || !isAddress(token.address)) {
-      setInputState(InputState.INVALID_ADDRESS_INPUT);
-      return false;
-    }
-    setValidTokenAddress(token.address);
-
-    const oppositeAddress =
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? exchangeContext.tradeData.buyTokenContract?.address
-        : exchangeContext.tradeData.sellTokenContract?.address;
-
-    if (token.address === oppositeAddress) {
-      setInputState(InputState.DUPLICATE_INPUT);
-      return false;
-    }
-
-    setInputState(InputState.VALID_INPUT);
-    return true;
-  };
-
   return (
     <>
       {avatars.length === 0 ? (
@@ -212,10 +213,10 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
               <div
                 className="cursor-pointer flex flex-row justify-between"
                 onClick={() => {
-                  if (validateTokenAddress(token)) {
-                    selectTokenAndClose(token);
-                  }
-                }}>
+                  console.log(`[DataList] onClick → Token Address Selected: ${token.address}`);
+                  setSelectedAddress(token.address);
+                }}
+              >
                 <img
                   className={styles.elementLogo}
                   src={listElement.avatar || defaultMissingImage}

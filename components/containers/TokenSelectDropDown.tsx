@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenSelectDialog } from '../Dialogs/Dialogs';
-import { ChevronDown } from 'lucide-react'; // ✅ Lucide icon
+import { ChevronDown } from 'lucide-react';
 
 import {
   CONTAINER_TYPE,
@@ -17,16 +17,17 @@ import {
   isBlockChainToken,
 } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { useContainerType } from '@/lib/context/contextHooks'; // ✅ Added import
+import { useContainerType } from '@/lib/context/contextHooks';
+import { InputState } from '../Dialogs/TokenSelectDialog';
 
-type Props = {
+interface Props {
   containerType: CONTAINER_TYPE;
   tokenContract: TokenContract | undefined;
   setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
   exchangeContext: ExchangeContext;
-};
+}
 
-function TokenSelect({
+function TokenSelectDropDown({
   containerType,
   tokenContract,
   setDecimalAdjustedContract,
@@ -34,7 +35,8 @@ function TokenSelect({
 }: Props) {
   const [showDialog, setShowDialog] = useState<boolean>(false);
   const { tradeData } = exchangeContext;
-  const [_, setContainerType] = useContainerType(); // ✅ useContainerType hook
+  const [_, setContainerType] = useContainerType();
+  const tokenRef = useRef<TokenContract | undefined>(undefined);
 
   const avatarSrc = useMemo(() => {
     if (!tokenContract || !tokenContract.address) return defaultMissingImage;
@@ -53,27 +55,44 @@ function TokenSelect({
     [tokenContract]
   );
 
-  const handleTokenSelect = useCallback(() => {
-    if (tokenContract) {
-      setDecimalAdjustedContract(tokenContract);
-    } else {
-      console.warn('No token contract selected');
-    }
-    alert(`handleTokenSelect ${stringifyBigInt(tokenContract)}`);
-  }, [tokenContract, setDecimalAdjustedContract]);
+  useEffect(() => {
+    console.log('[TokenSelectDropDown] RENDERED with tokenContract:', stringifyBigInt(tokenContract));
+  }, [tokenContract]);
 
-  // ✅ Handles both containerType update + dialog show
+  const handleTokenSelect = useCallback(() => {
+    console.log('[TokenSelectDropDown] handleTokenSelect fired');
+    if (tokenRef.current) {
+      console.log('[TokenSelectDropDown] Setting tokenContract from ref:', tokenRef.current);
+      setDecimalAdjustedContract(tokenRef.current);
+    } else {
+      console.warn('[TokenSelectDropDown] No tokenContract selected');
+    }
+  }, [setDecimalAdjustedContract]);
+
   const handleDialogOpen = useCallback(() => {
+    console.log('[TokenSelectDropDown] Opening dialog for containerType:', containerType);
     setContainerType(containerType);
     setShowDialog(true);
   }, [containerType, setContainerType]);
+
+  const handleDialogClose = useCallback((contract: TokenContract | undefined, inputState: InputState) => {
+    console.log('[TokenSelectDropDown] Dialog closed with state:', inputState);
+    if (inputState === InputState.CLOSE_INPUT && contract) {
+      tokenRef.current = contract;
+      console.log('[TokenSelectDropDown] Token selected from dialog:', stringifyBigInt(contract));
+      setDecimalAdjustedContract(contract);
+    }
+  }, [setDecimalAdjustedContract]);
+
+  useEffect(() => {
+    console.log('[TokenSelectDropDown] tokenContract prop changed:', stringifyBigInt(tokenContract));
+  }, [tokenContract]);
 
   return (
     <>
       <TokenSelectDialog
         showDialog={showDialog}
         setShowDialog={setShowDialog}
-        callBackSetter={setDecimalAdjustedContract}
       />
       <div className={styles.assetSelect}>
         {tokenContract ? (
@@ -93,11 +112,11 @@ function TokenSelect({
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={handleDialogOpen} // ✅ updated click handler
+          onClick={handleDialogOpen}
         />
       </div>
     </>
   );
 }
 
-export default TokenSelect;
+export default TokenSelectDropDown;

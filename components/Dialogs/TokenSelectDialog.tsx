@@ -67,7 +67,10 @@ export default function TokenSelectDialog({
   }, [showDialog]);
 
   useEffect(() => {
+    console.log('[TokenSelectDialog] inputState changed:', inputState);
+  
     if (inputState === InputState.CLOSE_INPUT) {
+      console.log('[TokenSelectDialog] CLOSE_INPUT detected — closing dialog');
       closeDialog();
     }
   }, [inputState]);
@@ -77,6 +80,12 @@ export default function TokenSelectDialog({
       setActiveAccount(ACTIVE_ACCOUNT_ADDRESS as Address);
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
+
+  const debugSetInputState = (state: InputState) => {
+    console.log('[🔄 setInputState] New State:', state);
+    setInputState(state);
+  };
+
 
   const getTitleFromState = (state: InputState): string | JSX.Element => {
     switch (state) {
@@ -145,12 +154,12 @@ export default function TokenSelectDialog({
       <div className={styles.modalBox}>
           <InputSelect
             inputState={inputState}
-            setInputState={setInputState}
+            setInputState={debugSetInputState}
           />
         <div className={styles.modalScrollBar}>
           <DataList
             inputState={inputState}
-            setInputState={setInputState}
+            setInputState={debugSetInputState}
             dataFeedType={FEED_TYPE.TOKEN_LIST}
           />
         </div>
@@ -158,57 +167,4 @@ export default function TokenSelectDialog({
     </dialog>
   );
 
-
-/*
-const updateTokenCallback = useCallback(
-  (
-    tokenContract: TokenContract | undefined,
-    state: InputState,
-    shouldClose: boolean,
-    ignorePrevSelection: boolean = false
-  ): boolean => {
-    console.log("[updateTokenCallback] tokenContract:", tokenContract, "state:", state, "shouldClose:", shouldClose);
-
-    setInputState(state);
-
-    if (state !== InputState.VALID_INPUT) {
-      console.log("[updateTokenCallback] Exiting: Invalid state", state);
-      return false;
-    }
-
-    if (!tokenContract || !tokenContract.address || !isAddress(tokenContract.address)) {
-      console.log("[updateTokenCallback] Exiting: Invalid token or address", tokenContract);
-      // alert(`SELECT_ERROR: Invalid token: ${tokenContract?.name}`);
-      return false;
-    }
-
-    if (isDuplicateToken(tokenContract.address)) {
-      console.log("[updateTokenCallback] Exiting: Duplicate token", tokenContract.symbol);
-      // alert(`SELECT_ERROR: Duplicate token: ${tokenContract.symbol}`);
-      return false;
-    }
-
-    if (!ignorePrevSelection && prevAddressRef.current === tokenContract.address) {
-      if (shouldClose) {
-        console.log("[updateTokenCallback] Previously selected token, but closing anyway:", tokenContract.address);
-        closeDialog();
-        return true; // ✅ Allow closure even if previously selected
-      } else {
-        console.log("[updateTokenCallback] Exiting: Previously selected token", tokenContract.address);
-        return false;
-      }
-    }
-
-    prevAddressRef.current = tokenContract.address;
-    setTokenContract(tokenContract);
-    callBackSetter(tokenContract);
-
-    if (shouldClose) {
-      closeDialog();
-    }
-    return true;
-  },
-  [isDuplicateToken, callBackSetter, closeDialog]
-);
-*/
 }

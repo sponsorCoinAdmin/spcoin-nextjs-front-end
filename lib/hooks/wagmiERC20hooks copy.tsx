@@ -29,33 +29,57 @@ function useErc20TokenContract(
   const resolvedAccount = accountAddress ?? account;
   const enabled = !!tokenAddress && isAddress(tokenAddress);
 
-  const { data: metaData, status: metaStatus } = useReadContracts({
-    contracts: [
-      { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
-    ],
-    query: { enabled },
-  });
-
-  const { data: balance, status: balanceStatus } = useReadContract({
-    address: tokenAddress,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: resolvedAccount ? [resolvedAccount] : undefined,
-    query: {
-      enabled: !!tokenAddress && !!resolvedAccount,
-    },
-  });
-
-  // 🔒 Require meta fetch success and presence of data
+  function useErc20TokenContract(
+    tokenAddress?: Address,
+    accountAddress?: Address
+  ): RawTokenContract | undefined {
+    const { address: account } = useAccount();
+    const resolvedAccount = accountAddress ?? account;
+    const enabled = !!tokenAddress && isAddress(tokenAddress);
+  
+    const { data: metaData, status: metaStatus } = useReadContracts({
+      contracts: [
+        { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
+        { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
+        { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
+        { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
+      ],
+      query: {
+        enabled,
+      },
+    });
+  
+    const { data: balance, status: balanceStatus } = useReadContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: resolvedAccount ? [resolvedAccount] : undefined,
+      query: {
+        enabled: !!tokenAddress && !!resolvedAccount,
+      },
+    });
+  
+    // 🔒 Require meta fetch success and presence of data
+    if (!enabled || metaStatus !== 'success' || !metaData) return undefined;
+  
+    const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
+  
+    // ❌ If essential values are missing, it's not a valid ERC-20 token
+    if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
+  
+    return {
+      address: tokenAddress!,
+      symbol: symbolRaw as string,
+      name: nameRaw as string,
+      decimals: Number(decimalsRaw),
+      totalSupply: totalSupplyRaw as bigint,
+      balance: balanceStatus === 'success' ? (balance as bigint) : 0n,
+    };
+  }
+  
   if (!enabled || metaStatus !== 'success' || !metaData) return undefined;
 
   const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
-
-  // ❌ If essential values are missing, it's not a valid ERC-20 token
-  if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
 
   return {
     address: tokenAddress!,
@@ -109,7 +133,7 @@ export function TokenFetchGuiExamples() {
       ? (accountAddressInput as Address)
       : account.address;
 
-  const tokenResult: TokenContract | undefined = useMappedTokenContract(submitted ? tokenAddress : undefined, accountAddress);
+  const tokenResult:TokenContract|undefined = useMappedTokenContract(submitted ? tokenAddress : undefined, accountAddress);
 
   useEffect(() => {
     if (submitted) {

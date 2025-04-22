@@ -18,7 +18,7 @@ import {
 
 // Components
 import AddSponsorButton from "../Buttons/AddSponsorButton";
-import TokenSelect from "./TokenSelectDropDown";
+import TokenSelectDropDown from "./TokenSelectDropDown";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
 // Utilities
@@ -32,6 +32,7 @@ import {
   API_TRADING_PROVIDER,
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
+import { stringifyBigInt } from "@sponsorcoin/spcoin-lib/utils";
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
@@ -60,6 +61,11 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     chainId: tokenContract?.chainId,
     token: tokenContract?.symbol === 'ETH' ? undefined : tokenContract?.address,
   });
+
+  useEffect(() => {
+    console.log('[TokenSelectContainer] SellToken:', stringifyBigInt(sellTokenContract));
+    console.log('[TokenSelectContainer] BuyToken:', stringifyBigInt(buyTokenContract));
+  }, [sellTokenContract, buyTokenContract]);
 
   const [inputValue, setInputValue] = useState<string>("0");
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -187,7 +193,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
           }
         }}
       />
-      <TokenSelect
+      <TokenSelectDropDown
         exchangeContext={exchangeContext}
         containerType={localContainerType}
         tokenContract={tokenContract}

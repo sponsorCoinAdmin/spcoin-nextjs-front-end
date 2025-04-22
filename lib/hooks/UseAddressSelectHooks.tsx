@@ -35,13 +35,6 @@ export function useIsEmptyInput(input?: string): boolean {
   }, [input]);
 }
 
-/**
- * Returns:
- * 1. tokenContract: resolved TokenContract or undefined
- * 2. isTokenContractResolved: true if found
- * 3. tokenContractMessage: formatted JSX message (success or bold red NOT found)
- */
-
 export function useResolvedTokenContractInfo(
   tokenAddress?: string
 ): [TokenContract | undefined, boolean, string, boolean] {
@@ -66,45 +59,6 @@ export function useResolvedTokenContractInfo(
   return [tokenContract, isTokenContractResolved, tokenContractMessage, isTokenLoading];
 }
 
-// /**
-//  * Hook to select a token (buy or sell based on containerType) and close the input dialog.
-//  * @param setInputState - Function to update the input validation state
-//  * @returns A callback that sets the selected token and triggers CLOSE_INPUT state
-//  */
-// export const useSelectTokenAndClose = (
-//   inputState: InputState,
-//   setInputState: (state: InputState) => void
-// ): ((tokenContract: TokenContract) => void) => {
-//   const [containerType] = useContainerType();
-//   const [, setSellTokenContract] = useSellTokenContract();
-//   const [, setBuyTokenContract] = useBuyTokenContract();
-
-//   return useCallback(
-//     (tokenContract: TokenContract) => {
-//       console.log(`🖱 Clicked Element Data: ${tokenContract.symbol} @ ${tokenContract.address}`);
-
-//       if (inputState !== InputState.VALID_INPUT) {
-//         console.warn(`[selectTokenAndClose] Aborting: inputState is not valid (${InputState[inputState]})`);
-//         return;
-//       }
-
-//       if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-//         setSellTokenContract(tokenContract);
-//       } else {
-//         setBuyTokenContract(tokenContract);
-//       }
-
-//       setInputState(InputState.CLOSE_INPUT);
-//     },
-//     [containerType, setSellTokenContract, setBuyTokenContract, setInputState, inputState]
-//   );
-// };
-
-
-/**
- * Checks whether the token is valid and not a duplicate of the opposite container token.
- * @returns {InputState} - the appropriate validation result
- */
 export function validateTokenSelection(
   token: TokenContract,
   containerType: CONTAINER_TYPE,
@@ -127,10 +81,18 @@ export function validateTokenSelection(
   return InputState.VALID_INPUT;
 }
 
-/**
- * Hook to validate a token, update the appropriate context (buy/sell),
- * and close the dialog on success. Validation assumes the token is already resolved.
- */
+export function useValidateTokenAddress(
+  tokenAddress: string | undefined,
+  setInputState: (state: InputState) => void
+): [TokenContract | undefined, boolean, string, boolean] {
+  const isAddressInput = useIsAddressInput(tokenAddress);
+  const isDuplicate = useIsDuplicateToken(tokenAddress);
+  const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
+    useResolvedTokenContractInfo(tokenAddress);
+
+  return [tokenContract, isAddressInput, tokenContractMessage, isLoading];
+}
+
 export const useValidatedTokenSelect = (
   isTokenContractResolved: boolean,
   setInputState: (state: InputState) => void
