@@ -35,7 +35,7 @@ function InputSelect({ inputState, setInputState }: Props) {
   const isEmptyInput = useIsEmptyInput(debouncedInput);
   const isAddressInput = useIsAddressInput(debouncedInput);
   const isDuplicate = useIsDuplicateToken(debouncedInput);
-  const [tokenContract, , , isLoading] = useValidateTokenAddress(debouncedInput, setInputState);
+  const [tokenContract, isLoading] = useValidateTokenAddress(debouncedInput, setInputState);
 
   const dumpStateVars = () => {
     console.log(`=====================================================================================`);

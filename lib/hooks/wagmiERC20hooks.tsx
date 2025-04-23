@@ -71,14 +71,20 @@ function useErc20TokenContract(
 // 🔁 Hook: useMappedTokenContract
 // Converts raw token to your global TokenContract
 // ---------------------------------------------
+
 export function useMappedTokenContract(
   tokenAddress?: Address,
   accountAddress?: Address
-): MappedTokenContract | undefined {
+): MappedTokenContract | undefined | null {
   const account = useAccount();
   const chainId = useChainId();
+
   const token = useErc20TokenContract(tokenAddress, accountAddress ?? account.address);
-  if (!token) return undefined;
+
+  if (!token) {
+    console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);
+    return null; // ⚠️ Return `null` to indicate known failure instead of staying undefined forever
+  }
 
   return {
     address: token.address,

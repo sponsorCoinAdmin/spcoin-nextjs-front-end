@@ -1,12 +1,13 @@
 import { CONTAINER_TYPE } from '@/lib/structure/types';
 import { useSellTokenContract, useBuyTokenContract, useContainerType } from '@/lib/context/contextHooks';
 import { isAddress } from 'viem';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useChainId } from 'wagmi';
 import { TokenContract } from '@/lib/structure/types';
 import { useMappedTokenContract } from './wagmiERC20hooks';
 import { useCallback } from 'react';
 import { InputState } from '@/components/Dialogs/TokenSelectDialog';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 export function useIsDuplicateToken(tokenAddress?: string): boolean {
   const [sellTokenContract] = useSellTokenContract();
@@ -44,11 +45,12 @@ export function useResolvedTokenContractInfo(
     return isAddress(tokenAddress ?? '') ? (tokenAddress as `0x${string}`) : undefined;
   }, [tokenAddress]);
 
-  const tokenContract: TokenContract | undefined = useMappedTokenContract(validAddress);
-  const isTokenContractResolved = !!tokenContract;
+  const tokenContract: TokenContract | undefined | null = useMappedTokenContract(validAddress);
+  const isTokenFailed = tokenContract === null;
+  const isTokenContractResolved = !!tokenContract && tokenContract !== null;
   const isTokenLoading = !!validAddress && tokenContract === undefined;
 
-  const tokenContractMessage: string = useMemo(() => {
+  const tokenContractMessage = useMemo(() => {
     if (isTokenContractResolved) {
       return `TokenContract ${tokenContract!.name} found on blockchain ${chainId}`;
     }
@@ -56,7 +58,25 @@ export function useResolvedTokenContractInfo(
     return `TokenContract at address ${tokenAddress} NOT found on blockchain ${chainId}`;
   }, [isTokenContractResolved, tokenContract?.name, tokenAddress, chainId]);
 
-  return [tokenContract, isTokenContractResolved, tokenContractMessage, isTokenLoading];
+  // ✅ Debugging output
+  useEffect(() => {
+    console.log(`[🔍 useResolvedTokenContractInfo DEBUG]`);
+    console.log(`  tokenAddress:         ${tokenAddress}`);
+    console.log(`  validAddress:         ${validAddress}`);
+    console.log(`  tokenContract:        ${stringifyBigInt(tokenContract)}`);
+    console.log(`  isTokenResolved:      ${isTokenContractResolved}`);
+    console.log(`  isTokenLoading:       ${isTokenLoading}`);
+    console.log(`  tokenContractMessage: ${tokenContractMessage}`);
+  }, [
+    tokenAddress,
+    validAddress,
+    tokenContract,
+    isTokenContractResolved,
+    isTokenLoading,
+    tokenContractMessage
+  ]);
+
+  return [tokenContract ?? undefined, isTokenContractResolved, tokenContractMessage, isTokenLoading];
 }
 
 export function validateTokenSelection(
@@ -84,13 +104,52 @@ export function validateTokenSelection(
 export function useValidateTokenAddress(
   tokenAddress: string | undefined,
   setInputState: (state: InputState) => void
-): [TokenContract | undefined, boolean, string, boolean] {
+): [TokenContract | undefined, boolean, string] {
   const isAddressInput = useIsAddressInput(tokenAddress);
   const isDuplicate = useIsDuplicateToken(tokenAddress);
   const [tokenContract, isTokenContractResolved, tokenContractMessage, isLoading] =
     useResolvedTokenContractInfo(tokenAddress);
+  const isEmptyInput = useIsEmptyInput(tokenAddress);
 
-  return [tokenContract, isAddressInput, tokenContractMessage, isLoading];
+  useEffect(() => {
+    if (isEmptyInput) {
+      setInputState(InputState.EMPTY_INPUT);
+      return;
+    }
+
+    if (!isAddressInput) {
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
+      return;
+    }
+
+    if (isDuplicate) {
+      setInputState(InputState.DUPLICATE_INPUT);
+      return;
+    }
+
+    if (isLoading) {
+      setInputState(InputState.IS_LOADING);
+      return;
+    }
+
+    if (!isTokenContractResolved || !tokenContract) {
+      setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+      return;
+    }
+
+    setInputState(InputState.VALID_INPUT);
+  }, [
+    tokenAddress,
+    isAddressInput,
+    isDuplicate,
+    isLoading,
+    tokenContract,
+    isEmptyInput,
+    isTokenContractResolved,
+    setInputState,
+  ]);
+
+  return [tokenContract, isLoading, tokenContractMessage];
 }
 
 export const useValidatedTokenSelect = (

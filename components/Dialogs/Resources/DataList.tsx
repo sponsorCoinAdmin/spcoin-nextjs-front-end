@@ -38,8 +38,8 @@ import sepoliaTokenList from "@/resources/data/networks/sepolia/tokenList.json";
 import ethereumTokenList from "@/resources/data/networks/ethereum/tokenList.json";
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
-import { Address } from "viem";
-import { useResolvedTokenContractInfo, validateTokenSelection } from '@/lib/hooks/UseAddressSelectHooks';
+import { Address, isAddress } from "viem";
+import { useResolvedTokenContractInfo } from '@/lib/hooks/UseAddressSelectHooks';
 
 let ACTIVE_ACCOUNT_ADDRESS: Address;
 
@@ -138,31 +138,34 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
   const [tokenContract, isResolved, tokenContractMessage, isLoading] = useResolvedTokenContractInfo(selectedAddress);
 
   useEffect(() => {
-    console.log(`[DataList] useEffect → selectedAddress: ${selectedAddress}`);
-    console.log(`[DataList] → isResolved: ${isResolved}`);
-    console.log(`[DataList] → isLoading: ${isLoading}`);
-    console.log(`[DataList] → tokenContractMessage: ${tokenContractMessage}`);
-    console.log(`[DataList] → tokenContract:`, tokenContract);
+    if (!isLoading && selectedAddress && isAddress(selectedAddress)) {
+      if (isResolved && tokenContract) {
+        const isDuplicate =
+          (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && tokenContract.address === buyTokenContract?.address) ||
+          (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && tokenContract.address === sellTokenContract?.address);
 
-    if (!isLoading && selectedAddress) {
-      if (!tokenContract) {
-        setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
-        return;
-      }
-      const validationResult = validateTokenSelection(tokenContract, containerType, sellTokenContract, buyTokenContract);
-      if (validationResult === InputState.VALID_INPUT && tokenContract.address !== prevResolvedRef.current) {
-        prevResolvedRef.current = tokenContract.address;
-        if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-          setSellTokenContract(tokenContract);
-        } else {
-          setBuyTokenContract(tokenContract);
+        if (isDuplicate) {
+          console.warn(`[DataList] ❌ Duplicate token detected: ${tokenContract.symbol}`);
+          setInputState(InputState.DUPLICATE_INPUT);
+          return;
         }
-        setInputState(InputState.CLOSE_INPUT);
+
+        if (tokenContract.address !== prevResolvedRef.current) {
+          prevResolvedRef.current = tokenContract.address;
+
+          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+            setSellTokenContract(tokenContract);
+          } else {
+            setBuyTokenContract(tokenContract);
+          }
+
+          setInputState(InputState.CLOSE_INPUT);
+        }
       } else {
-        setInputState(validationResult);
+        setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
       }
     }
-  }, [isResolved, isLoading, tokenContract]);
+  }, [isResolved, isLoading, tokenContract, selectedAddress]);
 
   useEffect(() => {
     setIsClient(true);
@@ -213,7 +216,6 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
               <div
                 className="cursor-pointer flex flex-row justify-between"
                 onClick={() => {
-                  console.log(`[DataList] onClick → Token Address Selected: ${token.address}`);
                   setSelectedAddress(token.address);
                 }}
               >

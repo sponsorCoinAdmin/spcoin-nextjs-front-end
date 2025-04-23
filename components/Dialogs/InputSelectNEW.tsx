@@ -55,7 +55,7 @@ function InputSelect({
   const [textInputField, setTextInputField] = useState<any>();
   const [tokenAddress, setTokenAddress] = useState<Address | undefined>();
   const [inputState, setInputStateLocal] = useState<InputState>(InputState.EMPTY_INPUT);
-  const tokenContract: TokenContract | undefined = useMappedTokenContract(tokenAddress);
+  const tokenContract: TokenContract | undefined | null = useMappedTokenContract(tokenAddress);
   const [containerType] = useContainerType();
 
   useEffect(() => {
