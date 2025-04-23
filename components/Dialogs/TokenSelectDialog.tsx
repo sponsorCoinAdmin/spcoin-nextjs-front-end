@@ -14,6 +14,7 @@ import { isAddress, Address } from "viem";
 export enum InputState {
   EMPTY_INPUT,
   VALID_INPUT,
+  VALID_INPUT_PENDING,
   INVALID_ADDRESS_INPUT,
   CONTRACT_NOT_FOUND_INPUT,
   DUPLICATE_INPUT,
@@ -58,6 +59,8 @@ export default function TokenSelectDialog({
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const [containerType, setContainerType] = useContainerType();
+  const [externalAddress, setExternalAddress] = useState<string | undefined>(undefined);
+
 
   useEffect(() => {
     setInputState(InputState.EMPTY_INPUT)
@@ -67,13 +70,15 @@ export default function TokenSelectDialog({
   }, [showDialog]);
 
   useEffect(() => {
-    console.log('[TokenSelectDialog] inputState changed:', inputState);
-  
-    if (inputState === InputState.CLOSE_INPUT) {
+    if (inputState === InputState.VALID_INPUT) {
+      console.log('[TokenSelectDialog] VALID_INPUT confirmed — promoting to CLOSE_INPUT');
+      setInputState(InputState.CLOSE_INPUT);
+    } else if (inputState === InputState.CLOSE_INPUT) {
       console.log('[TokenSelectDialog] CLOSE_INPUT detected — closing dialog');
       closeDialog();
     }
   }, [inputState]);
+  
 
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
@@ -113,6 +118,7 @@ export default function TokenSelectDialog({
     setInputState(InputState.EMPTY_INPUT)
     setShowDialog(false);
     dialogRef.current?.close();
+    setExternalAddress(undefined);
   }, [setShowDialog]);
 
   const isDuplicateToken = useCallback(
@@ -155,13 +161,16 @@ export default function TokenSelectDialog({
           <InputSelect
             inputState={inputState}
             setInputState={debugSetInputState}
+            externalAddress={externalAddress}
+
           />
         <div className={styles.modalScrollBar}>
-          <DataList
-            inputState={inputState}
-            setInputState={debugSetInputState}
-            dataFeedType={FEED_TYPE.TOKEN_LIST}
-          />
+        <DataList
+          inputState={inputState}
+          setInputState={setInputState}
+          dataFeedType={FEED_TYPE.TOKEN_LIST}
+          setExternalAddress={setExternalAddress}
+        />
         </div>
       </div>
     </dialog>

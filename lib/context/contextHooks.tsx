@@ -144,6 +144,16 @@ export const useBuyTokenContract = (): [TokenContract | undefined, (contract: To
   ];
 };
 
+export const useSellTokenAddress = (): string | undefined => {
+  const [sellTokenContract] = useSellTokenContract();
+  return sellTokenContract?.address;
+};
+
+export const useBuyTokenAddress = (): string | undefined => {
+  const [buyTokenContract] = useBuyTokenContract();
+  return buyTokenContract?.address;
+};
+
 export const useSlippageBps = (): [number, (bps: number) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   return [
@@ -248,6 +258,8 @@ export const AllHooksExample = () => {
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const apiProvider = useApiProvider();
   const tradeData = useTradeData();
+  const sellTokenAddress = useSellTokenAddress();
+  const buyTokenAddress = useBuyTokenAddress();
 
   return (
     <div style={{ fontFamily: "monospace", padding: "1rem" }}>
@@ -262,13 +274,13 @@ export const AllHooksExample = () => {
       <div>API Provider: {apiProvider}</div>
       <div>Sell Token: {sellTokenContract?.symbol ?? "None"}</div>
       <div>Buy Token: {buyTokenContract?.symbol ?? "None"}</div>
+      <div>Sell Token Address: {sellTokenAddress ?? "None"}</div>
+      <div>Buy Token Address: {buyTokenAddress ?? "None"}</div>
       <div>Trade Data: {JSON.stringify(tradeData, null, 2)}</div>
       <div>Exchange Context: {JSON.stringify(exchangeContext, null, 2)}</div>
       <div>Error Message: {JSON.stringify(errorMessage)}</div>
       <div>API Error Message: {JSON.stringify(apiErrorMessage)}</div>
-
       <hr />
-
       <button onClick={() => setSellAmount(sellAmount + 1n)}>+1 Sell</button>
       <button onClick={() => setSellBalance(sellBalance + 1000000000000000000n)}>+1 ETH Balance</button>
       <button onClick={() => setBuyAmount(buyAmount + 1n)}>+1 Buy</button>

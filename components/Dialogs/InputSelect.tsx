@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 
@@ -10,14 +10,15 @@ import { Address, isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { CONTAINER_TYPE } from '@/lib/structure/types';
-import { useContainerType } from '@/lib/context/contextHooks';
-import { getInputStateString, InputState } from './TokenSelectDialog';
 import {
-  useIsAddressInput,
-  useIsDuplicateToken,
-  useIsEmptyInput,
-  useValidateTokenAddress
-} from '@/lib/hooks/UseAddressSelectHooks';
+  useContainerType,
+  useBuyTokenAddress,
+  useSellTokenAddress,
+  useBuyTokenContract,
+  useSellTokenContract,
+} from '@/lib/context/contextHooks';
+import { getInputStateString, InputState } from './TokenSelectDialog';
+import { useIsAddressInput, useIsEmptyInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
@@ -26,32 +27,33 @@ const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
 type Props = {
   inputState: InputState;
   setInputState: (state: InputState) => void;
+  externalAddress?: string;
 };
 
-function InputSelect({ inputState, setInputState }: Props) {
+function InputSelect({ inputState, setInputState, externalAddress }: Props) {
   const [textInputField, setTextInputField] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
   const [containerType] = useContainerType();
+  const buyAddress = useBuyTokenAddress();
+  const sellAddress = useSellTokenAddress();
+  const [, setBuyTokenContract] = useBuyTokenContract();
+  const [, setSellTokenContract] = useSellTokenContract();
+
   const debouncedInput = useDebounce(textInputField);
   const isEmptyInput = useIsEmptyInput(debouncedInput);
   const isAddressInput = useIsAddressInput(debouncedInput);
-  const isDuplicate = useIsDuplicateToken(debouncedInput);
-  const [tokenContract, isLoading] = useValidateTokenAddress(debouncedInput, setInputState);
-
-  const dumpStateVars = () => {
-    console.log(`=====================================================================================`);
-    console.log(`[DEBUG] inputState: ${getInputStateString(inputState)}`);
-    console.log(`[DEBUG] textInputField: ${textInputField}`);
-    console.log(`[DEBUG] debouncedInput: ${debouncedInput}`);
-    console.log(`[DEBUG] isEmptyInput: ${isEmptyInput}`);
-    console.log(`[DEBUG] isAddressInput: ${isAddressInput}`);
-    console.log(`[DEBUG] isDuplicate: ${isDuplicate}`);
-    console.log(`[DEBUG] tokenContract: ${stringifyBigInt(tokenContract)}`);
-    console.log(`[DEBUG] isLoading: ${isLoading}`);
-    console.log(`-------------------------------------------------------------------------------------`);
-  };
+  const [tokenContract, isLoading] = useValidateTokenAddress(debouncedInput, () => {});
 
   useEffect(() => {
-    dumpStateVars();
+    if (externalAddress && externalAddress !== textInputField) {
+      setTextInputField(externalAddress);
+    }
+  }, [externalAddress]);
+
+  useEffect(() => {
+    if (inputState === InputState.CLOSE_INPUT) {
+      setTextInputField('');
+    }
   }, [inputState]);
 
   useEffect(() => {
@@ -65,7 +67,12 @@ function InputSelect({ inputState, setInputState }: Props) {
       return;
     }
 
-    if (isDuplicate) {
+    const selectedAddress = debouncedInput.toLowerCase();
+    const oppositeAddress = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyAddress?.toLowerCase()
+      : sellAddress?.toLowerCase();
+
+    if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
       setInputState(InputState.DUPLICATE_INPUT);
       return;
     }
@@ -77,8 +84,8 @@ function InputSelect({ inputState, setInputState }: Props) {
       return;
     }
 
-    setInputState(InputState.VALID_INPUT);
-  }, [debouncedInput, isAddressInput, isDuplicate, isLoading, tokenContract, isEmptyInput]);
+    setInputState(InputState.VALID_INPUT_PENDING);
+  }, [debouncedInput, isAddressInput, isLoading, tokenContract, isEmptyInput, buyAddress, sellAddress, containerType]);
 
   const getInputEmoji = (): string => {
     switch (inputState) {
@@ -104,6 +111,22 @@ function InputSelect({ inputState, setInputState }: Props) {
     }
   };
 
+  const handleTokenSelect = () => {
+    if (!tokenContract) return;
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      setSellTokenContract(tokenContract);
+    } else {
+      setBuyTokenContract(tokenContract);
+    }
+    setInputState(InputState.VALID_INPUT);
+  };
+
+  const handleTokenPreviewKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter') {
+      handleTokenSelect();
+    }
+  };
+
   const getErrorImage = (tokenContract?: any): string => {
     return tokenContract?.address && isAddress(tokenContract.address)
       ? defaultMissingImage
@@ -111,8 +134,6 @@ function InputSelect({ inputState, setInputState }: Props) {
   };
 
   const validateInputStatus = (state: InputState): JSX.Element => {
-    console.log(`[DEBUG] validateInputStatus.inputState: ${getInputStateString(state)}`);
-
     const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
     const textStyle: React.CSSProperties = { fontSize: '15px', position: 'relative', top: -6 };
 
@@ -159,13 +180,20 @@ function InputSelect({ inputState, setInputState }: Props) {
           placeholder={INPUT_PLACE_HOLDER}
           value={textInputField}
           onChange={(e) => validateTextInput(e.target.value)}
+          ref={inputRef}
         />
       </div>
 
       {inputState !== InputState.EMPTY_INPUT && (
         <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-          {inputState === InputState.VALID_INPUT ? (
-            <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
+          {inputState === InputState.VALID_INPUT_PENDING  ? (
+            <div
+              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+              role="button"
+              tabIndex={0}
+              onClick={handleTokenSelect}
+              onKeyDown={handleTokenPreviewKeyDown}
+            >
               <div className="cursor-pointer flex flex-row justify-between">
                 <Image
                   id="tokenImage"
@@ -173,7 +201,6 @@ function InputSelect({ inputState, setInputState }: Props) {
                   height={40}
                   width={40}
                   alt="Token Image"
-                  onClick={() => setInputState(InputState.CLOSE_INPUT)}
                   onError={(e) => {
                     const fallback = getErrorImage(tokenContract);
                     if (e.currentTarget.src !== fallback) {

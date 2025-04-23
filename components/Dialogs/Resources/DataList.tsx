@@ -1,4 +1,4 @@
-'use client'; 
+'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import styles from "@/styles/Modal.module.css";
@@ -119,9 +119,10 @@ interface Props {
   inputState: InputState;
   setInputState: (state: InputState) => void;
   dataFeedType: FEED_TYPE;
+  setExternalAddress: (address: string) => void;
 }
 
-const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
+const DataList = ({ inputState, setInputState, dataFeedType, setExternalAddress }: Props) => {
   const [isClient, setIsClient] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | undefined>();
   const prevResolvedRef = useRef<string | undefined>(undefined);
@@ -137,32 +138,34 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
 
   const [tokenContract, isResolved, tokenContractMessage, isLoading] = useResolvedTokenContractInfo(selectedAddress);
 
+  const isDuplicateToken = (address: string): boolean => {
+    const { buyTokenContract, sellTokenContract } = exchangeContext.tradeData;
+    const oppositeAddress = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyTokenContract?.address : sellTokenContract?.address;
+    return address === oppositeAddress;
+  };
+
   useEffect(() => {
     if (!isLoading && selectedAddress && isAddress(selectedAddress)) {
       if (isResolved && tokenContract) {
-        const isDuplicate =
-          (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && tokenContract.address === buyTokenContract?.address) ||
-          (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && tokenContract.address === sellTokenContract?.address);
-
-        if (isDuplicate) {
-          console.warn(`[DataList] ❌ Duplicate token detected: ${tokenContract.symbol}`);
-          setInputState(InputState.DUPLICATE_INPUT);
-          return;
-        }
-
         if (tokenContract.address !== prevResolvedRef.current) {
+          if (isDuplicateToken(tokenContract.address)) {
+            console.warn('[DataList] ❌ Duplicate token selected — blocking set');
+            setInputState(InputState.DUPLICATE_INPUT);
+            return;
+          }
           prevResolvedRef.current = tokenContract.address;
-
           if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
             setSellTokenContract(tokenContract);
           } else {
             setBuyTokenContract(tokenContract);
           }
-
           setInputState(InputState.CLOSE_INPUT);
         }
       } else {
+        console.warn('[DataList] ❌ Contract NOT found — setting CONTRACT_NOT_FOUND_INPUT');
         setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+        setExternalAddress(selectedAddress);
       }
     }
   }, [isResolved, isLoading, tokenContract, selectedAddress]);
@@ -216,6 +219,7 @@ const DataList = ({ inputState, setInputState, dataFeedType }: Props) => {
               <div
                 className="cursor-pointer flex flex-row justify-between"
                 onClick={() => {
+                  console.log(`[DataList] onClick → Token Address Selected: ${token.address}`);
                   setSelectedAddress(token.address);
                 }}
               >
