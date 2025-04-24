@@ -111,6 +111,8 @@ export default function TokenSelectDialog({
           : <span style={{ color: 'orange' }}>Buy Address Cannot Be the Same as Sell Address</span>;
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         return <span style={{ color: 'orange' }}>⚠️ Contract Not Found on BlockChain</span>;
+      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+        return <span style={{ color: 'orange' }}>⚠️ BlockChain Token Missing Local Logo Image</span>;
       default:
         return <span style={{ color: 'red' }}>(Unknown Error ❓)</span>;
     }

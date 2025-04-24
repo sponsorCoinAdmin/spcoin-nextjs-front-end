@@ -102,6 +102,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
       case InputState.DUPLICATE_INPUT: return '❌';
       case InputState.EMPTY_INPUT: return '🔍';
       case InputState.IS_LOADING: return '⏳';
+      case InputState.CONTRACT_NOT_FOUND_LOCALLY: return '⚠️'
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       default: return '❓';
     }

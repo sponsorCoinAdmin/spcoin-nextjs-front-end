@@ -46,7 +46,6 @@ export function useResolvedTokenContractInfo(
   }, [tokenAddress]);
 
   const tokenContract: TokenContract | undefined | null = useMappedTokenContract(validAddress);
-  const isTokenFailed = tokenContract === null;
   const isTokenContractResolved = !!tokenContract && tokenContract !== null;
   const isTokenLoading = !!validAddress && tokenContract === undefined;
 
@@ -75,7 +74,6 @@ export function useResolvedTokenContractInfo(
     isTokenLoading,
     tokenContractMessage
   ]);
-
   return [tokenContract ?? undefined, isTokenContractResolved, tokenContractMessage, isTokenLoading];
 }
 

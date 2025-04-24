@@ -49,7 +49,7 @@ function TokenSelectDropDown({
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       event.currentTarget.src = defaultMissingImage;
       if (tokenContract) {
-        tokenContract.img = `***ERROR: MISSING AVATAR FILE*** -> ${tokenContract.img}`;
+        tokenContract.logoURI = `***ERROR: MISSING AVATAR FILE*** -> ${tokenContract.logoURI}`;
       }
     },
     [tokenContract]
