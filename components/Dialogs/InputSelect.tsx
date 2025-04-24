@@ -45,6 +45,8 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
   const isEmptyInput = useIsEmptyInput(debouncedInput);
   const isAddressInput = useIsAddressInput(debouncedInput);
   const [tokenContract, isLoading] = useValidateTokenAddress(debouncedInput, () => {});
+  const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
+
 
   useEffect(() => {
     if (externalAddress && externalAddress !== textInputField) {
@@ -95,17 +97,20 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
     setInputState(InputState.VALID_INPUT_PENDING);
   }, [debouncedInput, isAddressInput, isLoading, tokenContract, isEmptyInput, buyAddress, sellAddress, containerType]);
 
-  const getInputEmoji = (): string => {
-    switch (inputState) {
-      case InputState.VALID_INPUT: return '✅';
-      case InputState.INVALID_ADDRESS_INPUT: return '⚠️';
-      case InputState.DUPLICATE_INPUT: return '❌';
-      case InputState.EMPTY_INPUT: return '🔍';
-      case InputState.IS_LOADING: return '⏳';
-      case InputState.CONTRACT_NOT_FOUND_LOCALLY: return '⚠️'
-      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-      default: return '❓';
-    }
+  const getInputEmoji = (style?: React.CSSProperties): JSX.Element | string => {
+    const emoji = (() => {
+      switch (inputState) {
+        case InputState.VALID_INPUT: return '✅';
+        case InputState.INVALID_ADDRESS_INPUT: return '❓';
+        case InputState.DUPLICATE_INPUT: return '❌';
+        case InputState.EMPTY_INPUT: return '🔍';
+        case InputState.IS_LOADING: return '⏳';
+        case InputState.CONTRACT_NOT_FOUND_LOCALLY: return '⚠️';
+        case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        default: return '⏳';
+      }
+    })();
+    return style ? <span style={style}>{emoji}</span> : emoji;
   };
 
   const validateTextInput = (input: string) => {
@@ -143,14 +148,13 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
   };
 
   const validateInputStatus = (state: InputState): JSX.Element => {
-    const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
     const textStyle: React.CSSProperties = { fontSize: '15px', position: 'relative', top: -6 };
 
     switch (state) {
       case InputState.INVALID_ADDRESS_INPUT:
         return (
           <span style={{ color: 'orange' }}>
-            <span style={emojiStyle}>❓</span>
+            {getInputEmoji(emojiStyle)}
             <span style={textStyle}>Enter a Valid Token Hex Address !</span>
           </span>
         );
@@ -161,7 +165,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
         return (
           <span style={{ color: 'orange' }} className="flex items-center">
             <Image
-              src={getTokenAvatar(avatarToken as TokenContract)}
+              src={avatarToken.logoURI ?? getTokenAvatar(avatarToken as TokenContract)}
               height={40}
               width={40}
               alt="Token Avatar"
@@ -181,10 +185,18 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
           </span>
         );
 
-      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>⚠️</span>
+            <span style={textStyle}>BlockChain Token Missing Local Logo Image</span>
+          </span>
+        );
+
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        return (
+          <span style={{ color: 'orange' }}>
+            {getInputEmoji(emojiStyle)}
             <span style={textStyle}>Contract Not Found on BlockChain</span>
           </span>
         );
@@ -198,7 +210,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
     <div className={styles.inputSelectWrapper}>
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH}`}>
         <div className={styles.searchImage} style={{ fontSize: '1.2rem' }}>
-          {getInputEmoji()}
+        {getInputEmoji(emojiStyle)}
         </div>
         <input
           className={`${styles.modalElementInput} w-full`}
@@ -213,7 +225,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
 
       {inputState !== InputState.EMPTY_INPUT && (
         <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-          {inputState === InputState.VALID_INPUT_PENDING ? (
+          {inputState === InputState.VALID_INPUT_PENDING || inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY ? (
             <div
               className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
               role="button"
@@ -222,19 +234,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
               onKeyDown={handleTokenPreviewKeyDown}
             >
               <div className="cursor-pointer flex flex-row justify-between">
-                <Image
-                  id="tokenImage"
-                  src={getTokenAvatar(tokenContract)}
-                  height={40}
-                  width={40}
-                  alt="Token Image"
-                  onError={(e) => {
-                    const fallback = getErrorImage(tokenContract);
-                    if (e.currentTarget.src !== fallback) {
-                      e.currentTarget.src = fallback;
-                    }
-                  }}
-                />
+                <div className={styles.searchImage} style={{ fontSize: '1.2rem' }}>{getInputEmoji(emojiStyle)}</div>
                 <div>
                   <div className={styles.elementName}>{tokenContract?.name}</div>
                   <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
