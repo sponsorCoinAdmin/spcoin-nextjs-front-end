@@ -1,7 +1,7 @@
 'use client';
 
+import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import styles from "@/styles/Modal.module.css";
 import Image from "next/image";
 import info_png from "@/public/assets/miscellaneous/info1.png";
 import { useChainId } from "wagmi";
@@ -119,7 +119,7 @@ interface Props {
   inputState: InputState;
   setInputState: (state: InputState) => void;
   dataFeedType: FEED_TYPE;
-  setExternalAddress: (address: string) => void;
+  setExternalAddress: (address: string, preview?: Partial<TokenContract>) => void;
 }
 
 const DataList = ({ inputState, setInputState, dataFeedType, setExternalAddress }: Props) => {
@@ -152,6 +152,11 @@ const DataList = ({ inputState, setInputState, dataFeedType, setExternalAddress 
           if (isDuplicateToken(tokenContract.address)) {
             console.warn('[DataList] ❌ Duplicate token selected — blocking set');
             setInputState(InputState.DUPLICATE_INPUT);
+            setExternalAddress(selectedAddress, {
+              name: tokenContract.name,
+              symbol: tokenContract.symbol,
+              logoURI: tokenContract.logoURI
+            });
             return;
           }
           prevResolvedRef.current = tokenContract.address;
@@ -221,6 +226,11 @@ const DataList = ({ inputState, setInputState, dataFeedType, setExternalAddress 
                 onClick={() => {
                   console.log(`[DataList] onClick → Token Address Selected: ${token.address}`);
                   setSelectedAddress(token.address);
+                  setExternalAddress(token.address, {
+                    name: token.name,
+                    symbol: token.symbol,
+                    logoURI: listElement.avatar
+                  });
                 }}
               >
                 <img

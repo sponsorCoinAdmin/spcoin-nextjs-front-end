@@ -28,10 +28,12 @@ type Props = {
   inputState: InputState;
   setInputState: (state: InputState) => void;
   externalAddress?: string;
+  externalPreview?: Partial<TokenContract>;
 };
 
-function InputSelect({ inputState, setInputState, externalAddress }: Props) {
+function InputSelect({ inputState, setInputState, externalAddress, externalPreview }: Props) {
   const [textInputField, setTextInputField] = useState<string>('');
+  const [previewContract, setPreviewContract] = useState<Partial<TokenContract> | undefined>();
   const inputRef = useRef<HTMLInputElement>(null);
   const [containerType] = useContainerType();
   const buyAddress = useBuyTokenAddress();
@@ -49,6 +51,12 @@ function InputSelect({ inputState, setInputState, externalAddress }: Props) {
       setTextInputField(externalAddress);
     }
   }, [externalAddress]);
+
+  useEffect(() => {
+    if (externalPreview) {
+      setPreviewContract(externalPreview);
+    }
+  }, [externalPreview]);
 
   useEffect(() => {
     if (inputState === InputState.CLOSE_INPUT) {
@@ -145,17 +153,33 @@ function InputSelect({ inputState, setInputState, externalAddress }: Props) {
             <span style={textStyle}>Enter a Valid Token Hex Address !</span>
           </span>
         );
+
       case InputState.DUPLICATE_INPUT:
+        const avatarToken = tokenContract ?? previewContract;
+        if (!avatarToken) return <span></span>;
         return (
-          <span style={{ color: 'orange' }}>
-            <span style={emojiStyle}>❌</span>
-            <span style={textStyle}>
+          <span style={{ color: 'orange' }} className="flex items-center">
+            <Image
+              src={getTokenAvatar(avatarToken)}
+              height={40}
+              width={40}
+              alt="Token Avatar"
+              onError={(e) => {
+                const fallback = getErrorImage(avatarToken);
+                if (e.currentTarget.src !== fallback) {
+                  e.currentTarget.src = fallback;
+                }
+              }}
+              style={{ marginRight: -8, marginLeft: 25, verticalAlign: 'middle' }}
+            />
+            <span style={{ fontSize: '15px', position: 'relative', top: 0, marginLeft: -4 }}>
               {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
                 ? 'Sell Address Cannot Be the Same as Buy Address'
                 : 'Buy Address Cannot Be the Same as Sell Address'}
             </span>
           </span>
         );
+
       case InputState.CONTRACT_NOT_FOUND_INPUT:
         return (
           <span style={{ color: 'orange' }}>
@@ -163,6 +187,7 @@ function InputSelect({ inputState, setInputState, externalAddress }: Props) {
             <span style={textStyle}>Contract Not Found on BlockChain</span>
           </span>
         );
+
       default:
         return <span></span>;
     }
@@ -181,12 +206,13 @@ function InputSelect({ inputState, setInputState, externalAddress }: Props) {
           value={textInputField}
           onChange={(e) => validateTextInput(e.target.value)}
           ref={inputRef}
+          style={{ fontSize: '15px' }}
         />
       </div>
 
       {inputState !== InputState.EMPTY_INPUT && (
         <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-          {inputState === InputState.VALID_INPUT_PENDING  ? (
+          {inputState === InputState.VALID_INPUT_PENDING ? (
             <div
               className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
               role="button"

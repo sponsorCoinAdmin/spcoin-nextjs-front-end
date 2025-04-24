@@ -63,6 +63,10 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   });
 
   useEffect(() => {
+    console.log(`[DEBUG:tokenSelectContainer] tokenContract after dialog close: ${stringifyBigInt(tokenContract)}`);
+  }, [tokenContract]);
+
+  useEffect(() => {
     console.log('[TokenSelectContainer] SellToken:', stringifyBigInt(sellTokenContract));
     console.log('[TokenSelectContainer] BuyToken:', stringifyBigInt(buyTokenContract));
   }, [sellTokenContract, buyTokenContract]);
