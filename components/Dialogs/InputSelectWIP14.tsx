@@ -28,7 +28,7 @@ export enum InputState {
   EMPTY_INPUT = 'EMPTY_INPUT',
   VALID_INPUT = 'VALID_INPUT',
   INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',
-  CONTRACT_NOT_FOUND_INPUT = 'CONTRACT_NOT_FOUND_INPUT',
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN = 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN',
   DUPLICATE_INPUT = 'DUPLICATE_INPUT'
 }
 
@@ -60,7 +60,7 @@ function InputSelect({
 
   useEffect(() => {
     if (!tokenContract && tokenAddress) {
-      updateInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+      updateInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
     }
   }, [tokenContract]);
 
@@ -112,7 +112,7 @@ function InputSelect({
         return '⚠️';
       case InputState.EMPTY_INPUT:
         return '🔍';
-      case InputState.CONTRACT_NOT_FOUND_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       default:
         return '❓';
     }
@@ -168,7 +168,7 @@ function InputSelect({
           </span>
         );
   
-      case InputState.CONTRACT_NOT_FOUND_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>⚠️</span>

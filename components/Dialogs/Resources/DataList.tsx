@@ -168,8 +168,8 @@ const DataList = ({ inputState, setInputState, dataFeedType, setExternalAddress 
           setInputState(InputState.CLOSE_INPUT);
         }
       } else {
-        console.warn('[DataList] ❌ Contract NOT found — setting CONTRACT_NOT_FOUND_INPUT');
-        setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+        console.warn('[DataList] ❌ Contract NOT found — setting CONTRACT_NOT_FOUND_ON_BLOCKCHAIN');
+        setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
         setExternalAddress(selectedAddress);
       }
     }

@@ -13,11 +13,12 @@ import { isAddress, Address } from "viem";
 // Token Address Input Select States
 export enum InputState {
   EMPTY_INPUT,
-  VALID_INPUT,
-  VALID_INPUT_PENDING,
   INVALID_ADDRESS_INPUT,
-  CONTRACT_NOT_FOUND_INPUT,
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+  CONTRACT_NOT_FOUND_LOCALLY,
   DUPLICATE_INPUT,
+  VALID_INPUT_PENDING,
+  VALID_INPUT,
   IS_LOADING,
   CLOSE_INPUT,
 }
@@ -30,8 +31,10 @@ export const getInputStateString = (state: InputState): string => {
       return 'VALID_INPUT';
     case InputState.INVALID_ADDRESS_INPUT:
       return 'INVALID_ADDRESS_INPUT';
-    case InputState.CONTRACT_NOT_FOUND_INPUT:
-      return 'CONTRACT_NOT_FOUND_INPUT';
+    case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+      return 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN';
+    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+      return 'CONTRACT_NOT_FOUND_LOCALLY';
     case InputState.DUPLICATE_INPUT:
       return 'DUPLICATE_INPUT';
     case InputState.IS_LOADING:
@@ -106,7 +109,7 @@ export default function TokenSelectDialog({
         return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
           ? <span style={{ color: 'orange' }}>Sell Address Cannot Be the Same as Buy Address</span>
           : <span style={{ color: 'orange' }}>Buy Address Cannot Be the Same as Sell Address</span>;
-      case InputState.CONTRACT_NOT_FOUND_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         return <span style={{ color: 'orange' }}>⚠️ Contract Not Found on BlockChain</span>;
       default:
         return <span style={{ color: 'red' }}>(Unknown Error ❓)</span>;

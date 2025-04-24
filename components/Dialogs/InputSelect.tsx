@@ -9,7 +9,7 @@ import { getTokenAvatar } from '@/lib/network/utils';
 import { Address, isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { CONTAINER_TYPE } from '@/lib/structure/types';
+import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenAddress,
@@ -88,7 +88,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
     if (isLoading) return;
 
     if (!tokenContract) {
-      setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+      setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       return;
     }
 
@@ -102,7 +102,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
       case InputState.DUPLICATE_INPUT: return '❌';
       case InputState.EMPTY_INPUT: return '🔍';
       case InputState.IS_LOADING: return '⏳';
-      case InputState.CONTRACT_NOT_FOUND_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       default: return '❓';
     }
   };
@@ -160,7 +160,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
         return (
           <span style={{ color: 'orange' }} className="flex items-center">
             <Image
-              src={getTokenAvatar(avatarToken)}
+              src={getTokenAvatar(avatarToken as TokenContract)}
               height={40}
               width={40}
               alt="Token Avatar"
@@ -180,7 +180,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
           </span>
         );
 
-      case InputState.CONTRACT_NOT_FOUND_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>⚠️</span>

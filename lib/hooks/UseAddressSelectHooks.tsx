@@ -133,7 +133,7 @@ export function useValidateTokenAddress(
     }
 
     if (!isTokenContractResolved || !tokenContract) {
-      setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+      setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       return;
     }
 
@@ -164,7 +164,7 @@ export const useValidatedTokenSelect = (
     (token: TokenContract | undefined) => {
       if (!token || !isTokenContractResolved) {
         console.warn(`⚠️ Token not resolved on chain`);
-        setInputState(InputState.CONTRACT_NOT_FOUND_INPUT);
+        setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
         return;
       }
 

@@ -27,7 +27,7 @@ export default function AssetSelectDialog({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
-  const [inputState, setInputState] = useState<InputState>(InputState.CONTRACT_NOT_FOUND_INPUT);
+  const [inputState, setInputState] = useState<InputState>(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const prevAddressRef = useRef<string | undefined>();
