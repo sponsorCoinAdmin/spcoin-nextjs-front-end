@@ -58,22 +58,22 @@ export function useResolvedTokenContractInfo(
   }, [isTokenContractResolved, tokenContract?.name, tokenAddress, chainId]);
 
   // ✅ Debugging output
-  useEffect(() => {
-    console.log(`[🔍 useResolvedTokenContractInfo DEBUG]`);
-    console.log(`  tokenAddress:         ${tokenAddress}`);
-    console.log(`  validAddress:         ${validAddress}`);
-    console.log(`  tokenContract:        ${stringifyBigInt(tokenContract)}`);
-    console.log(`  isTokenResolved:      ${isTokenContractResolved}`);
-    console.log(`  isTokenLoading:       ${isTokenLoading}`);
-    console.log(`  tokenContractMessage: ${tokenContractMessage}`);
-  }, [
-    tokenAddress,
-    validAddress,
-    tokenContract,
-    isTokenContractResolved,
-    isTokenLoading,
-    tokenContractMessage
-  ]);
+  // useEffect(() => {
+  //   console.log(`[🔍 useResolvedTokenContractInfo DEBUG]`);
+  //   console.log(`  tokenAddress:         ${tokenAddress}`);
+  //   console.log(`  validAddress:         ${validAddress}`);
+  //   console.log(`  tokenContract:        ${stringifyBigInt(tokenContract)}`);
+  //   console.log(`  isTokenResolved:      ${isTokenContractResolved}`);
+  //   console.log(`  isTokenLoading:       ${isTokenLoading}`);
+  //   console.log(`  tokenContractMessage: ${tokenContractMessage}`);
+  // }, [
+  //   tokenAddress,
+  //   validAddress,
+  //   tokenContract,
+  //   isTokenContractResolved,
+  //   isTokenLoading,
+  //   tokenContractMessage
+  // ]);
   return [tokenContract ?? undefined, isTokenContractResolved, tokenContractMessage, isTokenLoading];
 }
 

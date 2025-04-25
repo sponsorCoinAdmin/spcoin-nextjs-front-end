@@ -41,12 +41,12 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
   const [, setBuyTokenContract] = useBuyTokenContract();
   const [, setSellTokenContract] = useSellTokenContract();
 
-  const debouncedInput = useDebounce(textInputField);
+  const debouncedInput = useDebounce(textInputField, 250);
   const isEmptyInput = useIsEmptyInput(debouncedInput);
   const isAddressInput = useIsAddressInput(debouncedInput);
   const [tokenContract, isLoading] = useValidateTokenAddress(debouncedInput, () => {});
   const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
-
+  const lastCheckedTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (externalAddress && externalAddress !== textInputField) {
@@ -68,12 +68,12 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
 
   useEffect(() => {
     if (isEmptyInput) {
-      setInputState(InputState.EMPTY_INPUT);
+      if (inputState !== InputState.EMPTY_INPUT) setInputState(InputState.EMPTY_INPUT);
       return;
     }
 
     if (!isAddressInput) {
-      setInputState(InputState.INVALID_ADDRESS_INPUT);
+      if (inputState !== InputState.INVALID_ADDRESS_INPUT) setInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
 
@@ -83,18 +83,38 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
       : sellAddress?.toLowerCase();
 
     if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
-      setInputState(InputState.DUPLICATE_INPUT);
+      if (inputState !== InputState.DUPLICATE_INPUT) setInputState(InputState.DUPLICATE_INPUT);
       return;
     }
 
     if (isLoading) return;
 
     if (!tokenContract) {
-      setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
+      if (inputState !== InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN) {
+        setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
+      }
       return;
     }
 
-    setInputState(InputState.VALID_INPUT_PENDING);
+    const tokenAddress = tokenContract.address.toLowerCase();
+    if (lastCheckedTokenRef.current === tokenAddress) return;
+    lastCheckedTokenRef.current = tokenAddress;
+
+    const localTokenLogo = `/assets/blockchains/1/contracts/${tokenAddress}.avatar.png`;
+
+    fetch(localTokenLogo)
+      .then((res) => {
+        if (!res.ok && inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+          setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+        } else if (res.ok && inputState !== InputState.VALID_INPUT_PENDING) {
+          setInputState(InputState.VALID_INPUT_PENDING);
+        }
+      })
+      .catch(() => {
+        if (inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+          setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+        }
+      });
   }, [debouncedInput, isAddressInput, isLoading, tokenContract, isEmptyInput, buyAddress, sellAddress, containerType]);
 
   const getInputEmoji = (style?: React.CSSProperties): JSX.Element | string => {
@@ -107,7 +127,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
         case InputState.IS_LOADING: return '⏳';
         case InputState.CONTRACT_NOT_FOUND_LOCALLY: return '⚠️';
         case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        default: return '⏳';
+        default: return '❌';
       }
     })();
     return style ? <span style={style}>{emoji}</span> : emoji;
@@ -155,7 +175,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
         return (
           <span style={{ color: 'orange' }}>
             {getInputEmoji(emojiStyle)}
-            <span style={textStyle}>Enter a Valid Token Hex Address !</span>
+            <span style={textStyle}>Valid Token Address Required !</span>
           </span>
         );
 
@@ -177,7 +197,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
               }}
               style={{ marginRight: -8, marginLeft: 25, verticalAlign: 'middle' }}
             />
-            <span style={{ fontSize: '15px', position: 'relative', top: 0, marginLeft: -4 }}>
+            <span style={{ color: 'orange', fontSize: '15px', position: 'relative', top: 0, marginLeft: -4 }}>
               {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
                 ? 'Sell Address Cannot Be the Same as Buy Address'
                 : 'Buy Address Cannot Be the Same as Sell Address'}
@@ -194,10 +214,25 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
         );
 
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        const avatarTokenNF = tokenContract ?? previewContract;
         return (
-          <span style={{ color: 'orange' }}>
-            {getInputEmoji(emojiStyle)}
-            <span style={textStyle}>Contract Not Found on BlockChain</span>
+          <span className="flex items-center">
+            <Image
+              src={badTokenAddressImage}
+              height={40}
+              width={40}
+              alt="Token Avatar"
+              onError={(e) => {
+                const fallback = getErrorImage(avatarTokenNF);
+                if (e.currentTarget.src !== fallback) {
+                  e.currentTarget.src = fallback;
+                }
+              }}
+              style={{ marginRight: -8, marginLeft: 25, verticalAlign: 'middle' }}
+            />
+            <span style={{ color: 'red', fontSize: '15px', position: 'relative', top: 0, marginLeft: -4 }}>
+              Contract Not Found on BlockChain !!!
+            </span>
           </span>
         );
 
@@ -210,7 +245,7 @@ function InputSelect({ inputState, setInputState, externalAddress, externalPrevi
     <div className={styles.inputSelectWrapper}>
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH}`}>
         <div className={styles.searchImage} style={{ fontSize: '1.2rem' }}>
-        {getInputEmoji(emojiStyle)}
+          {getInputEmoji()}
         </div>
         <input
           className={`${styles.modalElementInput} w-full`}

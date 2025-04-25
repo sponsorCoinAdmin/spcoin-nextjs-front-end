@@ -82,7 +82,7 @@ export function useMappedTokenContract(
   const token = useErc20TokenContract(tokenAddress, accountAddress ?? account.address);
 
   if (!token) {
-    console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);
+    // console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);
     return null; // ⚠️ Return `null` to indicate known failure instead of staying undefined forever
   }
 

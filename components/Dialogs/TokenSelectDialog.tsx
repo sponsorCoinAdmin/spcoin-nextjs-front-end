@@ -64,24 +64,34 @@ export default function TokenSelectDialog({
   const [containerType, setContainerType] = useContainerType();
   const [externalAddress, setExternalAddress] = useState<string | undefined>(undefined);
 
+  const updateInputState = useCallback((next: InputState) => {
+    setInputState(prev => {
+      if (prev !== next) {
+        console.log(`[🔄 updateInputState] Changed to: ${next}`);
+        return next;
+      } else {
+        console.log(`[⏸ updateInputState] No change (still: ${next})`);
+        return prev;
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    setInputState(InputState.EMPTY_INPUT)
+    updateInputState(InputState.EMPTY_INPUT);
     if (dialogRef.current) {
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
-  }, [showDialog]);
+  }, [showDialog, updateInputState]);
 
   useEffect(() => {
     if (inputState === InputState.VALID_INPUT) {
       console.log('[TokenSelectDialog] VALID_INPUT confirmed — promoting to CLOSE_INPUT');
-      setInputState(InputState.CLOSE_INPUT);
+      updateInputState(InputState.CLOSE_INPUT);
     } else if (inputState === InputState.CLOSE_INPUT) {
       console.log('[TokenSelectDialog] CLOSE_INPUT detected — closing dialog');
       closeDialog();
     }
-  }, [inputState]);
-  
+  }, [inputState, updateInputState]);
 
   useEffect(() => {
     if (ACTIVE_ACCOUNT_ADDRESS) {
@@ -89,63 +99,13 @@ export default function TokenSelectDialog({
     }
   }, [ACTIVE_ACCOUNT_ADDRESS]);
 
-  const debugSetInputState = (state: InputState) => {
-    console.log('[🔄 setInputState] New State:', state);
-    setInputState(state);
-  };
-
-
-  const getTitleFromState = (state: InputState): string | JSX.Element => {
-    switch (state) {
-      case InputState.VALID_INPUT:
-        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? "Select a Token to Sell" : "Select a Token to to Buy";
-      case InputState.EMPTY_INPUT:
-        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? "Select a Token to Sell" : "Select a Token to to Buy";
-      case InputState.INVALID_ADDRESS_INPUT:
-        return <span style={{ color: 'orange' }}>Entering a Valid Token Hex Address!</span>;
-      case InputState.DUPLICATE_INPUT:
-        return containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? <span style={{ color: 'orange' }}>Sell Address Cannot Be the Same as Buy Address</span>
-          : <span style={{ color: 'orange' }}>Buy Address Cannot Be the Same as Sell Address</span>;
-      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        return <span style={{ color: 'orange' }}>⚠️ Contract Not Found on BlockChain</span>;
-      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-        return <span style={{ color: 'orange' }}>⚠️ BlockChain Token Missing Local Logo Image</span>;
-      default:
-        return <span style={{ color: 'red' }}>(Unknown Error ❓)</span>;
-    }
-  };
-
   const closeDialog = useCallback(() => {
     setInputField(undefined);
-    setInputState(InputState.EMPTY_INPUT)
+    updateInputState(InputState.EMPTY_INPUT);
     setShowDialog(false);
     dialogRef.current?.close();
     setExternalAddress(undefined);
-  }, [setShowDialog]);
-
-  const isDuplicateToken = useCallback(
-    (tokenAddress?: string): boolean => {
-      if (!tokenAddress) return false;
-
-      const { buyTokenContract, sellTokenContract } = exchangeContext.tradeData;
-      const oppositeTokenAddress =
-        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? buyTokenContract?.address
-          : sellTokenContract?.address;
-
-      const isDuplicateContract = tokenAddress === oppositeTokenAddress;
-
-      if (isDuplicateContract) {
-        setInputState(InputState.DUPLICATE_INPUT);
-      }
-
-      return isDuplicateContract;
-    },
-    [containerType, exchangeContext.tradeData, setInputState]
-  );
+  }, [setShowDialog, updateInputState]);
 
   return (
     <dialog id="TokenSelectDialog" ref={dialogRef} className={styles.modalContainer}>
@@ -163,22 +123,20 @@ export default function TokenSelectDialog({
       </div>
 
       <div className={styles.modalBox}>
-          <InputSelect
-            inputState={inputState}
-            setInputState={debugSetInputState}
-            externalAddress={externalAddress}
-
-          />
-        <div className={styles.modalScrollBar}>
-        <DataList
+        <InputSelect
           inputState={inputState}
-          setInputState={setInputState}
-          dataFeedType={FEED_TYPE.TOKEN_LIST}
-          setExternalAddress={setExternalAddress}
+          setInputState={updateInputState}
+          externalAddress={externalAddress}
         />
+        <div className={styles.modalScrollBar}>
+          <DataList
+            inputState={inputState}
+            setInputState={updateInputState}
+            dataFeedType={FEED_TYPE.TOKEN_LIST}
+            setExternalAddress={setExternalAddress}
+          />
         </div>
       </div>
     </dialog>
   );
-
 }
