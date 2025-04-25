@@ -1,4 +1,4 @@
-'use client';
+`use client`;
 
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState, useRef } from 'react';
@@ -6,10 +6,9 @@ import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 
 import { getTokenAvatar } from '@/lib/network/utils';
-import { Address, isAddress } from 'viem';
+import { isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
+import { InputState, getInputStateString , CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenAddress,
@@ -17,277 +16,178 @@ import {
   useBuyTokenContract,
   useSellTokenContract,
 } from '@/lib/context/contextHooks';
-import { getInputStateString, InputState } from './TokenSelectDialog';
 import { useIsAddressInput, useIsEmptyInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
-const INPUT_PLACE_HOLDER = 'Type or paste token to select address';
+const INPUT_PLACEHOLDER = 'Enter token address';
 
 type Props = {
-  inputState: InputState;
-  setInputState: (state: InputState) => void;
   externalAddress?: string;
-  externalPreview?: Partial<TokenContract>;
+  setTokenContractCallback: (token: TokenContract | undefined, state: InputState) => void;
 };
 
-function InputSelect({ inputState, setInputState, externalAddress, externalPreview }: Props) {
-  const [textInputField, setTextInputField] = useState<string>('');
-  const [previewContract, setPreviewContract] = useState<Partial<TokenContract> | undefined>();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [containerType] = useContainerType();
-  const buyAddress = useBuyTokenAddress();
-  const sellAddress = useSellTokenAddress();
-  const [, setBuyTokenContract] = useBuyTokenContract();
-  const [, setSellTokenContract] = useSellTokenContract();
-
-  const debouncedInput = useDebounce(textInputField, 250);
-  const isEmptyInput = useIsEmptyInput(debouncedInput);
-  const isAddressInput = useIsAddressInput(debouncedInput);
-  const [tokenContract, isLoading] = useValidateTokenAddress(debouncedInput, () => {});
-  const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
+export default function InputSelect({ externalAddress, setTokenContractCallback }: Props) {
+  const [inputValue, setInputValue] = useState<string>('');
+  const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(undefined);
+  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const lastCheckedTokenRef = useRef<string | null>(null);
 
+  const debouncedAddress = useDebounce(inputValue, 250);
+  const [containerType] = useContainerType();
+  const sellAddress = useSellTokenAddress()?.toLowerCase();
+  const buyAddress = useBuyTokenAddress()?.toLowerCase();
+
+  const isEmpty = useIsEmptyInput(debouncedAddress);
+  const isAddressValid = useIsAddressInput(debouncedAddress);
+  const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
+
   useEffect(() => {
-    if (externalAddress && externalAddress !== textInputField) {
-      setTextInputField(externalAddress);
+    if (externalAddress && externalAddress !== inputValue) {
+      setInputValue(externalAddress);
     }
   }, [externalAddress]);
 
   useEffect(() => {
-    if (externalPreview) {
-      setPreviewContract(externalPreview);
-    }
-  }, [externalPreview]);
-
-  useEffect(() => {
-    if (inputState === InputState.CLOSE_INPUT) {
-      setTextInputField('');
-    }
-  }, [inputState]);
-
-  useEffect(() => {
-    if (isEmptyInput) {
-      if (inputState !== InputState.EMPTY_INPUT) setInputState(InputState.EMPTY_INPUT);
+    if (isEmpty) {
+      setInputState(InputState.EMPTY_INPUT);
+      setTokenContract(undefined);
       return;
     }
 
-    if (!isAddressInput) {
-      if (inputState !== InputState.INVALID_ADDRESS_INPUT) setInputState(InputState.INVALID_ADDRESS_INPUT);
+    if (!isAddressValid) {
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
+      setTokenContract(undefined);
       return;
     }
 
-    const selectedAddress = debouncedInput.toLowerCase();
-    const oppositeAddress = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? buyAddress?.toLowerCase()
-      : sellAddress?.toLowerCase();
-
-    if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
-      if (inputState !== InputState.DUPLICATE_INPUT) setInputState(InputState.DUPLICATE_INPUT);
+    const selectedAddress = debouncedAddress.toLowerCase();
+    if (selectedAddress === sellAddress || selectedAddress === buyAddress) {
+      setInputState(InputState.DUPLICATE_INPUT);
+      setTokenContract(undefined);
       return;
     }
 
     if (isLoading) return;
 
-    if (!tokenContract) {
-      if (inputState !== InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN) {
-        setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
-      }
+    if (!validatedToken) {
+      setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
+      setTokenContract(undefined);
       return;
     }
 
-    const tokenAddress = tokenContract.address.toLowerCase();
+    const tokenAddress = validatedToken.address.toLowerCase();
     if (lastCheckedTokenRef.current === tokenAddress) return;
     lastCheckedTokenRef.current = tokenAddress;
 
-    const localTokenLogo = `/assets/blockchains/1/contracts/${tokenAddress}.avatar.png`;
+    const localTokenLogo = `/assets/blockchains/1/contracts/${tokenAddress}/avatar.png`;
 
     fetch(localTokenLogo)
       .then((res) => {
-        if (!res.ok && inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+        if (!res.ok) {
           setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-        } else if (res.ok && inputState !== InputState.VALID_INPUT_PENDING) {
+        } else {
           setInputState(InputState.VALID_INPUT_PENDING);
         }
       })
       .catch(() => {
-        if (inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY) {
-          setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-        }
+        setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
       });
-  }, [debouncedInput, isAddressInput, isLoading, tokenContract, isEmptyInput, buyAddress, sellAddress, containerType]);
 
-  const getInputEmoji = (style?: React.CSSProperties): JSX.Element | string => {
-    const emoji = (() => {
-      switch (inputState) {
-        case InputState.VALID_INPUT: return '✅';
-        case InputState.INVALID_ADDRESS_INPUT: return '❓';
-        case InputState.DUPLICATE_INPUT: return '❌';
-        case InputState.EMPTY_INPUT: return '🔍';
-        case InputState.IS_LOADING: return '⏳';
-        case InputState.CONTRACT_NOT_FOUND_LOCALLY: return '⚠️';
-        case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        default: return '❌';
-      }
-    })();
-    return style ? <span style={style}>{emoji}</span> : emoji;
+    setTokenContract(validatedToken);
+  }, [debouncedAddress, isEmpty, isAddressValid, isLoading, validatedToken, sellAddress, buyAddress]);
+
+  // Don't elevate to VALID_INPUT automatically to prevent premature dialog closure
+  // It will now only display VALID_INPUT_PENDING for pending state
+
+  const getErrorImage = (token?: TokenContract): string => {
+    return token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
   };
 
-  const validateTextInput = (input: string) => {
-    const trimmed = input.trim();
-    if (trimmed === '') {
-      setTextInputField(trimmed);
-      return;
-    }
-    const isPartialHex = /^0x?[0-9a-fA-F]*$/.test(trimmed);
-    if (isPartialHex) {
-      setTextInputField(trimmed);
-    }
-  };
-
-  const handleTokenSelect = () => {
-    if (!tokenContract) return;
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      setSellTokenContract(tokenContract);
-    } else {
-      setBuyTokenContract(tokenContract);
-    }
-    setInputState(InputState.VALID_INPUT);
-  };
-
-  const handleTokenPreviewKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter') {
-      handleTokenSelect();
-    }
-  };
-
-  const getErrorImage = (tokenContract?: any): string => {
-    return tokenContract?.address && isAddress(tokenContract.address)
-      ? defaultMissingImage
-      : badTokenAddressImage;
-  };
+  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
 
   const validateInputStatus = (state: InputState): JSX.Element => {
     const textStyle: React.CSSProperties = { fontSize: '15px', position: 'relative', top: -6 };
+    const emojiStyle: React.CSSProperties = { fontSize: 40, lineHeight: 1, marginRight: 6 };
 
     switch (state) {
       case InputState.INVALID_ADDRESS_INPUT:
         return (
           <span style={{ color: 'orange' }}>
-            {getInputEmoji(emojiStyle)}
+            <span style={emojiStyle}>❓</span>
             <span style={textStyle}>Valid Token Address Required !</span>
           </span>
         );
-
       case InputState.DUPLICATE_INPUT:
-        const avatarToken = tokenContract ?? previewContract;
-        if (!avatarToken) return <span></span>;
         return (
-          <span style={{ color: 'orange' }} className="flex items-center">
-            <Image
-              src={avatarToken.logoURI ?? getTokenAvatar(avatarToken as TokenContract)}
-              height={40}
-              width={40}
-              alt="Token Avatar"
-              onError={(e) => {
-                const fallback = getErrorImage(avatarToken);
-                if (e.currentTarget.src !== fallback) {
-                  e.currentTarget.src = fallback;
-                }
-              }}
-              style={{ marginRight: -8, marginLeft: 25, verticalAlign: 'middle' }}
-            />
-            <span style={{ color: 'orange', fontSize: '15px', position: 'relative', top: 0, marginLeft: -4 }}>
-              {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-                ? 'Sell Address Cannot Be the Same as Buy Address'
-                : 'Buy Address Cannot Be the Same as Sell Address'}
-            </span>
+          <span style={{ color: 'orange' }}>
+            <span style={emojiStyle}>❌</span>
+            <span style={textStyle}>Selected token is already active on the other side.</span>
           </span>
         );
-
       case InputState.CONTRACT_NOT_FOUND_LOCALLY:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>⚠️</span>
-            <span style={textStyle}>BlockChain Token Missing Local Logo Image</span>
+            <span style={textStyle}>Blockchain Token Missing Local Logo Image</span>
           </span>
         );
-
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        const avatarTokenNF = tokenContract ?? previewContract;
         return (
-          <span className="flex items-center">
-            <Image
-              src={badTokenAddressImage}
-              height={40}
-              width={40}
-              alt="Token Avatar"
-              onError={(e) => {
-                const fallback = getErrorImage(avatarTokenNF);
-                if (e.currentTarget.src !== fallback) {
-                  e.currentTarget.src = fallback;
-                }
-              }}
-              style={{ marginRight: -8, marginLeft: 25, verticalAlign: 'middle' }}
-            />
-            <span style={{ color: 'red', fontSize: '15px', position: 'relative', top: 0, marginLeft: -4 }}>
-              Contract Not Found on BlockChain !!!
-            </span>
+          <span style={{ color: 'red' }}>
+            <span style={emojiStyle}>❌</span>
+            <span style={textStyle}>Contract Not Found on Blockchain !!!</span>
           </span>
         );
-
       default:
         return <span></span>;
     }
   };
 
   return (
-    <div className={styles.inputSelectWrapper}>
-      <div className={`${styles.modalElementSelectContainer} ${styles.leftH}`}>
-        <div className={styles.searchImage} style={{ fontSize: '1.2rem' }}>
-          {getInputEmoji()}
-        </div>
+    <div id="inputSelect" className={styles.inputSelectWrapper}>
+      <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
+        <div className={styles.searchImage}>🔍</div>
         <input
           className={`${styles.modalElementInput} w-full`}
           autoComplete="off"
-          placeholder={INPUT_PLACE_HOLDER}
-          value={textInputField}
-          onChange={(e) => validateTextInput(e.target.value)}
-          ref={inputRef}
-          style={{ fontSize: '15px' }}
+          placeholder={INPUT_PLACEHOLDER}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
         />
       </div>
 
-      {inputState !== InputState.EMPTY_INPUT && (
-        <div id="inputSelectGroup_ID" className={styles.modalInputSelect}>
-          {inputState === InputState.VALID_INPUT_PENDING || inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY ? (
-            <div
-              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
-              role="button"
-              tabIndex={0}
-              onClick={handleTokenSelect}
-              onKeyDown={handleTokenPreviewKeyDown}
-            >
-              <div className="cursor-pointer flex flex-row justify-between">
-                <div className={styles.searchImage} style={{ fontSize: '1.2rem' }}>{getInputEmoji(emojiStyle)}</div>
-                <div>
-                  <div className={styles.elementName}>{tokenContract?.name}</div>
-                  <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
-                </div>
-              </div>
-              <div
-                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() => alert(`Token Contract Address = ${stringifyBigInt(tokenContract?.address)}`)}>
-                <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+      {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
+        <div id="pendingDiv" className={`${styles.modalInputSelect} ${styles.tokenPreviewWrap}`}>
+          <div className="flex flex-row justify-between mb-1 pt-0 px-5 hover:bg-spCoin_Blue-900">
+            <div className="cursor-pointer flex flex-row justify-between">
+              <Image
+                src={tokenAvatarPath ?? getErrorImage(tokenContract)}
+                alt='Token preview'
+                width={42}
+                height={38}
+                className={styles.tokenPreviewImg}
+                onError={(e) => {
+                  const fallback = getErrorImage(tokenContract);
+                  if (e.currentTarget.src !== fallback) {
+                    e.currentTarget.src = fallback;
+                  }
+                }}
+              />
+              <div>
+                <div className={styles.elementName}>{tokenContract.name}</div>
+                <div className={styles.elementSymbol}>{tokenContract.symbol}</div>
               </div>
             </div>
-          ) : (
-            <h1 className="indent-5 my-[9px]">{validateInputStatus(inputState)}</h1>
-          )}
+          </div>
+        </div>
+      )}
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+        <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
+          {validateInputStatus(inputState)}
         </div>
       )}
     </div>
   );
 }
-
-export default InputSelect;

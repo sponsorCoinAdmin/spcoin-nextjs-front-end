@@ -2,6 +2,43 @@ import { Account, Address } from "viem";
 
 export const publicWalletPath: string = "assets/accounts";
 
+
+// Token Address Input Select States
+export enum InputState {
+  EMPTY_INPUT,
+  INVALID_ADDRESS_INPUT,
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+  CONTRACT_NOT_FOUND_LOCALLY,
+  DUPLICATE_INPUT,
+  VALID_INPUT_PENDING,
+  VALID_INPUT,
+  IS_LOADING,
+  CLOSE_INPUT,
+}
+
+export const getInputStateString = (state: InputState): string => {
+  switch (state) {
+    case InputState.EMPTY_INPUT:
+      return 'EMPTY_INPUT';
+    case InputState.VALID_INPUT:
+      return 'VALID_INPUT';
+    case InputState.INVALID_ADDRESS_INPUT:
+      return 'INVALID_ADDRESS_INPUT';
+    case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+      return 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN';
+    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+      return 'CONTRACT_NOT_FOUND_LOCALLY';
+    case InputState.DUPLICATE_INPUT:
+      return 'DUPLICATE_INPUT';
+    case InputState.IS_LOADING:
+      return 'IS_LOADING';
+    case InputState.CLOSE_INPUT:
+      return 'CLOSE_INPUT';
+    default:
+      return 'UNKNOWN_INPUT_STATE';
+  }
+};
+
 export interface AccountAddress {
     address: string;
 }

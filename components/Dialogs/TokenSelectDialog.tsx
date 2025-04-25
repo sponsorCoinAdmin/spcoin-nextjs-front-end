@@ -7,61 +7,24 @@ import { useAccount } from "wagmi";
 import { useBuyTokenContract, useContainerType, useExchangeContext, useSellTokenContract } from '@/lib/context/contextHooks';
 import DataList, { setActiveAccount } from "./Resources/DataList";
 import InputSelect from "@/components/Dialogs/InputSelect";
-import { CONTAINER_TYPE, FEED_TYPE, TokenContract } from "@/lib/structure/types";
-import { isAddress, Address } from "viem";
+import { CONTAINER_TYPE, FEED_TYPE, InputState, TokenContract } from "@/lib/structure/types";
+import { Address } from "viem";
 
-// Token Address Input Select States
-export enum InputState {
-  EMPTY_INPUT,
-  INVALID_ADDRESS_INPUT,
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  CONTRACT_NOT_FOUND_LOCALLY,
-  DUPLICATE_INPUT,
-  VALID_INPUT_PENDING,
-  VALID_INPUT,
-  IS_LOADING,
-  CLOSE_INPUT,
-}
 
-export const getInputStateString = (state: InputState): string => {
-  switch (state) {
-    case InputState.EMPTY_INPUT:
-      return 'EMPTY_INPUT';
-    case InputState.VALID_INPUT:
-      return 'VALID_INPUT';
-    case InputState.INVALID_ADDRESS_INPUT:
-      return 'INVALID_ADDRESS_INPUT';
-    case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-      return 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN';
-    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-      return 'CONTRACT_NOT_FOUND_LOCALLY';
-    case InputState.DUPLICATE_INPUT:
-      return 'DUPLICATE_INPUT';
-    case InputState.IS_LOADING:
-      return 'IS_LOADING';
-    case InputState.CLOSE_INPUT:
-      return 'CLOSE_INPUT';
-    default:
-      return 'UNKNOWN_INPUT_STATE';
-  }
-};
-
-type Props = {
-  showDialog: boolean;
-  setShowDialog: (bool: boolean) => void;
-};
 
 export default function TokenSelectDialog({
   showDialog,
   setShowDialog
-}: Props) {
+}: {
+  showDialog: boolean;
+  setShowDialog: (bool: boolean) => void;
+}) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const [inputField, setInputField] = useState<string | undefined>();
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
   const { exchangeContext } = useExchangeContext();
-  const [containerType, setContainerType] = useContainerType();
+  const [containerType] = useContainerType();
   const [externalAddress, setExternalAddress] = useState<string | undefined>(undefined);
 
   const updateInputState = useCallback((next: InputState) => {
@@ -100,7 +63,6 @@ export default function TokenSelectDialog({
   }, [ACTIVE_ACCOUNT_ADDRESS]);
 
   const closeDialog = useCallback(() => {
-    setInputField(undefined);
     updateInputState(InputState.EMPTY_INPUT);
     setShowDialog(false);
     dialogRef.current?.close();
@@ -124,9 +86,11 @@ export default function TokenSelectDialog({
 
       <div className={styles.modalBox}>
         <InputSelect
-          inputState={inputState}
-          setInputState={updateInputState}
           externalAddress={externalAddress}
+          setTokenContractCallback={(token, state) => {
+            setTokenContract(token);
+            updateInputState(state);
+          }}
         />
         <div className={styles.modalScrollBar}>
           <DataList

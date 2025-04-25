@@ -22,9 +22,9 @@ import {
   SEPOLIA,
   TokenContract,
   WalletAccount,
-  TRADE_DIRECTION
+  TRADE_DIRECTION,
+  InputState
 } from "@/lib/structure/types";
-import { InputState } from "@/components/Dialogs/TokenSelectDialog";
 import {
   BURN_ADDRESS,
   defaultMissingImage,

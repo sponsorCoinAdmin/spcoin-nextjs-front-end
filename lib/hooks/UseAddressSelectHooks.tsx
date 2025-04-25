@@ -3,11 +3,9 @@ import { useSellTokenContract, useBuyTokenContract, useContainerType } from '@/l
 import { isAddress } from 'viem';
 import { useEffect, useMemo } from 'react';
 import { useChainId } from 'wagmi';
-import { TokenContract } from '@/lib/structure/types';
+import { InputState, TokenContract } from '@/lib/structure/types';
 import { useMappedTokenContract } from './wagmiERC20hooks';
 import { useCallback } from 'react';
-import { InputState } from '@/components/Dialogs/TokenSelectDialog';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 export function useIsDuplicateToken(tokenAddress?: string): boolean {
   const [sellTokenContract] = useSellTokenContract();
