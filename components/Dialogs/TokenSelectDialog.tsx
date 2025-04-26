@@ -10,8 +10,6 @@ import InputSelect from "@/components/Dialogs/InputSelect";
 import { CONTAINER_TYPE, FEED_TYPE, InputState, TokenContract } from "@/lib/structure/types";
 import { Address } from "viem";
 
-
-
 export default function TokenSelectDialog({
   showDialog,
   setShowDialog
@@ -20,6 +18,7 @@ export default function TokenSelectDialog({
   setShowDialog: (bool: boolean) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const inputSelectRef = useRef<{ clearInput: () => void } | null>(null); // ✅ Added ref to control InputSelect
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const { address: ACTIVE_ACCOUNT_ADDRESS } = useAccount();
@@ -40,7 +39,11 @@ export default function TokenSelectDialog({
   }, []);
 
   useEffect(() => {
-    updateInputState(InputState.EMPTY_INPUT);
+    if (showDialog) {
+      updateInputState(InputState.EMPTY_INPUT);
+      inputSelectRef.current?.clearInput(); // ✅ Clear input field when dialog opens
+    }
+
     if (dialogRef.current) {
       showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
     }
@@ -75,7 +78,7 @@ export default function TokenSelectDialog({
         <h1 className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg">
           {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
             ? "Select a Token to Sell"
-            : "Select a Token to to Buy"}
+            : "Select a Token to Buy"}
         </h1>
         <div
           className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white"
@@ -86,6 +89,7 @@ export default function TokenSelectDialog({
 
       <div className={styles.modalBox}>
         <InputSelect
+          ref={inputSelectRef} // ✅ Pass the ref down
           externalAddress={externalAddress}
           setTokenContractCallback={(token, state) => {
             setTokenContract(token);

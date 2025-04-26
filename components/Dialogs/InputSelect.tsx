@@ -1,56 +1,61 @@
 `use client`;
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 
 import { getTokenAvatar } from '@/lib/network/utils';
 import { isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { InputState, getInputStateString , CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
+import { InputState, getInputStateString, CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenAddress,
   useSellTokenAddress,
-  useBuyTokenContract,
-  useSellTokenContract,
 } from '@/lib/context/contextHooks';
 import { useIsAddressInput, useIsEmptyInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const INPUT_PLACEHOLDER = 'Enter token address';
 
-type Props = {
+export default function InputSelect({ externalAddress, setTokenContractCallback }: {
   externalAddress?: string;
   setTokenContractCallback: (token: TokenContract | undefined, state: InputState) => void;
-};
-
-export default function InputSelect({ externalAddress, setTokenContractCallback }: Props) {
+}) {
   const [inputValue, setInputValue] = useState<string>('');
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(undefined);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const lastCheckedTokenRef = useRef<string | null>(null);
+  const manualEntryRef = useRef<boolean>(false);
 
   const debouncedAddress = useDebounce(inputValue, 250);
   const [containerType] = useContainerType();
   const sellAddress = useSellTokenAddress()?.toLowerCase();
   const buyAddress = useBuyTokenAddress()?.toLowerCase();
 
-  const isEmpty = useIsEmptyInput(debouncedAddress);
-  const isAddressValid = useIsAddressInput(debouncedAddress);
-  const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
+  const isEmpty = useIsEmptyInput(inputValue);
+  const isAddressValid = useIsAddressInput(inputValue);
+  const [validatedToken, isLoading] = useValidateTokenAddress(inputValue, () => {});
+
+  const clearInput = useCallback(() => {
+    setInputValue('');
+    setInputState(InputState.EMPTY_INPUT);
+    setTokenContract(undefined);
+  }, []);
 
   useEffect(() => {
-    if (externalAddress && externalAddress !== inputValue) {
+    if (externalAddress === undefined) {
+      clearInput();
+    } else {
       setInputValue(externalAddress);
+      manualEntryRef.current = false; // DataList is setting address
     }
-  }, [externalAddress]);
+  }, [externalAddress, clearInput]);
 
   useEffect(() => {
-    if (isEmpty) {
+    if (inputValue === '') {
       setInputState(InputState.EMPTY_INPUT);
       setTokenContract(undefined);
       return;
@@ -62,7 +67,7 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
       return;
     }
 
-    const selectedAddress = debouncedAddress.toLowerCase();
+    const selectedAddress = inputValue.toLowerCase();
     if (selectedAddress === sellAddress || selectedAddress === buyAddress) {
       setInputState(InputState.DUPLICATE_INPUT);
       setTokenContract(undefined);
@@ -88,7 +93,11 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
         if (!res.ok) {
           setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
         } else {
-          setInputState(InputState.VALID_INPUT_PENDING);
+          if (manualEntryRef.current) {
+            setInputState(InputState.VALID_INPUT_PENDING);
+          } else {
+            setInputState(InputState.VALID_INPUT);
+          }
         }
       })
       .catch(() => {
@@ -96,10 +105,15 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
       });
 
     setTokenContract(validatedToken);
-  }, [debouncedAddress, isEmpty, isAddressValid, isLoading, validatedToken, sellAddress, buyAddress]);
+  }, [inputValue, isAddressValid, isLoading, validatedToken, sellAddress, buyAddress]);
 
-  // Don't elevate to VALID_INPUT automatically to prevent premature dialog closure
-  // It will now only display VALID_INPUT_PENDING for pending state
+  useEffect(() => {
+    if (inputState === InputState.VALID_INPUT) {
+      setTokenContractCallback(tokenContract, InputState.VALID_INPUT);
+    } else if (inputState === InputState.VALID_INPUT_PENDING) {
+      // Don't close dialog yet; show preview only
+    }
+  }, [inputState, tokenContract, setTokenContractCallback]);
 
   const getErrorImage = (token?: TokenContract): string => {
     return token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
@@ -109,7 +123,7 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
 
   const validateInputStatus = (state: InputState): JSX.Element => {
     const textStyle: React.CSSProperties = { fontSize: '15px', position: 'relative', top: -6 };
-    const emojiStyle: React.CSSProperties = { fontSize: 40, lineHeight: 1, marginRight: 6 };
+    const emojiStyle: React.CSSProperties = { fontSize: 36, lineHeight: 1, marginRight: 6 };
 
     switch (state) {
       case InputState.INVALID_ADDRESS_INPUT:
@@ -154,19 +168,22 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
           autoComplete="off"
           placeholder={INPUT_PLACEHOLDER}
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => {
+            manualEntryRef.current = true;
+            setInputValue(e.target.value);
+          }}
         />
       </div>
 
       {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect} ${styles.tokenPreviewWrap}`}>
-          <div className="flex flex-row justify-between mb-1 pt-0 px-5 hover:bg-spCoin_Blue-900">
+          <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <Image
                 src={tokenAvatarPath ?? getErrorImage(tokenContract)}
                 alt='Token preview'
-                width={42}
-                height={38}
+                width={40}
+                height={40}
                 className={styles.tokenPreviewImg}
                 onError={(e) => {
                   const fallback = getErrorImage(tokenContract);
@@ -183,6 +200,7 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
           </div>
         </div>
       )}
+
       {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
           {validateInputStatus(inputState)}
