@@ -21,7 +21,6 @@ import {
 } from '@/lib/structure/types';
 import { isAddress } from 'viem'
 
-
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png'
 
@@ -99,11 +98,16 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
   return WETH_ADDRESS || BURN_ADDRESS;
 };
 
-const getAvatarAddress = (exchangeContext:ExchangeContext, tokenAddress: Address, dataFeedType: FEED_TYPE): string => {
-  const chainId = exchangeContext.tradeData.chainId;
-  const isNativeToken = isActiveAccountAddress(exchangeContext, tokenAddress);
+const getAvatarAddress = (
+  exchangeContext: ExchangeContext | undefined, // ✅ Use your real ExchangeContext
+  tokenAddress: Address,
+  dataFeedType: FEED_TYPE
+): string => {
 
   if (!tokenAddress) return defaultMissingImage;
+
+  const chainId = exchangeContext?.tradeData?.chainId ?? 1; // ✅ fallback safely
+  const isNativeToken = exchangeContext ? isActiveAccountAddress(exchangeContext, tokenAddress) : false; // ✅ avoid crash
 
   switch (dataFeedType) {
     case FEED_TYPE.AGENT_WALLETS:

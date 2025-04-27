@@ -1,4 +1,4 @@
-`use client`;
+'use client';
 
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
@@ -8,54 +8,56 @@ import info_png from '@/public/assets/miscellaneous/info1.png';
 import { getTokenAvatar } from '@/lib/network/utils';
 import { isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { InputState, getInputStateString, CONTAINER_TYPE, TokenContract } from '@/lib/structure/types';
+import { InputState, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
 import {
   useContainerType,
-  useBuyTokenAddress,
-  useSellTokenAddress,
+  useBuyTokenContract,
+  useSellTokenContract,
 } from '@/lib/context/contextHooks';
 import { useIsAddressInput, useIsEmptyInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
+import DataList from './Resources/DataList';
 
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const INPUT_PLACEHOLDER = 'Enter token address';
 
-export default function InputSelect({ externalAddress, setTokenContractCallback }: {
-  externalAddress?: string;
-  setTokenContractCallback: (token: TokenContract | undefined, state: InputState) => void;
-}) {
+const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const [inputValue, setInputValue] = useState<string>('');
   const [tokenContract, setTokenContract] = useState<TokenContract | undefined>(undefined);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-  const lastCheckedTokenRef = useRef<string | null>(null);
   const manualEntryRef = useRef<boolean>(false);
+  const lastCheckedTokenRef = useRef<string | null>(null);
 
   const debouncedAddress = useDebounce(inputValue, 250);
   const [containerType] = useContainerType();
-  const sellAddress = useSellTokenAddress()?.toLowerCase();
-  const buyAddress = useBuyTokenAddress()?.toLowerCase();
+  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
+  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
-  const isEmpty = useIsEmptyInput(inputValue);
-  const isAddressValid = useIsAddressInput(inputValue);
-  const [validatedToken, isLoading] = useValidateTokenAddress(inputValue, () => {});
+  const isEmpty = useIsEmptyInput(debouncedAddress);
+  const isAddressValid = useIsAddressInput(debouncedAddress);
+  const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
 
-  const clearInput = useCallback(() => {
+  const clearFields = useCallback(() => {
     setInputValue('');
     setInputState(InputState.EMPTY_INPUT);
     setTokenContract(undefined);
   }, []);
 
-  useEffect(() => {
-    if (externalAddress === undefined) {
-      clearInput();
-    } else {
-      setInputValue(externalAddress);
-      manualEntryRef.current = false; // DataList is setting address
+  const validateAndMaybeClose = useCallback((token: TokenContract) => {
+    setTokenContract(token);
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      setSellTokenContract(token);
+    } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+      setBuyTokenContract(token);
     }
-  }, [externalAddress, clearInput]);
+    setInputState(InputState.VALID_INPUT);
+
+    clearFields();
+    closeDialog();
+  }, [closeDialog, containerType, clearFields, setSellTokenContract, setBuyTokenContract]);
 
   useEffect(() => {
-    if (inputValue === '') {
+    if (debouncedAddress === '') {
       setInputState(InputState.EMPTY_INPUT);
       setTokenContract(undefined);
       return;
@@ -63,13 +65,6 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
 
     if (!isAddressValid) {
       setInputState(InputState.INVALID_ADDRESS_INPUT);
-      setTokenContract(undefined);
-      return;
-    }
-
-    const selectedAddress = inputValue.toLowerCase();
-    if (selectedAddress === sellAddress || selectedAddress === buyAddress) {
-      setInputState(InputState.DUPLICATE_INPUT);
       setTokenContract(undefined);
       return;
     }
@@ -92,28 +87,20 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
       .then((res) => {
         if (!res.ok) {
           setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+          setTokenContract(undefined);
         } else {
           if (manualEntryRef.current) {
             setInputState(InputState.VALID_INPUT_PENDING);
           } else {
-            setInputState(InputState.VALID_INPUT);
+            validateAndMaybeClose(validatedToken);
           }
         }
       })
       .catch(() => {
         setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+        setTokenContract(undefined);
       });
-
-    setTokenContract(validatedToken);
-  }, [inputValue, isAddressValid, isLoading, validatedToken, sellAddress, buyAddress]);
-
-  useEffect(() => {
-    if (inputState === InputState.VALID_INPUT) {
-      setTokenContractCallback(tokenContract, InputState.VALID_INPUT);
-    } else if (inputState === InputState.VALID_INPUT_PENDING) {
-      // Don't close dialog yet; show preview only
-    }
-  }, [inputState, tokenContract, setTokenContractCallback]);
+  }, [debouncedAddress, isAddressValid, isLoading, validatedToken, validateAndMaybeClose]);
 
   const getErrorImage = (token?: TokenContract): string => {
     return token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
@@ -130,28 +117,28 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>❓</span>
-            <span style={textStyle}>Valid Token Address Required !</span>
+            <span style={textStyle}>Valid Token Address Required!</span>
           </span>
         );
       case InputState.DUPLICATE_INPUT:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>❌</span>
-            <span style={textStyle}>Selected token is already active on the other side.</span>
+            <span style={textStyle}>Selected token already active on the other side.</span>
           </span>
         );
       case InputState.CONTRACT_NOT_FOUND_LOCALLY:
         return (
           <span style={{ color: 'orange' }}>
             <span style={emojiStyle}>⚠️</span>
-            <span style={textStyle}>Blockchain Token Missing Local Logo Image</span>
+            <span style={textStyle}>Blockchain token missing local image.</span>
           </span>
         );
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         return (
           <span style={{ color: 'red' }}>
             <span style={emojiStyle}>❌</span>
-            <span style={textStyle}>Contract Not Found on Blockchain !!!</span>
+            <span style={textStyle}>Contract not found on blockchain!</span>
           </span>
         );
       default:
@@ -160,9 +147,9 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
   };
 
   return (
-    <div id="inputSelect" className={styles.inputSelectWrapper}>
+    <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>      {/* 🔵 inputSelectDiv */}
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
-        <div className={styles.searchImage}>🔍</div>
+        <div>🔍</div>
         <input
           className={`${styles.modalElementInput} w-full`}
           autoComplete="off"
@@ -175,13 +162,14 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
         />
       </div>
 
+      {/* 🔵 pendingDiv */}
       {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect} ${styles.tokenPreviewWrap}`}>
           <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <Image
                 src={tokenAvatarPath ?? getErrorImage(tokenContract)}
-                alt='Token preview'
+                alt="Token preview"
                 width={40}
                 height={40}
                 className={styles.tokenPreviewImg}
@@ -201,11 +189,25 @@ export default function InputSelect({ externalAddress, setTokenContractCallback 
         </div>
       )}
 
-      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
-        <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
-          {validateInputStatus(inputState)}
+      {/* 🛠️ inputSelectFlexDiv */}
+      <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0">
+        {/* 🔵 validateInputDiv */}
+        {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+          <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
+            {validateInputStatus(inputState)}
+          </div>
+        )}
+
+        <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>          <DataList
+            onTokenSelect={(address: string) => {
+              manualEntryRef.current = false;
+              setInputValue(address);
+            }}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
-}
+};
+
+export default InputSelect;
