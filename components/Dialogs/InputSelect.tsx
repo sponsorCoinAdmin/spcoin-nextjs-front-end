@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { getTokenAvatar } from '@/lib/network/utils';
 import { isAddress } from 'viem';
@@ -41,61 +41,75 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const isAddressValid = useIsAddressInput(debouncedAddress);
   const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
 
+  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
+  const resolveImageSrc = (token?: TokenContract) => token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
+
   const clearFields = useCallback(() => {
     setInputValue('');
     setInputState(InputState.EMPTY_INPUT);
     setTokenContract(undefined);
   }, []);
 
+  const clearToken = (state: InputState) => {
+    setInputState(state);
+    setTokenContract(undefined);
+  };
+
+  const setTokenContractInContext = useMemo(
+    () => containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? setSellTokenContract
+      : setBuyTokenContract,
+    [containerType, setSellTokenContract, setBuyTokenContract]
+  );
+
   const validateAndMaybeClose = useCallback((token: TokenContract) => {
     setTokenContract(token);
-    (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract)(token);
+    setTokenContractInContext(token);
     setInputState(InputState.VALID_INPUT);
     clearFields();
     closeDialog();
-  }, [containerType, clearFields, closeDialog, setSellTokenContract, setBuyTokenContract]);
+  }, [clearFields, closeDialog, setTokenContractInContext]);
 
   useEffect(() => {
     if (debouncedAddress === '' || !isAddressValid || isLoading) {
-      setInputState(debouncedAddress === '' ? InputState.EMPTY_INPUT : InputState.INVALID_ADDRESS_INPUT);
-      setTokenContract(undefined);
+      clearToken(debouncedAddress === '' ? InputState.EMPTY_INPUT : InputState.INVALID_ADDRESS_INPUT);
       return;
     }
-
+  
     if (!validatedToken) {
-      setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
-      setTokenContract(undefined);
+      clearToken(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       return;
     }
-
+  
     const tokenAddress = validatedToken.address.toLowerCase();
     if (lastCheckedTokenRef.current === tokenAddress) return;
     lastCheckedTokenRef.current = tokenAddress;
-
+  
+    setTokenContract(validatedToken);  // ✅ set token immediately
+  
+    if (manualEntryRef.current) {
+      setInputState(InputState.VALID_INPUT_PENDING);  // ✅ set pending immediately
+      return; // ✅ stop here: don't fetch!
+    }
+  
     fetch(`/assets/blockchains/1/contracts/${tokenAddress}/avatar.png`)
       .then(res => {
-        if (!res.ok) throw new Error();
-        manualEntryRef.current ? setInputState(InputState.VALID_INPUT_PENDING) : validateAndMaybeClose(validatedToken);
-      })
-      .catch(() => {
-        setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-        setTokenContract(undefined);
+        if (res.ok) {
+          validateAndMaybeClose(validatedToken);
+        } else {
+          clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+        }
       });
   }, [debouncedAddress, isAddressValid, isLoading, validatedToken, validateAndMaybeClose]);
+  
 
-  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
-  const resolveImageSrc = (token?: TokenContract) => token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
-
-  const validateInputStatus = (state: InputState) => {
-    const mapping = emojiMap[state];
-    if (!mapping) return null;
-    return (
+  const validateInputStatus = (state: InputState) =>
+    emojiMap[state] && (
       <span style={{ color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange' }}>
-        <span style={{ fontSize: 36, lineHeight: 1, marginRight: 6 }}>{mapping.emoji}</span>
-        <span style={{ fontSize: '15px', position: 'relative', top: -6 }}>{mapping.text}</span>
+        <span style={{ fontSize: 36, lineHeight: 1, marginRight: 6 }}>{emojiMap[state]!.emoji}</span>
+        <span style={{ fontSize: '15px', position: 'relative', top: -6 }}>{emojiMap[state]!.text}</span>
       </span>
     );
-  };
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
