@@ -9,7 +9,7 @@
 }
 
 .modalInputSelect {
-  height: 66px; /* or whatever fixed height you want */
+  height: 61px; /* or whatever fixed height you want */
   overflow: hidden; /* (optional) prevent extra text from pushing it larger */
   background-color: lightblue;
   padding: 8px;
@@ -23,10 +23,8 @@
 
 .modalElementSelectContainer {
   background-color: #243056;
-  font-size: 15px;
-
   color: #5981F3;
-  height: 85px !important;
+  height: 40px !important;
   width: 100%;
   margin-bottom: 0px;
   border-radius: 22px !important;
@@ -50,6 +48,16 @@
 
 .inputSelectSize {
   font-size: 7px;
+}
+
+.stackContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem; /* optional spacing between sections */
+}
+
+.inputSelectSize {
+  font-size: 15px;
 }
 
 .modalContainer{
@@ -111,6 +119,9 @@
     border-radius: 15px;
 }
 
+.stackContainer {
+}
+
 .modalBox {
   display: flex;
   flex-direction: column;
@@ -132,36 +143,19 @@
 }
 
 .modalScrollBar {
-  background-color: #243056;
-  width: 100%;
+  background-color: lightblue;
   height: 100%;
-  overflow-y: auto;            /* 🔥 allow vertical scroll */
-  flex-grow: 1;                /* 🔥 grow and fill available space */
-  scrollbar-width: thin;       /* 🔥 Firefox: show a thin scrollbar */
+  width: 100%;
+  overflow: hidden;
+  overflow-y: scroll;
+  overflow-y: scroll;
+  scrollbar-width: none;
   padding: 10px;
+  background-color: #243056; 
   color: #5981F3;
   border-width: 0px !important;
   margin-bottom: 5px;
-  border-radius: 22px !important;
-
-}
-
-/* Chrome/Safari/Edge: styled thin scrollbar */
-.modalScrollBar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.modalScrollBarHidden {
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-.modalScrollBarHidden::-webkit-scrollbar {
-  display: none;
-}
-
-.modalScrollBar::-webkit-scrollbar-thumb {
-  background: #5981F3;
-  border-radius: 10px;
+  border-radius: 22px !important; 
 }
 
 .infoLogo {

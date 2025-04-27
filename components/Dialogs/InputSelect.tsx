@@ -164,7 +164,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
 
       {/* 🔵 pendingDiv */}
       {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
-        <div id="pendingDiv" className={`${styles.modalInputSelect} ${styles.tokenPreviewWrap}`}>
+        <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <Image
@@ -190,15 +190,19 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       )}
 
       {/* 🛠️ inputSelectFlexDiv */}
-      <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0">
-        {/* 🔵 validateInputDiv */}
+      <div
+        id="inputSelectFlexDiv"
+        className="flex flex-col flex-grow min-h-0"
+        style={{ gap: '0.2rem' }}
+      >        {/* 🔵 validateInputDiv */}
         {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
           <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
             {validateInputStatus(inputState)}
           </div>
         )}
 
-        <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>          <DataList
+        <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>          
+          <DataList
             onTokenSelect={(address: string) => {
               manualEntryRef.current = false;
               setInputValue(address);
