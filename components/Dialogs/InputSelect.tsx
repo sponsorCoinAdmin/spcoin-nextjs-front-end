@@ -70,28 +70,49 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     closeDialog();
   }, [clearFields, closeDialog, setTokenContractInContext]);
 
-  useEffect(() => {
-    if (debouncedAddress === '' || !isAddressValid || isLoading) {
-      clearToken(debouncedAddress === '' ? InputState.EMPTY_INPUT : InputState.INVALID_ADDRESS_INPUT);
+  const validateTextInput = (input: string) => {
+    const trimmed = input.trim();
+    if (trimmed === '') {
+      setInputValue(trimmed);
       return;
     }
-  
+    const isPartialHex = /^0x?[0-9a-fA-F]*$/.test(trimmed);
+    if (isPartialHex) {
+      setInputValue(trimmed);
+    }
+  };
+
+  useEffect(() => {
+    if (debouncedAddress === '') {
+      clearToken(InputState.EMPTY_INPUT);
+      return;
+    }
+
+    if (!isAddressValid) {
+      clearToken(InputState.INVALID_ADDRESS_INPUT);
+      return;
+    }
+
+    if (isLoading) {
+      return; // Still waiting for blockchain validation
+    }
+
     if (!validatedToken) {
       clearToken(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       return;
     }
-  
+
     const tokenAddress = validatedToken.address.toLowerCase();
     if (lastCheckedTokenRef.current === tokenAddress) return;
     lastCheckedTokenRef.current = tokenAddress;
-  
-    setTokenContract(validatedToken);  // ✅ set token immediately
-  
+
+    setTokenContract(validatedToken);
+
     if (manualEntryRef.current) {
-      setInputState(InputState.VALID_INPUT_PENDING);  // ✅ set pending immediately
-      return; // ✅ stop here: don't fetch!
+      setInputState(InputState.VALID_INPUT_PENDING);
+      return;
     }
-  
+
     fetch(`/assets/blockchains/1/contracts/${tokenAddress}/avatar.png`)
       .then(res => {
         if (res.ok) {
@@ -101,7 +122,6 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
         }
       });
   }, [debouncedAddress, isAddressValid, isLoading, validatedToken, validateAndMaybeClose]);
-  
 
   const validateInputStatus = (state: InputState) =>
     emojiMap[state] && (
@@ -121,7 +141,10 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           autoComplete="off"
           placeholder={INPUT_PLACEHOLDER}
           value={inputValue}
-          onChange={(e) => { manualEntryRef.current = true; setInputValue(e.target.value); }}
+          onChange={(e) => {
+            manualEntryRef.current = true;
+            validateTextInput(e.target.value);
+          }}
         />
       </div>
 
