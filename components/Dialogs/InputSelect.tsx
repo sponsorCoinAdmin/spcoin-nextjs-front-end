@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { getTokenAvatar } from '@/lib/network/utils';
 import { isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useHexInput } from '@/lib/hooks/useHexInput'; // ✅ correct
 import { InputState, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
 import {
   useContainerType,
@@ -27,7 +28,8 @@ const emojiMap: Partial<Record<InputState, { emoji: string; text: string }>> = {
 };
 
 const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
-  const [inputValue, setInputValue] = useState('');
+  const { inputValue, validateHexInput, clearInput } = useHexInput(); // ✅ useHexInput here
+
   const [tokenContract, setTokenContract] = useState<TokenContract>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const manualEntryRef = useRef(false);
@@ -45,10 +47,10 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const resolveImageSrc = (token?: TokenContract) => token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
 
   const clearFields = useCallback(() => {
-    setInputValue('');
+    clearInput(); // ✅ use clearInput
     setInputState(InputState.EMPTY_INPUT);
     setTokenContract(undefined);
-  }, []);
+  }, [clearInput]);
 
   const clearToken = (state: InputState) => {
     setInputState(state);
@@ -70,31 +72,10 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     closeDialog();
   }, [clearFields, closeDialog, setTokenContractInContext]);
 
-  const validateTextInput = (input: string) => {
-    const trimmed = input.trim();
-    if (trimmed === '') {
-      setInputValue(trimmed);
-      return;
-    }
-    const isPartialHex = /^0x?[0-9a-fA-F]*$/.test(trimmed);
-    if (isPartialHex) {
-      setInputValue(trimmed);
-    }
-  };
-
   useEffect(() => {
-    if (debouncedAddress === '') {
-      clearToken(InputState.EMPTY_INPUT);
+    if (debouncedAddress === '' || !isAddressValid || isLoading) {
+      clearToken(debouncedAddress === '' ? InputState.EMPTY_INPUT : InputState.INVALID_ADDRESS_INPUT);
       return;
-    }
-
-    if (!isAddressValid) {
-      clearToken(InputState.INVALID_ADDRESS_INPUT);
-      return;
-    }
-
-    if (isLoading) {
-      return; // Still waiting for blockchain validation
     }
 
     if (!validatedToken) {
@@ -126,8 +107,8 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const validateInputStatus = (state: InputState) =>
     emojiMap[state] && (
       <span style={{ color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange' }}>
-        <span style={{ fontSize: 36, lineHeight: 1, marginRight: 6 }}>{emojiMap[state]!.emoji}</span>
-        <span style={{ fontSize: '15px', position: 'relative', top: -6 }}>{emojiMap[state]!.text}</span>
+        <span style={{ fontSize: 36, position: 'relative', marginRight: 3, top: -5 }}>{emojiMap[state]!.emoji}</span>
+        <span style={{ fontSize: '15px', position: 'relative', top: -12}}>{emojiMap[state]!.text}</span>
       </span>
     );
 
@@ -143,7 +124,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           value={inputValue}
           onChange={(e) => {
             manualEntryRef.current = true;
-            validateTextInput(e.target.value);
+            validateHexInput(e.target.value); // ✅ use validateHexInput
           }}
         />
       </div>
@@ -151,7 +132,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       {/* Pending Token */}
       {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
-          <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
+          <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <Image
                 src={tokenAvatarPath ?? resolveImageSrc(tokenContract)}
@@ -159,7 +140,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
                 width={40}
                 height={40}
                 className={styles.tokenPreviewImg}
-                onError={e => {
+                onError={(e) => {
                   const fallback = resolveImageSrc(tokenContract);
                   if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
                 }}
@@ -174,18 +155,18 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       )}
 
       {/* Validation + DataList */}
-      <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
-        {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
-          <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
-            {validateInputStatus(inputState)}
-          </div>
-        )}
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+        <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
+          {validateInputStatus(inputState)}
+        </div>
+      )}
 
+      <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
           <DataList
             onTokenSelect={address => {
               manualEntryRef.current = false;
-              setInputValue(address);
+              validateHexInput(address); // ✅ important: validate externally too
             }}
           />
         </div>

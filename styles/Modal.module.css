@@ -9,7 +9,7 @@
 }
 
 .modalInputSelect {
-  height: 66px; /* or whatever fixed height you want */
+  height: 146px; /* or whatever fixed height you want */
   overflow: hidden; /* (optional) prevent extra text from pushing it larger */
   background-color: lightblue;
   padding: 8px;
