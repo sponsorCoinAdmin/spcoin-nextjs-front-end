@@ -6,12 +6,14 @@ import Image from 'next/image';
 import { getTokenAvatar } from '@/lib/network/utils';
 import { isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useHexInput } from '@/lib/hooks/useHexInput'; // ✅ correct
+import { useHexInput } from '@/lib/hooks/useHexInput';
 import { InputState, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenContract,
   useSellTokenContract,
+  useBuyTokenAddress,
+  useSellTokenAddress,
 } from '@/lib/context/contextHooks';
 import { useIsAddressInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
 import DataList from './Resources/DataList';
@@ -28,17 +30,17 @@ const emojiMap: Partial<Record<InputState, { emoji: string; text: string }>> = {
 };
 
 const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
-  const { inputValue, validateHexInput, clearInput } = useHexInput(); // ✅ useHexInput here
-
+  const { inputValue, validateHexInput, clearInput } = useHexInput();
   const [tokenContract, setTokenContract] = useState<TokenContract>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const manualEntryRef = useRef(false);
-  const lastCheckedTokenRef = useRef<string | null>(null);
-
   const debouncedAddress = useDebounce(inputValue, 250);
+
   const [containerType] = useContainerType();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
+  const buyAddress = useBuyTokenAddress();
+  const sellAddress = useSellTokenAddress();
 
   const isAddressValid = useIsAddressInput(debouncedAddress);
   const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
@@ -47,7 +49,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const resolveImageSrc = (token?: TokenContract) => token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
 
   const clearFields = useCallback(() => {
-    clearInput(); // ✅ use clearInput
+    clearInput();
     setInputState(InputState.EMPTY_INPUT);
     setTokenContract(undefined);
   }, [clearInput]);
@@ -83,9 +85,15 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       return;
     }
 
-    const tokenAddress = validatedToken.address.toLowerCase();
-    if (lastCheckedTokenRef.current === tokenAddress) return;
-    lastCheckedTokenRef.current = tokenAddress;
+    const selectedAddress = validatedToken.address.toLowerCase();
+    const oppositeAddress = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyAddress?.toLowerCase()
+      : sellAddress?.toLowerCase();
+
+    if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
+      clearToken(InputState.DUPLICATE_INPUT);
+      return;
+    }
 
     setTokenContract(validatedToken);
 
@@ -94,7 +102,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       return;
     }
 
-    fetch(`/assets/blockchains/1/contracts/${tokenAddress}/avatar.png`)
+    fetch(`/assets/blockchains/1/contracts/${selectedAddress}/avatar.png`)
       .then(res => {
         if (res.ok) {
           validateAndMaybeClose(validatedToken);
@@ -102,19 +110,18 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
         }
       });
-  }, [debouncedAddress, isAddressValid, isLoading, validatedToken, validateAndMaybeClose]);
+  }, [debouncedAddress, isAddressValid, isLoading, validatedToken, validateAndMaybeClose, buyAddress, sellAddress, containerType]);
 
   const validateInputStatus = (state: InputState) =>
     emojiMap[state] && (
       <span style={{ color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange' }}>
         <span style={{ fontSize: 36, position: 'relative', marginRight: 3, top: -5 }}>{emojiMap[state]!.emoji}</span>
-        <span style={{ fontSize: '15px', position: 'relative', top: -12}}>{emojiMap[state]!.text}</span>
+        <span style={{ fontSize: '15px', position: 'relative', top: -12 }}>{emojiMap[state]!.text}</span>
       </span>
     );
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
-      {/* Input Field */}
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
         <div>🔍</div>
         <input
@@ -124,12 +131,11 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           value={inputValue}
           onChange={(e) => {
             manualEntryRef.current = true;
-            validateHexInput(e.target.value); // ✅ use validateHexInput
+            validateHexInput(e.target.value);
           }}
         />
       </div>
 
-      {/* Pending Token */}
       {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
@@ -154,7 +160,6 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
         </div>
       )}
 
-      {/* Validation + DataList */}
       {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
           {validateInputStatus(inputState)}
@@ -166,7 +171,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           <DataList
             onTokenSelect={address => {
               manualEntryRef.current = false;
-              validateHexInput(address); // ✅ important: validate externally too
+              validateHexInput(address);
             }}
           />
         </div>
