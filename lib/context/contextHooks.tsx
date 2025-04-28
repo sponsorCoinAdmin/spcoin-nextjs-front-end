@@ -202,7 +202,7 @@ export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) =
   ];
 };
 
-export const useContainerType = (initialType?: CONTAINER_TYPE): [CONTAINER_TYPE | undefined, (type: CONTAINER_TYPE) => void] => {
+export const useContainerType = (initialType?: CONTAINER_TYPE): [CONTAINER_TYPE, (type: CONTAINER_TYPE) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   // Initialize containerType if undefined and initialType is provided
@@ -214,7 +214,7 @@ export const useContainerType = (initialType?: CONTAINER_TYPE): [CONTAINER_TYPE 
   }
 
   return [
-    exchangeContext.containerType,
+    exchangeContext.containerType || CONTAINER_TYPE.SELL_SELECT_CONTAINER,
     (type) =>
       setExchangeContext((prev) => ({
         ...prev,

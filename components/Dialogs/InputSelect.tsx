@@ -22,13 +22,6 @@ const INPUT_PLACEHOLDER = 'Enter token address';
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
-const emojiMap: Partial<Record<InputState, { emoji: string; text: string }>> = {
-  [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
-  [InputState.DUPLICATE_INPUT]: { emoji: '❌', text: 'Selected token already active on the other side.' },
-  [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Blockchain token missing local image.' },
-  [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Contract not found on blockchain!' },
-};
-
 const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const { inputValue, validateHexInput, clearInput } = useHexInput();
   const [tokenContract, setTokenContract] = useState<TokenContract>();
@@ -46,7 +39,8 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
 
   const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
-  const resolveImageSrc = (token?: TokenContract) => token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
+  const resolveImageSrc = (token?: TokenContract) =>
+    token?.address && isAddress(token.address) ? defaultMissingImage : badTokenAddressImage;
 
   const clearFields = useCallback(() => {
     clearInput();
@@ -60,19 +54,36 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   };
 
   const setTokenContractInContext = useMemo(
-    () => containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? setSellTokenContract
-      : setBuyTokenContract,
+    () =>
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? setSellTokenContract
+        : setBuyTokenContract,
     [containerType, setSellTokenContract, setBuyTokenContract]
   );
 
-  const validateAndMaybeClose = useCallback((token: TokenContract) => {
-    setTokenContract(token);
-    setTokenContractInContext(token);
-    setInputState(InputState.VALID_INPUT);
-    clearFields();
-    closeDialog();
-  }, [clearFields, closeDialog, setTokenContractInContext]);
+  const validateAndMaybeClose = useCallback(
+    (token: TokenContract) => {
+      setTokenContract(token);
+      setTokenContractInContext(token);
+      setInputState(InputState.VALID_INPUT);
+      clearFields();
+      closeDialog();
+    },
+    [clearFields, closeDialog, setTokenContractInContext]
+  );
+
+  const emojiMap: Partial<Record<InputState, { emoji: string; text: string }>> = useMemo(() => ({
+    [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
+    [InputState.DUPLICATE_INPUT]: {
+      emoji: '❌',
+      text:
+        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          ? 'Sell Address Cannot Be the Same as Buy Address'
+          : 'Buy Address Cannot Be the Same as Sell Address',
+    },
+    [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Blockchain token missing local image.' },
+    [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Contract not found on blockchain!' },
+  }), [containerType]);
 
   useEffect(() => {
     if (debouncedAddress === '' || !isAddressValid || isLoading) {
@@ -86,9 +97,10 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     }
 
     const selectedAddress = validatedToken.address.toLowerCase();
-    const oppositeAddress = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? buyAddress?.toLowerCase()
-      : sellAddress?.toLowerCase();
+    const oppositeAddress =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? buyAddress?.toLowerCase()
+        : sellAddress?.toLowerCase();
 
     if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
       clearToken(InputState.DUPLICATE_INPUT);
@@ -102,21 +114,37 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       return;
     }
 
-    fetch(`/assets/blockchains/1/contracts/${selectedAddress}/avatar.png`)
-      .then(res => {
-        if (res.ok) {
-          validateAndMaybeClose(validatedToken);
-        } else {
-          clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-        }
-      });
-  }, [debouncedAddress, isAddressValid, isLoading, validatedToken, validateAndMaybeClose, buyAddress, sellAddress, containerType]);
+    fetch(`/assets/blockchains/1/contracts/${selectedAddress}/avatar.png`).then((res) => {
+      if (res.ok) {
+        validateAndMaybeClose(validatedToken);
+      } else {
+        clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+      }
+    });
+  }, [
+    debouncedAddress,
+    isAddressValid,
+    isLoading,
+    validatedToken,
+    validateAndMaybeClose,
+    buyAddress,
+    sellAddress,
+    containerType,
+  ]);
 
   const validateInputStatus = (state: InputState) =>
     emojiMap[state] && (
-      <span style={{ color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange' }}>
-        <span style={{ fontSize: 36, position: 'relative', marginRight: 3, top: -5 }}>{emojiMap[state]!.emoji}</span>
-        <span style={{ fontSize: '15px', position: 'relative', top: -12 }}>{emojiMap[state]!.text}</span>
+      <span
+        style={{
+          color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange',
+        }}
+      >
+        <span style={{ fontSize: 36, position: 'relative', marginRight: 3, top: -5 }}>
+          {emojiMap[state]!.emoji}
+        </span>
+        <span style={{ fontSize: '15px', position: 'relative', top: -12 }}>
+          {emojiMap[state]!.text}
+        </span>
       </span>
     );
 
@@ -169,7 +197,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
           <DataList
-            onTokenSelect={address => {
+            onTokenSelect={(address) => {
               manualEntryRef.current = false;
               validateHexInput(address);
             }}
