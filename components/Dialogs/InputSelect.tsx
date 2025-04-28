@@ -7,6 +7,7 @@ import { getTokenAvatar } from '@/lib/network/utils';
 import { isAddress } from 'viem';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
+import { useIsDuplicateToken, useIsAddressInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
 import { InputState, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
 import {
   useContainerType,
@@ -15,7 +16,6 @@ import {
   useBuyTokenAddress,
   useSellTokenAddress,
 } from '@/lib/context/contextHooks';
-import { useIsAddressInput, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
 import DataList from './Resources/DataList';
 
 const INPUT_PLACEHOLDER = 'Enter token address';
@@ -37,6 +37,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
 
   const isAddressValid = useIsAddressInput(debouncedAddress);
   const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
+  const isDuplicateToken = useIsDuplicateToken(debouncedAddress);
 
   const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
   const resolveImageSrc = (token?: TokenContract) =>
@@ -91,35 +92,32 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       return;
     }
 
+    // ➡️ DUPLICATE CHECK FIRST (early exit)
+    if (isDuplicateToken) {
+      clearToken(InputState.DUPLICATE_INPUT);
+      return;
+    }
+
     if (!validatedToken) {
       clearToken(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       return;
     }
 
     const selectedAddress = validatedToken.address.toLowerCase();
-    const oppositeAddress =
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? buyAddress?.toLowerCase()
-        : sellAddress?.toLowerCase();
-
-    if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
-      clearToken(InputState.DUPLICATE_INPUT);
-      return;
-    }
-
-    setTokenContract(validatedToken);
-
-    if (manualEntryRef.current) {
-      setInputState(InputState.VALID_INPUT_PENDING);
-      return;
-    }
 
     fetch(`/assets/blockchains/1/contracts/${selectedAddress}/avatar.png`).then((res) => {
       if (res.ok) {
-        validateAndMaybeClose(validatedToken);
+        if (manualEntryRef.current) {
+          setTokenContract(validatedToken);
+          setInputState(InputState.VALID_INPUT_PENDING);
+        } else {
+          validateAndMaybeClose(validatedToken);
+        }
       } else {
         clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
       }
+    }).catch(() => {
+      clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
     });
   }, [
     debouncedAddress,
@@ -130,6 +128,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     buyAddress,
     sellAddress,
     containerType,
+    isDuplicateToken,
   ]);
 
   const validateInputStatus = (state: InputState) =>
@@ -178,10 +177,15 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
                   const fallback = resolveImageSrc(tokenContract);
                   if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
                 }}
+                onClick={() => {
+                  if (tokenContract) {
+                    validateAndMaybeClose(tokenContract); // ✅ Clicking image promotes VALID_INPUT + closes
+                  }
+                }}
               />
               <div>
-                <div className={styles.elementName}>{tokenContract.name}</div>
-                <div className={styles.elementSymbol}>{tokenContract.symbol}</div>
+                <div className={styles.elementName}>{tokenContract?.name}</div>
+                <div className={styles.elementSymbol}>{tokenContract?.symbol}</div>
               </div>
             </div>
           </div>
