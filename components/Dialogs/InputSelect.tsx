@@ -13,10 +13,10 @@ import {
   useSellTokenContract,
 } from '@/lib/context/contextHooks';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import { useFetchLocalAvatar } from '@/lib/hooks/useFetchLocalAvatar';
 import DataList from './Resources/DataList';
 
 const INPUT_PLACEHOLDER = 'Enter token address';
-const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const { inputValue, validateHexInput, clearInput } = useHexInput();
@@ -28,12 +28,21 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
 
-  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
+  const {
+    inputState,
+    validatedToken,
+    isLoading,
+    chainId,
+  } = useInputValidationState(debouncedAddress);
+
+  const avatarURL = validatedToken
+    ? `/assets/blockchains/${chainId}/contracts/${validatedToken.address.toLowerCase()}/avatar.png`
+    : '';
+  const avatarSrc = useFetchLocalAvatar(inputState, avatarURL);
+
   const setTokenContractInContext = useMemo(() =>
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
   , [containerType, setSellTokenContract, setBuyTokenContract]);
-
-  const { inputState, validatedToken, isLoading } = useInputValidationState(debouncedAddress);
 
   const clearFields = useCallback(() => {
     clearInput();
@@ -95,16 +104,11 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <Image
-                src={tokenAvatarPath ?? defaultMissingImage}
+                src={avatarSrc}
                 alt="Token preview"
                 width={40}
                 height={40}
                 className={styles.tokenPreviewImg}
-                onError={(e) => {
-                  if (e.currentTarget.src !== defaultMissingImage) {
-                    e.currentTarget.src = defaultMissingImage;
-                  }
-                }}
                 onClick={() => {
                   if (tokenContract) {
                     validateAndMaybeClose(tokenContract);
