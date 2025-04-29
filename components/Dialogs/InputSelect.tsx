@@ -39,6 +39,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const chainId = useChainId();
   const isAddressValid = useIsAddressInput(debouncedAddress);
   const [validatedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
+  const isDuplicateToken = useIsDuplicateToken(debouncedAddress);
 
   const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
   const resolveImageSrc = (token?: TokenContract) =>
@@ -52,13 +53,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
 
   const clearToken = (state: InputState) => {
     setInputState(state);
-    if (
-      state !== InputState.DUPLICATE_INPUT &&
-      state !== InputState.INVALID_ADDRESS_INPUT &&
-      state !== InputState.EMPTY_INPUT
-    ) {
-      setTokenContract(undefined);
-    }
+    setTokenContract(undefined);
   };
 
   const setTokenContractInContext = useMemo(
@@ -82,86 +77,64 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
 
   const emojiMap: Partial<Record<InputState, { emoji: string; text: string }>> = useMemo(() => ({
     [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
-    [InputState.DUPLICATE_INPUT]: { emoji: '', text: '' },
+    [InputState.DUPLICATE_INPUT]: {
+      emoji: '❌',
+      text:
+        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          ? 'Sell Address Cannot Be the Same as Buy Address'
+          : 'Buy Address Cannot Be the Same as Sell Address',
+    },
     [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Blockchain token missing local image.' },
     [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Contract not found on blockchain!' },
   }), [containerType]);
 
   useEffect(() => {
-    if (debouncedAddress === '') {
-      clearToken(InputState.EMPTY_INPUT);
+    if (debouncedAddress === '' || !isAddressValid || isLoading) {
+      clearToken(debouncedAddress === '' ? InputState.EMPTY_INPUT : InputState.INVALID_ADDRESS_INPUT);
       return;
     }
 
-    if (!isAddressValid) {
-      clearToken(InputState.INVALID_ADDRESS_INPUT);
+    if (isDuplicateToken) {
+      clearToken(InputState.DUPLICATE_INPUT);
       return;
     }
-  }, [debouncedAddress, isAddressValid, clearToken]);
 
-  useEffect(() => {
-    if (!debouncedAddress || isLoading) return;
-
-    if (validatedToken) {
-      const oppositeAddress = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? buyAddress?.toLowerCase()
-        : sellAddress?.toLowerCase();
-      const selectedAddress = validatedToken.address.toLowerCase();
-
-      if (selectedAddress && oppositeAddress && selectedAddress === oppositeAddress) {
-        clearToken(InputState.DUPLICATE_INPUT);
-        return;
-      }
-
-      fetch(`/assets/blockchains/${chainId}/contracts/${selectedAddress}/avatar.png`)
-        .then((res) => {
-          if (res.ok) {
-            if (manualEntryRef.current) {
-              setTokenContract(validatedToken);
-              setInputState(InputState.VALID_INPUT_PENDING);
-            } else {
-              validateAndMaybeClose(validatedToken);
-            }
-          } else {
-            clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-          }
-        })
-        .catch(() => {
-          clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-        });
-    } else {
+    if (!validatedToken) {
       clearToken(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
-    }
-  }, [debouncedAddress, validatedToken, isLoading, containerType, buyAddress, sellAddress, validateAndMaybeClose, chainId, clearToken]);
-
-  const validateInputStatus = (state: InputState) => {
-    if (state === InputState.DUPLICATE_INPUT && tokenContract) {
-      return (
-        <span style={{ color: 'orange' }}>
-          <Image
-            src={tokenAvatarPath ?? resolveImageSrc(tokenContract)}
-            alt="Duplicate Token"
-            width={36}
-            height={36}
-            style={{ marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }}
-            className={styles.tokenPreviewImg}
-            onError={(e) => {
-              const fallback = resolveImageSrc(tokenContract);
-              if (e.currentTarget.src !== fallback) {
-                e.currentTarget.src = fallback;
-              }
-            }}
-          />
-          <span style={{ fontSize: '15px', position: 'relative', top: -6 }}>
-            {containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-              ? 'Sell Address Cannot Be the Same as Buy Address'
-              : 'Buy Address Cannot Be the Same as Sell Address'}
-          </span>
-        </span>
-      );
+      return;
     }
 
-    return emojiMap[state] && (
+    const selectedAddress = validatedToken.address.toLowerCase();
+
+    fetch(`/assets/blockchains/${chainId}/contracts/${selectedAddress}/avatar.png`).then((res) => {
+      if (res.ok) {
+        if (manualEntryRef.current) {
+          setTokenContract(validatedToken);
+          setInputState(InputState.VALID_INPUT_PENDING);
+        } else {
+          validateAndMaybeClose(validatedToken);
+        }
+      } else {
+        clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+      }
+    }).catch(() => {
+      clearToken(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+    });
+  }, [
+    debouncedAddress,
+    isAddressValid,
+    isLoading,
+    validatedToken,
+    validateAndMaybeClose,
+    buyAddress,
+    sellAddress,
+    containerType,
+    isDuplicateToken,
+    chainId
+  ]);
+
+  const validateInputStatus = (state: InputState) =>
+    emojiMap[state] && (
       <span
         style={{
           color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange',
@@ -175,7 +148,6 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
         </span>
       </span>
     );
-  };
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
