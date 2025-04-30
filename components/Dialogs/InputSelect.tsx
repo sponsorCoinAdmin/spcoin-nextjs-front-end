@@ -13,10 +13,11 @@ import {
   useSellTokenContract,
 } from '@/lib/context/contextHooks';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
-import { useFetchLocalAvatar } from '@/lib/hooks/useFetchLocalAvatar';
 import DataList from './Resources/DataList';
+import { useChainId } from 'wagmi';
 
 const INPUT_PLACEHOLDER = 'Enter token address';
+const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const { inputValue, validateHexInput, clearInput } = useHexInput();
@@ -27,22 +28,14 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   const [containerType] = useContainerType();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
+  const chainId = useChainId();
 
-  const {
-    inputState,
-    validatedToken,
-    isLoading,
-    chainId,
-  } = useInputValidationState(debouncedAddress);
-
-  const avatarURL = validatedToken
-    ? `/assets/blockchains/${chainId}/contracts/${validatedToken.address.toLowerCase()}/avatar.png`
-    : '';
-  const avatarSrc = useFetchLocalAvatar(inputState, avatarURL);
-
+  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
   const setTokenContractInContext = useMemo(() =>
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
   , [containerType, setSellTokenContract, setBuyTokenContract]);
+
+  const { inputState, validatedToken, isLoading } = useInputValidationState(debouncedAddress);
 
   const clearFields = useCallback(() => {
     clearInput();
@@ -67,22 +60,49 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
   }, [debouncedAddress, validatedToken, isLoading, validateAndMaybeClose]);
 
   const validateInputStatus = (state: InputState) => {
-    const emojiMap: Partial<Record<InputState, { emoji: string; text: string }>> = {
+    const duplicateMessage = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? 'Sell Address Cannot Be the Same as Buy Address'
+      : 'Buy Address Cannot Be the Same as Sell Address';
+  
+    const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useAvatar?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
-      [InputState.DUPLICATE_INPUT]: { emoji: '⚠️', text: 'Duplicate Address Selected' },
+      [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useAvatar: true },
       [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Blockchain token missing local image.' },
       [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Contract not found on blockchain!' },
     };
+  
     const item = emojiMap[state];
     if (!item) return null;
+  
+    const imageLogo = `/assets/blockchains/${chainId}/contracts/${debouncedAddress}/avatar.png`;
+  
     return (
-      <span style={{ color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange' }}>
-        <span style={{ fontSize: 36, position: 'relative', marginRight: 3, top: -5 }}>{item.emoji}</span>
-        <span style={{ fontSize: '15px', position: 'relative', top: -12 }}>{item.text}</span>
+      <span
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange',
+          marginLeft: item.useAvatar ? '1.4rem' : 0
+        }}
+      >
+        {item.useAvatar && imageLogo ? (
+          <Image
+            src={imageLogo}
+            alt="duplicate avatar"
+            width={40}
+            height={40}
+            style={{ marginRight: '6px', borderRadius: '50%' }}
+          />
+        ) : (
+          item.emoji && (
+            <span style={{ fontSize: 36, marginRight: 6 }}>{item.emoji}</span>
+          )
+        )}
+        <span style={{ fontSize: '15px', marginLeft: '-18px' }}>{item.text}</span>
       </span>
     );
   };
-
+    
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
@@ -104,11 +124,16 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <Image
-                src={avatarSrc}
+                src={tokenAvatarPath ?? defaultMissingImage}
                 alt="Token preview"
                 width={40}
                 height={40}
                 className={styles.tokenPreviewImg}
+                onError={(e) => {
+                  if (e.currentTarget.src !== defaultMissingImage) {
+                    e.currentTarget.src = defaultMissingImage;
+                  }
+                }}
                 onClick={() => {
                   if (tokenContract) {
                     validateAndMaybeClose(tokenContract);

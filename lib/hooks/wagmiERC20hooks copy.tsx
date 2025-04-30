@@ -112,7 +112,6 @@ export function useMappedTokenContract(
     symbol: token.symbol,
     name: token.name,
     totalSupply: token.totalSupply,
-    img: `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`,
     chainId,
   };
 }

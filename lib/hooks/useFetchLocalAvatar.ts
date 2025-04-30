@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { InputState } from '@/lib/structure/types';
+import { useChainId } from 'wagmi';
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
-export const useFetchLocalAvatar = (inputState: InputState, avatarURL: string) => {
+
+export const useFetchLocalAvatar = (tokenAddress: string) => {
+  const chainId = useChainId();
+
+  const avatarURL = `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`;
   const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
 
-  useEffect(() => {
-    if (inputState !== InputState.VALID_INPUT_PENDING || !avatarURL) {
-      setAvatarSrc(defaultMissingImage);
-      return;
-    }
-
+  console.log(`✅✅✅✅✅avatarURL = ${avatarURL}`)
     fetch(avatarURL)
       .then((res) => {
         if (res.ok) {

@@ -59,6 +59,6 @@ export const useInputValidationState = (selectAddress: string) => {
     inputState,
     validatedToken,
     isLoading,
-    chainId,
+    chainId
   };
 };
