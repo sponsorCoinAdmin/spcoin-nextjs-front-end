@@ -9,16 +9,16 @@ import {
   CONTAINER_TYPE,
   ExchangeContext,
   TokenContract,
+  InputState
 } from '@/lib/structure/types';
 import {
   defaultMissingImage,
   getNativeAvatar,
   getTokenAvatar,
-  isBlockChainToken,
+  isBlockChainToken
 } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useContainerType } from '@/lib/context/contextHooks';
-import { InputState } from '../Dialogs/TokenSelectDialog';
 
 interface Props {
   containerType: CONTAINER_TYPE;

@@ -22,43 +22,56 @@ export const useInputValidationState = (selectAddress: string) => {
   const isDuplicateToken = useIsDuplicateToken(debouncedAddress);
 
   useEffect(() => {
+    // Reset CONTRACT_NOT_FOUND_LOCALLY when a new input starts validation
+    if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+      setInputState(InputState.EMPTY_INPUT);
+    }
+
     if (debouncedAddress === '' || !isAddressValid || isLoading) {
-      setInputState(debouncedAddress === '' ? InputState.EMPTY_INPUT : InputState.INVALID_ADDRESS_INPUT);
-      setValidatedToken(undefined);
+      const nextState = debouncedAddress === ''
+        ? InputState.EMPTY_INPUT
+        : InputState.INVALID_ADDRESS_INPUT;
+
+      if (inputState !== nextState) setInputState(nextState);
+      if (validatedToken !== undefined) setValidatedToken(undefined);
       return;
     }
 
     if (isDuplicateToken) {
-      setInputState(InputState.DUPLICATE_INPUT);
-      setValidatedToken(undefined);
+      if (inputState !== InputState.DUPLICATE_INPUT) setInputState(InputState.DUPLICATE_INPUT);
+      if (validatedToken !== undefined) setValidatedToken(undefined);
       return;
     }
 
     if (!resolvedToken) {
-      setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
-      setValidatedToken(undefined);
+      if (inputState !== InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN) {
+        setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
+      }
+      if (validatedToken !== undefined) setValidatedToken(undefined);
       return;
     }
 
-    setValidatedToken(resolvedToken);
-    setInputState(InputState.VALID_INPUT_PENDING);
-
+    if (
+      inputState !== InputState.VALID_INPUT_PENDING ||
+      validatedToken?.address !== resolvedToken.address
+    ) {
+      setValidatedToken(resolvedToken);
+      setInputState(InputState.VALID_INPUT_PENDING);
+    }
   }, [
     debouncedAddress,
     isAddressValid,
     isLoading,
     resolvedToken,
-    buyAddress,
-    sellAddress,
-    containerType,
     isDuplicateToken,
-    chainId
+    inputState,
+    validatedToken?.address
   ]);
 
   return {
     inputState,
     validatedToken,
     isLoading,
-    chainId
+    chainId,
   };
 };
