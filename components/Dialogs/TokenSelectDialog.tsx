@@ -4,14 +4,16 @@ import styles from "@/styles/Modal.module.css";
 import { useEffect, useRef, useCallback } from "react";
 import { useContainerType } from '@/lib/context/contextHooks';
 import InputSelect from "@/components/Dialogs/InputSelect";
-import { CONTAINER_TYPE } from "@/lib/structure/types";
+import { CONTAINER_TYPE, TokenContract, InputState } from "@/lib/structure/types";
 
 export default function TokenSelectDialog({
   showDialog,
   setShowDialog,
+  onClose,
 }: {
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;
+  onClose: (contract: TokenContract | undefined, inputState: InputState) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [containerType] = useContainerType();
@@ -47,9 +49,8 @@ export default function TokenSelectDialog({
         </div>
       </div>
 
-      {/* 🛠️ Corrected modalBox with flex and height constraint */}
       <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>
-        <InputSelect closeDialog={closeDialog} />
+        <InputSelect closeDialog={closeDialog} onClose={onClose} />
       </div>
     </dialog>
   );

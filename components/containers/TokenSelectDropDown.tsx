@@ -34,65 +34,54 @@ function TokenSelectDropDown({
   exchangeContext,
 }: Props) {
   const [showDialog, setShowDialog] = useState<boolean>(false);
-  const { tradeData } = exchangeContext;
   const [_, setContainerType] = useContainerType();
   const tokenRef = useRef<TokenContract | undefined>(undefined);
+  const hasErroredRef = useRef(false);
 
   const avatarSrc = useMemo(() => {
     if (!tokenContract || !tokenContract.address) return defaultMissingImage;
     return isBlockChainToken(exchangeContext, tokenContract)
       ? getNativeAvatar(tokenContract.chainId || 1)
       : getTokenAvatar(tokenContract);
-  }, [tokenContract]);
+  }, [tokenContract, exchangeContext]);
 
   const handleMissingAvatar = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
-      event.currentTarget.src = defaultMissingImage;
-      if (tokenContract) {
-        tokenContract.logoURI = `***ERROR: MISSING AVATAR FILE*** -> ${tokenContract.logoURI}`;
+      if (!hasErroredRef.current) {
+        event.currentTarget.src = defaultMissingImage;
+        hasErroredRef.current = true;
+        if (tokenContract) {
+          tokenContract.logoURI = `***ERROR: MISSING AVATAR FILE*** -> ${tokenContract.logoURI}`;
+        }
       }
     },
     [tokenContract]
   );
 
-  useEffect(() => {
-    console.log('[TokenSelectDropDown] RENDERED with tokenContract:', stringifyBigInt(tokenContract));
-  }, [tokenContract]);
-
   const handleTokenSelect = useCallback(() => {
-    console.log('[TokenSelectDropDown] handleTokenSelect fired');
     if (tokenRef.current) {
-      console.log('[TokenSelectDropDown] Setting tokenContract from ref:', tokenRef.current);
       setDecimalAdjustedContract(tokenRef.current);
-    } else {
-      console.warn('[TokenSelectDropDown] No tokenContract selected');
     }
   }, [setDecimalAdjustedContract]);
 
   const handleDialogOpen = useCallback(() => {
-    console.log('[TokenSelectDropDown] Opening dialog for containerType:', containerType);
     setContainerType(containerType);
     setShowDialog(true);
   }, [containerType, setContainerType]);
 
   const handleDialogClose = useCallback((contract: TokenContract | undefined, inputState: InputState) => {
-    console.log('[TokenSelectDropDown] Dialog closed with state:', inputState);
     if (inputState === InputState.CLOSE_INPUT && contract) {
       tokenRef.current = contract;
-      console.log('[TokenSelectDropDown] Token selected from dialog:', stringifyBigInt(contract));
       setDecimalAdjustedContract(contract);
     }
   }, [setDecimalAdjustedContract]);
-
-  useEffect(() => {
-    console.log('[TokenSelectDropDown] tokenContract prop changed:', stringifyBigInt(tokenContract));
-  }, [tokenContract]);
 
   return (
     <>
       <TokenSelectDialog
         showDialog={showDialog}
         setShowDialog={setShowDialog}
+        onClose={handleDialogClose}
       />
       <div className={styles.assetSelect}>
         {tokenContract ? (

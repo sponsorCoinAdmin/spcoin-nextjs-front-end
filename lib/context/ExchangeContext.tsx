@@ -119,10 +119,10 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       const initial = getInitialContext(chain)
       const sanitized = sanitizeExchangeContext(stored, chain)
 
-      if (sanitized.tradeData.slippageBps !== 200) {
-        console.warn('🧼 Initial slippageBps not 200!', sanitized.tradeData.slippageBps)
+      if (!sanitized.tradeData.slippageBps || sanitized.tradeData.slippageBps <= 0) {
+        console.warn('⚠️ No valid slippageBps set — defaulting may be required.', sanitized.tradeData.slippageBps);
       }
-
+      
       setExchangeContextInternal(sanitized)
     }
   }, [chainId, exchangeContext])

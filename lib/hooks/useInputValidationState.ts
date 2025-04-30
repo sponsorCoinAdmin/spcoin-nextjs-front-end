@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useIsAddressInput, useIsDuplicateToken, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
 import { useChainId } from 'wagmi';
 import { useBuyTokenAddress, useSellTokenAddress, useContainerType } from '@/lib/context/contextHooks';
@@ -21,25 +21,38 @@ export const useInputValidationState = (selectAddress: string) => {
   const [resolvedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
   const isDuplicateToken = useIsDuplicateToken(debouncedAddress);
 
+  const seenBrokenImagesRef = useRef<Set<string>>(new Set());
+  const previousAddressRef = useRef<string>('');
+
+  // Reset inputState if address changed after local image failure
   useEffect(() => {
-    // Reset CONTRACT_NOT_FOUND_LOCALLY when a new input starts validation
-    if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+    if (
+      inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY &&
+      debouncedAddress !== previousAddressRef.current &&
+      !seenBrokenImagesRef.current.has(debouncedAddress)
+    ) {
       setInputState(InputState.EMPTY_INPUT);
     }
 
-    if (debouncedAddress === '' || !isAddressValid || isLoading) {
-      const nextState = debouncedAddress === ''
-        ? InputState.EMPTY_INPUT
-        : InputState.INVALID_ADDRESS_INPUT;
+    previousAddressRef.current = debouncedAddress;
+  }, [debouncedAddress, inputState]);
 
-      if (inputState !== nextState) setInputState(nextState);
-      if (validatedToken !== undefined) setValidatedToken(undefined);
+  useEffect(() => {
+    if (debouncedAddress === '' || !isAddressValid || isLoading) {
+      if (debouncedAddress === '' && inputState !== InputState.EMPTY_INPUT) {
+        setInputState(InputState.EMPTY_INPUT);
+      } else if (debouncedAddress !== '' && inputState !== InputState.INVALID_ADDRESS_INPUT) {
+        setInputState(InputState.INVALID_ADDRESS_INPUT);
+      }
+      setValidatedToken(undefined);
       return;
     }
 
     if (isDuplicateToken) {
-      if (inputState !== InputState.DUPLICATE_INPUT) setInputState(InputState.DUPLICATE_INPUT);
-      if (validatedToken !== undefined) setValidatedToken(undefined);
+      if (inputState !== InputState.DUPLICATE_INPUT) {
+        setInputState(InputState.DUPLICATE_INPUT);
+      }
+      setValidatedToken(undefined);
       return;
     }
 
@@ -47,14 +60,11 @@ export const useInputValidationState = (selectAddress: string) => {
       if (inputState !== InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN) {
         setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       }
-      if (validatedToken !== undefined) setValidatedToken(undefined);
+      setValidatedToken(undefined);
       return;
     }
 
-    if (
-      inputState !== InputState.VALID_INPUT_PENDING ||
-      validatedToken?.address !== resolvedToken.address
-    ) {
+    if (inputState !== InputState.VALID_INPUT_PENDING || validatedToken?.address !== resolvedToken.address) {
       setValidatedToken(resolvedToken);
       setInputState(InputState.VALID_INPUT_PENDING);
     }
@@ -65,13 +75,21 @@ export const useInputValidationState = (selectAddress: string) => {
     resolvedToken,
     isDuplicateToken,
     inputState,
-    validatedToken?.address
+    validatedToken?.address,
   ]);
+
+  const reportMissingAvatar = useCallback(() => {
+    if (!seenBrokenImagesRef.current.has(debouncedAddress)) {
+      seenBrokenImagesRef.current.add(debouncedAddress);
+      setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+    }
+  }, [debouncedAddress]);
 
   return {
     inputState,
     validatedToken,
     isLoading,
     chainId,
+    reportMissingAvatar,
   };
 };

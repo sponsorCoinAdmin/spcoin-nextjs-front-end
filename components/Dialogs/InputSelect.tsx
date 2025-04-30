@@ -19,7 +19,7 @@ import { useChainId } from 'wagmi';
 const INPUT_PLACEHOLDER = 'Enter token address';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
-const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
+const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClose: (contract: TokenContract | undefined, state: InputState) => void }) => {
   const { inputValue, validateHexInput, clearInput } = useHexInput();
   const [tokenContract, setTokenContract] = useState<TokenContract>();
   const manualEntryRef = useRef(false);
@@ -35,7 +35,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
   , [containerType, setSellTokenContract, setBuyTokenContract]);
 
-  const { inputState, validatedToken, isLoading } = useInputValidationState(debouncedAddress);
+  const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(debouncedAddress);
 
   const clearFields = useCallback(() => {
     clearInput();
@@ -46,8 +46,9 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     setTokenContract(token);
     setTokenContractInContext(token);
     clearFields();
+    onClose(token, InputState.CLOSE_INPUT);
     closeDialog();
-  }, [clearFields, closeDialog, setTokenContractInContext]);
+  }, [clearFields, closeDialog, setTokenContractInContext, onClose]);
 
   useEffect(() => {
     if (!debouncedAddress || isLoading || !validatedToken) return;
@@ -63,19 +64,19 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
     const duplicateMessage = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? 'Sell Address Cannot Be the Same as Buy Address'
       : 'Buy Address Cannot Be the Same as Sell Address';
-  
+
     const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useAvatar?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
       [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useAvatar: true },
       [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Blockchain token missing local image.' },
       [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Contract not found on blockchain!' },
     };
-  
+
     const item = emojiMap[state];
     if (!item) return null;
-  
+
     const imageLogo = `/assets/blockchains/${chainId}/contracts/${debouncedAddress}/avatar.png`;
-  
+
     return (
       <span
         style={{
@@ -102,7 +103,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
       </span>
     );
   };
-    
+
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
@@ -132,6 +133,7 @@ const InputSelect = ({ closeDialog }: { closeDialog: () => void }) => {
                 onError={(e) => {
                   if (e.currentTarget.src !== defaultMissingImage) {
                     e.currentTarget.src = defaultMissingImage;
+                    reportMissingAvatar();
                   }
                 }}
                 onClick={() => {
