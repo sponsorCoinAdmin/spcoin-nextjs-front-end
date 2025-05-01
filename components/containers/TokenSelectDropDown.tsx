@@ -51,7 +51,7 @@ function TokenSelectDropDown({
         event.currentTarget.src = defaultMissingImage;
         hasErroredRef.current = true;
         if (tokenContract) {
-          tokenContract.logoURI = `***ERROR: MISSING AVATAR FILE*** -> ${tokenContract.logoURI}`;
+          tokenContract.logoURI = `TokenSelectDropDown:***ERR: MISSING AVATAR FILE*** -> ${tokenContract.logoURI}`;
         }
       }
     },

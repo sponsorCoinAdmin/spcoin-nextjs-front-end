@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { getTokenAvatar } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import { InputState, TokenContract, CONTAINER_TYPE } from '@/lib/structure/types';
+import { InputState, TokenContract, CONTAINER_TYPE, getInputStateString } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenContract,
@@ -36,6 +36,20 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
   , [containerType, setSellTokenContract, setBuyTokenContract]);
 
   const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(debouncedAddress);
+
+  const prevInputStateRef = useRef<InputState>();
+
+  useEffect(() => {
+    console.log(`🟢debouncedAddress(${debouncedAddress}) => [InputSelect(${getInputStateString(inputState)})]`);
+    if (prevInputStateRef.current !== inputState) {
+      if (prevInputStateRef.current !== undefined) {
+        console.log(`🟢🟢debouncedAddress(${debouncedAddress}) => inputState changed: ${getInputStateString(prevInputStateRef.current)} → ${getInputStateString(inputState)}`);
+      } else {
+        console.log(`🟢🟢🟢debouncedAddress(${debouncedAddress}) => inputState initialized to: ${getInputStateString(inputState)}`);
+      }
+      prevInputStateRef.current = inputState;
+    }
+  }, [debouncedAddress, inputState]);
 
   const clearFields = useCallback(() => {
     clearInput();
