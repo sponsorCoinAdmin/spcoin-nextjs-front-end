@@ -2,7 +2,6 @@
 
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import Image from 'next/image';
 import { getTokenAvatar } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
@@ -15,6 +14,7 @@ import {
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import DataList from './Resources/DataList';
 import { useChainId } from 'wagmi';
+import AvatarWithFallback from '@/components/common/AvatarWithFallback';
 
 const INPUT_PLACEHOLDER = 'Enter token address';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
@@ -86,13 +86,15 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
           marginLeft: item.useAvatar ? '1.4rem' : 0
         }}
       >
-        {item.useAvatar && imageLogo ? (
-          <Image
+        {item.useAvatar ? (
+          <AvatarWithFallback
             src={imageLogo}
+            fallbackSrc={defaultMissingImage}
             alt="duplicate avatar"
             width={40}
             height={40}
             style={{ marginRight: '6px', borderRadius: '50%' }}
+            inputState={state}
           />
         ) : (
           item.emoji && (
@@ -124,23 +126,19 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
-              <Image
+              <AvatarWithFallback
                 src={tokenAvatarPath ?? defaultMissingImage}
+                fallbackSrc={defaultMissingImage}
                 alt="Token preview"
                 width={40}
                 height={40}
                 className={styles.tokenPreviewImg}
-                onError={(e) => {
-                  if (e.currentTarget.src !== defaultMissingImage) {
-                    e.currentTarget.src = defaultMissingImage;
-                    reportMissingAvatar();
-                  }
-                }}
                 onClick={() => {
                   if (tokenContract) {
                     validateAndMaybeClose(tokenContract);
                   }
                 }}
+                inputState={inputState}
               />
               <div>
                 <div className={styles.elementName}>{tokenContract.name}</div>
