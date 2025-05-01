@@ -47,7 +47,7 @@ export const useInputValidationState = (selectAddress: string) => {
       setValidatedToken(undefined);
       return;
     }
-
+  
     if (isDuplicateToken) {
       if (inputState !== InputState.DUPLICATE_INPUT) {
         setInputState(InputState.DUPLICATE_INPUT);
@@ -55,7 +55,16 @@ export const useInputValidationState = (selectAddress: string) => {
       setValidatedToken(undefined);
       return;
     }
-
+  
+    // 🟠 Local image failure detected for unresolved token
+    if (!resolvedToken && seenBrokenImagesRef.current.has(debouncedAddress)) {
+      if (inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+        setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+      }
+      setValidatedToken(undefined);
+      return;
+    }
+  
     if (!resolvedToken) {
       if (inputState !== InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN) {
         setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
@@ -63,7 +72,8 @@ export const useInputValidationState = (selectAddress: string) => {
       setValidatedToken(undefined);
       return;
     }
-
+  
+    // ✅ Token is valid
     if (inputState !== InputState.VALID_INPUT_PENDING || validatedToken?.address !== resolvedToken.address) {
       setValidatedToken(resolvedToken);
       setInputState(InputState.VALID_INPUT_PENDING);
@@ -77,7 +87,7 @@ export const useInputValidationState = (selectAddress: string) => {
     inputState,
     validatedToken?.address,
   ]);
-
+  
   const reportMissingAvatar = useCallback(() => {
     if (!seenBrokenImagesRef.current.has(debouncedAddress)) {
       seenBrokenImagesRef.current.add(debouncedAddress);

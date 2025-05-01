@@ -74,7 +74,7 @@
         "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
         "name": "Wrapped Bitcoin",
         "symbol": "WBTC",
-        "img": "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+        "decimals": 18
     },
     {
         "chainId": 8453,
@@ -86,7 +86,7 @@
     {
         "chainId": 8453,
         "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
-        "name": "Missing Token Address",
+        "name": "BASE Token Not Found",
         "symbol": "MISSING",
         "decimals": 18
     },
