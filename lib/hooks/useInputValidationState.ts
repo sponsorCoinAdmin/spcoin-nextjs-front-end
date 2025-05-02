@@ -1,11 +1,68 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useIsAddressInput, useIsDuplicateToken, useValidateTokenAddress } from '@/lib/hooks/UseAddressSelectHooks';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useChainId } from 'wagmi';
-import { useBuyTokenAddress, useSellTokenAddress, useContainerType } from '@/lib/context/contextHooks';
-import { InputState, TokenContract } from '@/lib/structure/types';
+import { isAddress } from 'viem';
+import {
+  InputState,
+  TokenContract,
+  CONTAINER_TYPE,
+  getInputStateString,
+} from '@/lib/structure/types';
+import {
+  useSellTokenContract,
+  useBuyTokenContract,
+  useContainerType,
+  useBuyTokenAddress,
+  useSellTokenAddress,
+} from '@/lib/context/contextHooks';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useMappedTokenContract } from './wagmiERC20hooks';
+
+function useIsAddressInput(input?: string): boolean {
+  return useMemo(() => !!input && isAddress(input), [input]);
+}
+
+function useIsEmptyInput(input?: string): boolean {
+  return useMemo(() => input == null || input.trim() === '', [input]);
+}
+
+function useIsDuplicateToken(tokenAddress?: string): boolean {
+  const [sellTokenContract] = useSellTokenContract();
+  const [buyTokenContract] = useBuyTokenContract();
+  const [containerType] = useContainerType();
+
+  if (!tokenAddress || !isAddress(tokenAddress)) return false;
+
+  const oppositeTokenAddress =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyTokenContract?.address
+      : sellTokenContract?.address;
+
+  return tokenAddress === oppositeTokenAddress;
+}
+
+function useResolvedTokenContractInfo(
+  tokenAddress?: string
+): [TokenContract | undefined, boolean, string, boolean] {
+  const chainId = useChainId();
+  const validAddress = useMemo(
+    () => (isAddress(tokenAddress ?? '') ? (tokenAddress as `0x${string}`) : undefined),
+    [tokenAddress]
+  );
+
+  const tokenContract = useMappedTokenContract(validAddress);
+  const isResolved = !!tokenContract && tokenContract !== null;
+  const isLoading = !!validAddress && tokenContract === undefined;
+
+  const message = useMemo(() => {
+    return isResolved
+      ? `TokenContract ${tokenContract!.name} found on blockchain ${chainId}`
+      : `TokenContract at address ${tokenAddress} NOT found on blockchain ${chainId}`;
+  }, [isResolved, tokenContract?.name, tokenAddress, chainId]);
+
+  return [tokenContract ?? undefined, isResolved, message, isLoading];
+}
 
 export const useInputValidationState = (selectAddress: string) => {
   const debouncedAddress = useDebounce(selectAddress, 250);
@@ -18,13 +75,13 @@ export const useInputValidationState = (selectAddress: string) => {
   const [containerType] = useContainerType();
 
   const isAddressValid = useIsAddressInput(debouncedAddress);
-  const [resolvedToken, isLoading] = useValidateTokenAddress(debouncedAddress, () => {});
-  const isDuplicateToken = useIsDuplicateToken(debouncedAddress);
+  const isEmptyInput = useIsEmptyInput(debouncedAddress);
+  const isDuplicate = useIsDuplicateToken(debouncedAddress);
+  const [resolvedToken, isResolved, _, isLoading] = useResolvedTokenContractInfo(debouncedAddress);
 
   const seenBrokenImagesRef = useRef<Set<string>>(new Set());
   const previousAddressRef = useRef<string>('');
 
-  // Reset inputState if address changed after local image failure
   useEffect(() => {
     if (
       inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY &&
@@ -33,61 +90,46 @@ export const useInputValidationState = (selectAddress: string) => {
     ) {
       setInputState(InputState.EMPTY_INPUT);
     }
-
     previousAddressRef.current = debouncedAddress;
   }, [debouncedAddress, inputState]);
 
   useEffect(() => {
-    if (debouncedAddress === '' || !isAddressValid || isLoading) {
-      if (debouncedAddress === '' && inputState !== InputState.EMPTY_INPUT) {
-        setInputState(InputState.EMPTY_INPUT);
-      } else if (debouncedAddress !== '' && inputState !== InputState.INVALID_ADDRESS_INPUT) {
-        setInputState(InputState.INVALID_ADDRESS_INPUT);
-      }
+    if (isEmptyInput) {
+      setValidatedToken(undefined);
+      setInputState(InputState.EMPTY_INPUT);
+      return;
+    }
+    if (!isAddressValid) {
+      setValidatedToken(undefined);
+      setInputState(InputState.INVALID_ADDRESS_INPUT);
+      return;
+    }
+    if (isDuplicate) {
+      setValidatedToken(undefined);
+      setInputState(InputState.DUPLICATE_INPUT);
+      return;
+    }
+    if (isLoading) {
       setValidatedToken(undefined);
       return;
     }
-  
-    if (isDuplicateToken) {
-      if (inputState !== InputState.DUPLICATE_INPUT) {
-        setInputState(InputState.DUPLICATE_INPUT);
-      }
-      setValidatedToken(undefined);
-      return;
-    }
-  
-    // 🟠 Local image failure detected for unresolved token
-    if (!resolvedToken && seenBrokenImagesRef.current.has(debouncedAddress)) {
-      if (inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY) {
+    if (!isResolved || !resolvedToken) {
+      if (seenBrokenImagesRef.current.has(debouncedAddress)) {
+        setValidatedToken(undefined);
         setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
-      }
-      setValidatedToken(undefined);
-      return;
-    }
-  
-    if (!resolvedToken) {
-      if (inputState !== InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN) {
+      } else {
+        setValidatedToken(undefined);
         setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       }
-      setValidatedToken(undefined);
       return;
     }
-  
-    // ✅ Token is valid
+
     if (inputState !== InputState.VALID_INPUT_PENDING || validatedToken?.address !== resolvedToken.address) {
       setValidatedToken(resolvedToken);
       setInputState(InputState.VALID_INPUT_PENDING);
     }
-  }, [
-    debouncedAddress,
-    isAddressValid,
-    isLoading,
-    resolvedToken,
-    isDuplicateToken,
-    inputState,
-    validatedToken?.address,
-  ]);
-  
+  }, [debouncedAddress, isEmptyInput, isAddressValid, isDuplicate, isLoading, isResolved, resolvedToken]);
+
   const reportMissingAvatar = useCallback(() => {
     if (!seenBrokenImagesRef.current.has(debouncedAddress)) {
       seenBrokenImagesRef.current.add(debouncedAddress);
