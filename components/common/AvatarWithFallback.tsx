@@ -7,6 +7,8 @@ import { InputState, getInputStateString } from '@/lib/structure/types';
 interface AvatarWithFallbackProps extends ImageProps {
   fallbackSrc: string;
   inputState?: InputState;
+  reportMissingAvatar: () => void;
+
 }
 
 const failedImageCache = new Set<string>();
@@ -15,6 +17,7 @@ const AvatarWithFallback: React.FC<AvatarWithFallbackProps> = ({
   src,
   fallbackSrc,
   inputState,
+  reportMissingAvatar,
   ...props
 }) => {
   const [imgSrc, setImgSrc] = useState(src as string);
@@ -35,11 +38,16 @@ const AvatarWithFallback: React.FC<AvatarWithFallbackProps> = ({
     }
   }, [src, fallbackSrc]);
 
+  // function reportMissingAvatar() {
+  //   throw new Error('Function not implemented.');
+  // }
+
   return (
     <Image
       {...props}
       src={imgSrc}
       onError={(e) => {
+        reportMissingAvatar();
         const failedSrc = e.currentTarget.src;
         console.warn(`[🖼️ AvatarWithFallback] onError: fallback to ${fallbackSrc}`);
         failedImageCache.add(failedSrc);

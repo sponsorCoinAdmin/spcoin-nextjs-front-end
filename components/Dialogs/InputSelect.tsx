@@ -102,13 +102,14 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
       >
         {item.useAvatar ? (
           <AvatarWithFallback
+            reportMissingAvatar={reportMissingAvatar}
             src={imageLogo}
             fallbackSrc={defaultMissingImage}
             alt="duplicate avatar"
             width={40}
             height={40}
             style={{ marginRight: '6px', borderRadius: '50%' }}
-            inputState={state}
+            inputState={InputState.CONTRACT_NOT_FOUND_LOCALLY}
           />
         ) : (
           item.emoji && (
@@ -141,6 +142,7 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <AvatarWithFallback
+                reportMissingAvatar={reportMissingAvatar}
                 src={tokenAvatarPath ?? defaultMissingImage}
                 fallbackSrc={defaultMissingImage}
                 alt="Token preview"
@@ -152,7 +154,7 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
                     validateAndMaybeClose(tokenContract);
                   }
                 }}
-                inputState={inputState}
+                inputState={InputState.CONTRACT_NOT_FOUND_LOCALLY}
               />
               <div>
                 <div className={styles.elementName}>{tokenContract.name}</div>
