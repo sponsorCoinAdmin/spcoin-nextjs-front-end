@@ -99,16 +99,25 @@ export const useInputValidationState = (selectAddress: string) => {
       setInputState(InputState.EMPTY_INPUT);
       return;
     }
+    else 
+      console.log(`🟢 TESTING: InputState.EMPTY_INPUT(${debouncedAddress})`);
+
     if (!isAddressValid) {
       setValidatedToken(undefined);
       setInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
+    else 
+    console.log(`🟢🟢 TESTING: InputState.EMPTY_INPUT(${debouncedAddress})`);
+
     if (isDuplicate) {
       setValidatedToken(undefined);
       setInputState(InputState.DUPLICATE_INPUT);
       return;
     }
+    else 
+    console.log(`🟢🟢🟢 TESTING: InputState.EMPTY_INPUT(${debouncedAddress})`);
+
     if (isLoading) {
       setValidatedToken(undefined);
       return;
