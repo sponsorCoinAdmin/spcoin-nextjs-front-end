@@ -88,35 +88,38 @@ export const useInputValidationState = (selectAddress: string) => {
       debouncedAddress !== previousAddressRef.current &&
       !seenBrokenImagesRef.current.has(debouncedAddress)
     ) {
-      setInputState(InputState.EMPTY_INPUT);
+      debugSetInputState(InputState.EMPTY_INPUT);
     }
     previousAddressRef.current = debouncedAddress;
   }, [debouncedAddress, inputState]);
 
+  const debugSetInputState = (state: InputState) => {
+    console.log(`➡️ SETTING STATE → ${getInputStateString(state)}`);
+    setInputState(state);
+  };
+
   useEffect(() => {
     if (isEmptyInput) {
       setValidatedToken(undefined);
-      setInputState(InputState.EMPTY_INPUT);
+      debugSetInputState(InputState.EMPTY_INPUT);
       return;
     }
     else 
-      console.log(`🟢 TESTING: InputState.EMPTY_INPUT(${debouncedAddress})`);
+      console.log(`🟢 TESTING PASSED: InputState.EMPTY_INPUT(${debouncedAddress})`);
 
     if (!isAddressValid) {
       setValidatedToken(undefined);
-      setInputState(InputState.INVALID_ADDRESS_INPUT);
+      debugSetInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
-    else 
-    console.log(`🟢🟢 TESTING: InputState.EMPTY_INPUT(${debouncedAddress})`);
+    console.log(`🟢🟢 TESTING PASSED: InputState.INVALID_ADDRESS_INPUT(${debouncedAddress})`);
 
     if (isDuplicate) {
       setValidatedToken(undefined);
-      setInputState(InputState.DUPLICATE_INPUT);
+      debugSetInputState(InputState.DUPLICATE_INPUT);
       return;
     }
-    else 
-    console.log(`🟢🟢🟢 TESTING: InputState.EMPTY_INPUT(${debouncedAddress})`);
+    console.log(`🟢🟢🟢 TESTING PASSED: InputState.DUPLICATE_INPUT(${debouncedAddress})`);
 
     if (isLoading) {
       setValidatedToken(undefined);
@@ -125,25 +128,32 @@ export const useInputValidationState = (selectAddress: string) => {
     if (!isResolved || !resolvedToken) {
       if (seenBrokenImagesRef.current.has(debouncedAddress)) {
         setValidatedToken(undefined);
-        setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+        debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
       } else {
+        console.log(`🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
         setValidatedToken(undefined);
-        setInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
+        debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       }
       return;
     }
+    console.log(`🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN(${debouncedAddress})`);
 
     if (inputState !== InputState.VALID_INPUT_PENDING || validatedToken?.address !== resolvedToken.address) {
       setValidatedToken(resolvedToken);
-      setInputState(InputState.VALID_INPUT_PENDING);
+      debugSetInputState(InputState.VALID_INPUT_PENDING);
     }
+    else
+      console.log(`🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.VALID_INPUT_PENDING(${debouncedAddress})`);
+
   }, [debouncedAddress, isEmptyInput, isAddressValid, isDuplicate, isLoading, isResolved, resolvedToken]);
 
   const reportMissingAvatar = useCallback(() => {
     if (!seenBrokenImagesRef.current.has(debouncedAddress)) {
       seenBrokenImagesRef.current.add(debouncedAddress);
-      setInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
+      debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
     }
+    else
+      console.log(`🟢🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
   }, [debouncedAddress]);
 
   return {
