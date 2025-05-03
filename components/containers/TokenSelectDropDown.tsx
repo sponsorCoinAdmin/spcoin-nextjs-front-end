@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenSelectDialog } from '../Dialogs/Dialogs';
 import { ChevronDown } from 'lucide-react';
@@ -27,15 +27,14 @@ function TokenSelectDropDown({
   tokenContract,
   setDecimalAdjustedContract,
 }: Props) {
-  const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [, setContainerType] = useContainerType();
   const seenBrokenImagesRef = useRef<Set<string>>(new Set());
 
   const avatarSrc = useMemo(() => {
-    if (tokenContract?.address && !seenBrokenImagesRef.current.has(tokenContract.address)) {
-      return getTokenAvatar(tokenContract);
-    }
-    return defaultMissingImage;
+    return tokenContract?.address && !seenBrokenImagesRef.current.has(tokenContract.address)
+      ? getTokenAvatar(tokenContract)
+      : defaultMissingImage;
   }, [tokenContract]);
 
   const handleMissingAvatar = (event: React.SyntheticEvent<HTMLImageElement>) => {
