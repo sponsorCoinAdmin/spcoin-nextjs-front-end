@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { loadAccounts } from "@/lib/spCoin/loadAccounts";
-import { defaultMissingImage, getWalletAvatar } from "@/lib/network/utils";
+import { defaultMissingImage, getAccountAvatar } from "@/lib/network/utils";
 import agentJsonList from "@/resources/data/agents/agentJsonList.json";
 import recipientJsonList from "@/resources/data/recipients/recipientJsonList.json";
 import { publicWalletPath, WalletAccount } from "@/lib/structure/types";
@@ -109,7 +109,7 @@ export default function WalletsPage() {
                             }}>
                                 {/* Wallet Avatar */}
                                 <img
-                                    src={getWalletAvatar(wallet) || defaultMissingImage}
+                                    src={getAccountAvatar(wallet) || defaultMissingImage}
                                     alt="Avatar" width="100" height="100"
                                     style={{ borderRadius: "50%", border: "2px solid #ccc", marginRight: "12px" }}
                                 />

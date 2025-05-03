@@ -64,8 +64,9 @@ function useResolvedTokenContractInfo(
   return [tokenContract ?? undefined, isResolved, message, isLoading];
 }
 
-export const useInputValidationState = (selectAddress: string) => {
-  const debouncedAddress = useDebounce(selectAddress, 250);
+export const useInputValidationState = (selectAddress: string|undefined) => {
+
+  const debouncedAddress = useDebounce(selectAddress || "", 250);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedToken, setValidatedToken] = useState<TokenContract | undefined>(undefined);
 

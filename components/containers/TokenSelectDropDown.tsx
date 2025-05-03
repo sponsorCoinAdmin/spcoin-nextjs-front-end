@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenSelectDialog } from '../Dialogs/Dialogs';
 import { ChevronDown } from 'lucide-react';
@@ -10,11 +10,46 @@ import {
   TokenContract,
   InputState,
 } from '@/lib/structure/types';
-import {
-  defaultMissingImage,
-  getTokenAvatar,
-} from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { useContainerType } from '@/lib/context/contextHooks';
+import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import { useChainId } from 'wagmi';
+import { isAddress } from 'viem';
+
+// Shared global set to track broken token logos
+const seenBrokenAvatars = new Set<string>();
+
+/////////////////////////////////////////////////////////////////////////////////
+export function useTokenLogoURL(tokenContract?: TokenContract): string {
+  return useAddressLogoURL(
+    tokenContract?.address,
+    tokenContract?.chainId,
+    true // testInputState
+  );
+}
+
+export function useAddressLogoURL(
+  address?: string,
+  chainIdOverride?: number,
+  testInputState: boolean = false
+): string {
+  const fallbackChainId = useChainId();
+  const { inputState } = useInputValidationState(address);
+
+  const logoUrl = useMemo(() => {
+    const chainId = chainIdOverride ?? fallbackChainId;
+
+    if (!address || !isAddress(address)) return defaultMissingImage;
+    if (seenBrokenAvatars.has(address)) return defaultMissingImage;
+    if (testInputState && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY)
+      return defaultMissingImage;
+
+    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+  }, [address, chainIdOverride, fallbackChainId, inputState, testInputState]);
+
+  return logoUrl;
+}
+/////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
   containerType: CONTAINER_TYPE;
@@ -29,19 +64,15 @@ function TokenSelectDropDown({
 }: Props) {
   const [showDialog, setShowDialog] = useState(false);
   const [, setContainerType] = useContainerType();
-  const seenBrokenImagesRef = useRef<Set<string>>(new Set());
+  const { inputState } = useInputValidationState(tokenContract?.address);
 
-  const avatarSrc = useMemo(() => {
-    return tokenContract?.address && !seenBrokenImagesRef.current.has(tokenContract.address)
-      ? getTokenAvatar(tokenContract)
-      : defaultMissingImage;
-  }, [tokenContract]);
+  const avatarSrc = useTokenLogoURL(tokenContract);
 
-  const handleMissingAvatar = (event: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleMissingLogoURL = (event: React.SyntheticEvent<HTMLImageElement>) => {
     const tokenAddr = tokenContract?.address;
-    if (!tokenAddr || seenBrokenImagesRef.current.has(tokenAddr)) return;
+    if (!tokenAddr) return;
 
-    seenBrokenImagesRef.current.add(tokenAddr);
+    seenBrokenAvatars.add(tokenAddr);
     event.currentTarget.src = defaultMissingImage;
 
     console.warn(
@@ -65,10 +96,10 @@ function TokenSelectDropDown({
           <>
             <img
               className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-              alt={`${tokenContract.name} Token Avatar`}
+              alt={`${tokenContract.name} Token logoURL`}
               src={avatarSrc}
               onClick={() => setDecimalAdjustedContract(tokenContract)}
-              onError={handleMissingAvatar}
+              onError={handleMissingLogoURL}
             />
             {tokenContract.symbol}
           </>

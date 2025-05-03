@@ -2,7 +2,7 @@
 
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { getTokenAvatar } from '@/lib/network/utils';
+import { getTokenLogoURL } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { InputState, TokenContract, CONTAINER_TYPE, getInputStateString } from '@/lib/structure/types';
@@ -18,8 +18,12 @@ import { useChainId } from 'wagmi';
 const INPUT_PLACEHOLDER = 'Enter token address';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
-const TokenSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClose: (contract: TokenContract | undefined, state: InputState) => void }) => {
-  const { inputValue, validateHexInput, clearInput } = useHexInput();
+interface Props {
+  closeDialog: () => void;
+  onClose: (contract: TokenContract | undefined, state: InputState) => void;
+}
+
+const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, validateHexInput, clearInput } = useHexInput();
   const [tokenContract, setTokenContract] = useState<TokenContract>();
   const manualEntryRef = useRef(false);
   const debouncedAddress = useDebounce(inputValue, 250);
@@ -29,7 +33,7 @@ const TokenSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const chainId = useChainId();
 
-  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : defaultMissingImage;
+  const tokenAvatarPath = tokenContract?.address ? getTokenLogoURL(tokenContract) : defaultMissingImage;
   const setTokenContractInContext = useMemo(() =>
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
   , [containerType, setSellTokenContract, setBuyTokenContract]);

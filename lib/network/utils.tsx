@@ -20,6 +20,7 @@ import {
   WalletAccount
 } from '@/lib/structure/types';
 import { isAddress } from 'viem'
+import { useMemo } from 'react';
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png'
@@ -168,8 +169,7 @@ const getNativeAvatar = (chainId:number): string =>
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-
-const getTokenAvatar = (tokenContract?: TokenContract): string => {
+const getTokenLogoURL = (tokenContract?: TokenContract): string => {
   if (!tokenContract) {
     return badTokenAddressImage
   }
@@ -183,9 +183,17 @@ const getTokenAvatar = (tokenContract?: TokenContract): string => {
   return badTokenAddressImage
 }
 
+export const getAddressLogoURL = (address: string, chainId: number): string => {
+  if (isAddress(address)) {
+    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+  }
 
-const getWalletAvatar = (wallet?: WalletAccount): string => 
-  wallet ? `/assets/accounts/${wallet.address}/avatar.png` : defaultMissingImage;
+  return badTokenAddressImage
+}
+
+
+const getAccountAvatar = (account?: WalletAccount): string =>
+  account ? `/assets/accounts/${account.address}/avatar.png` : defaultMissingImage;
 
 
 // Utility function to create a default network JSON list (for debugging/testing)
@@ -202,7 +210,7 @@ const createNetworkJsonList = () => {
   alert(`Network Settings: ${networkSettings}`);
 };
 
-const isLowerCase = (input: string): boolean => 
+const isLowerCase = (input: string): boolean =>
   input === input.toLowerCase();
 
 function delay(ms: number | undefined) {
@@ -228,8 +236,8 @@ export {
   getNativeAvatar,
   getBlockChainName,
   getNetworkWethAddress,
-  getTokenAvatar,
-  getWalletAvatar,
+  getTokenLogoURL,
+  getAccountAvatar,
   isActiveAccountAddress,
   isActiveAccountBuyToken,
   isActiveAccountSellToken,
