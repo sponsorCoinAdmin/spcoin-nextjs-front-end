@@ -1,21 +1,18 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenSelectDialog } from '../Dialogs/Dialogs';
 import { ChevronDown } from 'lucide-react';
 
 import {
   CONTAINER_TYPE,
-  ExchangeContext,
   TokenContract,
   InputState,
 } from '@/lib/structure/types';
 import {
   defaultMissingImage,
-  getNativeAvatar,
   getTokenAvatar,
-  isBlockChainToken,
 } from '@/lib/network/utils';
 import { useContainerType } from '@/lib/context/contextHooks';
 
@@ -23,62 +20,46 @@ interface Props {
   containerType: CONTAINER_TYPE;
   tokenContract: TokenContract | undefined;
   setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
-  exchangeContext: ExchangeContext;
 }
 
 function TokenSelectDropDown({
   containerType,
   tokenContract,
   setDecimalAdjustedContract,
-  exchangeContext,
 }: Props) {
   const [showDialog, setShowDialog] = useState<boolean>(false);
-  const [_, setContainerType] = useContainerType();
-  const tokenRef = useRef<TokenContract | undefined>(undefined);
+  const [, setContainerType] = useContainerType();
+  const seenBrokenImagesRef = useRef<Set<string>>(new Set());
 
   const avatarSrc = useMemo(() => {
-    if (!tokenContract || !tokenContract.address) return defaultMissingImage;
-    return isBlockChainToken(exchangeContext, tokenContract)
-      ? getNativeAvatar(tokenContract.chainId || 1)
-      : getTokenAvatar(tokenContract);
-  }, [tokenContract, exchangeContext]);
-
-  const handleMissingAvatar = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
-    event.currentTarget.onerror = null; // Prevent infinite loop
-    event.currentTarget.src = defaultMissingImage;
-
-    if (tokenContract) {
-      console.warn(`[TokenSelectDropDown] Missing avatar for ${tokenContract.symbol} (${tokenContract.address})`);
+    if (tokenContract?.address && !seenBrokenImagesRef.current.has(tokenContract.address)) {
+      return getTokenAvatar(tokenContract);
     }
+    return defaultMissingImage;
   }, [tokenContract]);
 
-  const handleTokenSelect = useCallback(() => {
-    if (tokenRef.current) {
-      setDecimalAdjustedContract(tokenRef.current);
-    }
-  }, [setDecimalAdjustedContract]);
+  const handleMissingAvatar = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const tokenAddr = tokenContract?.address;
+    if (!tokenAddr || seenBrokenImagesRef.current.has(tokenAddr)) return;
 
-  const handleDialogOpen = useCallback(() => {
-    setContainerType(containerType);
-    setShowDialog(true);
-  }, [containerType, setContainerType]);
+    seenBrokenImagesRef.current.add(tokenAddr);
+    event.currentTarget.src = defaultMissingImage;
 
-  const handleDialogClose = useCallback(
-    (contract: TokenContract | undefined, inputState: InputState) => {
-      if (inputState === InputState.CLOSE_INPUT && contract) {
-        tokenRef.current = contract;
-        setDecimalAdjustedContract(contract);
-      }
-    },
-    [setDecimalAdjustedContract]
-  );
+    console.warn(
+      `[TokenSelectDropDown] Missing avatar for ${tokenContract?.symbol} (${tokenAddr})`
+    );
+  };
 
   return (
     <>
       <TokenSelectDialog
         showDialog={showDialog}
         setShowDialog={setShowDialog}
-        onClose={handleDialogClose}
+        onClose={(contract: TokenContract | undefined, inputState: InputState) => {
+          if (inputState === InputState.CLOSE_INPUT && contract) {
+            setDecimalAdjustedContract(contract);
+          }
+        }}
       />
       <div className={styles.assetSelect}>
         {tokenContract ? (
@@ -87,7 +68,7 @@ function TokenSelectDropDown({
               className="h-9 w-9 mr-2 rounded-md cursor-pointer"
               alt={`${tokenContract.name} Token Avatar`}
               src={avatarSrc}
-              onClick={handleTokenSelect}
+              onClick={() => setDecimalAdjustedContract(tokenContract)}
               onError={handleMissingAvatar}
             />
             {tokenContract.symbol}
@@ -98,7 +79,10 @@ function TokenSelectDropDown({
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={handleDialogOpen}
+          onClick={() => {
+            setContainerType(containerType);
+            setShowDialog(true);
+          }}
         />
       </div>
     </>

@@ -3,7 +3,7 @@
 import styles from "@/styles/Modal.module.css";
 import { useEffect, useRef, useCallback } from "react";
 import { useContainerType } from '@/lib/context/contextHooks';
-import InputSelect from "@/components/Dialogs/InputSelect";
+import TokenSelect from "@/components/Dialogs/TokenSelect";
 import { CONTAINER_TYPE, TokenContract, InputState } from "@/lib/structure/types";
 
 export default function TokenSelectDialog({
@@ -50,7 +50,7 @@ export default function TokenSelectDialog({
       </div>
 
       <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>
-        <InputSelect closeDialog={closeDialog} onClose={onClose} />
+        <TokenSelect closeDialog={closeDialog} onClose={onClose} />
       </div>
     </dialog>
   );

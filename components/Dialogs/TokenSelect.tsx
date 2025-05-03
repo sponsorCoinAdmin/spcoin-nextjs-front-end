@@ -14,12 +14,11 @@ import {
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import DataList from './Resources/DataList';
 import { useChainId } from 'wagmi';
-import AvatarWithFallback from '@/components/common/AvatarWithFallback';
 
 const INPUT_PLACEHOLDER = 'Enter token address';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
-const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClose: (contract: TokenContract | undefined, state: InputState) => void }) => {
+const TokenSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClose: (contract: TokenContract | undefined, state: InputState) => void }) => {
   const { inputValue, validateHexInput, clearInput } = useHexInput();
   const [tokenContract, setTokenContract] = useState<TokenContract>();
   const manualEntryRef = useRef(false);
@@ -30,7 +29,7 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const chainId = useChainId();
 
-  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : undefined;
+  const tokenAvatarPath = tokenContract?.address ? getTokenAvatar(tokenContract) : defaultMissingImage;
   const setTokenContractInContext = useMemo(() =>
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
   , [containerType, setSellTokenContract, setBuyTokenContract]);
@@ -40,7 +39,7 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
   const prevInputStateRef = useRef<InputState>();
 
   useEffect(() => {
-    console.log(`🟢debouncedAddress(${debouncedAddress}) => [InputSelect(${getInputStateString(inputState)})]`);
+    console.log(`🟢debouncedAddress(${debouncedAddress}) => [TokenSelect(${getInputStateString(inputState)})]`);
     if (prevInputStateRef.current !== inputState) {
       if (prevInputStateRef.current !== undefined) {
         console.log(`🟢🟢debouncedAddress(${debouncedAddress}) => inputState changed: ${getInputStateString(prevInputStateRef.current)} → ${getInputStateString(inputState)}`);
@@ -101,15 +100,13 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
         }}
       >
         {item.useAvatar ? (
-          <AvatarWithFallback
-            reportMissingAvatar={reportMissingAvatar}
-            src={imageLogo}
-            fallbackSrc={defaultMissingImage}
+          <img
+            src={inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY ? imageLogo : defaultMissingImage}
             alt="duplicate avatar"
             width={40}
             height={40}
             style={{ marginRight: '6px', borderRadius: '50%' }}
-            inputState={InputState.CONTRACT_NOT_FOUND_LOCALLY}
+            onError={reportMissingAvatar}
           />
         ) : (
           item.emoji && (
@@ -141,10 +138,8 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
-              <AvatarWithFallback
-                reportMissingAvatar={reportMissingAvatar}
-                src={tokenAvatarPath ?? defaultMissingImage}
-                fallbackSrc={defaultMissingImage}
+              <img
+                src={tokenAvatarPath}
                 alt="Token preview"
                 width={40}
                 height={40}
@@ -154,7 +149,11 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
                     validateAndMaybeClose(tokenContract);
                   }
                 }}
-                inputState={InputState.CONTRACT_NOT_FOUND_LOCALLY}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = defaultMissingImage;
+                }}
               />
               <div>
                 <div className={styles.elementName}>{tokenContract.name}</div>
@@ -185,4 +184,4 @@ const InputSelect = ({ closeDialog, onClose }: { closeDialog: () => void; onClos
   );
 };
 
-export default InputSelect;
+export default TokenSelect;

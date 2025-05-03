@@ -18,7 +18,7 @@ const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackWallet }) => 
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (recipientAccount) {
         event.currentTarget.src = defaultMissingImage;
-        recipientAccount.avatar = `***AccountSelectDropDown:ERROR: MISSING AVATAR FILE*** -> ${recipientAccount.avatar}`;
+        console.warn(`[AccountSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`);
       }
     },
     [recipientAccount]
