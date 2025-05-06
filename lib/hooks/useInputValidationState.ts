@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
-import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
+import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 
 import {
   InputState,
@@ -14,7 +14,6 @@ import {
 import {
   useSellTokenContract,
   useBuyTokenContract,
-  useContainerType,
   useBuyTokenAddress,
   useSellTokenAddress,
 } from '@/lib/context/contextHooks';
@@ -29,36 +28,49 @@ function useIsEmptyInput(input?: string): boolean {
   return useMemo(() => input == null || input.trim() === '', [input]);
 }
 
-function useIsDuplicateToken(tokenAddress?: string): boolean {
+////////////////////////////////////////////////////////////////////////////////
+function useIsDuplicateToken(containerType: CONTAINER_TYPE, tokenAddress?: string): boolean {
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
-  const [containerType] = useContainerType();
 
-  if (!tokenAddress || !isAddress(tokenAddress)) return false;
-
-  const normalizedInput = tokenAddress.toLowerCase();
-
-  const sellAddress = sellTokenContract?.address?.toLowerCase();
-  const buyAddress = buyTokenContract?.address?.toLowerCase();
-
-  const isAlreadySelected =
-    (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && normalizedInput === sellAddress) ||
-    (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && normalizedInput === buyAddress);
-
-  if (isAlreadySelected) {
-    // Don't trigger duplicate check on re-entry of the same token
+  if (!tokenAddress || !isAddress(tokenAddress)) {
+    // console.log(`🔍 DUPLICATE CHECK SKIPPED — invalid or empty input: ${tokenAddress}`);
     return false;
   }
 
-  const oppositeAddress =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? buyAddress : sellAddress;
+  const sellAddr = sellTokenContract?.address;
+  const buyAddr = buyTokenContract?.address;
+  const isContextReady =
+    !!sellAddr &&
+    !!buyAddr &&
+    containerType !== CONTAINER_TYPE.UNDEFINED;
 
-  const isDuplicate = normalizedInput === oppositeAddress;
+  // console.log(`🧠 DUPLICATE CHECK CONTEXT:
+  // ├─ containerType: ${CONTAINER_TYPE[containerType]}
+  // ├─ sellAddress:   ${sellAddr}
+  // ├─ buyAddress:    ${buyAddr}
+  // └─ inputAddress:  ${tokenAddress}
+  // ⚙️ contextReady: ${isContextReady}
+  // `);
 
-  console.log(`🔍 DUPLICATE CHECK: input=${normalizedInput} vs opposite=${oppositeAddress} → ${isDuplicate ? 'DUPLICATE' : 'OK'}`);
+  if (!isContextReady) {
+    console.log(`⏳ DUPLICATE CHECK SKIPPED — context not ready`);
+    return false;
+  }
+
+  const oppositeTokenAddress =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyAddr
+      : sellAddr;
+
+  const isDuplicate =
+    tokenAddress.toLowerCase() === oppositeTokenAddress?.toLowerCase();
+
+  // console.log(`🔍 DUPLICATE CHECK: input=${tokenAddress} vs opposite=${oppositeTokenAddress} → ${isDuplicate ? '🛑 DUPLICATE' : '✅ OK'}`);
 
   return isDuplicate;
 }
+////////////////////////////////////////////////////////////////////////////////
 
 function useResolvedTokenContractInfo(
   tokenAddress?: string
@@ -82,20 +94,21 @@ function useResolvedTokenContractInfo(
   return [tokenContract ?? undefined, isResolved, message, isLoading];
 }
 
-export const useInputValidationState = (selectAddress: string|undefined) => {
-
-  const debouncedAddress = useDebounce(selectAddress || "", 250);
+export const useInputValidationState = (
+  selectAddress: string | undefined,
+  containerType: CONTAINER_TYPE
+) => {
+  const debouncedAddress = useDebounce(selectAddress || '', 250);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedToken, setValidatedToken] = useState<TokenContract | undefined>(undefined);
 
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
   const chainId = useChainId();
-  const [containerType] = useContainerType();
 
   const isAddressValid = useIsAddressInput(debouncedAddress);
   const isEmptyInput = useIsEmptyInput(debouncedAddress);
-  const isDuplicate = useIsDuplicateToken(debouncedAddress);
+  const isDuplicate = useIsDuplicateToken(containerType, debouncedAddress);
   const [resolvedToken, isResolved, _, isLoading] = useResolvedTokenContractInfo(debouncedAddress);
 
   const seenBrokenImagesRef = useRef<Set<string>>(new Set());
@@ -113,13 +126,12 @@ export const useInputValidationState = (selectAddress: string|undefined) => {
   }, [debouncedAddress, inputState]);
 
   const debugSetInputState = (state: InputState) => {
-    // console.log(`⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️`);
     if (inputState === state) return; // No state change
 
     const prevState = getInputStateString(inputState);
     const currState = getInputStateString(state);
     const currStateImgs = '⚠️'.repeat(state);
-  
+
     console.log(`${currStateImgs} STATE CHANGE: ${prevState}(${inputState}) -> ${currState}(${state})`);
     setInputState(state);
   };
@@ -130,55 +142,57 @@ export const useInputValidationState = (selectAddress: string|undefined) => {
       debugSetInputState(InputState.EMPTY_INPUT);
       return;
     }
-      // console.log(`🟢 TESTING PASSED: InputState.EMPTY_INPUT(${debouncedAddress})`);
 
     if (!isAddressValid) {
       setValidatedToken(undefined);
       debugSetInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
-    // console.log(`🟢🟢 TESTING PASSED: InputState.INVALID_ADDRESS_INPUT(${debouncedAddress})`);
 
     if (isDuplicate) {
       setValidatedToken(undefined);
       debugSetInputState(InputState.DUPLICATE_INPUT);
       return;
     }
-    // console.log(`🟢🟢🟢 TESTING PASSED: InputState.DUPLICATE_INPUT(${debouncedAddress})`);
 
     if (isLoading) {
       setValidatedToken(undefined);
       return;
     }
+
     if (!isResolved || !resolvedToken) {
       if (seenBrokenImagesRef.current.has(debouncedAddress)) {
         setValidatedToken(undefined);
         debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
       } else {
-        // console.log(`🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
         setValidatedToken(undefined);
         debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       }
       return;
     }
-    // console.log(`🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN(${debouncedAddress})`);
 
-    if (inputState !== InputState.VALID_INPUT_PENDING || validatedToken?.address !== resolvedToken.address) {
+    if (
+      inputState !== InputState.VALID_INPUT_PENDING ||
+      validatedToken?.address !== resolvedToken.address
+    ) {
       setValidatedToken(resolvedToken);
       debugSetInputState(InputState.VALID_INPUT_PENDING);
     }
-    // else
-      // console.log(`🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.VALID_INPUT_PENDING(${debouncedAddress})`);
-
-  }, [debouncedAddress, isEmptyInput, isAddressValid, isDuplicate, isLoading, isResolved, resolvedToken]);
+  }, [
+    debouncedAddress,
+    isEmptyInput,
+    isAddressValid,
+    isDuplicate,
+    isLoading,
+    isResolved,
+    resolvedToken,
+  ]);
 
   const reportMissingAvatar = useCallback(() => {
     if (!seenBrokenImagesRef.current.has(debouncedAddress)) {
       seenBrokenImagesRef.current.add(debouncedAddress);
       debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
     }
-    // else
-    //   console.log(`🟢🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
   }, [debouncedAddress]);
 
   return {
