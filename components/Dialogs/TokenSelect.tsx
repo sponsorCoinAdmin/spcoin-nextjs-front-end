@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { getTokenLogoURL } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
@@ -23,56 +23,55 @@ interface Props {
   onClose: (contract: TokenContract | undefined, state: InputState) => void;
 }
 
-const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, validateHexInput, clearInput } = useHexInput();
-  const [tokenContract, setTokenContract] = useState<TokenContract>();
+const TokenSelect = ({ closeDialog, onClose }: Props) => {
+  const { inputValue, validateHexInput, clearInput } = useHexInput();
   const manualEntryRef = useRef(false);
   const debouncedAddress = useDebounce(inputValue, 250);
 
   const [containerType] = useContainerType();
-  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
-  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
+  const [, setSellTokenContract] = useSellTokenContract();
+  const [, setBuyTokenContract] = useBuyTokenContract();
   const chainId = useChainId();
 
-  const tokenAvatarPath = tokenContract?.address ? getTokenLogoURL(tokenContract) : defaultMissingImage;
   const setTokenContractInContext = useMemo(() =>
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
   , [containerType, setSellTokenContract, setBuyTokenContract]);
 
-  const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(debouncedAddress, containerType);
+  const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(debouncedAddress);
 
-  const prevInputStateRef = useRef<InputState>();
+  const getAvatarSrc = (address: string, inputState: InputState, chainId: number) => {
+    if (!address) return defaultMissingImage;
+    if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
+    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+  };
 
-  useEffect(() => {
-    // console.log(`🟢debouncedAddress(${debouncedAddress}) => [TokenSelect(${getInputStateString(inputState)})]`);
-    if (prevInputStateRef.current !== inputState) {
-      if (prevInputStateRef.current !== undefined) {
-        // console.log(`🟢🟢debouncedAddress(${debouncedAddress}) => inputState changed: ${getInputStateString(prevInputStateRef.current)} → ${getInputStateString(inputState)}`);
-      } else {
-        // console.log(`🟢🟢🟢debouncedAddress(${debouncedAddress}) => inputState initialized to: ${getInputStateString(inputState)}`);
-      }
-      prevInputStateRef.current = inputState;
+  const getInputStatusImage = () => {
+    switch (inputState) {
+      case InputState.INVALID_ADDRESS_INPUT:
+        return '❓';
+      case InputState.DUPLICATE_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        return '❌';
+      case InputState.VALID_INPUT:
+        return '✅';
+      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+        return '⚠️';
+      default:
+        return '🔍';
     }
-  }, [debouncedAddress, inputState]);
-
-  const clearFields = useCallback(() => {
-    clearInput();
-    setTokenContract(undefined);
-  }, [clearInput]);
+  };
 
   const validateAndMaybeClose = useCallback((token: TokenContract) => {
-    setTokenContract(token);
     setTokenContractInContext(token);
-    clearFields();
+    clearInput();
     onClose(token, InputState.CLOSE_INPUT);
     closeDialog();
-  }, [clearFields, closeDialog, setTokenContractInContext, onClose]);
+  }, [clearInput, closeDialog, setTokenContractInContext, onClose]);
 
   useEffect(() => {
     if (!debouncedAddress || isLoading || !validatedToken) return;
 
-    if (manualEntryRef.current) {
-      setTokenContract(validatedToken);
-    } else {
+    if (!manualEntryRef.current) {
       validateAndMaybeClose(validatedToken);
     }
   }, [debouncedAddress, validatedToken, isLoading, validateAndMaybeClose]);
@@ -92,8 +91,6 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
     const item = emojiMap[state];
     if (!item) return null;
 
-    const imageLogo = `/assets/blockchains/${chainId}/contracts/${debouncedAddress}/avatar.png`;
-
     return (
       <span
         style={{
@@ -105,7 +102,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
       >
         {item.useAvatar ? (
           <img
-            src={inputState !== InputState.CONTRACT_NOT_FOUND_LOCALLY ? imageLogo : defaultMissingImage}
+            src={getAvatarSrc(debouncedAddress, inputState, chainId)}
             alt="duplicate avatar"
             width={40}
             height={40}
@@ -125,7 +122,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
-        <div>🔍</div>
+        <div>{getInputStatusImage()}</div>
         <input
           className={`${styles.modalElementInput} w-full`}
           autoComplete="off"
@@ -138,19 +135,19 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
         />
       </div>
 
-      {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
+      {validatedToken && inputState === InputState.VALID_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
               <img
-                src={tokenAvatarPath}
+                src={getTokenLogoURL(validatedToken)}
                 alt="Token preview"
                 width={40}
                 height={40}
                 className={styles.tokenPreviewImg}
                 onClick={() => {
-                  if (tokenContract) {
-                    validateAndMaybeClose(tokenContract);
+                  if (validatedToken && inputState === InputState.VALID_INPUT_PENDING) {
+                    validateAndMaybeClose(validatedToken);
                   }
                 }}
                 onError={(e) => {
@@ -160,8 +157,8 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
                 }}
               />
               <div>
-                <div className={styles.elementName}>{tokenContract.name}</div>
-                <div className={styles.elementSymbol}>{tokenContract.symbol}</div>
+                <div className={styles.elementName}>{validatedToken.name}</div>
+                <div className={styles.elementSymbol}>{validatedToken.symbol}</div>
               </div>
             </div>
           </div>
