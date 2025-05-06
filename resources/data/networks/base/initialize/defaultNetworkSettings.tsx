@@ -3,7 +3,6 @@ import {  BASE, TokenContract } from '@/lib/structure/types'
  const defaultSellToken: TokenContract = {
    chainId: BASE,
    "symbol": "BRETT",
-   "img": "assets/blockchains/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.png",
    "name": "Bret Meme Coin",
    "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
    totalSupply: null,
@@ -15,7 +14,6 @@ import {  BASE, TokenContract } from '@/lib/structure/types'
 const defaultBuyToken: TokenContract = {
   chainId: BASE,
   symbol: "SpCoin",
-  img: "assets/blockchains/0xToDo_SpCoin.png",
   name: "Sponsor Coin",
   address: "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
   totalSupply: null,

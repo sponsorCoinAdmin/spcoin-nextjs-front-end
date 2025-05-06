@@ -62,14 +62,14 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     token: tokenContract?.symbol === 'ETH' ? undefined : tokenContract?.address,
   });
 
-  useEffect(() => {
-    console.log(`[DEBUG:tokenSelectContainer] tokenContract after dialog close: ${stringifyBigInt(tokenContract)}`);
-  }, [tokenContract]);
+  // useEffect(() => {
+  //   console.log(`[DEBUG:tokenSelectContainer] tokenContract after dialog close: ${stringifyBigInt(tokenContract)}`);
+  // }, [tokenContract]);
 
-  useEffect(() => {
-    console.log('[TokenSelectContainer] SellToken:', stringifyBigInt(sellTokenContract));
-    console.log('[TokenSelectContainer] BuyToken:', stringifyBigInt(buyTokenContract));
-  }, [sellTokenContract, buyTokenContract]);
+  // useEffect(() => {
+  //   console.log('[TokenSelectContainer] SellToken:', stringifyBigInt(sellTokenContract));
+  //   console.log('[TokenSelectContainer] BuyToken:', stringifyBigInt(buyTokenContract));
+  // }, [sellTokenContract, buyTokenContract]);
 
   const [inputValue, setInputValue] = useState<string>("0");
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -198,7 +198,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         }}
       />
       <TokenSelectDropDown
-        exchangeContext={exchangeContext}
         containerType={localContainerType}
         tokenContract={tokenContract}
         setDecimalAdjustedContract={

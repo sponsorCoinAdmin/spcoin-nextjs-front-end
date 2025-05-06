@@ -191,10 +191,8 @@ export const getAddressLogoURL = (address: string, chainId: number): string => {
   return badTokenAddressImage
 }
 
-
 const getAccountAvatar = (account?: WalletAccount): string =>
   account ? `/assets/accounts/${account.address}/avatar.png` : defaultMissingImage;
-
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {

@@ -36,28 +36,12 @@ function useIsDuplicateToken(tokenAddress?: string): boolean {
 
   if (!tokenAddress || !isAddress(tokenAddress)) return false;
 
-  const normalizedInput = tokenAddress.toLowerCase();
+  const oppositeTokenAddress =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? buyTokenContract?.address
+      : sellTokenContract?.address;
 
-  const sellAddress = sellTokenContract?.address?.toLowerCase();
-  const buyAddress = buyTokenContract?.address?.toLowerCase();
-
-  const isAlreadySelected =
-    (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && normalizedInput === sellAddress) ||
-    (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && normalizedInput === buyAddress);
-
-  if (isAlreadySelected) {
-    // Don't trigger duplicate check on re-entry of the same token
-    return false;
-  }
-
-  const oppositeAddress =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? buyAddress : sellAddress;
-
-  const isDuplicate = normalizedInput === oppositeAddress;
-
-  console.log(`🔍 DUPLICATE CHECK: input=${normalizedInput} vs opposite=${oppositeAddress} → ${isDuplicate ? 'DUPLICATE' : 'OK'}`);
-
-  return isDuplicate;
+  return tokenAddress === oppositeTokenAddress;
 }
 
 function useResolvedTokenContractInfo(
@@ -113,14 +97,7 @@ export const useInputValidationState = (selectAddress: string|undefined) => {
   }, [debouncedAddress, inputState]);
 
   const debugSetInputState = (state: InputState) => {
-    // console.log(`⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️`);
-    if (inputState === state) return; // No state change
-
-    const prevState = getInputStateString(inputState);
-    const currState = getInputStateString(state);
-    const currStateImgs = '⚠️'.repeat(state);
-  
-    console.log(`${currStateImgs} STATE CHANGE: ${prevState}(${inputState}) -> ${currState}(${state})`);
+    console.log(`➡️ SETTING STATE → ${getInputStateString(state)}`);
     setInputState(state);
   };
 
@@ -130,21 +107,22 @@ export const useInputValidationState = (selectAddress: string|undefined) => {
       debugSetInputState(InputState.EMPTY_INPUT);
       return;
     }
-      // console.log(`🟢 TESTING PASSED: InputState.EMPTY_INPUT(${debouncedAddress})`);
+    else 
+      console.log(`🟢 TESTING PASSED: InputState.EMPTY_INPUT(${debouncedAddress})`);
 
     if (!isAddressValid) {
       setValidatedToken(undefined);
       debugSetInputState(InputState.INVALID_ADDRESS_INPUT);
       return;
     }
-    // console.log(`🟢🟢 TESTING PASSED: InputState.INVALID_ADDRESS_INPUT(${debouncedAddress})`);
+    console.log(`🟢🟢 TESTING PASSED: InputState.INVALID_ADDRESS_INPUT(${debouncedAddress})`);
 
     if (isDuplicate) {
       setValidatedToken(undefined);
       debugSetInputState(InputState.DUPLICATE_INPUT);
       return;
     }
-    // console.log(`🟢🟢🟢 TESTING PASSED: InputState.DUPLICATE_INPUT(${debouncedAddress})`);
+    console.log(`🟢🟢🟢 TESTING PASSED: InputState.DUPLICATE_INPUT(${debouncedAddress})`);
 
     if (isLoading) {
       setValidatedToken(undefined);
@@ -155,20 +133,20 @@ export const useInputValidationState = (selectAddress: string|undefined) => {
         setValidatedToken(undefined);
         debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
       } else {
-        // console.log(`🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
+        console.log(`🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
         setValidatedToken(undefined);
         debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN);
       }
       return;
     }
-    // console.log(`🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN(${debouncedAddress})`);
+    console.log(`🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN(${debouncedAddress})`);
 
     if (inputState !== InputState.VALID_INPUT_PENDING || validatedToken?.address !== resolvedToken.address) {
       setValidatedToken(resolvedToken);
       debugSetInputState(InputState.VALID_INPUT_PENDING);
     }
-    // else
-      // console.log(`🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.VALID_INPUT_PENDING(${debouncedAddress})`);
+    else
+      console.log(`🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.VALID_INPUT_PENDING(${debouncedAddress})`);
 
   }, [debouncedAddress, isEmptyInput, isAddressValid, isDuplicate, isLoading, isResolved, resolvedToken]);
 
@@ -177,8 +155,8 @@ export const useInputValidationState = (selectAddress: string|undefined) => {
       seenBrokenImagesRef.current.add(debouncedAddress);
       debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY);
     }
-    // else
-    //   console.log(`🟢🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
+    else
+      console.log(`🟢🟢🟢🟢🟢🟢🟢 TESTING PASSED: InputState.CONTRACT_NOT_FOUND_LOCALLY(${debouncedAddress})`);
   }, [debouncedAddress]);
 
   return {

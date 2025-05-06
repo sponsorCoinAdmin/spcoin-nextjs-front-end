@@ -43,12 +43,12 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
   const prevInputStateRef = useRef<InputState>();
 
   useEffect(() => {
-    console.log(`🟢debouncedAddress(${debouncedAddress}) => [TokenSelect(${getInputStateString(inputState)})]`);
+    // console.log(`🟢debouncedAddress(${debouncedAddress}) => [TokenSelect(${getInputStateString(inputState)})]`);
     if (prevInputStateRef.current !== inputState) {
       if (prevInputStateRef.current !== undefined) {
-        console.log(`🟢🟢debouncedAddress(${debouncedAddress}) => inputState changed: ${getInputStateString(prevInputStateRef.current)} → ${getInputStateString(inputState)}`);
+        // console.log(`🟢🟢debouncedAddress(${debouncedAddress}) => inputState changed: ${getInputStateString(prevInputStateRef.current)} → ${getInputStateString(inputState)}`);
       } else {
-        console.log(`🟢🟢🟢debouncedAddress(${debouncedAddress}) => inputState initialized to: ${getInputStateString(inputState)}`);
+        // console.log(`🟢🟢🟢debouncedAddress(${debouncedAddress}) => inputState initialized to: ${getInputStateString(inputState)}`);
       }
       prevInputStateRef.current = inputState;
     }
