@@ -5,6 +5,7 @@ import { erc20Abi } from 'viem';
 import { isAddress, Address } from 'viem';
 import { useState, useEffect } from 'react';
 import { TokenContract as MappedTokenContract, TokenContract } from '@/lib/structure/types';
+import { getNativeWrapAddress, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
 
 // ---------------------------------------------
 // 🔁 Local TokenContract used in hook
@@ -22,7 +23,7 @@ type RawTokenContract = {
 // 🧩 Hook: useErc20TokenContract (Wagmi v2.5+)
 // ---------------------------------------------
 function useErc20TokenContract(
-  tokenAddress?: Address,
+  tokenAddress?: Address
   ): RawTokenContract | undefined {
     const { address: account } = useAccount();
     const enabled = !!tokenAddress && isAddress(tokenAddress);
@@ -71,10 +72,9 @@ function useErc20TokenContract(
 export function useMappedTokenContract(
   tokenAddress?: Address,
 ): MappedTokenContract | undefined | null {
-  const account = useAccount();
   const chainId = useChainId();
-
-  const token = useErc20TokenContract(tokenAddress);
+  const validAddress = tokenAddress === NATIVE_TOKEN_ADDRESS ? getNativeWrapAddress(chainId) :  tokenAddress
+  const token = useErc20TokenContract(validAddress);
 
   if (!token) {
     // console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);

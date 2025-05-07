@@ -20,11 +20,9 @@ const TradeContainerHeader = () => {
         <Image
           src={spCoin_png}
           className={styles.avatarImg}
-          width={30}
-          height={30}
           alt="SponsorCoin Logo"
-        />
-      </div>
+          style={{ height: 'auto', width: 'auto' }} // ✅ add this
+        />      </div>
 
       <h4 className={styles.center}>Sponsor Coin Exchange</h4>
 
@@ -35,14 +33,12 @@ const TradeContainerHeader = () => {
       <div>
         <Image
           src={cog_png}
-          className={styles.cogImg2}
-          width={20}
-          height={20}
           alt="Info Image"
           onClick={() => openDialog('#ConfigDialog')}
-        />
+          className={styles.cogImg2}
+          style={{ height: 'au20to', width: 'auto' }} // ✅ required
+        />      
       </div>
-
       {/* 
       <Popover content={<slippageBps initialSlippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback}/>} title="Settings" trigger="click" placement="bottomLeft">
         <SettingOutlined className={styles.cog} />

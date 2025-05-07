@@ -7,17 +7,17 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import ConnectButton from "../Buttons/ConnectButton"
-import { defaultMissingImage, getBlockChainName, getNativeAvatar } from "@/lib/network/utils";
+import { defaultMissingImage, getBlockChainName, getBlockChainLogoURL } from "@/lib/network/utils";
 import { useChainId } from "wagmi";
 
 export default () => {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
   const chainId = useChainId({ config });
-  const [avatar, setAvatar] = useState<string>(getNativeAvatar(chainId));
+  const [avatar, setAvatar] = useState<string>(getBlockChainLogoURL(chainId));
 
   useEffect(() => {
     let network: string = getBlockChainName(chainId) || "";
-    setAvatar(getNativeAvatar(chainId));
+    setAvatar(getBlockChainLogoURL(chainId));
     setNetworkName(network);
   }, [chainId]);
 

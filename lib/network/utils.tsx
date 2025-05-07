@@ -51,7 +51,7 @@ const isWrappedToken = (tokenContract: TokenContract): boolean =>
   tokenContract.chainId ? isWrappedAddress(tokenContract.address, tokenContract.chainId) : false;
 
 const isWrappedAddress = (address:Address, chainId:number): boolean =>
-  address === getNetworkWethAddress(chainId);
+  address === getNativeWrapAddress(chainId);
 
 const isNativeSellToken = (tradeData: TradeData) : boolean => 
   tradeData.sellTokenContract ? isNativeToken(tradeData.sellTokenContract) : false;
@@ -86,7 +86,7 @@ const isBurnTokenAddress = (address?: Address) : boolean =>
   address === BURN_ADDRESS
 
 // *** WARNING: To be fixed for other networks ***
-const getNetworkWethAddress = (chainId: number) : Address | undefined => {
+const getNativeWrapAddress = (chainId: number) : Address | undefined => {
   const wethAddresses: Record<number, Address> = {
     [BASE]: BASE_WETH_ADDRESS,
     [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
@@ -95,7 +95,7 @@ const getNetworkWethAddress = (chainId: number) : Address | undefined => {
     [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
   };
   const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
-  // console.log(`getNetworkWethAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
+  // console.log(`getNativeWrapAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS || BURN_ADDRESS;
 };
 
@@ -116,7 +116,7 @@ const getAvatarAddress = (
       return `assets/accounts/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
       return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
-        ? getNativeAvatar(chainId)
+        ? getBlockChainLogoURL(chainId)
         : `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`;
     default:
       return defaultMissingImage;
@@ -136,7 +136,7 @@ const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress:
   //              Ethereum Account Address = ${ethAct} 
   //              Token Account Address = ${tokenAddress}`);
 
-  return ethAct === tokenAddress ? getNetworkWethAddress(chainId) : tokenAddress;
+  return ethAct === tokenAddress ? getNativeWrapAddress(chainId) : tokenAddress;
 };
 
 const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
@@ -163,7 +163,7 @@ const getChainMap = (chainList: any[]): Map<number, any> =>
 
 const chainIdMap = getChainMap(chainIdList);
 
-const getNativeAvatar = (chainId:number): string => 
+const getBlockChainLogoURL = (chainId:number): string => 
   `assets/blockchains/${chainId}/info/network.png`;
 
 const getBlockChainName = (chainId: number): string | undefined => 
@@ -231,9 +231,9 @@ export {
   defaultMissingImage,
   delay,
   getAvatarAddress,
-  getNativeAvatar,
+  getBlockChainLogoURL,
   getBlockChainName,
-  getNetworkWethAddress,
+  getNativeWrapAddress,
   getTokenLogoURL,
   getAccountAvatar,
   isActiveAccountAddress,

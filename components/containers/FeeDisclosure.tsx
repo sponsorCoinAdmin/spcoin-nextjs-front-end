@@ -5,12 +5,17 @@ import styles from '@/styles/Exchange.module.css';
 
 const FeeDisclosure = () => {
     return (
-        <div id="agentRateFee" className={styles["agentRateFee"]}>
+        <div id="agentRateFee" className={styles.agentRateFee}>
             Fee Disclosures
-            <Image src={cog_png} className={styles["feeInfoCog"]} width={18} height={18} alt="Info Image" 
-            onClick={() => alert("Fees Explained")}/>
+            <Image
+                src={cog_png}
+                alt="Info Image"
+                onClick={() => alert("Fees Explained")}
+                className={styles.feeInfoCog}
+                priority
+            />
         </div>
     );
-}
+};
 
 export default FeeDisclosure;
