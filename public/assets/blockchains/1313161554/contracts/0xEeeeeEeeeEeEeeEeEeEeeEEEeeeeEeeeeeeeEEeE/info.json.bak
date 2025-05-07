@@ -1,7 +1,21 @@
 {
-  "chainId": 1313161554,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Ethereum",
-  "symbol": "???",
-  "decimals": 18
+    "name": "Aurora",
+    "website": "https://aurora.dev",
+    "description": "Aurora provides Ethereum compatibility, NEAR Protocol scalability, and industry-first user experience through affordable transactions.",
+    "explorer": "https://explorer.mainnet.aurora.dev/",
+    "research": "",
+    "symbol": "ETH",
+    "type": "coin",
+    "decimals": 18,
+    "rpc_url": "https://mainnet.aurora.dev",
+    "status": "active",
+    "tags": [
+        "dapp"
+    ],
+    "links": [
+        {
+            "name": "x",
+            "url": "https://x.com/auroraisnear"
+        }
+    ]
 }

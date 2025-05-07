@@ -1,27 +1,22 @@
 #!/bin/bash
 
 for dir in ./*/; do
-  info_json="${dir}info/info.json"
-  target_json="${dir}contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
+  target="$dir/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
+  backup="$dir/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json.bak"
 
-  if [[ -f "$info_json" && -f "$target_json" ]]; then
-    # Extract symbol from source
-    new_symbol_line=$(grep '"symbol"' "$info_json" | head -1)
+  if [[ -f "$target" && -f "$backup" ]]; then
+    # Extract "name" line from .bak
+    nameLine=$(grep '"name":' "$backup")
 
-    # Replace symbol in target
-    tmp_file="${target_json}.tmp"
-    awk -v new_symbol="$new_symbol_line" '
-      {
-        if ($0 ~ /"symbol"/) {
-          print new_symbol
-        } else {
-          print $0
-        }
-      }
-    ' "$target_json" > "$tmp_file" && mv "$tmp_file" "$target_json"
-
-    echo "✔ Updated symbol in: $target_json"
+    if [[ -n "$nameLine" ]]; then
+      # Replace "name" line in target with the one from backup
+      tmpFile=$(mktemp)
+      sed "s/.*\"name\":.*/$nameLine/" "$target" > "$tmpFile" && mv "$tmpFile" "$target"
+      echo "🔁 Updated 'name' in: $target"
+    else
+      echo "⚠️  No 'name' line found in: $backup"
+    fi
   else
-    echo "⚠️ Skipped $dir — required files missing"
+    echo "❌ Missing file in: $dir"
   fi
 done

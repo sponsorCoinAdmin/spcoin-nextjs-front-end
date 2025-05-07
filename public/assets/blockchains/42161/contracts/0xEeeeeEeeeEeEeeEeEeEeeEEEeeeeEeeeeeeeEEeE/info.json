@@ -2,7 +2,7 @@
   "chainId": 42161,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   "name": "USDA",
-    "symbol": "ARETH",
+  "symbol": "ARETH",
   "decimals": 18,
   "website": "https://www.angle.money/",
   "description": "USDA is an over-collateralized and decentralized USD stablecoin by the Angle Protocol.",

@@ -2,7 +2,7 @@
   "chainId": 100,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   "name": "UniCrypt",
-    "symbol": "xDAI",
+  "symbol": "xDAI",
   "decimals": 18,
   "website": "https://unicrypt.network",
   "description": "UNCX is the governance token of the UniCrypt platform.",

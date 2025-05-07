@@ -2,7 +2,7 @@
   "chainId": 321,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   "name": "KCC-Peg Tether USD",
-    "symbol": "KCS",
+  "symbol": "KCS",
   "decimals": 18,
   "website": "https://tether.to/en/",
   "description": "USDT is a stablecoin (stable-value cryptocurrency) that mirrors the price of the U.S. dollar, issued by a Hong Kong-based company Tether. The token’s peg to the USD is achieved via maintaining a sum of commercial paper, fiduciary deposits, cash, reserve repo notes, and treasury bills in reserves that is equal in USD value to the number of USDT in circulation.",

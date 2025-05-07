@@ -1,7 +1,12 @@
 {
-  "chainId": 2020,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Ethereum",
-  "symbol": "???",
-  "decimals": 18
+    "name": "Ronin",
+    "website": "https://skymavis.com",
+    "description": "Ronin unlocks explosive growth for Blockchain gaming and collectible projects.",
+    "explorer": "https://explorer.roninchain.com",
+    "research": "",
+    "symbol": "RON",
+    "type": "coin",
+    "decimals": 18,
+    "status": "active",
+    "links": []
 }

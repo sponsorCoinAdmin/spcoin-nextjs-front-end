@@ -2,7 +2,7 @@
   "chainId": 2442,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   "name": "Tether USD",
-    "symbol": "tETH",
+  "symbol": "tETH",
   "decimals": 18,
   "website": "https://tether.to/",
   "description": "Tether gives you the joint benefits of open blockchain technology and traditional currency by converting your cash into a stable digital currency equivalent.",

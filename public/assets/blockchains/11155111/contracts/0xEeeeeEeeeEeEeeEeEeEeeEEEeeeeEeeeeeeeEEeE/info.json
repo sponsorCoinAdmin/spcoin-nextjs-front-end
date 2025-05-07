@@ -2,6 +2,6 @@
   "chainId": 11155111,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   "name": "Ethereum",
-    "symbol": "ETH",
+  "symbol": "ETH",
   "decimals": 18
 }

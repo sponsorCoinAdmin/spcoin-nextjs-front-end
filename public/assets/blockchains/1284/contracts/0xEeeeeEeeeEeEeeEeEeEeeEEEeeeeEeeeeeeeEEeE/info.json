@@ -2,7 +2,7 @@
   "chainId": 1284,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   "name": "Axelar",
-    "symbol": "GLMR",
+  "symbol": "GLMR",
   "decimals": 18,
   "website": "https://axelar.network/",
   "description": "Axelar delivers secure cross-chain communication for Web3. Our infrastructure enables dApp users to interact with any asset or application, on any chain, with one click.",

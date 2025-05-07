@@ -1,7 +1,26 @@
 {
-  "chainId": 8453,
-  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Ethereum",
-  "symbol": "BASE",
-  "decimals": 18
+    "name": "Base",
+    "website": "https://base.org",
+    "description": "Base is a secure, low-cost, builder-friendly Ethereum L2 built to bring the next billion users onchain.",
+    "explorer": "https://basescan.org",
+    "research": "https://base.mirror.xyz",
+    "symbol": "ETH",
+    "type": "coin",
+    "coin_type": 8453,
+    "decimals": 18,
+    "status": "active",
+    "rpc_url": "https://base-mainnet.public.blastapi.io",
+    "tags": [
+        "dapp"
+    ],
+    "links": [
+        {
+            "name": "x",
+            "url": "https://x.com/buildonbase"
+        },
+        {
+            "name": "github",
+            "url": "https://github.com/base-org"
+        }
+    ]
 }
