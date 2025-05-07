@@ -1,7 +1,18 @@
 {
   "chainId": 8453,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Ethereum",
-  "symbol": "BASE",
-  "decimals": 18
+  "name": "USDA",
+    "symbol": "ETH",
+  "decimals": 18,
+  "website": "https://www.angle.money/usda",
+  "description": "Supercharge your DeFi journey with USDA, the most complete & reliable yield-bearing U.S. Dollar stablecoin",
+  "explorer": "https://basescan.org/token/0x0000206329b97DB379d5E1Bf586BbDB969C63274",
+  "status": "active",
+  "id": "0x0000206329b97DB379d5E1Bf586BbDB969C63274",
+  "links": [
+    {
+      "name": "twitter",
+      "url": "https://x.com/AngleProtocol"
+    }
+  ]
 }

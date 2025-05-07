@@ -1,25 +1,27 @@
 #!/bin/bash
 
-for dir in */; do
-  chainId="${dir%/}"
-  nativeInfoPath="./$chainId/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
-  wrappedInfoPath=$(find "./$chainId/contracts" -mindepth 2 -maxdepth 2 -name "info.json" ! -path "*/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/*" | head -n 1)
+for dir in ./*/; do
+  info_json="${dir}info/info.json"
+  target_json="${dir}contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
 
-  if [[ -f "$nativeInfoPath" && -f "$wrappedInfoPath" ]]; then
-    jq -s '.[0] * {
-      name: .[1].name,
-      symbol: .[1].symbol,
-      website: .[1].website,
-      description: .[1].description,
-      explorer: .[1].explorer,
-      status: .[1].status,
-      id: .[1].id,
-      tags: .[1].tags,
-      links: .[1].links
-    }' "$nativeInfoPath" "$wrappedInfoPath" > "${nativeInfoPath}.merged" && mv "${nativeInfoPath}.merged" "$nativeInfoPath"
+  if [[ -f "$info_json" && -f "$target_json" ]]; then
+    # Extract symbol from source
+    new_symbol_line=$(grep '"symbol"' "$info_json" | head -1)
 
-    echo "✅ Merged info.json for chain $chainId"
+    # Replace symbol in target
+    tmp_file="${target_json}.tmp"
+    awk -v new_symbol="$new_symbol_line" '
+      {
+        if ($0 ~ /"symbol"/) {
+          print new_symbol
+        } else {
+          print $0
+        }
+      }
+    ' "$target_json" > "$tmp_file" && mv "$tmp_file" "$target_json"
+
+    echo "✔ Updated symbol in: $target_json"
   else
-    echo "⚠️  Skipped $chainId — missing required files"
+    echo "⚠️ Skipped $dir — required files missing"
   fi
 done
