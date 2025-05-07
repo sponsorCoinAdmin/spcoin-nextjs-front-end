@@ -52,10 +52,10 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
       case InputState.DUPLICATE_INPUT:
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         return '❌';
-      case InputState.VALID_INPUT:
-        return '✅';
       case InputState.CONTRACT_NOT_FOUND_LOCALLY:
         return '⚠️';
+      case InputState.VALID_INPUT:
+        return '✅';
       default:
         return '🔍';
     }
@@ -135,7 +135,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
         />
       </div>
 
-      {validatedToken && inputState === InputState.VALID_INPUT_PENDING && (
+      {validatedToken && inputState === InputState.VALIDATE_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
@@ -146,7 +146,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
                 height={40}
                 className={styles.tokenPreviewImg}
                 onClick={() => {
-                  if (validatedToken && inputState === InputState.VALID_INPUT_PENDING) {
+                  if (validatedToken && inputState === InputState.VALIDATE_INPUT_PENDING) {
                     validateAndMaybeClose(validatedToken);
                   }
                 }}
@@ -165,7 +165,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
         </div>
       )}
 
-      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALIDATE_INPUT_PENDING && (
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
           {validateInputStatus(inputState)}
         </div>

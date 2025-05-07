@@ -138,7 +138,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
         />
       </div>
 
-      {tokenContract && inputState === InputState.VALID_INPUT_PENDING && (
+      {tokenContract && inputState === InputState.VALIDATE_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
@@ -168,7 +168,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {  const { inputValue, 
         </div>
       )}
 
-      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALIDATE_INPUT_PENDING && (
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
           {validateInputStatus(inputState)}
         </div>

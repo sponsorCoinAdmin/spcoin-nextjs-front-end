@@ -23,50 +23,46 @@ type RawTokenContract = {
 // ---------------------------------------------
 function useErc20TokenContract(
   tokenAddress?: Address,
-  accountAddress?: Address
-): RawTokenContract | undefined {
-  const { address: account } = useAccount();
-  const resolvedAccount = accountAddress ?? account;
-  const enabled = !!tokenAddress && isAddress(tokenAddress);
-
-  const { data: metaData, status: metaStatus } = useReadContracts({
-    contracts: [
-      { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
-    ],
-    query: { enabled },
-  });
-
-  const { data: balance, status: balanceStatus } = useReadContract({
-    address: tokenAddress,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
-    args: resolvedAccount ? [resolvedAccount] : undefined,
-    query: {
-      enabled: !!tokenAddress && !!resolvedAccount,
-    },
-  });
-
-  // 🔒 Require meta fetch success and presence of data
-  if (!enabled || metaStatus !== 'success' || !metaData) return undefined;
-
-  const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
-
-  // ❌ If essential values are missing, it's not a valid ERC-20 token
-  if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
-
-  return {
-    address: tokenAddress!,
-    symbol: symbolRaw as string,
-    name: nameRaw as string,
-    decimals: Number(decimalsRaw),
-    totalSupply: totalSupplyRaw as bigint,
-    balance: balanceStatus === 'success' ? (balance as bigint) : 0n,
-  };
-}
-
+  ): RawTokenContract | undefined {
+    const { address: account } = useAccount();
+    const enabled = !!tokenAddress && isAddress(tokenAddress);
+  
+    const { data: metaData, status: metaStatus } = useReadContracts({
+      contracts: [
+        { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
+        { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
+        { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
+        { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
+      ],
+      query: { enabled },
+    });
+  
+    const { data: balance, status: balanceStatus } = useReadContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: account ? [account] : undefined,
+      query: {
+        enabled: !!tokenAddress && !!account,
+      },
+    });
+  
+    if (!enabled || metaStatus !== 'success' || !metaData) return undefined;
+  
+    const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
+  
+    if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
+  
+    return {
+      address: tokenAddress!,
+      symbol: symbolRaw as string,
+      name: nameRaw as string,
+      decimals: Number(decimalsRaw),
+      totalSupply: totalSupplyRaw as bigint,
+      balance: balanceStatus === 'success' ? (balance as bigint) : 0n,
+    };
+  }
+  
 // ---------------------------------------------
 // 🔁 Hook: useMappedTokenContract
 // Converts raw token to your global TokenContract
@@ -74,12 +70,11 @@ function useErc20TokenContract(
 
 export function useMappedTokenContract(
   tokenAddress?: Address,
-  accountAddress?: Address
 ): MappedTokenContract | undefined | null {
   const account = useAccount();
   const chainId = useChainId();
 
-  const token = useErc20TokenContract(tokenAddress, accountAddress ?? account.address);
+  const token = useErc20TokenContract(tokenAddress);
 
   if (!token) {
     // console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);
@@ -94,7 +89,6 @@ export function useMappedTokenContract(
     symbol: token.symbol,
     name: token.name,
     totalSupply: token.totalSupply,
-    img: `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`,
     chainId,
   };
 }
@@ -115,7 +109,7 @@ export function TokenFetchGuiExamples() {
       ? (accountAddressInput as Address)
       : account.address;
 
-  const tokenResult: TokenContract | undefined = useMappedTokenContract(submitted ? tokenAddress : undefined, accountAddress);
+  const tokenResult: TokenContract | undefined | null = useMappedTokenContract(submitted ? tokenAddress : undefined);
 
   useEffect(() => {
     if (submitted) {

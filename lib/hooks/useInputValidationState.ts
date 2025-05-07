@@ -114,11 +114,11 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
     }
 
     if (
-      inputState !== InputState.VALID_INPUT_PENDING ||
+      inputState !== InputState.VALIDATE_INPUT_PENDING ||
       validatedToken?.address !== resolvedToken.address
     ) {
       setValidatedToken(resolvedToken);
-      debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
+      debugSetInputState(InputState.VALIDATE_INPUT_PENDING, inputState, setInputState);
     }
   }, [debouncedAddress, resolvedToken, isResolved, isLoading, sellAddress, buyAddress, containerType]);
 

@@ -117,8 +117,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       decimals:decimals,
       amount:0n,
       balance:0n,
-      totalSupply:totalSupply,
-      img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
+      totalSupply:totalSupply
     }
   }
   // if (TOKEN_CONTRACT_ADDRESS)
@@ -144,8 +143,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       symbol:symbol,
       decimals:decimals,
       amount:0n,
-      totalSupply:undefined,
-      img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
+      totalSupply:undefined
     }
   }
 

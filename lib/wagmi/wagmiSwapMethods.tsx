@@ -114,7 +114,6 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): Toke
       totalSupply:totalSupply,
       amount:0n,
       balance:0n,
-      img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
   // if (TOKEN_CONTRACT_ADDRESS)
@@ -141,7 +140,6 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined):Tok
       totalSupply:undefined,
       amount:0n,
       balance:0n,
-      img:'/assets/miscellaneous/QuestionWhiteOnRed.png'
     }
   }
 
