@@ -1,21 +1,25 @@
 #!/bin/bash
 
 for dir in */; do
-  # Strip trailing slash
-  dir=${dir%/}
+  chainId="${dir%/}"
+  nativeInfoPath="./$chainId/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
+  wrappedInfoPath=$(find "./$chainId/contracts" -mindepth 2 -maxdepth 2 -name "info.json" ! -path "*/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/*" | head -n 1)
 
-  # Construct source and destination paths
-  src_path="./$dir/info"
-  dest_path="./$dir/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+  if [[ -f "$nativeInfoPath" && -f "$wrappedInfoPath" ]]; then
+    jq -s '.[0] * {
+      name: .[1].name,
+      symbol: .[1].symbol,
+      website: .[1].website,
+      description: .[1].description,
+      explorer: .[1].explorer,
+      status: .[1].status,
+      id: .[1].id,
+      tags: .[1].tags,
+      links: .[1].links
+    }' "$nativeInfoPath" "$wrappedInfoPath" > "${nativeInfoPath}.merged" && mv "${nativeInfoPath}.merged" "$nativeInfoPath"
 
-  # Find the avatar file (any extension)
-  avatar_file=$(find "$src_path" -maxdepth 1 -type f -name "avatar.*" 2>/dev/null)
-
-  if [[ -n "$avatar_file" ]]; then
-    mkdir -p "$dest_path"
-    cp "$avatar_file" "$dest_path"
-    echo "✅ Copied $(basename "$avatar_file") to $dest_path"
+    echo "✅ Merged info.json for chain $chainId"
   else
-    echo "⚠️  No avatar.* found in $src_path"
+    echo "⚠️  Skipped $chainId — missing required files"
   fi
 done

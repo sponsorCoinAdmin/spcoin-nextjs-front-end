@@ -1,0 +1,7 @@
+{
+  "chainId": 137,
+  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "name": "Ethereum",
+  "symbol": "MATIC",
+  "decimals": 18
+}
