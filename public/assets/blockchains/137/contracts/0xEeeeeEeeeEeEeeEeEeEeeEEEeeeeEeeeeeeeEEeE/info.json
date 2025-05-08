@@ -1,7 +1,7 @@
 {
   "chainId": 137,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "USDA",
+  "name": "POL (ex-MATIC)",
   "symbol": "POL",
   "decimals": 18,
   "website": "https://www.angle.money/",

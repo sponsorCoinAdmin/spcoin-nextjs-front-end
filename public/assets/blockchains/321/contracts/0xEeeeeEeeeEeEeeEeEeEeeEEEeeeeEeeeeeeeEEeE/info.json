@@ -1,7 +1,7 @@
 {
   "chainId": 321,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "KCC-Peg Tether USD",
+  "name": "KuCoin Community Chain",
   "symbol": "KCS",
   "decimals": 18,
   "website": "https://tether.to/en/",

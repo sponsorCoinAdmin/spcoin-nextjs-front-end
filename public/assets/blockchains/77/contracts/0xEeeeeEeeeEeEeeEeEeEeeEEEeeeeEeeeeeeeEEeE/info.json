@@ -1,7 +1,7 @@
 {
   "chainId": 77,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "User Pay",
+  "name": "POA",
   "symbol": "POA",
   "decimals": 18,
   "website": "",

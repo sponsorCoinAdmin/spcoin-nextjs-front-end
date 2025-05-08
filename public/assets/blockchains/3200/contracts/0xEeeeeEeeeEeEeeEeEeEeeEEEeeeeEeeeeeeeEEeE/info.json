@@ -1,7 +1,7 @@
 {
   "chainId": 3200,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Merlin's Seal ordi",
+  "name": "Merlin Mainnet",
   "symbol": "BTC",
   "decimals": 18,
   "website": "https://merlinchain.io/bridge",

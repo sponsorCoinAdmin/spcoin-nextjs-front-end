@@ -1,7 +1,7 @@
 {
   "chainId": 888,
   "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "name": "Wanchain LRC Crosschain Token",
+  "name": "Wanchain",
   "symbol": "WAN",
   "decimals": 18,
   "website": "",

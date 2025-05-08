@@ -1,22 +1,27 @@
 #!/bin/bash
 
-for dir in ./*/; do
-  target="$dir/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
-  backup="$dir/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json.bak"
+for dir in */; do
+  info_json="${dir}contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/info.json"
+  backup_json="${info_json}.bak"
 
-  if [[ -f "$target" && -f "$backup" ]]; then
-    # Extract "name" line from .bak
-    nameLine=$(grep '"name":' "$backup")
+  if [[ -f "$info_json" && -f "$backup_json" ]]; then
+    node -e "
+      const fs = require('fs');
+      const infoPath = '$info_json';
+      const backupPath = '$backup_json';
+      const info = JSON.parse(fs.readFileSync(infoPath, 'utf-8'));
+      const backup = JSON.parse(fs.readFileSync(backupPath, 'utf-8'));
 
-    if [[ -n "$nameLine" ]]; then
-      # Replace "name" line in target with the one from backup
-      tmpFile=$(mktemp)
-      sed "s/.*\"name\":.*/$nameLine/" "$target" > "$tmpFile" && mv "$tmpFile" "$target"
-      echo "🔁 Updated 'name' in: $target"
-    else
-      echo "⚠️  No 'name' line found in: $backup"
-    fi
+      if (backup.name) {
+        info.name = backup.name;
+        fs.writeFileSync(infoPath, JSON.stringify(info, null, 2));
+        console.log('✅ Replaced name in: ' + infoPath);
+      } else {
+        console.warn('⚠️ No name field in: ' + backupPath);
+      }
+    "
   else
-    echo "❌ Missing file in: $dir"
+    echo "❌ Missing file in $dir"
   fi
 done
+
