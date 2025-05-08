@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS, ERROR_CODES, ErrorMessage } from '@/lib/structure/types';
+import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure/types';
 import { stringify } from 'qs';
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 import { isAddress } from 'viem';
 import {
   useApiErrorMessage,
@@ -11,42 +11,37 @@ import {
   useSellAmount,
   useTradeData
 } from '@/lib/context/contextHooks';
-import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../network/utils';
+import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from 'wagmi';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const API_PROVIDER = '0X/';
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
 const apiPriceBase = '/price';
-
 const WRAPPED_ETHEREUM_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+
+// 🌐 Debug logger
+const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_PRICE_REQUEST=== 'true';
+const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED); // tsFlag defaults to true
 
 const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
   return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;
 };
 
-/**
- * fetcher: Builds a URL with query string parameters using qs.stringify
- * 
- * Example:
- *   const params = {
- *     chainId: 1,
- *     sellToken: '0x123...',
- *     buyToken: '0x456...',
- *     sellAmount: '1000000000000000000',
- *     slippageBps: 50
- *   };
- *   const query = stringify(params); // => "chainId=1&sellToken=...&..."
- *   const apiCall = `/price?${query}`;
- */
 const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
   const { sellAmount, buyAmount } = params;
 
-  if (!sellAmount && !buyAmount) return;
+  if (
+    (sellAmount !== undefined && sellAmount === '0') ||
+    (buyAmount !== undefined && buyAmount === '0')
+  ) {
+    debugLog.warn(`Blocked fetch with zero amount`, { sellAmount, buyAmount });
+    return;
+  }
 
   const cleanParams = Object.fromEntries(
     Object.entries(params).filter(
@@ -57,9 +52,13 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   const query = stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
 
-  console.log(`[📡 Fetching]: ${JSON.stringify(apiCall)}`);
+  debugLog.log(`📡 Fetching:`, apiCall);
 
   const response = await fetch(apiCall);
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+
   return response.json();
 };
 
@@ -95,6 +94,7 @@ const getPriceApiCall = (
     (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) ||
     (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n)
   ) {
+    debugLog.warn(`Skipping fetch due to 0 amount`, { tradeDirection, sellAmount, buyAmount });
     return undefined;
   }
 
@@ -133,7 +133,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
     });
 
     if (Object.keys(changesObj).length) {
-      console.log(`[why-did-you-update] ${name}`, changesObj);
+      debugLog.log(`[why-did-you-update] ${name}`, changesObj);
     }
 
     previousProps.current = props;
@@ -173,27 +173,27 @@ function usePriceAPI() {
     amount?: bigint
   ): boolean => {
     if (!isAddress(sellTokenAddress ?? '')) {
-      console.warn(`[🚫 shouldFetch] Invalid or missing sellTokenAddress:`, sellTokenAddress);
+      debugLog.warn(`Invalid or missing sellTokenAddress`, sellTokenAddress);
       return false;
     }
 
     if (!isAddress(buyTokenAddress ?? '')) {
-      console.warn(`[🚫 shouldFetch] Invalid or missing buyTokenAddress:`, buyTokenAddress);
+      debugLog.warn(`Invalid or missing buyTokenAddress`, buyTokenAddress);
       return false;
     }
 
     if (sellTokenAddress!.toLowerCase() === buyTokenAddress!.toLowerCase()) {
-      console.warn(`[🚫 shouldFetch] Tokens are the same — skipping fetch.`);
+      debugLog.warn(`Sell and buy tokens are the same`);
       return false;
     }
 
     if (!amount || amount === 0n) {
-      console.warn(`[🚫 shouldFetch] Skipping — amount is 0`);
+      debugLog.warn(`Amount is 0`);
       return false;
     }
 
     if (chainId === HARDHAT) {
-      console.warn(`[🚫 shouldFetch] Chain is HARDHAT — skipping fetch.`);
+      debugLog.warn(`Chain is HARDHAT`);
       return false;
     }
 
@@ -236,13 +236,13 @@ function usePriceAPI() {
 
   const swr = useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
-      console.log(`[✅ API SUCCESS] Direction: ${tradeData.tradeDirection}`, data);
+      debugLog.log(`✅ API SUCCESS`, data);
 
-      if (data.code) {
+      if (data && typeof data === 'object' && 'code' in data) {
         setApiErrorMessage({
           status: STATUS.ERROR_API_PRICE,
           source: 'ApiFetcher',
-          errCode: data.code,
+          errCode: (data as any).code,
           msg: getApiErrorTransactionData(
             exchangeContext,
             sellTokenAddress,
@@ -259,13 +259,16 @@ function usePriceAPI() {
         }
       }
     },
-    onError: (error) =>
+    onError: (error: any) => {
+      debugLog.error(`❌ API ERROR`, error);
+
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
         source: 'ApiFetcher',
-        errCode: error.code,
-        msg: error,
-      }),
+        errCode: error?.code ?? 'UNKNOWN_ERROR',
+        msg: error?.message ?? String(error),
+      });
+    },
   });
 
   return {

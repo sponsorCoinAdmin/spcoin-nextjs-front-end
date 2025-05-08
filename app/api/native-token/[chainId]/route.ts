@@ -1,12 +1,28 @@
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+export const runtime = 'nodejs';
+
+const DEBUG_ENABLED = process.env.DEBUG_LOG_API_SPCOIN_TOKEN === 'true';
+const debugLog = createDebugLogger('api/native-token', DEBUG_ENABLED);
+
+function validateTokenInfo(data: any): boolean {
+  return (
+    typeof data?.chainId === 'number' &&
+    typeof data?.address === 'string' &&
+    typeof data?.name === 'string' &&
+    typeof data?.symbol === 'string'
+  );
+}
 
 export async function GET(
   request: Request,
-  { params }: { params: { chainId: string } }
+  { params }: { params: Promise<{ chainId: string }> }
 ) {
-  const chainId = params.chainId;
+  const { chainId } = await params;
+
   const infoPath = path.join(
     process.cwd(),
     'public',
@@ -18,17 +34,41 @@ export async function GET(
     'info.json'
   );
 
-  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-  console.log(`route.nativeToken:GET ${infoPath}`)
+  debugLog.log(`🟢 GET called for chainId: ${chainId}`);
+  debugLog.log(`📁 Looking for file at: ${infoPath}`);
+
   try {
-    if (!fs.existsSync(infoPath)) {
+    const exists = fs.existsSync(infoPath);
+    debugLog.log(`🔍 File exists: ${exists}`);
+
+    if (!exists) {
+      debugLog.warn(`⚠️ File not found for chainId ${chainId}`);
       return NextResponse.json({ error: 'Chain info not found' }, { status: 404 });
     }
 
     const rawData = fs.readFileSync(infoPath, 'utf-8');
-    const data = JSON.parse(rawData);
-    return NextResponse.json(data);
+    debugLog.log(`📄 Raw file contents (truncated): ${rawData.slice(0, 300)}...`);
+
+    let data;
+    try {
+      data = JSON.parse(rawData);
+    } catch (err) {
+      debugLog.error('❌ Failed to parse JSON', err);
+      return NextResponse.json({ error: 'Malformed token info file' }, { status: 422 });
+    }
+
+    if (!validateTokenInfo(data)) {
+      debugLog.warn('⚠️ Invalid token info structure', data);
+      return NextResponse.json({ error: 'Invalid token info structure' }, { status: 400 });
+    }
+
+    debugLog.log(`✅ JSON validated and parsed successfully`);
+
+    const response = NextResponse.json(data);
+    response.headers.set('Cache-Control', 'public, max-age=60');
+    return response;
   } catch (e) {
-    return NextResponse.json({ error: 'Failed to read token info' }, { status: 500 });
+    debugLog.error('❌ Unexpected error reading token info', e);
+    return NextResponse.json({ error: 'Server error reading token info' }, { status: 500 });
   }
 }

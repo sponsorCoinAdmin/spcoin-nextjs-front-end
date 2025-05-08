@@ -13,7 +13,7 @@ import {
   ERROR_CODES,
   TRADE_DIRECTION
 } from '@/lib/structure/types';
-import { usePriceAPI } from '@/lib/0X/fetcher';
+import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI.ts';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton, { useBuySellSwap } from '@/components/Buttons/BuySellSwapArrowButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
