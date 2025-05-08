@@ -6,6 +6,7 @@ import { isAddress, Address } from 'viem';
 import { useState, useEffect } from 'react';
 import { TokenContract as MappedTokenContract, TokenContract } from '@/lib/structure/types';
 import { getNativeWrapAddress, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
+import { useNativeToken } from './useNativeToken';
 
 // ---------------------------------------------
 // 🔁 Local TokenContract used in hook
@@ -14,6 +15,7 @@ type RawTokenContract = {
   address: Address;
   name?: string;
   symbol?: string;
+  amount?:bigint;
   decimals?: number;
   totalSupply?: bigint;
   balance: bigint;
@@ -58,6 +60,7 @@ function useErc20TokenContract(
       address: tokenAddress!,
       symbol: symbolRaw as string,
       name: nameRaw as string,
+      amount: 0n,
       decimals: Number(decimalsRaw),
       totalSupply: totalSupplyRaw as bigint,
       balance: balanceStatus === 'success' ? (balance as bigint) : 0n,
@@ -73,24 +76,17 @@ export function useMappedTokenContract(
   tokenAddress?: Address,
 ): MappedTokenContract | undefined | null {
   const chainId = useChainId();
-  const validAddress = tokenAddress === NATIVE_TOKEN_ADDRESS ? getNativeWrapAddress(chainId) :  tokenAddress
+  const isNativeToken:boolean = tokenAddress === NATIVE_TOKEN_ADDRESS
+  const validAddress = isNativeToken ? getNativeWrapAddress(chainId) :  tokenAddress
   const token = useErc20TokenContract(validAddress);
+  const nativeToken = useNativeToken()
 
   if (!token) {
     // console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);
     return null; // ⚠️ Return `null` to indicate known failure instead of staying undefined forever
   }
 
-  return {
-    address: token.address,
-    amount: 0n,
-    balance: token.balance,
-    decimals: token.decimals,
-    symbol: token.symbol,
-    name: token.name,
-    totalSupply: token.totalSupply,
-    chainId,
-  };
+  return isNativeToken ? nativeToken : token as TokenContract;
 }
 
 // ---------------------------------------------
