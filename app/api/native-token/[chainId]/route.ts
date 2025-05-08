@@ -18,6 +18,7 @@ export async function GET(
     'info.json'
   );
 
+  console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
   console.log(`route.nativeToken:GET ${infoPath}`)
   try {
     if (!fs.existsSync(infoPath)) {

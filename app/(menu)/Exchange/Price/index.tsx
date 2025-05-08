@@ -166,8 +166,6 @@ useEffect(() => {
   tradeData.tradeDirection
 ]);
 
-
-
   return (
     <div>
       <ErrorDialog showDialog={showError} />

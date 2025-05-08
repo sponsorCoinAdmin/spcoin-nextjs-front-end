@@ -12,6 +12,7 @@ import {
 } from '@/lib/context/contextHooks';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from './wagmiERC20hooks';
+import { useChainId } from 'wagmi';
 
 function debugSetInputState(
   state: InputState,
@@ -52,14 +53,13 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
   const [validatedToken, setValidatedToken] = useState<TokenContract | undefined>(undefined);
 
   const [containerType] = useContainerType();
-  const [sellTokenContract] = useSellTokenContract();
-  const [buyTokenContract] = useBuyTokenContract();
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
 
-  const chainId = sellTokenContract?.chainId || buyTokenContract?.chainId || 1;
+  // const chainId = sellTokenContract?.chainId || buyTokenContract?.chainId || 1;
   const seenBrokenImagesRef = useRef<Set<string>>(new Set());
   const previousAddressRef = useRef<string>('');
+  const chainId = useChainId();
 
   useEffect(() => {
     if (

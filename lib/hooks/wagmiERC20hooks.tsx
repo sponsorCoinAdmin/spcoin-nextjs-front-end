@@ -9,26 +9,12 @@ import { getNativeWrapAddress, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
 import { useNativeToken } from './useNativeToken';
 
 // ---------------------------------------------
-// 🔁 Local TokenContract used in hook
-// ---------------------------------------------
-type RawTokenContract = {
-  address: Address;
-  name?: string;
-  symbol?: string;
-  amount?:bigint;
-  decimals?: number;
-  totalSupply?: bigint;
-  balance: bigint;
-};
-
-// ---------------------------------------------
 // 🧩 Hook: useErc20TokenContract (Wagmi v2.5+)
 // ---------------------------------------------
-function useErc20TokenContract(
-  tokenAddress?: Address
-  ): RawTokenContract | undefined {
+function useErc20TokenContract( tokenAddress?: Address ): TokenContract | undefined {
     const { address: account } = useAccount();
     const enabled = !!tokenAddress && isAddress(tokenAddress);
+    const chainId = useChainId()
   
     const { data: metaData, status: metaStatus } = useReadContracts({
       contracts: [
@@ -57,6 +43,7 @@ function useErc20TokenContract(
     if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
   
     return {
+      chainId,
       address: tokenAddress!,
       symbol: symbolRaw as string,
       name: nameRaw as string,
