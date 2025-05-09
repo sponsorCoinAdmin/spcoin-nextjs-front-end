@@ -136,21 +136,22 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
     if (!isValid) return;
-
-    setInputValue(value);
-
+  
+    // ✅ Remove leading zeros unless followed by a dot (e.g., 00123 -> 123, 0.123 stays)
+    const normalized = value.replace(/^0+(?!\.)/, '') || '0';
+    setInputValue(normalized);
+  
     if (!tokenContract) return;
-
+  
     const decimals = tokenContract.decimals || 18;
-
-    const formatted = parseValidFormattedAmount(value, decimals);
+    const formatted = parseValidFormattedAmount(normalized, decimals);
     const isCompleteNumber = /^\d+(\.\d+)?$/.test(formatted);
-
+  
     if (!isCompleteNumber) return;
-
+  
     try {
       const bigIntValue = parseUnits(formatted, decimals);
-
+  
       if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         setSellAmount(bigIntValue);
@@ -162,7 +163,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       // Parsing failed
     }
   };
-
+  
   const buySellText = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
     ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
         ? `You Pay ± ${slippageBps / 100}%`

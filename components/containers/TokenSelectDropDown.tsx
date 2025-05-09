@@ -15,6 +15,7 @@ import { useContainerType } from '@/lib/context/contextHooks';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 // Shared global set to track broken token logos
 const seenBrokenAvatars = new Set<string>();
@@ -98,7 +99,7 @@ function TokenSelectDropDown({
               className="h-9 w-9 mr-2 rounded-md cursor-pointer"
               alt={`${tokenContract.name} Token logoURL`}
               src={avatarSrc}
-              onClick={() => setDecimalAdjustedContract(tokenContract)}
+              onClick={() => alert(stringifyBigInt(tokenContract))}
               onError={handleMissingLogoURL}
             />
             {tokenContract.symbol}
