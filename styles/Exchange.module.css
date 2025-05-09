@@ -50,7 +50,7 @@
 .assetBalance {
   position: absolute;
   justify-content: flex-start;
-  top: 70px;
+  top: 74px;
   right: 20px;
   min-width: 50px;
   height: 10px;
@@ -563,20 +563,14 @@
 .tokenSelectContainer {
   margin-top: 5px;
   margin-bottom: 5px;
-  /* transform: translate(0px, -10px); */
-
-  font-weight: bold;
-  background-color: #1f2639 !important;
-  /* border: 2px solid #21273a; */
-  min-height: 106px !important;
-  border-radius: 15px;
 }
 
 .priceInput {
+  padding-top: 10px;
   width: 100%;
   text-indent: 10px;
   height: 106px !important;
-  /* margin-bottom: 5px; */
+  /* margin-top: 5px; */
   background-color: #1f2639 !important;
   color: #94a3b8 !important;
   border-width: 0px !important;

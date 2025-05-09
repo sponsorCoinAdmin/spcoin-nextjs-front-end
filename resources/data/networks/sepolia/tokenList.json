@@ -37,7 +37,7 @@
     {
         "chainId": 8453,
         "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
-        "name": "Sepolia Token Not Found",
+        "name": "Token Not Found on Sepolia Network",
         "symbol": "MISSING",
         "decimals": 18
     },

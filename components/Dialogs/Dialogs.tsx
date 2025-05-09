@@ -20,6 +20,7 @@ type DialogSelector =
  * Logs a warning if the dialog is not found.
  */
 const openDialog = (dialogType: DialogSelector) => {
+  alert('Opening Slippage Dialog')
   const dialog = document.querySelector(dialogType) as HTMLDialogElement | null
   if (dialog) {
     dialog.showModal()

@@ -192,7 +192,12 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         onBlur={() => {
           try {
             const parsed = parseFloat(inputValue);
-            setInputValue(isNaN(parsed) ? '0' : parsed.toString());
+            if (isNaN(parsed)) {
+              setInputValue('0');
+            } else {
+              const normalized = parsed.toString(); // removes trailing . and zeros
+              setInputValue(normalized);
+            }
           } catch {
             setInputValue('0');
           }
