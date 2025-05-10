@@ -105,28 +105,25 @@ const getNativeWrapAddress = (chainId: number) : Address | undefined => {
 };
 
 const getLogoURL = (
-  exchangeContext: ExchangeContext | undefined, // ✅ Use your real ExchangeContext
+  chainId: number | undefined,
   tokenAddress: Address,
   dataFeedType: FEED_TYPE
 ): string => {
-
   if (!tokenAddress) return defaultMissingImage;
 
-  const chainId = exchangeContext?.tradeData?.chainId ?? 1; // ✅ fallback safely
-  const isNativeToken = exchangeContext ? isActiveAccountAddress(exchangeContext, tokenAddress) : false; // ✅ avoid crash
+  const resolvedChainId = chainId ?? 1;
 
   switch (dataFeedType) {
     case FEED_TYPE.AGENT_ACCOUNTS:
     case FEED_TYPE.RECIPIENT_WALLETS:
       return `assets/accounts/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
-      return isNativeToken || isNativeTokenAddress(tokenAddress) || isBurnTokenAddress(tokenAddress)
-        ? getBlockChainLogoURL(chainId)
-        : `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`;
+      return `assets/blockchains/${resolvedChainId}/contracts/${tokenAddress}/avatar.png`;
     default:
       return defaultMissingImage;
   }
 };
+
 
 const useIsActiveAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();

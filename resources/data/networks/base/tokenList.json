@@ -50,13 +50,6 @@
     },
     {
         "chainId": 8453,
-        "address": "0xCa72827a3D211CfD8F6b00Ac98824872b72CAb49",
-        "name": "Gemini USD",
-        "symbol": "cgUSD",
-        "decimals": 2
-    },
-    {
-        "chainId": 8453,
         "address": "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",
         "name": "Dai Stablecoin",
         "symbol": "DAI",
@@ -120,7 +113,7 @@
     },
     {
         "chainId": 8453,
-        "address": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+        "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
         "name": "AAVE",
         "symbol": "AAVE",
         "decimals": 18

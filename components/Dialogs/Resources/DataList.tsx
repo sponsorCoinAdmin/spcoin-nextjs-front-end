@@ -4,7 +4,7 @@ import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { useChainId } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 import {
   BASE,
   ETHEREUM,
@@ -24,10 +24,7 @@ import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import { Address } from 'viem';
-
-interface DataListProps {
-  onTokenSelect: (address: string) => void;
-}
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const getDataFeedList = (chainId: number) => {
   switch (chainId) {
@@ -40,9 +37,15 @@ const getDataFeedList = (chainId: number) => {
   }
 };
 
+interface DataListProps {
+  onTokenSelect: (address: string) => void;
+}
+
 const DataList = ({ onTokenSelect }: DataListProps) => {
   const [isClient, setIsClient] = useState(false);
   const chainId = useChainId();
+  const { status } = useAccount();
+  console.log('Current chainId:', chainId, 'Connection status:', status);
 
   useEffect(() => {
     setIsClient(true);
@@ -52,10 +55,10 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
     return isClient ? getDataFeedList(chainId) : [];
   }, [chainId, isClient]);
 
-  const avatars = useMemo(() => {
+  const LogoURL_List = useMemo(() => {
     return dataFeedList.map((listElement) => ({
       ...listElement,
-      avatar: getLogoURL(undefined, listElement.address as Address, FEED_TYPE.TOKEN_LIST),
+      logoURL: getLogoURL(chainId, listElement.address as Address, FEED_TYPE.TOKEN_LIST),
     }));
   }, [dataFeedList]);
 
@@ -65,10 +68,10 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
 
   return (
     <>
-      {avatars.length === 0 ? (
+      {LogoURL_List.length === 0 ? (
         <p>No data available.</p>
       ) : (
-        avatars.map((listElement, i) => {
+        LogoURL_List.map((listElement, i) => {
           const token = dataFeedList[i] as TokenContract;
           return (
             <div
@@ -82,8 +85,8 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
               <div className="cursor-pointer flex flex-row justify-between">
                 <img
                   className={styles.elementLogo}
-                  src={listElement.avatar || defaultMissingImage}
-                  alt={`${listElement.name} Token Avatar`}
+                  src={listElement.logoURL || defaultMissingImage}
+                  alt={`${listElement.name} Token logoURL`}
                 />
                 <div>
                   <div className={styles.elementName}>{listElement.name}</div>
@@ -95,6 +98,11 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
                 onClick={(e) => {
                   e.stopPropagation();
                   alert(`${listElement.name} Address: ${listElement.address}`);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault(); // Prevents the default browser context menu
+                  e.stopPropagation();
+                  alert(`${listElement.name} Record: ${stringifyBigInt(listElement.logoURL)}`);
                 }}
               >
                 <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
