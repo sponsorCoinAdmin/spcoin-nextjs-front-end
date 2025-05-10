@@ -16,7 +16,7 @@ import {
 } from '@/lib/structure/types';
 import {
   defaultMissingImage,
-  getAvatarAddress,
+  getLogoURL,
 } from '@/lib/network/utils';
 import baseTokenList from '@/resources/data/networks/base/tokenList.json';
 import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
@@ -55,7 +55,7 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
   const avatars = useMemo(() => {
     return dataFeedList.map((listElement) => ({
       ...listElement,
-      avatar: getAvatarAddress(undefined, listElement.address as Address, FEED_TYPE.TOKEN_LIST),
+      avatar: getLogoURL(undefined, listElement.address as Address, FEED_TYPE.TOKEN_LIST),
     }));
   }, [dataFeedList]);
 

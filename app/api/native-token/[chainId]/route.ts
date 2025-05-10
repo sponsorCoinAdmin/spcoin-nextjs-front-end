@@ -5,8 +5,10 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 export const runtime = 'nodejs';
 
+// 🌐 Debug logging flag and logger controlled by .env.local
+const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.DEBUG_LOG_API_SPCOIN_TOKEN === 'true';
-const debugLog = createDebugLogger('api/native-token', DEBUG_ENABLED);
+const debugLog = createDebugLogger('api/native-token', DEBUG_ENABLED, LOG_TIME);
 
 function validateTokenInfo(data: any): boolean {
   return (

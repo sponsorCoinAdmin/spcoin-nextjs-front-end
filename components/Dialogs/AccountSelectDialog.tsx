@@ -11,7 +11,7 @@ import { getWagmiBalanceOfRec } from "@/lib/wagmi/getWagmiBalanceOfRec";
 import DataList from "./Resources/DataList";
 import { FEED_TYPE, WalletAccount } from "@/lib/structure/types";
 import { hideElement, showElement } from "@/lib/spCoin/guiControl";
-import { getAvatarAddress } from "@/lib/network/utils";
+import { getLogoURL } from "@/lib/network/utils";
 
 import searchMagGlassGrey_png from "@/public/assets/miscellaneous/SearchMagGlassGrey.png";
 import customUnknownImage_png from "@/public/assets/miscellaneous/QuestionWhiteOnRed.png";
@@ -96,7 +96,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
       return;
     }
 
-    const avatar = getAvatarAddress(exchangeContext, selectedWallet.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
+    const avatar = getLogoURL(exchangeContext, selectedWallet.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
     selectedWallet.avatar = avatar;
 
     setWalletElement(selectedWallet); // ✅ Update wallet state

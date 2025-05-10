@@ -23,9 +23,10 @@ const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER
 const apiPriceBase = '/price';
 const WRAPPED_ETHEREUM_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
-// 🌐 Debug logger
+// 🌐 Debug logging flag and logger controlled by .env.local
+const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_PRICE_REQUEST=== 'true';
-const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED); // tsFlag defaults to true
+const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME); // tsFlag defaults to true
 
 const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
   return isActiveAccount ? WRAPPED_ETHEREUM_ADDRESS : address;

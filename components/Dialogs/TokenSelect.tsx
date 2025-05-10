@@ -14,7 +14,13 @@ import {
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import DataList from './Resources/DataList';
 import { useChainId } from 'wagmi';
+import { debuglog } from 'util';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+// 🌐 Debug logging flag and logger controlled by .env.local
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECTOR === 'true';
+const debugLog = createDebugLogger('TokenSelector', DEBUG_ENABLED, LOG_TIME);
 const INPUT_PLACEHOLDER = 'Enter token address';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
@@ -42,7 +48,9 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
   const getAvatarSrc = (address: string, inputState: InputState, chainId: number) => {
     if (!address) return defaultMissingImage;
     if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
-    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+    debugLog.log(`getAvatarSrc.logoURL=${logoURL}`)
+    return logoURL;
   };
 
   const getInputStatusImage = () => {

@@ -19,7 +19,7 @@ import {
 import {
   BURN_ADDRESS,
   defaultMissingImage,
-  getAvatarAddress
+  getLogoURL
 } from "@/lib/network/utils";
 import { loadAccounts } from "@/lib/spCoin/loadAccounts";
 
@@ -76,7 +76,7 @@ const useWalletLists = () => {
 // 🔹 Function to get data feed list
 const getDataFeedList = (feedType: FEED_TYPE, chainId: number, walletLists: { recipientAccountList: WalletAccount[], agentAccountList: WalletAccount[] }) => {
   switch (feedType) {
-    case FEED_TYPE.AGENT_WALLETS:
+    case FEED_TYPE.AGENT_ACCOUNTS:
       return walletLists.agentAccountList;
     case FEED_TYPE.RECIPIENT_WALLETS:
       return walletLists.recipientAccountList;
@@ -143,7 +143,7 @@ const DataList = ({ dataFeedType }: Props) => {
   const avatars = useMemo(() => {
     return dataFeedList.map((listElement) => ({
       ...listElement,
-      avatar: getAvatarAddress(exchangeContext, listElement.address as Address, dataFeedType),
+      avatar: getLogoURL(exchangeContext, listElement.address as Address, dataFeedType),
     }));
   }, [dataFeedList, exchangeContext, dataFeedType]);
 

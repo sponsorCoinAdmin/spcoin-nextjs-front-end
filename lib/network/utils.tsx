@@ -20,7 +20,12 @@ import {
   WalletAccount
 } from '@/lib/structure/types';
 import { isAddress } from 'viem'
-import { useMemo } from 'react';
+import { createDebugLogger } from '../utils/debugLogger';
+
+// 🌐 Debug logging flag and logger controlled by .env.local
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_UTILS === 'true';
+const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png'
@@ -99,7 +104,7 @@ const getNativeWrapAddress = (chainId: number) : Address | undefined => {
   return WETH_ADDRESS || BURN_ADDRESS;
 };
 
-const getAvatarAddress = (
+const getLogoURL = (
   exchangeContext: ExchangeContext | undefined, // ✅ Use your real ExchangeContext
   tokenAddress: Address,
   dataFeedType: FEED_TYPE
@@ -111,7 +116,7 @@ const getAvatarAddress = (
   const isNativeToken = exchangeContext ? isActiveAccountAddress(exchangeContext, tokenAddress) : false; // ✅ avoid crash
 
   switch (dataFeedType) {
-    case FEED_TYPE.AGENT_WALLETS:
+    case FEED_TYPE.AGENT_ACCOUNTS:
     case FEED_TYPE.RECIPIENT_WALLETS:
       return `assets/accounts/${tokenAddress}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
@@ -177,7 +182,9 @@ const getTokenLogoURL = (tokenContract?: TokenContract): string => {
   const { chainId, address } = tokenContract
 
   if (isAddress(address)) {
-    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+    debugLog.log(`getTokenLogoURL.logoURL=${logoURL}`)
+    return logoURL
   }
 
   return badTokenAddressImage
@@ -185,7 +192,9 @@ const getTokenLogoURL = (tokenContract?: TokenContract): string => {
 
 export const getAddressLogoURL = (address: string, chainId: number): string => {
   if (isAddress(address)) {
-    return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+    debugLog.log(`getAddressLogoURL.logoURL=${logoURL}`)
+    return logoURL
   }
 
   return badTokenAddressImage
@@ -230,7 +239,7 @@ export {
   badTokenAddressImage,
   defaultMissingImage,
   delay,
-  getAvatarAddress,
+  getLogoURL,
   getBlockChainLogoURL,
   getBlockChainName,
   getNativeWrapAddress,

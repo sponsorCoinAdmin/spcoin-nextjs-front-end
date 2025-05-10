@@ -4,10 +4,14 @@ import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors';
 import { getDefaultConfig } from 'connectkit';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// 🌐 Debug logging flag and logger
-const NEXT_PUBLIC_DEBUG_LOG_WAGMI_CONFIG = process.env.NEXT_PUBLIC_DEBUG_LOG_WAGMI_CONFIG === 'true';
+// 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME:boolean = false;
-const debugLog = createDebugLogger('wagmiConfig', NEXT_PUBLIC_DEBUG_LOG_WAGMI_CONFIG, LOG_TIME);
+const NEXT_PUBLIC_DEBUG_LOG_WAGMI_CONFIG = process.env.NEXT_PUBLIC_DEBUG_LOG_WAGMI_CONFIG === 'true';
+const debugLog = createDebugLogger(
+  'wagmiConfig',
+   NEXT_PUBLIC_DEBUG_LOG_WAGMI_CONFIG,
+  LOG_TIME
+);
 
 // 🌐 Blockchain provider selection (INFURA or ALCHEMY)
 const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
