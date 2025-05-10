@@ -1,19 +1,19 @@
 [
-{
-    "chainId": 137,
-    "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    "name": "Polygon",
-    "symbol": "MATIC",
-    "decimals": 18
-},
-{
-    "chainId": 137,
-    "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
-    "name": "Sponsor Coin",
-    "symbol": "SpCoin",
-    "decimals": 18
-},
-{
+    {
+        "chainId": 137,
+        "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+        "name": "Polygon",
+        "symbol": "MATIC",
+        "decimals": 18
+    },
+    {
+        "chainId": 137,
+        "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
+        "name": "Sponsor Coin",
+        "symbol": "SpCoin",
+        "decimals": 18
+    },
+    {
         "chainId": 137,
         "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
         "name": "USD Coin",
@@ -93,14 +93,14 @@
     {
         "chainId": 147,
         "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
-        "name": "Wrapped Bitcoin Exchange",
-        "symbol": "WBTC.e",
+        "name": "USD Coin (PoS)",
+        "symbol": "USDC.e",
         "decimals": 8
     },
     {
         "symbol": "MATIC",
         "address": "0x0000000000000000000000000000000000001010",
-        "name": "Matic Token",
+        "name": "Polygon Token",
         "chainId": 137,
         "decimals": 18,
         "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png"

@@ -25,6 +25,12 @@ import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import { Address } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+// 🌐 Debug logging flag and logger controlled by .env.local
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
+const debugLog = createDebugLogger('DataList', DEBUG_ENABLED, LOG_TIME);
 
 const getDataFeedList = (chainId: number) => {
   switch (chainId) {
@@ -45,7 +51,8 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
   const [isClient, setIsClient] = useState(false);
   const chainId = useChainId();
   const { status } = useAccount();
-  console.log('Current chainId:', chainId, 'Connection status:', status);
+  if (status === 'disconnected')
+    debugLog.warn('Current chainId:', chainId, 'Connection status:', status);
 
   useEffect(() => {
     setIsClient(true);
@@ -78,7 +85,7 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
               key={listElement.address}
               className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
               onClick={() => {
-                console.log(`[DataList] Token selected: ${token.address}`);
+                debugLog.log(`[DataList] Token selected: ${token.address}`);
                 onTokenSelect(token.address); // ✅ Only pass the address now
               }}
             >
