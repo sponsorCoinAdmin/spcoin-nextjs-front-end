@@ -1,30 +1,7 @@
-/// START DROPDOWN STUFF
+// File: guiControl.tsx
 
-import { useExchangeContext } from '@/lib/context/contextHooks'
+import { useExchangeContext } from '@/lib/context/contextHooks';
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
-
-const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY, exchangeContext: any) => {
-  switch (spCoinDisplay) {
-    case SP_COIN_DISPLAY.SELECT_BUTTON:
-      showElement("AddSponsorshipButton_ID");
-      hideElement("RecipientSelect_ID");
-      hideElement("SponsorRateConfig_ID");
-      exchangeContext.spCoinPanels = spCoinDisplay;
-      break;
-    case SP_COIN_DISPLAY.RECIPIENT_CONTAINER:
-      showElement("RecipientSelect_ID");
-      hideElement("AddSponsorshipButton_ID");
-      hideElement("SponsorRateConfig_ID");
-      exchangeContext.spCoinPanels = spCoinDisplay;
-      break;
-    case SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG:
-      showElement("SponsorRateConfig_ID");
-      showElement("RecipientSelect_ID");
-      hideElement("AddSponsorshipButton_ID");
-      exchangeContext.spCoinPanels = spCoinDisplay;
-      break;
-  }
-};
 
 const hideElement = (element: string) => {
   const el = document.getElementById(element);
@@ -40,15 +17,6 @@ const showElement = (element: string) => {
   }
 };
 
-const toggleSponsorRateConfig = (element: any, exchangeContext: any) => {
-  const el = document.getElementById(element);
-  if (el != null) {
-    el.style.display === "block"
-      ? displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER, exchangeContext)
-      : displaySpCoinContainers(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG, exchangeContext);
-  }
-};
-
 const toggleElement = (element: any) => {
   const el = document.getElementById(element);
   if (el != null) {
@@ -56,23 +24,77 @@ const toggleElement = (element: any) => {
   }
 };
 
-// ✅ Inside a component, get exchangeContext and pass it into functions
+// ✅ Top-level exportable version for use outside hooks
+export const displaySpCoinContainers = (
+  spCoinDisplay: SP_COIN_DISPLAY,
+  setExchangeContext: (cb: (prev: any) => any) => void
+) => {
+  switch (spCoinDisplay) {
+    case SP_COIN_DISPLAY.OFF:
+      hideElement("RecipientSelect_ID");
+      hideElement("AddSponsorshipButton_ID");
+      hideElement("SponsorRateConfig_ID");
+    break;
+    case SP_COIN_DISPLAY.SELECT_BUTTON:
+      showElement("AddSponsorshipButton_ID");
+      hideElement("RecipientSelect_ID");
+      hideElement("SponsorRateConfig_ID");
+      break;
+    case SP_COIN_DISPLAY.RECIPIENT_CONTAINER:
+      showElement("RecipientSelect_ID");
+      hideElement("AddSponsorshipButton_ID");
+      hideElement("SponsorRateConfig_ID");
+    break;
+    case SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG:
+      showElement("SponsorRateConfig_ID");
+      showElement("RecipientSelect_ID");
+      hideElement("AddSponsorshipButton_ID");
+    break;
+  }
+
+  setExchangeContext((prev: any) => ({
+    ...prev,
+    spCoinPanels: spCoinDisplay,
+  }));
+};
+
 export const useSpCoinHandlers = () => {
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+
+  const toggleSponsorRateConfig = (element: any) => {
+    const el = document.getElementById(element);
+    const nextDisplay = el?.style.display === "block"
+      ? SP_COIN_DISPLAY.RECIPIENT_CONTAINER
+      : SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG;
+    displaySpCoinContainers(nextDisplay, setExchangeContext);
+  };
 
   return {
-    displaySpCoinContainers: (spCoinDisplay: SP_COIN_DISPLAY) => displaySpCoinContainers(spCoinDisplay, exchangeContext),
-    toggleSponsorRateConfig: (element: any) => toggleSponsorRateConfig(element, exchangeContext),
+    displaySpCoinContainers: (d: SP_COIN_DISPLAY) =>
+      displaySpCoinContainers(d, setExchangeContext),
+    toggleSponsorRateConfig,
     hideElement,
     showElement,
     toggleElement,
   };
 };
 
+export const spCoinStringDisplay = (spCoinDisplay: SP_COIN_DISPLAY):string => {
+  switch (spCoinDisplay) {
+    case SP_COIN_DISPLAY.SELECT_BUTTON:
+      return (`spCoinDisplay(${SP_COIN_DISPLAY.SELECT_BUTTON})) = SELECT_BUTTON`)
+    case SP_COIN_DISPLAY.RECIPIENT_CONTAINER:
+            return (`spCoinDisplay(${SP_COIN_DISPLAY.RECIPIENT_CONTAINER}) = RECIPIENT_CONTAINER)`)
+    case SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG:
+            return (`spCoinDisplay(${SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG}) = SPONSOR_RATE_CONFIG)`)
+    default:
+      return (`spCoinDisplay(${SP_COIN_DISPLAY.SELECT_BUTTON}) = undefined`)
+  }
+}
+
+
 export {
-  displaySpCoinContainers,
   hideElement,
   showElement,
   toggleElement,
-  toggleSponsorRateConfig
-}
+};

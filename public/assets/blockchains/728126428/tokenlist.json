@@ -1,6 +1,6 @@
 {
     "name": "Trust Wallet: Tron Chain List",
-    "logoURI": "https://trustwallet.com/assets/images/favicon.png",
+    "logoURL": "https://trustwallet.com/assets/images/favicon.png",
     "timestamp": "2023-01-23T12:30:11.183301",
     "tokens": [
         {
@@ -10,7 +10,7 @@
             "name": "BUSD Token",
             "symbol": "BUSD",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/tron/assets/TMz2SWatiAtZVVcH2ebpsbVtYwUPT9EdjH/avatar.png",
+            "logoURL": "https://assets-cdn.trustwallet.com/blockchains/tron/assets/TMz2SWatiAtZVVcH2ebpsbVtYwUPT9EdjH/avatar.png",
             "pairs": []
         }
     ],

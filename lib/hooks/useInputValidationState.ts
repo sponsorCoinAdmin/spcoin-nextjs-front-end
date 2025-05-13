@@ -56,10 +56,15 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
 
-  // const chainId = sellTokenContract?.chainId || buyTokenContract?.chainId || 1;
   const seenBrokenImagesRef = useRef<Set<string>>(new Set());
   const previousAddressRef = useRef<string>('');
   const chainId = useChainId();
+
+  const resolvedToken = useMappedTokenContract(
+    isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined
+  );
+  const isResolved = !!resolvedToken;
+  const isLoading = isAddress(debouncedAddress) && resolvedToken === undefined;
 
   useEffect(() => {
     if (
@@ -70,13 +75,7 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
       debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
     }
     previousAddressRef.current = debouncedAddress;
-  }, [debouncedAddress, inputState]);
-
-  const resolvedToken = useMappedTokenContract(
-    isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined
-  );
-  const isResolved = !!resolvedToken;
-  const isLoading = isAddress(debouncedAddress) && resolvedToken === undefined;
+  }, [debouncedAddress]);
 
   useEffect(() => {
     if (isEmptyInput(debouncedAddress)) {
@@ -120,7 +119,7 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
       setValidatedToken(resolvedToken);
       debugSetInputState(InputState.VALIDATE_INPUT_PENDING, inputState, setInputState);
     }
-  }, [debouncedAddress, resolvedToken, isResolved, isLoading, sellAddress, buyAddress, containerType]);
+  }, [debouncedAddress, isResolved, isLoading, sellAddress, buyAddress, containerType]);
 
   const reportMissingAvatar = useCallback(() => {
     if (!seenBrokenImagesRef.current.has(debouncedAddress)) {

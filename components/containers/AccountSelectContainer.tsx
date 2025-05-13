@@ -1,65 +1,61 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import styles from "@/styles/Exchange.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import classNames from "classnames";
 
-import styles from "@/styles/Exchange.module.css";
 import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
 import SponsorRateConfig from "./SponsorRateConfig";
-import { useExchangeContext } from '@/lib/context/contextHooks' // ✅ Use context
+import { useExchangeContext } from '@/lib/context/contextHooks';
 import RecipientSelect from "./AccountSelectDropDown";
-import { displaySpCoinContainers, toggleSponsorRateConfig } from "@/lib/spCoin/guiControl";
+import { useSpCoinHandlers } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 
 const AccountSelectContainer: React.FC = () => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Access global context
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { displaySpCoinContainers, toggleSponsorRateConfig } = useSpCoinHandlers();
 
-  const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
-    exchangeContext.recipientAccount
-  );
   const [siteExists, setSiteExists] = useState<boolean>(false);
+  const recipientAccount = exchangeContext.recipientAccount;
 
-  useEffect(() => {
-    // ✅ Update global ExchangeContext when recipientAccount changes
-    if (exchangeContext.recipientAccount !== recipientAccount) {
+  const setRecipientAccount = useCallback((wallet: WalletAccount | undefined) => {
+    if (wallet?.address !== exchangeContext.recipientAccount?.address) {
       setExchangeContext(prev => ({
         ...prev,
-        recipientAccount,
+        recipientAccount: wallet,
       }));
     }
-  }, [recipientAccount, exchangeContext, setExchangeContext]);
+  }, [exchangeContext.recipientAccount?.address, setExchangeContext]);
 
   const closeRecipientSelect = useCallback(() => {
-    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON, exchangeContext);
+    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON);
     setRecipientAccount(undefined);
-  }, []);
+  }, [displaySpCoinContainers, setRecipientAccount]);
 
-  // ✅ Default URL if recipient website does not exist
-  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
+  const baseURL = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
-  let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
+  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
-  // ✅ Check if recipient's website exists
   useEffect(() => {
     const website = recipientAccount?.website;
     if (website && website !== "N/A" && website.trim() !== "") {
       fetch(website, { method: "HEAD", mode: "no-cors" })
         .then(() => {
-          setSiteExists(true); // Assume the site exists since we can't check response.ok
-          console.log(`Site ${website} is reachable.`);
+          setSiteExists(true);
+          console.log(`✅ Site ${website} is reachable.`);
         })
         .catch((error) => {
-          console.error(`ERROR: WalletContainer.Fetching ${website}:`, error);
+          console.error(`❌ ERROR fetching ${website}:`, error);
           setSiteExists(false);
         });
     } else {
       setSiteExists(false);
     }
-  }, [recipientAccount?.website]); // Keep dependency array unchanged
+  }, [recipientAccount?.website]);
 
   return (
     <>
@@ -85,7 +81,7 @@ const AccountSelectContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
-            onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID", exchangeContext)}
+            onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID")}
           />
         </div>
         <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>

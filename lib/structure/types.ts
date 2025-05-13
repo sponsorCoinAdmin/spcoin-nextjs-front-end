@@ -102,8 +102,9 @@ enum FEED_TYPE {
 
 // SP Coin Display
 enum SP_COIN_DISPLAY {
-  RECIPIENT_CONTAINER,
+  OFF,
   SELECT_BUTTON,
+  RECIPIENT_CONTAINER,
   SPONSOR_RATE_CONFIG
 }
 
@@ -210,7 +211,7 @@ type TokenContract = {
   balance: bigint;
   chainId?: number;
   decimals?: number;
-  logoURI?: string;
+  logoURL?: string;
   name?: string;
   symbol?: string;
   totalSupply: any;
