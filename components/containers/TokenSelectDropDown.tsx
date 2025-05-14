@@ -21,7 +21,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 // 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DOKEN_SELECT_DROP_DOWN === 'true';
-const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 // Shared global set to track broken token logos
 const seenBrokenAvatars = new Set<string>();

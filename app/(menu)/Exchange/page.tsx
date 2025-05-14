@@ -1,3 +1,4 @@
+// File: app/(menu)/Exchange/layout.tsx
 'use client'
 
 import SpCoinWrapper from "@/components/Wrappers/SpCoinWrapper";

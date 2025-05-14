@@ -1,13 +1,12 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
-import { useApiProvider, useBuyBalance, useSellBalance, useTradeData } from '@/lib/context/contextHooks';
+import { useApiProvider, useBuyBalance, useSellBalance, useTradeData, useSpCoinPanels } from '@/lib/context/contextHooks';
 
 import {
   useBuyAmount,
-  useExchangeContext,
   useSellAmount,
   useSlippageBps,
   useTradeDirection,
@@ -28,12 +27,12 @@ import {
   API_TRADING_PROVIDER,
   SP_COIN_DISPLAY,
 } from "@/lib/structure/types";
+
 import styles from "@/styles/Exchange.module.css";
-import { stringifyBigInt } from "@sponsorcoin/spcoin-lib/utils";
 import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
-  const { exchangeContext } = useExchangeContext();
+  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
   const tradeData = useTradeData();
   const apiProvider = useApiProvider();
   const account = useAccount();
@@ -46,6 +45,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyBalance, setBuyBalance] = useBuyBalance();
+
 
   const [localContainerType, setLocalContainerType] = useState<CONTAINER_TYPE>(containerType);
 
@@ -66,17 +66,29 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   const tokenContainerRef = useRef<HTMLDivElement>(null);
 
-//   useEffect(() => {
-//   alert(`🟢 spCoinPanels: ${exchangeContext.spCoinPanels}`);
+  useEffect(() => {
+  if (!tokenContract) return;
 
-//   const tokenBox = tokenContainerRef.current;
-//   if (!tokenBox) return;
+  const isSp = isSpCoin(tokenContract);
+  const isBuy = localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
+  const isSell = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER;
 
-//   const isAddPanelVisible = exchangeContext.spCoinPanels === SP_COIN_DISPLAY.RECIPIENT_CONTAINER;
+  const desiredPanel = isSp
+    ? isSell
+      ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON
+      : SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON
+    : SP_COIN_DISPLAY.OFF;
 
-//   tokenBox.style.borderBottomLeftRadius = isAddPanelVisible ? '0px' : '12px';
-//   tokenBox.style.borderBottomRightRadius = isAddPanelVisible ? '0px' : '12px';
-// }, [exchangeContext.spCoinPanels]);
+  console.debug(`🧩 [spCoinPanelSync] container: ${isBuy ? 'BUY' : 'SELL'}`);
+  console.debug(`   isSpCoin: ${isSp}`);
+  console.debug(`   current: ${spCoinPanels}`);
+  console.debug(`   desired: ${desiredPanel}`);
+
+  if (spCoinPanels !== desiredPanel) {
+    setSpCoinPanels(desiredPanel);
+  }
+}, [tokenContract, localContainerType]);
+
 
   useEffect(() => {
     if (!tokenContract) return;
@@ -118,7 +130,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   }, [debouncedSellAmount, debouncedBuyAmount]);
 
   useEffect(() => {
-    if (!account.chainId || account.chainId === exchangeContext?.tradeData?.chainId) return;
+    if (!account.chainId || account.chainId === tradeData?.chainId) return;
     tradeData.chainId = account.chainId;
     setSellAmount(0n);
     setSellTokenContract(undefined);
@@ -136,16 +148,15 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     }
   }, [wagmiBalance, localContainerType]);
 
-  // 🔁 Handle dynamic border radius animation
   useEffect(() => {
     const tokenBox = tokenContainerRef.current;
     if (!tokenBox) return;
 
-    const isAddPanelVisible = exchangeContext.spCoinPanels === SP_COIN_DISPLAY.RECIPIENT_CONTAINER;
+    const isAddPanelVisible = spCoinPanels === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER;
 
     tokenBox.style.borderBottomLeftRadius = isAddPanelVisible ? '0px' : '12px';
     tokenBox.style.borderBottomRightRadius = isAddPanelVisible ? '0px' : '12px';
-  }, [exchangeContext.spCoinPanels]);
+  }, [spCoinPanels]);
 
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
@@ -230,13 +241,13 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       />
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
-      {isSpCoin(tokenContract) &&
-        (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
+      {isSpCoin(tokenContract) && (
+        <>
           <ManageSponsorsButton tokenContract={tokenContract} />
-        ) : (
           <AddSponsorButton />
-        ))}
-          <span>{spCoinStringDisplay(exchangeContext.spCoinPanels)}</span>
+        </>
+      )}
+      <span>{spCoinStringDisplay(spCoinPanels)}</span>
     </div>
   );
 };

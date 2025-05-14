@@ -1,3 +1,5 @@
+// File: lib\context\contextHooks.tsx
+
 "use client";
 
 import { useContext, useMemo } from "react";
@@ -9,9 +11,11 @@ import {
   STATUS,
   TradeData,
   API_TRADING_PROVIDER,
-  CONTAINER_TYPE
+  CONTAINER_TYPE,
+  SP_COIN_DISPLAY,
 } from "@/lib/structure/types";
 import { tokenContractsEqual } from '@/lib/network/utils';
+import { isSpCoin } from "../spCoin/coreUtils";
 
 export const useExchangeContext = () => {
   const context = useContext(ExchangeContextState);
@@ -113,12 +117,16 @@ export const useSellTokenContract = (): [TokenContract | undefined, (contract: T
         if (tokenContractsEqual(prev.tradeData.sellTokenContract, contract)) {
           return prev;
         }
+
         return {
           ...prev,
           tradeData: {
             ...prev.tradeData,
             sellTokenContract: contract,
           },
+          spCoinPanels: contract && isSpCoin(contract)
+            ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON
+            : SP_COIN_DISPLAY.OFF,
         };
       }),
   ];
@@ -133,12 +141,16 @@ export const useBuyTokenContract = (): [TokenContract | undefined, (contract: To
         if (tokenContractsEqual(prev.tradeData.buyTokenContract, contract)) {
           return prev;
         }
+
         return {
           ...prev,
           tradeData: {
             ...prev.tradeData,
             buyTokenContract: contract,
           },
+          spCoinPanels: contract && isSpCoin(contract)
+            ? SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON
+            : SP_COIN_DISPLAY.OFF,
         };
       }),
   ];
@@ -223,6 +235,31 @@ export const useContainerType = (initialType?: CONTAINER_TYPE): [CONTAINER_TYPE,
   ];
 };
 
+import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
+
+export const useSpCoinPanels = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+
+  const debugSetSpCoinPanels = (display: SP_COIN_DISPLAY) => {
+    const old = exchangeContext.spCoinPanels;
+    const newVal = display;
+
+    if (old !== newVal) {
+      console.debug(`🔁 spCoinPanels change: ${spCoinStringDisplay(old)} → ${spCoinStringDisplay(newVal)}`);
+    } else {
+      console.debug(`⚠️ spCoinPanels unchanged: ${spCoinStringDisplay(old)}`);
+    }
+
+    setExchangeContext((prev) => ({
+      ...prev,
+      spCoinPanels: newVal,
+    }));
+  };
+
+  return [exchangeContext.spCoinPanels, debugSetSpCoinPanels];
+};
+
+
 export const useTradeData = (): TradeData => {
   const { exchangeContext } = useExchangeContext();
   return useMemo(() => exchangeContext.tradeData, [exchangeContext.tradeData]);
@@ -256,6 +293,7 @@ export const AllHooksExample = () => {
   const [containerType, setContainerType] = useContainerType();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
+  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
   const apiProvider = useApiProvider();
   const tradeData = useTradeData();
   const sellTokenAddress = useSellTokenAddress();
@@ -271,6 +309,7 @@ export const AllHooksExample = () => {
       <div>Slippage Bps: {slippageBps}</div>
       <div>Transaction Type: {tradeDirection}</div>
       <div>Container Type: {containerType}</div>
+      <div>spCoinPanels: {spCoinPanels}</div>
       <div>API Provider: {apiProvider}</div>
       <div>Sell Token: {sellTokenContract?.symbol ?? "None"}</div>
       <div>Buy Token: {buyTokenContract?.symbol ?? "None"}</div>

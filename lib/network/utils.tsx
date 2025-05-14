@@ -25,7 +25,7 @@ import { createDebugLogger } from '../utils/debugLogger';
 // 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_UTILS === 'true';
-const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('utils', DEBUG_ENABLED, LOG_TIME);
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png'

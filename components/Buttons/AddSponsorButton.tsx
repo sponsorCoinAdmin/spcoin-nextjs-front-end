@@ -1,30 +1,29 @@
-// File: AddSponsorshipButton.tsx
+// File: components\Buttons\AddSponsorButton.tsx
+
 'use client';
 
 import styles from "@/styles/Exchange.module.css";
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
-import { useSpCoinHandlers } from "@/lib/spCoin/guiControl"; // ✅ correct usage
-import AccountSelectContainer from "../containers/AccountSelectContainer"; // ✅ still needed
+import { useSpCoinPanels } from "@/lib/context/contextHooks";
 
 const AddSponsorshipButton = () => {
-  const { displaySpCoinContainers } = useSpCoinHandlers(); // ✅ use handler from hook
+  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
+
+  // ✅ Only show when SELECT_RECIPIENT_BUTTON is active
+  if (spCoinPanels !== SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON) return null;
+
+  const openRecipientPanel = () => {
+    setSpCoinPanels(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER);
+  };
 
   return (
-    <>
-      <div
-        id="AddSponsorshipButton_ID"
-        className={styles.addSponsorshipDiv}
-        onClick={() =>
-          displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER)
-        }
-      >
-        <div className={styles.centerTop}>Add</div>
-        <div className={styles.centerBottom}>Sponsorship</div>
-      </div>
-      <div id="RecipientSelect_ID" className={styles.hidden}>
-        <AccountSelectContainer />
-      </div>
-    </>
+    <div
+      className={styles.addSponsorshipDiv}
+      onClick={openRecipientPanel}
+    >
+      <div className={styles.centerTop}>Add</div>
+      <div className={styles.centerBottom}>Sponsorship</div>
+    </div>
   );
 };
 

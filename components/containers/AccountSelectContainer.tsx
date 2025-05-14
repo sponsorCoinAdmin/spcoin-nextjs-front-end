@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Exchange.module.css";
@@ -10,16 +10,15 @@ import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
 import SponsorRateConfig from "./SponsorRateConfig";
-import { useExchangeContext } from '@/lib/context/contextHooks';
+import { useExchangeContext, useSpCoinPanels } from '@/lib/context/contextHooks';
 import RecipientSelect from "./AccountSelectDropDown";
-import { useSpCoinHandlers } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 
 const AccountSelectContainer: React.FC = () => {
+  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { displaySpCoinContainers, toggleSponsorRateConfig } = useSpCoinHandlers();
-
   const [siteExists, setSiteExists] = useState<boolean>(false);
+
   const recipientAccount = exchangeContext.recipientAccount;
 
   const setRecipientAccount = useCallback((wallet: WalletAccount | undefined) => {
@@ -32,13 +31,17 @@ const AccountSelectContainer: React.FC = () => {
   }, [exchangeContext.recipientAccount?.address, setExchangeContext]);
 
   const closeRecipientSelect = useCallback(() => {
-    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON);
-    setRecipientAccount(undefined);
-  }, [displaySpCoinContainers, setRecipientAccount]);
+    setExchangeContext(prev => ({
+      ...prev,
+      recipientAccount: undefined,
+    }));
+    setSpCoinPanels(SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON);
+  }, [setExchangeContext, setSpCoinPanels]);
 
   const baseURL = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
-  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
+  const encodedUrl = encodeURIComponent(`${baseURL}?${sitekey}`);
+  const defaultStaticFileUrl = `/Recipient?url=${encodedUrl}`;
 
   useEffect(() => {
     const website = recipientAccount?.website;
@@ -57,13 +60,22 @@ const AccountSelectContainer: React.FC = () => {
     }
   }, [recipientAccount?.website]);
 
+  if (spCoinPanels !== SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) return null;
+
+  const togglePanel = () => {
+    const next = Number(spCoinPanels) === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
+      ? SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER
+      : SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
+    setSpCoinPanels(next);
+  };
+
   return (
     <>
-      <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.AccountSelectContainer)}>
+      <div className={classNames(styles.inputs, styles.AccountSelectContainer)}>
         <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
         {recipientAccount && siteExists ? (
-          <Link href={`Recipient?url=${recipientAccount.website}`} className={styles.recipientName}>
+          <Link href={`/Recipient?url=${encodeURIComponent(recipientAccount.website ?? "")}`} className={styles.recipientName}>
             {recipientAccount.name}
           </Link>
         ) : (
@@ -81,10 +93,10 @@ const AccountSelectContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
-            onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID")}
+            onClick={togglePanel}
           />
         </div>
-        <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>
+        <div className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>
           X
         </div>
       </div>
