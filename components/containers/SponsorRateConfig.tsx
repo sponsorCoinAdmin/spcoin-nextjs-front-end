@@ -46,7 +46,7 @@ const SponsorRateConfig = ({}:Props) => {
           50%
         </div>
       </div>
-      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER, exchangeContext)}>
+      <div id="closeSponsorConfig" className={styles["closeSponsorConfig"]} onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER, exchangeContext)}>
         X
       </div>
       <div className={styles["assetSelect"] + " " + styles["recipientRatio"]}>

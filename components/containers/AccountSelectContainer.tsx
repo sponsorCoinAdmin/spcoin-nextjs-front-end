@@ -34,7 +34,7 @@ const AccountSelectContainer: React.FC = () => {
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const closeRecipientSelect = useCallback(() => {
-    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_BUTTON, exchangeContext);
+    displaySpCoinContainers(SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON, exchangeContext);
     setRecipientAccount(undefined);
   }, []);
 

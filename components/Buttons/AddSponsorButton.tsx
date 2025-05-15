@@ -18,7 +18,7 @@ const AddSponsorshipButton = () => {
       <div
         id="AddSponsorshipButton_ID"
         className={styles.addSponsorshipDiv}
-        onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.RECIPIENT_CONTAINER, exchangeContext)}
+        onClick={() => displaySpCoinContainers(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER, exchangeContext)}
       >
         <div className={styles.centerTop}>Add</div>
         <div className={styles.centerBottom}>Sponsorship</div>

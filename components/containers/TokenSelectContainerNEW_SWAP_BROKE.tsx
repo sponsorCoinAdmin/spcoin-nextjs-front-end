@@ -8,7 +8,7 @@ import {
   useBuyBalance,
   useSellBalance,
   useTradeData,
-  useSpCoinDisplay,
+  useSpCoinDisplay
 } from '@/lib/context/contextHooks';
 import {
   useBuyAmount,
