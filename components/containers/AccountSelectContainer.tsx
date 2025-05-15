@@ -40,8 +40,7 @@ const AccountSelectContainer: React.FC = () => {
 
   const baseURL = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
-  const encodedUrl = encodeURIComponent(`${baseURL}?${sitekey}`);
-  const defaultStaticFileUrl = `/Recipient?url=${encodedUrl}`;
+  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
   useEffect(() => {
     const website = recipientAccount?.website;
@@ -60,14 +59,14 @@ const AccountSelectContainer: React.FC = () => {
     }
   }, [recipientAccount?.website]);
 
-  if (spCoinPanels !== SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) return null;
-
-  const togglePanel = () => {
-    const next = Number(spCoinPanels) === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
+  const toggleRateConfig = () => {
+    const next = spCoinPanels === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
       ? SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER
       : SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
     setSpCoinPanels(next);
   };
+
+  if (spCoinPanels !== SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) return null;
 
   return (
     <>
@@ -75,7 +74,7 @@ const AccountSelectContainer: React.FC = () => {
         <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
         {recipientAccount && siteExists ? (
-          <Link href={`/Recipient?url=${encodeURIComponent(recipientAccount.website ?? "")}`} className={styles.recipientName}>
+          <Link href={`Recipient?url=${recipientAccount.website}`} className={styles.recipientName}>
             {recipientAccount.name}
           </Link>
         ) : (
@@ -93,7 +92,7 @@ const AccountSelectContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
-            onClick={togglePanel}
+            onClick={toggleRateConfig}
           />
         </div>
         <div className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>

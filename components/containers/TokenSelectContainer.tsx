@@ -3,8 +3,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
-import { useApiProvider, useBuyBalance, useSellBalance, useTradeData, useSpCoinPanels } from '@/lib/context/contextHooks';
-
+import {
+  useApiProvider,
+  useBuyBalance,
+  useSellBalance,
+  useTradeData,
+  useSpCoinPanels,
+} from '@/lib/context/contextHooks';
 import {
   useBuyAmount,
   useSellAmount,
@@ -46,8 +51,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyBalance, setBuyBalance] = useBuyBalance();
 
-
-  const [localContainerType, setLocalContainerType] = useState<CONTAINER_TYPE>(containerType);
+  const [localContainerType] = useState<CONTAINER_TYPE>(containerType);
 
   const tokenContract =
     localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
@@ -67,28 +71,18 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const tokenContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-  if (!tokenContract) return;
+    if (!tokenContract) return;
 
-  const isSp = isSpCoin(tokenContract);
-  const isBuy = localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
-  const isSell = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER;
+    const isSp = isSpCoin(tokenContract);
+    const isSell = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER;
+    const desired = isSp
+      ? (isSell ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON : SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON)
+      : SP_COIN_DISPLAY.OFF;
 
-  const desiredPanel = isSp
-    ? isSell
-      ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON
-      : SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON
-    : SP_COIN_DISPLAY.OFF;
-
-  console.debug(`🧩 [spCoinPanelSync] container: ${isBuy ? 'BUY' : 'SELL'}`);
-  console.debug(`   isSpCoin: ${isSp}`);
-  console.debug(`   current: ${spCoinPanels}`);
-  console.debug(`   desired: ${desiredPanel}`);
-
-  if (spCoinPanels !== desiredPanel) {
-    setSpCoinPanels(desiredPanel);
-  }
-}, [tokenContract, localContainerType]);
-
+    if (spCoinPanels !== desired) {
+      setSpCoinPanels(desired);
+    }
+  }, [tokenContract]);
 
   useEffect(() => {
     if (!tokenContract) return;
