@@ -12,7 +12,8 @@ import {
   STATUS,
   ERROR_CODES,
   TRADE_DIRECTION,
-  SP_COIN_DISPLAY
+  SP_COIN_DISPLAY,
+  TokenContract
 } from '@/lib/structure/types';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI.ts';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -27,11 +28,17 @@ import {
   useExchangeContext,
   useSellAmount,
   useSellTokenContract,
-  useSpCoinPanels
+  useSpCoinDisplay
 } from "@/lib/context/contextHooks";
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { mutate } from 'swr';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
+
+const SWAP_STATUS = {
+  OFF: 'OFF',
+  BUY_TO_SELL: 'BUY_TO_SELL',
+  SELL_TO_BUY: 'SELL_TO_BUY'
+};
 
 export default function PriceView() {
   const { chainId } = useAccount();
@@ -47,8 +54,11 @@ export default function PriceView() {
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [containerSwapStatus, setContainerSwapStatus] = useBuySellSwap();
-  const [pendingSwapAmount, setPendingSwapAmount] = useState<bigint | null>(null);
-  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+
+  const [swapStatus, setSwapStatus] = useState(SWAP_STATUS.OFF);
+  const tmpSellTokenRef = useRef<TokenContract | undefined>(undefined);
+  const tmpBuyTokenRef = useRef<TokenContract | undefined>(undefined);
 
   const apiErrorCallBack = useCallback((apiErrorObj: ErrorMessage) => {
     setErrorMessage({
@@ -95,17 +105,12 @@ export default function PriceView() {
     setBuyTokenContract(undefined);
   }, [chainId, tradeData]);
 
-  const pendingBuyTokenRef = useRef<typeof buyTokenContract | null>(null);
-
   useEffect(() => {
     if (containerSwapStatus && tradeData) {
-      const oldSellAmount = tradeData.sellTokenContract?.amount || 0n;
-      const newSellToken = tradeData.buyTokenContract;
-      const newBuyToken = tradeData.sellTokenContract;
-
-      pendingBuyTokenRef.current = newBuyToken;
-      setPendingSwapAmount(oldSellAmount);
-      setSellTokenContract(newSellToken);
+      tmpSellTokenRef.current = tradeData.buyTokenContract;
+      tmpBuyTokenRef.current = tradeData.sellTokenContract;
+      setBuyTokenContract(undefined);
+      setSwapStatus(SWAP_STATUS.BUY_TO_SELL);
       setContainerSwapStatus(false);
 
       if (swrKey) {
@@ -116,16 +121,19 @@ export default function PriceView() {
   }, [containerSwapStatus, tradeData, swrKey]);
 
   useEffect(() => {
-    if (pendingSwapAmount !== null && sellTokenContract) {
-      setSellAmount(pendingSwapAmount);
-      setPendingSwapAmount(null);
-
-      if (pendingBuyTokenRef.current) {
-        setBuyTokenContract(pendingBuyTokenRef.current);
-        pendingBuyTokenRef.current = null;
-      }
+    if (swapStatus === SWAP_STATUS.BUY_TO_SELL && !buyTokenContract && tmpSellTokenRef.current) {
+      setBuyTokenContract(tmpSellTokenRef.current);
+      tmpSellTokenRef.current = undefined;
+      setSwapStatus(SWAP_STATUS.SELL_TO_BUY);
+      return;
     }
-  }, [sellTokenContract]);
+
+    if (swapStatus === SWAP_STATUS.SELL_TO_BUY && !sellTokenContract && tmpBuyTokenRef.current) {
+      setSellTokenContract(tmpBuyTokenRef.current);
+      tmpBuyTokenRef.current = undefined;
+      setSwapStatus(SWAP_STATUS.OFF);
+    }
+  }, [buyTokenContract, sellTokenContract, swapStatus]);
 
   const previousSellToken = useRef(tradeData.sellTokenContract);
   const previousBuyToken = useRef(tradeData.buyTokenContract);
@@ -147,22 +155,19 @@ export default function PriceView() {
   }, [tradeData.sellTokenContract, tradeData.buyTokenContract, tradeData.tradeDirection]);
 
   useEffect(() => {
-    const sellTokenChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
-    const buyTokenChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
+    const isSellSp = isSpCoin(sellTokenContract);
+    const isBuySp = isSpCoin(buyTokenContract);
 
-    if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
-      alert('[⚠️ PriceView] Resetting buy amount due to token change');
-      setBuyAmount(0n);
+    let nextPanel: SP_COIN_DISPLAY = SP_COIN_DISPLAY.OFF;
+
+    if (isSellSp) nextPanel = SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON;
+    else if (isBuySp) nextPanel = SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON;
+
+    if (spCoinDisplay !== nextPanel) {
+      console.debug(`🔁 spCoinDisplay change (centralized): ${spCoinDisplay} → ${nextPanel}`);
+      setSpCoinDisplay(nextPanel);
     }
-
-    if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
-      alert('[⚠️ PriceView] Resetting sell amount due to token change');
-      setSellAmount(0n);
-    }
-
-    previousSellToken.current = tradeData.sellTokenContract;
-    previousBuyToken.current = tradeData.buyTokenContract;
-  }, [tradeData.sellTokenContract, tradeData.buyTokenContract, tradeData.tradeDirection]);
+  }, [sellTokenContract, buyTokenContract, spCoinDisplay, setSpCoinDisplay]);
 
   return (
     <div>

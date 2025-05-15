@@ -29,19 +29,19 @@ const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY, exchangeContext
       showElement("AddSponsorshipButton_ID");
       hideElement("RecipientSelect_ID");
       hideElement("SponsorRateConfig_ID");
-      exchangeContext.spCoinPanels = spCoinDisplay;
+      exchangeContext.spCoinDisplay = spCoinDisplay;
       break;
     case SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER:
       showElement("RecipientSelect_ID");
       hideElement("AddSponsorshipButton_ID");
       hideElement("SponsorRateConfig_ID");
-      exchangeContext.spCoinPanels = spCoinDisplay;
+      exchangeContext.spCoinDisplay = spCoinDisplay;
       break;
     case SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG:
       showElement("SponsorRateConfig_ID");
       showElement("RecipientSelect_ID");
       hideElement("AddSponsorshipButton_ID");
-      exchangeContext.spCoinPanels = spCoinDisplay;
+      exchangeContext.spCoinDisplay = spCoinDisplay;
       break;
   }
 };

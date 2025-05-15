@@ -7,7 +7,7 @@ import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { useSpCoinPanels } from '@/lib/context/contextHooks';
+import { useSpCoinDisplay } from '@/lib/context/contextHooks';
 
 function setRateRatios(newRate: string) {
   const numRate = Number(newRate);
@@ -26,13 +26,13 @@ function setRecipientRatio(newRate: number) {
 }
 
 const SponsorRateConfig = () => {
-  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
   // ✅ Only render if the current panel is active
-  if (spCoinPanels !== SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG) return null;
+  if (spCoinDisplay !== SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG) return null;
 
   const closeConfigPanel = () => {
-    setSpCoinPanels(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER);
+    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER);
   };
 
   return (

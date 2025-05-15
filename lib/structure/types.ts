@@ -193,7 +193,7 @@ type ExchangeContext = {
   agentAccount?: WalletAccount;
   network: NetworkElement;
   recipientAccount?: WalletAccount;
-  spCoinPanels: SP_COIN_DISPLAY;
+  spCoinDisplay: SP_COIN_DISPLAY;
   test: { dumpContextButton: boolean };
   tradeData: TradeData;
 };

@@ -4,7 +4,7 @@ import styles from '@/styles/Exchange.module.css';
 import { TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
 import ManageSponsorships from '../Dialogs/ManageSponsorships';
 import { useState } from 'react';
-import { useSpCoinPanels } from '@/lib/context/contextHooks';
+import { useSpCoinDisplay } from '@/lib/context/contextHooks';
 
 type Props = {
   tokenContract: TokenContract | undefined;
@@ -12,10 +12,10 @@ type Props = {
 
 const ManageSponsorsButton = ({ tokenContract }: Props) => {
   const [showDialog, setShowDialog] = useState<boolean>(false);
-  const [spCoinPanels] = useSpCoinPanels();
+  const [spCoinDisplay] = useSpCoinDisplay();
 
   // ✅ Only show if MANAGE_RECIPIENT_BUTTON is active
-  if (spCoinPanels !== SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON) return null;
+  if (spCoinDisplay !== SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON) return null;
 
   const openDialog = () => {
     setShowDialog(true);

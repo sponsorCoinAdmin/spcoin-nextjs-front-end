@@ -8,7 +8,7 @@ import {
   useBuyBalance,
   useSellBalance,
   useTradeData,
-  useSpCoinPanels,
+  useSpCoinDisplay,
 } from '@/lib/context/contextHooks';
 import {
   useBuyAmount,
@@ -37,7 +37,7 @@ import styles from "@/styles/Exchange.module.css";
 import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
-  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
   const tradeData = useTradeData();
   const apiProvider = useApiProvider();
   const account = useAccount();
@@ -79,8 +79,8 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       ? (isSell ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON : SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON)
       : SP_COIN_DISPLAY.OFF;
 
-    if (spCoinPanels !== desired) {
-      setSpCoinPanels(desired);
+    if (spCoinDisplay !== desired) {
+      setSpCoinDisplay(desired);
     }
   }, [tokenContract]);
 
@@ -146,11 +146,11 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     const tokenBox = tokenContainerRef.current;
     if (!tokenBox) return;
 
-    const isAddPanelVisible = spCoinPanels === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER;
+    const isAddPanelVisible = spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER;
 
     tokenBox.style.borderBottomLeftRadius = isAddPanelVisible ? '0px' : '12px';
     tokenBox.style.borderBottomRightRadius = isAddPanelVisible ? '0px' : '12px';
-  }, [spCoinPanels]);
+  }, [spCoinDisplay]);
 
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
@@ -241,7 +241,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
           <AddSponsorButton />
         </>
       )}
-      <span>{spCoinStringDisplay(spCoinPanels)}</span>
+      <span>{spCoinStringDisplay(spCoinDisplay)}</span>
     </div>
   );
 };

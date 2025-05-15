@@ -10,12 +10,12 @@ import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
 import SponsorRateConfig from "./SponsorRateConfig";
-import { useExchangeContext, useSpCoinPanels } from '@/lib/context/contextHooks';
+import { useExchangeContext, useSpCoinDisplay } from '@/lib/context/contextHooks';
 import RecipientSelect from "./AccountSelectDropDown";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 
 const AccountSelectContainer: React.FC = () => {
-  const [spCoinPanels, setSpCoinPanels] = useSpCoinPanels();
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
@@ -35,8 +35,8 @@ const AccountSelectContainer: React.FC = () => {
       ...prev,
       recipientAccount: undefined,
     }));
-    setSpCoinPanels(SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON);
-  }, [setExchangeContext, setSpCoinPanels]);
+    setSpCoinDisplay(SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON);
+  }, [setExchangeContext, setSpCoinDisplay]);
 
   const baseURL = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
@@ -60,13 +60,13 @@ const AccountSelectContainer: React.FC = () => {
   }, [recipientAccount?.website]);
 
   const toggleRateConfig = () => {
-    const next = spCoinPanels === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
+    const next = spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
       ? SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER
       : SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
-    setSpCoinPanels(next);
+    setSpCoinDisplay(next);
   };
 
-  if (spCoinPanels !== SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) return null;
+  if (spCoinDisplay !== SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) return null;
 
   return (
     <>
