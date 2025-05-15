@@ -2,16 +2,17 @@ import { useEffect } from "react";
 import styles from "@/styles/Exchange.module.css";
 import { SP_COIN_DISPLAY, TokenContract } from "@/lib/structure/types";
 import { displaySpCoinContainers } from "@/lib/spCoin/guiControl";
-import { useExchangeContext } from '@/lib/context/contextHooks'
+import { useExchangeContext, useSpCoinDisplay } from '@/lib/context/contextHooks'
 import AccountSelectContainer from "../containers/AccountSelectContainer";
 
 const AddSponsorshipButton = () => {
   const { exchangeContext } = useExchangeContext();
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
   useEffect(() => {
     // Call function when component mounts
-    displaySpCoinContainers(exchangeContext.spCoinDisplay, exchangeContext);
-  }, [exchangeContext]); // Ensure dependency array includes exchangeContext
+    displaySpCoinContainers(spCoinDisplay, exchangeContext);
+  }, [spCoinDisplay]); // Ensure dependency array includes exchangeContext
 
   return (
     <>

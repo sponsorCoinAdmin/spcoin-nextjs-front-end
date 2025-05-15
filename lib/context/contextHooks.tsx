@@ -239,6 +239,7 @@ import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
 export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+  
 
   const debugSetSpCoinDisplay = (display: SP_COIN_DISPLAY) => {
     const old = exchangeContext.spCoinDisplay;

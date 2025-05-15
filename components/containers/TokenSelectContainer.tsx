@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
-import { useApiProvider, useBuyBalance, useSellBalance, useTradeData } from '@/lib/context/contextHooks';
+import { useApiProvider, useBuyBalance, useSellBalance, useSpCoinDisplay, useTradeData } from '@/lib/context/contextHooks';
 
 // Context & Hooks
 import {
@@ -33,6 +33,7 @@ import {
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
 import { stringifyBigInt } from "@sponsorcoin/spcoin-lib/utils";
+import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
@@ -48,8 +49,8 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyBalance, setBuyBalance] = useBuyBalance();
-
   const [localContainerType, setLocalContainerType] = useState<CONTAINER_TYPE>(containerType);
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
   const tokenContract =
     localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
@@ -220,6 +221,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         ) : (
           <AddSponsorButton />
         ))}
+        <span>{spCoinStringDisplay(spCoinDisplay)}</span>
     </div>
   );
 };

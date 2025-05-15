@@ -3,6 +3,7 @@ import { TokenContract } from '@/lib/structure/types';
 import { openDialog } from '../Dialogs/Dialogs';
 import ManageSponsorships from '../Dialogs/ManageSponsorships';
 import { useState } from 'react';
+import { useSpCoinDisplay } from '@/lib/context/contextHooks';
 
 type Props = {
   tokenContract: TokenContract|undefined,
@@ -10,6 +11,9 @@ type Props = {
 
 const ManageSponsorsButton = ({ tokenContract}:Props) => {
   const [showDialog, setShowDialog ] = useState<boolean>(false)
+    const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+  
+  
   const openDialog2 = () => {
       setShowDialog(true)
       openDialog("#manageSponsorshipsDialog")
