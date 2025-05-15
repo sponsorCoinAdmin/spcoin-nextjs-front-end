@@ -32,7 +32,7 @@ const getInitialContext = (chain:any | number): ExchangeContext => {
     recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
     agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
     tradeData: defaultInitialTradeData,
-    spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
+    spCoinDisplay: SP_COIN_DISPLAY.SELECT_BUTTON,
     test: { dumpContextButton: false },
     apiTradingProvider: API_TRADING_PROVIDER.API_0X,
     containerType: undefined

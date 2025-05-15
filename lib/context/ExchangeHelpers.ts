@@ -61,7 +61,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       sellTokenContract: undefined,
       buyTokenContract: undefined,
     },
-    spCoinPanels: SP_COIN_DISPLAY.SELECT_BUTTON,
+    spCoinDisplay: SP_COIN_DISPLAY.SELECT_BUTTON,
     test: { dumpContextButton: false },
   };
 };
@@ -76,7 +76,7 @@ export const sanitizeExchangeContext = (
       apiTradingProvider: raw?.apiTradingProvider ?? defaultContext.apiTradingProvider,
       activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
       network: raw?.network ?? defaultContext.network,
-      spCoinPanels: raw?.spCoinPanels ?? defaultContext.spCoinPanels,
+      spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
       test: raw?.test ?? defaultContext.test,
       recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
       agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,

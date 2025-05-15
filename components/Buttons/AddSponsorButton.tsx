@@ -10,7 +10,7 @@ const AddSponsorshipButton = () => {
 
   useEffect(() => {
     // Call function when component mounts
-    displaySpCoinContainers(exchangeContext.spCoinPanels, exchangeContext);
+    displaySpCoinContainers(exchangeContext.spCoinDisplay, exchangeContext);
   }, [exchangeContext]); // Ensure dependency array includes exchangeContext
 
   return (
