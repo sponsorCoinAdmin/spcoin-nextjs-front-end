@@ -200,7 +200,7 @@ type ExchangeContext = {
 
 type NetworkElement = {
   readonly chainId: number;
-  readonly img: string;
+  readonly logoURL: string;
   readonly name: string;
   readonly symbol: string;
   readonly url: string;
@@ -212,7 +212,7 @@ type TokenContract = {
   balance: bigint;
   chainId?: number;
   decimals?: number;
-  logoURI?: string;
+  logoURL?: string;
   name?: string;
   symbol?: string;
   totalSupply: any;
