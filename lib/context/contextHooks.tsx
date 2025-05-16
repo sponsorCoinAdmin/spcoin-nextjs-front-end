@@ -239,21 +239,19 @@ import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
 export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  
-
   const debugSetSpCoinDisplay = (display: SP_COIN_DISPLAY) => {
-    const old = exchangeContext.spCoinDisplay;
-    const newVal = display;
+  const old = exchangeContext.spCoinDisplay;
+  const newVal = display;
 
-    if (old !== newVal) {
-      console.debug(`🔁 spCoinDisplay change: ${spCoinStringDisplay(old)} → ${spCoinStringDisplay(newVal)}`);
-    } else {
-      console.debug(`⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(old)}`);
-    }
+  if (old !== newVal) {
+    console.debug(`🔁 spCoinDisplay change: ${spCoinStringDisplay(old)} → ${spCoinStringDisplay(newVal)}`);
+  } else {
+    console.debug(`⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(old)}`);
+  }
 
-    setExchangeContext((prev) => ({
-      ...prev,
-      spCoinDisplay: newVal,
+  setExchangeContext((prev) => ({
+    ...prev,
+    spCoinDisplay: newVal,
     }));
   };
 

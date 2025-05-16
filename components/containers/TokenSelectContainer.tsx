@@ -1,6 +1,8 @@
+// File: components\containers\TokenSelectContainer.tsx
+
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useBalance, useAccount } from "wagmi";
 import { useApiProvider, useBuyBalance, useSellBalance, useSpCoinDisplay, useTradeData } from '@/lib/context/contextHooks';
@@ -24,16 +26,22 @@ import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 // Utilities
 import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/coreUtils";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // Types & Constants
 import {
   CONTAINER_TYPE,
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
+  SP_COIN_DISPLAY,
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
 import { stringifyBigInt } from "@sponsorcoin/spcoin-lib/utils";
 import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
+
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
+const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED, LOG_TIME);
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
@@ -63,18 +71,26 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     token: tokenContract?.symbol === 'ETH' ? undefined : tokenContract?.address,
   });
 
-  // useEffect(() => {
-  //   console.log(`[DEBUG:tokenSelectContainer] tokenContract after dialog close: ${stringifyBigInt(tokenContract)}`);
-  // }, [tokenContract]);
-
-  // useEffect(() => {
-  //   console.log('[TokenSelectContainer] SellToken:', stringifyBigInt(sellTokenContract));
-  //   console.log('[TokenSelectContainer] BuyToken:', stringifyBigInt(buyTokenContract));
-  // }, [sellTokenContract, buyTokenContract]);
-
   const [inputValue, setInputValue] = useState<string>("0");
   const debouncedSellAmount = useDebounce(sellAmount, 600);
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
+
+  useEffect(() => {
+    if (!tokenContract) return;
+
+    debugLog.log(`📦 tokenContract loaded for ${CONTAINER_TYPE[localContainerType]}:`, tokenContract);
+
+    const isSp = isSpCoin(tokenContract);
+    const isSell = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER;
+    const desired = isSp
+      ? (isSell ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON : SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON)
+      : SP_COIN_DISPLAY.OFF;
+
+    if (spCoinDisplay !== desired) {
+      debugLog.log(`🔁 spCoinDisplay: ${spCoinDisplay} → ${desired}`);
+      setSpCoinDisplay(desired);
+    }
+  }, [tokenContract]);
 
   useEffect(() => {
     if (!tokenContract) return;
@@ -86,6 +102,8 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
     const decimals = tokenContract.decimals || 18;
     const formatted = formatUnits(amountToUse, decimals);
+
+    debugLog.log(`🔢 Updating inputValue for ${tokenContract.symbol}:`, formatted);
 
     const numericInput = Number(inputValue);
     const numericFormatted = Number(formatted);
@@ -127,6 +145,8 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   useEffect(() => {
     if (!wagmiBalance || !wagmiBalance.value) return;
 
+    debugLog.log(`💰 New balance fetched: ${wagmiBalance.formatted} (${localContainerType})`);
+
     if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
       setSellBalance(wagmiBalance.value);
     } else {
@@ -137,22 +157,23 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
     if (!isValid) return;
-  
-    // ✅ Remove leading zeros unless followed by a dot (e.g., 00123 -> 123, 0.123 stays)
+
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
+    debugLog.log(`⌨️ User input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
-  
+
     if (!tokenContract) return;
-  
+
     const decimals = tokenContract.decimals || 18;
     const formatted = parseValidFormattedAmount(normalized, decimals);
     const isCompleteNumber = /^\d+(\.\d+)?$/.test(formatted);
-  
+
     if (!isCompleteNumber) return;
-  
+
     try {
       const bigIntValue = parseUnits(formatted, decimals);
-  
+      debugLog.log(`🔢 Parsed BigInt: ${bigIntValue}`);
+
       if (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         setSellAmount(bigIntValue);
@@ -160,11 +181,11 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN);
         setBuyAmount(bigIntValue);
       }
-    } catch {
-      // Parsing failed
+    } catch (err) {
+      debugLog.warn('⚠️ Failed to parse input:', err);
     }
   };
-  
+
   const buySellText = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
     ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
         ? `You Pay ± ${slippageBps / 100}%`
@@ -196,7 +217,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
             if (isNaN(parsed)) {
               setInputValue('0');
             } else {
-              const normalized = parsed.toString(); // removes trailing . and zeros
+              const normalized = parsed.toString();
               setInputValue(normalized);
             }
           } catch {
@@ -221,7 +242,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         ) : (
           <AddSponsorButton />
         ))}
-        <span>{spCoinStringDisplay(spCoinDisplay)}</span>
+      <span>{spCoinStringDisplay(spCoinDisplay)}</span>
     </div>
   );
 };
