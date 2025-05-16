@@ -1,7 +1,8 @@
 /// START DROPDOWN STUFF
 
-import { useExchangeContext } from '@/lib/context/contextHooks'
+import { useExchangeContext, useSpCoinDisplay } from '@/lib/context/contextHooks';
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
+import { useEffect } from 'react';
 
 const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY, exchangeContext: any) => {
   switch (spCoinDisplay) {
@@ -57,7 +58,7 @@ const toggleElement = (element: any) => {
 };
 
 // ✅ Inside a component, get exchangeContext and pass it into functions
-export const useSpCoinHandlers = () => {
+const useSpCoinHandlers = () => {
   const { exchangeContext } = useExchangeContext();
 
   return {
@@ -85,11 +86,39 @@ const spCoinStringDisplay = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string
   }
 };
 
+const useDisplaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
+  const [, setSpCoinDisplay] = useSpCoinDisplay();
+
+  useEffect(() => {
+    setSpCoinDisplay(spCoinDisplay);
+
+    switch (spCoinDisplay) {
+      case SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON:
+        showElement("AddSponsorshipButton_ID");
+        hideElement("RecipientSelect_ID");
+        hideElement("SponsorRateConfig_ID");
+        break;
+      case SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER:
+        showElement("RecipientSelect_ID");
+        hideElement("AddSponsorshipButton_ID");
+        hideElement("SponsorRateConfig_ID");
+        break;
+      case SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG:
+        showElement("SponsorRateConfig_ID");
+        showElement("RecipientSelect_ID");
+        hideElement("AddSponsorshipButton_ID");
+        break;
+    }
+  }, [spCoinDisplay]);
+};
+
 export {
   displaySpCoinContainers,
   hideElement,
   showElement,
   spCoinStringDisplay,
+  useDisplaySpCoinContainers,
+  useSpCoinHandlers,
   toggleElement,
   toggleSponsorRateConfig
-}
+} 
