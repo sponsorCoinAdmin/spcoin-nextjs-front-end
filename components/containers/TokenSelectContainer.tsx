@@ -27,6 +27,7 @@ import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/coreUtils";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useSyncSpCoinDisplay } from '@/lib/hooks/useSyncSpCoinDisplay';
 
 // Types & Constants
 import {
@@ -39,11 +40,12 @@ import styles from "@/styles/Exchange.module.css";
 import { stringifyBigInt } from "@sponsorcoin/spcoin-lib/utils";
 import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
-const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
-const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
+  useSyncSpCoinDisplay(); // 🔁 Ensure spCoinDisplay sync runs centrally
+
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
   const apiProvider = useApiProvider();
@@ -79,17 +81,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     if (!tokenContract) return;
 
     debugLog.log(`📦 tokenContract loaded for ${CONTAINER_TYPE[localContainerType]}:`, tokenContract);
-
-    const isSp = isSpCoin(tokenContract);
-    const isSell = localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER;
-    const desired = isSp
-      ? (isSell ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON : SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON)
-      : SP_COIN_DISPLAY.OFF;
-
-    if (spCoinDisplay !== desired) {
-      debugLog.log(`🔁 spCoinDisplay: ${spCoinDisplay} → ${desired}`);
-      setSpCoinDisplay(desired);
-    }
   }, [tokenContract]);
 
   useEffect(() => {
@@ -242,7 +233,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         ) : (
           <AddSponsorButton />
         ))}
-      <span>{spCoinStringDisplay(spCoinDisplay)}</span>
+        <span>{spCoinStringDisplay(spCoinDisplay)}</span>
     </div>
   );
 };
