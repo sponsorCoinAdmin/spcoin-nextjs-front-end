@@ -8,7 +8,7 @@ import {  SEPOLIA, TokenContract } from '@/lib/structure/types'
    decimals: 8,
    balance: 0n,
    totalSupply: null,
-   img: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+   logoURL: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
    amount: 0n
  };
 
@@ -20,7 +20,7 @@ const defaultBuyToken: TokenContract = {
   decimals: 6,
   balance: 0n,
   totalSupply: null,
-  img: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
+  logoURL: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
   amount: 0n
 };
 

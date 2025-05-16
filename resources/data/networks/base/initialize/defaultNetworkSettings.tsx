@@ -24,7 +24,7 @@ const defaultBuyToken: TokenContract = {
 
 const defaultRecipient = { 
   "symbol": "Trees",
-  "img": "/assets/recipients/SaveTheTrees.png",
+  "logoURL": "/assets/recipients/SaveTheTrees.png",
   "name": "Save The Trees",
   "address": "Save The Trees Wallet Address",
   "url": "ToDo N/A"
@@ -32,7 +32,7 @@ const defaultRecipient = {
 
 const defaultAgent = { 
   "symbol": "Tweety",
-  "img": "/assets/agents/TweetyBird.png",
+  "logoURL": "/assets/agents/TweetyBird.png",
   "name": "Tweety Bird",
   "address": "TweetyBird's Wallet Address",
   "url": "ToDo N/A"
