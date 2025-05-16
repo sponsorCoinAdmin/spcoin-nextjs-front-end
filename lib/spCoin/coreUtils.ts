@@ -1,7 +1,15 @@
 import { isAddress, parseUnits } from 'ethers'
 import { Address, formatUnits, getAddress } from 'viem'
-import { TokenContract } from '@/lib/structure/types'
 import { BURN_ADDRESS } from '@/lib/network/utils'
+import {
+  BASE,
+  ETHEREUM,
+  FEED_TYPE,
+  HARDHAT,
+  POLYGON,
+  SEPOLIA,
+  TokenContract,
+} from '@/lib/structure/types';
 
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
@@ -80,7 +88,16 @@ const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
  * Check if a TokenContract is recognized as SpCoin.
  */
 const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
-  return tokenContract?.symbol === 'SpCoin'
+  if (!tokenContract) return false;
+  let chainId = 1;
+  switch (chainId) {
+    case BASE: 
+    case ETHEREUM:
+    case POLYGON:
+    case HARDHAT:
+    case SEPOLIA: return tokenContract?.address === '0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562';
+    default: return false;
+  }
 }
 
 /**
@@ -119,14 +136,14 @@ const invalidTokenContract = (textInputField: string | undefined, chainId: numbe
         decimals: undefined,
         balance: 0n,
         totalSupply: undefined,
-        img: undefined,
+        logoURL: undefined,
         amount: 0n,
       }
     : undefined
 }
 
 export {
-  // parseValidFormattedAmount,
+  // ,
   getValidBigIntToFormattedValue,
   setValidPriceInput,
   getQueryVariable,

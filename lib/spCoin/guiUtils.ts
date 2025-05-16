@@ -49,7 +49,7 @@ const fetchTokenDetails = async (
         decimals: retResponse.decimals,
         balance: 0n,
         totalSupply: undefined,
-        img: tokenIconPath,
+        logoURL: tokenIconPath,
       }
     }
   } catch (e: any) {
