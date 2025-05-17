@@ -3,7 +3,7 @@
     "chainId": 11155111,
     "name": "Sepolia",
     "symbol": "ETH",
-    "img": "/assets/blockchains/1/info/1.png",
+    "logoURL": "/assets/blockchains/1/info/1.png",
     "url": "https://sepolia.etherscan.io/"
   },
   "defaultSellToken": {
@@ -13,7 +13,7 @@
     "name": "Wrapped Bitcoin",
     "totalSupply": null,
     "decimals": 8,
-    "img": "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
+    "logoURL": "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png"
   },
   "defaultBuyToken": {
     "chainId": 11155111,
@@ -22,20 +22,20 @@
     "totalSupply": null,
     "name": "Tether USD",
     "decimals": 6,
-    "img": "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
+    "logoURL": "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png"
   },
   "defaultRecipient": {
     "address": "SaveTheTiger4 Wallet Address",
     "symbol": "Tiger",
     "name": "Support The Tiger",
     "url": "ToDo N/A",
-    "img": "/assets/recipients/SaveTheTiger4.png"
+    "logoURL": "/assets/recipients/SaveTheTiger4.png"
   },
   "defaultAgent": {
     "address": "Moe's Wallet Address",
     "symbol": "Stuge 3",
     "name": "Moe Howard",
     "url": "ToDo N/A",
-    "img": "/assets/agents/MoeHoward.png"
+    "logoURL": "/assets/agents/MoeHoward.png"
   }
 }

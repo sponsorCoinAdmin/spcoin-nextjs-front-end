@@ -15,6 +15,7 @@ import {
   HARDHAT,
   POLYGON,
   SEPOLIA,
+  CONTAINER_TYPE,
 } from "@/lib/structure/types";
 import { isLowerCase } from "../network/utils";
 
@@ -61,38 +62,40 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       sellTokenContract: undefined,
       buyTokenContract: undefined,
     },
-    spCoinDisplay: SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON,
+    spCoinDisplay: SP_COIN_DISPLAY.OFF,
     test: { dumpContextButton: false },
+    containerType: CONTAINER_TYPE.UNDEFINED,
   };
 };
 
 export const sanitizeExchangeContext = (
-    raw: Partial<ExchangeContext> | null,
-    chainId: number
-  ): ExchangeContext => {
-    const defaultContext = getInitialContext(chainId);
-  
-    return {
-      apiTradingProvider: raw?.apiTradingProvider ?? defaultContext.apiTradingProvider,
-      activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
-      network: raw?.network ?? defaultContext.network,
-      spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
-      test: raw?.test ?? defaultContext.test,
-      recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
-      agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
-      tradeData: {
-        chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
-        tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
-        swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
-        slippageBps: raw?.tradeData?.slippageBps !== undefined
-          ? raw.tradeData.slippageBps
-          : defaultContext.tradeData.slippageBps, // ✅ USE 200 on first load
-        sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
-        buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
-        signer: raw?.tradeData?.signer ?? defaultContext.tradeData.signer,
-      },
-    };
-  };  
+  raw: Partial<ExchangeContext> | null,
+  chainId: number
+): ExchangeContext => {
+  const defaultContext = getInitialContext(chainId);
+
+  return {
+    containerType: raw?.containerType ?? defaultContext.containerType,
+    apiTradingProvider: raw?.apiTradingProvider ?? defaultContext.apiTradingProvider,
+    activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
+    network: raw?.network ?? defaultContext.network,
+    spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
+    test: raw?.test ?? defaultContext.test,
+    recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
+    agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
+    tradeData: {
+      chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
+      tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
+      swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
+      slippageBps: raw?.tradeData?.slippageBps !== undefined
+        ? raw.tradeData.slippageBps
+        : defaultContext.tradeData.slippageBps,
+      sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
+      buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
+      signer: raw?.tradeData?.signer ?? defaultContext.tradeData.signer,
+    },
+  };
+};
 
 function getInitialContextMap(chain: number) {
   const initialNetworkContext = getDefaultNetworkSettings(chain);

@@ -3,7 +3,7 @@
     "chainId": 31337,
     "name": "HardHat",
     "symbol": "HH",
-    "img": "/public/assets/blockchains/31337.png",
+    "logoURL": "/public/assets/blockchains/31337.png",
     "url": "http://localhost:3000/Exchange"
   }
 }

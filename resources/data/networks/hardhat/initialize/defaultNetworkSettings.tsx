@@ -29,7 +29,7 @@ const defaultRecipient = {
   "address": "0xToDo_SpCoin.png",
   "name": "Sponsor Coin",
   "url": "ToDo add URL here",
-  "img": "assets/blockchains/0xToDo_SpCoin.png"
+  "logoURL": "assets/blockchains/0xToDo_SpCoin.png"
 };
 
 const defaultAgent = { 
