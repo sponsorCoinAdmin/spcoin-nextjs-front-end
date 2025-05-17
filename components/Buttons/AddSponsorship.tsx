@@ -1,3 +1,5 @@
+// File: components\Buttons\AddSponsorship.tsx
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -16,7 +18,7 @@ const AddSponsorship = () => {
     switch (spCoinDisplay) {
       case SP_COIN_DISPLAY.OFF:
         setShow(DISPLAY.NONE);
-        setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON);
+        setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON); // ✅ already logs due to hook change
         return;
       case SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON:
         setShow(DISPLAY.BUTTON);

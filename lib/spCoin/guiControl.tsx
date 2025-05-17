@@ -1,8 +1,13 @@
-/// START DROPDOWN STUFF
+/// START DROP DOWN STUFF
 
 import { useExchangeContext, useSpCoinDisplay } from '@/lib/context/contextHooks';
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 import { useEffect } from 'react';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_GUI_CONTROLLER === 'true';
+const debugLog = createDebugLogger('GuiController', DEBUG_ENABLED, LOG_TIME);
 
 const hideElement = (element: string) => {
   const el = document.getElementById(element);
@@ -39,7 +44,7 @@ export const useSpCoinHandlers = () => {
   const { exchangeContext } = useExchangeContext();
 
   return {
-    displaySpCoinContainers: (spCoinDisplay: SP_COIN_DISPLAY) => displaySpCoinContainers(spCoinDisplay, exchangeContext),
+    displaySpCoinContainers: (spCoinDisplay: SP_COIN_DISPLAY) => displaySpCoinContainers(spCoinDisplay),
     toggleSponsorRateConfig: (element: any) => toggleSponsorRateConfig(element, exchangeContext),
     hideElement,
     showElement,
@@ -64,6 +69,8 @@ const spCoinStringDisplay = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string
 };
 
 const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
+  debugLog.log(`🖼️ [displaySpCoinContainers] → ${spCoinStringDisplay(spCoinDisplay)}`);
+
   switch (spCoinDisplay) {
     case SP_COIN_DISPLAY.OFF:
       hideElement("AddSponsorshipButton_ID");
@@ -89,10 +96,11 @@ const displaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
 };
 
 const useDisplaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
-  const [, setSpCoinDisplay] = useSpCoinDisplay();
+  const [, debugSetSpCoinDisplay] = useSpCoinDisplay();
   useEffect(() => {
-    setSpCoinDisplay(spCoinDisplay);
-    displaySpCoinContainers (spCoinDisplay) 
+    debugLog.log(`🧩 [useDisplaySpCoinContainers] Sync to → ${spCoinStringDisplay(spCoinDisplay)}`);
+    debugSetSpCoinDisplay(spCoinDisplay);
+    displaySpCoinContainers(spCoinDisplay);
   }, [spCoinDisplay]);
 };
 

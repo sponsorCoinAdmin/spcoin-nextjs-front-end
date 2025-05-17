@@ -1,5 +1,3 @@
-// File: lib\context\contextHooks.tsx
-
 "use client";
 
 import { useContext, useMemo } from "react";
@@ -13,9 +11,16 @@ import {
   API_TRADING_PROVIDER,
   CONTAINER_TYPE,
   SP_COIN_DISPLAY,
+  ExchangeContext,
 } from "@/lib/structure/types";
 import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from "../spCoin/coreUtils";
+import { spCoinStringDisplay } from '@/lib/spCoin/guiControl';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';
+const debugLog = createDebugLogger('contextHooks', DEBUG_ENABLED, LOG_TIME);
 
 export const useExchangeContext = () => {
   const context = useContext(ExchangeContextState);
@@ -110,52 +115,54 @@ export const useBuyBalance = (): [bigint, (balance: bigint) => void] => {
 
 export const useSellTokenContract = (): [TokenContract | undefined, (contract: TokenContract | undefined) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+
   return [
     exchangeContext.tradeData.sellTokenContract,
-    (contract) =>
-      setExchangeContext((prev) => {
-        if (tokenContractsEqual(prev.tradeData.sellTokenContract, contract)) {
-          return prev;
-        }
+    (contract) => {
+      const oldContract = exchangeContext.tradeData.sellTokenContract;
+      const isSame = tokenContractsEqual(oldContract, contract);
 
-        return {
-          ...prev,
-          tradeData: {
-            ...prev.tradeData,
-            sellTokenContract: contract,
-          },
-          spCoinDisplay: contract && isSpCoin(contract)
-            ? SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON
-            : SP_COIN_DISPLAY.OFF,
-        };
-      }),
+      if (isSame) return;
+
+      setExchangeContext((prev) => ({
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          sellTokenContract: contract,
+        },
+      }));
+    },
   ];
 };
 
 export const useBuyTokenContract = (): [TokenContract | undefined, (contract: TokenContract | undefined) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+
   return [
     exchangeContext.tradeData.buyTokenContract,
-    (contract) =>
-      setExchangeContext((prev) => {
-        if (tokenContractsEqual(prev.tradeData.buyTokenContract, contract)) {
-          return prev;
-        }
+    (contract) => {
+      const oldContract = exchangeContext.tradeData.buyTokenContract;
+      const oldDisplay = exchangeContext.spCoinDisplay;
+      const isSame = tokenContractsEqual(oldContract, contract);
 
-        return {
-          ...prev,
-          tradeData: {
-            ...prev.tradeData,
-            buyTokenContract: contract,
-          },
-          spCoinDisplay: contract && isSpCoin(contract)
-            ? SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON
-            : SP_COIN_DISPLAY.OFF,
-        };
-      }),
+      const isSp = contract && isSpCoin(contract);
+      const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON : SP_COIN_DISPLAY.OFF;
+
+      if (isSame && oldDisplay === newDisplay) return;
+
+      setExchangeContext((prev) => ({
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          buyTokenContract: contract,
+        },
+      }));
+      debugSetSpCoinDisplay(oldDisplay, newDisplay, setExchangeContext);
+    },
   ];
 };
 
+// ...remaining unchanged hooks below
 export const useSellTokenAddress = (): string | undefined => {
   const [sellTokenContract] = useSellTokenContract();
   return sellTokenContract?.address;
@@ -235,29 +242,43 @@ export const useContainerType = (initialType?: CONTAINER_TYPE): [CONTAINER_TYPE,
   ];
 };
 
-import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
+/**
+ * Hook to read and update spCoinDisplay with debug output.
+ */
 
 export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const debugSetSpCoinDisplay = (display: SP_COIN_DISPLAY) => {
-  const old = exchangeContext.spCoinDisplay;
-  const newVal = display;
 
-  if (old !== newVal) {
-    console.debug(`ZZZZZZZZZZZZZZZZ🔁 spCoinDisplay change: ${spCoinStringDisplay(old)} → ${spCoinStringDisplay(newVal)}`);
+  const wrappedDebugSetter = (display: SP_COIN_DISPLAY) =>
+    debugSetSpCoinDisplay(exchangeContext.spCoinDisplay, display, setExchangeContext);
+
+  return [exchangeContext.spCoinDisplay, wrappedDebugSetter];
+};
+
+// Archived: useSyncSpCoinDisplay is currently unused and has been disabled.
+// This file is retained for future reference or reuse.
+
+/**
+ * Centralized debug-aware setter for spCoinDisplay.
+ */
+export const debugSetSpCoinDisplay = (
+  oldDisplay: SP_COIN_DISPLAY,
+  newDisplay: SP_COIN_DISPLAY,
+  setExchangeContext: (updater: (prev: any) => any) => void
+) => {
+  if (oldDisplay !== newDisplay) {
+    debugLog.log(
+      `🔁 spCoinDisplay change: ${spCoinStringDisplay(oldDisplay)} → ${spCoinStringDisplay(newDisplay)}`
+    );
   } else {
-    console.debug(`ZZZZZZZZZZZZZZZZ⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(old)}`);
+    debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(oldDisplay)}`);
   }
 
   setExchangeContext((prev) => ({
     ...prev,
-    spCoinDisplay: newVal,
-    }));
-  };
-
-  return [exchangeContext.spCoinDisplay, debugSetSpCoinDisplay];
+    spCoinDisplay: newDisplay,
+  }));
 };
-
 
 export const useTradeData = (): TradeData => {
   const { exchangeContext } = useExchangeContext();

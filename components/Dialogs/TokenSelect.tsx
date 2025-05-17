@@ -1,3 +1,5 @@
+// File: components\Dialogs\TokenSelect.tsx
+
 'use client';
 
 import styles from '@/styles/Modal.module.css';

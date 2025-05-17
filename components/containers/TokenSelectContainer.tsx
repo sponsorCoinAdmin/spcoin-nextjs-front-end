@@ -27,7 +27,6 @@ import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/coreUtils";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useSyncSpCoinDisplay } from '@/lib/hooks/useSyncSpCoinDisplay';
 
 // Types & Constants
 import {
