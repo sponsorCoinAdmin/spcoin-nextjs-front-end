@@ -125,7 +125,7 @@ export const useSellTokenContract = (): [TokenContract | undefined, (contract: T
             sellTokenContract: contract,
           },
           spCoinDisplay: contract && isSpCoin(contract)
-            ? SP_COIN_DISPLAY.MANAGE_RECIPIENT_BUTTON
+            ? SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON
             : SP_COIN_DISPLAY.OFF,
         };
       }),
@@ -149,7 +149,7 @@ export const useBuyTokenContract = (): [TokenContract | undefined, (contract: To
             buyTokenContract: contract,
           },
           spCoinDisplay: contract && isSpCoin(contract)
-            ? SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON
+            ? SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON
             : SP_COIN_DISPLAY.OFF,
         };
       }),
@@ -244,9 +244,9 @@ export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY)
   const newVal = display;
 
   if (old !== newVal) {
-    console.debug(`🔁 spCoinDisplay change: ${spCoinStringDisplay(old)} → ${spCoinStringDisplay(newVal)}`);
+    console.debug(`ZZZZZZZZZZZZZZZZ🔁 spCoinDisplay change: ${spCoinStringDisplay(old)} → ${spCoinStringDisplay(newVal)}`);
   } else {
-    console.debug(`⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(old)}`);
+    console.debug(`ZZZZZZZZZZZZZZZZ⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(old)}`);
   }
 
   setExchangeContext((prev) => ({

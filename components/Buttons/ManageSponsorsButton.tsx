@@ -1,42 +1,40 @@
 import styles from '@/styles/Exchange.module.css';
-import { TokenContract } from '@/lib/structure/types';
-import { openDialog } from '../Dialogs/Dialogs';
+import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
 import ManageSponsorships from '../Dialogs/ManageSponsorships';
-import { useState } from 'react';
-import { useSpCoinDisplay } from '@/lib/context/contextHooks';
+import { useState, useEffect } from 'react';
 
 type Props = {
-  tokenContract: TokenContract|undefined,
-}
+  tokenContract: TokenContract | undefined,
+};
 
-const ManageSponsorsButton = ({ tokenContract}:Props) => {
-  const [showDialog, setShowDialog ] = useState<boolean>(false)
-    const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
-  
-  
+const ManageSponsorsButton = ({ tokenContract }: Props) => {
+  const [showDialog, setShowDialog] = useState<boolean>(false);
+
   const openDialog2 = () => {
-      setShowDialog(true)
-      openDialog("#manageSponsorshipsDialog")
-      openDialog("#recipientContainerDiv_ID")
-  }
+    setShowDialog(true);
+  };
 
-  const junkManageSponsorshipCallback = (tokenContract:TokenContract) => {
+  const junkManageSponsorshipCallback = (tokenContract: TokenContract) => {
     return null;
-  }
+  };
 
-  try {
-    return (
-      <>
-        <ManageSponsorships showDialog={showDialog} tokenContract={tokenContract} callBackSetter={junkManageSponsorshipCallback}  />
-        <div id="manageSponsorshipsDiv" className={styles[`manageSponsorshipsDiv`]} onClick={() => openDialog2()}>
-          <div className={styles["centerTop"]} >Manage</div>
-          <div className={styles["centerBottom"]} >Sponsorships</div>
-        </div>
-      </>
-    );
-  } catch (err:any) {
-    console.error (`Sell Container Error:\n ${err.message}`)
-  }
-}
+  return (
+    <>
+      <ManageSponsorships
+        showDialog={showDialog}
+        tokenContract={tokenContract}
+        callBackSetter={junkManageSponsorshipCallback}
+      />
+      <div
+        id="manageSponsorshipsDiv"
+        className={styles.manageSponsorshipsDiv}
+        onClick={openDialog2}
+      >
+        <div className={styles.centerTop}>Manage</div>
+        <div className={styles.centerBottom}>Sponsorships</div>
+      </div>
+    </>
+  );
+};
 
 export default ManageSponsorsButton;

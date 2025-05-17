@@ -6,7 +6,7 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '../Dialogs/Popup/ConfigDialog';
 import { openDialog } from '../Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { toggleElement, toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
+import { toggleSponsorRateConfig } from '@/lib/spCoin/guiControl';
 import { useExchangeContext } from '@/lib/context/contextHooks'
 
 const RecipientSelectHeader = ({slippageBps, closeDialog}:any) => {

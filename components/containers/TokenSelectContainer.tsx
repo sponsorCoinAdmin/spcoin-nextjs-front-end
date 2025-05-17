@@ -19,7 +19,7 @@ import {
 } from "@/lib/context/contextHooks";
 
 // Components
-import AddSponsorButton from "../Buttons/AddSponsorButton";
+import AddSponsorship from "../Buttons/AddSponsorship";
 import TokenSelectDropDown from "./TokenSelectDropDown";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 
@@ -37,14 +37,12 @@ import {
   SP_COIN_DISPLAY,
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
-import { stringifyBigInt } from "@sponsorcoin/spcoin-lib/utils";
 import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
-  useSyncSpCoinDisplay(); // 🔁 Ensure spCoinDisplay sync runs centrally
 
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
@@ -60,7 +58,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [sellBalance, setSellBalance] = useSellBalance();
   const [buyBalance, setBuyBalance] = useBuyBalance();
   const [localContainerType, setLocalContainerType] = useState<CONTAINER_TYPE>(containerType);
-  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+  const [spCoinDisplay] = useSpCoinDisplay();
 
   const tokenContract =
     localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
@@ -231,7 +229,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         (localContainerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
-          <AddSponsorButton />
+          <AddSponsorship />
         ))}
         <span>{spCoinStringDisplay(spCoinDisplay)}</span>
     </div>
