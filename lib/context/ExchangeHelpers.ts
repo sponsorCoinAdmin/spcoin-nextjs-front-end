@@ -61,7 +61,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       sellTokenContract: undefined,
       buyTokenContract: undefined,
     },
-    spCoinDisplay: SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON,
+    spCoinDisplay: SP_COIN_DISPLAY.SELECT_RECIPIENT_BUTTON,
     test: { dumpContextButton: false },
   };
 };
@@ -73,48 +73,25 @@ export const sanitizeExchangeContext = (
     const defaultContext = getInitialContext(chainId);
   
     return {
-  apiTradingProvider: raw?.apiTradingProvider ?? defaultContext.apiTradingProvider,
-  activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
-  network: raw?.network ?? defaultContext.network,
-  spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
-  test: raw?.test ?? defaultContext.test,
-  recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
-  agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
-  tradeData: {
-    chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
-    tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
-    swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
-    slippageBps: raw?.tradeData?.slippageBps !== undefined
-      ? raw.tradeData.slippageBps
-      : defaultContext.tradeData.slippageBps, // ✅ USE 200 on first load
-    sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
-    buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
-    signer: raw?.tradeData?.signer ?? defaultContext.tradeData.signer,
-  },
-  containerType: undefined,
-  apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-  activeAccountAddress: undefined,
-  network: {
-    chainId: 0,
-    logoURL: "",
-    name: "",
-    symbol: "",
-    url: ""
-  },
-  spCoinDisplay: SP_COIN_DISPLAY.OFF,
-  test: {
-    dumpContextButton: false
-  },
-  tradeData: {
-    buyTokenContract: undefined,
-    chainId: 0,
-    sellTokenContract: undefined,
-    signer: undefined,
-    slippageBps: 0,
-    swapType: SWAP_TYPE.SWAP,
-    tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT
-  }
-};
+      apiTradingProvider: raw?.apiTradingProvider ?? defaultContext.apiTradingProvider,
+      activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
+      network: raw?.network ?? defaultContext.network,
+      spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
+      test: raw?.test ?? defaultContext.test,
+      recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
+      agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
+      tradeData: {
+        chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
+        tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
+        swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
+        slippageBps: raw?.tradeData?.slippageBps !== undefined
+          ? raw.tradeData.slippageBps
+          : defaultContext.tradeData.slippageBps, // ✅ USE 200 on first load
+        sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
+        buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
+        signer: raw?.tradeData?.signer ?? defaultContext.tradeData.signer,
+      },
+    };
   };  
 
 function getInitialContextMap(chain: number) {
