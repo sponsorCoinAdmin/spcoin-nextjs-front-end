@@ -21,12 +21,12 @@ const TITLE_NAME = "Select a Recipient";
 const INPUT_PLACE_HOLDER = "Type or paste recipient wallet address";
 
 type Props = {
-  callBackWallet: (walletAccount: WalletAccount) => void;
+  callBackAccount: (walletAccount: WalletAccount) => void;
   setShowDialog: (showDialog: boolean) => void;
   showDialog: boolean;
 };
 
-export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Props) {
+export default function Dialog({ showDialog, setShowDialog, callBackAccount }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [recipientInput, setRecipientInput] = useState<string | undefined>();
   const [walletElement, setWalletElement] = useState<WalletAccount | undefined>();
@@ -100,11 +100,11 @@ export default function Dialog({ showDialog, setShowDialog, callBackWallet }: Pr
     selectedWallet.avatar = avatar;
 
     setWalletElement(selectedWallet); // ✅ Update wallet state
-    callBackWallet(selectedWallet);
+    callBackAccount(selectedWallet);
 
     setShowDialog(false);
     dialogRef.current?.close();
-  }, [agentAccount, exchangeContext, callBackWallet, setShowDialog]);
+  }, [agentAccount, exchangeContext, callBackAccount, setShowDialog]);
 
   return (
     <dialog id="recipientDialog" ref={dialogRef} className={styles.modalContainer}>

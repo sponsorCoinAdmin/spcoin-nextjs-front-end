@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
+import styles from "@/styles/Exchange.module.css";
 import Image from "next/image";
 import Link from "next/link";
-import * as classNames from "classnames"; // ✅ Safe fallback import
+import classNames from "classnames"; // ✅ Safe fallback import
 
-import styles from "@/styles/Exchange.module.css";
 import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
@@ -13,7 +13,7 @@ import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/contextHooks';
 import RecipientSelect from "./AccountSelectDropDown";
 import { useSpCoinDisplay } from '@/lib/context/contextHooks';
-import { toggleSponsorRateConfig, useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
+import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 
 const AccountSelectContainer: React.FC = () => {
@@ -63,6 +63,15 @@ const AccountSelectContainer: React.FC = () => {
     }
   }, [recipientAccount?.website]);
 
+   const toggleSponsorRateConfig = () => {
+    if(spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
+    }
+    else {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER)
+    }
+  };
+
   return (
     <>
       <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.AccountSelectContainer)}>
@@ -78,7 +87,7 @@ const AccountSelectContainer: React.FC = () => {
           </Link>
         )}
         <div className={styles.recipientSelect}>
-          <RecipientSelect recipientAccount={recipientAccount} callBackWallet={setRecipientAccount} />
+          <RecipientSelect recipientAccount={recipientAccount} callBackAccount={setRecipientAccount} />
         </div>
         <div>
           <Image
@@ -87,14 +96,18 @@ const AccountSelectContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
-            onClick={() => toggleSponsorRateConfig("SponsorRateConfig_ID", exchangeContext)}
+            onClick={() => toggleSponsorRateConfig()}
           />
         </div>
         <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>
           X
         </div>
       </div>
-      <SponsorRateConfig />
+      {spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG && (
+        <div>
+          <SponsorRateConfig />
+        </div>
+      )}
     </>
   );
 };

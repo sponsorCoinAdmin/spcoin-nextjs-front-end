@@ -6,10 +6,10 @@ import { defaultMissingImage } from '@/lib/network/utils';
 
 type Props = {
   recipientAccount: WalletAccount | undefined;
-  callBackWallet: (walletAccount: WalletAccount) => void;
+  callBackAccount: (walletAccount: WalletAccount) => void;
 };
 
-const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackWallet }) => {
+const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
@@ -26,7 +26,7 @@ const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackWallet }) => 
 
   return (
     <>
-      <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackWallet={callBackWallet} />
+      <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackAccount={callBackAccount} />
       {recipientAccount ? (
         <>
           <img
