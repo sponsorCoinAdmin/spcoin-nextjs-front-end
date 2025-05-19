@@ -1,20 +1,16 @@
-// File: types.ts
-
 import { Account, Address } from "viem";
 
 export const publicWalletPath: string = "assets/accounts";
-
 
 // Token Address Input Select States
 export enum InputState {
   EMPTY_INPUT,
   INVALID_ADDRESS_INPUT,
   DUPLICATE_INPUT,
-  VALIDATE_NATIVE_TOKEN,
-  VALIDATE_INPUT_PENDING,
   IS_LOADING,
   CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
   CONTRACT_NOT_FOUND_LOCALLY,
+  VALID_INPUT_PENDING,
   VALID_INPUT,
   CLOSE_INPUT,
 }
@@ -25,6 +21,8 @@ export const getInputStateString = (state: InputState): string => {
       return 'EMPTY_INPUT';
     case InputState.VALID_INPUT:
       return 'VALID_INPUT';
+    case InputState.VALID_INPUT_PENDING:
+      return 'VALID_INPUT_PENDING';
     case InputState.INVALID_ADDRESS_INPUT:
       return 'INVALID_ADDRESS_INPUT';
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
@@ -43,19 +41,19 @@ export const getInputStateString = (state: InputState): string => {
 };
 
 export interface AccountAddress {
-    address: string;
+  address: string;
 }
 
 // Define Wallet type
 interface WalletAccount {
-    name: string;
-    symbol: string;
-    type: string;
-    website: string;
-    description: string;
-    status: string;
-    address: string;
-    avatar:string;
+  name: string;
+  symbol: string;
+  type: string;
+  website: string;
+  description: string;
+  status: string;
+  address: string;
+  avatar?: string;
 }
 
 // Button Types
@@ -113,7 +111,6 @@ const ERROR_CODES = {
   CHAIN_SWITCH: 1001,
   PRICE_FETCH_ERROR: 2001,
   INVALID_TOKENS: 3001
-  // Add more codes as needed
 };
 
 // Status Types
@@ -145,7 +142,7 @@ enum TRADE_DIRECTION {
 export enum API_TRADING_PROVIDER {
   API_0X,
   API_1INCH
- }
+}
 
 // Network Constants
 const ETHEREUM = 1;
@@ -187,7 +184,7 @@ type ErrorMessage = {
 };
 
 type ExchangeContext = {
-  containerType:CONTAINER_TYPE | undefined;
+  containerType: CONTAINER_TYPE | undefined;
   apiTradingProvider: API_TRADING_PROVIDER;
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
   agentAccount?: WalletAccount;
@@ -208,7 +205,7 @@ type NetworkElement = {
 
 type TokenContract = {
   address: Address;
-  amount:bigint;
+  amount: bigint;
   balance: bigint;
   chainId?: number;
   decimals?: number;
@@ -220,7 +217,7 @@ type TokenContract = {
 
 type TradeData = {
   buyTokenContract?: TokenContract;
-  chainId: number;  
+  chainId: number;
   sellTokenContract?: TokenContract;
   signer: any;
   slippageBps: number;

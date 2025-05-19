@@ -1,3 +1,5 @@
+// File: app\(menu)\Exchange\Price\index.tsx
+
 "use client";
 
 import styles from '@/styles/Exchange.module.css';
@@ -28,12 +30,11 @@ import {
   useSellTokenContract
 } from "@/lib/context/contextHooks";
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
-import { mutate } from 'swr'; // ✅ NEW
+import { mutate } from 'swr';
 
 export default function PriceView() {
   const { chainId } = useAccount();
   const signer = useEthersSigner();
-
   const { exchangeContext } = useExchangeContext();
   const tradeData = exchangeContext?.tradeData;
 
@@ -56,7 +57,6 @@ export default function PriceView() {
     setShowError(true);
   }, [setErrorMessage]);
 
-  // ✅ swrKey added to destructure
   const {
     isLoading: isLoadingPrice,
     data: priceData,
@@ -68,7 +68,7 @@ export default function PriceView() {
     if (priceError) {
       apiErrorCallBack({
         errCode: ERROR_CODES.PRICE_FETCH_ERROR,
-        msg: priceError.message || 'Unknown price API error',
+        msg: (priceError as Error)?.message ?? 'Unknown price API error',
         source: 'PriceAPI',
         status: STATUS.ERROR_API_PRICE,
       });
@@ -77,7 +77,6 @@ export default function PriceView() {
 
   useEffect(() => {
     if (!chainId || !tradeData || chainId === tradeData.chainId) return;
-    // Notify user about reset
     setErrorMessage({
       errCode: ERROR_CODES.CHAIN_SWITCH,
       msg: 'Switched chains — resetting token selections and amounts.',
@@ -86,14 +85,13 @@ export default function PriceView() {
     });
     setShowError(true);
 
-    tradeData.chainId = chainId;
+    const newTradeData = { ...tradeData, chainId };
     setSellAmount(0n);
     setSellTokenContract(undefined);
     setBuyAmount(0n);
     setBuyTokenContract(undefined);
   }, [chainId, tradeData]);
 
-  // ✅ Updated to include mutate(swrKey) after swap
   useEffect(() => {
     if (containerSwapStatus && tradeData) {
       const oldSellAmount = tradeData.sellTokenContract?.amount || 0n;
@@ -108,7 +106,7 @@ export default function PriceView() {
 
       if (swrKey) {
         console.log('🔁 Forcing mutate', swrKey);
-        mutate(swrKey, undefined, { revalidate: true }); // OR use setTimeout
+        mutate(swrKey);
       }
     }
   }, [containerSwapStatus, tradeData, swrKey]);
@@ -120,54 +118,33 @@ export default function PriceView() {
     }
   }, [sellTokenContract]);
 
-  // Clear stale buy/sell amount while debounce is active
-const previousSellToken = useRef(tradeData.sellTokenContract);
-const previousBuyToken = useRef(tradeData.buyTokenContract);
+  const previousSellToken = useRef(tradeData.sellTokenContract);
+  const previousBuyToken = useRef(tradeData.buyTokenContract);
 
-useEffect(() => {
-  const sellTokenChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
-  const buyTokenChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
+  useEffect(() => {
+    const sellTokenChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
+    const buyTokenChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
 
-  if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
-    setBuyAmount(0n);
-  }
+    if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[PriceView] Resetting buy amount due to token change');
+      }
+      setBuyAmount(0n);
+    }
 
-  if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
-    setSellAmount(0n);
-  }
+    if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[PriceView] Resetting sell amount due to token change');
+      }
+      setSellAmount(0n);
+    }
 
-  previousSellToken.current = tradeData.sellTokenContract;
-  previousBuyToken.current = tradeData.buyTokenContract;
-}, [
-  tradeData.sellTokenContract,
-  tradeData.buyTokenContract,
-  tradeData.tradeDirection
-]);
-
-useEffect(() => {
-  const sellTokenChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
-  const buyTokenChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
-
-  if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellTokenChanged || buyTokenChanged)) {
-    alert('[⚠️ PriceView] Resetting buy amount due to token change');
-    setBuyAmount(0n);
-  }
-
-  if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellTokenChanged || buyTokenChanged)) {
-    alert('[⚠️ PriceView] Resetting sell amount due to token change');
-    setSellAmount(0n);
-  }
-
-  previousSellToken.current = tradeData.sellTokenContract;
-  previousBuyToken.current = tradeData.buyTokenContract;
-}, [
-  tradeData.sellTokenContract,
-  tradeData.buyTokenContract,
-  tradeData.tradeDirection
-]);
+    previousSellToken.current = tradeData.sellTokenContract;
+    previousBuyToken.current = tradeData.buyTokenContract;
+  }, [tradeData.sellTokenContract, tradeData.buyTokenContract, tradeData.tradeDirection]);
 
   return (
-    <div>
+    <div className={styles.pageWrap}>
       <ErrorDialog showDialog={showError} />
       <div id="MainSwapContainer_ID" className={styles["mainSwapContainer"]}>
         <TradeContainerHeader />

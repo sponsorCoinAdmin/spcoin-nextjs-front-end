@@ -61,6 +61,10 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       slippageBps: 200,
       sellTokenContract: undefined,
       buyTokenContract: undefined,
+      rateRatio: 1,
+      slippage: 0,
+      slippagePercentage: 0,
+      slippagePercentageString: "0.00%",
     },
     spCoinDisplay: SP_COIN_DISPLAY.OFF,
     test: { dumpContextButton: false },
@@ -69,7 +73,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
 };
 
 export const sanitizeExchangeContext = (
-  raw: Partial<ExchangeContext> | null,
+  raw: { tradeData?: Partial<TradeData> } & Partial<ExchangeContext> | null,
   chainId: number
 ): ExchangeContext => {
   const defaultContext = getInitialContext(chainId);
@@ -87,12 +91,17 @@ export const sanitizeExchangeContext = (
       chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
       tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
       swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
-      slippageBps: raw?.tradeData?.slippageBps !== undefined
-        ? raw.tradeData.slippageBps
-        : defaultContext.tradeData.slippageBps,
+      slippageBps:
+        typeof raw?.tradeData?.slippageBps === 'number' && raw.tradeData.slippageBps > 0
+          ? raw.tradeData.slippageBps
+          : defaultContext.tradeData.slippageBps,
       sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
       buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
       signer: raw?.tradeData?.signer ?? defaultContext.tradeData.signer,
+      rateRatio: raw?.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
+      slippage: raw?.tradeData?.slippage ?? defaultContext.tradeData.slippage,
+      slippagePercentage: raw?.tradeData?.slippagePercentage ?? defaultContext.tradeData.slippagePercentage,
+      slippagePercentageString: raw?.tradeData?.slippagePercentageString ?? defaultContext.tradeData.slippagePercentageString,
     },
   };
 };
@@ -103,13 +112,9 @@ function getInitialContextMap(chain: number) {
 }
 
 const getDefaultNetworkSettings = (chain: any) => {
-  if (chain && typeof chain === "string" && !isLowerCase(chain)) {
-    chain = chain.toLowerCase();
-  } else if (chain && typeof chain !== "number" && typeof chain !== "string") {
-    chain = chain.id;
-  }
+  const normalized = normalizeChainId(chain);
 
-  switch (chain) {
+  switch (normalized) {
     case ETHEREUM:
     case "ethereum":
       return defaultEthereumSettings;
@@ -125,4 +130,11 @@ const getDefaultNetworkSettings = (chain: any) => {
     default:
       return defaultEthereumSettings;
   }
+};
+
+const normalizeChainId = (chain: unknown): number | string => {
+  if (typeof chain === 'number') return chain;
+  if (typeof chain === 'string') return chain.toLowerCase();
+  if (typeof chain === 'object' && chain && 'id' in chain) return (chain as any).id;
+  return ETHEREUM;
 };

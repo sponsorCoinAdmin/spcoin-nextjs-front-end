@@ -9,7 +9,7 @@ import {
   TRADE_DIRECTION,
   TokenContract,
   ErrorMessage,
-  WalletAccount, // ✅ needed for recipientAccount
+  WalletAccount,
 } from '@/lib/structure/types'
 
 import {
@@ -19,7 +19,7 @@ import {
 } from '@/lib/context/ExchangeHelpers'
 
 export type ExchangeContextType = {
-  exchangeContext: ExchangeContextTypeOnly
+  exchangeContext: ExchangeContextTypeOnly // ⚠️ Consumers should not mutate directly
   setExchangeContext: (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => void
   setSellAmount: (amount: bigint) => void
   setBuyAmount: (amount: bigint) => void
@@ -27,7 +27,7 @@ export type ExchangeContextType = {
   setBuyTokenContract: (contract: TokenContract | undefined) => void
   setTradeDirection: (type: TRADE_DIRECTION) => void
   setSlippageBps: (bps: number) => void
-  setRecipientAccount: (wallet: WalletAccount | undefined) => void // ✅
+  setRecipientAccount: (wallet: WalletAccount | undefined) => void
 
   errorMessage: ErrorMessage | undefined
   setErrorMessage: (error: ErrorMessage | undefined) => void
@@ -40,14 +40,14 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const chainId = useChainId()
 
-  const [exchangeContext, setExchangeContextInternal] = useState<ExchangeContextTypeOnly | null>(null)
+  const [contextState, setContextState] = useState<ExchangeContextTypeOnly | null>(null)
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>()
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>()
 
   const setExchangeContext = (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => {
-    setExchangeContextInternal((prev) => {
+    setContextState((prev) => {
       const updated = prev ? updater(prev) : prev
-      if (updated) saveExchangeContext(updated) // ✅ persist on update
+      if (updated) saveExchangeContext(updated)
       return updated
     })
   }
@@ -105,7 +105,9 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
   }
 
   const setSlippageBps = (bps: number) => {
-    console.trace(`🕵️‍♂️ setSlippageBps called with`, bps)
+    if (process.env.NODE_ENV === 'development') {
+      console.trace(`🕵️‍♂️ setSlippageBps called with`, bps)
+    }
     setExchangeContext((prev) => ({
       ...prev,
       tradeData: { ...prev.tradeData, slippageBps: bps },
@@ -113,26 +115,25 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    if (!exchangeContext) {
-      const chain = chainId ?? 1
-      const stored = loadStoredExchangeContext()
-      const initial = getInitialContext(chain)
-      const sanitized = sanitizeExchangeContext(stored, chain)
+    if (contextState) return
 
-      if (!sanitized.tradeData.slippageBps || sanitized.tradeData.slippageBps <= 0) {
-        console.warn('⚠️ No valid slippageBps set — defaulting may be required.', sanitized.tradeData.slippageBps);
-      }
-      
-      setExchangeContextInternal(sanitized)
+    const chain = chainId ?? 1
+    const stored = loadStoredExchangeContext()
+    const sanitized = sanitizeExchangeContext(stored, chain)
+
+    if (!sanitized.tradeData.slippageBps || sanitized.tradeData.slippageBps <= 0) {
+      console.warn('⚠️ No valid slippageBps set — defaulting may be required.', sanitized.tradeData.slippageBps);
     }
-  }, [chainId, exchangeContext])
 
-  if (!exchangeContext) return null
+    setContextState(sanitized)
+  }, [chainId, contextState])
+
+  if (!contextState) return null
 
   return (
     <ExchangeContextState.Provider
       value={{
-        exchangeContext,
+        exchangeContext: contextState,
         setExchangeContext,
         setSellAmount,
         setBuyAmount,
@@ -140,7 +141,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
         setBuyTokenContract,
         setTradeDirection,
         setSlippageBps,
-        setRecipientAccount, // ✅ exposed
+        setRecipientAccount,
         errorMessage,
         setErrorMessage,
         apiErrorMessage,

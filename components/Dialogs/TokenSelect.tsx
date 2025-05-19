@@ -16,10 +16,8 @@ import {
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import DataList from './Resources/DataList';
 import { useChainId } from 'wagmi';
-import { debuglog } from 'util';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECTOR === 'true';
 const debugLog = createDebugLogger('TokenSelector', DEBUG_ENABLED, LOG_TIME);
@@ -50,8 +48,8 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
   const getAvatarSrc = (address: string, inputState: InputState, chainId: number) => {
     if (!address) return defaultMissingImage;
     if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
-    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
-    debugLog.log(`getAvatarSrc.logoURL=${logoURL}`)
+    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+    debugLog.log(`getAvatarSrc.logoURL=${logoURL}`);
     return logoURL;
   };
 
@@ -117,7 +115,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
             width={40}
             height={40}
             style={{ marginRight: '6px', borderRadius: '50%' }}
-            onError={reportMissingAvatar}
+            onError={() => reportMissingAvatar()}
           />
         ) : (
           item.emoji && (
@@ -145,7 +143,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
         />
       </div>
 
-      {validatedToken && inputState === InputState.VALIDATE_INPUT_PENDING && (
+      {validatedToken && inputState === InputState.VALID_INPUT_PENDING && (
         <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <div className="flex flex-row justify-between px-5 hover:bg-spCoin_Blue-900">
             <div className="cursor-pointer flex flex-row justify-between">
@@ -156,15 +154,11 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
                 height={40}
                 className={styles.tokenPreviewImg}
                 onClick={() => {
-                  if (validatedToken && inputState === InputState.VALIDATE_INPUT_PENDING) {
+                  if (validatedToken && inputState === InputState.VALID_INPUT_PENDING) {
                     validateAndMaybeClose(validatedToken);
                   }
                 }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null;
-                  target.src = defaultMissingImage;
-                }}
+                onError={() => reportMissingAvatar()}
               />
               <div>
                 <div className={styles.elementName}>{validatedToken.name}</div>
@@ -175,7 +169,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
         </div>
       )}
 
-      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALIDATE_INPUT_PENDING && (
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
           {validateInputStatus(inputState)}
         </div>

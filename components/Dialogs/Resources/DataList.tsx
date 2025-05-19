@@ -27,8 +27,7 @@ import { Address } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// 🌐 Debug logging flag and logger controlled by .env.local
-const LOG_TIME:boolean = false;
+const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
 const debugLog = createDebugLogger('DataList', DEBUG_ENABLED, LOG_TIME);
 
@@ -51,21 +50,23 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
   const [isClient, setIsClient] = useState(false);
   const chainId = useChainId();
   const { status } = useAccount();
-  if (status === 'disconnected')
-    debugLog.warn('Current chainId:', chainId, 'Connection status:', status);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  if (status === 'disconnected') {
+    debugLog.warn('Current chainId:', chainId, 'Connection status:', status);
+  }
+
   const dataFeedList = useMemo(() => {
     return isClient ? getDataFeedList(chainId) : [];
   }, [chainId, isClient]);
 
-  const LogoURL_List = useMemo(() => {
-    return dataFeedList.map((listElement) => ({
-      ...listElement,
-      logoURL: getLogoURL(chainId, listElement.address as Address, FEED_TYPE.TOKEN_LIST),
+  const logoTokenList = useMemo(() => {
+    return dataFeedList.map((token) => ({
+      ...token,
+      logoURL: getLogoURL(chainId, token.address as Address, FEED_TYPE.TOKEN_LIST),
     }));
   }, [dataFeedList]);
 
@@ -75,48 +76,46 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
 
   return (
     <>
-      {LogoURL_List.length === 0 ? (
+      {logoTokenList.length === 0 ? (
         <p>No data available.</p>
       ) : (
-        LogoURL_List.map((listElement, i) => {
-          const token = dataFeedList[i] as TokenContract;
-          return (
-            <div
-              key={listElement.address}
-              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
-              onClick={() => {
-                debugLog.log(`[DataList] Token selected: ${token.address}`);
-                onTokenSelect(token.address); // ✅ Only pass the address now
-              }}
-            >
-              <div className="cursor-pointer flex flex-row justify-between">
-                <img
-                  className={styles.elementLogo}
-                  src={listElement.logoURL || defaultMissingImage}
-                  alt={`${listElement.name} Token logoURL`}
-                />
-                <div>
-                  <div className={styles.elementName}>{listElement.name}</div>
-                  <div className={styles.elementSymbol}>{listElement.symbol}</div>
-                </div>
-              </div>
-              <div
-                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  alert(`${listElement.name} Address: ${listElement.address}`);
-                }}
-                onContextMenu={(e) => {
-                  e.preventDefault(); // Prevents the default browser context menu
-                  e.stopPropagation();
-                  alert(`${listElement.name} Record: ${stringifyBigInt(listElement.logoURL)}`);
-                }}
-              >
-                <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
+        logoTokenList.map((token) => (
+          <div
+            key={token.address}
+            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+            onClick={() => {
+              if (!token?.address) return;
+              debugLog.log(`[DataList] Token selected: ${token.address}`);
+              onTokenSelect(token.address);
+            }}
+          >
+            <div className="cursor-pointer flex flex-row justify-between">
+              <img
+                className={styles.elementLogo}
+                src={token.logoURL || defaultMissingImage}
+                alt={`${token.name} Token logoURL`}
+              />
+              <div>
+                <div className={styles.elementName}>{token.name}</div>
+                <div className={styles.elementSymbol}>{token.symbol}</div>
               </div>
             </div>
-          );
-        })
+            <div
+              className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                alert(`${token.name} Address: ${token.address}`);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                alert(`${token.name} Record: ${stringifyBigInt(token.logoURL)}`);
+              }}
+            >
+              <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
+            </div>
+          </div>
+        ))
       )}
     </>
   );

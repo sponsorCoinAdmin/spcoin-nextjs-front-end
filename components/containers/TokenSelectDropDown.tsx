@@ -1,3 +1,5 @@
+//File: components\containers\TokenSelectDropDown.tsx
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -18,20 +20,17 @@ import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// 🌐 Debug logging flag and logger controlled by .env.local
-const LOG_TIME:boolean = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DOKEN_SELECT_DROP_DOWN === 'true';
-const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
+const LOG_TIME: boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
+const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
-// Shared global set to track broken token logos
 const seenBrokenAvatars = new Set<string>();
 
-/////////////////////////////////////////////////////////////////////////////////
 export function useTokenLogoURL(tokenContract?: TokenContract): string {
   return useAddressLogoURL(
     tokenContract?.address,
     tokenContract?.chainId,
-    true // testInputState
+    true
   );
 }
 
@@ -51,14 +50,13 @@ export function useAddressLogoURL(
     if (testInputState && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY)
       return defaultMissingImage;
 
-  const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
-    debugLog.log(`getAddressLogoURL.logoURL=${logoURL}`)
-    return logoURL
+    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+    debugLog.log(`getAddressLogoURL.logoURL=${logoURL}`);
+    return logoURL;
   }, [address, chainIdOverride, fallbackChainId, inputState, testInputState]);
 
   return logoUrl;
 }
-/////////////////////////////////////////////////////////////////////////////////
 
 interface Props {
   containerType: CONTAINER_TYPE;

@@ -56,7 +56,6 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
 
-  // const chainId = sellTokenContract?.chainId || buyTokenContract?.chainId || 1;
   const seenBrokenImagesRef = useRef<Set<string>>(new Set());
   const previousAddressRef = useRef<string>('');
   const chainId = useChainId();
@@ -71,6 +70,10 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
     }
     previousAddressRef.current = debouncedAddress;
   }, [debouncedAddress, inputState]);
+
+  useEffect(() => {
+    seenBrokenImagesRef.current.clear();
+  }, [chainId]);
 
   const resolvedToken = useMappedTokenContract(
     isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined
@@ -114,11 +117,11 @@ export const useInputValidationState = (selectAddress: string | undefined) => {
     }
 
     if (
-      inputState !== InputState.VALIDATE_INPUT_PENDING ||
+      inputState !== InputState.VALID_INPUT_PENDING ||
       validatedToken?.address !== resolvedToken.address
     ) {
       setValidatedToken(resolvedToken);
-      debugSetInputState(InputState.VALIDATE_INPUT_PENDING, inputState, setInputState);
+      debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     }
   }, [debouncedAddress, resolvedToken, isResolved, isLoading, sellAddress, buyAddress, containerType]);
 
