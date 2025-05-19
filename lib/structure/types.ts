@@ -224,6 +224,10 @@ type TradeData = {
   sellTokenContract?: TokenContract;
   signer: any;
   slippageBps: number;
+  rateRatio: number;
+  slippage: number;
+  slippagePercentage: number;
+  slippagePercentageString: string;
   swapType: SWAP_TYPE;
   tradeDirection: TRADE_DIRECTION;
 };

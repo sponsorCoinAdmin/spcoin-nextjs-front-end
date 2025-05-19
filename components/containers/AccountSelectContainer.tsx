@@ -74,8 +74,17 @@ const AccountSelectContainer: React.FC = () => {
 
   return (
     <>
-      <div id="recipientContainerDiv_ID" className={classNames(styles.inputs, styles.AccountSelectContainer)}>
-        <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
+      <div
+        id="recipientContainerDiv_ID"
+        className={classNames(
+          styles.inputs,
+          styles.AccountSelectContainer,
+          spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
+            ? styles.noBottomRadius
+            : styles.withBottomRadius
+        )}
+      >
+        <div className={styles.lineDivider}></div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
         {recipientAccount && siteExists ? (
           <Link href={`Recipient?url=${recipientAccount.website}`} className={styles.recipientName}>

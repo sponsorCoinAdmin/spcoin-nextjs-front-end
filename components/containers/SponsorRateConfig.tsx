@@ -34,9 +34,7 @@ const SponsorRateConfig = () => {
     <div id="SponsorRateConfig_ID" className={styles.rateRatioContainer}>
       <div className={styles["inputs"]}>
         <div id="recipient-config" />
-        <div className={styles["lineDivider"]}>
-          -------------------------------------------------------------------
-        </div>
+        <div className={styles.lineDivider}></div>
         <div className={styles["rewardRatio"]}>
           Staking Reward Ratio:
         </div>

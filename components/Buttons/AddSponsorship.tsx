@@ -29,7 +29,7 @@ const AddSponsorship = () => {
     <>
       {spCoinDisplay === SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON && (
         <div
-          id="AddSponsorshipButton_ID"
+          // id="AddSponsorshipButton_ID"
           className={styles.addSponsorshipDiv}
           onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER)}
         >

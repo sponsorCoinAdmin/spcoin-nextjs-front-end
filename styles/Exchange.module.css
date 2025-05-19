@@ -316,11 +316,12 @@
 
 .lineDivider {
   position: absolute;
-  top: -23px;
+  top: -12px;
   left: 11px;
-  color: #94a3b8;
-  opacity: 0.1; 
-  font-size: 14px;
+  right: 11px; /* Ensures it spans the container width evenly */
+  height: 1px;
+  background-color: #94a3b8;
+  opacity: 0.2;
 }
 
 .manageSponsorshipsDiv {
@@ -408,8 +409,7 @@
   height: 57px !important;
   margin-bottom: 5px;
   font-size: 25px;
-  border-radius: 12px !important;
-}
+  border-radius: 0 0 12px 12px !important; /* ⬅️ Only bottom corners rounded */}
 
 .recipientPosition {
   position: absolute;
@@ -510,7 +510,7 @@
   border-width: 0px !important;
   height: 90px !important;
   font-size: 25px;
-  border-radius: 12px !important;
+  border-radius: 0 0 12px 12px !important; /* ⬅️ Only bottom corners rounded */
 }
 
 .swapButton {
@@ -632,3 +632,14 @@
   font-size: 14px;
   color: #94a3b8; 
 }
+
+.noBottomRadius {
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+}
+
+.withBottomRadius {
+  border-bottom-left-radius: 12px !important;
+  border-bottom-right-radius: 12px !important;
+}
+

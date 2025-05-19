@@ -36,9 +36,10 @@ import {
   SP_COIN_DISPLAY,
 } from "@/lib/structure/types";
 import styles from "@/styles/Exchange.module.css";
-import { spCoinStringDisplay } from "@/lib/spCoin/guiControl";
+import { spCoinDisplayString } from "@/lib/spCoin/guiControl";
+import classNames from "classnames";
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SPCOIN_DISPLAY === 'true';
 const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
@@ -191,11 +192,34 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
       localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER);
 
+  const showNoRadius = () => {
+  const isBuyTokenContainer = localContainerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
+  const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER;
+  const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
+  const isShowNoRadius = isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
+
+  debugLog.log(`🧩 showNoRadius() check:`);
+  debugLog.log(`   └─ isSellTokenContainer: ${isBuyTokenContainer}`);
+  debugLog.log(`   └─ isShowRecipient: ${isShowRecipient}`);
+  debugLog.log(`   └─ isShowRateConfig: ${isShowRateConfig}`);
+  debugLog.log(`   └─ isShowNoRadius: ${isShowNoRadius}`);
+
+  return isShowNoRadius;
+};
+
   return (
-    <div className={`${styles.inputs} ${styles.tokenSelectContainer}`}>
+    <div
+      className={classNames(
+        styles.inputs,
+        styles.tokenSelectContainer,
+        // showNoRadius() ? styles.withBottomRadius : styles.noBottomRadius
+      )}
+    >
       <input
-        className={styles.priceInput}
-        placeholder="0"
+        className={classNames(
+        styles.priceInput,
+        showNoRadius() ? styles.noBottomRadius : styles.withBottomRadius
+        )} placeholder="0"
         disabled={isInputDisabled}
         value={inputValue}
         onChange={(e) => handleInputChange(e.target.value)}
@@ -230,7 +254,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         ) : (
           <AddSponsorship />
         ))}
-        <span>{spCoinStringDisplay(spCoinDisplay)}</span>
+        <span>{DEBUG_ENABLED && spCoinDisplayString(spCoinDisplay)}</span>
     </div>
   );
 };

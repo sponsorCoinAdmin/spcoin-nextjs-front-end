@@ -30,7 +30,7 @@ const toggleElement = (element: any) => {
   }
 };
 
-const spCoinStringDisplay = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string => {
+const spCoinDisplayString = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string => {
   switch (spCoinDisplay) {
     case SP_COIN_DISPLAY.OFF:
       return `spCoinDisplay(${SP_COIN_DISPLAY.OFF}) = OFF`;
@@ -49,7 +49,7 @@ const spCoinStringDisplay = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string
 const useDisplaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
   const [, debugSetSpCoinDisplay] = useSpCoinDisplay();
   useEffect(() => {
-    debugLog.log(`🧩 [useDisplaySpCoinContainers] Sync to → ${spCoinStringDisplay(spCoinDisplay)}`);
+    debugLog.log(`🧩 [useDisplaySpCoinContainers] Sync to → ${spCoinDisplayString(spCoinDisplay)}`);
     debugSetSpCoinDisplay(spCoinDisplay);
   }, [spCoinDisplay]);
 };
@@ -57,7 +57,7 @@ const useDisplaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
 export {
   hideElement,
   showElement,
-  spCoinStringDisplay,
+  spCoinDisplayString,
   toggleElement,
   useDisplaySpCoinContainers
 } 

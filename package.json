@@ -23,6 +23,7 @@
     "@wagmi/core": "^2.6.17",
     "antd": "^5.16.2",
     "autoprefixer": "^10.4.19",
+    "classnames": "^2.5.1",
     "connectkit": "^1.7.3",
     "cors": "^2.8.5",
     "ethers": "^6.12.0",

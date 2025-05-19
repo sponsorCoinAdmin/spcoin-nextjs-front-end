@@ -15,7 +15,7 @@ import {
 } from "@/lib/structure/types";
 import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from "../spCoin/coreUtils";
-import { spCoinStringDisplay } from '@/lib/spCoin/guiControl';
+import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -268,10 +268,10 @@ export const debugSetSpCoinDisplay = (
 ) => {
   if (oldDisplay !== newDisplay) {
     debugLog.log(
-      `🔁 spCoinDisplay change: ${spCoinStringDisplay(oldDisplay)} → ${spCoinStringDisplay(newDisplay)}`
+      `🔁 spCoinDisplay change: ${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}`
     );
   } else {
-    debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinStringDisplay(oldDisplay)}`);
+    debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}`);
   }
 
   setExchangeContext((prev) => ({
