@@ -1,5 +1,10 @@
+// File: components\containers\RecipientSelectDropDown.tsx
+// Copyright (c) 2023 Robin van der Vliet
+// License: MIT License (https://opensource.org/licenses/MIT)
+// SPDX-License-Identifier: MIT
+
 import React, { useState, useCallback } from 'react';
-import { RecipientDialog } from '../Dialogs/Dialogs';
+import { RecipientDialog } from '@/components/Dialogs/Dialogs';
 import { DownOutlined } from "@ant-design/icons";
 import { WalletAccount } from '@/lib/structure/types';
 import { defaultMissingImage } from '@/lib/network/utils';
@@ -9,7 +14,7 @@ type Props = {
   callBackAccount: (walletAccount: WalletAccount) => void;
 };
 
-const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
+const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
@@ -18,7 +23,7 @@ const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackAccount }) =>
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (recipientAccount) {
         event.currentTarget.src = defaultMissingImage;
-        console.warn(`[AccountSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`);
+        console.warn(`[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`);
       }
     },
     [recipientAccount]
@@ -46,4 +51,4 @@ const WalletSelect: React.FC<Props> = ({ recipientAccount, callBackAccount }) =>
   );
 };
 
-export default WalletSelect;
+export default RecipientSelectDropDown;

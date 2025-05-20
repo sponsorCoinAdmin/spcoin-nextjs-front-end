@@ -1,3 +1,5 @@
+// File: components\Dialogs\RecipientSelectDialog.tsx
+
 "use client";
 
 import styles from "@/styles/Modal.module.css";
@@ -96,7 +98,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackAccount }: P
       return;
     }
 
-    const avatar = getLogoURL(exchangeContext, selectedWallet.address as Address, FEED_TYPE.RECIPIENT_WALLETS);
+    const avatar = getLogoURL(exchangeContext, selectedWallet.address as Address, FEED_TYPE.RECIPIENT_ACCOUNTS);
     selectedWallet.avatar = avatar;
 
     setWalletElement(selectedWallet); // ✅ Update wallet state
@@ -149,7 +151,7 @@ export default function Dialog({ showDialog, setShowDialog, callBackAccount }: P
         )}
 
         <div className={styles.modalScrollBar}>
-          <DataList dataFeedType={FEED_TYPE.RECIPIENT_WALLETS} updateTokenCallback={handleWalletSelect} />
+          <DataList dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS} updateTokenCallback={handleWalletSelect} />
         </div>
       </div>
     </dialog>

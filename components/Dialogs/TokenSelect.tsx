@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { getTokenLogoURL } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import { InputState, TokenContract, CONTAINER_TYPE, getInputStateString } from '@/lib/structure/types';
+import { InputState, TokenContract, CONTAINER_TYPE, getInputStateString, FEED_TYPE } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenContract,
@@ -178,9 +178,10 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
           <DataList
-            onTokenSelect={(address) => {
+            dataFeedType={FEED_TYPE.TOKEN_LIST}
+            onSelect={(token) => {
               manualEntryRef.current = false;
-              validateHexInput(address);
+              validateHexInput(token.address);
             }}
           />
         </div>

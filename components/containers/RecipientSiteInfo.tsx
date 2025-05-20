@@ -1,3 +1,10 @@
+// File: components\containers\RecipientSiteInfo.tsx
+// Author: Robin (robin@spcoin.com)
+// Date: 2023-09-19
+// Description: Recipient Site Info
+// License: MIT
+// Copyright (c) 2023 Robin (robin@spcoin.com)
+
 "use client";
 
 import { useEffect, useState } from "react";

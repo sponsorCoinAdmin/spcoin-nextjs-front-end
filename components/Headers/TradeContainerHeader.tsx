@@ -2,8 +2,8 @@ import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
-import ConfigDialog from '../Dialogs/Popup/ConfigDialog';
-import { openDialog } from '../Dialogs/Dialogs';
+import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
+import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext, useSlippageBps } from '@/lib/context/contextHooks';
 import { Settings } from 'lucide-react'; // replaces AntD icon

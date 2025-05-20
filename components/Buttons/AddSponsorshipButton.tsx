@@ -2,11 +2,11 @@
 
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import styles from "@/styles/Exchange.module.css";
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 import { useSpCoinDisplay } from '@/lib/context/contextHooks';
-import AccountSelectContainer from "../containers/AccountSelectContainer";
+import AccountSelectContainer from "@/components/containers/RecipientSelectContainer";
 
 const AddSponsorship = () => {
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();

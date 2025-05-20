@@ -1,3 +1,5 @@
+// File : components\containers\AccountSelectContainer.tsx
+
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -11,7 +13,7 @@ import cog_png from "@/public/assets/miscellaneous/cog.png";
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
 import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/contextHooks';
-import RecipientSelect from "./AccountSelectDropDown";
+import RecipientSelectDropDown from "./RecipientSelectDropDown";
 import { useSpCoinDisplay } from '@/lib/context/contextHooks';
 import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
@@ -37,7 +39,7 @@ const AccountSelectContainer: React.FC = () => {
     }
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 
-  const closeRecipientSelect = useCallback(() => {
+  const closeRecipientSelectDropDown = useCallback(() => {
     setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON);
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
@@ -96,7 +98,7 @@ const AccountSelectContainer: React.FC = () => {
           </Link>
         )}
         <div className={styles.recipientSelect}>
-          <RecipientSelect recipientAccount={recipientAccount} callBackAccount={setRecipientAccount} />
+          <RecipientSelectDropDown recipientAccount={recipientAccount} callBackAccount={setRecipientAccount} />
         </div>
         <div>
           <Image
@@ -108,7 +110,7 @@ const AccountSelectContainer: React.FC = () => {
             onClick={() => toggleSponsorRateConfig()}
           />
         </div>
-        <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelect}>
+        <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelectDropDown}>
           X
         </div>
       </div>

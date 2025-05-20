@@ -2,7 +2,7 @@
 
 import ConfigDialog from './Popup/ConfigDialog'
 import ErrorDialog from './ErrorDialog'
-import RecipientDialog from './AccountSelectDialog'
+import RecipientDialog from './RecipientSelectDialog'
 import TokenSelectDialog from './TokenSelectDialog'
 
 /** 

@@ -106,19 +106,19 @@ const getNativeWrapAddress = (chainId: number) : Address | undefined => {
 
 const getLogoURL = (
   chainId: number | undefined,
-  tokenAddress: Address,
+  address: Address,
   dataFeedType: FEED_TYPE
 ): string => {
-  if (!tokenAddress) return defaultMissingImage;
+  if (!address) return defaultMissingImage;
 
   const resolvedChainId = chainId ?? 1;
 
   switch (dataFeedType) {
     case FEED_TYPE.AGENT_ACCOUNTS:
-    case FEED_TYPE.RECIPIENT_WALLETS:
-      return `assets/accounts/${tokenAddress}/avatar.png`;
+    case FEED_TYPE.RECIPIENT_ACCOUNTS:
+      return `assets/accounts/${address}/avatar.png`;
     case FEED_TYPE.TOKEN_LIST:
-      return `assets/blockchains/${resolvedChainId}/contracts/${tokenAddress}/avatar.png`;
+      return `assets/blockchains/${resolvedChainId}/contracts/${address}/avatar.png`;
     default:
       return defaultMissingImage;
   }

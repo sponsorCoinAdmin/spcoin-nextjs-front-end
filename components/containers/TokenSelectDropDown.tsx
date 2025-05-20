@@ -4,7 +4,7 @@
 
 import { useState, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { TokenSelectDialog } from '../Dialogs/Dialogs';
+import { TokenSelectDialog } from '@/components/Dialogs/Dialogs';
 import { ChevronDown } from 'lucide-react';
 
 import {

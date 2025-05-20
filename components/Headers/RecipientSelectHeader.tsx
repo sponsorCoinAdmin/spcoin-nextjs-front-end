@@ -3,8 +3,8 @@ import { SettingOutlined } from "@ant-design/icons";
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
-import ConfigDialog from '../Dialogs/Popup/ConfigDialog';
-import { openDialog } from '../Dialogs/Dialogs';
+import ConfigDialog from '@/components/Dialogs/Dialogs/Popup/ConfigDialog';
+import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/contextHooks'
 import { SP_COIN_DISPLAY } from '@/lib/structure/types';

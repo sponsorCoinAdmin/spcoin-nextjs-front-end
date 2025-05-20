@@ -23,7 +23,7 @@ import {
   useBuyTokenContract,
 } from "@/lib/context/contextHooks";
 
-import AddSponsorship from "../Buttons/AddSponsorship";
+import AddSponsorship from "../Buttons/AddSponsorshipButton";
 import TokenSelectDropDown from "./TokenSelectDropDown";
 import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
 

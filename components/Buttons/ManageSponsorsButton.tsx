@@ -1,6 +1,6 @@
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
-import ManageSponsorships from '../Dialogs/ManageSponsorships';
+import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { useState, useEffect } from 'react';
 
 type Props = {

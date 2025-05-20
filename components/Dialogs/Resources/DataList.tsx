@@ -13,6 +13,7 @@ import {
   POLYGON,
   SEPOLIA,
   TokenContract,
+  WalletAccount,
 } from '@/lib/structure/types';
 import {
   defaultMissingImage,
@@ -23,7 +24,7 @@ import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
-import { Address } from 'viem';
+import { Address, isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -43,10 +44,11 @@ const getDataFeedList = (chainId: number) => {
 };
 
 interface DataListProps {
-  onTokenSelect: (address: string) => void;
+  dataFeedType: FEED_TYPE.TOKEN_LIST | FEED_TYPE.RECIPIENT_ACCOUNTS;
+  onSelect: (entry: TokenContract | WalletAccount) => void;
 }
 
-const DataList = ({ onTokenSelect }: DataListProps) => {
+const DataList = ({ dataFeedType, onSelect }: DataListProps) => {
   const [isClient, setIsClient] = useState(false);
   const chainId = useChainId();
   const { status } = useAccount();
@@ -66,9 +68,9 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
   const logoTokenList = useMemo(() => {
     return dataFeedList.map((token) => ({
       ...token,
-      logoURL: getLogoURL(chainId, token.address as Address, FEED_TYPE.TOKEN_LIST),
+      logoURL: getLogoURL(chainId, token.address as Address, dataFeedType),
     }));
-  }, [dataFeedList]);
+  }, [dataFeedList, chainId, dataFeedType]);
 
   if (!isClient) {
     return <p>Loading data...</p>;
@@ -79,43 +81,72 @@ const DataList = ({ onTokenSelect }: DataListProps) => {
       {logoTokenList.length === 0 ? (
         <p>No data available.</p>
       ) : (
-        logoTokenList.map((token) => (
-          <div
-            key={token.address}
-            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
-            onClick={() => {
-              if (!token?.address) return;
-              debugLog.log(`[DataList] Token selected: ${token.address}`);
-              onTokenSelect(token.address);
-            }}
-          >
-            <div className="cursor-pointer flex flex-row justify-between">
-              <img
-                className={styles.elementLogo}
-                src={token.logoURL || defaultMissingImage}
-                alt={`${token.name} Token logoURL`}
-              />
-              <div>
-                <div className={styles.elementName}>{token.name}</div>
-                <div className={styles.elementSymbol}>{token.symbol}</div>
+        logoTokenList.map((token) => {
+          const handleSelect = () => {
+            if (!token?.address || !isAddress(token.address)) return;
+            debugLog.log(`[DataList] Selected: ${token.address}`);
+
+            if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS) {
+              const wallet: WalletAccount = {
+                address: token.address as `0x${string}`,
+                symbol: token.symbol,
+                name: token.name,
+                avatar: token.logoURL || defaultMissingImage,
+                type: '',
+                website: '',
+                description: '',
+                status: '',
+              };
+              onSelect(wallet);
+            } else {
+              const tokenContract: TokenContract = {
+                address: token.address as `0x${string}`,
+                symbol: token.symbol,
+                name: token.name,
+                logoURL: token.logoURL || defaultMissingImage,
+                decimals: token.decimals || 18,
+                balance: 0n,
+                amount: 0n,
+                totalSupply: BigInt(0),
+              };
+              onSelect(tokenContract);
+            }
+          };
+
+          return (
+            <div
+              key={token.address}
+              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+              onClick={handleSelect}
+            >
+              <div className="cursor-pointer flex flex-row justify-between">
+                <img
+                  className={styles.elementLogo}
+                  src={token.logoURL || defaultMissingImage}
+                  alt={`${token.name} logo`}
+                />
+                <div>
+                  <div className={styles.elementName}>{token.name}</div>
+                  <div className={styles.elementSymbol}>{token.symbol}</div>
+                </div>
+              </div>
+              <div
+                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  alert(`${token.name} Address: ${token.address}`);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  alert(`${token.name} Record: ${stringifyBigInt(token.logoURL)}`);
+                }}
+              >
+                <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
               </div>
             </div>
-            <div
-              className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-              onClick={(e) => {
-                e.stopPropagation();
-                alert(`${token.name} Address: ${token.address}`);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                alert(`${token.name} Record: ${stringifyBigInt(token.logoURL)}`);
-              }}
-            >
-              <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
-            </div>
-          </div>
-        ))
+          );
+        })
       )}
     </>
   );
