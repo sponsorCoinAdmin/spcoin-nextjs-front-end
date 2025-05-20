@@ -21,7 +21,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECTOR === 'true';
 const debugLog = createDebugLogger('TokenSelector', DEBUG_ENABLED, LOG_TIME);
-const INPUT_PLACEHOLDER = 'Enter token address';
+const INPUT_PLACE_HOLDER = 'Type or paste token address';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 interface Props {
@@ -134,7 +134,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
         <input
           className={`${styles.modalElementInput} w-full`}
           autoComplete="off"
-          placeholder={INPUT_PLACEHOLDER}
+          placeholder={INPUT_PLACE_HOLDER}
           value={inputValue}
           onChange={(e) => {
             manualEntryRef.current = true;

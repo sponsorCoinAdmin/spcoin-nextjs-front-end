@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const defaultMilliSeconds = 600
-let isDebug:boolean = process.env.NEXT_PUBLIC_DEBUG === 'true'
+let isDebug:boolean = process.env.NEXT_PUBLIC_DEBOUNCE_DEBUG === 'true'
 isDebug = false;
 
 /**

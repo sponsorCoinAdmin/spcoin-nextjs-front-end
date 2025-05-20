@@ -97,7 +97,7 @@ export default function RecipientSelect({ closeDialog, onSelect }: Props) {
               <Image
                 src={selectedAccount.avatar || customUnknownImage_png}
                 className={styles.elementLogo}
-                alt="Wallet Avatar"
+                alt="Recipient Avatar"
               />
               <div>
                 <div className={styles.elementName}>{selectedAccount.name || 'Unknown Wallet'}</div>
@@ -106,7 +106,7 @@ export default function RecipientSelect({ closeDialog, onSelect }: Props) {
             </div>
             <div
               className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-              onClick={() => alert(`Wallet Address = ${selectedAccount.address}`)}
+              onClick={() => alert(`Recipient Address = ${selectedAccount.address}`)}
             >
               <Image src={info_png} className={styles.infoLogo} alt="Info" />
             </div>
@@ -117,7 +117,7 @@ export default function RecipientSelect({ closeDialog, onSelect }: Props) {
       <div className={styles.modalScrollBar}>
         <DataList
           dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-          onSelect={(wallet) => handleWalletSelect(wallet as WalletAccount)}
+          onSelect={(walletAccount) => handleWalletSelect(walletAccount as WalletAccount)}
         />
       </div>
     </>

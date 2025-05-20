@@ -10,13 +10,15 @@ import ConnectButton from "../Buttons/ConnectButton"
 import { defaultMissingImage, getBlockChainName, getBlockChainLogoURL } from "@/lib/network/utils";
 import { useChainId } from "wagmi";
 
-export default () => {
+export default function Header() {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
   const chainId = useChainId({ config });
   const [avatar, setAvatar] = useState<string>(getBlockChainLogoURL(chainId));
 
+  const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_DEBUG_TEST_PAGE_ON === 'true';
+
   useEffect(() => {
-    let network: string = getBlockChainName(chainId) || "";
+    const network = getBlockChainName(chainId) || "";
     setAvatar(getBlockChainLogoURL(chainId));
     setNetworkName(network);
   }, [chainId]);
@@ -25,7 +27,7 @@ export default () => {
     <header>
       <div className={styles.leftH}>
         <Image
-          className={styles.avatarImg} // ✅ changed from imgOptions to avatarImg
+          className={styles.avatarImg}
           src={spCoin_png}
           width={25}
           height={25}
@@ -35,7 +37,9 @@ export default () => {
         <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
         <div className={styles.headerItem}><Link href="/Recipient">Recipient</Link></div>
         <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
-        <div className={styles.headerItem}><Link href="/Exchange/Test">Test</Link></div>
+        {SHOW_TEST_LINK && (
+          <div className={styles.headerItem}><Link href="/Exchange/Test">Test</Link></div>
+        )}
       </div>
       <div className={styles.rightH}>
         <div className={styles.headerItem}>
