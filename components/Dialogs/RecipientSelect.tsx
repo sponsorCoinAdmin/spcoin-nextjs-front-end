@@ -1,30 +1,37 @@
+// File: components/Dialogs/RecipientSelect.tsx
+
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Address, isAddress } from 'viem';
-import { useExchangeContext } from '@/lib/context/contextHooks';
+import { useChainId } from 'wagmi';
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
 import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
 import { getLogoURL } from '@/lib/network/utils';
-import { useChainId } from 'wagmi';
-import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useHexInput } from '@/lib/hooks/useHexInput';
-import ScrollableDataList from '@/components/shared/ScrollableDataList';
+import { useExchangeContext } from '@/lib/context/contextHooks';
+import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import BasePreviewCard from '@/components/shared/BasePreviewCard';
+import ScrollableDataList from '@/components/shared/ScrollableDataList';
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
 
-const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
+const INPUT_PLACEHOLDER = 'Type or paste recipient wallet address';
 
-type Props = {
+interface Props {
   closeDialog: () => void;
   onSelect: (walletAccount: WalletAccount) => void;
-};
+}
 
 export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }: Props) {
-  const { inputValue, validateHexInput } = useHexInput();
-  const debouncedAddress = useDebounce(inputValue, 250);
+  const {
+    inputValue,
+    debouncedAddress,
+    onChange,
+    clearInput,
+    manualEntryRef,
+    validateHexInput
+  } = useDebouncedAddressInput();
 
   const [selectedAccount, setSelectedAccount] = useState<WalletAccount | undefined>();
   const chainId = useChainId();
@@ -50,7 +57,7 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
         type: '',
         website: '',
         description: '',
-        status: '',
+        status: ''
       };
       setSelectedAccount(wallet);
     } catch (e: any) {
@@ -63,18 +70,24 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
       alert(`Recipient cannot be the same as Agent (${agentAccount.symbol})`);
       return;
     }
-
     setSelectedAccount(wallet);
     onSelectProp(wallet);
     closeDialog();
   }, [agentAccount, onSelectProp, closeDialog]);
 
+  useEffect(() => {
+    if (!debouncedAddress || !selectedAccount) return;
+    if (!manualEntryRef.current) {
+      onSelect(selectedAccount);
+    }
+  }, [debouncedAddress, selectedAccount, onSelect, manualEntryRef]);
+
   return (
-    <>
+    <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
-        onChange={validateHexInput}
-        placeholder={INPUT_PLACE_HOLDER}
+        onChange={onChange}
+        placeholder={INPUT_PLACEHOLDER}
         statusEmoji="🔍"
       />
 
@@ -97,8 +110,11 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
 
       <ScrollableDataList<WalletAccount>
         dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-        onSelect={onSelect}
+        onSelect={(wallet) => {
+          manualEntryRef.current = false;
+          validateHexInput(wallet.address);
+        }}
       />
-    </>
+    </div>
   );
 }

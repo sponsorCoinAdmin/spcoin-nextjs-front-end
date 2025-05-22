@@ -109,21 +109,22 @@ const getLogoURL = (
   address: Address,
   dataFeedType: FEED_TYPE
 ): string => {
-  if (!address) return defaultMissingImage;
+  if (!address?.trim()) return defaultMissingImage;
 
-  const resolvedChainId = chainId ?? 1;
+  const path = (() => {
+    switch (dataFeedType) {
+      case FEED_TYPE.AGENT_ACCOUNTS:
+      case FEED_TYPE.RECIPIENT_ACCOUNTS:
+        return `/assets/accounts/${address}/avatar.png`;
+      case FEED_TYPE.TOKEN_LIST:
+        return `/assets/blockchains/${chainId ?? 1}/contracts/${address}/avatar.png`;
+      default:
+        return '';
+    }
+  })();
 
-  switch (dataFeedType) {
-    case FEED_TYPE.AGENT_ACCOUNTS:
-    case FEED_TYPE.RECIPIENT_ACCOUNTS:
-      return `assets/accounts/${address}/avatar.png`;
-    case FEED_TYPE.TOKEN_LIST:
-      return `assets/blockchains/${resolvedChainId}/contracts/${address}/avatar.png`;
-    default:
-      return defaultMissingImage;
-  }
+  return path || defaultMissingImage;
 };
-
 
 const useIsActiveAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
