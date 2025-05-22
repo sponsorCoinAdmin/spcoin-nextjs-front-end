@@ -40,7 +40,7 @@ import {
 
 import styles from "@/styles/Exchange.module.css";
 import { spCoinDisplayString } from "@/lib/spCoin/guiControl";
-import classNames from "classnames";
+import { clsx } from "clsx"; // ✅ clsx replaces classNames
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SPCOIN_DISPLAY === 'true';
 const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
@@ -104,7 +104,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     if (!account.chainId || account.chainId === exchangeContext?.tradeData?.chainId) return;
 
     const updatedTradeData = { ...tradeData, chainId: account.chainId };
-    exchangeContext.tradeData = updatedTradeData; // Assumes context is mutable for simplicity, otherwise use setExchangeContext
+    exchangeContext.tradeData = updatedTradeData;
     setSellAmount(0n);
     setSellTokenContract(undefined);
     setBuyAmount(0n);
@@ -177,14 +177,9 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   };
 
   return (
-    <div
-      className={classNames(
-        styles.inputs,
-        styles.tokenSelectContainer
-      )}
-    >
+    <div className={clsx(styles.inputs, styles.tokenSelectContainer)}>
       <input
-        className={classNames(
+        className={clsx(
           styles.priceInput,
           showNoRadius() ? styles.noBottomRadius : styles.withBottomRadius
         )}

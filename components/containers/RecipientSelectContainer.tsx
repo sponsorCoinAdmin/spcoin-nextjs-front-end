@@ -1,4 +1,4 @@
-// File : components\containers\AccountSelectContainer.tsx
+// File : components/containers/AccountSelectContainer.tsx
 
 'use client';
 
@@ -6,7 +6,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Exchange.module.css";
 import Image from "next/image";
 import Link from "next/link";
-import classNames from "classnames"; // ✅ Safe fallback import
+import { clsx } from "clsx"; // ✅ Replaced classNames with clsx
 
 import cog_png from "@/public/assets/miscellaneous/cog.png";
 
@@ -27,7 +27,6 @@ const AccountSelectContainer: React.FC = () => {
   const [siteExists, setSiteExists] = useState<boolean>(false);
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
-  // 🧩 Sync DOM visibility with spCoinDisplay
   useDisplaySpCoinContainers(spCoinDisplay);
 
   useEffect(() => {
@@ -65,12 +64,11 @@ const AccountSelectContainer: React.FC = () => {
     }
   }, [recipientAccount?.website]);
 
-   const toggleSponsorRateConfig = () => {
-    if(spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) {
+  const toggleSponsorRateConfig = () => {
+    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) {
       setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
-    }
-    else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER)
+    } else {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER);
     }
   };
 
@@ -78,7 +76,7 @@ const AccountSelectContainer: React.FC = () => {
     <>
       <div
         id="recipientContainerDiv_ID"
-        className={classNames(
+        className={clsx(
           styles.inputs,
           styles.AccountSelectContainer,
           spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
@@ -107,13 +105,14 @@ const AccountSelectContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
-            onClick={() => toggleSponsorRateConfig()}
+            onClick={toggleSponsorRateConfig}
           />
         </div>
         <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelectDropDown}>
           X
         </div>
       </div>
+
       {spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG && (
         <div>
           <SponsorRateConfig />

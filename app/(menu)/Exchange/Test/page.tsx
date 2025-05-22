@@ -5,7 +5,6 @@ import { Address } from 'viem';
 import { useAccount } from 'wagmi';
 
 // Components
-import ProviderConfigurationStatus from '@/components/ERC20/ProviderConfigurationStatus';
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
 import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields';
 import ReadWagmiERC20Records from '@/components/ERC20/ReadWagmiERC20Records';
@@ -41,24 +40,34 @@ function App() {
   const toggleContext = () => {
     if (!contextVisible) {
       setExchangeContextData(stringifyBigInt(exchangeContext));
+      setShowWallets(false); // ⬅️ Hide wallets when showing context
     } else {
       setExchangeContextData('');
     }
     setContextVisible((prev) => !prev);
   };
 
-  const logContext = () => {
-    console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
+  const toggleWallets = () => {
+    setShowWallets((prev) => {
+      const newValue = !prev;
+      if (newValue) {
+        setContextVisible(false); // ⬅️ Hide context when showing wallets
+        setExchangeContextData('');
+      }
+      return newValue;
+    });
   };
 
   const setTokenContractCallBack = (tokenContract: TokenContract | undefined) => {
     setTokenInput(tokenContract?.address);
   };
 
+  const logContext = () => {
+    console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
+  };
+
   return (
     <div className="space-y-6 p-6">
-      <ProviderConfigurationStatus />
-
       {/* Control Buttons */}
       <div className="flex flex-wrap gap-4">
         <button
@@ -70,18 +79,18 @@ function App() {
         </button>
 
         <button
+          onClick={toggleWallets}
+          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+        >
+          {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
+        </button>
+
+        <button
           onClick={logContext}
           type="button"
           className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
         >
           Log Context
-        </button>
-
-        <button
-          onClick={() => setShowWallets((prev) => !prev)}
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
-          {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
         </button>
       </div>
 
@@ -94,11 +103,10 @@ function App() {
 
       {/* Wallets Page Display */}
       {showWallets && (
-        <div className="w-full max-w-[1000px] h-[600px] overflow-y-auto border border-gray-700 rounded-lg shadow-inner bg-[#1f2639] p-4 mx-auto">
+        <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>
       )}
-
 
       {/* ERC20 Read Operations */}
       <div className="grid gap-6">

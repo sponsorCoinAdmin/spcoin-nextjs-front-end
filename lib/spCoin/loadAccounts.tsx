@@ -32,6 +32,9 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
                 try {
                     const accountData = fs.readFileSync(accountFilePath, "utf-8");
                     const account: WalletAccount = JSON.parse(accountData);
+                    if (!account.avatar) {
+                        account.avatar = `/assets/accounts/${account.address}/avatar.png`;
+                    }
                     accounts.push(account);
                 } catch (error) {
                     console.error(`❌ ERROR: Processing account file ${accountFilePath}:`, error);
@@ -63,6 +66,9 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
                     try {
                         const accountData = fs.readFileSync(accountFilePath, "utf-8");
                         const account: WalletAccount = JSON.parse(accountData);
+                        if (!account.avatar) {
+                            account.avatar = `/assets/accounts/${account.address}/avatar.png`;
+                        }
                         accounts.push(account);
                     } catch (error) {
                         console.error(`❌ ERROR: Reading account file ${accountFilePath}:`, error);
