@@ -1,7 +1,9 @@
-// File: components\containers\RecipientSelectDropDown.tsx
+// File: components/containers/RecipientSelectDropDown.tsx
 // Copyright (c) 2023 Robin van der Vliet
 // License: MIT License (https://opensource.org/licenses/MIT)
 // SPDX-License-Identifier: MIT
+
+'use client';
 
 import React, { useState, useCallback } from 'react';
 import { RecipientDialog } from '@/components/Dialogs/Dialogs';
@@ -29,9 +31,17 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     [recipientAccount]
   );
 
+  const handleRecipientSelect = useCallback((wallet: WalletAccount) => {
+    callBackAccount(wallet);
+  }, [callBackAccount]);
+
   return (
     <>
-      <RecipientDialog showDialog={showDialog} setShowDialog={setShowDialog} callBackAccount={callBackAccount} />
+      <RecipientDialog
+        showDialog={showDialog}
+        setShowDialog={setShowDialog}
+        onSelect={handleRecipientSelect}
+      />
       {recipientAccount ? (
         <>
           <img

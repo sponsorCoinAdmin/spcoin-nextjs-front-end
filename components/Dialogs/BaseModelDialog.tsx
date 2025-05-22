@@ -1,21 +1,19 @@
-// File: components/Dialogs/RecipientSelectDialog.tsx
-
-'use client';
-
-import styles from '@/styles/Modal.module.css';
-import { useEffect, useRef, useCallback } from 'react';
-import RecipientSelect from '@/components/Dialogs/RecipientSelect';
-import { WalletAccount } from '@/lib/structure/types';
-
-const TITLE_NAME = 'Select a Recipient';
-
-type Props = {
+// BaseModalDialog.tsx
+type BaseModalDialogProps = {
+  id: string;
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
-  onSelect: (walletAccount: WalletAccount) => void;
+  title: string;
+  children: React.ReactNode;
 };
 
-export default function RecipientSelectDialog({ showDialog, setShowDialog, onSelect }: Props) {
+export default function BaseModalDialog({
+  id,
+  showDialog,
+  setShowDialog,
+  title,
+  children,
+}: BaseModalDialogProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
   const closeDialog = useCallback(() => {
@@ -34,9 +32,9 @@ export default function RecipientSelectDialog({ showDialog, setShowDialog, onSel
   }, [showDialog]);
 
   return (
-    <dialog id="RecipientSelectDialog" ref={dialogRef} className={styles.modalContainer}>
+    <dialog id={id} ref={dialogRef} className={styles.modalContainer}>
       <div className="relative h-8 px-3 mb-1 text-gray-600">
-        <h1 className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg">{TITLE_NAME}</h1>
+        <h1 className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg">{title}</h1>
         <div
           className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white"
           onClick={closeDialog}
@@ -44,9 +42,8 @@ export default function RecipientSelectDialog({ showDialog, setShowDialog, onSel
           X
         </div>
       </div>
-
       <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>
-        <RecipientSelect closeDialog={closeDialog} onSelect={onSelect} />
+        {children}
       </div>
     </dialog>
   );

@@ -3,7 +3,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Address, isAddress } from 'viem';
 import { useExchangeContext } from '@/lib/context/contextHooks';
@@ -98,6 +98,11 @@ export default function RecipientSelect({ closeDialog, onSelect }: Props) {
                 src={selectedAccount.avatar || customUnknownImage_png}
                 className={styles.elementLogo}
                 alt="Recipient Avatar"
+                width={32}
+                height={32}
+                onError={(e) => {
+                  e.currentTarget.src = customUnknownImage_png.src;
+                }}
               />
               <div>
                 <div className={styles.elementName}>{selectedAccount.name || 'Unknown Wallet'}</div>
@@ -108,16 +113,16 @@ export default function RecipientSelect({ closeDialog, onSelect }: Props) {
               className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
               onClick={() => alert(`Recipient Address = ${selectedAccount.address}`)}
             >
-              <Image src={info_png} className={styles.infoLogo} alt="Info" />
+              <Image src={info_png} className={styles.infoLogo} alt="Info" width={20} height={20} />
             </div>
           </div>
         </div>
       )}
 
       <div className={styles.modalScrollBar}>
-        <DataList
+        <DataList<WalletAccount>
           dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-          onSelect={(walletAccount) => handleWalletSelect(walletAccount as WalletAccount)}
+          onSelect={handleWalletSelect}
         />
       </div>
     </>

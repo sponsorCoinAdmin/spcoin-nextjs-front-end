@@ -1,4 +1,4 @@
-// File: components\Dialogs\TokenSelectDialog.tsx
+// File: components/Dialogs/TokenSelectDialog.tsx
 
 'use client';
 
@@ -11,11 +11,11 @@ import { CONTAINER_TYPE, TokenContract, InputState } from "@/lib/structure/types
 export default function TokenSelectDialog({
   showDialog,
   setShowDialog,
-  onClose,
+  onSelect,
 }: {
   showDialog: boolean;
   setShowDialog: (bool: boolean) => void;
-  onClose: (contract: TokenContract | undefined, inputState: InputState) => void;
+  onSelect: (contract: TokenContract | undefined, inputState: InputState) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [containerType] = useContainerType();
@@ -52,7 +52,7 @@ export default function TokenSelectDialog({
       </div>
 
       <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>
-        <TokenSelect closeDialog={closeDialog} onClose={onClose} />
+        <TokenSelect closeDialog={closeDialog} onSelect={onSelect} />
       </div>
     </dialog>
   );

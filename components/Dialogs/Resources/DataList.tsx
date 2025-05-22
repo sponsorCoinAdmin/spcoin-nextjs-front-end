@@ -113,6 +113,8 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 className={styles.elementLogo}
                 src={wallet.avatar || defaultMissingImage}
                 alt={`${wallet.name} avatar`}
+                width={32}
+                height={32}
               />
               <div>
                 <div className={styles.elementName}>{wallet.name}</div>
@@ -126,7 +128,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
               }}
             >
-              <Image className={styles.infoLogo} src={info_png} alt="Info" />
+              <Image className={styles.infoLogo} src={info_png} alt="Info" width={20} height={20} />
             </div>
           </div>
         ))}
@@ -169,6 +171,8 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 className={styles.elementLogo}
                 src={token.logoURL || defaultMissingImage}
                 alt={`${token.name} logo`}
+                width={32}
+                height={32}
               />
               <div>
                 <div className={styles.elementName}>{token.name}</div>
@@ -187,7 +191,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 alert(`${token.name} Record: ${stringifyBigInt(token.logoURL)}`);
               }}
             >
-              <Image className={styles.infoLogo} src={info_png} alt="Info Image" />
+              <Image className={styles.infoLogo} src={info_png} alt="Info Image" width={20} height={20} />
             </div>
           </div>
         );

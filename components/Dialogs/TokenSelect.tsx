@@ -1,5 +1,3 @@
-// File: components\Dialogs\TokenSelect.tsx
-
 'use client';
 
 import styles from '@/styles/Modal.module.css';
@@ -7,7 +5,7 @@ import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { getTokenLogoURL } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import { InputState, TokenContract, CONTAINER_TYPE, getInputStateString, FEED_TYPE } from '@/lib/structure/types';
+import { InputState, TokenContract, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure/types';
 import {
   useContainerType,
   useBuyTokenContract,
@@ -18,7 +16,7 @@ import DataList from './Resources/DataList';
 import { useChainId } from 'wagmi';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOG_TIME:boolean = false;
+const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECTOR === 'true';
 const debugLog = createDebugLogger('TokenSelector', DEBUG_ENABLED, LOG_TIME);
 const INPUT_PLACE_HOLDER = 'Type or paste token address';
@@ -26,10 +24,10 @@ const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 interface Props {
   closeDialog: () => void;
-  onClose: (contract: TokenContract | undefined, state: InputState) => void;
+  onSelect: (contract: TokenContract | undefined, state: InputState) => void;
 }
 
-const TokenSelect = ({ closeDialog, onClose }: Props) => {
+const TokenSelect = ({ closeDialog, onSelect }: Props) => {
   const { inputValue, validateHexInput, clearInput } = useHexInput();
   const manualEntryRef = useRef(false);
   const debouncedAddress = useDebounce(inputValue, 250);
@@ -39,16 +37,22 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
   const [, setBuyTokenContract] = useBuyTokenContract();
   const chainId = useChainId();
 
-  const setTokenContractInContext = useMemo(() =>
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? setSellTokenContract : setBuyTokenContract
-  , [containerType, setSellTokenContract, setBuyTokenContract]);
+  const setTokenContractInContext = useMemo(
+    () =>
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? setSellTokenContract
+        : setBuyTokenContract,
+    [containerType, setSellTokenContract, setBuyTokenContract]
+  );
 
-  const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(debouncedAddress);
+  const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(
+    debouncedAddress
+  );
 
   const getAvatarSrc = (address: string, inputState: InputState, chainId: number) => {
     if (!address) return defaultMissingImage;
     if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
-    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
     debugLog.log(`getAvatarSrc.logoURL=${logoURL}`);
     return logoURL;
   };
@@ -69,25 +73,28 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
     }
   };
 
-  const validateAndMaybeClose = useCallback((token: TokenContract) => {
-    setTokenContractInContext(token);
-    clearInput();
-    onClose(token, InputState.CLOSE_INPUT);
-    closeDialog();
-  }, [clearInput, closeDialog, setTokenContractInContext, onClose]);
+  const validateAndMaybeClose = useCallback(
+    (token: TokenContract) => {
+      setTokenContractInContext(token);
+      clearInput();
+      onSelect(token, InputState.CLOSE_INPUT);
+      closeDialog();
+    },
+    [clearInput, closeDialog, setTokenContractInContext, onSelect]
+  );
 
   useEffect(() => {
     if (!debouncedAddress || isLoading || !validatedToken) return;
-
     if (!manualEntryRef.current) {
       validateAndMaybeClose(validatedToken);
     }
   }, [debouncedAddress, validatedToken, isLoading, validateAndMaybeClose]);
 
   const validateInputStatus = (state: InputState) => {
-    const duplicateMessage = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? 'Sell Address Cannot Be the Same as Buy Address'
-      : 'Buy Address Cannot Be the Same as Sell Address';
+    const duplicateMessage =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? 'Sell Address Cannot Be the Same as Buy Address'
+        : 'Buy Address Cannot Be the Same as Sell Address';
 
     const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useAvatar?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
@@ -105,7 +112,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
           display: 'flex',
           alignItems: 'center',
           color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange',
-          marginLeft: item.useAvatar ? '1.4rem' : 0
+          marginLeft: item.useAvatar ? '1.4rem' : 0,
         }}
       >
         {item.useAvatar ? (
@@ -118,9 +125,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
             onError={() => reportMissingAvatar()}
           />
         ) : (
-          item.emoji && (
-            <span style={{ fontSize: 36, marginRight: 6 }}>{item.emoji}</span>
-          )
+          item.emoji && <span style={{ fontSize: 36, marginRight: 6 }}>{item.emoji}</span>
         )}
         <span style={{ fontSize: '15px', marginLeft: '-18px' }}>{item.text}</span>
       </span>
@@ -177,7 +182,7 @@ const TokenSelect = ({ closeDialog, onClose }: Props) => {
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
-          <DataList
+          <DataList<TokenContract>
             dataFeedType={FEED_TYPE.TOKEN_LIST}
             onSelect={(token) => {
               manualEntryRef.current = false;
