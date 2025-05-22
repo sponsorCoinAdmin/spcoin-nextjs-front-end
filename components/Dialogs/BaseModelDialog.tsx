@@ -1,3 +1,6 @@
+import { useRef, useCallback, useEffect } from "react";
+import styles from '@/styles/Modal.module.css';
+
 // BaseModalDialog.tsx
 type BaseModalDialogProps = {
   id: string;

@@ -92,7 +92,7 @@ function TokenSelectDropDown({
       <TokenSelectDialog
         showDialog={showDialog}
         setShowDialog={setShowDialog}
-        onClose={(contract: TokenContract | undefined, inputState: InputState) => {
+        onSelect={(contract: TokenContract | undefined, inputState: InputState) => {
           if (inputState === InputState.CLOSE_INPUT && contract) {
             setDecimalAdjustedContract(contract);
           }

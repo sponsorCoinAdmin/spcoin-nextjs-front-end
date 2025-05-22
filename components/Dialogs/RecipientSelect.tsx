@@ -1,22 +1,19 @@
-// File: components/Dialogs/RecipientSelect.tsx
-
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import Image from 'next/image';
+import { useEffect, useState, useCallback } from 'react';
 import { Address, isAddress } from 'viem';
 import { useExchangeContext } from '@/lib/context/contextHooks';
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
-import DataList from './Resources/DataList';
 import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
 import { getLogoURL } from '@/lib/network/utils';
 import { useChainId } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png';
+import ScrollableDataList from '@/components/shared/ScrollableDataList';
+import HexAddressInput from '@/components/shared/HexAddressInput';
+import BasePreviewCard from '@/components/shared/BasePreviewCard';
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
-import info_png from '@/public/assets/miscellaneous/info1.png';
 
 const INPUT_PLACE_HOLDER = 'Type or paste recipient wallet address';
 
@@ -25,7 +22,7 @@ type Props = {
   onSelect: (walletAccount: WalletAccount) => void;
 };
 
-export default function RecipientSelect({ closeDialog, onSelect }: Props) {
+export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }: Props) {
   const { inputValue, validateHexInput } = useHexInput();
   const debouncedAddress = useDebounce(inputValue, 250);
 
@@ -61,70 +58,47 @@ export default function RecipientSelect({ closeDialog, onSelect }: Props) {
     }
   }, [chainId]);
 
-  const handleWalletSelect = useCallback((wallet: WalletAccount) => {
-    if (!wallet) {
-      alert('Invalid Wallet address.');
-      return;
-    }
-    if (wallet.address === agentAccount?.address) {
+  const onSelect = useCallback((wallet: WalletAccount) => {
+    if (agentAccount && wallet.address === agentAccount.address) {
       alert(`Recipient cannot be the same as Agent (${agentAccount.symbol})`);
       return;
     }
+
     setSelectedAccount(wallet);
-    onSelect(wallet);
+    onSelectProp(wallet);
     closeDialog();
-  }, [agentAccount, onSelect, closeDialog]);
+  }, [agentAccount, onSelectProp, closeDialog]);
 
   return (
     <>
-      <div className={styles.modalElementSelect}>
-        <div className={styles.leftH}>
-          <Image src={searchMagGlassGrey_png} className={styles.searchImage} alt="Search" />
-          <input
-            className={styles.modalElementSelect}
-            autoComplete="off"
-            placeholder={INPUT_PLACE_HOLDER}
-            onChange={(e) => validateHexInput(e.target.value)}
-            value={inputValue}
-          />
-        </div>
-      </div>
+      <HexAddressInput
+        inputValue={inputValue}
+        onChange={validateHexInput}
+        placeholder={INPUT_PLACE_HOLDER}
+        statusEmoji="🔍"
+      />
 
       {selectedAccount && (
         <div className={styles.modalInputSelect}>
-          <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-            <div className="cursor-pointer flex flex-row" onClick={() => handleWalletSelect(selectedAccount)}>
-              <Image
-                src={selectedAccount.avatar || customUnknownImage_png}
-                className={styles.elementLogo}
-                alt="Recipient Avatar"
-                width={32}
-                height={32}
-                onError={(e) => {
-                  e.currentTarget.src = customUnknownImage_png.src;
-                }}
-              />
-              <div>
-                <div className={styles.elementName}>{selectedAccount.name || 'Unknown Wallet'}</div>
-                <div className={styles.elementSymbol}>{selectedAccount.symbol || 'N/A'}</div>
-              </div>
-            </div>
-            <div
-              className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-              onClick={() => alert(`Recipient Address = ${selectedAccount.address}`)}
-            >
-              <Image src={info_png} className={styles.infoLogo} alt="Info" width={20} height={20} />
-            </div>
-          </div>
+          <BasePreviewCard
+            name={selectedAccount.name || ''}
+            symbol={selectedAccount.symbol || ''}
+            avatarSrc={selectedAccount.avatar || customUnknownImage_png.src}
+            onSelect={() => onSelect(selectedAccount)}
+            onInfoClick={() => alert(`Recipient Address = ${selectedAccount.address}`)}
+            onError={(e) => {
+              e.currentTarget.src = customUnknownImage_png.src;
+            }}
+            width={32}
+            height={32}
+          />
         </div>
       )}
 
-      <div className={styles.modalScrollBar}>
-        <DataList<WalletAccount>
-          dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-          onSelect={handleWalletSelect}
-        />
-      </div>
+      <ScrollableDataList<WalletAccount>
+        dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
+        onSelect={onSelect}
+      />
     </>
   );
 }
