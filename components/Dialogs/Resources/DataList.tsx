@@ -71,8 +71,22 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
         dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ? recipientJsonList : agentJsonList;
 
       loadAccounts(jsonList)
-        .then((accounts) => setWallets(accounts))
-        .catch((err) => debugLog.error('Failed to load accounts', err))
+        .then((accounts) => {
+          debugLog.log(`✅ Accounts loaded: ${accounts.length}`);
+          const sanitized = accounts.map((account, index) => {
+            const sanitizedAccount: WalletAccount = {
+              ...account,
+              name: account.name || 'N/A',
+              symbol: account.symbol || 'N/A',
+              avatar: account.avatar || `/assets/accounts/${account.address}/avatar.png`,
+              address: account.address || '0x0000000000000000000000000000000000000000',
+            };
+            debugLog.log(`📘 [${index}] ${sanitizedAccount.address} — name: ${sanitizedAccount.name}`);
+            return sanitizedAccount;
+          });
+          setWallets(sanitized);
+        })
+        .catch((err) => debugLog.error('❌ Failed to load accounts', err))
         .finally(() => setLoadingWallets(false));
     }
   }, [dataFeedType]);
@@ -92,7 +106,6 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
 
   if (!isClient) return <p>Loading data...</p>;
 
-  // Wallet account rendering
   if (
     dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
     dataFeedType === FEED_TYPE.AGENT_ACCOUNTS
@@ -102,41 +115,44 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
 
     return (
       <>
-        {wallets.map((wallet) => (
-          <div
-            key={wallet.address}
-            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-            onClick={() => onSelect(wallet as T)}
-          >
-            <div className="flex items-center gap-3">
-              <img
-                className={styles.elementLogo}
-                src={wallet.avatar || defaultMissingImage}
-                alt={`${wallet.name} avatar`}
-                width={32}
-                height={32}
-              />
-              <div>
-                <div className={styles.elementName}>{wallet.name}</div>
-                <div className={styles.elementSymbol}>{wallet.symbol}</div>
+        {wallets.map((wallet, index) => {
+          debugLog.log(`📤 Rendering wallet[${index}] - name: '${wallet.name}', address: ${wallet.address}`);
+
+          return (
+            <div
+              key={wallet.address}
+              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
+              onClick={() => onSelect(wallet as T)}
+            >
+              <div className="flex items-center gap-3">
+                <img
+                  className={styles.elementLogo}
+                  src={wallet.avatar || defaultMissingImage}
+                  alt={`${wallet.name} avatar`}
+                  width={32}
+                  height={32}
+                />
+                <div>
+                  <div className={styles.elementName}>{wallet.name}</div>
+                  <div className={styles.elementSymbol}>{wallet.symbol}</div>
+                </div>
+              </div>
+              <div
+                className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
+                }}
+              >
+                <Image className={styles.infoLogo} src={info_png} alt="Info" width={20} height={20} />
               </div>
             </div>
-            <div
-              className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-              onClick={(e) => {
-                e.stopPropagation();
-                alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
-              }}
-            >
-              <Image className={styles.infoLogo} src={info_png} alt="Info" width={20} height={20} />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </>
     );
   }
 
-  // Token list rendering
   if (logoTokenList.length === 0) {
     return <p>No tokens available.</p>;
   }
