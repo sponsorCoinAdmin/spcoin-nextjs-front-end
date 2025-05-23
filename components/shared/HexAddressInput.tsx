@@ -14,11 +14,11 @@ export default function HexAddressInput({
   inputValue,
   onChange,
   placeholder,
-  statusEmoji = '🔍',
+  statusEmoji,
 }: HexAddressInputProps) {
   return (
-    <div className={`${styles.modalElementSelectContainer} ${styles.leftH} mb-[-0.25rem]`}>
-      <div>{statusEmoji}</div>
+    <div className={`${styles.modalElementSelectContainer} flex items-center gap-2`}>
+      <div className="text-lg">{statusEmoji}</div>
       <input
         className={`${styles.modalElementInput} w-full`}
         autoComplete="off"
