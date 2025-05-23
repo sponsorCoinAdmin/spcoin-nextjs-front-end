@@ -11,6 +11,7 @@ type Props = {
   avatarSrc: string;
   onSelect: () => void;
   onInfoClick?: () => void;
+  onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void; // ✅ Added this
   onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
   width?: number;
   height?: number;
@@ -22,12 +23,16 @@ const BasePreviewCard: React.FC<Props> = ({
   avatarSrc,
   onSelect,
   onInfoClick,
+  onContextMenu,
   onError,
   width = 40,
   height = 40,
 }) => {
   return (
-    <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
+    <div
+      className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+      onContextMenu={onContextMenu} // ✅ Use it here
+    >
       <div className="cursor-pointer flex flex-row" onClick={onSelect}>
         <Image
           src={avatarSrc}
