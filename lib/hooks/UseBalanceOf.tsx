@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { Address, erc20Abi } from 'viem';
 import { useReadContract } from 'wagmi';
 

@@ -2,7 +2,7 @@ import PriceResponse from '@/lib/0X/typesV1';
 import { useBuyTokenContract } from '@/lib/context/contextHooks';
 import { TokenContract } from '@/lib/structure/types';
 import { formatUnits } from 'ethers';
-import * as React from 'react';
+import React from 'react';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE
 
 type Props = {

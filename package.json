@@ -13,7 +13,6 @@
     "installDevModules": "echo Installing SPCOIN-PROJECT-MODULES; . ./scripts/installNodeSubModules.sh"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.3.6",
     "@sponsorcoin/spcoin-lib": "^1.0.3",
     "@sponsorcoin/spcoin-lib-es6": "^1.0.0",
     "@sponsorcoin/weth-access-module-es6": "^1.0.5",
@@ -21,7 +20,6 @@
     "@types/pbkdf2": "^3.1.2",
     "@wagmi/connectors": "^5.1.4",
     "@wagmi/core": "^2.6.17",
-    "antd": "^5.16.2",
     "autoprefixer": "^10.4.19",
     "clsx": "^2.1.1",
     "connectkit": "^1.7.3",

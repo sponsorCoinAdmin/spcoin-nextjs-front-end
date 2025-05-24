@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Address, isAddress } from 'viem';
 import { useChainId } from 'wagmi';
 import { FEED_TYPE, WalletAccount, InputState } from '@/lib/structure/types';
@@ -10,7 +10,7 @@ import { useExchangeContext } from '@/lib/context/contextHooks';
 import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import BasePreviewCard from '@/components/shared/BasePreviewCard';
-import ScrollableDataList from '@/components/shared/ScrollableDataList';
+import DataList from '@/components/Dialogs/Resources/DataList';
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
 
 const INPUT_PLACEHOLDER = 'Type or paste recipient wallet address';
@@ -27,7 +27,7 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
     onChange,
     clearInput,
     manualEntryRef,
-    validateHexInput
+    validateHexInput,
   } = useDebouncedAddressInput();
 
   const [selectedAccount, setSelectedAccount] = useState<WalletAccount | undefined>();
@@ -52,7 +52,7 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
         type: metadata.type || '',
         website: metadata.website || '',
         description: metadata.description || '',
-        status: metadata.status || ''
+        status: metadata.status || '',
       };
 
       setSelectedAccount(wallet);
@@ -64,15 +64,18 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
     }
   }, [chainId]);
 
-  const onSelect = useCallback((wallet: WalletAccount) => {
-    if (agentAccount && wallet.address === agentAccount.address) {
-      alert(`Recipient cannot be the same as Agent (${agentAccount.symbol})`);
-      return;
-    }
-    clearInput();
-    onSelectProp(wallet, InputState.CLOSE_INPUT);
-    closeDialog();
-  }, [agentAccount, onSelectProp, closeDialog, clearInput]);
+  const onSelect = useCallback(
+    (wallet: WalletAccount) => {
+      if (agentAccount && wallet.address === agentAccount.address) {
+        alert(`Recipient cannot be the same as Agent (${agentAccount.symbol})`);
+        return;
+      }
+      clearInput();
+      onSelectProp(wallet, InputState.CLOSE_INPUT);
+      closeDialog();
+    },
+    [agentAccount, onSelectProp, closeDialog, clearInput]
+  );
 
   useEffect(() => {
     if (!debouncedAddress || !isAddress(debouncedAddress)) {
@@ -84,8 +87,8 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
   }, [debouncedAddress, fetchAccountDetails]);
 
   useEffect(() => {
-    if (!debouncedAddress || !selectedAccount) return;
-    if (!manualEntryRef.current && inputState === InputState.VALID_INPUT) {
+    if (!debouncedAddress || !selectedAccount || inputState !== InputState.VALID_INPUT) return;
+    if (!manualEntryRef.current) {
       onSelect(selectedAccount);
     }
   }, [debouncedAddress, selectedAccount, inputState, onSelect, manualEntryRef]);
@@ -98,9 +101,33 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
         return '❌';
       case InputState.VALID_INPUT:
         return '✅';
+      case InputState.VALID_INPUT_PENDING:
+        return '⏳';
       default:
         return '🔍';
     }
+  };
+
+  const validateInputStatus = (state: InputState) => {
+    const emojiMap: Partial<Record<InputState, { emoji?: string; text: string }>> = {
+      [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid address required.' },
+      [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Recipient not found.' },
+    };
+    const item = emojiMap[state];
+    if (!item) return null;
+    return (
+      <span
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          color: 'red',
+          marginLeft: '1.2rem',
+        }}
+      >
+        {item.emoji && <span style={{ fontSize: 24, marginRight: 6 }}>{item.emoji}</span>}
+        <span style={{ fontSize: '15px' }}>{item.text}</span>
+      </span>
+    );
   };
 
   return (
@@ -112,7 +139,7 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
         statusEmoji={getInputStatusImage()}
       />
 
-      {selectedAccount && inputState === InputState.VALID_INPUT && (
+      {selectedAccount && inputState === InputState.VALID_INPUT_PENDING && (
         <div className={styles.modalInputSelect}>
           <BasePreviewCard
             name={selectedAccount.name || ''}
@@ -133,9 +160,15 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
         </div>
       )}
 
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+        <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
+          {validateInputStatus(inputState)}
+        </div>
+      )}
+
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
-          <ScrollableDataList<WalletAccount>
+          <DataList<WalletAccount>
             dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
             onSelect={(wallet) => {
               manualEntryRef.current = false;

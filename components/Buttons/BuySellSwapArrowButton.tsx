@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ArrowDown } from 'lucide-react';
-import * as React from 'react';
+import React from 'react';
 
 let sharedState = false;
 let subscribers: ((val: boolean) => void)[] = [];

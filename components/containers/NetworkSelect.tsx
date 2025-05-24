@@ -1,6 +1,10 @@
+// File: components/containers/NetworkSelect.tsx
+
+'use client';
+
 import React, { useEffect, useMemo } from 'react';
 import styles from '@/styles/Header.module.css';
-import { DownOutlined } from "@ant-design/icons";
+import { ChevronDown } from 'lucide-react';
 import { NetworkElement } from '@/lib/structure/types';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 import networks from '@/lib/network/initialize/networks.json';
@@ -27,10 +31,10 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
             onClick={() => alert(JSON.stringify(network, null, 2))}
           >
             <img
-                src={network.img}
-                alt={network.symbol}
-                className="h-9 w-9 mr-2
-                rounded-md cursor-pointer" />
+              src={network.img}
+              alt={network.symbol}
+              className="h-9 w-9 mr-2 rounded-md cursor-pointer"
+            />
             <div>{network.name}</div>
           </div>
         </div>
@@ -45,11 +49,16 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
           <img
             alt={networkElement.name}
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            src={networkElement.img}
+            src={networkElement.logoURL}
             onClick={() => alert(`networkElement ${JSON.stringify(networkElement, null, 2)}`)}
           />
           {networkElement.name}
-          <DownOutlined id={selectId} onClick={() => toggleElement("networks")} />
+          <ChevronDown
+            id={selectId}
+            size={16}
+            onClick={() => toggleElement("networks")}
+            style={{ cursor: 'pointer', marginLeft: '0.5rem' }}
+          />
         </div>
         <div id="networks" className={styles.networks}>
           {networkOptions}

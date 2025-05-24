@@ -7,9 +7,9 @@
 
 import React, { useState, useCallback } from 'react';
 import { RecipientDialog } from '@/components/Dialogs/Dialogs';
-import { DownOutlined } from "@ant-design/icons";
 import { WalletAccount } from '@/lib/structure/types';
 import { defaultMissingImage } from '@/lib/network/utils';
+import { ChevronDown } from 'lucide-react';
 
 type Props = {
   recipientAccount: WalletAccount | undefined;
@@ -56,7 +56,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
       ) : (
         <> &nbsp; Select Recipient: </>
       )}
-      <DownOutlined onClick={openDialog} />
+      <ChevronDown size={16} onClick={openDialog} style={{ cursor: 'pointer', marginLeft: '0.5rem' }} />
     </>
   );
 };

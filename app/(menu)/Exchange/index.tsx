@@ -1,6 +1,6 @@
 import PriceView from "./Price/index";
 import { EXCHANGE_STATE } from "@/lib/structure/types";
-import * as React from 'react';
+import React from 'react';
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;
 let exchangeState:EXCHANGE_STATE;
