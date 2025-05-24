@@ -1,3 +1,5 @@
+// File: components/Dialogs/AddressSelectDialog.tsx
+
 'use client';
 
 import { useMemo } from 'react';
@@ -16,7 +18,7 @@ import {
   useContainerType,
 } from '@/lib/context/contextHooks';
 
-// Generic version
+// Generic Address Select Dialog
 interface BaseProps<T> {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
@@ -64,7 +66,7 @@ export default function AddressSelectDialog<T extends { address: string; name?: 
   );
 }
 
-// Usage example for Token:
+// Token Dialog Wrapper
 export function TokenDialogWrapper(props: {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
@@ -110,7 +112,7 @@ export function TokenDialogWrapper(props: {
   );
 }
 
-// Usage example for Recipient:
+// Recipient Dialog Wrapper
 export function RecipientDialogWrapper(props: {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
@@ -118,8 +120,7 @@ export function RecipientDialogWrapper(props: {
 }) {
   return (
     <AddressSelectDialog<WalletAccount>
-      showDialog={props.showDialog}
-      setShowDialog={props.setShowDialog}
+      {...props}
       title="Select a Recipient"
       feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
       inputPlaceholder="Paste recipient wallet address"
