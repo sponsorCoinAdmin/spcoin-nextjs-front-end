@@ -1,53 +1,68 @@
 // File: components/containers/RecipientSelectDropDown.tsx
-// Copyright (c) 2023 Robin van der Vliet
-// License: MIT License (https://opensource.org/licenses/MIT)
-// SPDX-License-Identifier: MIT
 
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { RecipientDialog } from '@/components/Dialogs/Dialogs';
-import { WalletAccount } from '@/lib/structure/types';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { RecipientDialogWrapper } from '@/components/Dialogs/AddressSelectDialog';
+import { WalletAccount, InputState } from '@/lib/structure/types';
 import { ChevronDown } from 'lucide-react';
+import { useSafeAvatarURL } from '@/lib/hooks/useSafeAvatarURL';
 
-type Props = {
+interface Props {
   recipientAccount: WalletAccount | undefined;
   callBackAccount: (walletAccount: WalletAccount) => void;
-};
+}
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
   const [showDialog, setShowDialog] = useState(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
 
+  const handleRecipientSelect = useCallback(
+    (wallet: WalletAccount) => {
+      console.debug('✅ [RecipientSelectDropDown] Received wallet from dialog:', wallet);
+      callBackAccount(wallet);
+    },
+    [callBackAccount]
+  );
+
+  const avatarSrc = useSafeAvatarURL(
+    recipientAccount?.address,
+    undefined,
+    recipientAccount?.avatar
+  );
+
   const handleAvatarError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (recipientAccount) {
-        event.currentTarget.src = defaultMissingImage;
-        console.warn(`[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`);
+        event.currentTarget.src = avatarSrc;
+        console.warn(
+          `[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`
+        );
       }
     },
-    [recipientAccount]
+    [recipientAccount, avatarSrc]
   );
-
-  const handleRecipientSelect = useCallback((wallet: WalletAccount) => {
-    callBackAccount(wallet);
-  }, [callBackAccount]);
 
   return (
     <>
-      <RecipientDialog
+      <RecipientDialogWrapper
         showDialog={showDialog}
         setShowDialog={setShowDialog}
-        onSelect={handleRecipientSelect}
+        onSelect={(wallet, state) => {
+          console.debug('🎯 [RecipientDialogWrapper -> DropDown] onSelect triggered', { wallet, state });
+          if (state === InputState.CLOSE_INPUT) {
+            handleRecipientSelect(wallet);
+            setShowDialog(false);
+          }
+        }}
       />
       {recipientAccount ? (
         <>
           <img
             alt={recipientAccount.name}
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            src={recipientAccount.avatar}
+            src={avatarSrc}
             onClick={() => alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`)}
             onError={handleAvatarError}
           />

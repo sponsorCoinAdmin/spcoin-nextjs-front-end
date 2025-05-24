@@ -1,10 +1,8 @@
-//File: components\containers\TokenSelectDropDown.tsx
-
 'use client';
 
 import { useState, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { TokenSelectDialog } from '@/components/Dialogs/Dialogs';
+import { TokenDialogWrapper } from '@/components/Dialogs/AddressSelectDialog';
 import { ChevronDown } from 'lucide-react';
 
 import {
@@ -45,13 +43,22 @@ export function useAddressLogoURL(
   const logoUrl = useMemo(() => {
     const chainId = chainIdOverride ?? fallbackChainId;
 
-    if (!address || !isAddress(address)) return defaultMissingImage;
+    if (!address || !isAddress(address)) {
+      debugLog.warn('⚠️ Invalid or missing address for logo', { address });
+      return defaultMissingImage;
+    }
+
+    if (!chainId) {
+      debugLog.warn('⚠️ Missing chainId for logo path', { address });
+      return defaultMissingImage;
+    }
+
     if (seenBrokenAvatars.has(address)) return defaultMissingImage;
     if (testInputState && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY)
       return defaultMissingImage;
 
     const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
-    debugLog.log(`getAddressLogoURL.logoURL=${logoURL}`);
+    debugLog.log(`✅ getAddressLogoURL.logoURL = ${logoURL}`);
     return logoURL;
   }, [address, chainIdOverride, fallbackChainId, inputState, testInputState]);
 
@@ -89,10 +96,10 @@ function TokenSelectDropDown({
 
   return (
     <>
-      <TokenSelectDialog
+      <TokenDialogWrapper
         showDialog={showDialog}
         setShowDialog={setShowDialog}
-        onSelect={(contract: TokenContract | undefined, inputState: InputState) => {
+        onSelect={(contract: TokenContract, inputState: InputState) => {
           if (inputState === InputState.CLOSE_INPUT && contract) {
             setDecimalAdjustedContract(contract);
           }

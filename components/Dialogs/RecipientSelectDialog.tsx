@@ -1,8 +1,8 @@
 'use client';
 
-import { WalletAccount } from '@/lib/structure/types';
-import RecipientSelect from '@/components/Dialogs/RecipientSelect';
-import BaseModalDialog from "@/components/Dialogs/BaseModelDialog";
+import { WalletAccount, InputState, FEED_TYPE } from '@/lib/structure/types';
+import BaseModalDialog from '@/components/Dialogs/BaseModelDialog';
+import AddressSelect from '@/components/Dialogs/AddressSelect';
 
 type Props = {
   showDialog: boolean;
@@ -18,7 +18,14 @@ export default function RecipientSelectDialog({ showDialog, setShowDialog, onSel
       setShowDialog={setShowDialog}
       title="Select a Recipient"
     >
-      <RecipientSelect closeDialog={() => setShowDialog(false)} onSelect={onSelect} />
+      <AddressSelect<WalletAccount>
+        feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
+        inputPlaceholder="Paste recipient wallet address"
+        closeDialog={() => setShowDialog(false)}
+        onSelect={(account, state) => {
+          if (state === InputState.CLOSE_INPUT) onSelect(account);
+        }}
+      />
     </BaseModalDialog>
   );
 }

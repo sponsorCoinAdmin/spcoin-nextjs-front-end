@@ -8,8 +8,6 @@ import {
   InputState,
   TokenContract,
   WalletAccount,
-  SponsorAccount,
-  AgentAccount,
   CONTAINER_TYPE,
   getInputStateString,
   FEED_TYPE,
@@ -25,6 +23,9 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from './wagmiERC20hooks';
 import { getLogoURL } from '@/lib/network/utils';
 
+// Treat AgentAccount and SponsorAccount as WalletAccount (if type not available)
+type AgentAccount = WalletAccount;
+type SponsorAccount = WalletAccount;
 type ValidAddressAccount = WalletAccount | SponsorAccount | AgentAccount;
 
 function debugSetInputState(
@@ -104,8 +105,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       const basePath = {
         [FEED_TYPE.RECIPIENT_ACCOUNTS]: 'accounts',
         [FEED_TYPE.AGENT_ACCOUNTS]: 'accounts',
-        [FEED_TYPE.SPONSOR_ACCOUNTS]: 'accounts',
-      }[feedType] || 'unknown';
+      }[feedType as FEED_TYPE.RECIPIENT_ACCOUNTS | FEED_TYPE.AGENT_ACCOUNTS] || 'unknown';
 
       const metaURL = `/assets/${basePath}/${debouncedAddress}/wallet.json`;
       const metaResponse = await fetch(metaURL);
@@ -157,7 +157,6 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
 
     if (
       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
-      feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
       feedType === FEED_TYPE.AGENT_ACCOUNTS
     ) {
       fetchAccountMetadata();
