@@ -1,124 +1,156 @@
-// File: components/Dialogs/RecipientSelect.tsx
-
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useState, useCallback } from 'react';
-import { Address, isAddress } from 'viem';
+import React, { useEffect, useCallback, useMemo } from 'react';
+import { getTokenLogoURL } from '@/lib/network/utils';
+import { InputState, TokenContract, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure/types';
+import {
+  useContainerType,
+  useBuyTokenContract,
+  useSellTokenContract,
+} from '@/lib/context/contextHooks';
+import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import DataList from './Resources/DataList';
 import { useChainId } from 'wagmi';
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
-import { FEED_TYPE, WalletAccount } from '@/lib/structure/types';
-import { getLogoURL } from '@/lib/network/utils';
-import { useExchangeContext } from '@/lib/context/contextHooks';
-import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 import HexAddressInput from '@/components/shared/HexAddressInput';
+import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 import BasePreviewCard from '@/components/shared/BasePreviewCard';
-import ScrollableDataList from '@/components/shared/ScrollableDataList';
-import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
 
-const INPUT_PLACEHOLDER = 'Type or paste recipient wallet address';
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECTOR === 'true';
+const debugLog = createDebugLogger('TokenSelector', DEBUG_ENABLED, LOG_TIME);
+
+const INPUT_PLACE_HOLDER = 'Type or paste token address';
+const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 interface Props {
   closeDialog: () => void;
-  onSelect: (walletAccount: WalletAccount) => void;
+  onSelect: (contract: TokenContract | undefined, state: InputState) => void;
 }
 
-export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }: Props) {
+export default function TokenSelect({ closeDialog, onSelect: onSelectProp }: Props) {
   const {
     inputValue,
     debouncedAddress,
     onChange,
     clearInput,
     manualEntryRef,
-    validateHexInput
+    validateHexInput,
   } = useDebouncedAddressInput();
 
-  const [selectedAccount, setSelectedAccount] = useState<WalletAccount | undefined>();
+  const [containerType] = useContainerType();
+  const [, setSellTokenContract] = useSellTokenContract();
+  const [, setBuyTokenContract] = useBuyTokenContract();
   const chainId = useChainId();
-  const { exchangeContext } = useExchangeContext();
-  const agentAccount = exchangeContext.agentAccount;
 
-  const fetchAccountDetails = useCallback(async (walletAddr: string) => {
-    try {
-      const retResponse = await getWagmiBalanceOfRec(walletAddr);
-      const wallet: WalletAccount = {
-        address: walletAddr,
-        symbol: retResponse.symbol,
-        avatar: getLogoURL(chainId, walletAddr as Address, FEED_TYPE.RECIPIENT_ACCOUNTS),
-        name: '',
-        type: '',
-        website: '',
-        description: '',
-        status: ''
-      };
-      setSelectedAccount(wallet);
-    } catch (e: any) {
-      console.error('ERROR: Fetching wallet details failed', e.message);
-    }
-  }, [chainId]);
+  const setTokenContractInContext = useMemo(
+    () =>
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? setSellTokenContract
+        : setBuyTokenContract,
+    [containerType, setSellTokenContract, setBuyTokenContract]
+  );
 
-  const onSelect = useCallback((wallet: WalletAccount) => {
-    if (agentAccount && wallet.address === agentAccount.address) {
-      alert(`Recipient cannot be the same as Agent (${agentAccount.symbol})`);
-      return;
-    }
+  const { inputState, validatedToken, isLoading, reportMissingAvatar } = useInputValidationState(
+    debouncedAddress
+  );
+
+  const onSelect = useCallback((token: TokenContract) => {
+    setTokenContractInContext(token);
     clearInput();
-    onSelectProp(wallet);
+    onSelectProp(token, InputState.CLOSE_INPUT);
     closeDialog();
-  }, [agentAccount, onSelectProp, closeDialog, clearInput]);
+  }, [setTokenContractInContext, clearInput, onSelectProp, closeDialog]);
 
   useEffect(() => {
-    if (!debouncedAddress || !isAddress(debouncedAddress)) {
-      setSelectedAccount(undefined);
-      return;
-    }
-    fetchAccountDetails(debouncedAddress);
-  }, [debouncedAddress, fetchAccountDetails]);
-
-  useEffect(() => {
-    if (!debouncedAddress || !selectedAccount) return;
+    if (!debouncedAddress || isLoading || !validatedToken) return;
     if (!manualEntryRef.current) {
-      onSelect(selectedAccount);
+      onSelect(validatedToken);
     }
-  }, [debouncedAddress, selectedAccount, onSelect, manualEntryRef]);
+  }, [debouncedAddress, validatedToken, isLoading, manualEntryRef, onSelect]);
+
+  const getInputStatusImage = () => {
+    switch (inputState) {
+      case InputState.INVALID_ADDRESS_INPUT:
+        return '❓';
+      case InputState.DUPLICATE_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        return '❌';
+      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+        return '⚠️';
+      case InputState.VALID_INPUT:
+        return '✅';
+      default:
+        return '🔍';
+    }
+  };
+
+  const validateInputStatus = (state: InputState) => {
+    const duplicateMessage =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? 'Sell Address Cannot Be the Same as Buy Address'
+        : 'Buy Address Cannot Be the Same as Sell Address';
+
+    const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useAvatar?: boolean }>> = {
+      [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid Token Address Required!' },
+      [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useAvatar: true },
+      [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Blockchain token missing local image.' },
+      [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Contract not found on blockchain!' },
+    };
+
+    const item = emojiMap[state];
+    if (!item) return null;
+
+    return (
+      <span
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          color: state === InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN ? 'red' : 'orange',
+          marginLeft: item.useAvatar ? '1.4rem' : 0,
+        }}
+      >
+        {item.emoji && <span style={{ fontSize: 36, marginRight: 6 }}>{item.emoji}</span>}
+        <span style={{ fontSize: '15px', marginLeft: '-18px' }}>{item.text}</span>
+      </span>
+    );
+  };
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
         onChange={onChange}
-        placeholder={INPUT_PLACEHOLDER}
-        statusEmoji="🔍"
+        placeholder={INPUT_PLACE_HOLDER}
+        statusEmoji={getInputStatusImage()}
       />
 
-      {selectedAccount && (
-        <div className={styles.modalInputSelect}>
+      {validatedToken && inputState === InputState.VALID_INPUT_PENDING && (
+        <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
           <BasePreviewCard
-            name={selectedAccount.name || ''}
-            symbol={selectedAccount.symbol || ''}
-            avatarSrc={selectedAccount.avatar?.trim() || customUnknownImage_png.src}
-            onSelect={() => onSelect(selectedAccount)}
-            onInfoClick={() => alert(`Recipient Address = ${selectedAccount.address}`)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              alert(`Right-click Recipient:\nName: ${selectedAccount.name}\nAddress: ${selectedAccount.address}`);
-            }}
-            onError={(e) => {
-              e.currentTarget.src = customUnknownImage_png.src;
-            }}
-            width={32}
-            height={32}
+            name={validatedToken.name || ''}
+            symbol={validatedToken.symbol || ''}
+            avatarSrc={getTokenLogoURL(validatedToken)}
+            onSelect={() => onSelect(validatedToken)}
+            onError={() => reportMissingAvatar()}
           />
+        </div>
+      )}
+
+      {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
+        <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
+          {validateInputStatus(inputState)}
         </div>
       )}
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
-          <ScrollableDataList<WalletAccount>
-            dataFeedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-            onSelect={(wallet) => {
+          <DataList<TokenContract>
+            dataFeedType={FEED_TYPE.TOKEN_LIST}
+            onSelect={(token) => {
               manualEntryRef.current = false;
-              validateHexInput(wallet.address);
+              validateHexInput(token.address);
             }}
           />
         </div>

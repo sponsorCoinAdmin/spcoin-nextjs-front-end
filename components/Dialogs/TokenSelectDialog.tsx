@@ -28,7 +28,7 @@ export default function TokenSelectDialog({ showDialog, setShowDialog, onSelect 
       setShowDialog={setShowDialog}
       title={title}
     >
-      <TokenSelect closeDialog={() => setShowDialog(false)} onSelect={onSelect} />
+    <TokenSelect closeDialog={() => setShowDialog(false)} onSelect={onSelect} />        
     </BaseModalDialog>
   );
 }
