@@ -2,8 +2,6 @@
 
 import ConfigDialog from './Popup/ConfigDialog'
 import ErrorDialog from './ErrorDialog'
-import RecipientDialog from './RecipientSelectDialog'
-import TokenSelectDialog from './TokenSelectDialog'
 
 /** 
  * List of allowed dialog CSS ID selectors.
@@ -46,7 +44,5 @@ export {
   openDialog,
   closeDialog,
   ConfigDialog,
-  RecipientDialog,
-  TokenSelectDialog,
   ErrorDialog
 }

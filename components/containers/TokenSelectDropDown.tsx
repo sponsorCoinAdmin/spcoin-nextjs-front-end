@@ -1,3 +1,5 @@
+// File: components/containers/TokenSelectDropDown.tsx
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -100,6 +102,7 @@ function TokenSelectDropDown({
         showDialog={showDialog}
         setShowDialog={setShowDialog}
         onSelect={(contract: TokenContract, inputState: InputState) => {
+          debugLog.log('🎯 TokenDialogWrapper.onSelect', { contract, inputState });
           if (inputState === InputState.CLOSE_INPUT && contract) {
             setDecimalAdjustedContract(contract);
           }
