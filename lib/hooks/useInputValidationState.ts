@@ -2,19 +2,20 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { isAddress } from 'viem';
+import { useChainId } from 'wagmi';
 
 import {
   InputState,
   TokenContract,
+  WalletAccount,
+  SponsorAccount,
+  AgentAccount,
   CONTAINER_TYPE,
   getInputStateString,
   FEED_TYPE,
-  WalletAccount,
 } from '@/lib/structure/types';
 
 import {
-  useSellTokenContract,
-  useBuyTokenContract,
   useBuyTokenAddress,
   useSellTokenAddress,
   useContainerType,
@@ -22,8 +23,9 @@ import {
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from './wagmiERC20hooks';
-import { useChainId } from 'wagmi';
 import { getLogoURL } from '@/lib/network/utils';
+
+type ValidAddressAccount = WalletAccount | SponsorAccount | AgentAccount;
 
 function debugSetInputState(
   state: InputState,
@@ -58,13 +60,13 @@ function isDuplicateInput(
   return input.toLowerCase() === opposite.toLowerCase();
 }
 
-export const useInputValidationState = (
+export const useInputValidationState = <T extends TokenContract | ValidAddressAccount>(
   selectAddress: string | undefined,
   feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-  const [validatedToken, setValidatedToken] = useState<TokenContract | WalletAccount | undefined>(undefined);
+  const [validatedToken, setValidatedToken] = useState<T | undefined>(undefined);
 
   const [containerType] = useContainerType();
   const buyAddress = useBuyTokenAddress();
@@ -95,35 +97,41 @@ export const useInputValidationState = (
   const isResolved = !!resolvedToken;
   const isLoading = isAddress(debouncedAddress) && resolvedToken === undefined;
 
-  // Handle recipient metadata for FEED_TYPE.RECIPIENT_ACCOUNTS
-  const fetchRecipientDetails = useCallback(async () => {
+  const fetchAccountMetadata = useCallback(async () => {
     if (!isAddress(debouncedAddress)) return;
 
     try {
-      const metaURL = `/assets/accounts/${debouncedAddress}/wallet.json`;
+      const basePath = {
+        [FEED_TYPE.RECIPIENT_ACCOUNTS]: 'accounts',
+        [FEED_TYPE.AGENT_ACCOUNTS]: 'accounts',
+        [FEED_TYPE.SPONSOR_ACCOUNTS]: 'accounts',
+      }[feedType] || 'unknown';
+
+      const metaURL = `/assets/${basePath}/${debouncedAddress}/wallet.json`;
       const metaResponse = await fetch(metaURL);
       if (!metaResponse.ok) throw new Error('Not found');
 
       const metadata = await metaResponse.json();
-      const wallet: WalletAccount = {
+
+      const account = {
         address: debouncedAddress,
         name: metadata.name || '',
         symbol: metadata.symbol || '',
-        avatar: getLogoURL(chainId, debouncedAddress as `0x${string}`, FEED_TYPE.RECIPIENT_ACCOUNTS),
+        avatar: getLogoURL(chainId, debouncedAddress as `0x${string}`, feedType),
         website: metadata.website || '',
         description: metadata.description || '',
         status: metadata.status || '',
         type: metadata.type || '',
-      };
+      } as T;
 
-      setValidatedToken(wallet);
+      setValidatedToken(account);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     } catch (e) {
-      console.warn(`Recipient wallet.json not found for ${debouncedAddress}`);
+      console.warn(`wallet.json not found for ${debouncedAddress}`);
       setValidatedToken(undefined);
       debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
     }
-  }, [debouncedAddress, chainId, inputState]);
+  }, [debouncedAddress, chainId, inputState, feedType]);
 
   useEffect(() => {
     if (isEmptyInput(debouncedAddress)) {
@@ -138,15 +146,21 @@ export const useInputValidationState = (
       return;
     }
 
-    if (feedType === FEED_TYPE.TOKEN_LIST &&
-        isDuplicateInput(containerType, debouncedAddress, sellAddress, buyAddress)) {
+    if (
+      feedType === FEED_TYPE.TOKEN_LIST &&
+      isDuplicateInput(containerType, debouncedAddress, sellAddress, buyAddress)
+    ) {
       setValidatedToken(undefined);
       debugSetInputState(InputState.DUPLICATE_INPUT, inputState, setInputState);
       return;
     }
 
-    if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS) {
-      fetchRecipientDetails();
+    if (
+      feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+      feedType === FEED_TYPE.SPONSOR_ACCOUNTS ||
+      feedType === FEED_TYPE.AGENT_ACCOUNTS
+    ) {
+      fetchAccountMetadata();
       return;
     }
 
@@ -171,7 +185,7 @@ export const useInputValidationState = (
       inputState !== InputState.VALID_INPUT_PENDING ||
       (validatedToken as TokenContract)?.address !== resolvedToken.address
     ) {
-      setValidatedToken(resolvedToken);
+      setValidatedToken(resolvedToken as T);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     }
   }, [
@@ -183,7 +197,7 @@ export const useInputValidationState = (
     buyAddress,
     containerType,
     inputState,
-    fetchRecipientDetails,
+    fetchAccountMetadata,
     feedType,
   ]);
 

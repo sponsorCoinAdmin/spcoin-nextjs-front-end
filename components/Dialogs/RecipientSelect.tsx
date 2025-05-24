@@ -15,8 +15,6 @@ import { getLogoURL } from '@/lib/network/utils';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import { useExchangeContext } from '@/lib/context/contextHooks';
-import { isWalletAccount } from '@/lib/utils/isWalletAccount';
-
 
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import BasePreviewCard from '@/components/shared/BasePreviewCard';
@@ -50,7 +48,7 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
     validatedToken: validatedAccount,
     isLoading,
     reportMissingAvatar,
-  } = useInputValidationState(debouncedAddress, FEED_TYPE.RECIPIENT_ACCOUNTS);
+  } = useInputValidationState<WalletAccount>(debouncedAddress, FEED_TYPE.RECIPIENT_ACCOUNTS);
 
   const onSelect = useCallback((account: WalletAccount) => {
     if (agentAccount && account.address === agentAccount.address) {
@@ -63,13 +61,7 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
   }, [agentAccount, clearInput, onSelectProp, closeDialog]);
 
   useEffect(() => {
-    if (
-      !debouncedAddress ||
-      isLoading ||
-      !validatedAccount ||
-      !isWalletAccount(validatedAccount)
-    ) return;
-
+    if (!debouncedAddress || isLoading || !validatedAccount) return;
     if (!manualEntryRef.current) {
       onSelect(validatedAccount);
     }
@@ -84,19 +76,17 @@ export default function RecipientSelect({ closeDialog, onSelect: onSelectProp }:
         statusEmoji={getInputStatusEmoji(inputState)}
       />
 
-      {validatedAccount &&
-        inputState === InputState.VALID_INPUT_PENDING &&
-        isWalletAccount(validatedAccount) && (
-          <div id="pendingDiv" className={styles.modalInputSelect}>
-            <BasePreviewCard
-              name={validatedAccount.name || ''}
-              symbol={validatedAccount.symbol || ''}
-              avatarSrc={getLogoURL(chainId, validatedAccount.address as Address, FEED_TYPE.RECIPIENT_ACCOUNTS)}
-              onSelect={() => onSelect(validatedAccount)}
-              onError={() => reportMissingAvatar()}
-            />
-          </div>
-        )}
+      {validatedAccount && inputState === InputState.VALID_INPUT_PENDING && (
+        <div id="pendingDiv" className={styles.modalInputSelect}>
+          <BasePreviewCard
+            name={validatedAccount.name || ''}
+            symbol={validatedAccount.symbol || ''}
+            avatarSrc={getLogoURL(chainId, validatedAccount.address as Address, FEED_TYPE.RECIPIENT_ACCOUNTS)}
+            onSelect={() => onSelect(validatedAccount)}
+            onError={() => reportMissingAvatar()}
+          />
+        </div>
+      )}
 
       {inputState !== InputState.EMPTY_INPUT && inputState !== InputState.VALID_INPUT_PENDING && (
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>

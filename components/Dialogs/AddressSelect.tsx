@@ -1,31 +1,35 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { getTokenLogoURL } from '@/lib/network/utils';
-import { InputState, TokenContract, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure/types';
-import {
-  useContainerType,
-  useBuyTokenContract,
-  useSellTokenContract,
-} from '@/lib/context/contextHooks';
+import { InputState, FEED_TYPE } from '@/lib/structure/types';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
-import { useChainId } from 'wagmi';
-
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import BasePreviewCard from '@/components/shared/BasePreviewCard';
 import ValidationDisplay from '@/components/shared/ValidationDisplay';
 import DataList from './Resources/DataList';
 
-const INPUT_PLACE_HOLDER = 'Type or paste token address';
-
-interface Props {
+interface AddressSelectProps<T> {
+  feedType: FEED_TYPE;
+  inputPlaceholder: string;
   closeDialog: () => void;
-  onSelect: (contract: TokenContract | undefined, state: InputState) => void;
+  onSelect: (item: T, state: InputState) => void;
+  duplicateMessage?: string;
+  showDuplicateCheck?: boolean;
 }
 
-export default function TokenSelect({ closeDialog, onSelect: onSelectProp }: Props) {
+export default function AddressSelect<T extends { address: string; name?: string; symbol?: string }>(
+  {
+    feedType,
+    inputPlaceholder,
+    closeDialog,
+    onSelect: onSelectProp,
+    duplicateMessage,
+    showDuplicateCheck = false,
+  }: AddressSelectProps<T>
+) {
   const {
     inputValue,
     debouncedAddress,
@@ -36,51 +40,37 @@ export default function TokenSelect({ closeDialog, onSelect: onSelectProp }: Pro
     getInputStatusEmoji,
   } = useBaseSelectShared();
 
-  const [containerType] = useContainerType();
-  const [, setSellTokenContract] = useSellTokenContract();
-  const [, setBuyTokenContract] = useBuyTokenContract();
-  const chainId = useChainId();
-
-  const setTokenContractInContext = useMemo(
-    () =>
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? setSellTokenContract
-        : setBuyTokenContract,
-    [containerType, setSellTokenContract, setBuyTokenContract]
-  );
-
   const {
     inputState,
     validatedToken,
     isLoading,
     reportMissingAvatar,
-  } = useInputValidationState<TokenContract>(debouncedAddress, FEED_TYPE.TOKEN_LIST);
+  } = useInputValidationState<T>(debouncedAddress, feedType);
 
-  const onSelect = useCallback((token: TokenContract) => {
-    setTokenContractInContext(token);
+  const onSelect = useCallback((item: T) => {
     clearInput();
-    onSelectProp(token, InputState.CLOSE_INPUT);
+    onSelectProp(item, InputState.CLOSE_INPUT);
     closeDialog();
-  }, [setTokenContractInContext, clearInput, onSelectProp, closeDialog]);
+  }, [clearInput, closeDialog, onSelectProp]);
 
   useEffect(() => {
     if (!debouncedAddress || isLoading || !validatedToken) return;
     if (!manualEntryRef.current) {
       onSelect(validatedToken);
     }
-  }, [debouncedAddress, validatedToken, isLoading, manualEntryRef, onSelect]);
+  }, [debouncedAddress, isLoading, validatedToken, manualEntryRef, onSelect]);
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
         onChange={onChange}
-        placeholder={INPUT_PLACE_HOLDER}
+        placeholder={inputPlaceholder}
         statusEmoji={getInputStatusEmoji(inputState)}
       />
 
       {validatedToken && inputState === InputState.VALID_INPUT_PENDING && (
-        <div id="pendingDiv" className={`${styles.modalInputSelect}`}>
+        <div id="pendingDiv" className={styles.modalInputSelect}>
           <BasePreviewCard
             name={validatedToken.name || ''}
             symbol={validatedToken.symbol || ''}
@@ -95,22 +85,18 @@ export default function TokenSelect({ closeDialog, onSelect: onSelectProp }: Pro
         <div id="validateInputDiv" className={`${styles.modalInputSelect} indent-5`}>
           <ValidationDisplay
             inputState={inputState}
-            duplicateMessage={
-              containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-                ? 'Sell Address Cannot Be the Same as Buy Address'
-                : 'Buy Address Cannot Be the Same as Sell Address'
-            }
+            duplicateMessage={showDuplicateCheck ? duplicateMessage : undefined}
           />
         </div>
       )}
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0" style={{ gap: '0.2rem' }}>
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
-          <DataList<TokenContract>
-            dataFeedType={FEED_TYPE.TOKEN_LIST}
-            onSelect={(token) => {
+          <DataList<T>
+            dataFeedType={feedType}
+            onSelect={(item) => {
               manualEntryRef.current = false;
-              validateHexInput(token.address);
+              validateHexInput(item.address);
             }}
           />
         </div>
