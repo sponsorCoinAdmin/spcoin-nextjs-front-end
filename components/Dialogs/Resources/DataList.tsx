@@ -106,49 +106,47 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
 
   if (!isClient) return <p>Loading data...</p>;
 
-  if (
-    dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
-    dataFeedType === FEED_TYPE.AGENT_ACCOUNTS
-  ) {
+  if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) {
     if (loadingWallets) return <p>Loading accounts...</p>;
     if (wallets.length === 0) return <p>No accounts available.</p>;
 
     return (
       <>
-        {wallets.map((wallet, index) => {
-          debugLog.log(`📤 Rendering wallet[${index}] - name: '${wallet.name}', address: ${wallet.address}`);
-
-          return (
-            <div
-              key={wallet.address}
-              className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-              onClick={() => onSelect(wallet as T)}
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  className={styles.elementLogo}
-                  src={wallet.avatar || defaultMissingImage}
-                  alt={`${wallet.name} avatar`}
-                  width={32}
-                  height={32}
-                />
-                <div>
-                  <div className={styles.elementName}>{wallet.name}</div>
-                  <div className={styles.elementSymbol}>{wallet.symbol}</div>
-                </div>
-              </div>
-              <div
-                className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
-                }}
-              >
-                <Image className={styles.infoLogo} src={info_png} alt="Info" width={20} height={20} />
+        {wallets.map((wallet, index) => (
+          <div
+            key={wallet.address}
+            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
+            onClick={() => onSelect(wallet as T)}
+          >
+            <div className="flex items-center gap-3">
+              <img
+                className={styles.elementLogo}
+                src={wallet.avatar || defaultMissingImage}
+                alt={`${wallet.name} avatar`}
+                width={32}
+                height={32}
+              />
+              <div>
+                <div className={styles.elementName}>{wallet.name}</div>
+                <div className={styles.elementSymbol}>{wallet.symbol}</div>
               </div>
             </div>
-          );
-        })}
+            <div
+              className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                alert(`${wallet.name} Record: ${stringifyBigInt(wallet.avatar || '')}`);
+              }}
+            >
+              <Image className={styles.infoLogo} src={info_png} alt="Info Image" width={20} height={20} />
+            </div>
+          </div>
+        ))}
       </>
     );
   }

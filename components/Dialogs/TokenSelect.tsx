@@ -22,7 +22,6 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECTOR === 'true
 const debugLog = createDebugLogger('TokenSelector', DEBUG_ENABLED, LOG_TIME);
 
 const INPUT_PLACE_HOLDER = 'Type or paste token address';
-const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 interface Props {
   closeDialog: () => void;
