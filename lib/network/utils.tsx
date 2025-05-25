@@ -172,21 +172,19 @@ const getBlockChainLogoURL = (chainId:number): string =>
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
-const getTokenLogoURL = (tokenContract?: TokenContract): string => {
-  if (!tokenContract) {
-    return badTokenAddressImage
+type RequiredAssetMembers = { address: string; chainId: number };
+
+const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string => {
+  if (!requiredAssetMembers || !isAddress(requiredAssetMembers.address)) {
+    return badTokenAddressImage;
   }
 
-  const { chainId, address } = tokenContract
+  const { chainId, address } = requiredAssetMembers;
+  const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+  debugLog.log(`getTokenLogoURL.logoURL=${logoURL}`);
+  return logoURL;
+};
 
-  if (isAddress(address)) {
-    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
-    debugLog.log(`getTokenLogoURL.logoURL=${logoURL}`)
-    return logoURL
-  }
-
-  return badTokenAddressImage
-}
 
 export const getAddressLogoURL = (address: string, chainId: number): string => {
   if (isAddress(address)) {
@@ -242,6 +240,7 @@ export {
   getBlockChainName,
   getNativeWrapAddress,
   getTokenLogoURL,
+  type RequiredAssetMembers,
   getAccountAvatar,
   isActiveAccountAddress,
   isActiveAccountBuyToken,

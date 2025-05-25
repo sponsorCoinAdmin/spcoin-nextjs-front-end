@@ -197,12 +197,12 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
               className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
               onClick={(e) => {
                 e.stopPropagation();
-                alert(`${token.name} Address: ${token.address}`);
+                alert(`${token.name} Address: ${console.log(stringifyBigInt(token))}`);
               }}
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                alert(`${token.name} Record: ${stringifyBigInt(token.logoURL)}`);
+                alert(`${token.name} Record: ${token.logoURL}`);
               }}
             >
               <Image className={styles.infoLogo} src={info_png} alt="Info Image" width={20} height={20} />

@@ -1,6 +1,7 @@
 // lib/utils/debugLogger.ts
 
 interface DebugLogger {
+  debug: (...args: any[]) => void;
   log: (...args: any[]) => void;
   warn: (...args: any[]) => void;
   error: (...args: any[]) => void;
@@ -55,6 +56,13 @@ export function createDebugLogger(moduleName: string, enabled: boolean, tsFlag: 
   }
 
   return {
+    debug: (...args: any[]) => {
+      if (shouldLog) {
+        const line = formatLine('DEBUG', args);
+        console.debug(line);
+        logBuffer.push(line);
+      }
+    },
     log: (...args: any[]) => {
       if (shouldLog) {
         const line = formatLine('LOG', args);

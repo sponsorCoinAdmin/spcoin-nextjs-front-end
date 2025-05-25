@@ -4,7 +4,7 @@
 
 import { useState, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { TokenDialogWrapper } from '@/components/Dialogs/AddressSelectDialog';
+import { TokenDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { ChevronDown } from 'lucide-react';
 
 import {

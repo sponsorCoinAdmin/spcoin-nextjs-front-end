@@ -23,7 +23,6 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from './wagmiERC20hooks';
 import { getLogoURL } from '@/lib/network/utils';
 
-// Treat AgentAccount and SponsorAccount as WalletAccount (if type not available)
 type AgentAccount = WalletAccount;
 type SponsorAccount = WalletAccount;
 type ValidAddressAccount = WalletAccount | SponsorAccount | AgentAccount;
@@ -115,6 +114,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
 
       const account = {
         address: debouncedAddress,
+        chainId: chainId,
         name: metadata.name || '',
         symbol: metadata.symbol || '',
         avatar: getLogoURL(chainId, debouncedAddress as `0x${string}`, feedType),
@@ -122,9 +122,9 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
         description: metadata.description || '',
         status: metadata.status || '',
         type: metadata.type || '',
-      } as T;
+      };
 
-      setValidatedToken(account);
+      setValidatedToken(account as unknown as T);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     } catch (e) {
       console.warn(`wallet.json not found for ${debouncedAddress}`);
@@ -184,7 +184,10 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       inputState !== InputState.VALID_INPUT_PENDING ||
       (validatedToken as TokenContract)?.address !== resolvedToken.address
     ) {
-      setValidatedToken(resolvedToken as T);
+      setValidatedToken({
+        ...(resolvedToken as TokenContract),
+        chainId: chainId!,
+      } as unknown as T);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     }
   }, [

@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { RecipientDialogWrapper } from '@/components/Dialogs/AddressSelectDialog';
+import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { WalletAccount, InputState } from '@/lib/structure/types';
 import { ChevronDown } from 'lucide-react';
 import { useSafeAvatarURL } from '@/lib/hooks/useSafeAvatarURL';

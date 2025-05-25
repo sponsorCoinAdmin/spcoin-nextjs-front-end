@@ -1,5 +1,3 @@
-// File: components/Dialogs/AddressSelectDialog.tsx
-
 'use client';
 
 import { useMemo, useRef, useCallback, useEffect } from 'react';
@@ -78,18 +76,16 @@ function BaseModalDialog({
   );
 }
 
-export default function AddressSelectDialog<T extends { address: string; name?: string; symbol?: string }>(
-  {
-    showDialog,
-    setShowDialog,
-    onSelect,
-    title,
-    feedType,
-    inputPlaceholder,
-    duplicateMessage,
-    showDuplicateCheck = false,
-  }: BaseProps<T>
-) {
+export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
+  showDialog,
+  setShowDialog,
+  onSelect,
+  title,
+  feedType,
+  inputPlaceholder,
+  duplicateMessage,
+  showDuplicateCheck = false,
+}: BaseProps<T>) {
   return (
     <BaseModalDialog
       id="AddressSelectDialog"

@@ -9,7 +9,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { InputState, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure/types';
 import { useContainerType } from '@/lib/context/contextHooks';
 import { useSafeAvatarURL } from '@/lib/hooks/useSafeAvatarURL';
-import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AddressSelectDialog';
+import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 
 type GenericAsset = {
   address: string;
