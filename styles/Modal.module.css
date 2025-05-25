@@ -44,18 +44,6 @@
   margin-left: auto;
 }
 
-.popupContainer {
-    /* background-color: #781508; */
-    position: absolute;
-    top: -210px;
-    right: -740px;
-    color: white;
-    background-color: #0E111B;
-    border: solid #21273a;
-    min-height: 10px;
-    border-radius: 15px;
-}
-
 .modalBox {
   display: flex;
   flex-direction: column;

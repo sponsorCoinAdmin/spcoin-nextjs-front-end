@@ -2,6 +2,31 @@
 
 import React from 'react';
 
+// ✅ Grouped styles under `hexInput`
+const hexInput = {
+  containerStyle: {
+    backgroundColor: '#243056',
+    color: '#5981F3',
+    width: '100%',
+    marginBottom: '0px',
+    borderRadius: '22px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 0.75rem',
+    gap: '0.5rem',
+  } as React.CSSProperties,
+
+  inputStyle: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+    color: '#ffffff',
+    fontSize: '14px',
+    width: '100%',
+    padding: '0.5rem 0',
+  } as React.CSSProperties,
+};
+
 type HexAddressInputProps = {
   inputValue: string;
   onChange: (val: string) => void;
@@ -16,39 +41,15 @@ export default function HexAddressInput({
   statusEmoji,
 }: HexAddressInputProps) {
   return (
-    <>
-      <style jsx>{`
-        .modalElementSelectContainer {
-          background-color: #243056;
-          color: #5981F3;
-          width: 100%;
-          margin-bottom: 0px;
-          border-radius: 22px !important;
-          display: flex;
-          align-items: center;
-          padding: 0 0.75rem; /* Optional horizontal spacing */
-        }
-        .modalElementInput {
-          background-color: transparent;
-          border: none;
-          outline: none;
-          color: #ffffff;
-          font-size: 14px;
-          width: 100%;
-          padding: 0.5rem 0;
-        }
-      `}</style>
-
-      <div className="modalElementSelectContainer flex items-center gap-2">
-        <div className="text-lg">{statusEmoji}</div>
-        <input
-          className="modalElementInput w-full"
-          autoComplete="off"
-          placeholder={placeholder}
-          value={inputValue}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </div>
-    </>
+    <div style={hexInput.containerStyle}>
+      <div className="text-lg">{statusEmoji}</div>
+      <input
+        style={hexInput.inputStyle}
+        autoComplete="off"
+        placeholder={placeholder}
+        value={inputValue}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
   );
 }

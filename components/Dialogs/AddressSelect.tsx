@@ -141,7 +141,18 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
         inputState !== InputState.EMPTY_INPUT && (
           <div
             id="validateInputDiv"
-            className={`${styles.modalInputSelect} indent-5`}
+            className="indent-5"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              height: '146px',                          // match preview height
+              padding: '8px',
+              borderRadius: '22px',
+              backgroundColor: 'rgba(0, 255, 0, 0.1)',   // ✅ debug green background
+              color: '#5981F3',
+              boxSizing: 'border-box',
+            }}
           >
             <ValidationDisplay
               inputState={inputState}
@@ -151,6 +162,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
             />
           </div>
         )}
+
       <div
         id="inputSelectFlexDiv"
         className="flex flex-col flex-grow min-h-0"
