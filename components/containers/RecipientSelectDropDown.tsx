@@ -1,15 +1,15 @@
+'use client';
+
 // File: components/containers/RecipientSelectDropDown.tsx
 // Copyright (c) 2023 Robin van der Vliet
 // License: MIT License (https://opensource.org/licenses/MIT)
 // SPDX-License-Identifier: MIT
 
-'use client';
-
 import React, { useState, useCallback } from 'react';
 import { RecipientDialog } from '@/components/Dialogs/Dialogs';
-import { DownOutlined } from "@ant-design/icons";
 import { WalletAccount } from '@/lib/structure/types';
 import { defaultMissingImage } from '@/lib/network/utils';
+import { ChevronDown } from 'lucide-react';
 
 type Props = {
   recipientAccount: WalletAccount | undefined;
@@ -25,15 +25,20 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (recipientAccount) {
         event.currentTarget.src = defaultMissingImage;
-        console.warn(`[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`);
+        console.warn(
+          `[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`
+        );
       }
     },
     [recipientAccount]
   );
 
-  const handleRecipientSelect = useCallback((wallet: WalletAccount) => {
-    callBackAccount(wallet);
-  }, [callBackAccount]);
+  const handleRecipientSelect = useCallback(
+    (wallet: WalletAccount) => {
+      callBackAccount(wallet);
+    },
+    [callBackAccount]
+  );
 
   return (
     <>
@@ -48,7 +53,9 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
             alt={recipientAccount.name}
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             src={recipientAccount.avatar}
-            onClick={() => alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`)}
+            onClick={() =>
+              alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`)
+            }
             onError={handleAvatarError}
           />
           {recipientAccount.symbol}
@@ -56,7 +63,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
       ) : (
         <> &nbsp; Select Recipient: </>
       )}
-      <DownOutlined onClick={openDialog} />
+      <ChevronDown className="cursor-pointer" onClick={openDialog} />
     </>
   );
 };
