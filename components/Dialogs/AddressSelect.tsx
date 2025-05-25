@@ -137,21 +137,20 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
       {renderPreview()}
 
-      {inputState !== InputState.VALID_INPUT_PENDING && (
-        debugLog.log('🟨 Rendering ValidationDisplay block'),
-        <div
-          id="validateInputDiv"
-          className={`${styles.modalInputSelect} indent-5`}
-        >
-          <ValidationDisplay
-            inputState={inputState}
-            duplicateMessage={
-              showDuplicateCheck ? duplicateMessage : undefined
-            }
-          />
-        </div>
-      )}
-
+      {inputState !== InputState.VALID_INPUT_PENDING &&
+        inputState !== InputState.EMPTY_INPUT && (
+          <div
+            id="validateInputDiv"
+            className={`${styles.modalInputSelect} indent-5`}
+          >
+            <ValidationDisplay
+              inputState={inputState}
+              duplicateMessage={
+                showDuplicateCheck ? duplicateMessage : undefined
+              }
+            />
+          </div>
+        )}
       <div
         id="inputSelectFlexDiv"
         className="flex flex-col flex-grow min-h-0"

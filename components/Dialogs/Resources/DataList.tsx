@@ -116,7 +116,19 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
           <div
             key={wallet.address}
             className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-            onClick={() => onSelect(wallet as T)}
+            onClick={() => {
+              if (!wallet.address || !isAddress(wallet.address)) {
+                debugLog.warn(`🚫 Invalid wallet address selected: ${wallet.address}`);
+                onSelect({
+                  ...wallet,
+                  address: '0x0000000000000000000000000000000000000000',
+                } as T);
+                return;
+              }
+
+              debugLog.log(`[DataList] Selected: ${wallet.address}`);
+              onSelect(wallet as T);
+            }}
           >
             <div className="flex items-center gap-3">
               <img
@@ -159,10 +171,36 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
     <>
       {logoTokenList.map((token) => {
         const handleSelect = () => {
-          if (!token.address || !isAddress(token.address)) return;
-          debugLog.log(`[DataList] Selected: ${token.address}`);
+          const selectedAddress = token.address?.trim();
+
+          // ✅ Explicitly insert empty string into the address input
+          if (!selectedAddress) {
+            debugLog.warn(`⚠️ Empty address selected for token: ${token.name}`);
+            onSelect({
+              ...token,
+              address: '' // Pass blank address to flow through onChange('')
+            } as T);
+            return;
+          }
+
+          if (!isAddress(selectedAddress)) {
+            debugLog.warn(`🚫 Invalid token address selected: ${selectedAddress}`);
+            onSelect({
+              address: '0x0000000000000000000000000000000000000000',
+              symbol: 'N/A',
+              name: 'Invalid Token',
+              logoURL: defaultMissingImage,
+              decimals: 18,
+              balance: 0n,
+              amount: 0n,
+              totalSupply: 0n,
+            } as T);
+            return;
+          }
+
+          debugLog.log(`[DataList] Selected: ${selectedAddress}`);
           const tokenContract: TokenContract = {
-            address: token.address as `0x${string}`,
+            address: selectedAddress as `0x${string}`,
             symbol: token.symbol,
             name: token.name,
             logoURL: token.logoURL || defaultMissingImage,
@@ -173,6 +211,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
           };
           onSelect(tokenContract as T);
         };
+
 
         return (
           <div
