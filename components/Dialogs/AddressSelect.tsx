@@ -104,13 +104,20 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
       'address' in validatedAsset &&
       !hasBrokenLogoURL()
     ) {
-      logoURL = validatedAsset.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png';
+    logoURL = validatedAsset.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png';
     }
 
     debugLog.log('🟦 Rendering VALID_INPUT_PENDING preview');
 
     return (
-      <div id="pendingDiv" className={styles.modalInputSelect}>
+      <div id="pendingDiv"
+        style={{
+          padding: '8px', // from both
+          backgroundColor: '#243056', // unified background
+          color: '#5981F3', // modalInputSelect + state color
+          borderRadius: '22px'
+        }}
+      >
         <BasePreviewCard
           name={name || ''}
           symbol={symbol || ''}
@@ -141,29 +148,13 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
       {inputState !== InputState.VALID_INPUT_PENDING &&
         inputState !== InputState.EMPTY_INPUT && (
-          <div
-            id="validateInputDiv"
-            className="indent-5"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              height: '146px',
-              padding: '8px',
-              borderRadius: '22px',
-              backgroundColor: 'rgba(0, 255, 0, 0.1)',
-              color: '#5981F3',
-              boxSizing: 'border-box',
-            }}
-          >
-            <ValidationDisplay
-              inputState={inputState}
-              duplicateMessage={
-                showDuplicateCheck ? duplicateMessage : undefined
-              }
-            />
-          </div>
-        )}
+        <ValidationDisplay
+          inputState={inputState}
+          duplicateMessage={
+            showDuplicateCheck ? duplicateMessage : undefined
+          }
+        />
+      )}
 
       <div
         id="inputSelectFlexDiv"

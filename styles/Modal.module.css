@@ -11,13 +11,19 @@
 .modalInputSelect {
   height: 146px; /* or whatever fixed height you want */
   overflow: hidden; /* (optional) prevent extra text from pushing it larger */
-  background-color: lightblue;
   padding: 8px;
   background-color: #243056; 
   color: #5981F3;
   border-width: 0px !important;
   width: 100%;
   margin-bottom: 0px;
+  border-radius: 22px !important; 
+}
+
+.JUNK_INPUT_SELECT {
+  padding: 8px;
+  background-color: #243056; 
+  color: #5981F3;
   border-radius: 22px !important; 
 }
 
@@ -48,7 +54,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem; /* optional spacing between sections */
-  
   font-weight: bold;
   overflow: hidden;
   height: 516px;
