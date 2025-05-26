@@ -28,7 +28,7 @@ function App() {
   const [activeAccountAddress, setActiveAccountAddress] = useState<Address | undefined>(address);
   const [exchangeContextData, setExchangeContextData] = useState<string>('');
   const [textInputField, setTokenInput] = useState<Address | undefined>();
-  const [contextVisible, setContextVisible] = useState(false);
+  const [showContext, setShowContext] = useState(false);
   const [showWallets, setShowWallets] = useState(false);
 
   useEffect(() => {
@@ -38,20 +38,20 @@ function App() {
   }, [address]);
 
   const toggleContext = () => {
-    if (!contextVisible) {
+    if (!showContext) {
       setExchangeContextData(stringifyBigInt(exchangeContext));
-      setShowWallets(false); // ⬅️ Hide wallets when showing context
+      setShowWallets(false);
     } else {
       setExchangeContextData('');
     }
-    setContextVisible((prev) => !prev);
+    setShowContext((prev) => !prev);
   };
 
   const toggleWallets = () => {
     setShowWallets((prev) => {
       const newValue = !prev;
       if (newValue) {
-        setContextVisible(false); // ⬅️ Hide context when showing wallets
+        setShowContext(false);
         setExchangeContextData('');
       }
       return newValue;
@@ -75,7 +75,7 @@ function App() {
           type="button"
           className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
         >
-          {contextVisible ? 'Hide Context' : 'Show Context'}
+          {showContext ? 'Hide Context' : 'Show Context'}
         </button>
 
         <button
@@ -95,8 +95,8 @@ function App() {
       </div>
 
       {/* Context Display */}
-      {contextVisible && exchangeContextData && (
-        <div className="mt-4 bg-[#243056] text-white text-xs p-4 rounded-lg h-[400px] w-[550px] overflow-y-auto whitespace-pre-wrap break-words border border-gray-700 shadow-inner">
+      {showContext && exchangeContextData && (
+        <div className="flex-grow overflow-y-auto bg-[#243056] text-white text-xs p-4 rounded-lg w-full whitespace-pre-wrap break-words border border-gray-700 shadow-inner min-h-0">
           {exchangeContextData}
         </div>
       )}

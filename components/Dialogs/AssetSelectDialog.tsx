@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useEffect } from 'react';
-import AddressSelect from '@/components/Dialogs/AddressSelect';
+import AddressSelect from '@/components/shared/AddressSelect';
 import styles from '@/styles/Modal.module.css';
 import {
   CONTAINER_TYPE,

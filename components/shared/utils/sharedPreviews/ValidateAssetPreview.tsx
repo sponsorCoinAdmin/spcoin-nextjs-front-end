@@ -1,4 +1,6 @@
-// File: components/shared/ValidationDisplay.tsx
+// File: components/shared/AssetPreviews/ValidateAssetPreview.tsx
+
+'use client';
 
 import React from 'react';
 import { InputState } from '@/lib/structure/types';
@@ -26,7 +28,7 @@ const emojiMap: Partial<Record<InputState, {
   },
   [InputState.CONTRACT_NOT_FOUND_LOCALLY]: {
     emoji: '⚠️',
-    text: 'Missing local image for token.',
+    text: 'Missing local image for asset.',
     color: 'orange',
   },
   [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: {
@@ -36,9 +38,9 @@ const emojiMap: Partial<Record<InputState, {
   },
 };
 
-const ValidationDisplay: React.FC<Props> = ({ inputState, duplicateMessage }) => {
+const ValidateAssetPreview: React.FC<Props> = ({ inputState, duplicateMessage }) => {
   const item = emojiMap[inputState];
-  if (!item) return null;
+  if (!item || inputState === InputState.VALID_INPUT_PENDING || inputState === InputState.EMPTY_INPUT) return null;
 
   const message =
     inputState === InputState.DUPLICATE_INPUT && duplicateMessage
@@ -46,25 +48,17 @@ const ValidationDisplay: React.FC<Props> = ({ inputState, duplicateMessage }) =>
       : item.text;
 
   return (
-<div
-  style={{
-    display: 'flex',
-    alignItems: 'center',
-    height: '170px', // from modalInputSelect
-    backgroundColor: '#243056', // unified background
-    color: item.color || '#5981F3', // modalInputSelect + state color
-    padding: '8px', // from both
-    borderRadius: '22px',
-    // justifyContent: 'flex-start',
-    // overflow: 'hidden', // prevent overflow
-    // boxSizing: 'border-box',
-    // borderWidth: '0px',
-    // width: '100%',
-    // marginBottom: '0px',
-    // marginLeft: item.useAvatar ? '1.4rem' : 0,
-  }}
->
-
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        height: '170px',
+        backgroundColor: '#243056',
+        color: item.color || '#5981F3',
+        padding: '8px',
+        borderRadius: '22px',
+      }}
+    >
       {item.emoji && (
         <span style={{ fontSize: 28, marginRight: 6 }}>{item.emoji}</span>
       )}
@@ -73,4 +67,4 @@ const ValidationDisplay: React.FC<Props> = ({ inputState, duplicateMessage }) =>
   );
 };
 
-export default ValidationDisplay;
+export default ValidateAssetPreview;

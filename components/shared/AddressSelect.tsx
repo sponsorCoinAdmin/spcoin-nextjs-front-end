@@ -11,9 +11,9 @@ import {
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import HexAddressInput from '@/components/shared/HexAddressInput';
-import BasePreviewCard from '@/components/shared/BasePreviewCard';
-import ValidationDisplay from '@/components/shared/ValidationDisplay';
-import DataList from './Resources/DataList';
+import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
+import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
+import DataList from '../Dialogs/Resources/DataList';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -57,10 +57,10 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   } = useInputValidationState<T>(debouncedAddress, feedType);
 
   const onSelect = useCallback(
-    (item: T) => {
+    (item: TokenContract | WalletAccount) => {
       debugLog.log(`🟢 onSelect() called with:`, item);
       clearInput();
-      onSelectProp(item, InputState.CLOSE_INPUT);
+      onSelectProp(item as T, InputState.CLOSE_INPUT);
       closeDialog();
     },
     [clearInput, closeDialog, onSelectProp]
@@ -88,47 +88,6 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     }
   }, [debouncedAddress, isLoading, validatedAsset, manualEntryRef, onSelect]);
 
-  const renderPreview = () => {
-    if (!validatedAsset || inputState !== InputState.VALID_INPUT_PENDING)
-      return null;
-
-    const name = 'name' in validatedAsset ? validatedAsset.name : '';
-    const symbol = 'symbol' in validatedAsset ? validatedAsset.symbol : '';
-
-    // Default fallback
-    let logoURL = '/assets/miscellaneous/badTokenAddressImage.png';
-
-    // Use asset-provided logo if available and not marked as broken
-    if (
-      'logoURL' in validatedAsset &&
-      'address' in validatedAsset &&
-      !hasBrokenLogoURL()
-    ) {
-    logoURL = validatedAsset.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png';
-    }
-
-    debugLog.log('🟦 Rendering VALID_INPUT_PENDING preview');
-
-    return (
-      <div id="pendingDiv"
-        style={{
-          padding: '8px', // from both
-          backgroundColor: '#243056', // unified background
-          color: '#5981F3', // modalInputSelect + state color
-          borderRadius: '22px'
-        }}
-      >
-        <BasePreviewCard
-          name={name || ''}
-          symbol={symbol || ''}
-          avatarSrc={logoURL}
-          onSelect={() => onSelect(validatedAsset)}
-          onError={() => reportMissingLogoURL()}
-        />
-      </div>
-    );
-  };
-
   return (
     <div
       id="inputSelectDiv"
@@ -144,17 +103,18 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
         statusEmoji={getInputStatusEmoji(inputState)}
       />
 
-      {renderPreview()}
+      <RenderAssetPreview
+        inputState={inputState}
+        validatedAsset={validatedAsset}
+        hasBrokenLogoURL={hasBrokenLogoURL}
+        reportMissingLogoURL={reportMissingLogoURL}
+        onSelect={onSelect}
+      />
 
-      {inputState !== InputState.VALID_INPUT_PENDING &&
-        inputState !== InputState.EMPTY_INPUT && (
-        <ValidationDisplay
-          inputState={inputState}
-          duplicateMessage={
-            showDuplicateCheck ? duplicateMessage : undefined
-          }
-        />
-      )}
+      <ValidateAssetPreview
+        inputState={inputState}
+        duplicateMessage={showDuplicateCheck ? duplicateMessage : undefined}
+      />
 
       <div
         id="inputSelectFlexDiv"
