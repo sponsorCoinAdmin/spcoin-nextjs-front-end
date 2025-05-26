@@ -53,7 +53,7 @@ interface WalletAccount {
   description: string;
   status: string;
   address: string;
-  avatar?: string;
+  logoURL?: string;
 }
 
 // Button Types

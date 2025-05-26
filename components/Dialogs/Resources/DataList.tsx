@@ -78,7 +78,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
               ...account,
               name: account.name || 'N/A',
               symbol: account.symbol || 'N/A',
-              avatar: account.avatar || `/assets/accounts/${account.address}/avatar.png`,
+              logoURL: account.logoURL || `/assets/accounts/${account.address}/avatar.png`,
               address: account.address || '0x0000000000000000000000000000000000000000',
             };
             debugLog.log(`📘 [${index}] ${sanitizedAccount.address} — name: ${sanitizedAccount.name}`);
@@ -133,7 +133,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
             <div className="flex items-center gap-3">
               <img
                 className={styles.elementLogo}
-                src={wallet.avatar || defaultMissingImage}
+                src={wallet.logoURL || defaultMissingImage}
                 alt={`${wallet.name} avatar`}
                 width={32}
                 height={32}
@@ -152,7 +152,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
               onContextMenu={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                alert(`${wallet.name} Record: ${stringifyBigInt(wallet.avatar || '')}`);
+                alert(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`);
               }}
             >
               <Image className={styles.infoLogo} src={info_png} alt="Info Image" width={20} height={20} />

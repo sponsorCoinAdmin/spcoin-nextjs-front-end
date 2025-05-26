@@ -3,10 +3,6 @@
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useCallback } from 'react';
 import {
-  getTokenLogoURL,
-  type RequiredAssetMembers,
-} from '@/lib/network/utils';
-import {
   InputState,
   FEED_TYPE,
   TokenContract,
@@ -20,7 +16,7 @@ import ValidationDisplay from '@/components/shared/ValidationDisplay';
 import DataList from './Resources/DataList';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOG_TIME: boolean = false;
+const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME);
@@ -54,9 +50,10 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
   const {
     inputState,
-    validatedToken,
+    validatedAsset,
     isLoading,
-    reportMissingAvatar,
+    reportMissingLogoURL,
+    hasBrokenLogoURL,
   } = useInputValidationState<T>(debouncedAddress, feedType);
 
   const onSelect = useCallback(
@@ -78,43 +75,48 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   }, [inputState]);
 
   useEffect(() => {
-    if (validatedToken) {
-      debugLog.log(`✅ validatedToken:`, validatedToken);
+    if (validatedAsset) {
+      debugLog.log(`✅ validatedAsset:`, validatedAsset);
     }
-  }, [validatedToken]);
+  }, [validatedAsset]);
 
   useEffect(() => {
-    if (!debouncedAddress || isLoading || !validatedToken) return;
+    if (!debouncedAddress || isLoading || !validatedAsset) return;
     if (!manualEntryRef.current) {
-      debugLog.log(`🚀 Auto-selecting validatedToken`);
-      onSelect(validatedToken);
+      debugLog.log(`🚀 Auto-selecting validatedAsset`);
+      onSelect(validatedAsset);
     }
-  }, [debouncedAddress, isLoading, validatedToken, manualEntryRef, onSelect]);
+  }, [debouncedAddress, isLoading, validatedAsset, manualEntryRef, onSelect]);
 
   const renderPreview = () => {
-    if (!validatedToken || inputState !== InputState.VALID_INPUT_PENDING)
+    if (!validatedAsset || inputState !== InputState.VALID_INPUT_PENDING)
       return null;
 
-    const name = 'name' in validatedToken ? validatedToken.name : '';
-    const symbol = 'symbol' in validatedToken ? validatedToken.symbol : '';
+    const name = 'name' in validatedAsset ? validatedAsset.name : '';
+    const symbol = 'symbol' in validatedAsset ? validatedAsset.symbol : '';
 
-    let avatarSrc = '/assets/miscellaneous/badTokenAddressImage.png';
-    if ('chainId' in validatedToken && validatedToken.chainId !== undefined) {
-      avatarSrc = getTokenLogoURL({
-        address: validatedToken.address,
-        chainId: validatedToken.chainId,
-      });
+    // Default fallback
+    let logoURL = '/assets/miscellaneous/badTokenAddressImage.png';
+
+    // Use asset-provided logo if available and not marked as broken
+    if (
+      'logoURL' in validatedAsset &&
+      'address' in validatedAsset &&
+      !hasBrokenLogoURL()
+    ) {
+      logoURL = validatedAsset.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png';
     }
 
     debugLog.log('🟦 Rendering VALID_INPUT_PENDING preview');
+
     return (
       <div id="pendingDiv" className={styles.modalInputSelect}>
         <BasePreviewCard
           name={name || ''}
           symbol={symbol || ''}
-          avatarSrc={avatarSrc}
-          onSelect={() => onSelect(validatedToken)}
-          onError={() => reportMissingAvatar()}
+          avatarSrc={logoURL}
+          onSelect={() => onSelect(validatedAsset)}
+          onError={() => reportMissingLogoURL()}
         />
       </div>
     );
@@ -146,10 +148,10 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-start',
-              height: '146px',                          // match preview height
+              height: '146px',
               padding: '8px',
               borderRadius: '22px',
-              backgroundColor: 'rgba(0, 255, 0, 0.1)',   // ✅ debug green background
+              backgroundColor: 'rgba(0, 255, 0, 0.1)',
               color: '#5981F3',
               boxSizing: 'border-box',
             }}

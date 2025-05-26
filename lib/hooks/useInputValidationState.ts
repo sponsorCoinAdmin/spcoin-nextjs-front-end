@@ -66,13 +66,13 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-  const [validatedToken, setValidatedToken] = useState<T | undefined>(undefined);
+  const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);
 
   const [containerType] = useContainerType();
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
 
-  const seenBrokenImagesRef = useRef<Set<string>>(new Set());
+  const seenBrokenLogosRef = useRef<Set<string>>(new Set());
   const previousAddressRef = useRef<string>('');
   const chainId = useChainId();
 
@@ -80,7 +80,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
     if (
       inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY &&
       debouncedAddress !== previousAddressRef.current &&
-      !seenBrokenImagesRef.current.has(debouncedAddress)
+      !seenBrokenLogosRef.current.has(debouncedAddress)
     ) {
       debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
     }
@@ -88,14 +88,14 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
   }, [debouncedAddress, inputState]);
 
   useEffect(() => {
-    seenBrokenImagesRef.current.clear();
+    seenBrokenLogosRef.current.clear();
   }, [chainId]);
 
-  const resolvedToken = useMappedTokenContract(
+  const resolvedAsset = useMappedTokenContract(
     isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined
   );
-  const isResolved = !!resolvedToken;
-  const isLoading = isAddress(debouncedAddress) && resolvedToken === undefined;
+  const isResolved = !!resolvedAsset;
+  const isLoading = isAddress(debouncedAddress) && resolvedAsset === undefined;
 
   const fetchAccountMetadata = useCallback(async () => {
     if (!isAddress(debouncedAddress)) return;
@@ -117,31 +117,31 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
         chainId: chainId,
         name: metadata.name || '',
         symbol: metadata.symbol || '',
-        avatar: getLogoURL(chainId, debouncedAddress as `0x${string}`, feedType),
+        logoURL: getLogoURL(chainId, debouncedAddress as `0x${string}`, feedType),
         website: metadata.website || '',
         description: metadata.description || '',
         status: metadata.status || '',
         type: metadata.type || '',
       };
 
-      setValidatedToken(account as unknown as T);
+      setValidatedAsset(account as unknown as T);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     } catch (e) {
       console.warn(`wallet.json not found for ${debouncedAddress}`);
-      setValidatedToken(undefined);
+      setValidatedAsset(undefined);
       debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
     }
   }, [debouncedAddress, chainId, inputState, feedType]);
 
   useEffect(() => {
     if (isEmptyInput(debouncedAddress)) {
-      setValidatedToken(undefined);
+      setValidatedAsset(undefined);
       debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
       return;
     }
 
     if (isInvalidAddress(debouncedAddress)) {
-      setValidatedToken(undefined);
+      setValidatedAsset(undefined);
       debugSetInputState(InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
       return;
     }
@@ -150,7 +150,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       feedType === FEED_TYPE.TOKEN_LIST &&
       isDuplicateInput(containerType, debouncedAddress, sellAddress, buyAddress)
     ) {
-      setValidatedToken(undefined);
+      setValidatedAsset(undefined);
       debugSetInputState(InputState.DUPLICATE_INPUT, inputState, setInputState);
       return;
     }
@@ -163,18 +163,17 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       return;
     }
 
-    // Token validation path
     if (isLoading) {
-      setValidatedToken(undefined);
+      setValidatedAsset(undefined);
       return;
     }
 
-    if (!isResolved || !resolvedToken) {
-      if (seenBrokenImagesRef.current.has(debouncedAddress)) {
-        setValidatedToken(undefined);
+    if (!isResolved || !resolvedAsset) {
+      if (seenBrokenLogosRef.current.has(debouncedAddress)) {
+        setValidatedAsset(undefined);
         debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
       } else {
-        setValidatedToken(undefined);
+        setValidatedAsset(undefined);
         debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
       }
       return;
@@ -182,17 +181,18 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
 
     if (
       inputState !== InputState.VALID_INPUT_PENDING ||
-      (validatedToken as TokenContract)?.address !== resolvedToken.address
+      (validatedAsset as TokenContract)?.address !== resolvedAsset.address
     ) {
-      setValidatedToken({
-        ...(resolvedToken as TokenContract),
+      setValidatedAsset({
+        ...(resolvedAsset as TokenContract),
         chainId: chainId!,
+        logoURL: getLogoURL(chainId, resolvedAsset.address, feedType),
       } as unknown as T);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     }
   }, [
     debouncedAddress,
-    resolvedToken,
+    resolvedAsset,
     isResolved,
     isLoading,
     sellAddress,
@@ -203,18 +203,25 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
     feedType,
   ]);
 
-  const reportMissingAvatar = useCallback(() => {
-    if (!seenBrokenImagesRef.current.has(debouncedAddress)) {
-      seenBrokenImagesRef.current.add(debouncedAddress);
+  const reportMissingLogoURL = useCallback(() => {
+    if (!debouncedAddress) return;
+    if (!seenBrokenLogosRef.current.has(debouncedAddress)) {
+      seenBrokenLogosRef.current.add(debouncedAddress);
+      console.warn(`🛑 Missing logoURL image for ${debouncedAddress}`);
       debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
     }
   }, [debouncedAddress, inputState]);
 
+  const hasBrokenLogoURL = useCallback(() => {
+    return seenBrokenLogosRef.current.has(debouncedAddress);
+  }, [debouncedAddress]);
+
   return {
     inputState,
-    validatedToken,
+    validatedAsset,
     isLoading,
     chainId,
-    reportMissingAvatar,
+    reportMissingLogoURL,
+    hasBrokenLogoURL,
   };
 };

@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { WalletAccount, InputState } from '@/lib/structure/types';
 import { ChevronDown } from 'lucide-react';
@@ -15,6 +15,7 @@ interface Props {
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
   const [showDialog, setShowDialog] = useState(false);
+  const hasErroredRef = useRef(false); // 🛑 Prevents infinite retry loops
 
   const openDialog = useCallback(() => setShowDialog(true), []);
 
@@ -22,6 +23,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     (wallet: WalletAccount) => {
       console.debug('✅ [RecipientSelectDropDown] Received wallet from dialog:', wallet);
       callBackAccount(wallet);
+      hasErroredRef.current = false; // Reset error tracking on new selection
     },
     [callBackAccount]
   );
@@ -29,19 +31,23 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
   const avatarSrc = useSafeAvatarURL(
     recipientAccount?.address,
     undefined,
-    recipientAccount?.avatar
+    recipientAccount?.logoURL
   );
 
   const handleAvatarError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
-      if (recipientAccount) {
-        event.currentTarget.src = avatarSrc;
-        console.warn(
-          `[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.avatar})`
-        );
-      }
+      if (!recipientAccount || hasErroredRef.current) return;
+
+      console.warn(
+        `[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
+      );
+
+      // Prevent retry loop
+      hasErroredRef.current = true;
+      // Swap to fallback (this may already be avatarSrc if useSafeAvatarURL returned fallback)
+      event.currentTarget.src = '/assets/miscellaneous/badTokenAddressImage.png';
     },
-    [recipientAccount, avatarSrc]
+    [recipientAccount]
   );
 
   return (
