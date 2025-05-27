@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { JSONTree } from 'react-json-tree';
 
@@ -42,7 +42,6 @@ function App() {
           ...prev.test,
           exchangePage: {
             ...prev.test.exchangePage,
-            // Not persisted in state; used only locally
           },
         },
       }));
@@ -50,16 +49,20 @@ function App() {
   }, [address]);
 
   const updateExchangePage = (updates: Partial<typeof state.test.exchangePage>) => {
-    setState(prev => ({
-      ...prev,
-      test: {
-        ...prev.test,
-        exchangePage: {
-          ...prev.test.exchangePage,
-          ...updates,
+    setState(prev => {
+      const newState = {
+        ...prev,
+        test: {
+          ...prev.test,
+          exchangePage: {
+            ...prev.test.exchangePage,
+            ...updates,
+          },
         },
-      },
-    }));
+      };
+      localStorage.setItem('PageStateContext', JSON.stringify(newState));
+      return newState;
+    });
   };
 
   const toggleContext = () => {
@@ -82,10 +85,13 @@ function App() {
     console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
   };
 
-  const shouldExpandNode = (keyPath: (string | number)[], data: unknown, level: number) => {
-    const key = keyPath.slice().reverse().join('.');
-    return !collapsedKeys.includes(key);
-  };
+  const shouldExpandNodeInitially = useCallback(
+    (keyPath: readonly (string | number)[], data: unknown, level: number) => {
+      const key = [...keyPath].reverse().join('.');
+      return !collapsedKeys.includes(key);
+    },
+    [collapsedKeys]
+  );
 
   const theme = {
     base00: '#243056', base01: '#2a3350', base02: '#37415c', base03: '#5c6b88',
@@ -121,7 +127,7 @@ function App() {
             data={exchangeContext}
             theme={theme}
             invertTheme={false}
-            shouldExpandNode={shouldExpandNode}
+            shouldExpandNodeInitially={shouldExpandNodeInitially}
           />
         </div>
       )}
