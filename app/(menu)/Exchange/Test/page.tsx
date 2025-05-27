@@ -1,8 +1,10 @@
+// File: app/(menu)/Exchange/Test/page.tsx
+
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Address } from 'viem';
+import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { JSONTree } from 'react-json-tree';
 
 // Components
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
@@ -19,85 +21,108 @@ import WalletsPage from '@/components/Pages/WalletsPage';
 // Utilities & Context
 import { useExchangeContext } from '@/lib/context/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { TokenContract } from '@/lib/structure/types';
+import { usePageState } from '@/lib/context/PageStateContext';
 
 function App() {
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
+  const { state, setState } = usePageState();
 
-  const [activeAccountAddress, setActiveAccountAddress] = useState<Address | undefined>(address);
-  const [exchangeContextData, setExchangeContextData] = useState<string>('');
-  const [textInputField, setTokenInput] = useState<Address | undefined>();
-  const [showContext, setShowContext] = useState(false);
-  const [showWallets, setShowWallets] = useState(false);
+  const {
+    showContext = false,
+    showWallets = false,
+    collapsedKeys = [],
+  } = state.test.exchangePage;
 
   useEffect(() => {
-    if (address && activeAccountAddress !== address) {
-      setActiveAccountAddress(address);
+    if (address) {
+      setState(prev => ({
+        ...prev,
+        test: {
+          ...prev.test,
+          exchangePage: {
+            ...prev.test.exchangePage,
+            // Not persisted in state; used only locally
+          },
+        },
+      }));
     }
   }, [address]);
 
+  const updateExchangePage = (updates: Partial<typeof state.test.exchangePage>) => {
+    setState(prev => ({
+      ...prev,
+      test: {
+        ...prev.test,
+        exchangePage: {
+          ...prev.test.exchangePage,
+          ...updates,
+        },
+      },
+    }));
+  };
+
   const toggleContext = () => {
-    if (!showContext) {
-      setExchangeContextData(stringifyBigInt(exchangeContext));
-      setShowWallets(false);
-    } else {
-      setExchangeContextData('');
-    }
-    setShowContext((prev) => !prev);
+    if (!showContext) updateExchangePage({ showWallets: false });
+    updateExchangePage({ showContext: !showContext });
   };
 
   const toggleWallets = () => {
-    setShowWallets((prev) => {
-      const newValue = !prev;
-      if (newValue) {
-        setShowContext(false);
-        setExchangeContextData('');
-      }
-      return newValue;
+    updateExchangePage({
+      showWallets: !showWallets,
+      showContext: showWallets ? showContext : false,
     });
   };
 
-  const setTokenContractCallBack = (tokenContract: TokenContract | undefined) => {
-    setTokenInput(tokenContract?.address);
+  const resetCollapsedKeys = () => {
+    updateExchangePage({ collapsedKeys: [] });
   };
 
   const logContext = () => {
     console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
   };
 
+  const shouldExpandNode = (keyPath: (string | number)[], data: unknown, level: number) => {
+    const key = keyPath.slice().reverse().join('.');
+    return !collapsedKeys.includes(key);
+  };
+
+  const theme = {
+    base00: '#243056', base01: '#2a3350', base02: '#37415c', base03: '#5c6b88',
+    base04: '#a2b4d3', base05: '#ffffff', base06: '#ffffff', base07: '#ffffff',
+    base08: '#f2777a', base09: '#f99157', base0A: '#ffcc66', base0B: '#99cc99',
+    base0C: '#66cccc', base0D: '#6699cc', base0E: '#cc99cc', base0F: '#d27b53',
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Control Buttons */}
       <div className="flex flex-wrap gap-4">
-        <button
-          onClick={toggleContext}
-          type="button"
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
+        <button onClick={toggleContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
           {showContext ? 'Hide Context' : 'Show Context'}
         </button>
-
-        <button
-          onClick={toggleWallets}
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
+        {showContext && (
+          <button onClick={resetCollapsedKeys} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
+            Reset Collapsed State
+          </button>
+        )}
+        <button onClick={toggleWallets} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
           {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
         </button>
-
-        <button
-          onClick={logContext}
-          type="button"
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
+        <button onClick={logContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
           Log Context
         </button>
       </div>
 
       {/* Context Display */}
-      {showContext && exchangeContextData && (
-        <div className="flex-grow overflow-y-auto bg-[#243056] text-white text-xs p-4 rounded-lg w-full whitespace-pre-wrap break-words border border-gray-700 shadow-inner min-h-0">
-          {exchangeContextData}
+      {showContext && (
+        <div className="flex-grow bg-[#243056] text-white p-4 rounded-lg w-full min-h-0" style={{ fontSize: '15px' }}>
+          <JSONTree
+            data={exchangeContext}
+            theme={theme}
+            invertTheme={false}
+            shouldExpandNode={shouldExpandNode}
+          />
         </div>
       )}
 
@@ -110,18 +135,15 @@ function App() {
 
       {/* ERC20 Read Operations */}
       <div className="grid gap-6">
-        <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20BalanceOf
-          ACTIVE_ACCOUNT_ADDRESS={activeAccountAddress}
-          TOKEN_CONTRACT_ADDRESS={textInputField}
-        />
-        <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={textInputField} />
-        <ReadWagmiERC20ContractTotalSupply TOKEN_CONTRACT_ADDRESS={textInputField} />
+        <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20BalanceOf ACTIVE_ACCOUNT_ADDRESS={address} TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20ContractTotalSupply TOKEN_CONTRACT_ADDRESS={undefined} />
       </div>
     </div>
   );

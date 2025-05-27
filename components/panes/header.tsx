@@ -1,12 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from "react";
-import styles from "@/styles/Header.module.css"
-import { config } from '@/lib/wagmi/wagmiConfig'
-import spCoin_png from '@/public/assets/miscellaneous/spCoin.png'
-import Image from 'next/image'
-import Link from 'next/link'
-import ConnectButton from "../Buttons/ConnectButton"
+import { config } from '@/lib/wagmi/wagmiConfig';
+import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
+import Image from 'next/image';
+import Link from 'next/link';
+import ConnectButton from "../Buttons/ConnectButton";
 import { defaultMissingImage, getBlockChainName, getBlockChainLogoURL } from "@/lib/network/utils";
 import { useChainId } from "wagmi";
 
@@ -24,34 +23,36 @@ export default function Header() {
   }, [chainId]);
 
   return (
-    <header>
-      <div className={styles.leftH}>
+    <header className="flex items-center justify-between px-6 py-4 bg-[#0E111B] text-white border-b border-[#21273a]">
+      {/* Left side nav */}
+      <div className="flex items-center gap-5">
         <Image
-          className={styles.avatarImg}
           src={spCoin_png}
           width={25}
           height={25}
           alt="Sponsor Coin Logo"
         />
-        <div className={styles.headerItem}><Link href="/SponsorCoin">SponsorCoin</Link></div>
-        <div className={styles.headerItem}><Link href="/Exchange">Exchange</Link></div>
-        <div className={styles.headerItem}><Link href="/Recipient">Recipient</Link></div>
-        <div className={styles.headerItem}><Link href="/Admin">Admin</Link></div>
+        <Link href="/SponsorCoin" className="hover:text-[#5981F3]">SponsorCoin</Link>
+        <Link href="/Exchange" className="hover:text-[#5981F3]">Exchange</Link>
+        <Link href="/Recipient" className="hover:text-[#5981F3]">Recipient</Link>
+        <Link href="/Admin" className="hover:text-[#5981F3]">Admin</Link>
         {SHOW_TEST_LINK && (
-          <div className={styles.headerItem}><Link href="/Exchange/Test">Test</Link></div>
+          <Link href="/Exchange/Test" className="hover:text-[#5981F3]">Test</Link>
         )}
       </div>
-      <div className={styles.rightH}>
-        <div className={styles.headerItem}>
+
+      {/* Right side */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <img
             src={avatar}
-            className={styles.elementLogo}
+            className="h-[25px] w-[25px]"
             alt={`Header ChainId = ${chainId} Network = ${networkName}`}
-            width={25}
-            height={25}
-            onError={(event) => { event.currentTarget.src = defaultMissingImage; }}
+            onError={(event) => {
+              event.currentTarget.src = defaultMissingImage;
+            }}
           />
-          &nbsp;&nbsp;{networkName}
+          <span>{networkName}</span>
         </div>
         <ConnectButton />
       </div>
