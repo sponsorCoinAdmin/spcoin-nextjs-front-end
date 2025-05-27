@@ -1,13 +1,19 @@
-// File: lib/context/PageStateContext.tsx
-
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 
+// ✅ Updated type definition
 export type ExchangePageState = {
   showContext: boolean;
   showWallets: boolean;
-  collapsedKeys: string[]; // ReactJson specific
+  collapsedKeys: string[];
+  expandContext: boolean; // ✅ added
 };
 
 export type PageStateTree = {
@@ -16,12 +22,14 @@ export type PageStateTree = {
   };
 };
 
+// ✅ Updated default state
 const defaultState: PageStateTree = {
   test: {
     exchangePage: {
       showContext: false,
       showWallets: false,
       collapsedKeys: [],
+      expandContext: false, // ✅ added
     },
   },
 };

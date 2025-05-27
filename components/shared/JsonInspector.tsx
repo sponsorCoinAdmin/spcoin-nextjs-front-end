@@ -2,6 +2,7 @@
 
 'use client';
 
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import React, { useCallback } from 'react';
 
 interface JsonInspectorProps {
@@ -50,7 +51,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     }
     return (
       <div key={currentPath} className="ml-4">
-        <span className="text-[#5981F3]">{key}</span>: <span className={getValueColor(value)}>{JSON.stringify(value)}</span>
+        <span className="text-[#5981F3]">{key}</span>: <span className={getValueColor(value)}>{stringifyBigInt(value)}</span>
       </div>
     );
   };
