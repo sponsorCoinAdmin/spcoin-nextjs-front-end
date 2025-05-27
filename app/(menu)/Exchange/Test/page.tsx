@@ -2,9 +2,8 @@
 
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { JSONTree } from 'react-json-tree';
 
 // Components
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
@@ -17,6 +16,7 @@ import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20Contr
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals';
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply';
 import WalletsPage from '@/components/Pages/WalletsPage';
+import JsonInspector from '@/components/shared/JsonInspector';
 
 // Utilities & Context
 import { useExchangeContext } from '@/lib/context/contextHooks';
@@ -32,6 +32,7 @@ function App() {
     showContext = false,
     showWallets = false,
     collapsedKeys = [],
+    expandContext = false,
   } = state.test.exchangePage;
 
   useEffect(() => {
@@ -77,59 +78,72 @@ function App() {
     });
   };
 
-  const resetCollapsedKeys = () => {
-    updateExchangePage({ collapsedKeys: [] });
+  const toggleExpandCollapse = () => {
+    const nextExpand = !expandContext;
+    const nextKeys = nextExpand ? [] : getAllKeys(exchangeContext, 'root');
+    updateExchangePage({
+      expandContext: nextExpand,
+      collapsedKeys: nextKeys,
+    });
+  };
+
+  const getAllKeys = (obj: any, basePath: string): string[] => {
+    let keys: string[] = [basePath];
+    if (typeof obj === 'object' && obj !== null) {
+      Object.entries(obj).forEach(([k, v]) => {
+        const childPath = `${basePath}.${k}`;
+        keys.push(...getAllKeys(v, childPath));
+      });
+    }
+    return keys;
   };
 
   const logContext = () => {
     console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
   };
 
-  const shouldExpandNodeInitially = useCallback(
-    (keyPath: readonly (string | number)[], data: unknown, level: number) => {
-      const key = [...keyPath].reverse().join('.');
-      return !collapsedKeys.includes(key);
-    },
-    [collapsedKeys]
-  );
-
-  const theme = {
-    base00: '#243056', base01: '#2a3350', base02: '#37415c', base03: '#5c6b88',
-    base04: '#a2b4d3', base05: '#ffffff', base06: '#ffffff', base07: '#ffffff',
-    base08: '#f2777a', base09: '#f99157', base0A: '#ffcc66', base0B: '#99cc99',
-    base0C: '#66cccc', base0D: '#6699cc', base0E: '#cc99cc', base0F: '#d27b53',
-  };
-
   return (
     <div className="space-y-6 p-6">
       {/* Control Buttons */}
       <div className="flex flex-wrap gap-4">
-        <button onClick={toggleContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
+        <button
+          onClick={toggleContext}
+          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+        >
           {showContext ? 'Hide Context' : 'Show Context'}
         </button>
+
         {showContext && (
-          <button onClick={resetCollapsedKeys} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-            Reset Collapsed State
+          <button
+            onClick={toggleExpandCollapse}
+            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+          >
+            {expandContext ? 'Collapse Context' : 'Expand Context'}
           </button>
         )}
-        <button onClick={toggleWallets} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-          {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
-        </button>
-        <button onClick={logContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
+
+        <button
+          onClick={logContext}
+          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+        >
           Log Context
+        </button>
+
+        <button
+          onClick={toggleWallets}
+          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+        >
+          {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
         </button>
       </div>
 
       {/* Context Display */}
       {showContext && (
-        <div className="flex-grow bg-[#243056] text-white p-4 rounded-lg w-full min-h-0" style={{ fontSize: '15px' }}>
-          <JSONTree
-            data={exchangeContext}
-            theme={theme}
-            invertTheme={false}
-            shouldExpandNodeInitially={shouldExpandNodeInitially}
-          />
-        </div>
+        <JsonInspector
+          data={exchangeContext}
+          collapsedKeys={collapsedKeys}
+          updateCollapsedKeys={(next: string[]) => updateExchangePage({ collapsedKeys: next })}
+        />
       )}
 
       {/* Wallets Page Display */}
