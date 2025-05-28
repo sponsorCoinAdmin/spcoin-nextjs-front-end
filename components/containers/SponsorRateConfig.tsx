@@ -6,7 +6,7 @@ import { useDisplaySpCoinContainers } from '@/lib/spCoin/guiControl';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { useSpCoinDisplay } from '@/lib/context/contextHooks';
+import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
 
 function setRateRatios(newRate: string) {
   var numRate = Number(newRate)

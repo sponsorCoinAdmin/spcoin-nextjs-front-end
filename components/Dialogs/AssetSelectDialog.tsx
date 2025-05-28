@@ -14,7 +14,7 @@ import {
   useBuyTokenContract,
   useSellTokenContract,
   useContainerType,
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 
 // Generic Address Select Dialog
 interface BaseProps<T> {

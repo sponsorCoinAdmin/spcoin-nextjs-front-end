@@ -2,7 +2,7 @@ import React, { createContext } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 
-import { useExchangeContext } from '@/lib/context/contextHooks'; // ✅ Updated import
+import { useExchangeContext } from '@/lib/context/hooks/contextHooks'; // ✅ Updated import
 
 const DumpContextButton = () => {
     const { exchangeContext } = useExchangeContext(); // ✅ Using `useExchangeContext()`

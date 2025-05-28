@@ -6,7 +6,7 @@ import {
   useErrorMessage,
   useExchangeContext,
   useSellAmount
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 import {
   BUTTON_TYPE,
   STATUS,

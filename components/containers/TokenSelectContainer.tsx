@@ -2,18 +2,14 @@
 
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { parseUnits, formatUnits } from "viem";
-import { useBalance, useAccount } from "wagmi";
+import { useAccount } from "wagmi";
 import {
   useApiProvider,
-  useBuyBalance,
-  useSellBalance,
+  useExchangeBalances,
   useSpCoinDisplay,
-  useTradeData
-} from '@/lib/context/contextHooks';
-
-import {
+  useTradeData,
   useBuyAmount,
   useExchangeContext,
   useSellAmount,
@@ -21,7 +17,7 @@ import {
   useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract,
-} from "@/lib/context/contextHooks";
+} from '@/lib/context/hooks/contextHooks';
 
 import AddSponsorship from "../Buttons/AddSponsorshipButton";
 import TokenSelectDropDown from "./TokenSelectDropDown";
@@ -40,7 +36,7 @@ import {
 
 import styles from "@/styles/Exchange.module.css";
 import { spCoinDisplayString } from "@/lib/spCoin/guiControl";
-import { clsx } from "clsx"; // ✅ clsx replaces classNames
+import { clsx } from "clsx";
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SPCOIN_DISPLAY === 'true';
 const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
@@ -48,7 +44,7 @@ const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
-  const apiProvider = useApiProvider();
+  const [apiProvider] = useApiProvider();
   const account = useAccount();
 
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -57,19 +53,13 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [slippageBps] = useSlippageBps();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
-  const [sellBalance, setSellBalance] = useSellBalance();
-  const [buyBalance, setBuyBalance] = useBuyBalance();
   const [spCoinDisplay] = useSpCoinDisplay();
+
+  const { updateBalances } = useExchangeBalances();
 
   const tokenContract = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
     ? sellTokenContract
     : buyTokenContract;
-
-  const { data: wagmiBalance } = useBalance({
-    address: account.address,
-    chainId: tokenContract?.chainId,
-    token: tokenContract?.symbol === 'ETH' ? undefined : tokenContract?.address,
-  });
 
   const [inputValue, setInputValue] = useState<string>("0");
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -111,17 +101,12 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     setBuyTokenContract(undefined);
   }, [account.chainId]);
 
+  // Optional: Re-fetch balances on token change
   useEffect(() => {
-    if (!wagmiBalance || !wagmiBalance.value) return;
-
-    debugLog.log(`💰 New balance fetched: ${wagmiBalance.formatted} (${containerType})`);
-
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      setSellBalance(wagmiBalance.value);
-    } else {
-      setBuyBalance(wagmiBalance.value);
+    if (tokenContract && account.address) {
+      updateBalances(tokenContract, account.address);
     }
-  }, [wagmiBalance, containerType]);
+  }, [tokenContract, account.address]);
 
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);

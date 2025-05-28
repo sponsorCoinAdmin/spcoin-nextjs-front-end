@@ -19,7 +19,7 @@ import WalletsPage from '@/components/Pages/WalletsPage';
 import JsonInspector from '@/components/shared/JsonInspector';
 
 // Utilities & Context
-import { useExchangeContext } from '@/lib/context/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { usePageState } from '@/lib/context/PageStateContext';
 

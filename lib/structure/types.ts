@@ -196,6 +196,7 @@ type ExchangeContext = {
 };
 
 type NetworkElement = {
+  [x: string]: any;
   readonly chainId: number;
   readonly logoURL: string;
   readonly name: string;

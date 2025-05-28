@@ -1,4 +1,4 @@
-import { useExchangeContext } from '@/lib/context/contextHooks'
+import { useExchangeContext } from '@/lib/context/hooks/contextHooks'
 
 import chainIdList from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultBaseSettings } from '@/resources/data/networks/base/initialize/defaultNetworkSettings';

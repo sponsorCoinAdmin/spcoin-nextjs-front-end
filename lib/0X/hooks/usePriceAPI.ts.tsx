@@ -10,7 +10,7 @@ import {
   useExchangeContext,
   useSellAmount,
   useTradeData
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';

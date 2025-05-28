@@ -7,7 +7,7 @@ import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { InputState, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure/types';
-import { useContainerType } from '@/lib/context/contextHooks';
+import { useContainerType } from '@/lib/context/hooks/contextHooks';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 

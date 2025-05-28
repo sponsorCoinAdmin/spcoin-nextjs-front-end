@@ -18,7 +18,7 @@ import {
   useBuyTokenContract,
   useSellTokenContract,
   useExchangeContext,
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME: boolean = false;

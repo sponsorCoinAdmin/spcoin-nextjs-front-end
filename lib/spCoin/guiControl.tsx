@@ -1,6 +1,6 @@
 /// START DROP DOWN STUFF
 
-import { useSpCoinDisplay } from '@/lib/context/contextHooks';
+import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
 import { SP_COIN_DISPLAY } from "@/lib/structure/types";
 import { useEffect } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

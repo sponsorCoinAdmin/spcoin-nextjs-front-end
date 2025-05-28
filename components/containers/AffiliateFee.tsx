@@ -1,5 +1,5 @@
 import PriceResponse from '@/lib/0X/typesV1';
-import { useBuyTokenContract } from '@/lib/context/contextHooks';
+import { useBuyTokenContract } from '@/lib/context/hooks/contextHooks';
 import { TokenContract } from '@/lib/structure/types';
 import { formatUnits } from 'ethers';
 import React from 'react';

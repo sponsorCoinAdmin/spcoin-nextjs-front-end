@@ -12,9 +12,9 @@ import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
 import SponsorRateConfig from "./SponsorRateConfig";
-import { useExchangeContext } from '@/lib/context/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import RecipientSelectDropDown from "./RecipientSelectDropDown";
-import { useSpCoinDisplay } from '@/lib/context/contextHooks';
+import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
 import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { SWAP_TYPE, TradeData } from "@/lib/structure/types";
-import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/contextHooks";
+import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/hooks/contextHooks";
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 ;
 

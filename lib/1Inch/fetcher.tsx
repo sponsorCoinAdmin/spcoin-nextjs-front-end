@@ -8,7 +8,7 @@ import {
   useExchangeContext,
   useSellAmount,
   useTradeData,
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 import { useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import { useAccount, useChainId } from 'wagmi';

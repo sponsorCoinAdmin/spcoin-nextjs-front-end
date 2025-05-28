@@ -14,7 +14,7 @@ import {
   ExchangeContext,
 } from "@/lib/structure/types";
 import { tokenContractsEqual } from '@/lib/network/utils';
-import { isSpCoin } from "../spCoin/coreUtils";
+import { isSpCoin } from "../../spCoin/coreUtils";
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

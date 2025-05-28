@@ -13,7 +13,7 @@ import {
   InputState,
 } from '@/lib/structure/types';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { useContainerType } from '@/lib/context/contextHooks';
+import { useContainerType } from '@/lib/context/hooks/contextHooks';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';

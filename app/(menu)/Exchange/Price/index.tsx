@@ -24,7 +24,7 @@ import {
   useExchangeContext,
   useSellAmount,
   useSellTokenContract,
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { mutate } from 'swr';
 

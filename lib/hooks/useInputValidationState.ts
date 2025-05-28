@@ -17,7 +17,7 @@ import {
   useBuyTokenAddress,
   useSellTokenAddress,
   useContainerType,
-} from '@/lib/context/contextHooks';
+} from '@/lib/context/hooks/contextHooks';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from './wagmiERC20hooks';
