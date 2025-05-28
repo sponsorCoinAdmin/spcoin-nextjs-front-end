@@ -23,7 +23,7 @@ import { useExchangeContext } from '@/lib/context/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { usePageState } from '@/lib/context/PageStateContext';
 
-function App() {
+function TestPage() {
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
@@ -169,4 +169,4 @@ function App() {
   );
 }
 
-export default App;
+export default TestPage;

@@ -167,7 +167,7 @@ const getChainMap = (chainList: any[]): Map<number, any> =>
 const chainIdMap = getChainMap(chainIdList);
 
 const getBlockChainLogoURL = (chainId:number): string => 
-  `assets/blockchains/${chainId}/info/network.png`;
+  `/assets/blockchains/${chainId}/info/network.png`;
 
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
