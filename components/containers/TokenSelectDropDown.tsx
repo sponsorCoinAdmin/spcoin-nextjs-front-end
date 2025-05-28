@@ -24,7 +24,7 @@ const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
-const seenBrokenAvatars = new Set<string>();
+const seenBrokenLogos = new Set<string>();
 
 export function useTokenLogoURL(tokenContract?: TokenContract): string {
   return useAddressLogoURL(
@@ -55,11 +55,11 @@ export function useAddressLogoURL(
       return defaultMissingImage;
     }
 
-    if (seenBrokenAvatars.has(address)) return defaultMissingImage;
+    if (seenBrokenLogos.has(address)) return defaultMissingImage;
     if (testInputState && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY)
       return defaultMissingImage;
 
-    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
     debugLog.log(`✅ getAddressLogoURL.logoURL = ${logoURL}`);
     return logoURL;
   }, [address, chainIdOverride, fallbackChainId, inputState, testInputState]);
@@ -82,17 +82,17 @@ function TokenSelectDropDown({
   const [, setContainerType] = useContainerType();
   const { inputState } = useInputValidationState(tokenContract?.address);
 
-  const avatarSrc = useTokenLogoURL(tokenContract);
+  const logoSrc = useTokenLogoURL(tokenContract);
 
   const handleMissingLogoURL = (event: React.SyntheticEvent<HTMLImageElement>) => {
     const tokenAddr = tokenContract?.address;
     if (!tokenAddr) return;
 
-    seenBrokenAvatars.add(tokenAddr);
+    seenBrokenLogos.add(tokenAddr);
     event.currentTarget.src = defaultMissingImage;
 
     console.warn(
-      `[TokenSelectDropDown] Missing avatar for ${tokenContract?.symbol} (${tokenAddr})`
+      `[TokenSelectDropDown] Missing logo for ${tokenContract?.symbol} (${tokenAddr})`
     );
   };
 
@@ -114,7 +114,7 @@ function TokenSelectDropDown({
             <img
               className="h-9 w-9 mr-2 rounded-md cursor-pointer"
               alt={`${tokenContract.name} Token logoURL`}
-              src={avatarSrc}
+              src={logoSrc}
               onClick={() => alert(stringifyBigInt(tokenContract))}
               onError={handleMissingLogoURL}
             />

@@ -10,7 +10,7 @@
             "name": "Wrapped Ether",
             "symbol": "WETH",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0x82aF49447D8a07e3bd95BD0d56f35241523fBab1/logo.png",
             "pairs": []
         },
         {
@@ -20,7 +20,7 @@
             "name": "Bridged USDC",
             "symbol": "USDC.e",
             "decimals": 6,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8/logo.png",
             "pairs": []
         },
         {
@@ -30,7 +30,7 @@
             "name": "Dai Stablecoin",
             "symbol": "DAI",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1/logo.png",
             "pairs": []
         },
         {
@@ -40,7 +40,7 @@
             "name": "Tether USD",
             "symbol": "USDT",
             "decimals": 6,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9/logo.png",
             "pairs": []
         },
         {
@@ -50,7 +50,7 @@
             "name": "GMX",
             "symbol": "GMX",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a/logo.png",
             "pairs": []
         },
         {
@@ -60,7 +60,7 @@
             "name": "The Graph",
             "symbol": "GRT",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0x9623063377AD1B27544C965cCd7342f7EA7e88C7/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/arbitrum/contractss/0x9623063377AD1B27544C965cCd7342f7EA7e88C7/logo.png",
             "pairs": []
         }
     ],

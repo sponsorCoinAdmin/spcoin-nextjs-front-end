@@ -10,7 +10,7 @@
             "name": "Wrapped Ether",
             "symbol": "WETH",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x4200000000000000000000000000000000000006/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x4200000000000000000000000000000000000006/logo.png",
             "pairs": []
         },
         {
@@ -20,7 +20,7 @@
             "name": "Synthetix Network",
             "symbol": "SNX",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x8700dAec35aF8Ff88c16BdF0418774CB3D7599B4/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x8700dAec35aF8Ff88c16BdF0418774CB3D7599B4/logo.png",
             "pairs": []
         },
         {
@@ -30,7 +30,7 @@
             "name": "ChainLink",
             "symbol": "LINK",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x350a791Bfc2C21F9Ed5d10980Dad2e2638ffa7f6/logo.png",
             "pairs": []
         },
         {
@@ -40,7 +40,7 @@
             "name": "Aelin Token",
             "symbol": "AELIN",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x61BAADcF22d2565B0F471b291C475db5555e0b76/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x61BAADcF22d2565B0F471b291C475db5555e0b76/logo.png",
             "pairs": []
         },
         {
@@ -50,7 +50,7 @@
             "name": "Perpetual",
             "symbol": "PERP",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x9e1028F5F1D5eDE59748FFceE5532509976840E0/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0x9e1028F5F1D5eDE59748FFceE5532509976840E0/logo.png",
             "pairs": []
         },
         {
@@ -60,7 +60,7 @@
             "name": "Kromatika",
             "symbol": "KROM",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0xF98dCd95217E15E05d8638da4c91125E59590B07/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/optimism/contractss/0xF98dCd95217E15E05d8638da4c91125E59590B07/logo.png",
             "pairs": []
         }
     ],

@@ -6,7 +6,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { WalletAccount, InputState } from '@/lib/structure/types';
 import { ChevronDown } from 'lucide-react';
-import { useSafeAvatarURL } from '@/lib/hooks/useSafeAvatarURL';
+import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 
 interface Props {
   recipientAccount: WalletAccount | undefined;
@@ -28,23 +28,23 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     [callBackAccount]
   );
 
-  const avatarSrc = useSafeAvatarURL(
+  const logoSrc = useSafeLogoURL(
     recipientAccount?.address,
     undefined,
     recipientAccount?.logoURL
   );
 
-  const handleAvatarError = useCallback(
+  const handleLogoError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (!recipientAccount || hasErroredRef.current) return;
 
       console.warn(
-        `[RecipientSelectDropDown] Missing avatar for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
+        `[RecipientSelectDropDown] Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
       );
 
       // Prevent retry loop
       hasErroredRef.current = true;
-      // Swap to fallback (this may already be avatarSrc if useSafeAvatarURL returned fallback)
+      // Swap to fallback (this may already be logoSrc if useSafeLogoURL returned fallback)
       event.currentTarget.src = '/assets/miscellaneous/badTokenAddressImage.png';
     },
     [recipientAccount]
@@ -68,9 +68,9 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
           <img
             alt={recipientAccount.name}
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            src={avatarSrc}
+            src={logoSrc}
             onClick={() => alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`)}
-            onError={handleAvatarError}
+            onError={handleLogoError}
           />
           {recipientAccount.symbol}
         </>

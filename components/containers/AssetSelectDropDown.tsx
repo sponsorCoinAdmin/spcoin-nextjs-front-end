@@ -8,14 +8,14 @@ import { ChevronDown } from 'lucide-react';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { InputState, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure/types';
 import { useContainerType } from '@/lib/context/contextHooks';
-import { useSafeAvatarURL } from '@/lib/hooks/useSafeAvatarURL';
+import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 
 type GenericAsset = {
   address: string;
   name?: string;
   symbol?: string;
-  avatar?: string;
+  logo?: string;
 };
 
 interface AssetSelectDropDownProps<T extends GenericAsset> {
@@ -34,16 +34,16 @@ function AssetSelectDropDown<T extends GenericAsset>({
   const [showDialog, setShowDialog] = useState(false);
   const [, setContainerType] = useContainerType();
 
-  const avatarSrc = useSafeAvatarURL(asset?.address, undefined, asset?.avatar);
+  const logoSrc = useSafeLogoURL(asset?.address, undefined, asset?.logo);
 
-  const handleAvatarError = useCallback(
+  const handleLogoError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (asset) {
-        event.currentTarget.src = avatarSrc;
-        console.warn(`[AssetSelectDropDown] Missing avatar for ${asset.symbol} (${asset.avatar})`);
+        event.currentTarget.src = logoSrc;
+        console.warn(`[AssetSelectDropDown] Missing logo for ${asset.symbol} (${asset.logo})`);
       }
     },
-    [asset, avatarSrc]
+    [asset, logoSrc]
   );
 
   const handleAssetSelect = useCallback(
@@ -81,10 +81,10 @@ function AssetSelectDropDown<T extends GenericAsset>({
           <>
             <img
               className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-              alt={`${asset.name} avatar`}
-              src={avatarSrc}
+              alt={`${asset.name} logo`}
+              src={logoSrc}
               onClick={() => alert(JSON.stringify(asset, null, 2))}
-              onError={handleAvatarError}
+              onError={handleLogoError}
             />
             {asset.symbol}
           </>

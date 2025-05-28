@@ -42,7 +42,7 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
       <BasePreviewCard
         name={name}
         symbol={symbol}
-        avatarSrc={logoURL}
+        logoSrc={logoURL}
         onSelect={() => onSelect(validatedAsset)}
         onError={reportMissingLogoURL}
       />

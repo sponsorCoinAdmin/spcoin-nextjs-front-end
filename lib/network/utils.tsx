@@ -115,9 +115,9 @@ const getLogoURL = (
     switch (dataFeedType) {
       case FEED_TYPE.AGENT_ACCOUNTS:
       case FEED_TYPE.RECIPIENT_ACCOUNTS:
-        return `/assets/accounts/${address}/avatar.png`;
+        return `/assets/accounts/${address}/logo.png`;
       case FEED_TYPE.TOKEN_LIST:
-        return `/assets/blockchains/${chainId ?? 1}/contracts/${address}/avatar.png`;
+        return `/assets/blockchains/${chainId ?? 1}/contracts/${address}/logo.png`;
       default:
         return '';
     }
@@ -180,7 +180,7 @@ const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string =>
   }
 
   const { chainId, address } = requiredAssetMembers;
-  const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+  const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
   debugLog.log(`getTokenLogoURL.logoURL=${logoURL}`);
   return logoURL;
 };
@@ -188,7 +188,7 @@ const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string =>
 
 export const getAddressLogoURL = (address: string, chainId: number): string => {
   if (isAddress(address)) {
-    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/avatar.png`
+    const logoURL=`/assets/blockchains/${chainId}/contracts/${address}/logo.png`
     debugLog.log(`getAddressLogoURL.logoURL=${logoURL}`)
     return logoURL
   }
@@ -196,8 +196,8 @@ export const getAddressLogoURL = (address: string, chainId: number): string => {
   return badTokenAddressImage
 }
 
-const getAccountAvatar = (account?: WalletAccount): string =>
-  account ? `/assets/accounts/${account.address}/avatar.png` : defaultMissingImage;
+const getAccountLogo = (account?: WalletAccount): string =>
+  account ? `/assets/accounts/${account.address}/logo.png` : defaultMissingImage;
 
 // Utility function to create a default network JSON list (for debugging/testing)
 const createNetworkJsonList = () => {
@@ -241,7 +241,7 @@ export {
   getNativeWrapAddress,
   getTokenLogoURL,
   type RequiredAssetMembers,
-  getAccountAvatar,
+  getAccountLogo,
   isActiveAccountAddress,
   isActiveAccountBuyToken,
   isActiveAccountSellToken,

@@ -14,7 +14,7 @@ const emojiMap: Partial<Record<InputState, {
   emoji?: string;
   text: string;
   color?: string;
-  useAvatar?: boolean;
+  useLogo?: boolean;
 }>> = {
   [InputState.INVALID_ADDRESS_INPUT]: {
     emoji: '❓',
@@ -24,7 +24,7 @@ const emojiMap: Partial<Record<InputState, {
   [InputState.DUPLICATE_INPUT]: {
     text: 'Duplicate input selected.',
     color: 'orange',
-    useAvatar: true,
+    useLogo: true,
   },
   [InputState.CONTRACT_NOT_FOUND_LOCALLY]: {
     emoji: '⚠️',

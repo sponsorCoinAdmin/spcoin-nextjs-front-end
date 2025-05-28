@@ -10,7 +10,7 @@
             "name": "BUSD Token",
             "symbol": "BUSD",
             "decimals": 18,
-            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/tron/assets/TMz2SWatiAtZVVcH2ebpsbVtYwUPT9EdjH/avatar.png",
+            "logoURI": "https://assets-cdn.trustwallet.com/blockchains/tron/assets/TMz2SWatiAtZVVcH2ebpsbVtYwUPT9EdjH/logo.png",
             "pairs": []
         }
     ],

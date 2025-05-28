@@ -12,13 +12,13 @@ import { useChainId } from "wagmi";
 export default function Header() {
   const [networkName, setNetworkName] = useState<string>("Ethereum");
   const chainId = useChainId({ config });
-  const [avatar, setAvatar] = useState<string>(getBlockChainLogoURL(chainId));
+  const [logoURL, setLogoURL] = useState<string>(getBlockChainLogoURL(chainId));
 
   const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_DEBUG_TEST_PAGE_ON === 'true';
 
   useEffect(() => {
     const network = getBlockChainName(chainId) || "";
-    setAvatar(getBlockChainLogoURL(chainId));
+    setLogoURL(getBlockChainLogoURL(chainId));
     setNetworkName(network);
   }, [chainId]);
 
@@ -45,7 +45,7 @@ export default function Header() {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <img
-            src={avatar}
+            src={logoURL}
             className="h-[25px] w-[25px]"
             alt={`Header ChainId = ${chainId} Network = ${networkName}`}
             onError={(event) => {

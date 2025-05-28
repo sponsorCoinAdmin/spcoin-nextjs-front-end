@@ -19,7 +19,7 @@ const TradeContainerHeader = () => {
       <div onClick={() => exchangeContextDump(exchangeContext)}>
         <Image
           src={spCoin_png}
-          className={styles.avatarImg}
+          className={styles.logoImg}
           alt="SponsorCoin Logo"
           style={{ height: 'auto', width: 'auto' }} // ✅ add this
         />      </div>

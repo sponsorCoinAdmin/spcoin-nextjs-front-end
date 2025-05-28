@@ -7,25 +7,25 @@ import { useChainId } from 'wagmi';
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 
-export const useFetchLocalAvatar = (tokenAddress: string) => {
+export const useFetchLocalLogo = (tokenAddress: string) => {
   const chainId = useChainId();
 
-  const avatarURL = `assets/blockchains/${chainId}/contracts/${tokenAddress}/avatar.png`;
-  const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
+  const logoURL = `assets/blockchains/${chainId}/contracts/${tokenAddress}/logo.png`;
+  const [logoSrc, setLogoSrc] = useState<string>(defaultMissingImage);
 
-  console.log(`✅✅✅✅✅avatarURL = ${avatarURL}`)
-    fetch(avatarURL)
+  console.log(`✅✅✅✅✅logoURL = ${logoURL}`)
+    fetch(logoURL)
       .then((res) => {
         if (res.ok) {
-          setAvatarSrc(avatarURL);
+          setLogoSrc(logoURL);
         } else {
-          setAvatarSrc(defaultMissingImage);
+          setLogoSrc(defaultMissingImage);
         }
       })
       .catch(() => {
-        setAvatarSrc(defaultMissingImage);
+        setLogoSrc(defaultMissingImage);
       });
-  }, [inputState, avatarURL]);
+  }, [inputState, logoURL]);
 
-  return avatarSrc;
+  return logoSrc;
 };

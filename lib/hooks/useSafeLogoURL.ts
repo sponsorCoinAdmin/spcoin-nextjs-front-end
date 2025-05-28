@@ -1,14 +1,14 @@
-// lib\hooks\useSafeAvatarURL.ts
+// lib\hooks\useSafeLogoURL.ts
 
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 
-export function useSafeAvatarURL(address?: string, chainIdOverride?: number, avatar?: string): string {
+export function useSafeLogoURL(address?: string, chainIdOverride?: number, logo?: string): string {
   const fallbackChainId = useChainId();
 
   if (!address || !isAddress(address)) return '/assets/miscellaneous/QuestionWhiteOnRed.png';
-  if (avatar) return avatar;
+  if (logo) return logo;
 
   const chainId = chainIdOverride ?? fallbackChainId;
-  return `/assets/blockchains/${chainId}/contracts/${address}/avatar.png`;
+  return `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
 }

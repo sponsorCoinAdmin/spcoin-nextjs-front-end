@@ -8,7 +8,7 @@ import info_png from '@/public/assets/miscellaneous/info1.png';
 type Props = {
   name: string;
   symbol: string;
-  avatarSrc: string;
+  logoSrc: string;
   onSelect: () => void;
   onInfoClick?: () => void;
   onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void; // ✅ Added this
@@ -20,7 +20,7 @@ type Props = {
 const BasePreviewCard: React.FC<Props> = ({
   name,
   symbol,
-  avatarSrc,
+  logoSrc,
   onSelect,
   onInfoClick,
   onContextMenu,
@@ -35,8 +35,8 @@ const BasePreviewCard: React.FC<Props> = ({
     >
       <div className="cursor-pointer flex flex-row" onClick={onSelect}>
         <Image
-          src={avatarSrc}
-          alt={`${name} avatar`}
+          src={logoSrc}
+          alt={`${name} logo`}
           width={width}
           height={height}
           className={styles.elementLogo}

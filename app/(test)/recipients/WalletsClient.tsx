@@ -4,15 +4,15 @@ import { WalletAccount, publicWalletPath } from '@/lib/structure/types'
 import { defaultMissingImage } from '@/lib/network/utils'
 
 export default function WalletsClient({ wallets }: { wallets: WalletAccount[] }) {
-  const getAvatarUrl = (walletAddress: string) =>
-    `/${publicWalletPath}/${walletAddress}/avatar.png`
+  const getLogoUrl = (walletAddress: string) =>
+    `/${publicWalletPath}/${walletAddress}/logo.png`
 
   return (
     <div style={{ padding: '20px' }}>
       <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
         {wallets.map((wallet, index) => {
-          const avatarUrl = getAvatarUrl(wallet.address)
-          const isMissingAvatar = avatarUrl === defaultMissingImage
+          const logoUrl = getLogoUrl(wallet.address)
+          const isMissingLogo = logoUrl === defaultMissingImage
 
           return (
             <li
@@ -28,8 +28,8 @@ export default function WalletsClient({ wallets }: { wallets: WalletAccount[] })
             >
               <div style={{ textAlign: 'center', marginRight: '12px' }}>
                 <img
-                  src={avatarUrl}
-                  alt='Avatar'
+                  src={logoUrl}
+                  alt='Logo'
                   width='100'
                   height='100'
                   style={{
@@ -40,7 +40,7 @@ export default function WalletsClient({ wallets }: { wallets: WalletAccount[] })
                     (e.target as HTMLImageElement).src = defaultMissingImage
                   }}
                 />
-                {isMissingAvatar && (
+                {isMissingLogo && (
                   <div
                     style={{
                       color: 'red',
@@ -49,7 +49,7 @@ export default function WalletsClient({ wallets }: { wallets: WalletAccount[] })
                       fontWeight: 'bold',
                     }}
                   >
-                    Missing Avatar
+                    Missing Logo
                   </div>
                 )}
               </div>

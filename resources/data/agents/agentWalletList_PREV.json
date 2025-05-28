@@ -267,8 +267,8 @@
     },
     {
         "symbol": "???",
-        "img": "/assets/agents/anonymous-avatar.png",
-        "name": "Anonymous Avatar",
-        "address": "anonymous-avatar's Wallet Address"
+        "img": "/assets/agents/anonymous-logo.png",
+        "name": "Anonymous Logo",
+        "address": "anonymous-logo's Wallet Address"
     }
 ]

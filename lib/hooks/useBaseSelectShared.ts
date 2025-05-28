@@ -36,9 +36,9 @@ export function useBaseSelectShared() {
   };
 
   const validateInputStatusMessage = (state: InputState, duplicateMessage = 'Duplicate token') => {
-    const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useAvatar?: boolean }>> = {
+    const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useLogo?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid address required.' },
-      [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useAvatar: true },
+      [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useLogo: true },
       [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Missing local metadata.' },
       [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Not found on blockchain.' },
     };

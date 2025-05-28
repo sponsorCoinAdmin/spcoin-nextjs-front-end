@@ -65,6 +65,6 @@ export const config = createConfig(
     appName: 'SponsorCoin Exchange',
     appDescription: 'SponsorCoin Exchange',
     appUrl: 'https://family.co',
-    appIcon: 'https://family.co/avatar.png',
+    appIcon: 'https://family.co/logo.png',
   })
 );

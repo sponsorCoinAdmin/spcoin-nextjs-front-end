@@ -31,8 +31,8 @@ export default function Page() {
     })
   }, [wallets, filter])
 
-  const getAvatarUrl = (walletAddress: string) => {
-    return `/${publicWalletPath}/${walletAddress}/avatar.png` // let browser 404 if missing
+  const getLogoUrl = (walletAddress: string) => {
+    return `/${publicWalletPath}/${walletAddress}/logo.png` // let browser 404 if missing
   }
 
   const getTitle = () => {
@@ -81,7 +81,7 @@ export default function Page() {
       <div style={{ marginTop: '90px', padding: '0 20px' }}>
         <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
           {filteredWallets.map((wallet, index) => {
-            const avatarUrl = getAvatarUrl(wallet.address)
+            const logoUrl = getLogoUrl(wallet.address)
 
             return (
               <li key={wallet.address} style={{
@@ -94,8 +94,8 @@ export default function Page() {
               }}>
                 <div style={{ textAlign: 'center', marginRight: '12px' }}>
                   <img
-                    src={avatarUrl}
-                    alt='Avatar'
+                    src={logoUrl}
+                    alt='Logo'
                     width='100'
                     height='100'
                     style={{ borderRadius: '50%', border: '2px solid #ccc' }}
