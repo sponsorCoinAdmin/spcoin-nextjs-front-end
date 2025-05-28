@@ -1,7 +1,18 @@
-// File: components/shared/utils/addressUtils.ts
+// File: lib/spCoin/isDuplicateAddress.ts
+
+import { TokenContract } from '@/lib/structure/types';
 
 /**
  * Case-insensitive check for whether two Ethereum addresses are equal.
  */
-export const isDuplicateAddress = (a?: string, b?: string): boolean =>
-  !!a && !!b && a.toLowerCase() === b.toLowerCase();
+export const isDuplicateAddress = (addr1?: string, addr2?: string): boolean =>
+  !!addr1 && !!addr2 && addr1.toLowerCase() === addr2.toLowerCase();
+
+/**
+ * Returns true if two token contracts refer to the same address and chain.
+ * Address comparison is case-insensitive.
+ */
+export const tokenContractsEqual = (a?: TokenContract, b?: TokenContract): boolean => {
+  if (!a || !b) return false;
+  return isDuplicateAddress(a.address, b.address) && a.chainId === b.chainId;
+};
