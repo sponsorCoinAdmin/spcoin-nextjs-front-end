@@ -35,7 +35,12 @@ export default function Header() {
   const [__, setBuyTokenContract] = useBuyTokenContract();
   const { setExchangeContext } = useExchangeContext();
 
-  const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_DEBUG_TEST_PAGE_ON === 'true';
+  const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
+  const SHOW_ADMIN_LINK = process.env.NEXT_PUBLIC_SHOW_ADMIN_PAGE === 'true';
+  const SHOW_RECIPIENT_LINK = process.env.NEXT_PUBLIC_SHOW_RECIPIENT_PAGE === 'true';
+  const SHOW_EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
+  const SHOW_SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
+  const SHOW_WHITE_PAPER = process.env.NEXT_PUBLIC_SHOW_WHITE_PAPER === 'true';
 
   // Update network display
   useEffect(() => {
@@ -91,30 +96,38 @@ export default function Header() {
             alt="Sponsor Coin Logo"
           />
 
-          <Link
-            href="/SponsorCoin"
-            className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
-          >
-            SponsorCoin
-          </Link>
-          <Link
-            href="/Exchange"
-            className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
-          >
-            Exchange
-          </Link>
-          <Link
-            href="/Recipient"
-            className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
-          >
-            Recipient
-          </Link>
-          <Link
-            href="/Admin"
-            className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
-          >
-            Admin
-          </Link>
+          {SHOW_SPCOIN_LINK && (
+            <Link
+              href="/SponsorCoin"
+              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+            >
+              SponsorCoin
+            </Link>
+          )}
+          {SHOW_EXCHANGE_LINK && (
+            <Link
+              href="/Exchange"
+              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+            >
+              Exchange
+            </Link>
+          )}
+          {SHOW_RECIPIENT_LINK && (
+            <Link
+              href="/Recipient"
+              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+            >
+              Recipient
+            </Link>
+          )}
+          {SHOW_ADMIN_LINK && (
+            <Link
+              href="/Admin"
+              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+            >
+              Admin
+            </Link>
+          )}
           {SHOW_TEST_LINK && (
             <Link
               href="/Exchange/Test"
@@ -123,6 +136,15 @@ export default function Header() {
               Test
             </Link>
           )}
+          {SHOW_WHITE_PAPER && (
+            <Link
+              href="/WhitePaper"
+              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+            >
+              White Paper
+            </Link>
+          )}
+
         </div>
 
         {/* Right-aligned network + connect */}

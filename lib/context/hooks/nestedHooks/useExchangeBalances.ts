@@ -5,33 +5,30 @@ import { useBalance, useAccount } from 'wagmi';
 import { useEffect, useMemo, useRef } from 'react';
 import { Address } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { isDuplicateAddress } from '@/components/shared/utils/isDuplicateAddress';
-import { TokenContract } from '@/lib/structure/types';
+import { isNativeToken } from '@/lib/utils/isNativeToken';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_USE_EXCHANGE_BALANCES === 'true';
 const debugLog = createDebugLogger('ExchangeBalances', DEBUG_ENABLED, LOG_TIME);
 
 const useManagedBalance = (
-  token: TokenContract | undefined,
+  token: any,
   updateTokenInContext: (balance: bigint) => void,
   type: 'sell' | 'buy'
 ) => {
   const { address } = useAccount();
 
-  const tokenAddress: Address | undefined = useMemo(
-    () => (token?.symbol === 'ETH' ? undefined : token?.address),
-    [token?.symbol, token?.address]
-  );
+  const tokenAddress: Address | undefined = useMemo(() => {
+    if (!token) return undefined;
+    return isNativeToken(token.address, token.chainId) ? undefined : token.address;
+  }, [token]);
 
   const chainId = token?.chainId;
 
-  // ✅ Always call useBalance unconditionally
   const balanceResult = useBalance({
     address,
     token: tokenAddress,
     chainId,
-    enabled: !!address && !!chainId,
   });
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -72,7 +69,7 @@ const useManagedBalance = (
         }
       }
     }, 500);
-  }, [address, tokenAddress, chainId, balanceResult.data?.value, token, type, updateTokenInContext]);
+  }, [address, tokenAddress, chainId, balanceResult.data?.value]);
 };
 
 export const useSellBalance = () => {
@@ -82,7 +79,7 @@ export const useSellBalance = () => {
   useManagedBalance(token, (balance) => {
     setExchangeContext((prev) => {
       const prevToken = prev.tradeData.sellTokenContract;
-      if (!prevToken || !token || !isDuplicateAddress(prevToken.address, token.address)) return prev;
+      if (!prevToken || prevToken.address !== token.address) return prev;
       return {
         ...prev,
         tradeData: {
@@ -104,7 +101,7 @@ export const useBuyBalance = () => {
   useManagedBalance(token, (balance) => {
     setExchangeContext((prev) => {
       const prevToken = prev.tradeData.buyTokenContract;
-      if (!prevToken || !token || !isDuplicateAddress(prevToken.address, token.address)) return prev;
+      if (!prevToken || prevToken.address !== token.address) return prev;
       return {
         ...prev,
         tradeData: {
