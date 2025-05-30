@@ -45,7 +45,7 @@ const AccountSelectContainer: React.FC = () => {
 
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
-  let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
+  let defaultStaticFileUrl = `/RecipientSite?url=${baseURL}?${sitekey}`;
 
   useEffect(() => {
     const website = recipientAccount?.website;
@@ -87,7 +87,7 @@ const AccountSelectContainer: React.FC = () => {
         <div className={styles.lineDivider}></div>
         <div className={styles.yourRecipient}>You are sponsoring:</div>
         {recipientAccount && siteExists ? (
-          <Link href={`Recipient?url=${recipientAccount.website}`} className={styles.recipientName}>
+          <Link href={`/RecipientSite?url=${recipientAccount.website}`} className={styles.recipientName}>
             {recipientAccount.name}
           </Link>
         ) : (

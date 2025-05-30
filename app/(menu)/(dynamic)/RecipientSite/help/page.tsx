@@ -6,19 +6,19 @@ export default function HelpPage() {
           To load a remote URL inside this page, append a <code>?url=</code> parameter to the URL:
         </p>
         <pre style={{ background: "#f4f4f4", padding: "10px", borderRadius: "5px" }}>
-          http://localhost:3000/Recipient?url=YOUR_REMOTE_URL
+          http://localhost:3000/RecipientSite?url=YOUR_REMOTE_URL
         </pre>
   
         <h3 style={{ color: "#fef08a" }}>Example Calls:</h3>
         <ul>
           <li>
-            <a href="/Recipient?url=https://openai.com" target="_parent">Load OpenAI</a>
+            <a href="/RecipientSite?url=https://openai.com" target="_parent">Load OpenAI</a>
           </li>
           <li>
-            <a href="/Recipient?url=https://wikipedia.org" target="_parent">Load Wikipedia</a>
+            <a href="/RecipientSite?url=https://wikipedia.org" target="_parent">Load Wikipedia</a>
           </li>
           <li>
-            <a href="/Recipient?url=https://example.com" target="_parent">Load Example</a>
+            <a href="/RecipientSite?url=https://example.com" target="_parent">Load Example</a>
           </li>
         </ul>
       </div>

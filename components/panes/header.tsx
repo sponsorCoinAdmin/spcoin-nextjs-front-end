@@ -3,6 +3,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { config } from '@/lib/wagmi/wagmiConfig';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
@@ -28,6 +29,7 @@ const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 export default function Header() {
   const [networkName, setNetworkName] = useState('Ethereum');
   const chainId = useChainId({ config });
+  const pathname = usePathname();
 
   const [logo, setLogo] = useState(() => getBlockChainLogoURL(chainId));
 
@@ -37,10 +39,8 @@ export default function Header() {
 
   const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
   const SHOW_ADMIN_LINK = process.env.NEXT_PUBLIC_SHOW_ADMIN_PAGE === 'true';
-  const SHOW_RECIPIENT_LINK = process.env.NEXT_PUBLIC_SHOW_RECIPIENT_PAGE === 'true';
   const SHOW_EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
   const SHOW_SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
-  const SHOW_WHITE_PAPER = process.env.NEXT_PUBLIC_SHOW_WHITE_PAPER === 'true';
 
   // Update network display
   useEffect(() => {
@@ -63,11 +63,9 @@ export default function Header() {
 
     debugLog.warn(`⚠️ Clearing token contracts due to chain switch: ${chainId}`);
 
-    // Clear token state immediately
     setSellTokenContract(undefined);
     setBuyTokenContract(undefined);
 
-    // Update exchangeContext with new chainId
     setExchangeContext(prev => ({
       ...prev,
       tradeData: {
@@ -112,9 +110,9 @@ export default function Header() {
               Exchange
             </Link>
           )}
-          {SHOW_RECIPIENT_LINK && (
+          {pathname === '/RecipientSite' && (
             <Link
-              href="/Recipient"
+              href="/RecipientSite"
               className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
             >
               Recipient
@@ -136,7 +134,7 @@ export default function Header() {
               Test
             </Link>
           )}
-          {SHOW_WHITE_PAPER && (
+          {pathname === '/WhitePaper' && (
             <Link
               href="/WhitePaper"
               className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
@@ -144,14 +142,13 @@ export default function Header() {
               White Paper
             </Link>
           )}
-
         </div>
 
         {/* Right-aligned network + connect */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <img
-              key={logo} // ⬅️ Force re-render when logo changes
+              key={logo}
               src={logo}
               className="h-[36px]"
               alt={`Header ChainId = ${chainId} Network = ${networkName}`}

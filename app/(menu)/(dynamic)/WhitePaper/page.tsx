@@ -33,7 +33,7 @@ export default function WhitePaper() {
       <p><b>Sample SponsorCoin Recipient Page:</b></p>
       <div className="text-center mb-10">
       <h1 className="text-[30px] font-bold">Swap For Sick Kids Hospital SponsorCoins Here</h1>
-      <h1 className="text-[30px] font-bold">(PUT IMAGE HERE)</h1>
+      <img src="/assets/docs/whitePaper/RecipientPage.png" alt="Recipient Page" style={{ width: '600px', margin: '20px auto' }} />
       <h2 className={h2Class}>Image 1 (Recipient Page)</h2>
       </div>
 
@@ -45,7 +45,7 @@ export default function WhitePaper() {
       <p><b>Sample SponsorCoin Wallet Management Application:</b></p>
       <div className="text-center mb-10">
         <h1 className="text-[30px] font-bold">Sample Sponsor Coin Management App</h1>
-        <h1 className="text-[30px] font-bold">(PUT IMAGE HERE)</h1>
+        <img src="/assets/docs/whitePaper/ManagementApp.png" alt="Management App" style={{ width: '600px', margin: '20px auto' }} />
         <h2 className={h2Class}>Image 2 (Management App)</h2>
       </div>
       <p>The Buy button executes a contract to buy directly from an exchange through a third-party app like Metamask.</p>

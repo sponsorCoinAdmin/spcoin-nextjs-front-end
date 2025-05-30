@@ -2,9 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 
-// Inline hook (scoped to this page)
 function useTogglePortal<T extends HTMLElement>() {
   const [visible, setVisible] = useState(true);
   const portalRef = useRef<T>(null);
@@ -49,10 +49,19 @@ export default function SponsorCoinPage() {
     toggleOnBackgroundClick,
   } = useTogglePortal<HTMLDivElement>();
 
+  const cardStyle =
+    'group p-4 rounded-xl bg-[#0E111B] hover:bg-[rgb(79,86,101)] cursor-pointer transition-colors duration-200';
+
+  const headerStyle =
+    'text-xl font-semibold mb-2 text-center text-[#5981F3] group-hover:text-[#000000] transition-colors';
+
+  const paragraphStyle =
+    'text-sm text-white group-hover:text-[#FFFFFF] transition-colors text-left';
+
   return (
     <main
       ref={backgroundRef}
-      className="min-h-screen text-white p-6 bg-cover bg-center relative"
+      className="min-h-screen p-6 bg-cover bg-center relative"
       style={{
         backgroundImage: showSpCoinPortal
           ? 'none'
@@ -65,85 +74,71 @@ export default function SponsorCoinPage() {
         <div
           ref={portalRef}
           id="sponsorCoinPortal"
-          className="backdrop-blur-sm bg-[#0E111B]/80 rounded-2xl p-6 max-w-4xl mx-auto"
+          className="relative backdrop-blur-sm bg-[#0E111B]/80 rounded-2xl p-6 max-w-5xl mx-auto"
         >
-          <div className="flex justify-center mt-8">
-            <div className="flex items-center gap-4 mb-8">
-              <Image src={spCoin_png} width={48} height={48} alt="Sponsor Coin Logo" />
-              <h1 className="text-3xl font-bold text-[#5981F3]">SponsorCoin Portal</h1>
+          {/* Image moved to top-left */}
+          <div className="absolute top-0 left-0 p-[17px]">
+            <Image src={spCoin_png} width={40} height={40} alt="Sponsor Coin Logo" />
+          </div>
+
+          <div className="flex justify-center mt-0">
+            <div className="flex items-center gap-4 mb-6">
+              <h1 className="text-3xl font-bold text-[#EBCA6A]">SponsorCoin Portal</h1>
             </div>
           </div>
 
-          <section className="bg-[#1A1D2E] p-6 rounded-2xl shadow-md">
-            <p className="text-lg mb-4">
-              Welcome to the SponsorCoin configuration page. Here you can configure sponsor-related token settings, update metadata, and preview sponsorship options.
+          <section className="bg-[#1A1D2E] p-4 rounded-2xl shadow-md">
+            <p className="text-lg mb-4 text-white text-center">
+              Welcome to the SponsorCoin configuration page. Here you can trade tokens, support your causes, create sposorship relationships, earn rewards, and much more.
             </p>
 
             <div className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className="p-4 rounded-xl hover:bg-[rgb(119,126,142)] cursor-pointer transition-colors duration-200"
-                  onClick={() => alert('Type ToDo: Configure Sponsorship')}
-                >
-                  <h2 className="text-xl font-semibold mb-2">Configure Sponsorship</h2>
-                  <p className="text-sm text-gray-300">
-                    Set sponsorship rates, designate recipients, and review sponsor history.
-                  </p>
-                </div>
-
-                <div
-                  className="p-4 rounded-xl hover:bg-[rgb(119,126,142)] cursor-pointer transition-colors duration-200"
-                  onClick={() => alert('Type ToDo: Token Info')}
-                >
-                  <h2 className="text-xl font-semibold mb-2">Token Info</h2>
-                  <p className="text-sm text-gray-300">
-                    View or edit the SponsorCoin token metadata including name, symbol, and decimals.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className="p-4 rounded-xl hover:bg-[rgb(119,126,142)] cursor-pointer transition-colors duration-200"
-                  onClick={() => alert('Type ToDo: Create a Sponsor Me Account')}
-                >
-                  <h2 className="text-xl font-semibold mb-2">Create a Sponsor Me Account</h2>
-                  <p className="text-sm text-gray-300">
-                    Set up a sponsorship recipient account and set up a sponsorship profile.
-                  </p>
-                </div>
-
-                <div
-                  className="p-4 rounded-xl hover:bg-[rgb(119,126,142)] cursor-pointer transition-colors duration-200"
-                  onClick={() => alert('Type ToDo: Token Info')}
-                >
-                  <h2 className="text-xl font-semibold mb-2">Token Info</h2>
-                  <p className="text-sm text-gray-300">
-                    View or edit the SponsorCoin token metadata including name, symbol, and decimals.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className="p-4 rounded-xl hover:bg-[rgb(119,126,142)] cursor-pointer transition-colors duration-200"
-                  onClick={() => alert('Type ToDo: SponsorCoin Exchange')}
-                >
-                  <h2 className="text-xl font-semibold mb-2">SponsorCoin Exchange</h2>
-                  <p className="text-sm text-gray-300">
+                <Link href="/Exchange" className={cardStyle}>
+                  <h2 className={headerStyle}>SponsorCoin Exchange</h2>
+                  <p className={paragraphStyle}>
                     Trade on Sponsorcoin Exchange and be eligible for future SponsorCoin drops.
                   </p>
-                </div>
-
-                <div
-                  className="p-4 rounded-xl hover:bg-[rgb(119,126,142)] cursor-pointer transition-colors duration-200"
-                  onClick={() => alert('Type ToDo: SponsorCoin White Paper')}
-                >
-                  <h2 className="text-xl font-semibold mb-2">SponsorCoin White Paper</h2>
-                  <p className="text-sm text-gray-300">
-                    Read the SponsorCoin white paper and learn more about the project.
+                </Link>
+                <div className={cardStyle} onClick={() => alert('Type ToDo: Token Info')}>
+                  <h2 className={headerStyle}>Manage Your Account</h2>
+                  <p className={paragraphStyle}>
+                    View or edit the SponsorCoin token metadata including name, symbol, and decimals.
                   </p>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={cardStyle} onClick={() => alert('Type ToDo: Create a Sponsor Me Account')}>
+                  <h2 className={headerStyle}>Create a Sponsor Me Account</h2>
+                  <p className={paragraphStyle}>
+                    Set up a sponsorCoin recipient account to recieve crypto credit rewards through your sponsorCoin relationships
+                  </p>
+                </div>
+
+                <div className={cardStyle} onClick={() => alert('Type ToDo: Token Info')}>
+                  <h2 className={headerStyle}>Create an Agent Account</h2>
+                  <p className={paragraphStyle}>
+                    As an agent, you can create an agent account to manage sponsorships and receive rewards.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Link href="/SpCoinApi" className={cardStyle}>
+                  <h2 className={headerStyle}>SpCoin API for Developers</h2>
+                  <p className={paragraphStyle}>
+                    Connect to the blockCoin token utilizing SponsorCoin's API's for advanced development. SponsorCoin Exchange was built utilizing these API's
+                  </p>
+                </Link>
+
+                <Link href="/WhitePaper" className={cardStyle}>
+                  <h2 className={headerStyle}>SponsorCoin White Paper</h2>
+                  <p className={paragraphStyle}>
+                    Read the SponsorCoin white paper and learn more about the project.
+                  </p>
+                </Link>
+
               </div>
             </div>
           </section>
