@@ -48,7 +48,7 @@ export default function CreateRecipientAccountPage() {
 
   return (
     <main className="max-w-3xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">Create a SponsorCoin Recipient Account</h1>
+      <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">Create a Sponsor Me (Recipient) Account</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Required Fields */}
         {[

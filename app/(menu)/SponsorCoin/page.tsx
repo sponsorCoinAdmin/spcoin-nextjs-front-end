@@ -109,11 +109,13 @@ export default function SponsorCoinPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={cardStyle} onClick={() => alert('Type ToDo: Create a Sponsor Me Account')}>
-                  <h2 className={headerStyle}>Create a Sponsor Me Account</h2>
-                  <p className={paragraphStyle}>
-                    Set up a sponsorCoin recipient account to recieve crypto credit rewards through your sponsorCoin relationships
-                  </p>
+                <div className={cardStyle}>
+                  <Link href="/SponsorMe" className={cardStyle}>
+                    <h2 className={headerStyle}>Create a Sponsor Me Account</h2>
+                    <p className={paragraphStyle}>
+                      Set up a sponsorCoin recipient account to recieve crypto credit rewards through your sponsorCoin relationships
+                    </p>
+                  </Link>
                 </div>
 
                 <div className={cardStyle} onClick={() => alert('Type ToDo: Token Info')}>
@@ -125,7 +127,7 @@ export default function SponsorCoinPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Link href="/SpCoinApi" className={cardStyle}>
+                <Link href="/SpCoinAPI" className={cardStyle}>
                   <h2 className={headerStyle}>SpCoin API for Developers</h2>
                   <p className={paragraphStyle}>
                     Connect to the blockCoin token utilizing SponsorCoin's API's for advanced development. SponsorCoin Exchange was built utilizing these API's

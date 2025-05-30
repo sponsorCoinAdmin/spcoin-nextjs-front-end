@@ -30,6 +30,7 @@ export default function Header() {
   const [networkName, setNetworkName] = useState('Ethereum');
   const chainId = useChainId({ config });
   const pathname = usePathname();
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
   const [logo, setLogo] = useState(() => getBlockChainLogoURL(chainId));
 
@@ -42,7 +43,19 @@ export default function Header() {
   const SHOW_EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
   const SHOW_SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
 
-  // Update network display
+  const linkClass = (href: string) => {
+    const isHovered = hoveredTab === href;
+    const isActive = pathname === href && hoveredTab === null;
+
+    return `
+      px-4 py-2 rounded font-medium transition cursor-pointer
+      ${isHovered || isActive ? 'bg-[#222a3a] text-[#5981F3]' : ''}
+    `;
+  };
+
+  const onMouseEnter = (href: string) => () => setHoveredTab(href);
+  const onMouseLeave = () => setHoveredTab(null);
+
   useEffect(() => {
     if (!chainId) return;
 
@@ -57,7 +70,6 @@ export default function Header() {
     setLogo(newLogo);
   }, [chainId]);
 
-  // Clear token contracts + update context chainId globally
   useEffect(() => {
     if (!chainId) return;
 
@@ -85,66 +97,96 @@ export default function Header() {
       }}
     >
       <div className="flex flex-row justify-between items-center w-full">
-        {/* Left-aligned nav */}
         <div className="flex items-center gap-4 flex-shrink-0">
-          <Image
-            src={spCoin_png}
-            width={25}
-            height={25}
-            alt="Sponsor Coin Logo"
-          />
+          <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
 
           {SHOW_SPCOIN_LINK && (
             <Link
               href="/SponsorCoin"
-              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+              className={linkClass('/SponsorCoin')}
+              onMouseEnter={onMouseEnter('/SponsorCoin')}
+              onMouseLeave={onMouseLeave}
             >
               SponsorCoin
             </Link>
           )}
+
           {SHOW_EXCHANGE_LINK && (
             <Link
               href="/Exchange"
-              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+              className={linkClass('/Exchange')}
+              onMouseEnter={onMouseEnter('/Exchange')}
+              onMouseLeave={onMouseLeave}
             >
               Exchange
             </Link>
           )}
-          {pathname === '/RecipientSite' && (
-            <Link
-              href="/RecipientSite"
-              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
-            >
-              Recipient
-            </Link>
-          )}
+
+          <Link
+            href="/RecipientSite"
+            className={linkClass('/RecipientSite')}
+            onMouseEnter={onMouseEnter('/RecipientSite')}
+            onMouseLeave={onMouseLeave}
+          >
+            Recipient
+          </Link>
+
           {SHOW_ADMIN_LINK && (
             <Link
               href="/Admin"
-              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+              className={linkClass('/Admin')}
+              onMouseEnter={onMouseEnter('/Admin')}
+              onMouseLeave={onMouseLeave}
             >
               Admin
             </Link>
           )}
+
           {SHOW_TEST_LINK && (
             <Link
               href="/Exchange/Test"
-              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+              className={linkClass('/Exchange/Test')}
+              onMouseEnter={onMouseEnter('/Exchange/Test')}
+              onMouseLeave={onMouseLeave}
             >
               Test
             </Link>
           )}
+
           {pathname === '/WhitePaper' && (
+          <Link
+            href="/WhitePaper"
+            className={linkClass('/WhitePaper')}
+            onMouseEnter={onMouseEnter('/WhitePaper')}
+            onMouseLeave={onMouseLeave}
+          >
+            White Paper
+          </Link>
+          )}
+
+          {pathname === '/SpCoinAPI' && (
             <Link
-              href="/WhitePaper"
-              className="px-4 py-2 rounded font-medium transition hover:bg-[#222a3a] hover:text-[#5981F3] cursor-pointer"
+              href="/SpCoinAPI"
+              className={linkClass('/SpCoinAPI')}
+              onMouseEnter={onMouseEnter('/SpCoinAPI')}
+              onMouseLeave={onMouseLeave}
             >
-              White Paper
+              Sponsor Coin API
+            </Link>
+          )}
+
+          {pathname === '/SponsorMe' && (
+            <Link
+              href="/SponsorMe"
+              className={linkClass('/SponsorMe')}
+              onMouseEnter={onMouseEnter('/SponsorMe')}
+              onMouseLeave={onMouseLeave}
+            >
+              Sponsor Me
             </Link>
           )}
         </div>
 
-        {/* Right-aligned network + connect */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <img
