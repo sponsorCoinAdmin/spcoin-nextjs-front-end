@@ -93,6 +93,7 @@ export default function SponsorCoinPage() {
             </p>
 
             <div className="space-y-5">
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Link href="/Exchange" className={cardStyle}>
                   <h2 className={headerStyle}>SponsorCoin Exchange</h2>
@@ -109,14 +110,12 @@ export default function SponsorCoinPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={cardStyle}>
-                  <Link href="/SponsorMe" className={cardStyle}>
-                    <h2 className={headerStyle}>Create a Sponsor Me Account</h2>
-                    <p className={paragraphStyle}>
-                      Set up a sponsorCoin recipient account to recieve crypto credit rewards through your sponsorCoin relationships
-                    </p>
-                  </Link>
-                </div>
+                <Link href="/SponsorMe" className={cardStyle}>
+                  <h2 className={headerStyle}>Create a Sponsor Me Account</h2>
+                  <p className={paragraphStyle}>
+                    Set up a sponsorCoin recipient account to recieve crypto credit rewards through your sponsorCoin relationships
+                  </p>
+                </Link>
 
                 <div className={cardStyle} onClick={() => alert('Type ToDo: Token Info')}>
                   <h2 className={headerStyle}>Create an Agent Account</h2>
@@ -140,8 +139,8 @@ export default function SponsorCoinPage() {
                     Read the SponsorCoin white paper and learn more about the project.
                   </p>
                 </Link>
-
               </div>
+
             </div>
           </section>
         </div>
