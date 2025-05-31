@@ -185,6 +185,17 @@ export default function Header() {
               Sponsor Me
             </Link>
           )}
+
+          {pathname === '/ManageAccounts' && (
+            <Link
+              href="/ManageAccounts"
+              className={linkClass('/ManageAccounts')}
+              onMouseEnter={onMouseEnter('/ManageAccounts')}
+              onMouseLeave={onMouseLeave}
+            >
+              Manage Accounts
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

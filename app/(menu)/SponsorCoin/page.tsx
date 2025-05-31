@@ -101,17 +101,19 @@ export default function SponsorCoinPage() {
                     Trade on Sponsorcoin Exchange and be eligible for future SponsorCoin drops.
                   </p>
                 </Link>
-                <div className={cardStyle} onClick={() => alert('Type ToDo: Token Info')}>
-                  <h2 className={headerStyle}>Manage Your Account</h2>
+                <Link href="/ManageAccounts" className={cardStyle}>
+                  <h2 className={headerStyle}>Manage Your SponsorCoin Accounts</h2>
                   <p className={paragraphStyle}>
-                    View or edit the SponsorCoin token metadata including name, symbol, and decimals.
+                    Wether you are a sponsor, agent or recipient, you can view or edit the SponsorCoin accounts and Balances, including managing sponsorship relationships and
+                    claiming Rewards.
                   </p>
-                </div>
+                </Link>
+
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Link href="/SponsorMe" className={cardStyle}>
-                  <h2 className={headerStyle}>Create a Sponsor Me Account</h2>
+                  <h2 className={headerStyle}>Create a "Sponsor Me" Account</h2>
                   <p className={paragraphStyle}>
                     Set up a sponsorCoin recipient account to recieve crypto credit rewards through your sponsorCoin relationships
                   </p>
