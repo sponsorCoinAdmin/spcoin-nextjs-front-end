@@ -119,12 +119,12 @@ export default function SponsorCoinPage() {
                   </p>
                 </Link>
 
-                <div className={cardStyle} onClick={() => alert('Type ToDo: Token Info')}>
+                <Link href="/CreateAgent" className={cardStyle}>
                   <h2 className={headerStyle}>Create an Agent Account</h2>
                   <p className={paragraphStyle}>
                     As an agent, you can create an agent account to manage sponsorships and receive rewards.
                   </p>
-                </div>
+                </Link>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -196,6 +196,17 @@ export default function Header() {
               Manage Accounts
             </Link>
           )}
+
+          {pathname === '/CreateAgent' && (
+            <Link
+              href="/CreateAgent"
+              className={linkClass('/CreateAgent')}
+              onMouseEnter={onMouseEnter('/CreateAgent')}
+              onMouseLeave={onMouseLeave}
+            >
+              Create Agent
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
