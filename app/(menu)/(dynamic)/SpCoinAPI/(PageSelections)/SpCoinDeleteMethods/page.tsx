@@ -40,8 +40,7 @@ export default function SpCoinDeleteMethodsPage() {
 
             <p className="mt-4"><b>Methods:</b></p>
             <ol className="list-decimal list-inside ml-4">
-              <li>
-                <p><b>setSigner(_signer)</b></p>
+              <li><b>setSigner(_signer)</b>
                 <ul className="list-disc list-inside ml-4">
                   <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
                   <li><b>Parameters:</b> _signer: The signer to be set for the contract.</li>
