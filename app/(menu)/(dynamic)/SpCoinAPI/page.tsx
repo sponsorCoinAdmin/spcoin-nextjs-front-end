@@ -94,21 +94,33 @@ export default function WhitePaper() {
               <p><b>Constructor(_spCoinContractDeployed)</b></p>
               <ul className="list-disc list-inside ml-4">
                 <li><b>Description:</b> Creates an instance of SpCoinAddMethods and initializes properties.</li>
-                <li><b>Parameters:</b> _spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+                <li><b>Parameters:</b>
+                  <ul className="list-disc list-inside ml-6">
+                    <li> _spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+                  </ul>
+                </li>
               </ul>
 
               <p><b>Methods:</b></p>
               <ol className="list-decimal list-inside ml-4">
                 <li><b>setSigner(_signer)</b>
-                  <ul className="list-disc ml-6">
+                  <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
-                    <li><b>Parameters:</b> _signer: The signer to be set for the contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_signer: The signer to be set for the contract.</li>
+                      </ul>
+                    </li>
                   </ul>
+
                 </li>
                 <li><b>AddRecipient(_recipientKey)</b>
                   <ul className="list-disc ml-6">
                     <li><b>Description:</b> Adds a recipient to the SpCoin smart contract.</li>
-                    <li><b>Parameters:</b> _recipientKey (string): The key of the recipient to be added.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc ml-6">
+                      <li> _recipientKey (string): The key of the recipient to be added.</li>
+                    </ul>
                   </ul>
                 </li>
                 <li><b>addRecipients(_accountKey, _recipientAccount)</b>
@@ -151,13 +163,19 @@ export default function WhitePaper() {
                 <li><b>addAccountRecord(_accountKey)</b>
                   <ul className="list-disc ml-6">
                     <li><b>Description:</b> Adds an account record to the SpCoin smart contract.</li>
-                    <li><b>Parameters:</b> _accountKey (string): The key of the account to be added.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc ml-6">
+                      <li> _accountKey (string): The key of the account to be added.</li>
+                    </ul>
                   </ul>
                 </li>
                 <li><b>addAccountRecords(_accountListKeys)</b>
                   <ul className="list-disc ml-6">
                     <li><b>Description:</b> Adds multiple account records to the SpCoin smart contract.</li>
-                    <li><b>Parameters:</b> _accountListKeys (string[]): The list of account keys to be added.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc ml-6">
+                      <li>_accountListKeys (string[]): The list of account keys to be added.</li>
+                    </ul>
                     <li><b>Returns:</b> (number): The count of successfully added account records.</li>
                   </ul>
                 </li>
@@ -247,27 +265,37 @@ export default function WhitePaper() {
                 </ul>
               </div>
 
-              <p className="mt-4"><b>Methods:</b></p>
+              <p><b>Methods:</b></p>
               <ol className="list-decimal list-inside ml-4">
                 <li>
                   <b>setSigner(_signer)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
-                    <li><b>Parameters:</b> _signer: The signer to be set for the contract.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_signer: The signer to be set for the contract.</li>
+                        </ul>
+                      </li>
                   </ul>
                 </li>
                 <li>
                   <b>deleteAccountRecord(_accountKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Deletes an account record from the SpCoin contract.</li>
-                    <li><b>Parameters:</b> accountKey: The key of the account to be deleted.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc ml-6">
+                      <li>accountKey: The key of the account to be deleted.</li>
+                    </ul>
                   </ul>
                 </li>
                 <li>
                   <b>deleteAccountRecords(accountListKeys)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Deletes multiple account records from the SpCoin contract.</li>
-                    <li><b>Parameters:</b> _accountListKeys: The list of account keys to be deleted.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc ml-6">
+                      <li>_accountListKeys: The list of account keys to be deleted.</li>
+                    </ul>
                   </ul>
                 </li>
                 <li>
@@ -317,17 +345,15 @@ export default function WhitePaper() {
               </ul>
 
               <ul className="list-disc list-inside ml-4">
-                <li>
-                  <p><b>Constructor(_spCoinContractDeployed)</b></p>
-                  <ul className="list-disc list-inside ml-4">
-                    <li><b>Description:</b> Creates an instance of SpCoinStakingMethods and initializes properties.</li>
-                    <li><b>Parameters:</b>
-                      <ul className="list-disc list-inside ml-6">
-                        <li>_spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
-                      </ul>
-                    </li>
-                  </ul>
-                </li>
+                <p><b>Constructor(_spCoinContractDeployed)</b></p>
+                <ul className="list-disc list-inside ml-4">
+                  <li><b>Description:</b> Creates an instance of SpCoinStakingMethods and initializes properties.</li>
+                  <li><b>Parameters:</b>
+                    <ul className="list-disc list-inside ml-6">
+                      <li>_spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+                    </ul>
+                  </li>
+                </ul>
               </ul>
 
               <p><b>Module Description:</b></p>
@@ -469,8 +495,23 @@ export default function WhitePaper() {
               <div style={{ marginLeft: '20px' }}>
                 <p><b>Constructor(_spCoinContractDeployed)</b></p>
                 <ol className="list-decimal list-inside">
-                  <li>setSigner(_signer)</li>
+                  <li><b>setSigner(_signer)</b>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_signer: The signer to be set for the contract.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
                   <li>updateAccountStakingRewards (_accountKey)</li>
+                  <li><b>Parameters:</b>
+                    <ul className="list-disc list-inside ml-6">
+                      <li>_accountKey: Account for which the rewards are to be updated.</li>
+                    </ul>
+                  </li>
+
                 </ol>
                 <p><b>Exporting the Module:</b> The module exports an object with a single property <code>SpCoinRewardsMethods</code> which holds the class.</p>
               </div>
@@ -494,7 +535,7 @@ export default function WhitePaper() {
                 </ul>
               </div>
 
-              <p className="mt-4"><b>Methods:</b></p>
+              <p><b>Methods:</b></p>
               <ol className="list-decimal list-inside ml-4">
                 <li>
                   <b>setSigner(_signer)</b>
