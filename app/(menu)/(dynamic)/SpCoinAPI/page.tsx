@@ -250,28 +250,28 @@ export default function WhitePaper() {
               <p className="mt-4"><b>Methods:</b></p>
               <ol className="list-decimal list-inside ml-4">
                 <li>
-                  <p><b>setSigner(_signer)</b></p>
+                  <b>setSigner(_signer)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
                     <li><b>Parameters:</b> _signer: The signer to be set for the contract.</li>
                   </ul>
                 </li>
                 <li>
-                  <p><b>deleteAccountRecord(_accountKey)</b></p>
+                  <b>deleteAccountRecord(_accountKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Deletes an account record from the SpCoin contract.</li>
                     <li><b>Parameters:</b> accountKey: The key of the account to be deleted.</li>
                   </ul>
                 </li>
                 <li>
-                  <p><b>deleteAccountRecords(accountListKeys)</b></p>
+                  <b>deleteAccountRecords(accountListKeys)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Deletes multiple account records from the SpCoin contract.</li>
                     <li><b>Parameters:</b> _accountListKeys: The list of account keys to be deleted.</li>
                   </ul>
                 </li>
                 <li>
-                  <p><b>unSponsorRecipient(_sponsorKey, _recipientKey)</b></p>
+                  <b>unSponsorRecipient(_sponsorKey, _recipientKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Un-sponsors a recipient from the SpCoin contract.</li>
                     <li><b>Parameters:</b></li>
@@ -282,7 +282,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>deleteAgentRecord(_accountKey, _recipientKey, _accountAgentKey)</b></p>
+                  <b>deleteAgentRecord(_accountKey, _recipientKey, _accountAgentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Deletes an agent record from the SpCoin contract.</li>
                     <li><b>Parameters:</b></li>
@@ -334,7 +334,7 @@ export default function WhitePaper() {
               <div style={{ marginLeft: '20px' }}>
                 <ol className="list-decimal list-inside">
                   <li>
-                    <p><b>setSigner(_signer)</b></p>
+                    <b>setSigner(_signer)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
                       <li><b>Parameters:</b>
@@ -346,7 +346,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>testStakingRewards(lastUpdateTime, _testUpdateTime, _interestRate, _quantity)</b></p>
+                    <b>testStakingRewards(lastUpdateTime, _testUpdateTime, _interestRate, _quantity)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Tests staking rewards by simulating a staking operation.</li>
                       <li><b>Parameters:</b>
@@ -361,7 +361,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>getStakingRewards(lastUpdateTime, _interestRate, _quantity)</b></p>
+                    <b>getStakingRewards(lastUpdateTime, _interestRate, _quantity)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Retrieves staking rewards for a specified account.</li>
                       <li><b>Parameters:</b>
@@ -375,7 +375,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>getTimeMultiplier(_timeRateMultiplier)</b></p>
+                    <b>getTimeMultiplier(_timeRateMultiplier)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Gets the time multiplier based on the provided time rate multiplier.</li>
                       <li><b>Parameters:</b>
@@ -387,7 +387,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>getAccountTimeInSecondeSinceUpdate(_tokenLastUpdate)</b></p>
+                    <b>getAccountTimeInSecondeSinceUpdate(_tokenLastUpdate)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Retrieves the time elapsed in seconds since the last update for a specified account.</li>
                       <li><b>Parameters:</b>
@@ -399,7 +399,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>getMillenniumTimeIntervalDivisor(_timeInSeconds)</b></p>
+                    <b>getMillenniumTimeIntervalDivisor(_timeInSeconds)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Gets the annualized percentage for the provided time in seconds.</li>
                       <li><b>Parameters:</b>
@@ -411,7 +411,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>depositSponsorStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</b></p>
+                    <b>depositSponsorStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Deposits staking rewards for the sponsor account.</li>
                       <li><b>Parameters:</b>
@@ -426,7 +426,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>depositRecipientStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</b></p>
+                    <b>depositRecipientStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Deposits staking rewards for the recipient account.</li>
                       <li><b>Parameters:</b>
@@ -441,7 +441,7 @@ export default function WhitePaper() {
                   </li>
 
                   <li>
-                    <p><b>depositAgentStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount)</b></p>
+                    <b>depositAgentStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount)</b>
                     <ul className="list-disc list-inside ml-4">
                       <li><b>Description:</b> Deposits staking rewards for the agent account.</li>
                       <li><b>Parameters:</b>
@@ -497,7 +497,7 @@ export default function WhitePaper() {
               <p className="mt-4"><b>Methods:</b></p>
               <ol className="list-decimal list-inside ml-4">
                 <li>
-                  <p><b>setSigner(_signer)</b></p>
+                  <b>setSigner(_signer)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
                     <li><b>Parameters:</b>
@@ -508,21 +508,21 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountList()</b></p>
+                  <b>getAccountList()</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get a list of all account keys.</li>
                     <li><b>Returns:</b> Promise containing the list of account keys.</li>
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountListSize()</b></p>
+                  <b>getAccountListSize()</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the size of the account list.</li>
                     <li><b>Returns:</b> Promise containing the size of the account list.</li>
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRecipientList(_accountKey)</b></p>
+                  <b>getAccountRecipientList(_accountKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipients for a given account key.</li>
                     <li><b>Parameters:</b>
@@ -534,7 +534,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRecipientListSize(_accountKey)</b></p>
+                  <b>getAccountRecipientListSize(_accountKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the size of the recipient list for a given account key.</li>
                     <li><b>Parameters:</b>
@@ -546,7 +546,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRecord(_accountKey)</b></p>
+                  <b>getAccountRecord(_accountKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the detailed record for a given account key, including recipient records and staking rewards.</li>
                     <li><b>Parameters:</b>
@@ -557,7 +557,7 @@ export default function WhitePaper() {
                     <li><b>Returns:</b> Promise containing the account record.</li>
                   </ul>
                 </li>              <li>
-                  <p><b>getAccountStakingRewards(_accountKey)</b></p>
+                  <b>getAccountStakingRewards(_accountKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get staking rewards for a given account key.</li>
                     <li><b>Parameters:</b>
@@ -569,7 +569,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getRewardTypeRecord(_accountKey, _rewardType, _reward)</b></p>
+                  <b>getRewardTypeRecord(_accountKey, _rewardType, _reward)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get reward type record for a specific account, including sponsor, recipient, or agent rewards.</li>
                     <li><b>Parameters:</b>
@@ -583,7 +583,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRewardTransactionList(_rewardAccountList)</b></p>
+                  <b>getAccountRewardTransactionList(_rewardAccountList)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get a list of reward transactions for a given account.</li>
                     <li><b>Parameters:</b>
@@ -595,7 +595,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRewardTransactionRecord(_rewardRecordStr)</b></p>
+                  <b>getAccountRewardTransactionRecord(_rewardRecordStr)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get a single reward transaction record from the serialized string.</li>
                     <li><b>Parameters:</b>
@@ -607,7 +607,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRateRecordList(rateRewardList)</b></p>
+                  <b>getAccountRateRecordList(rateRewardList)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get a list of reward rate records for a given account.</li>
                     <li><b>Parameters:</b>
@@ -619,7 +619,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getRateTransactionList(rewardRateRowList)</b></p>
+                  <b>getRateTransactionList(rewardRateRowList)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get a list of rate transactions for a given reward rate row list.</li>
                     <li><b>Parameters:</b>
@@ -631,7 +631,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getSPCoinHeaderRecord(getBody)</b></p>
+                  <b>getSPCoinHeaderRecord(getBody)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the SpCoin header record, including account records if specified.</li>
                     <li><b>Parameters:</b>
@@ -643,14 +643,14 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAccountRecords()</b></p>
+                  <b>getAccountRecords()</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get a list of all account records.</li>
                     <li><b>Returns:</b> Promise containing the list of account records.</li>
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of agent rates for a specific agent.</li>
                     <li><b>Parameters:</b>
@@ -666,7 +666,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getAgentRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b></p>
+                  <b>getAgentRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the agent rate record for a specific agent rate key.</li>
                     <li><b>Parameters:</b>
@@ -683,7 +683,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getAgentRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getAgentRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of agent rate records for a specific agent.</li>
                     <li><b>Parameters:</b>
@@ -699,7 +699,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getAgentRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getAgentRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the agent record for a specific agent.</li>
                     <li><b>Parameters:</b>
@@ -715,7 +715,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentAccountList)</b></p>
+                  <b>getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentAccountList)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of agent records for a list of agent accounts.</li>
                     <li><b>Parameters:</b>
@@ -731,7 +731,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getAgentRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b></p>
+                  <b>getAgentRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of agent rate transactions for a specific agent rate.</li>
                     <li><b>Parameters:</b>
@@ -747,7 +747,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAgentTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getAgentTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of agent transactions for a specific agent.</li>
                     <li><b>Parameters:</b>
@@ -763,7 +763,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRateTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b></p>
+                  <b>getRecipientRateTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient rate transactions for a specific recipient rate.</li>
                     <li><b>Parameters:</b>
@@ -780,7 +780,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient transactions for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -796,7 +796,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getSponsorRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getSponsorRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of sponsor-recipient transactions for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -812,7 +812,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient rate records for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -828,7 +828,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the recipient record for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -844,7 +844,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient records for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -860,7 +860,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient rates for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -876,7 +876,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _recipientRate)</b></p>
+                  <b>getRecipientRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _recipientRate)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the recipient rate record for a specific recipient rate.</li>
                     <li><b>Parameters:</b>
@@ -893,7 +893,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient rate records for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -908,7 +908,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getRewardRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRewardRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of reward rate records for a specific recipient.</li>
                     <li><b>Parameters:</b>
@@ -924,7 +924,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getSponsorRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getSponsorRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the sponsor record for a specific sponsor.</li>
                     <li><b>Parameters:</b>
@@ -940,7 +940,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getSponsorRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getSponsorRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of sponsor records for a list of sponsor accounts.</li>
                     <li><b>Parameters:</b>
@@ -956,7 +956,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRewardTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRewardTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of reward transactions for a specific sponsor.</li>
                     <li><b>Parameters:</b>
@@ -972,7 +972,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRewardTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRewardTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of reward types for a specific sponsor.</li>
                     <li><b>Parameters:</b>
@@ -988,7 +988,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRewardRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRewardRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of reward records for a specific sponsor account.</li>
                     <li><b>Parameters:</b>
@@ -1004,7 +1004,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRewardTypeRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRewardTypeRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of reward type records for a specific sponsor account.</li>
                     <li><b>Parameters:</b>
@@ -1020,7 +1020,7 @@ export default function WhitePaper() {
                 </li>
 
                 <li>
-                  <p><b>getRecipientRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getRecipientRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of recipient rate types for a specific sponsor account.</li>
                     <li><b>Parameters:</b>
@@ -1035,7 +1035,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getAgentRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getAgentRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of agent rate types for a specific sponsor account.</li>
                     <li><b>Parameters:</b>
@@ -1050,7 +1050,7 @@ export default function WhitePaper() {
                   </ul>
                 </li>
                 <li>
-                  <p><b>getSponsorRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <b>getSponsorRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b>
                   <ul className="list-disc list-inside ml-4">
                     <li><b>Description:</b> Get the list of sponsor rate types for a specific sponsor account.</li>
                     <li><b>Parameters:</b>
