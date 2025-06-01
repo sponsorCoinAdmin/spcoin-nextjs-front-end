@@ -52,31 +52,31 @@ export default function WhitePaper() {
         </div>
 
         <div style={{ marginLeft: '45px', marginRight: '45px' }}>
-        <h2 className={h2Class} onClick={() => setShowOverview(!showOverview)}>
-          Overview {showOverview ? '▾' : '▸'}
-        </h2>
-        {showOverview && (
-          <div style={{ marginLeft: '20px' }}>
-            <p>
-              This document details the class modules the methods available to the Ethereum sponsorCoin Token contract. These class modules are JavaScript react access modules for interaction with the sponsorCoin contract on the Ethereum network. This interaction is required to manage the accounts and rewards earned by sponsors, beneficiaries, and agents of the sponsorCoin contract. All erc20 functionality methods are also implemented according to the Ethereum standards.
-            </p>
-            <p>
-              The access modules are as follows:
-              <br />
-              <b>SpCoinAddMethods:</b> This module includes functionalities like adding sponsorships, recipients, agents, account records, and sponsorship transactions. The module generates backdated data for testing purposes involving staking over time.
-              <br />
-              <b>SpCoinDeleteMethods:</b> This module includes functionalities like deleting recipients, agents, account records, and sponsorships. Its primary purpose is to un-sponsor tokens called SponsorCoins so that they may be resold in the crypto token market.
-              <br />
-              <b>SpCoinStakingMethods:</b> This module includes functionalities pertaining to staking functionality such as calculating the staking rewards since last claimed and depositing the rewards to the erc20 balanceOf account, based on time method calculations. Rewards are allocated according to the proportion assigned between the Sponsor, Recipient and Agent allocations.
-              <br />
-              <b>SpCoinRewardsMethods:</b> This module updates the staking rewards for a given account. There are three types of awards which may be generated for any account. Sponsor rewards, Recipient Rewards and Agent Rewards. Any account can be a Sponsor, Recipient, Agent, none, one, two or all three of these entities and hence may have multiple SponsorCoin reward sources attached to their address identities.
-              <br />
-              <b>SpCoinReadMethods:</b> This module requests data which is existing on the blockchain and hence is read only so no signer is required and no network fees are incurred. Such read functions include get a list of recipients or agents or beneficiaries. Get a list of transactions such as rewards generated reward balances and so on. This class is ideal for an account display page for administrative work such as analyzing transactions or determining which beneficiaries to add to or delete from.
-              <br />
-              <b>spCoinERC20Methods:</b> This module requests standard erc20 request and is currently under review for modifications. Currently it is a WIP.
-            </p>
-          </div>
-        )}
+          <h2 className={h2Class} onClick={() => setShowOverview(!showOverview)}>
+            Overview {showOverview ? '▾' : '▸'}
+          </h2>
+          {showOverview && (
+            <div style={{ marginLeft: '20px' }}>
+              <p>
+                This document details the class modules the methods available to the Ethereum sponsorCoin Token contract. These class modules are JavaScript react access modules for interaction with the sponsorCoin contract on the Ethereum network. This interaction is required to manage the accounts and rewards earned by sponsors, beneficiaries, and agents of the sponsorCoin contract. All erc20 functionality methods are also implemented according to the Ethereum standards.
+              </p>
+              <p>
+                The access modules are as follows:
+                <br />
+                <b>SpCoinAddMethods:</b> This module includes functionalities like adding sponsorships, recipients, agents, account records, and sponsorship transactions. The module generates backdated data for testing purposes involving staking over time.
+                <br />
+                <b>SpCoinDeleteMethods:</b> This module includes functionalities like deleting recipients, agents, account records, and sponsorships. Its primary purpose is to un-sponsor tokens called SponsorCoins so that they may be resold in the crypto token market.
+                <br />
+                <b>SpCoinStakingMethods:</b> This module includes functionalities pertaining to staking functionality such as calculating the staking rewards since last claimed and depositing the rewards to the erc20 balanceOf account, based on time method calculations. Rewards are allocated according to the proportion assigned between the Sponsor, Recipient and Agent allocations.
+                <br />
+                <b>SpCoinRewardsMethods:</b> This module updates the staking rewards for a given account. There are three types of awards which may be generated for any account. Sponsor rewards, Recipient Rewards and Agent Rewards. Any account can be a Sponsor, Recipient, Agent, none, one, two or all three of these entities and hence may have multiple SponsorCoin reward sources attached to their address identities.
+                <br />
+                <b>SpCoinReadMethods:</b> This module requests data which is existing on the blockchain and hence is read only so no signer is required and no network fees are incurred. Such read functions include get a list of recipients or agents or beneficiaries. Get a list of transactions such as rewards generated reward balances and so on. This class is ideal for an account display page for administrative work such as analyzing transactions or determining which beneficiaries to add to or delete from.
+                <br />
+                <b>spCoinERC20Methods:</b> This module requests standard erc20 request and is currently under review for modifications. Currently it is a WIP.
+              </p>
+            </div>
+          )}
 
           <h2 className={h2Class} onClick={() => setShowAdd(!showAdd)}>
             SpCoinAddMethods {showAdd ? '▾' : '▸'}
@@ -84,22 +84,142 @@ export default function WhitePaper() {
           {showAdd && (
             <div style={{ marginLeft: '20px' }}>
               <p><b>Module Description:</b></p>
-              <div style={{ marginLeft: '20px' }}>
-                <p><b>Constructor(_spCoinContractDeployed)</b></p>
-                <ol className="list-decimal list-inside">
-                  <li>setSigner (_signer)</li>
-                  <li>AddRecipient (_recipientKey)</li>
-                  <li>addRecipients (_accountKey, _recipientAccount)</li>
-                  <li>addAgent (_recipientKey, _recipientRateKey, _accountAgentList)</li>
-                  <li>addAgents (_recipientKey, _recipientRateKey, _agentAccountList)</li>
-                  <li>addAccountRecord (_accountKey)</li>
-                  <li>addAccountRecords (_accountListKeys)</li>
-                  <li>addSponsorship (_sponsorSigner, _recipientKey, _recipientRateKey, _transactionQty)</li>
-                  <li>addAgentSponsorship (_sponsorSigner, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty)</li>
-                  <li>addBackDatedSponsorship (_sponsorSigner, _recipientKey, _recipientRateKey, _transactionQty, _transactionBackDate)</li>
-                  <li>addBackDatedAgentSponsorship (_sponsorSigner, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty, _transactionBackDate)</li>
-                </ol>
-              </div>
+              <p>This JavaScript react module exports the SpCoinAddMethods class, which provides methods for interacting with the SponsorCoin smart contract. It includes functionalities like adding recipients, agents, account records, and sponsorship transactions.</p>
+              <p><b>Properties:</b></p>
+              <ul className="list-disc list-inside ml-4">
+                <li><b>spCoinContractDeployed</b> (Object): The deployed instance of the SpCoin smart contract.</li>
+                <li><b>spCoinLogger</b> (Object): An instance of the SpCoinLogger class for logging purposes.</li>
+                <li><b>signer</b> (Object): The signer for the SpCoin smart contract.</li>
+              </ul>
+              <p><b>Constructor(_spCoinContractDeployed)</b></p>
+              <ul className="list-disc list-inside ml-4">
+                <li><b>Description:</b> Creates an instance of SpCoinAddMethods and initializes properties.</li>
+                <li><b>Parameters:</b> _spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+              </ul>
+
+              <p><b>Methods:</b></p>
+              <ol className="list-decimal list-inside ml-4">
+                <li><b>setSigner(_signer)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
+                    <li><b>Parameters:</b> _signer: The signer to be set for the contract.</li>
+                  </ul>
+                </li>
+                <li><b>AddRecipient(_recipientKey)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds a recipient to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b> _recipientKey (string): The key of the recipient to be added.</li>
+                  </ul>
+                </li>
+                <li><b>addRecipients(_accountKey, _recipientAccount)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds multiple recipients to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_accountKey (string): The key of the account associated with the recipients.</li>
+                        <li>_recipientAccountList (string []): The list of recipient keys to be added.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> (number): The count of successfully added recipients.</li>
+                  </ul>
+                </li>
+                <li><b>addAgent(_recipientKey, _recipientRateKey, _accountAgentList)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds an agent to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_recipientKey (string): The key of the associated recipient.</li>
+                        <li>_recipientRateKey (string): The key representing the rate of the recipient.</li>
+                        <li>_accountAgentKey (string): The key of the agent to be added.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li><b>addAgents(_recipientKey, _recipientRateKey, _agentAccountList)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds multiple agents to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_recipientKey (string): The key of the associated recipient.</li>
+                        <li>_recipientRateKey (string): The key representing the rate of the recipient.</li>
+                        <li>_agentAccountList (string[]): The list of agent keys to be added.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> (number): The count of successfully added agents.</li>
+                  </ul>
+                </li>
+                <li><b>addAccountRecord(_accountKey)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds an account record to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b> _accountKey (string): The key of the account to be added.</li>
+                  </ul>
+                </li>
+                <li><b>addAccountRecords(_accountListKeys)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds multiple account records to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b> _accountListKeys (string[]): The list of account keys to be added.</li>
+                    <li><b>Returns:</b> (number): The count of successfully added account records.</li>
+                  </ul>
+                </li>
+                <li><b>addSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, _transactionQty)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds a sponsorship transaction to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_sponsorSigner (Object): The signer of the sponsoring account.</li>
+                        <li>_recipientKey (string): The key of the sponsored recipient.</li>
+                        <li>_recipientRateKey (string): The key representing the rate of the recipient.</li>
+                        <li>_transactionQty (number): The quantity of the sponsorship transaction.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li><b>addAgentSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds an agent sponsorship transaction to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_sponsorSigner (Object): The signer of the sponsoring account.</li>
+                        <li>_recipientKey (string): The key of the sponsored recipient.</li>
+                        <li>_recipientRateKey (string): The key representing the rate of the recipient.</li>
+                        <li>_accountAgentKey (string): The key of the sponsored agent.</li>
+                        <li>_agentRateKey (string): The key representing the rate of the agent.</li>
+                        <li>_transactionQty (number): The quantity of the agent sponsorship transaction.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li><b>addBackDatedSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, _transactionQty, _transactionBackDate)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds a backdated sponsorship transaction to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_sponsorSigner (Object): The signer of the sponsoring account.</li>
+                        <li>_recipientKey (string): The key of the sponsored recipient.</li>
+                        <li>_recipientRateKey (string): The key representing the rate of the recipient.</li>
+                        <li>_transactionQty (number): The quantity of the backdated sponsorship transaction.</li>
+                        <li>_transactionBackDate (number): The timestamp of the backdated sponsorship transaction.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li><b>addBackDatedAgentSponsorship(_sponsorSigner, _recipientKey, _recipientRateKey, _accountAgentKey, _agentRateKey, _transactionQty, _transactionBackDate)</b>
+                  <ul className="list-disc ml-6">
+                    <li><b>Description:</b> Adds a backdated agent sponsorship transaction to the SpCoin smart contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc ml-6">
+                        <li>_sponsorSigner (Object): The signer of the sponsoring account.</li>
+                        <li>_recipientKey (string): The key of the sponsored recipient.</li>
+                        <li>_recipientRateKey (string): The key representing the rate of the recipient.</li>
+                        <li>_accountAgentKey (string): The key of the sponsored agent.</li>
+                        <li>_agentRateKey (string): The key representing the rate of the agent.</li>
+                        <li>_transactionQty (number): The quantity of the backdated agent sponsorship transaction.</li>
+                        <li>_transactionBackDate (number): The timestamp of the backdated agent sponsorship transaction.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ol>
             </div>
           )}
 
@@ -108,17 +228,72 @@ export default function WhitePaper() {
           </h2>
           {showDelete && (
             <div style={{ marginLeft: '20px' }}>
-              <p><b>Module Description:</b></p>
+              <p>
+                This module exports the <b>SpCoinDeleteMethods</b> class, which provides methods for interacting with the SpCoin smart contract. It includes functionalities like deleting recipients, agents, account records, and sponsorships. This module also exports the SpCoinDeleteMethods for integration into other JavaScript programs.
+              </p>
+              <p><b>Properties:</b></p>
+              <ul className="list-disc list-inside ml-4">
+                <li><b>spCoinContractDeployed (Object):</b> The deployed instance of the SpCoin smart contract.</li>
+                <li><b>spCoinLogger (Object):</b> An instance of the SpCoinLogger class for logging purposes.</li>
+                <li><b>signer (Object):</b> The signer for the SpCoin smart contract.</li>
+              </ul>
+              <p><b>Constructor(_spCoinContractDeployed)</b></p>
               <div style={{ marginLeft: '20px' }}>
-                <p><b>Constructor(_spCoinContractDeployed)</b></p>
-                <ol className="list-decimal list-inside">
-                  <li>setSigner(_signer)</li>
-                  <li>deleteAccountRecord(_accountKey)</li>
-                  <li>deleteAccountRecords(accountListKeys)</li>
-                  <li>unSponsorRecipient(_sponsorKey, _recipientKey)</li>
-                  <li>deleteAgentRecord (_accountKey, _recipientKey, _accountAgentKey)</li>
-                </ol>
+                <p><b>Description:</b></p>
+                <p>Creates an instance of SpCoinDeleteMethods and initializes properties.</p>
+                <p><b>Parameters:</b></p>
+                <ul className="list-disc list-inside ml-4">
+                  <li>_spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+                </ul>
               </div>
+
+              <p className="mt-4"><b>Methods:</b></p>
+              <ol className="list-decimal list-inside ml-4">
+                <li>
+                  <p><b>setSigner(_signer)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
+                    <li><b>Parameters:</b> _signer: The signer to be set for the contract.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>deleteAccountRecord(_accountKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Deletes an account record from the SpCoin contract.</li>
+                    <li><b>Parameters:</b> accountKey: The key of the account to be deleted.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>deleteAccountRecords(accountListKeys)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Deletes multiple account records from the SpCoin contract.</li>
+                    <li><b>Parameters:</b> _accountListKeys: The list of account keys to be deleted.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>unSponsorRecipient(_sponsorKey, _recipientKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Un-sponsors a recipient from the SpCoin contract.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc list-inside ml-6">
+                      <li>sponsorKey: The key of the sponsor initiating the un-sponsorship.</li>
+                      <li>recipientKey: The key of the recipient to be unsponsored.</li>
+                    </ul>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>deleteAgentRecord(_accountKey, _recipientKey, _accountAgentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Deletes an agent record from the SpCoin contract.</li>
+                    <li><b>Parameters:</b></li>
+                    <ul className="list-disc list-inside ml-6">
+                      <li>accountKey: The key of the account associated with the agent.</li>
+                      <li>recipientKey: The key of the recipient associated with the agent.</li>
+                      <li>accountAgentKey: The key of the agent to be deleted.</li>
+                    </ul>
+                  </ul>
+                </li>
+              </ol>
             </div>
           )}
 
@@ -127,20 +302,160 @@ export default function WhitePaper() {
           </h2>
           {showStaking && (
             <div style={{ marginLeft: '20px' }}>
+
+              <h2 className="text-xl font-semibold">Module Description</h2>
+              <p>
+                This code defines a JavaScript module that exports the <code>SpCoinStakingMethods</code> class,
+                which provides methods for interacting with the SpCoin smart contract for staking method access.
+              </p>
+
+              <h2 className="text-xl font-semibold">Properties</h2>
+              <ul className="list-disc list-inside ml-4">
+                <li><b>spCoinContractDeployed</b> (Object): The deployed instance of the SpCoin smart contract.</li>
+                <li><b>spCoinLogger</b> (Object): An instance of the SpCoinLogger class for logging purposes.</li>
+                <li><b>signer</b> (Object): The signer for the SpCoin smart contract.</li>
+              </ul>
+
+              <ul className="list-disc list-inside ml-4">
+                <li>
+                  <p><b>Constructor(_spCoinContractDeployed)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Creates an instance of SpCoinStakingMethods and initializes properties.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+
               <p><b>Module Description:</b></p>
               <div style={{ marginLeft: '20px' }}>
-                <p><b>Constructor(_spCoinContractDeployed)</b></p>
                 <ol className="list-decimal list-inside">
-                  <li>setSigner(_signer)</li>
-                  <li>testStakingRewards (lastUpdateTime, _testUpdateTime, _interestRate, _quantity)</li>
-                  <li>getStakingRewards (lastUpdateTime, _interestRate, _quantity)</li>
-                  <li>getTimeMultiplier ( _timeRateMultiplier )</li>
-                  <li>getAccountTimeInSecondeSinceUpdate ( _tokenLastUpdate )</li>
-                  <li>getMillenniumTimeIntervalDivisor ( _timeInSeconds )</li>
-                  <li>depositSponsorStakingRewards ( _sponsorAccount, _recipientAccount, _recipientRate, _amount )</li>
-                  <li>depositRecipientStakingRewards ( _sponsorAccount, _recipientAccount, _recipientRate, _amount )</li>
-                  <li>depositAgentStakingRewards ( _sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount )</li>
-                </ol>
+                  <li>
+                    <p><b>setSigner(_signer)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_signer: The signer to be set for the contract.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>testStakingRewards(lastUpdateTime, _testUpdateTime, _interestRate, _quantity)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Tests staking rewards by simulating a staking operation.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_lastUpdateTime: The last update time for staking rewards.</li>
+                          <li>_testUpdateTime: The simulated time for testing staking rewards.</li>
+                          <li>_interestRate: The interest rate for staking rewards.</li>
+                          <li>_quantity: The quantity to be staked.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>getStakingRewards(lastUpdateTime, _interestRate, _quantity)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Retrieves staking rewards for a specified account.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_lastUpdateTime: The last update time for staking rewards.</li>
+                          <li>_interestRate: The interest rate for staking rewards.</li>
+                          <li>_quantity: The quantity to be staked.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>getTimeMultiplier(_timeRateMultiplier)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Gets the time multiplier based on the provided time rate multiplier.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_timeRateMultiplier: The time rate multiplier.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>getAccountTimeInSecondeSinceUpdate(_tokenLastUpdate)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Retrieves the time elapsed in seconds since the last update for a specified account.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_tokenLastUpdate: The last update time for the account.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>getMillenniumTimeIntervalDivisor(_timeInSeconds)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Gets the annualized percentage for the provided time in seconds.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_timeInSeconds: The time interval in seconds.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>depositSponsorStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Deposits staking rewards for the sponsor account.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_sponsorAccount: The sponsor account.</li>
+                          <li>_recipientAccount: The recipient account.</li>
+                          <li>_recipientRate: The recipient rate.</li>
+                          <li>_amount: The amount to be staked.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>depositRecipientStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _amount)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Deposits staking rewards for the recipient account.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_sponsorAccount: The sponsor account.</li>
+                          <li>_recipientAccount: The recipient account.</li>
+                          <li>_recipientRate: The recipient rate.</li>
+                          <li>_amount: The amount to be staked.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+
+                  <li>
+                    <p><b>depositAgentStakingRewards(_sponsorAccount, _recipientAccount, _recipientRate, _agentAccount, _agentRate, _amount)</b></p>
+                    <ul className="list-disc list-inside ml-4">
+                      <li><b>Description:</b> Deposits staking rewards for the agent account.</li>
+                      <li><b>Parameters:</b>
+                        <ul className="list-disc list-inside ml-6">
+                          <li>_sponsorAccount: The sponsor account.</li>
+                          <li>_recipientAccount: The recipient account.</li>
+                          <li>_recipientRate: The recipient rate.</li>
+                          <li>_agentAccount: The agent account.</li>
+                          <li>_agentRate: The agent rate.</li>
+                          <li>_amount: The amount to be staked.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>                </ol>
               </div>
             </div>
           )}
@@ -167,52 +482,590 @@ export default function WhitePaper() {
           </h2>
           {showRead && (
             <div style={{ marginLeft: '20px' }}>
-              <p><b>Module Description:</b></p>
+              <p>
+                This class provides read methods to interact with a SpCoin contract. It has methods to retrieve information about accounts, recipients, agents, and reward-related data.
+              </p>
+              <p><b>Constructor(_spCoinContractDeployed)</b></p>
               <div style={{ marginLeft: '20px' }}>
-                <p><b>Constructor(_spCoinContractDeployed)</b></p>
-                <ol className="list-decimal list-inside">
-                  <li>setSigner(_signer)</li>
-                  <li>getAccountList()</li>
-                  <li>getAccountListSize()</li>
-                  <li>getAccountRecipientList(_accountKey)</li>
-                  <li>getAccountRecipientListSize(_accountKey)</li>
-                  <li>getAccountRecord(_accountKey)</li>
-                  <li>getAccountStakingRewards(_accountKey)</li>
-                  <li>getRewardTypeRecord(_accountKey, _rewardType, _reward)</li>
-                  <li>getAccountRewardTransactionList(_rewardAccountList)</li>
-                  <li>getAccountRewardTransactionRecord(_rewardRecordStr)</li>
-                  <li>getAccountRateRecordList(rateRewardList)</li>
-                  <li>getRateTransactionList(rewardRateRowList)</li>
-                  <li>getSPCoinHeaderRecord(getBody)</li>
-                  <li>getAccountRecords()</li>
-                  <li>getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getAgentRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</li>
-                  <li>getAgentRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getAgentRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getAgentRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</li>
-                  <li>getAgentTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRateTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</li>
-                  <li>getRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getSponsorRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _recipientRate)</li>
-                  <li>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRewardRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getSponsorRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getSponsorRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRewardTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRewardTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRewardRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRewardTypeRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getRecipientRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getAgentRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                  <li>getSponsorRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</li>
-                </ol>
+                <p><b>Description:</b> Creates an instance of SpCoinReadMethods and initializes properties.</p>
+                <p><b>Parameters:</b></p>
+                <ul className="list-disc list-inside ml-4">
+                  <li>_spCoinContractDeployed (Object): The deployed instance of the SpCoin smart contract.</li>
+                </ul>
               </div>
+
+              <p className="mt-4"><b>Methods:</b></p>
+              <ol className="list-decimal list-inside ml-4">
+                <li>
+                  <p><b>setSigner(_signer)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Sets the signer for the SponsorCoin contract.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_signer: The signer to be set for the contract.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountList()</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get a list of all account keys.</li>
+                    <li><b>Returns:</b> Promise containing the list of account keys.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountListSize()</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the size of the account list.</li>
+                    <li><b>Returns:</b> Promise containing the size of the account list.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRecipientList(_accountKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipients for a given account key.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_accountKey: Key of the account.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient account keys.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRecipientListSize(_accountKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the size of the recipient list for a given account key.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_accountKey: Key of the account.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the size of the recipient list.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRecord(_accountKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the detailed record for a given account key, including recipient records and staking rewards.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_accountKey: Key of the account.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the account record.</li>
+                  </ul>
+                </li>              <li>
+                  <p><b>getAccountStakingRewards(_accountKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get staking rewards for a given account key.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_accountKey: Key of the account.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing staking rewards.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getRewardTypeRecord(_accountKey, _rewardType, _reward)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get reward type record for a specific account, including sponsor, recipient, or agent rewards.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_accountKey: Key of the account.</li>
+                        <li>_rewardType: Type of reward (SPONSOR, RECIPIENT, or AGENT).</li>
+                        <li>_reward: Reward value.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the reward type record.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRewardTransactionList(_rewardAccountList)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get a list of reward transactions for a given account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_rewardAccountList: List of reward accounts.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> List of reward transactions.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRewardTransactionRecord(_rewardRecordStr)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get a single reward transaction record from the serialized string.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_rewardRecordStr: Serialized string containing reward transaction details.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Reward transaction record.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRateRecordList(rateRewardList)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get a list of reward rate records for a given account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>rateRewardList: List of serialized reward rates.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> List of reward rate records.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getRateTransactionList(rewardRateRowList)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get a list of rate transactions for a given reward rate row list.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>rewardRateRowList: List of serialized reward rate transactions.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> List of rate transactions.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getSPCoinHeaderRecord(getBody)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the SpCoin header record, including account records if specified.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>getBody: Boolean flag indicating whether to include account records.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> SpCoin header record.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAccountRecords()</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get a list of all account records.</li>
+                    <li><b>Returns:</b> Promise containing the list of account records.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAgentRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of agent rates for a specific agent.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of agent rates.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getAgentRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the agent rate record for a specific agent rate key.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                        <li>_agentRateKey: Key of the agent rate.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the agent rate record.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getAgentRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of agent rate records for a specific agent.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of agent rate records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getAgentRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the agent record for a specific agent.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the agent record.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getAgentRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentAccountList)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of agent records for a list of agent accounts.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentAccountList: List of agent accounts.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of agent records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getAgentRateTransactionList(_sponsorCoin, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of agent rate transactions for a specific agent rate.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorCoin: Sponsor coin key.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                        <li>_agentRateKey: Key of the agent rate.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of agent rate transactions.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAgentTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of agent transactions for a specific agent.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of agent transactions.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRateTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _agentRateKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient rate transactions for a specific recipient rate.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                        <li>_agentRateKey: Key of the agent rate.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient rate transactions.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient transactions for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient transactions.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getSponsorRecipientTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of sponsor-recipient transactions for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of sponsor-recipient transactions.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient rate records for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient rate records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the recipient record for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the recipient record.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient records for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRateList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient rates for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient rates.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRateRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey, _recipientRate)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the recipient rate record for a specific recipient rate.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                        <li>_recipientRate: Key of the recipient rate.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the recipient rate record.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient rate records for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient rate records.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getRewardRateRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of reward rate records for a specific recipient.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of reward rate records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getSponsorRecord(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the sponsor record for a specific sponsor.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the sponsor record.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getSponsorRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of sponsor records for a list of sponsor accounts.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of sponsor records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRewardTransactionList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of reward transactions for a specific sponsor.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of reward transactions.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRewardTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of reward types for a specific sponsor.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of reward types.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRewardRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of reward records for a specific sponsor account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of reward records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRewardTypeRecordList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of reward type records for a specific sponsor account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of reward type records.</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <p><b>getRecipientRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of recipient rate types for a specific sponsor account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of recipient rate types.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getAgentRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of agent rate types for a specific sponsor account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of agent rate types.</li>
+                  </ul>
+                </li>
+                <li>
+                  <p><b>getSponsorRateTypeList(_sponsorKey, _recipientKey, _recipientRateKey, _agentKey)</b></p>
+                  <ul className="list-disc list-inside ml-4">
+                    <li><b>Description:</b> Get the list of sponsor rate types for a specific sponsor account.</li>
+                    <li><b>Parameters:</b>
+                      <ul className="list-disc list-inside ml-6">
+                        <li>_sponsorKey: Key of the sponsor.</li>
+                        <li>_recipientKey: Key of the recipient.</li>
+                        <li>_recipientRateKey: Key of the recipient rate.</li>
+                        <li>_agentKey: Key of the agent.</li>
+                      </ul>
+                    </li>
+                    <li><b>Returns:</b> Promise containing the list of sponsor rate types.</li>
+                  </ul>
+                </li>
+              </ol>
+              <p className="mt-4"><i>Methods continued in subsequent documentation...</i></p>
             </div>
           )}
         </div>
