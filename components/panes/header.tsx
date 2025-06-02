@@ -121,7 +121,7 @@ export default function Header() {
               Exchange
             </Link>
           )}
-
+{/* This can be activated for tests
           <Link
             href="/RecipientSite"
             className={linkClass('/RecipientSite')}
@@ -130,17 +130,7 @@ export default function Header() {
           >
             Recipient
           </Link>
-
-          {SHOW_ADMIN_LINK && (
-            <Link
-              href="/Admin"
-              className={linkClass('/Admin')}
-              onMouseEnter={onMouseEnter('/Admin')}
-              onMouseLeave={onMouseLeave}
-            >
-              Admin
-            </Link>
-          )}
+ */}
 
           {SHOW_TEST_LINK && (
             <Link
