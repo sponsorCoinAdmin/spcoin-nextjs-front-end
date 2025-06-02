@@ -165,7 +165,7 @@ function TestPage() {
         <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20BalanceOf ACTIVE_ACCOUNT_ADDRESS={address} TOKEN_CONTRACT_ADDRESS={undefined} />
+        <ReadWagmiERC20BalanceOf TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={undefined} />

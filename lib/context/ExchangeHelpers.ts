@@ -1,3 +1,5 @@
+// File: lib/context/ExchangeHelpers.ts
+
 "use client";
 
 import { API_TRADING_PROVIDER, ExchangeContext, TradeData } from "@/lib/structure/types";
@@ -51,9 +53,14 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     activeAccountAddress: undefined,
     network: initialContextMap.get("networkHeader") as NetworkElement,
     accounts: {
+      connectedAccount: undefined,
       sponsorAccount: undefined,
       recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
       agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+
+      sponsorAccounts: [],
+      recipientAccounts: [],
+      agentAccounts: [],
     },
     apiTradingProvider: API_TRADING_PROVIDER.API_0X,
     tradeData: {
@@ -87,16 +94,21 @@ export const sanitizeExchangeContext = (
     network: raw?.network ?? defaultContext.network,
     spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
     accounts: {
+      connectedAccount: raw?.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
       sponsorAccount: raw?.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,
       recipientAccount: raw?.accounts?.recipientAccount ?? defaultContext.accounts.recipientAccount,
       agentAccount: raw?.accounts?.agentAccount ?? defaultContext.accounts.agentAccount,
+
+      sponsorAccounts: raw?.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
+      recipientAccounts: raw?.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
+      agentAccounts: raw?.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
     },
     tradeData: {
       chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
       tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
       swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
       slippageBps:
-        typeof raw?.tradeData?.slippageBps === 'number' && raw.tradeData.slippageBps > 0
+        typeof raw?.tradeData?.slippageBps === "number" && raw.tradeData.slippageBps > 0
           ? raw.tradeData.slippageBps
           : defaultContext.tradeData.slippageBps,
       sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
@@ -137,8 +149,8 @@ const getDefaultNetworkSettings = (chain: any) => {
 };
 
 const normalizeChainId = (chain: unknown): number | string => {
-  if (typeof chain === 'number') return chain;
-  if (typeof chain === 'string') return chain.toLowerCase();
-  if (typeof chain === 'object' && chain && 'id' in chain) return (chain as any).id;
+  if (typeof chain === "number") return chain;
+  if (typeof chain === "string") return chain.toLowerCase();
+  if (typeof chain === "object" && chain && "id" in chain) return (chain as any).id;
   return ETHEREUM;
 };

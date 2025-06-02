@@ -15,7 +15,6 @@ import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20Con
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply'
 import { BURN_ADDRESS, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
 
-// let ACTIVE_ACCOUNT_ADDRESS:Address|undefined;
 const USDT_TON_CONTRACT:Address  = '0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1'
 const USDT_POLYGON_CONTRACT:Address  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
 const CHKN_ETHEREUM_CONTRACT:Address = USDT_TON_CONTRACT
@@ -23,7 +22,6 @@ let ACTIVE_ACCOUNT: UseAccountReturnType<Config>;
 
 function App() {
   ACTIVE_ACCOUNT = useAccount()
-  const [ ACTIVE_ACCOUNT_ADDRESS, setActiveAccountAddress ] = useState<Address>(BURN_ADDRESS)
   const [ TOKEN_CONTRACT_ADDRESS, setDefaultTokenContractAddress ] = useState<Address>(BURN_ADDRESS)
 
   useEffect(() => {
@@ -34,12 +32,6 @@ function App() {
     }
   }, [ACTIVE_ACCOUNT.chainId]);
   
-  useEffect(() => {
-    // alert(`SETTING ACTIVE_ACCOUNT_ADDRESS = ${ACTIVE_ACCOUNT.address}`)
-    if (ACTIVE_ACCOUNT.address != undefined && ACTIVE_ACCOUNT_ADDRESS !== ACTIVE_ACCOUNT.address)
-      setActiveAccountAddress(ACTIVE_ACCOUNT.address)
-  }, [ACTIVE_ACCOUNT.address]);
-
   // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
 
   return (
@@ -49,7 +41,7 @@ function App() {
       <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiERC20ContractFields  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
-      <ReadWagmiERC20BalanceOf  ACTIVE_ACCOUNT_ADDRESS={ACTIVE_ACCOUNT_ADDRESS} TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
+      <ReadWagmiERC20BalanceOf  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiERC20ContractName  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiERC20ContractSymbol  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
       <ReadWagmiERC20ContractDecimals  TOKEN_CONTRACT_ADDRESS={TOKEN_CONTRACT_ADDRESS} />
