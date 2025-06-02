@@ -1,5 +1,7 @@
 // File: lib/context/hooks/nestedHooks/useAmounts.ts
 
+'use client';
+
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
 
 /**
@@ -12,11 +14,15 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
   const setSellAmount = (amount: bigint) => {
     const token = exchangeContext.tradeData.sellTokenContract;
     if (!token) return;
-    setExchangeContext(prev => ({
+
+    setExchangeContext((prev) => ({
       ...prev,
       tradeData: {
         ...prev.tradeData,
-        sellTokenContract: { ...token, amount },
+        sellTokenContract: {
+          ...prev.tradeData.sellTokenContract!,
+          amount,
+        },
       },
     }));
   };
@@ -34,11 +40,15 @@ export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
   const setBuyAmount = (amount: bigint) => {
     const token = exchangeContext.tradeData.buyTokenContract;
     if (!token) return;
-    setExchangeContext(prev => ({
+
+    setExchangeContext((prev) => ({
       ...prev,
       tradeData: {
         ...prev.tradeData,
-        buyTokenContract: { ...token, amount },
+        buyTokenContract: {
+          ...prev.tradeData.buyTokenContract!,
+          amount,
+        },
       },
     }));
   };

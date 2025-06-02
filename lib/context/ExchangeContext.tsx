@@ -55,7 +55,10 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const setRecipientAccount = (wallet: WalletAccount | undefined) => {
     setExchangeContext((prev) => ({
       ...prev,
-      recipientAccount: wallet,
+      accounts: {
+        ...prev.accounts,
+        recipientAccount: wallet,
+      },
     }))
   }
 

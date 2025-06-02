@@ -7,23 +7,36 @@ import {
   CONTAINER_TYPE,
   TradeData,
 } from '@/lib/structure/types';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';
+const debugLog = createDebugLogger('contextHooks', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Read and update the current trade direction.
- * Example: TRADE_DIRECTION.BUY_EXACT_IN
  */
 export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+
   return [
     exchangeContext.tradeData.tradeDirection,
-    (type: TRADE_DIRECTION) =>
+    (type: TRADE_DIRECTION) => {
+      if (exchangeContext.tradeData.tradeDirection === type) {
+        debugLog.log(`⚠️ tradeDirection unchanged: ${type}`);
+        return;
+      }
+
+      debugLog.log(`🔁 tradeDirection changed: ${exchangeContext.tradeData.tradeDirection} → ${type}`);
+
       setExchangeContext((prev) => ({
         ...prev,
         tradeData: {
           ...prev.tradeData,
           tradeDirection: type,
         },
-      })),
+      }));
+    },
   ];
 };
 
@@ -35,8 +48,11 @@ export const useContainerType = (
 ): [CONTAINER_TYPE, (type: CONTAINER_TYPE) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // Initialize containerType if undefined and initialType is provided
-  if (exchangeContext.containerType === undefined && initialType !== undefined) {
+  const current = exchangeContext.containerType;
+
+  // Initialize if undefined
+  if (current === undefined && initialType !== undefined) {
+    debugLog.log(`🆕 Initializing containerType to: ${initialType}`);
     setExchangeContext((prev) => ({
       ...prev,
       containerType: initialType,
@@ -44,12 +60,20 @@ export const useContainerType = (
   }
 
   return [
-    exchangeContext.containerType || CONTAINER_TYPE.SELL_SELECT_CONTAINER,
-    (type: CONTAINER_TYPE) =>
+    current || CONTAINER_TYPE.SELL_SELECT_CONTAINER,
+    (type: CONTAINER_TYPE) => {
+      if (current === type) {
+        debugLog.log(`⚠️ containerType unchanged: ${type}`);
+        return;
+      }
+
+      debugLog.log(`🔁 containerType changed: ${current} → ${type}`);
+
       setExchangeContext((prev) => ({
         ...prev,
         containerType: type,
-      })),
+      }));
+    },
   ];
 };
 

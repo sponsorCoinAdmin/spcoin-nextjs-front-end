@@ -24,8 +24,7 @@ export const useSellTokenContract = (): [
     exchangeContext.tradeData.sellTokenContract,
     (contract) => {
       const oldContract = exchangeContext.tradeData.sellTokenContract;
-      const isSame = tokenContractsEqual(oldContract, contract);
-      if (isSame) return;
+      if (tokenContractsEqual(oldContract, contract)) return;
 
       setExchangeContext((prev) => ({
         ...prev,
@@ -53,8 +52,8 @@ export const useBuyTokenContract = (): [
     (contract) => {
       const oldContract = exchangeContext.tradeData.buyTokenContract;
       const oldDisplay = exchangeContext.spCoinDisplay;
-      const isSame = tokenContractsEqual(oldContract, contract);
 
+      const isSame = tokenContractsEqual(oldContract, contract);
       const isSp = contract && isSpCoin(contract);
       const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON : SP_COIN_DISPLAY.OFF;
 
@@ -74,17 +73,25 @@ export const useBuyTokenContract = (): [
 };
 
 /**
- * Shared debug-aware setter for spCoinDisplay.
+ * Shared debug-aware setter for spCoinDisplay with call trace.
  */
 const debugSetSpCoinDisplay = (
   oldDisplay: SP_COIN_DISPLAY,
   newDisplay: SP_COIN_DISPLAY,
   setExchangeContext: (updater: (prev: any) => any) => void
 ) => {
+  if (!DEBUG_ENABLED) {
+    if (oldDisplay !== newDisplay) {
+      setExchangeContext((prev) => ({ ...prev, spCoinDisplay: newDisplay }));
+    }
+    return;
+  }
+
+  const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No trace';
   if (oldDisplay !== newDisplay) {
-    debugLog.log(`🔁 spCoinDisplay change: ${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}`);
+    debugLog.log(`🔁 spCoinDisplay change: ${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}\n📍 Call site:\n${trace}`);
   } else {
-    debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}`);
+    debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`);
   }
 
   setExchangeContext((prev) => ({

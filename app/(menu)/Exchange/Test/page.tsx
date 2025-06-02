@@ -23,6 +23,8 @@ import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { usePageState } from '@/lib/context/PageStateContext';
 
+
+
 function TestPage() {
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
@@ -33,30 +35,34 @@ function TestPage() {
     showWallets = false,
     collapsedKeys = [],
     expandContext = false,
-  } = state.test.exchangePage;
+  } = state.page.exchangePage;
+
+  useEffect(() => {
+  localStorage.setItem('PageStateContext', JSON.stringify(state));
+}, [state]);
 
   useEffect(() => {
     if (address) {
       setState(prev => ({
         ...prev,
-        test: {
-          ...prev.test,
+        page: {
+          ...prev.page,
           exchangePage: {
-            ...prev.test.exchangePage,
+            ...prev.page.exchangePage,
           },
         },
       }));
     }
   }, [address]);
 
-  const updateExchangePage = (updates: Partial<typeof state.test.exchangePage>) => {
+  const updateExchangePage = (updates: Partial<typeof state.page.exchangePage>) => {
     setState(prev => {
       const newState = {
         ...prev,
-        test: {
-          ...prev.test,
+        page: {
+          ...prev.page,
           exchangePage: {
-            ...prev.test.exchangePage,
+            ...prev.page.exchangePage,
             ...updates,
           },
         },

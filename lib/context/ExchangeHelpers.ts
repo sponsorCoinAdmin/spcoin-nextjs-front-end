@@ -50,8 +50,11 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
   return {
     activeAccountAddress: undefined,
     network: initialContextMap.get("networkHeader") as NetworkElement,
-    recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
-    agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+    accounts: {
+      sponsorAccount: undefined,
+      recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
+      agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+    },
     apiTradingProvider: API_TRADING_PROVIDER.API_0X,
     tradeData: {
       signer: undefined,
@@ -67,7 +70,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       slippagePercentageString: "0.00%",
     },
     spCoinDisplay: SP_COIN_DISPLAY.OFF,
-    test: { dumpContextButton: false },
     containerType: CONTAINER_TYPE.UNDEFINED,
   };
 };
@@ -84,9 +86,11 @@ export const sanitizeExchangeContext = (
     activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
     network: raw?.network ?? defaultContext.network,
     spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
-    test: raw?.test ?? defaultContext.test,
-    recipientAccount: raw?.recipientAccount ?? defaultContext.recipientAccount,
-    agentAccount: raw?.agentAccount ?? defaultContext.agentAccount,
+    accounts: {
+      sponsorAccount: raw?.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,
+      recipientAccount: raw?.accounts?.recipientAccount ?? defaultContext.accounts.recipientAccount,
+      agentAccount: raw?.accounts?.agentAccount ?? defaultContext.accounts.agentAccount,
+    },
     tradeData: {
       chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
       tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,

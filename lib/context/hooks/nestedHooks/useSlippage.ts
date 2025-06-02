@@ -9,17 +9,17 @@ import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 export const useSlippageBps = (): [number, (bps: number) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  return [
-    exchangeContext.tradeData.slippageBps,
-    (bps: number) =>
-      setExchangeContext((prev) => ({
-        ...prev,
-        tradeData: {
-          ...prev.tradeData,
-          slippageBps: bps,
-        },
-      })),
-  ];
+  const setBps = (bps: number) => {
+    setExchangeContext((prev) => ({
+      ...prev,
+      tradeData: {
+        ...prev.tradeData,
+        slippageBps: bps,
+      },
+    }));
+  };
+
+  return [exchangeContext.tradeData.slippageBps, setBps];
 };
 
 /**

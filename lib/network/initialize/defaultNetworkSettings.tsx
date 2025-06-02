@@ -1,3 +1,5 @@
+"use client";
+
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
 import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
 import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
@@ -31,6 +33,10 @@ const defaultInitialTradeData: Omit<TradeData, 'chainId'> = {
   slippageBps: 100,
   sellTokenContract: undefined,
   buyTokenContract: undefined,
+  rateRatio: 0,
+  slippage: 0,
+  slippagePercentage: 0,
+  slippagePercentageString: ''
 };
 
 const initialContext = () => {
@@ -45,20 +51,22 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
   logger.log(`🛠️ [getInitialContext] Generating context for chainId: ${chainId}`);
 
-  const initialContext: ExchangeContext = {
+  const exchangeContext: ExchangeContext = {
     activeAccountAddress: undefined,
     network: initialContextMap.get('networkHeader') as NetworkElement,
-    recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
-    agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
+    accounts: {
+      recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
+      agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
+      sponsorAccount: undefined,
+    },
     tradeData: { ...defaultInitialTradeData, chainId },
     spCoinDisplay: SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON,
-    test: { dumpContextButton: false },
     apiTradingProvider: API_TRADING_PROVIDER.API_0X,
     containerType: CONTAINER_TYPE.UNDEFINED,
   };
 
-  logger.log('✅ [getInitialContext] InitialContext constructed:', initialContext);
-  return initialContext;
+  logger.log('✅ [getInitialContext] InitialContext constructed:', exchangeContext);
+  return exchangeContext;
 };
 
 function getInitialContextMap(chain: any) {

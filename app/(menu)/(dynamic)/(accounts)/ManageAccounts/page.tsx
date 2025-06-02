@@ -121,7 +121,7 @@ export default function ManageAccountsPage() {
       </div>
 
       <div className="mb-8 bg-[#1A1D2E] hover:bg-[rgb(79,86,101)] p-4 rounded">
-        <h2 className={headerStyle}>Active Account</h2>
+        <h2 className={headerStyle}>Connected Account</h2>
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <label className="w-48 font-medium whitespace-nowrap">Public Key</label>

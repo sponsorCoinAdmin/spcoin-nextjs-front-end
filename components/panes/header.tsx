@@ -87,6 +87,14 @@ export default function Header() {
     }));
   }, [chainId]);
 
+  const staticLinks = [
+    { href: '/WhitePaper', label: 'White Paper' },
+    { href: '/SpCoinAPI', label: 'Sponsor Coin API' },
+    { href: '/SponsorMe', label: 'Sponsor Me' },
+    { href: '/ManageAccounts', label: 'Manage Accounts' },
+    { href: '/CreateAgent', label: 'Create Agent' },
+  ];
+
   return (
     <header
       className="text-white border-b border-[#21273a] py-4"
@@ -121,16 +129,6 @@ export default function Header() {
               Exchange
             </Link>
           )}
-{/* This can be activated for tests
-          <Link
-            href="/RecipientSite"
-            className={linkClass('/RecipientSite')}
-            onMouseEnter={onMouseEnter('/RecipientSite')}
-            onMouseLeave={onMouseLeave}
-          >
-            Recipient
-          </Link>
- */}
 
           {SHOW_TEST_LINK && (
             <Link
@@ -143,60 +141,19 @@ export default function Header() {
             </Link>
           )}
 
-          {pathname === '/WhitePaper' && (
-          <Link
-            href="/WhitePaper"
-            className={linkClass('/WhitePaper')}
-            onMouseEnter={onMouseEnter('/WhitePaper')}
-            onMouseLeave={onMouseLeave}
-          >
-            White Paper
-          </Link>
-          )}
-
-          {pathname === '/SpCoinAPI' && (
-            <Link
-              href="/SpCoinAPI"
-              className={linkClass('/SpCoinAPI')}
-              onMouseEnter={onMouseEnter('/SpCoinAPI')}
-              onMouseLeave={onMouseLeave}
-            >
-              Sponsor Coin API
-            </Link>
-          )}
-
-          {pathname === '/SponsorMe' && (
-            <Link
-              href="/SponsorMe"
-              className={linkClass('/SponsorMe')}
-              onMouseEnter={onMouseEnter('/SponsorMe')}
-              onMouseLeave={onMouseLeave}
-            >
-              Sponsor Me
-            </Link>
-          )}
-
-          {pathname === '/ManageAccounts' && (
-            <Link
-              href="/ManageAccounts"
-              className={linkClass('/ManageAccounts')}
-              onMouseEnter={onMouseEnter('/ManageAccounts')}
-              onMouseLeave={onMouseLeave}
-            >
-              Manage Accounts
-            </Link>
-          )}
-
-          {pathname === '/CreateAgent' && (
-            <Link
-              href="/CreateAgent"
-              className={linkClass('/CreateAgent')}
-              onMouseEnter={onMouseEnter('/CreateAgent')}
-              onMouseLeave={onMouseLeave}
-            >
-              Create Agent
-            </Link>
-          )}
+          {staticLinks
+            .filter(link => pathname === link.href)
+            .map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={linkClass(link.href)}
+                onMouseEnter={onMouseEnter(link.href)}
+                onMouseLeave={onMouseLeave}
+              >
+                {link.label}
+              </Link>
+            ))}
         </div>
 
         <div className="flex items-center gap-4">

@@ -1,18 +1,21 @@
 // File: lib/context/hooks/nestedHooks/useExchangeBalances.ts
 
+'use client';
+
 import { useExchangeContext } from '../useExchangeContext';
 import { useBalance, useAccount } from 'wagmi';
 import { useEffect, useMemo, useRef } from 'react';
 import { Address } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { isNativeToken } from '@/lib/utils/isNativeToken';
+import { TokenContract } from '@/lib/structure/types';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_USE_EXCHANGE_BALANCES === 'true';
 const debugLog = createDebugLogger('ExchangeBalances', DEBUG_ENABLED, LOG_TIME);
 
 const useManagedBalance = (
-  token: any,
+  token: TokenContract | undefined,
   updateTokenInContext: (balance: bigint) => void,
   type: 'sell' | 'buy'
 ) => {
@@ -32,7 +35,11 @@ const useManagedBalance = (
   });
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const lastArgs = useRef<{ address?: string; tokenAddress?: string; chainId?: number } | null>(null);
+  const lastArgs = useRef<{
+    address?: Address;
+    tokenAddress?: Address;
+    chainId?: number;
+  } | null>(null);
   const prevBalanceRef = useRef<bigint | null>(null);
 
   useEffect(() => {
@@ -79,7 +86,7 @@ export const useSellBalance = () => {
   useManagedBalance(token, (balance) => {
     setExchangeContext((prev) => {
       const prevToken = prev.tradeData.sellTokenContract;
-      if (!prevToken || prevToken.address !== token.address) return prev;
+      if (!prevToken || prevToken.address !== token?.address) return prev;
       return {
         ...prev,
         tradeData: {
@@ -101,7 +108,7 @@ export const useBuyBalance = () => {
   useManagedBalance(token, (balance) => {
     setExchangeContext((prev) => {
       const prevToken = prev.tradeData.buyTokenContract;
-      if (!prevToken || prevToken.address !== token.address) return prev;
+      if (!prevToken || prevToken.address !== token?.address) return prev;
       return {
         ...prev,
         tradeData: {
@@ -119,7 +126,10 @@ export const useBuyBalance = () => {
 export const useExchangeBalances = () => {
   useSellBalance();
   useBuyBalance();
+
   return {
-    updateBalances: () => {}, // placeholder for future manual refresh
+    updateBalances: () => {
+      // Optionally reset cache or force refresh in the future
+    },
   };
 };

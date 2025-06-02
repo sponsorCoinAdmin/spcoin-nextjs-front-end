@@ -17,14 +17,14 @@ export type ExchangePageState = {
 };
 
 export type PageStateTree = {
-  test: {
+  page: {
     exchangePage: ExchangePageState;
   };
 };
 
 // ✅ Updated default state
 const defaultState: PageStateTree = {
-  test: {
+  page: {
     exchangePage: {
       showContext: false,
       showWallets: false,

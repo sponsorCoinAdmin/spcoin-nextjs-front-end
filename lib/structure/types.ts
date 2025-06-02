@@ -183,15 +183,24 @@ type ErrorMessage = {
   status: STATUS;
 };
 
+type Accounts = {
+  connectedAccount?: WalletAccount;
+  sponsorAccount?: WalletAccount;
+  recipientAccount?: WalletAccount;
+  agentAccount?: WalletAccount;
+
+  sponsorAccounts?: WalletAccount[];
+  recipientAccounts?: WalletAccount[];
+  agentAccounts?: WalletAccount[];
+}
+
 type ExchangeContext = {
   containerType: CONTAINER_TYPE | undefined;
   apiTradingProvider: API_TRADING_PROVIDER;
   activeAccountAddress: `0x${string}` | Account | Address | undefined;
-  agentAccount?: WalletAccount;
-  network: NetworkElement;
-  recipientAccount?: WalletAccount;
   spCoinDisplay: SP_COIN_DISPLAY;
-  test: { dumpContextButton: boolean };
+  accounts: Accounts;
+  network: NetworkElement;
   tradeData: TradeData;
 };
 
