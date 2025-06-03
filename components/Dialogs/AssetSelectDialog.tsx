@@ -13,10 +13,12 @@ import {
 import {
   useBuyTokenContract,
   useSellTokenContract,
-  useContainerType,
 } from '@/lib/context/hooks/contextHooks';
 
-// Generic Address Select Dialog
+// ---------------------------------------------
+// Base Modal Structure
+// ---------------------------------------------
+
 interface BaseProps<T> {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
@@ -50,11 +52,9 @@ function BaseModalDialog({
 
   useEffect(() => {
     if (dialogRef.current) {
-      if (showDialog) {
-        dialogRef.current.showModal();
-      } else {
-        dialogRef.current.close();
-      }
+      showDialog
+        ? dialogRef.current.showModal()
+        : dialogRef.current.close();
     }
   }, [showDialog]);
 
@@ -75,6 +75,10 @@ function BaseModalDialog({
     </dialog>
   );
 }
+
+// ---------------------------------------------
+// Generic Address Selection Dialog
+// ---------------------------------------------
 
 export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
   showDialog,
@@ -110,13 +114,17 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   );
 }
 
-// Token Dialog Wrapper
+// ---------------------------------------------
+// Token Dialog Wrapper (uses containerType prop)
+// ---------------------------------------------
+
 export function TokenDialogWrapper(props: {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
+  containerType: CONTAINER_TYPE; // ✅ passed explicitly now
   onSelect: (token: TokenContract, state: InputState) => void;
 }) {
-  const [containerType] = useContainerType();
+  const { containerType } = props;
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
@@ -156,7 +164,10 @@ export function TokenDialogWrapper(props: {
   );
 }
 
+// ---------------------------------------------
 // Recipient Dialog Wrapper
+// ---------------------------------------------
+
 export function RecipientDialogWrapper(props: {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;

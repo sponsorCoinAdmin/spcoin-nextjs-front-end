@@ -13,7 +13,6 @@ import {
   InputState,
 } from '@/lib/structure/types';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { useContainerType } from '@/lib/context/hooks/contextHooks';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
@@ -68,7 +67,7 @@ export function useAddressLogoURL(
 }
 
 interface Props {
-  containerType: CONTAINER_TYPE;
+  containerType: CONTAINER_TYPE; // ✅ passed from TokenSelectContainer
   tokenContract: TokenContract | undefined;
   setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
 }
@@ -79,7 +78,6 @@ function TokenSelectDropDown({
   setDecimalAdjustedContract,
 }: Props) {
   const [showDialog, setShowDialog] = useState(false);
-  const [, setContainerType] = useContainerType();
   const { inputState } = useInputValidationState(tokenContract?.address);
 
   const logoSrc = useTokenLogoURL(tokenContract);
@@ -101,6 +99,7 @@ function TokenSelectDropDown({
       <TokenDialogWrapper
         showDialog={showDialog}
         setShowDialog={setShowDialog}
+        containerType={containerType} // ✅ now passed explicitly
         onSelect={(contract: TokenContract, inputState: InputState) => {
           debugLog.log('🎯 TokenDialogWrapper.onSelect', { contract, inputState });
           if (inputState === InputState.CLOSE_INPUT && contract) {
@@ -126,10 +125,7 @@ function TokenSelectDropDown({
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={() => {
-            setContainerType(containerType);
-            setShowDialog(true);
-          }}
+          onClick={() => setShowDialog(true)} // ✅ no useContainerType()
         />
       </div>
     </>
