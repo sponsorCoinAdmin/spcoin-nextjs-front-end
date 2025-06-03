@@ -1,47 +1,125 @@
-// File: lib/context/hooks/nestedHooks/useSpCoinDisplay.ts
+// File : components/containers/AccountSelectContainer.tsx
 
+'use client';
+
+import React, { useEffect, useState, useCallback } from "react";
+import styles from "@/styles/Exchange.module.css";
+import Image from "next/image";
+import Link from "next/link";
+import { clsx } from "clsx"; // ✅ Replaced classNames with clsx
+
+import cog_png from "@/public/assets/miscellaneous/cog.png";
+
+import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
+import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import RecipientSelectDropDown from "./RecipientSelectDropDown";
+import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
+import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
+import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 
-const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';
-const debugLog = createDebugLogger('contextHooks', DEBUG_ENABLED, LOG_TIME);
-
-/**
- * Hook to read and update `spCoinDisplay` with debug output.
- */
-export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
+const AccountSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const setSpCoinDisplay = (display: SP_COIN_DISPLAY) =>
-    debugSetSpCoinDisplay(exchangeContext.spCoinDisplay, display, setExchangeContext);
+  const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
+    exchangeContext.recipientAccount
+  );
+  const [siteExists, setSiteExists] = useState<boolean>(false);
+  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
-  return [exchangeContext.spCoinDisplay, setSpCoinDisplay];
-};
+  useDisplaySpCoinContainers(spCoinDisplay);
 
-/**
- * Centralized debug-aware setter for `spCoinDisplay` with call trace.
- */
-export const debugSetSpCoinDisplay = (
-  oldDisplay: SP_COIN_DISPLAY,
-  newDisplay: SP_COIN_DISPLAY,
-  setExchangeContext: (updater: (prev: any) => any) => void
-): void => {
-  const displayChange = `${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}`;
-
-  if (DEBUG_ENABLED) {
-    const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No stack trace available';
-    if (oldDisplay !== newDisplay) {
-      debugLog.log(`🔁 spCoinDisplay change: ${displayChange}\n📍 Call site:\n${trace}`);
-    } else {
-      debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`);
+  useEffect(() => {
+    if (exchangeContext.recipientAccount !== recipientAccount) {
+      setExchangeContext(prev => ({
+        ...prev,
+        recipientAccount,
+      }));
     }
-  }
+  }, [recipientAccount, exchangeContext, setExchangeContext]);
 
-  setExchangeContext((prev) => ({status
-    ...prev,
-    spCoinDisplay: newDisplay,
-  }));
+  const closeRecipientSelectDropDown = useCallback(() => {
+    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON);
+    setRecipientAccount(undefined);
+  }, [setSpCoinDisplay]);
+
+  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
+  const sitekey = recipientAccount?.address?.trim() ? `siteKey=${recipientAccount.address.trim()}` : "";
+  let defaultStaticFileUrl = `/RecipientSite?url=${baseURL}?${sitekey}`;
+
+  useEffect(() => {
+    const website = recipientAccount?.website;
+    if (website && website !== "N/A" && website.trim() !== "") {
+      fetch(website, { method: "HEAD", mode: "no-cors" })
+        .then(() => {
+          setSiteExists(true);
+          console.log(`Site ${website} is reachable.`);
+        })
+        .catch((error) => {
+          console.error(`ERROR: WalletContainer.Fetching ${website}:`, error);
+          setSiteExists(false);
+        });
+    } else {
+      setSiteExists(false);
+    }
+  }, [recipientAccount?.website]);
+
+  const toggleSponsorRateConfig = () => {
+    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
+    } else {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER);
+    }
+  };
+
+  return (
+    <>
+      <div
+        id="recipientContainerDiv_ID"
+        className={clsx(
+          styles.inputs,
+          styles.AccountSelectContainer,
+          spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
+            ? styles.noBottomRadius
+            : styles.withBottomRadius
+        )}
+      >
+        <div className={styles.lineDivider}></div>
+        <div className={styles.yourRecipient}>You are sponsoring:</div>
+        {recipientAccount && siteExists ? (
+          <Link href={`/RecipientSite?url=${recipientAccount.website}`} className={styles.recipientName}>
+            {recipientAccount.name}
+          </Link>
+        ) : (
+          <Link href={defaultStaticFileUrl} className={styles.recipientName}>
+            {recipientAccount?.name || "No recipient selected"}
+          </Link>
+        )}
+        <div className={styles.recipientSelect}>
+          <RecipientSelectDropDown recipientAccount={recipientAccount} callBackAccount={setRecipientAccount} />
+        </div>
+        <div>
+          <Image
+            src={cog_png}
+            className={styles.cogImg}
+            width={20}
+            height={20}
+            alt="Settings"
+            onClick={toggleSponsorRateConfig}
+          />
+        </div>
+        <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={closeRecipientSelectDropDown}>
+          X
+        </div>
+      </div>
+
+      {spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG && (
+        <div>
+          <SponsorRateConfig />
+        </div>
+      )}
+    </>
+  );
 };
+
+export default AccountSelectContainer;
