@@ -40,7 +40,7 @@ export const debugSetSpCoinDisplay = (
     }
   }
 
-  setExchangeContext((prev) => ({
+  setExchangeContext((prev) => ({status
     ...prev,
     spCoinDisplay: newDisplay,
   }));

@@ -7,7 +7,6 @@ import { parseUnits, formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import {
   useApiProvider,
-  useExchangeBalances,
   useSpCoinDisplay,
   useTradeData,
   useBuyAmount,
@@ -55,8 +54,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [spCoinDisplay] = useSpCoinDisplay();
 
-  const { updateBalances } = useExchangeBalances();
-
   const tokenContract = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
     ? sellTokenContract
     : buyTokenContract;
@@ -100,13 +97,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     setBuyAmount(0n);
     setBuyTokenContract(undefined);
   }, [account.chainId]);
-
-  // Optional: Re-fetch balances on token change
-  useEffect(() => {
-    if (tokenContract && account.address) {
-      updateBalances(tokenContract, account.address);
-    }
-  }, [tokenContract, account.address]);
 
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
