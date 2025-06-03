@@ -1,7 +1,6 @@
 // File: app\(menu)\layout.tsx
 
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import '@/app/globals.css'
 import Footer from '@/components/panes/footer'
 import Header from '@/components/panes/header'
