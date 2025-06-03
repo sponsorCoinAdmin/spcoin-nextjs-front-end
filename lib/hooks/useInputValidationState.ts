@@ -179,15 +179,17 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       return;
     }
 
+    const validatedAddress = (validatedAsset as TokenContract | undefined)?.address;
     if (
-      inputState !== InputState.VALID_INPUT_PENDING ||
-      (validatedAsset as TokenContract)?.address !== resolvedAsset.address
+      inputState !== InputState.VALID_INPUT_PENDING &&
+      validatedAddress !== resolvedAsset.address
     ) {
       setValidatedAsset({
         ...(resolvedAsset as TokenContract),
         chainId: chainId!,
         logoURL: getLogoURL(chainId, resolvedAsset.address, feedType),
       } as unknown as T);
+
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     }
   }, [
