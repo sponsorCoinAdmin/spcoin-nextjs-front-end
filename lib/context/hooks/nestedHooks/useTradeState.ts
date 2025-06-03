@@ -48,7 +48,7 @@ export const useContainerType = (
 ): [CONTAINER_TYPE, (type: CONTAINER_TYPE) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const current = exchangeContext.containerType;
+  const current = exchangeContext.settings.containerType;
 
   // Initialize if undefined
   if (current === undefined && initialType !== undefined) {

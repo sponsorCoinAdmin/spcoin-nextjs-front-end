@@ -51,7 +51,7 @@ export const useBuyTokenContract = (): [
     exchangeContext.tradeData.buyTokenContract,
     (contract) => {
       const oldContract = exchangeContext.tradeData.buyTokenContract;
-      const oldDisplay = exchangeContext.spCoinDisplay;
+      const oldDisplay = exchangeContext.settings.spCoinDisplay;
 
       const isSame = tokenContractsEqual(oldContract, contract);
       const isSp = contract && isSpCoin(contract);

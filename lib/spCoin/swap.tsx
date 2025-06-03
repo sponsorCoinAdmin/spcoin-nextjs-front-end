@@ -1,9 +1,9 @@
 "use client";
 
-import { SWAP_TYPE, TradeData } from "@/lib/structure/types";
+import { SWAP_TYPE } from "@/lib/structure/types";
 import { useBuyAmount, useExchangeContext, useSellAmount } from "@/lib/context/hooks/contextHooks";
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
-;
+import { useAccount } from 'wagmi';
 
 // import { WethMethods, weth9ABI } from "../../../node_modules-dev/spcoin-back-end/weth-access-module-es6";
 import { WethMethods, weth9ABI } from '@sponsorcoin/weth-access-module-es6';
@@ -22,8 +22,10 @@ import { useCallback } from "react";
 const useSwapFunctions = () => {
     const { exchangeContext } = useExchangeContext(); // ✅ Moved to the top level (Rules of Hooks)
     const tradeData = exchangeContext.tradeData;
-  const [sellAmount, setSellAmount] = useSellAmount();
-  const [buyAmount, setBuyAmount] = useBuyAmount();
+    const [sellAmount, setSellAmount] = useSellAmount();
+    const [buyAmount, setBuyAmount] = useBuyAmount();
+    const { address, isConnected } = useAccount();
+
 
     // ✅ Fix: Instantiate `wethMethods` inside the hook
     const wethMethods = new WethMethods();

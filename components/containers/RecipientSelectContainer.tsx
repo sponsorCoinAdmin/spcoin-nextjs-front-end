@@ -22,7 +22,7 @@ const AccountSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
-    exchangeContext.recipientAccount
+    exchangeContext.accounts.recipientAccount
   );
   const [siteExists, setSiteExists] = useState<boolean>(false);
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
@@ -30,7 +30,7 @@ const AccountSelectContainer: React.FC = () => {
   useDisplaySpCoinContainers(spCoinDisplay);
 
   useEffect(() => {
-    if (exchangeContext.recipientAccount !== recipientAccount) {
+    if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
       setExchangeContext(prev => ({
         ...prev,
         recipientAccount,

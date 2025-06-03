@@ -1,13 +1,13 @@
-// File: components/Wrappers/SpCoinWrapper.tsx
-
 'use client';
 
 import { WagmiProvider } from 'wagmi';
 import { ConnectKitProvider } from 'connectkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { config } from '@/lib/wagmi/wagmiConfig';
+import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext'; // ✅ new import
 import { ExchangeWrapper } from '@/lib/context/ExchangeContext';
-import { PageStateProvider } from '@/lib/context/PageStateContext'; // ✅ new context
+import { PageStateProvider } from '@/lib/context/PageStateContext';
 
 export default function SpCoinWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient();
@@ -16,10 +16,12 @@ export default function SpCoinWrapper({ children }: { children: React.ReactNode 
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider>
-          <PageStateProvider> {/* ✅ added */}
-            <ExchangeWrapper>
-              {children}
-            </ExchangeWrapper>
+          <PageStateProvider>
+            <ConnectedAccountProvider> {/* ✅ inserted */}
+              <ExchangeWrapper>
+                {children}
+              </ExchangeWrapper>
+            </ConnectedAccountProvider>
           </PageStateProvider>
         </ConnectKitProvider>
       </QueryClientProvider>

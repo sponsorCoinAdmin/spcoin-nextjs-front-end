@@ -44,7 +44,7 @@ const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: T
   isActiveAccountAddress(exchangeContext, tokenContract.address);
 
 const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address ) =>
-  address ? address === exchangeContext.activeAccountAddress : false;
+  address ? address === exchangeContext?.accounts?.connectedAccount?.address : false;
 
 const isWrappedSellToken = (tradeData: TradeData): boolean =>
   tradeData.sellTokenContract ? isWrappedToken(tradeData.sellTokenContract) : false;
@@ -133,7 +133,7 @@ const useIsActiveAccountAddress = (address?: Address): boolean => {
 
 const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress: Address): Address | undefined => {
   const chainId = exchangeContext.tradeData.chainId;
-  const ethAct = exchangeContext.activeAccountAddress;
+  const ethAct = exchangeContext?.accounts?.connectedAccount?.address;
 
   // console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
   //              Ethereum Account Address = ${ethAct} 

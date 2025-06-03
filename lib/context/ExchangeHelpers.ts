@@ -2,15 +2,9 @@
 
 "use client";
 
-import { API_TRADING_PROVIDER, ExchangeContext, TradeData } from "@/lib/structure/types";
-import defaultEthereumSettings from "@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json";
-import defaultPolygonSettings from "@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json";
-import defaultHardHatSettings from "@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json";
-import defaultSoliditySettings from "@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json";
 import {
-  SWAP_TYPE,
-  TRADE_DIRECTION,
-  NetworkElement,
+  API_TRADING_PROVIDER,
+  TradeData,
   WalletAccount,
   SP_COIN_DISPLAY,
   ETHEREUM,
@@ -18,10 +12,43 @@ import {
   POLYGON,
   SEPOLIA,
   CONTAINER_TYPE,
+  TRADE_DIRECTION,
+  SWAP_TYPE,
+  NetworkElement,
 } from "@/lib/structure/types";
+
+import defaultEthereumSettings from "@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json";
+import defaultPolygonSettings from "@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json";
+import defaultHardHatSettings from "@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json";
+import defaultSoliditySettings from "@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json";
+
 import { isLowerCase } from "../network/utils";
 
 const STORAGE_KEY = "exchangeContext";
+
+export type Accounts = {
+  connectedAccount?: WalletAccount;
+  sponsorAccount?: WalletAccount;
+  recipientAccount?: WalletAccount;
+  agentAccount?: WalletAccount;
+
+  sponsorAccounts?: WalletAccount[];
+  recipientAccounts?: WalletAccount[];
+  agentAccounts?: WalletAccount[];
+};
+
+export type Settings = {
+  containerType: CONTAINER_TYPE | undefined;
+  readonly apiTradingProvider: API_TRADING_PROVIDER;
+  readonly spCoinDisplay: SP_COIN_DISPLAY;
+};
+
+export type ExchangeContext = {
+  settings: Settings;
+  accounts: Accounts;
+  network: NetworkElement;
+  tradeData: TradeData;
+};
 
 export const loadStoredExchangeContext = (): ExchangeContext | null => {
   if (typeof window !== "undefined") {
@@ -50,8 +77,12 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
 
   return {
-    activeAccountAddress: undefined,
     network: initialContextMap.get("networkHeader") as NetworkElement,
+    settings: {
+      apiTradingProvider: API_TRADING_PROVIDER.API_0X,
+      spCoinDisplay: SP_COIN_DISPLAY.OFF,
+      containerType: CONTAINER_TYPE.UNDEFINED,
+    },
     accounts: {
       connectedAccount: undefined,
       sponsorAccount: undefined,
@@ -62,7 +93,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       recipientAccounts: [],
       agentAccounts: [],
     },
-    apiTradingProvider: API_TRADING_PROVIDER.API_0X,
     tradeData: {
       signer: undefined,
       chainId,
@@ -76,8 +106,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       slippagePercentage: 0,
       slippagePercentageString: "0.00%",
     },
-    spCoinDisplay: SP_COIN_DISPLAY.OFF,
-    containerType: CONTAINER_TYPE.UNDEFINED,
   };
 };
 
@@ -88,11 +116,12 @@ export const sanitizeExchangeContext = (
   const defaultContext = getInitialContext(chainId);
 
   return {
-    containerType: raw?.containerType ?? defaultContext.containerType,
-    apiTradingProvider: raw?.apiTradingProvider ?? defaultContext.apiTradingProvider,
-    activeAccountAddress: raw?.activeAccountAddress ?? defaultContext.activeAccountAddress,
+    settings: {
+      containerType: raw?.settings?.containerType ?? defaultContext.settings.containerType,
+      apiTradingProvider: raw?.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
+      spCoinDisplay: raw?.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
+    },
     network: raw?.network ?? defaultContext.network,
-    spCoinDisplay: raw?.spCoinDisplay ?? defaultContext.spCoinDisplay,
     accounts: {
       connectedAccount: raw?.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
       sponsorAccount: raw?.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,

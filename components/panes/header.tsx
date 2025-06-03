@@ -43,6 +43,15 @@ export default function Header() {
   const SHOW_EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
   const SHOW_SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
 
+  useEffect(() => {
+    debugLog.warn('🌐 ENV FLAGS:', {
+      SHOW_SPCOIN_LINK,
+      SHOW_EXCHANGE_LINK,
+      SHOW_TEST_LINK,
+      SHOW_ADMIN_LINK,
+    });
+  }, []);
+
   const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
     const isActive = pathname === href && hoveredTab === null;
@@ -141,19 +150,17 @@ export default function Header() {
             </Link>
           )}
 
-          {staticLinks
-            .filter(link => pathname === link.href)
-            .map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={linkClass(link.href)}
-                onMouseEnter={onMouseEnter(link.href)}
-                onMouseLeave={onMouseLeave}
-              >
-                {link.label}
-              </Link>
-            ))}
+          {staticLinks.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={linkClass(link.href)}
+              onMouseEnter={onMouseEnter(link.href)}
+              onMouseLeave={onMouseLeave}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
         <div className="flex items-center gap-4">

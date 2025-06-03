@@ -194,11 +194,14 @@ type Accounts = {
   agentAccounts?: WalletAccount[];
 }
 
-type ExchangeContext = {
+type Settings = {
   containerType: CONTAINER_TYPE | undefined;
-  apiTradingProvider: API_TRADING_PROVIDER;
-  activeAccountAddress: `0x${string}` | Account | Address | undefined;
-  spCoinDisplay: SP_COIN_DISPLAY;
+  readonly apiTradingProvider: API_TRADING_PROVIDER;
+  readonly spCoinDisplay: SP_COIN_DISPLAY;
+};
+
+type ExchangeContext = {
+  settings: Settings;
   accounts: Accounts;
   network: NetworkElement;
   tradeData: TradeData;

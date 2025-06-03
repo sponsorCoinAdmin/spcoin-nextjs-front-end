@@ -52,7 +52,6 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
   logger.log(`🛠️ [getInitialContext] Generating context for chainId: ${chainId}`);
 
   const exchangeContext: ExchangeContext = {
-    activeAccountAddress: undefined,
     network: initialContextMap.get('networkHeader') as NetworkElement,
     accounts: {
       recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
@@ -60,9 +59,11 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
       sponsorAccount: undefined,
     },
     tradeData: { ...defaultInitialTradeData, chainId },
-    spCoinDisplay: SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON,
-    apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-    containerType: CONTAINER_TYPE.UNDEFINED,
+    settings: {
+      spCoinDisplay: SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON,
+      apiTradingProvider: API_TRADING_PROVIDER.API_0X,
+      containerType: CONTAINER_TYPE.UNDEFINED
+    }
   };
 
   logger.log('✅ [getInitialContext] InitialContext constructed:', exchangeContext);

@@ -16,9 +16,9 @@ export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY)
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const setSpCoinDisplay = (display: SP_COIN_DISPLAY) =>
-    debugSetSpCoinDisplay(exchangeContext.spCoinDisplay, display, setExchangeContext);
+    debugSetSpCoinDisplay(exchangeContext.settings.spCoinDisplay, display, setExchangeContext);
 
-  return [exchangeContext.spCoinDisplay, setSpCoinDisplay];
+  return [exchangeContext.settings.spCoinDisplay, setSpCoinDisplay];
 };
 
 /**
