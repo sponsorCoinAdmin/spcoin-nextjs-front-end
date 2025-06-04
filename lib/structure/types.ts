@@ -75,10 +75,10 @@ enum BUTTON_TYPE {
 
 // Container Types
 enum CONTAINER_TYPE {
+  UNDEFINED,
   SELL_SELECT_CONTAINER,
   BUY_SELECT_CONTAINER,
   ASSET_SELECT_DIALOG,
-  UNDEFINED
 }
 
 // Exchange States
@@ -100,9 +100,9 @@ enum FEED_TYPE {
 
 // SP Coin Display
 enum SP_COIN_DISPLAY {
-  OFF,
-  SHOW_ADD_SPONSOR_BUTTON,
-  SHOW_RECIPIENT_CONTAINER,
+  UNDEFINED,
+  SHOW_ACTIVE_RECIPIENT_CONTAINER ,
+  SHOW_RECIPIENT_SELECT_DIALOG,
   SHOW_SPONSOR_RATE_CONFIG,
   SHOW_MANAGE_SPONSORS_BUTTON
 }
@@ -195,7 +195,7 @@ type Accounts = {
 }
 
 type Settings = {
-  containerType: CONTAINER_TYPE | undefined;
+  containerType: CONTAINER_TYPE;
   readonly apiTradingProvider: API_TRADING_PROVIDER;
   readonly spCoinDisplay: SP_COIN_DISPLAY;
 };

@@ -146,7 +146,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   const showNoRadius = () => {
     const isBuyTokenContainer = containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
-    const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER;
+    const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER;
     const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
     return isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
   };
@@ -190,7 +190,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       {isSpCoin(tokenContract) &&
         (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
-        ) : (
+        ) : ( 
           <AddSponsorship />
         ))}
       <span>{DEBUG_ENABLED && spCoinDisplayString(spCoinDisplay)}</span>

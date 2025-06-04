@@ -1,12 +1,10 @@
-// File : components/containers/AccountSelectContainer.tsx
-
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Exchange.module.css";
 import Image from "next/image";
 import Link from "next/link";
-import { clsx } from "clsx"; // ✅ Replaced classNames with clsx
+import { clsx } from "clsx";
 
 import cog_png from "@/public/assets/miscellaneous/cog.png";
 
@@ -15,8 +13,8 @@ import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import RecipientSelectDropDown from "./RecipientSelectDropDown";
 import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
-import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
+import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
 
 const AccountSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
@@ -27,19 +25,24 @@ const AccountSelectContainer: React.FC = () => {
   const [siteExists, setSiteExists] = useState<boolean>(false);
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
+  // 🧩 Ensure DOM elements match spCoinDisplay state
   useDisplaySpCoinContainers(spCoinDisplay);
 
   useEffect(() => {
-    if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
-      setExchangeContext(prev => ({
-        ...prev,
+  if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
+    setExchangeContext(prev => ({
+      ...prev,
+      accounts: {
+        ...prev.accounts,
         recipientAccount,
-      }));
-    }
-  }, [recipientAccount, exchangeContext, setExchangeContext]);
+      },
+    }));
+  }
+}, [recipientAccount, exchangeContext, setExchangeContext]);
+
 
   const closeRecipientSelectDropDown = useCallback(() => {
-    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON);
+    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER );
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
 
@@ -65,10 +68,10 @@ const AccountSelectContainer: React.FC = () => {
   }, [recipientAccount?.website]);
 
   const toggleSponsorRateConfig = () => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER) {
+    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG) {
       setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
     } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_CONTAINER);
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG);
     }
   };
 

@@ -1,3 +1,5 @@
+// file: lib/hooks/useInputValidationState.ts
+
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -19,7 +21,7 @@ import {
 } from '@/lib/context/hooks/contextHooks';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useMappedTokenContract } from './wagmiERC20hooks';
+import { useMappedTokenContract } from '@/lib/context/hooks/contextHooks';
 import { getLogoURL } from '@/lib/network/utils';
 
 type AgentAccount = WalletAccount;
@@ -62,7 +64,7 @@ function isDuplicateInput(
 export const useInputValidationState = <T extends TokenContract | ValidAddressAccount>(
   selectAddress: string | undefined,
   feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
-  containerType?: CONTAINER_TYPE // ✅ now passed explicitly
+  containerType?: CONTAINER_TYPE
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
@@ -76,13 +78,22 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
   const chainId = useChainId();
 
   useEffect(() => {
-    if (
+    const shouldReset =
       inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY &&
       debouncedAddress !== previousAddressRef.current &&
-      !seenBrokenLogosRef.current.has(debouncedAddress)
-    ) {
+      !seenBrokenLogosRef.current.has(debouncedAddress) &&
+      isEmptyInput(debouncedAddress);
+
+    if (shouldReset) {
+      console.debug('🔁 Validation reset loop fix triggered', {
+        debouncedAddress,
+        prev: previousAddressRef.current,
+        inputState,
+        seenBroken: Array.from(seenBrokenLogosRef.current),
+      });
       debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
     }
+
     previousAddressRef.current = debouncedAddress;
   }, [debouncedAddress, inputState]);
 
@@ -184,12 +195,15 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       inputState !== InputState.VALID_INPUT_PENDING &&
       validatedAddress !== resolvedAsset.address
     ) {
-      setValidatedAsset({
+      const cleanedToken = {
         ...(resolvedAsset as TokenContract),
         chainId: chainId!,
         logoURL: getLogoURL(chainId, resolvedAsset.address, feedType),
-      } as unknown as T);
+      };
 
+      delete (cleanedToken as Partial<TokenContract>).balance;
+
+      setValidatedAsset(cleanedToken as unknown as T);
       debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
     }
   }, [

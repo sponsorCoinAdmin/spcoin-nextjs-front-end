@@ -66,6 +66,6 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
       </div>
     </div>
   );
-};
+}
 
 export default NetworkSelect;

@@ -1,6 +1,6 @@
 // File: lib/context/hooks/nestedHooks/useTokenContracts.ts
 
-import { TokenContract, SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { TokenContract, SP_COIN_DISPLAY, ExchangeContext } from '@/lib/structure/types';
 import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
@@ -55,7 +55,7 @@ export const useBuyTokenContract = (): [
 
       const isSame = tokenContractsEqual(oldContract, contract);
       const isSp = contract && isSpCoin(contract);
-      const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ADD_SPONSOR_BUTTON : SP_COIN_DISPLAY.OFF;
+      const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER : SP_COIN_DISPLAY.UNDEFINED;
 
       if (isSame && oldDisplay === newDisplay) return;
 
@@ -73,30 +73,32 @@ export const useBuyTokenContract = (): [
 };
 
 /**
- * Shared debug-aware setter for spCoinDisplay with call trace.
+ * Shared debug-aware setter for settings.spCoinDisplay with call trace.
  */
 const debugSetSpCoinDisplay = (
   oldDisplay: SP_COIN_DISPLAY,
   newDisplay: SP_COIN_DISPLAY,
-  setExchangeContext: (updater: (prev: any) => any) => void
-) => {
-  if (!DEBUG_ENABLED) {
-    if (oldDisplay !== newDisplay) {
-      setExchangeContext((prev) => ({ ...prev, spCoinDisplay: newDisplay }));
+  setExchangeContext: (updater: (prev: ExchangeContext) => ExchangeContext) => void
+): void => {
+  if (oldDisplay === newDisplay) {
+    if (DEBUG_ENABLED) {
+      const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No trace';
+      debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`);
     }
     return;
   }
 
-  const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No trace';
-  if (oldDisplay !== newDisplay) {
+  if (DEBUG_ENABLED) {
+    const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No trace';
     debugLog.log(`🔁 spCoinDisplay change: ${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}\n📍 Call site:\n${trace}`);
-  } else {
-    debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`);
   }
 
   setExchangeContext((prev) => ({
     ...prev,
-    spCoinDisplay: newDisplay,
+    settings: {
+      ...prev.settings,
+      spCoinDisplay: newDisplay,
+    },
   }));
 };
 

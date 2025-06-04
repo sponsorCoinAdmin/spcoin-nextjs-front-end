@@ -1,79 +1,59 @@
+// File: lib/hooks/wagmiERC20hooks.tsx
+
 'use client';
 
-import { useReadContract, useReadContracts, useAccount, useChainId } from 'wagmi';
-import { erc20Abi } from 'viem';
-import { isAddress, Address } from 'viem';
 import { useState, useEffect } from 'react';
-import { TokenContract as MappedTokenContract, TokenContract } from '@/lib/structure/types';
-import { getNativeWrapAddress, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
-import { useNativeToken } from './useNativeToken';
+import { useAccount } from 'wagmi';
+import { isAddress, Address } from 'viem';
+import { TokenContract } from '@/lib/structure/types';
+import { NATIVE_TOKEN_ADDRESS, getNativeWrapAddress } from '@/lib/network/utils';
+import { useReadContract, useReadContracts, useChainId } from 'wagmi';
+import { erc20Abi } from 'viem';
 
 // ---------------------------------------------
 // 🧩 Hook: useErc20TokenContract (Wagmi v2.5+)
 // ---------------------------------------------
-function useErc20TokenContract( tokenAddress?: Address ): TokenContract | undefined {
-    const { address: account } = useAccount();
-    const enabled = !!tokenAddress && isAddress(tokenAddress);
-    const chainId = useChainId()
-  
-    const { data: metaData, status: metaStatus } = useReadContracts({
-      contracts: [
-        { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
-        { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
-        { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
-        { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
-      ],
-      query: { enabled },
-    });
-  
-    const { data: balance, status: balanceStatus } = useReadContract({
-      address: tokenAddress,
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: account ? [account] : undefined,
-      query: {
-        enabled: !!tokenAddress && !!account,
-      },
-    });
-  
-    if (!enabled || metaStatus !== 'success' || !metaData) return undefined;
-  
-    const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
-  
-    if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
-  
-    return {
-      chainId,
-      address: tokenAddress!,
-      symbol: symbolRaw as string,
-      name: nameRaw as string,
-      amount: 0n,
-      decimals: Number(decimalsRaw),
-      totalSupply: totalSupplyRaw as bigint,
-      balance: balanceStatus === 'success' ? (balance as bigint) : 0n,
-    };
-  }
-  
-// ---------------------------------------------
-// 🔁 Hook: useMappedTokenContract
-// Converts raw token to your global TokenContract
-// ---------------------------------------------
-
-export function useMappedTokenContract(
-  tokenAddress?: Address,
-): MappedTokenContract | undefined | null {
+export function useErc20TokenContract(tokenAddress?: Address): TokenContract | undefined {
+  const { address: account } = useAccount();
+  const enabled = !!tokenAddress && isAddress(tokenAddress);
   const chainId = useChainId();
-  const isNativeToken:boolean = tokenAddress === NATIVE_TOKEN_ADDRESS
-  const validAddress = isNativeToken ? getNativeWrapAddress(chainId) :  tokenAddress
-  const token = useErc20TokenContract(validAddress);
-  const nativeToken = useNativeToken()
 
-  if (!token) {
-    // console.warn(`[❌ useMappedTokenContract] Failed to resolve token for address: ${tokenAddress}`);
-    return null; // ⚠️ Return `null` to indicate known failure instead of staying undefined forever
-  }
+  const { data: metaData, status: metaStatus } = useReadContracts({
+    contracts: [
+      { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
+      { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
+      { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
+      { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
+    ],
+    query: { enabled },
+  });
 
-  return isNativeToken ? nativeToken : token as TokenContract;
+  const { data: balance, status: balanceStatus } = useReadContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: account ? [account] : undefined,
+    query: {
+      enabled: !!tokenAddress && !!account,
+    },
+  });
+
+  if (!enabled || metaStatus !== 'success' || !metaData) return undefined;
+
+  const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
+
+  if (!symbolRaw || !nameRaw || decimalsRaw == null) return undefined;
+
+  return {
+    chainId,
+    address: tokenAddress!,
+    symbol: symbolRaw as string,
+    name: nameRaw as string,
+    amount: 0n,
+    decimals: Number(decimalsRaw),
+    totalSupply: totalSupplyRaw as bigint,
+    balance: balanceStatus === 'success' ? (balance as bigint) : 0n,
+  };
 }
 
 // ---------------------------------------------
@@ -92,7 +72,7 @@ export function TokenFetchGuiExamples() {
       ? (accountAddressInput as Address)
       : account.address;
 
-  const tokenResult: TokenContract | undefined | null = useMappedTokenContract(submitted ? tokenAddress : undefined);
+  const tokenResult: TokenContract | undefined = useErc20TokenContract(submitted ? tokenAddress : undefined);
 
   useEffect(() => {
     if (submitted) {
@@ -101,7 +81,7 @@ export function TokenFetchGuiExamples() {
       } else {
         setNotFoundMessage('');
       }
-      setSubmitted(false); // prevent repeated alerts or stale results
+      setSubmitted(false);
     }
   }, [submitted, tokenResult, tokenAddressInput]);
 
@@ -158,13 +138,11 @@ export function TokenFetchGuiExamples() {
         onClick={handleFetch}
         disabled={!tokenAddressInput}
         style={{ padding: '0.5rem 1rem', marginBottom: '1rem' }}>
-          Fetch
+        Fetch
       </button>
 
       {notFoundMessage && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>
-          {notFoundMessage}
-        </div>
+        <div style={{ color: 'red', marginBottom: '1rem' }}>{notFoundMessage}</div>
       )}
 
       {tokenResult && (

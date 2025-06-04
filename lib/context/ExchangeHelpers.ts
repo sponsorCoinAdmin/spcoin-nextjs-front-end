@@ -1,6 +1,6 @@
 // File: lib/context/ExchangeHelpers.ts
 
-"use client";
+'use client';
 
 import {
   API_TRADING_PROVIDER,
@@ -15,48 +15,24 @@ import {
   TRADE_DIRECTION,
   SWAP_TYPE,
   NetworkElement,
-} from "@/lib/structure/types";
+  ExchangeContext,
+} from '@/lib/structure/types';
 
-import defaultEthereumSettings from "@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json";
-import defaultPolygonSettings from "@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json";
-import defaultHardHatSettings from "@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json";
-import defaultSoliditySettings from "@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json";
+import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
+import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
+import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
+import defaultSoliditySettings from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
 
-import { isLowerCase } from "../network/utils";
-
-const STORAGE_KEY = "exchangeContext";
-
-export type Accounts = {
-  connectedAccount?: WalletAccount;
-  sponsorAccount?: WalletAccount;
-  recipientAccount?: WalletAccount;
-  agentAccount?: WalletAccount;
-
-  sponsorAccounts?: WalletAccount[];
-  recipientAccounts?: WalletAccount[];
-  agentAccounts?: WalletAccount[];
-};
-
-export type Settings = {
-  readonly apiTradingProvider: API_TRADING_PROVIDER;
-  readonly spCoinDisplay: SP_COIN_DISPLAY;
-};
-
-export type ExchangeContext = {
-  settings: Settings;
-  accounts: Accounts;
-  network: NetworkElement;
-  tradeData: TradeData;
-};
+const STORAGE_KEY = 'exchangeContext';
 
 export const loadStoredExchangeContext = (): ExchangeContext | null => {
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     const storedData = localStorage.getItem(STORAGE_KEY);
     if (storedData) {
       try {
         return JSON.parse(storedData);
       } catch (error) {
-        console.error("Failed to parse stored ExchangeContext:", error);
+        console.error('Failed to parse stored ExchangeContext:', error);
       }
     }
   }
@@ -64,9 +40,9 @@ export const loadStoredExchangeContext = (): ExchangeContext | null => {
 };
 
 export const saveExchangeContext = (contextData: ExchangeContext): void => {
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     const serializedContext = JSON.stringify(contextData, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value
+      typeof value === 'bigint' ? value.toString() : value
     );
     localStorage.setItem(STORAGE_KEY, serializedContext);
   }
@@ -76,16 +52,17 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
 
   return {
-    network: initialContextMap.get("networkHeader") as NetworkElement,
+    network: initialContextMap.get('networkHeader') as NetworkElement,
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      spCoinDisplay: SP_COIN_DISPLAY.OFF,
+      spCoinDisplay: SP_COIN_DISPLAY.UNDEFINED,
+      containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER, // ✅ Default trade container
     },
     accounts: {
       connectedAccount: undefined,
       sponsorAccount: undefined,
-      recipientAccount: initialContextMap.get("defaultRecipient") as WalletAccount | undefined,
-      agentAccount: initialContextMap.get("defaultAgent") as WalletAccount | undefined,
+      recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
+      agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
 
       sponsorAccounts: [],
       recipientAccounts: [],
@@ -102,7 +79,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       rateRatio: 1,
       slippage: 0,
       slippagePercentage: 0,
-      slippagePercentageString: "0.00%",
+      slippagePercentageString: '0.00%',
     },
   };
 };
@@ -117,6 +94,7 @@ export const sanitizeExchangeContext = (
     settings: {
       apiTradingProvider: raw?.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       spCoinDisplay: raw?.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
+      containerType: raw?.settings?.containerType ?? defaultContext.settings.containerType, // ✅ Added here
     },
     network: raw?.network ?? defaultContext.network,
     accounts: {
@@ -134,7 +112,7 @@ export const sanitizeExchangeContext = (
       tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
       swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
       slippageBps:
-        typeof raw?.tradeData?.slippageBps === "number" && raw.tradeData.slippageBps > 0
+        typeof raw?.tradeData?.slippageBps === 'number' && raw.tradeData.slippageBps > 0
           ? raw.tradeData.slippageBps
           : defaultContext.tradeData.slippageBps,
       sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
@@ -143,7 +121,8 @@ export const sanitizeExchangeContext = (
       rateRatio: raw?.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
       slippage: raw?.tradeData?.slippage ?? defaultContext.tradeData.slippage,
       slippagePercentage: raw?.tradeData?.slippagePercentage ?? defaultContext.tradeData.slippagePercentage,
-      slippagePercentageString: raw?.tradeData?.slippagePercentageString ?? defaultContext.tradeData.slippagePercentageString,
+      slippagePercentageString:
+        raw?.tradeData?.slippagePercentageString ?? defaultContext.tradeData.slippagePercentageString,
     },
   };
 };
@@ -158,16 +137,16 @@ const getDefaultNetworkSettings = (chain: any) => {
 
   switch (normalized) {
     case ETHEREUM:
-    case "ethereum":
+    case 'ethereum':
       return defaultEthereumSettings;
     case POLYGON:
-    case "polygon":
+    case 'polygon':
       return defaultPolygonSettings;
     case HARDHAT:
-    case "hardhat":
+    case 'hardhat':
       return defaultHardHatSettings;
     case SEPOLIA:
-    case "sepolia":
+    case 'sepolia':
       return defaultSoliditySettings;
     default:
       return defaultEthereumSettings;
@@ -175,8 +154,8 @@ const getDefaultNetworkSettings = (chain: any) => {
 };
 
 const normalizeChainId = (chain: unknown): number | string => {
-  if (typeof chain === "number") return chain;
-  if (typeof chain === "string") return chain.toLowerCase();
-  if (typeof chain === "object" && chain && "id" in chain) return (chain as any).id;
+  if (typeof chain === 'number') return chain;
+  if (typeof chain === 'string') return chain.toLowerCase();
+  if (typeof chain === 'object' && chain && 'id' in chain) return (chain as any).id;
   return ETHEREUM;
 };

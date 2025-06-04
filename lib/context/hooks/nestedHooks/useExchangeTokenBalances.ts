@@ -1,4 +1,3 @@
-// File: lib/context/hooks/nestedHooks/useExchangeTokenBalances.ts
 'use client'
 
 import { useEffect } from 'react';
@@ -20,14 +19,14 @@ export const useExchangeTokenBalances = () => {
   useEffect(() => {
     const updates: Partial<typeof exchangeContext['tradeData']> = {};
 
-    if (buyToken?.address) {
+    if (buyToken?.address && buyToken) {
       updates.buyTokenContract = {
         ...buyToken,
         balance: buyBalance ?? 0n,
       };
     }
 
-    if (sellToken?.address) {
+    if (sellToken?.address && sellToken) {
       updates.sellTokenContract = {
         ...sellToken,
         balance: sellBalance ?? 0n,
@@ -43,5 +42,5 @@ export const useExchangeTokenBalances = () => {
         },
       }));
     }
-  }, [buyBalance, sellBalance]);
+  }, [buyBalance, sellBalance, buyToken, sellToken, setExchangeContext]);
 };
