@@ -16,7 +16,6 @@ import {
 import {
   useBuyTokenAddress,
   useSellTokenAddress,
-  useContainerType,
 } from '@/lib/context/hooks/contextHooks';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -62,13 +61,13 @@ function isDuplicateInput(
 
 export const useInputValidationState = <T extends TokenContract | ValidAddressAccount>(
   selectAddress: string | undefined,
-  feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST
+  feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
+  containerType?: CONTAINER_TYPE // ✅ now passed explicitly
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);
 
-  const [containerType] = useContainerType();
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
 
@@ -148,6 +147,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
 
     if (
       feedType === FEED_TYPE.TOKEN_LIST &&
+      containerType !== undefined &&
       isDuplicateInput(containerType, debouncedAddress, sellAddress, buyAddress)
     ) {
       setValidatedAsset(undefined);

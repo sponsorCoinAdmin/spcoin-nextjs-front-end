@@ -1,5 +1,3 @@
-// File: lib/context/ExchangeContextUsageExamples.tsx
-
 'use client';
 
 import React from 'react';
@@ -9,7 +7,6 @@ import {
   useSellTokenContract,
   useBuyTokenContract,
   useTradeDirection,
-  useContainerType,
   useSlippageBps,
   useErrorMessage,
   useApiErrorMessage,
@@ -19,7 +16,7 @@ import {
   useBuyTokenAddress,
 } from './hooks/contextHooks';
 
-import { TRADE_DIRECTION, CONTAINER_TYPE, STATUS } from '@/lib/structure/types';
+import { TRADE_DIRECTION, STATUS } from '@/lib/structure/types';
 
 export default function ExchangeContextUsageExamples() {
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -27,7 +24,6 @@ export default function ExchangeContextUsageExamples() {
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
-  const [containerType, setContainerType] = useContainerType();
   const [slippageBps, setSlippageBps] = useSlippageBps();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
@@ -46,7 +42,6 @@ export default function ExchangeContextUsageExamples() {
       <pre>Sell Token Address: {sellTokenAddress ?? 'None'}</pre>
       <pre>Buy Token Address: {buyTokenAddress ?? 'None'}</pre>
       <pre>Trade Direction: {tradeDirection}</pre>
-      <pre>Container Type: {containerType}</pre>
       <pre>Slippage Bps: {slippageBps}</pre>
       <pre>spCoinDisplay: {spCoinDisplay}</pre>
       <pre>Trade Data: {JSON.stringify(tradeData, null, 2)}</pre>
@@ -94,10 +89,6 @@ export default function ExchangeContextUsageExamples() {
 
       <button onClick={() => setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN)}>
         Set Trade Direction: BUY_EXACT_IN
-      </button>
-
-      <button onClick={() => setContainerType(CONTAINER_TYPE.SELL_SELECT_CONTAINER)}>
-        Set Container Type: SELL_SELECT_CONTAINER
       </button>
 
       <button onClick={() => setSlippageBps(slippageBps + 10)}>

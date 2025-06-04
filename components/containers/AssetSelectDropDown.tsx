@@ -1,13 +1,9 @@
-// File: components/containers/AssetSelectDropDown.tsx
-
 'use client';
 
 import React, { useState, useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { InputState, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure/types';
-import { useContainerType } from '@/lib/context/hooks/contextHooks';
+import { CONTAINER_TYPE } from '@/lib/structure/types';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 
@@ -21,7 +17,7 @@ type GenericAsset = {
 interface AssetSelectDropDownProps<T extends GenericAsset> {
   asset: T | undefined;
   onSelectAsset: (asset: T) => void;
-  containerType?: CONTAINER_TYPE; // only needed for TokenSelect flow
+  containerType?: CONTAINER_TYPE; // required for isToken === true
   isToken?: boolean;
 }
 
@@ -32,7 +28,6 @@ function AssetSelectDropDown<T extends GenericAsset>({
   isToken = false,
 }: AssetSelectDropDownProps<T>) {
   const [showDialog, setShowDialog] = useState(false);
-  const [, setContainerType] = useContainerType();
 
   const logoSrc = useSafeLogoURL(asset?.address, undefined, asset?.logo);
 
@@ -56,9 +51,11 @@ function AssetSelectDropDown<T extends GenericAsset>({
   );
 
   const openDialog = useCallback(() => {
-    if (isToken && containerType) setContainerType(containerType);
+    if (isToken && !containerType) {
+      throw new Error('containerType is required when selecting a token.');
+    }
     setShowDialog(true);
-  }, [isToken, containerType, setContainerType]);
+  }, [isToken, containerType]);
 
   return (
     <>
@@ -66,6 +63,7 @@ function AssetSelectDropDown<T extends GenericAsset>({
         <TokenDialogWrapper
           showDialog={showDialog}
           setShowDialog={setShowDialog}
+          containerType={containerType!} // assert present for tokens
           onSelect={handleAssetSelect as any}
         />
       ) : (

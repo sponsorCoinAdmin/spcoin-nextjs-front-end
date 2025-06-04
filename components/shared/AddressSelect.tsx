@@ -7,6 +7,7 @@ import {
   FEED_TYPE,
   TokenContract,
   WalletAccount,
+  CONTAINER_TYPE,
 } from '@/lib/structure/types';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
@@ -28,6 +29,7 @@ interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   onSelect: (item: T, state: InputState) => void;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
+  containerType?: CONTAINER_TYPE; // ✅ added
 }
 
 export default function AddressSelect<T extends TokenContract | WalletAccount>({
@@ -37,6 +39,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   onSelect: onSelectProp,
   duplicateMessage,
   showDuplicateCheck = false,
+  containerType, // ✅ added
 }: AddressSelectProps<T>) {
   const {
     inputValue,
@@ -54,7 +57,11 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     isLoading,
     reportMissingLogoURL,
     hasBrokenLogoURL,
-  } = useInputValidationState<T>(debouncedAddress, feedType);
+  } = useInputValidationState<T>(
+    debouncedAddress,
+    feedType,
+    containerType // ✅ passed to support duplicate detection
+  );
 
   const onSelect = useCallback(
     (item: TokenContract | WalletAccount) => {

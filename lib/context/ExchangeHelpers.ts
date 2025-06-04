@@ -38,7 +38,6 @@ export type Accounts = {
 };
 
 export type Settings = {
-  containerType: CONTAINER_TYPE | undefined;
   readonly apiTradingProvider: API_TRADING_PROVIDER;
   readonly spCoinDisplay: SP_COIN_DISPLAY;
 };
@@ -81,7 +80,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
       spCoinDisplay: SP_COIN_DISPLAY.OFF,
-      containerType: CONTAINER_TYPE.UNDEFINED,
     },
     accounts: {
       connectedAccount: undefined,
@@ -117,7 +115,6 @@ export const sanitizeExchangeContext = (
 
   return {
     settings: {
-      containerType: raw?.settings?.containerType ?? defaultContext.settings.containerType,
       apiTradingProvider: raw?.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       spCoinDisplay: raw?.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
     },

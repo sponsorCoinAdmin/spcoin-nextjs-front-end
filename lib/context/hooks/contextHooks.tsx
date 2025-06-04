@@ -8,3 +8,4 @@ export * from './nestedHooks/useTradeState';
 export * from './nestedHooks/useErrorMessages';
 export * from './nestedHooks/useSpCoinDisplay';
 export * from './nestedHooks/useApiProvider';
+export * from './nestedHooks/useExchangeTokenBalances';

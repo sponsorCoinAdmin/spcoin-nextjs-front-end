@@ -125,7 +125,7 @@ function TokenSelectDropDown({
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={() => setShowDialog(true)} // ✅ no useContainerType()
+          onClick={() => setShowDialog(true)}
         />
       </div>
     </>

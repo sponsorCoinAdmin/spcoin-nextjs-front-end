@@ -28,6 +28,7 @@ interface BaseProps<T> {
   inputPlaceholder: string;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
+  containerType?: CONTAINER_TYPE;
 }
 
 function BaseModalDialog({
@@ -89,6 +90,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   inputPlaceholder,
   duplicateMessage,
   showDuplicateCheck = false,
+  containerType,
 }: BaseProps<T>) {
   return (
     <BaseModalDialog
@@ -109,6 +111,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
         }}
         duplicateMessage={duplicateMessage}
         showDuplicateCheck={showDuplicateCheck}
+        containerType={containerType}
       />
     </BaseModalDialog>
   );
@@ -121,7 +124,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
 export function TokenDialogWrapper(props: {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
-  containerType: CONTAINER_TYPE; // ✅ passed explicitly now
+  containerType: CONTAINER_TYPE;
   onSelect: (token: TokenContract, state: InputState) => void;
 }) {
   const { containerType } = props;
@@ -153,6 +156,7 @@ export function TokenDialogWrapper(props: {
           : 'Buy Address Cannot Be the Same as Sell Address'
       }
       showDuplicateCheck
+      containerType={containerType}
       onSelect={(token, state) => {
         console.debug('✅ [TokenDialogWrapper] selected token', token);
         if (state === InputState.CLOSE_INPUT) {
