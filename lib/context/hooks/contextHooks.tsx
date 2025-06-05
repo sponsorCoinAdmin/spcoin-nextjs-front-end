@@ -10,3 +10,4 @@ export * from './nestedHooks/useSpCoinDisplay';
 export * from './nestedHooks/useApiProvider';
 export * from './nestedHooks/useExchangeTokenBalances';
 export * from './nestedHooks/useMappedTokenContract';
+export * from './nestedHooks/useNetwork';

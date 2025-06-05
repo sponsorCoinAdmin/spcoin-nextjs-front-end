@@ -37,7 +37,7 @@ const useSwapFunctions = () => {
 
         const weiDepositAmount: bigint = sellAmount;
         const signer = tradeData.signer;
-        const chainId = tradeData.chainId;
+        const chainId = exchangeContext.network.chainId;
         const weth9Address = wethMethods.getWeth9NetworkAddress(chainId);
 
         wethMethods.connect(weth9Address, weth9ABI, signer);
@@ -51,7 +51,7 @@ const useSwapFunctions = () => {
 
         const weiWithdrawAmount: bigint = sellAmount;
         const signer = tradeData.signer;
-        const chainId = tradeData.chainId;
+        const chainId = exchangeContext.network.chainId;
         const weth9Address = wethMethods.getWeth9NetworkAddress(chainId);
 
         alert(`chainId = ${chainId} weth9Address = ${weth9Address}`);

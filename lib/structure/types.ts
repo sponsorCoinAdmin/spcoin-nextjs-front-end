@@ -197,20 +197,31 @@ type Settings = {
   readonly spCoinDisplay: SP_COIN_DISPLAY;
 };
 
-type ExchangeContext = {
-  settings: Settings;
-  accounts: Accounts;
-  network: NetworkElement;
-  tradeData: TradeData;
-};
-
 type NetworkElement = {
-  [x: string]: any;
   readonly chainId: number;
   readonly logoURL: string;
   readonly name: string;
   readonly symbol: string;
   readonly url: string;
+};
+
+type Slippage = {
+  readonly bps: number;
+  readonly percentage: number;
+  readonly percentageString: string;
+}
+
+type TradeData = {
+  buyTokenContract?: TokenContract;
+  sellTokenContract?: TokenContract;
+  signer: any;
+  slippageBps: number;
+  rateRatio: number;
+  slippage: number;
+  slippagePercentage: number;
+  slippagePercentageString: string;
+  swapType: SWAP_TYPE;
+  tradeDirection: TRADE_DIRECTION;
 };
 
 type TokenContract = {
@@ -225,19 +236,14 @@ type TokenContract = {
   totalSupply: any;
 };
 
-type TradeData = {
-  buyTokenContract?: TokenContract;
-  chainId: number;
-  sellTokenContract?: TokenContract;
-  signer: any;
-  slippageBps: number;
-  rateRatio: number;
-  slippage: number;
-  slippagePercentage: number;
-  slippagePercentageString: string;
-  swapType: SWAP_TYPE;
-  tradeDirection: TRADE_DIRECTION;
+type ExchangeContext = {
+  accounts: Accounts;
+  network: NetworkElement;
+  settings: Settings;
+  tradeData: TradeData;
 };
+
+
 
 // Exports
 export {

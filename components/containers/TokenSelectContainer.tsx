@@ -1,14 +1,12 @@
-// File: components/containers/TokenSelectContainer.tsx
+'use client';
 
-"use client";
+import React, { useEffect, useState } from 'react';
+import { parseUnits, formatUnits } from 'viem';
+import { useAccount } from 'wagmi';
 
-import React, { useEffect, useState } from "react";
-import { parseUnits, formatUnits } from "viem";
-import { useAccount } from "wagmi";
 import {
   useApiProvider,
   useSpCoinDisplay,
-  useTradeData,
   useBuyAmount,
   useExchangeContext,
   useSellAmount,
@@ -18,12 +16,12 @@ import {
   useBuyTokenContract,
 } from '@/lib/context/hooks/contextHooks';
 
-import AddSponsorship from "../Buttons/AddSponsorshipButton";
-import TokenSelectDropDown from "./TokenSelectDropDown";
-import ManageSponsorsButton from "../Buttons/ManageSponsorsButton";
+import AddSponsorship from '../Buttons/AddSponsorshipButton';
+import TokenSelectDropDown from './TokenSelectDropDown';
+import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
 
-import { parseValidFormattedAmount, isSpCoin } from "@/lib/spCoin/coreUtils";
-import { useDebounce } from "@/lib/hooks/useDebounce";
+import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import {
@@ -31,18 +29,17 @@ import {
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
   SP_COIN_DISPLAY,
-} from "@/lib/structure/types";
+} from '@/lib/structure/types';
 
-import styles from "@/styles/Exchange.module.css";
-import { spCoinDisplayString } from "@/lib/spCoin/guiControl";
-import { clsx } from "clsx";
+import styles from '@/styles/Exchange.module.css';
+import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
+import { clsx } from 'clsx';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SPCOIN_DISPLAY === 'true';
 const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const { exchangeContext } = useExchangeContext();
-  const tradeData = useTradeData();
   const [apiProvider] = useApiProvider();
   const account = useAccount();
 
@@ -58,7 +55,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     ? sellTokenContract
     : buyTokenContract;
 
-  const [inputValue, setInputValue] = useState<string>("0");
+  const [inputValue, setInputValue] = useState<string>('0');
   const debouncedSellAmount = useDebounce(sellAmount, 600);
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
@@ -86,17 +83,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
       setBuyAmount(debouncedBuyAmount);
     }
   }, [debouncedSellAmount, debouncedBuyAmount, containerType, tradeDirection]);
-
-  useEffect(() => {
-    if (!account.chainId || account.chainId === exchangeContext?.tradeData?.chainId) return;
-
-    const updatedTradeData = { ...tradeData, chainId: account.chainId };
-    exchangeContext.tradeData = updatedTradeData;
-    setSellAmount(0n);
-    setSellTokenContract(undefined);
-    setBuyAmount(0n);
-    setBuyTokenContract(undefined);
-  }, [account.chainId]);
 
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
@@ -137,7 +123,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   const formattedBalance = tokenContract && tokenContract.balance !== undefined
     ? formatUnits(tokenContract.balance, tokenContract.decimals || 18)
-    : "0.0";
+    : '0.0';
 
   const isInputDisabled =
     !tokenContract ||

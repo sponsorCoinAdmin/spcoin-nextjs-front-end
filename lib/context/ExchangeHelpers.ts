@@ -11,7 +11,6 @@ import {
   HARDHAT,
   POLYGON,
   SEPOLIA,
-  CONTAINER_TYPE,
   TRADE_DIRECTION,
   SWAP_TYPE,
   NetworkElement,
@@ -69,7 +68,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     tradeData: {
       signer: undefined,
-      chainId,
       tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT,
       swapType: SWAP_TYPE.UNDEFINED,
       slippageBps: 200,
@@ -106,7 +104,6 @@ export const sanitizeExchangeContext = (
       agentAccounts: raw?.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
     },
     tradeData: {
-      chainId: raw?.tradeData?.chainId ?? defaultContext.tradeData.chainId,
       tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
       swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
       slippageBps:

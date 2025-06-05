@@ -7,34 +7,32 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
-import {
-  defaultMissingImage,
-  getBlockChainName,
-  getBlockChainLogoURL,
-} from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { useChainId } from 'wagmi';
 import {
   useBuyTokenContract,
   useSellTokenContract,
   useExchangeContext,
 } from '@/lib/context/hooks/contextHooks';
+import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOG_TIME: boolean = false;
+const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
-  const [networkName, setNetworkName] = useState('Ethereum');
+  useNetwork(); // ✅ Automatically updates exchangeContext.network
+
   const chainId = useChainId({ config });
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
-  const [logo, setLogo] = useState(() => getBlockChainLogoURL(chainId));
-
   const [_, setSellTokenContract] = useSellTokenContract();
   const [__, setBuyTokenContract] = useBuyTokenContract();
-  const { setExchangeContext } = useExchangeContext();
+  const { exchangeContext } = useExchangeContext();
+
+  const { name: networkName, logoURL: logo } = exchangeContext.network;
 
   const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
   const SHOW_ADMIN_LINK = process.env.NEXT_PUBLIC_SHOW_ADMIN_PAGE === 'true';
@@ -57,32 +55,9 @@ export default function Header() {
   useEffect(() => {
     if (!chainId) return;
 
-    const network = getBlockChainName(chainId) || '';
-    const newLogo = getBlockChainLogoURL(chainId);
-
-    debugLog.log(`🔄 chainId = ${chainId}`);
-    debugLog.log(`🌐 networkName = ${network}`);
-    debugLog.log(`🖼️ newLogo = ${newLogo}`);
-
-    setNetworkName(network);
-    setLogo(newLogo);
-  }, [chainId]);
-
-  useEffect(() => {
-    if (!chainId) return;
-
     debugLog.warn(`⚠️ Clearing token contracts due to chain switch: ${chainId}`);
-
     setSellTokenContract(undefined);
     setBuyTokenContract(undefined);
-
-    setExchangeContext(prev => ({
-      ...prev,
-      tradeData: {
-        ...prev.tradeData,
-        chainId,
-      },
-    }));
   }, [chainId]);
 
   const staticLinks = [

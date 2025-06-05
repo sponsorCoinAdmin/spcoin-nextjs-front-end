@@ -132,7 +132,7 @@ const useIsActiveAccountAddress = (address?: Address): boolean => {
 };
 
 const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress: Address): Address | undefined => {
-  const chainId = exchangeContext.tradeData.chainId;
+  const chainId = exchangeContext.network.chainId;
   const ethAct = exchangeContext?.accounts?.connectedAccount?.address;
 
   // console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
@@ -227,6 +227,33 @@ const tokenContractsEqual = (a?: TokenContract, b?: TokenContract): boolean => {
     a?.decimals === b?.decimals
   );
 };
+
+// File: lib/network/utils/getBlockExplorerURL.ts
+
+/**
+ * Returns the block explorer URL for a given chain ID.
+ * Falls back to an empty string if not recognized.
+ */
+
+export function getBlockExplorerURL(chainId: number): string {
+  switch (chainId) {
+    case 1: // Ethereum Mainnet
+      return 'https://etherscan.io/';
+    case 5: // Goerli Testnet
+      return 'https://goerli.etherscan.io/';
+    case 137: // Polygon Mainnet
+      return 'https://polygonscan.com/';
+    case 80001: // Mumbai Testnet
+      return 'https://mumbai.polygonscan.com/';
+    case 11155111: // Sepolia Testnet
+      return 'https://sepolia.etherscan.io/';
+    case 31337: // Hardhat localhost
+      return 'http://localhost:8545/';
+    default:
+      return '';
+  }
+}
+
 
 export {
   BURN_ADDRESS,
