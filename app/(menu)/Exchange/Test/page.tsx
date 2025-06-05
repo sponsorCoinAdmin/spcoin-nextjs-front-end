@@ -31,7 +31,7 @@ import {
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap = {
-    [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.EXCHANGE_ROOT',
+    [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.UNDEFINED',
     [SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER',
     [SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG',
     [SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG]: 'SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG',
@@ -61,17 +61,24 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
     [API_TRADING_PROVIDER.API_1INCH]: 'API_TRADING_PROVIDER.API_1INCH',
   };
 
+  const { spCoinDisplay, apiTradingProvider } = ctx.settings;
+  const { tradeDirection, swapType, ...restTradeData } = ctx.tradeData;
+
   return {
     ...ctx,
     settings: {
-      ...ctx.settings,
-      [`spCoinDisplay (${ctx.settings.spCoinDisplay})`]: spCoinDisplayMap[ctx.settings.spCoinDisplay],
-      [`apiTradingProvider (${ctx.settings.apiTradingProvider})`]: apiProviderMap[ctx.settings.apiTradingProvider],
+      ...Object.fromEntries(
+        Object.entries(ctx.settings).filter(([key]) =>
+          !['spCoinDisplay', 'containerType', 'apiTradingProvider'].includes(key)
+        )
+      ),
+      [`spCoinDisplay (${spCoinDisplay})`]: spCoinDisplayMap[spCoinDisplay],
+      [`apiTradingProvider (${apiTradingProvider})`]: apiProviderMap[apiTradingProvider],
     },
     tradeData: {
-      ...ctx.tradeData,
-      [`tradeDirection (${ctx.tradeData.tradeDirection})`]: tradeDirectionMap[ctx.tradeData.tradeDirection],
-      [`swapType (${ctx.tradeData.swapType})`]: swapTypeMap[ctx.tradeData.swapType],
+      ...restTradeData,
+      [`tradeDirection (${tradeDirection})`]: tradeDirectionMap[tradeDirection],
+      [`swapType (${swapType})`]: swapTypeMap[swapType],
     },
   };
 }
