@@ -1,5 +1,3 @@
-// File: components/shared/JsonInspector.tsx
-
 'use client';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -60,12 +58,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     <div className="ml-2">
       <div className="cursor-pointer" onClick={toggle}>
         <span className="text-green-400">{isCollapsed ? '[+]' : '[-]'}</span>{' '}
-        <span className="text-white font-semibold">{path}</span>
+        <span className="text-white font-semibold">{path === 'root' ? 'Exchange Context' : path}</span>
       </div>
       {!isCollapsed && (
         <div className="ml-4">
           {Object.entries(data).map(([key, value]) => {
-            const newPath = `${path}.${key}`;
+            const newPath = path === 'root' ? key : `${path}.${key}`;
             return renderValue(value, key, newPath);
           })}
         </div>

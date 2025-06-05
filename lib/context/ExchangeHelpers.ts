@@ -55,8 +55,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     network: initialContextMap.get('networkHeader') as NetworkElement,
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      spCoinDisplay: SP_COIN_DISPLAY.UNDEFINED,
-      containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER, // ✅ Default trade container
+      spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
     },
     accounts: {
       connectedAccount: undefined,
@@ -94,7 +93,6 @@ export const sanitizeExchangeContext = (
     settings: {
       apiTradingProvider: raw?.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       spCoinDisplay: raw?.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
-      containerType: raw?.settings?.containerType ?? defaultContext.settings.containerType, // ✅ Added here
     },
     network: raw?.network ?? defaultContext.network,
     accounts: {

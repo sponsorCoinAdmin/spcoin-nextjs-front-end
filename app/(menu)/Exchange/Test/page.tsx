@@ -1,5 +1,3 @@
-// File: app/(menu)/Exchange/Test/page.tsx
-
 'use client';
 
 import { useEffect } from 'react';
@@ -22,10 +20,63 @@ import JsonInspector from '@/components/shared/JsonInspector';
 import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { usePageState } from '@/lib/context/PageStateContext';
+import {
+  CONTAINER_TYPE,
+  SP_COIN_DISPLAY,
+  TRADE_DIRECTION,
+  SWAP_TYPE,
+  API_TRADING_PROVIDER,
+  ExchangeContext,
+} from '@/lib/structure/types';
 
+function normalizeContextDisplay(ctx: ExchangeContext): any {
+  const spCoinDisplayMap = {
+    [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.EXCHANGE_ROOT',
+    [SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER',
+    [SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG',
+    [SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG]: 'SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG',
+    [SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON]: 'SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON',
+  };
+  const containerTypeMap = {
+    [CONTAINER_TYPE.SELL_SELECT_CONTAINER]: 'CONTAINER_TYPE.SELL_SELECT_CONTAINER',
+    [CONTAINER_TYPE.BUY_SELECT_CONTAINER]: 'CONTAINER_TYPE.BUY_SELECT_CONTAINER',
+  };
 
+  const tradeDirectionMap = {
+    [TRADE_DIRECTION.SELL_EXACT_OUT]: 'TRADE_DIRECTION.SELL_EXACT_OUT',
+    [TRADE_DIRECTION.BUY_EXACT_IN]: 'TRADE_DIRECTION.BUY_EXACT_IN',
+  };
 
-function TestPage() {
+  const swapTypeMap = {
+    [SWAP_TYPE.SWAP]: 'SWAP_TYPE.SWAP',
+    [SWAP_TYPE.SWAP_UNWRAP]: 'SWAP_TYPE.SWAP_UNWRAP',
+    [SWAP_TYPE.UNDEFINED]: 'SWAP_TYPE.UNDEFINED',
+    [SWAP_TYPE.UNWRAP]: 'SWAP_TYPE.UNWRAP',
+    [SWAP_TYPE.WRAP]: 'SWAP_TYPE.WRAP',
+    [SWAP_TYPE.WRAP_SWAP]: 'SWAP_TYPE.WRAP_SWAP',
+  };
+
+  const apiProviderMap = {
+    [API_TRADING_PROVIDER.API_0X]: 'API_TRADING_PROVIDER.API_0X',
+    [API_TRADING_PROVIDER.API_1INCH]: 'API_TRADING_PROVIDER.API_1INCH',
+  };
+
+  return {
+    ...ctx,
+    settings: {
+      ...ctx.settings,
+      [`spCoinDisplay (${ctx.settings.spCoinDisplay})`]: spCoinDisplayMap[ctx.settings.spCoinDisplay],
+      [`apiTradingProvider (${ctx.settings.apiTradingProvider})`]: apiProviderMap[ctx.settings.apiTradingProvider],
+    },
+    tradeData: {
+      ...ctx.tradeData,
+      [`tradeDirection (${ctx.tradeData.tradeDirection})`]: tradeDirectionMap[ctx.tradeData.tradeDirection],
+      [`swapType (${ctx.tradeData.swapType})`]: swapTypeMap[ctx.tradeData.swapType],
+    },
+  };
+}
+
+export default function TestPage() {
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
@@ -38,8 +89,8 @@ function TestPage() {
   } = state.page.exchangePage;
 
   useEffect(() => {
-  localStorage.setItem('PageStateContext', JSON.stringify(state));
-}, [state]);
+    localStorage.setItem('PageStateContext', JSON.stringify(state));
+  }, [state]);
 
   useEffect(() => {
     if (address) {
@@ -86,7 +137,7 @@ function TestPage() {
 
   const toggleExpandCollapse = () => {
     const nextExpand = !expandContext;
-    const nextKeys = nextExpand ? [] : getAllKeys(exchangeContext, 'root');
+    const nextKeys = nextExpand ? [] : getAllKeys(exchangeContext, '');
     updateExchangePage({
       expandContext: nextExpand,
       collapsedKeys: nextKeys,
@@ -94,11 +145,11 @@ function TestPage() {
   };
 
   const getAllKeys = (obj: any, basePath: string): string[] => {
-    let keys: string[] = [basePath];
+    let keys: string[] = [];
     if (typeof obj === 'object' && obj !== null) {
+      keys.push(basePath);
       Object.entries(obj).forEach(([k, v]) => {
-        const childPath = `${basePath}.${k}`;
-        keys.push(...getAllKeys(v, childPath));
+        keys.push(...getAllKeys(v, k));
       });
     }
     return keys;
@@ -110,7 +161,6 @@ function TestPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Control Buttons */}
       <div className="flex flex-wrap gap-4">
         <button
           onClick={toggleContext}
@@ -143,23 +193,20 @@ function TestPage() {
         </button>
       </div>
 
-      {/* Context Display */}
       {showContext && (
         <JsonInspector
-          data={exchangeContext}
+          data={normalizeContextDisplay(exchangeContext)}
           collapsedKeys={collapsedKeys}
           updateCollapsedKeys={(next: string[]) => updateExchangePage({ collapsedKeys: next })}
         />
       )}
 
-      {/* Wallets Page Display */}
       {showWallets && (
         <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>
       )}
 
-      {/* ERC20 Read Operations */}
       <div className="grid gap-6">
         <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={undefined} />
@@ -174,5 +221,3 @@ function TestPage() {
     </div>
   );
 }
-
-export default TestPage;

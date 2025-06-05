@@ -55,7 +55,7 @@ export const useBuyTokenContract = (): [
 
       const isSame = tokenContractsEqual(oldContract, contract);
       const isSp = contract && isSpCoin(contract);
-      const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER : SP_COIN_DISPLAY.UNDEFINED;
+      const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER : SP_COIN_DISPLAY.EXCHANGE_ROOT;
 
       if (isSame && oldDisplay === newDisplay) return;
 
@@ -66,7 +66,6 @@ export const useBuyTokenContract = (): [
           buyTokenContract: contract,
         },
       }));
-
       debugSetSpCoinDisplay(oldDisplay, newDisplay, setExchangeContext);
     },
   ];

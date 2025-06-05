@@ -34,8 +34,8 @@ const toggleElement = (element: any) => {
 
 const spCoinDisplayString = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string => {
   switch (spCoinDisplay) {
-    case SP_COIN_DISPLAY.UNDEFINED:
-      return `spCoinDisplay(${SP_COIN_DISPLAY.UNDEFINED}) = UNDEFINED`;
+    case SP_COIN_DISPLAY.EXCHANGE_ROOT:
+      return `spCoinDisplay(${SP_COIN_DISPLAY.EXCHANGE_ROOT}) = UNDEFINED`;
     case SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER :
       return `spCoinDisplay(${SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER }) = SHOW_ACTIVE_RECIPIENT_CONTAINER `;
     case SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG:
