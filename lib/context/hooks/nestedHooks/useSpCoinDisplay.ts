@@ -40,12 +40,11 @@ export const debugSetSpCoinDisplay = (
     }
   }
 
-setExchangeContext((prev) => ({
-  ...prev,
-  settings: {
-    ...prev.settings,
-    spCoinDisplay: newDisplay,
-  },
-}));
-
+  setExchangeContext((prev) => ({
+    ...prev,
+    settings: {
+      ...prev.settings,
+      spCoinDisplay: newDisplay,
+    },
+  }));
 };

@@ -38,8 +38,8 @@ export const useSellTokenContract = (): [
 };
 
 /**
- * Hook for managing buyTokenContract from context,
- * also manages spCoinDisplay based on whether buy token is an spCoin.
+ * Hook for managing buyTokenContract from context.
+ * Also manages spCoinDisplay based on whether buy token is an spCoin.
  */
 export const useBuyTokenContract = (): [
   TokenContract | undefined,
@@ -55,7 +55,9 @@ export const useBuyTokenContract = (): [
 
       const isSame = tokenContractsEqual(oldContract, contract);
       const isSp = contract && isSpCoin(contract);
-      const newDisplay = isSp ? SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER : SP_COIN_DISPLAY.EXCHANGE_ROOT;
+      const newDisplay = isSp
+        ? SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER
+        : SP_COIN_DISPLAY.EXCHANGE_ROOT;
 
       if (isSame && oldDisplay === newDisplay) return;
 
@@ -66,13 +68,14 @@ export const useBuyTokenContract = (): [
           buyTokenContract: contract,
         },
       }));
+
       debugSetSpCoinDisplay(oldDisplay, newDisplay, setExchangeContext);
     },
   ];
 };
 
 /**
- * Shared debug-aware setter for settings.spCoinDisplay with call trace.
+ * Debug-aware setter for spCoinDisplay with call trace.
  */
 const debugSetSpCoinDisplay = (
   oldDisplay: SP_COIN_DISPLAY,

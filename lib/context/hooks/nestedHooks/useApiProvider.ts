@@ -11,9 +11,13 @@ export const useApiProvider = (): [API_TRADING_PROVIDER, (provider: API_TRADING_
   const setApiProvider = (provider: API_TRADING_PROVIDER) => {
     setExchangeContext((prev) => ({
       ...prev,
-      apiTradingProvider: provider, // ✅ fixed
+      settings: {
+        ...prev.settings,
+        apiTradingProvider: provider,
+      },
     }));
   };
+
 
   return [apiProvider, setApiProvider];
 };

@@ -1,3 +1,5 @@
+// File: lib/context/ExchangeHelpers.ts
+
 'use client';
 
 import {
@@ -19,17 +21,31 @@ import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize
 import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
 import defaultSoliditySettings from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
 
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
 const STORAGE_KEY = 'exchangeContext';
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
+const debugLog = createDebugLogger('ExchangeHelpers', DEBUG_ENABLED, LOG_TIME);
 
 export const loadStoredExchangeContext = (): ExchangeContext | null => {
   if (typeof window !== 'undefined') {
-    const storedData = localStorage.getItem(STORAGE_KEY);
-    if (storedData) {
-      try {
-        return JSON.parse(storedData);
-      } catch (error) {
-        console.error('Failed to parse stored ExchangeContext:', error);
+    try {
+      const storedData = localStorage.getItem(STORAGE_KEY);
+      debugLog.log(`🔑 Loading exchangeContext with key: ${STORAGE_KEY}`);
+      if (storedData) {
+        const parsed = JSON.parse(storedData, (_key, value) => {
+          return typeof value === 'string' && /^\d+n?$/.test(value)
+            ? BigInt(value.replace(/n$/, ''))
+            : value;
+        });
+        debugLog.log('📥 Loaded exchangeContext from localStorage');
+        return parsed;
+      } else {
+        debugLog.warn('⚠️ No stored exchangeContext found');
       }
+    } catch (err) {
+      debugLog.error('❌ Failed to load exchangeContext from localStorage', err);
     }
   }
   return null;
@@ -37,10 +53,20 @@ export const loadStoredExchangeContext = (): ExchangeContext | null => {
 
 export const saveExchangeContext = (contextData: ExchangeContext): void => {
   if (typeof window !== 'undefined') {
-    const serializedContext = JSON.stringify(contextData, (_, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    );
-    localStorage.setItem(STORAGE_KEY, serializedContext);
+    try {
+      debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
+      const serializedContext = JSON.stringify(contextData, (_key, value) => {
+        if (typeof value === 'bigint') {
+          return value.toString();
+        }
+        return value;
+      });
+      debugLog.log('🧾 Serialized exchangeContext:', serializedContext);
+      localStorage.setItem(STORAGE_KEY, serializedContext);
+      debugLog.log('✅ exchangeContext successfully saved');
+    } catch (err) {
+      debugLog.error('❌ Failed to save exchangeContext to localStorage', err);
+    }
   }
 };
 
@@ -55,12 +81,10 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     accounts: {
       signer: undefined,
-
       connectedAccount: undefined,
       sponsorAccount: undefined,
       recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
       agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
-
       sponsorAccounts: [],
       recipientAccounts: [],
       agentAccounts: [],
@@ -86,39 +110,41 @@ export const sanitizeExchangeContext = (
   chainId: number
 ): ExchangeContext => {
   const defaultContext = getInitialContext(chainId);
+  if (!raw) {
+    debugLog.warn('⚠️ sanitizeExchangeContext received null — returning defaults');
+    return defaultContext;
+  }
 
   return {
     settings: {
-      apiTradingProvider: raw?.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
-      spCoinDisplay: raw?.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
+      apiTradingProvider: raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
+      spCoinDisplay: raw.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
     },
-    network: raw?.network ?? defaultContext.network,
+    network: raw.network ?? defaultContext.network,
     accounts: {
-      signer: raw?.accounts?.signer ?? defaultContext.accounts.signer,
-
-      connectedAccount: raw?.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
-      sponsorAccount: raw?.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,
-      recipientAccount: raw?.accounts?.recipientAccount ?? defaultContext.accounts.recipientAccount,
-      agentAccount: raw?.accounts?.agentAccount ?? defaultContext.accounts.agentAccount,
-
-      sponsorAccounts: raw?.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
-      recipientAccounts: raw?.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
-      agentAccounts: raw?.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
+      signer: raw.accounts?.signer ?? defaultContext.accounts.signer,
+      connectedAccount: raw.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
+      sponsorAccount: raw.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,
+      recipientAccount: raw.accounts?.recipientAccount ?? defaultContext.accounts.recipientAccount,
+      agentAccount: raw.accounts?.agentAccount ?? defaultContext.accounts.agentAccount,
+      sponsorAccounts: raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
+      recipientAccounts: raw.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
+      agentAccounts: raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
     },
     tradeData: {
-      tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
-      sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
-      buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
-      rateRatio: raw?.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
+      tradeDirection: raw.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
+      sellTokenContract: raw.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
+      buyTokenContract: raw.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
+      rateRatio: raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
       slippage: {
-        bps: raw?.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
-        percentage: raw?.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
+        bps: raw.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
+        percentage: raw.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
         percentageString:
-          raw?.tradeData?.slippage?.percentageString ?? defaultContext.tradeData.slippage.percentageString,
+          raw.tradeData?.slippage?.percentageString ?? defaultContext.tradeData.slippage.percentageString,
       },
     },
-    errorMessage: raw?.errorMessage ?? defaultContext.errorMessage,
-    apiErrorMessage: raw?.apiErrorMessage ?? defaultContext.apiErrorMessage,
+    errorMessage: raw.errorMessage ?? defaultContext.errorMessage,
+    apiErrorMessage: raw.apiErrorMessage ?? defaultContext.apiErrorMessage,
   };
 };
 

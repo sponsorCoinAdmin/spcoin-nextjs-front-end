@@ -1,8 +1,11 @@
-// File: lib/context/hooks/nestedHooks/useAmounts.ts
-
 'use client';
 
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
+const debugLog = createDebugLogger('useAmounts', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Hook to get and set the sell amount in the exchange context.
@@ -15,16 +18,14 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
     const token = exchangeContext.tradeData.sellTokenContract;
     if (!token) return;
 
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: {
-        ...prev.tradeData,
-        sellTokenContract: {
-          ...prev.tradeData.sellTokenContract!,
-          amount,
-        },
-      },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      debugLog.log('🪙 Updating sellAmount to:', amount);
+      if (cloned.tradeData.sellTokenContract) {
+        cloned.tradeData.sellTokenContract.amount = amount;
+      }
+      return cloned;
+    });
   };
 
   return [sellAmount, setSellAmount];
@@ -41,16 +42,14 @@ export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
     const token = exchangeContext.tradeData.buyTokenContract;
     if (!token) return;
 
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: {
-        ...prev.tradeData,
-        buyTokenContract: {
-          ...prev.tradeData.buyTokenContract!,
-          amount,
-        },
-      },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      debugLog.log('💰 Updating buyAmount to:', amount);
+      if (cloned.tradeData.buyTokenContract) {
+        cloned.tradeData.buyTokenContract.amount = amount;
+      }
+      return cloned;
+    });
   };
 
   return [buyAmount, setBuyAmount];

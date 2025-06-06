@@ -1,10 +1,16 @@
-'use client'
+'use client';
 
 import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { Address } from 'viem';
+
 import { useExchangeContext } from '../useExchangeContext';
 import { useWagmiERC20TokenBalanceOf } from '@/lib/wagmi/wagmiERC20ClientRead';
-import { Address } from 'viem';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_BALANCES === 'true';
+const debugLog = createDebugLogger('useExchangeTokenBalances', DEBUG_ENABLED, LOG_TIME);
 
 export const useExchangeTokenBalances = () => {
   const { address } = useAccount();
@@ -17,30 +23,36 @@ export const useExchangeTokenBalances = () => {
   const sellBalance = useWagmiERC20TokenBalanceOf(address as Address, sellToken?.address as Address);
 
   useEffect(() => {
+    if (!address) return;
+
     const updates: Partial<typeof exchangeContext['tradeData']> = {};
 
-    if (buyToken?.address && buyToken) {
+    if (buyToken?.address) {
       updates.buyTokenContract = {
         ...buyToken,
         balance: buyBalance ?? 0n,
       };
+      debugLog.log('🔵 Updated buyToken balance:', updates.buyTokenContract.balance.toString());
     }
 
-    if (sellToken?.address && sellToken) {
+    if (sellToken?.address) {
       updates.sellTokenContract = {
         ...sellToken,
         balance: sellBalance ?? 0n,
       };
+      debugLog.log('🟠 Updated sellToken balance:', updates.sellTokenContract.balance.toString());
     }
 
     if (Object.keys(updates).length > 0) {
-      setExchangeContext(prev => ({
-        ...prev,
-        tradeData: {
-          ...prev.tradeData,
+      debugLog.log('💾 Applying token balance updates to context');
+      setExchangeContext(prev => {
+        const next = structuredClone(prev);
+        next.tradeData = {
+          ...next.tradeData,
           ...updates,
-        },
-      }));
+        };
+        return next;
+      });
     }
-  }, [buyBalance, sellBalance, buyToken, sellToken, setExchangeContext]);
+  }, [address, buyBalance, sellBalance, buyToken, sellToken, setExchangeContext]);
 };

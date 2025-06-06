@@ -1,5 +1,7 @@
+// File: app/(menu)/Exchange/index.tsx
+
 import PriceView from "./Price/index";
-import { EXCHANGE_STATE } from "@/lib/structure/types";
+import { EXCHANGE_STATE } from "@/lib/structure";
 import React from 'react';
 
 let setExchangeState: (value:EXCHANGE_STATE) => void;

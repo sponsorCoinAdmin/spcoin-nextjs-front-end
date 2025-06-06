@@ -1,8 +1,12 @@
 'use client';
 
-import React, { createContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { useChainId, useAccount } from 'wagmi';
-import { saveExchangeContext } from '@/lib/context/ExchangeHelpers';
+import {
+  saveExchangeContext,
+  loadStoredExchangeContext,
+  sanitizeExchangeContext,
+} from '@/lib/context/ExchangeHelpers';
 
 import {
   ExchangeContext as ExchangeContextTypeOnly,
@@ -12,10 +16,11 @@ import {
   WalletAccount,
 } from '@/lib/structure';
 
-import {
-  loadStoredExchangeContext,
-  sanitizeExchangeContext,
-} from '@/lib/context/ExchangeHelpers';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
+const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME);
 
 export type ExchangeContextType = {
   exchangeContext: ExchangeContextTypeOnly;
@@ -27,7 +32,6 @@ export type ExchangeContextType = {
   setTradeDirection: (type: TRADE_DIRECTION) => void;
   setSlippageBps: (bps: number) => void;
   setRecipientAccount: (wallet: WalletAccount | undefined) => void;
-
   errorMessage: ErrorMessage | undefined;
   setErrorMessage: (error: ErrorMessage | undefined) => void;
   apiErrorMessage: ErrorMessage | undefined;
@@ -43,94 +47,102 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const [contextState, setContextState] = useState<ExchangeContextTypeOnly | null>(null);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
+  const hasInitializedRef = useRef(false);
 
   const setExchangeContext = (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => {
     setContextState((prev) => {
-      const updated = prev ? updater(prev) : prev;
-      if (updated) saveExchangeContext(updated);
+      debugLog.log('🧪 setExchangeContext triggered');
+      const updated = prev ? updater(structuredClone(prev)) : prev;
+      if (updated) {
+        debugLog.log('📦 Saving exchangeContext to localStorage...');
+        saveExchangeContext(updated);
+      }
       return updated;
     });
   };
 
   const setRecipientAccount = (wallet: WalletAccount | undefined) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      accounts: {
-        ...prev.accounts,
-        recipientAccount: wallet,
-      },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      cloned.accounts.recipientAccount = wallet;
+      return cloned;
+    });
   };
 
   const setSellAmount = (amount: bigint) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: {
-        ...prev.tradeData,
-        sellTokenContract: prev.tradeData.sellTokenContract
-          ? { ...prev.tradeData.sellTokenContract, amount }
-          : undefined,
-      },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      if (cloned.tradeData.sellTokenContract) {
+        cloned.tradeData.sellTokenContract.amount = amount;
+      }
+      return cloned;
+    });
   };
 
   const setBuyAmount = (amount: bigint) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: {
-        ...prev.tradeData,
-        buyTokenContract: prev.tradeData.buyTokenContract
-          ? { ...prev.tradeData.buyTokenContract, amount }
-          : undefined,
-      },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      if (cloned.tradeData.buyTokenContract) {
+        cloned.tradeData.buyTokenContract.amount = amount;
+      }
+      return cloned;
+    });
   };
 
   const setSellTokenContract = (contract: TokenContract | undefined) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: { ...prev.tradeData, sellTokenContract: contract },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      cloned.tradeData.sellTokenContract = contract;
+      return cloned;
+    });
   };
 
   const setBuyTokenContract = (contract: TokenContract | undefined) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: { ...prev.tradeData, buyTokenContract: contract },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      cloned.tradeData.buyTokenContract = contract;
+      return cloned;
+    });
   };
 
   const setTradeDirection = (type: TRADE_DIRECTION) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: { ...prev.tradeData, tradeDirection: type },
-    }));
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      cloned.tradeData.tradeDirection = type;
+      return cloned;
+    });
   };
 
   const setSlippageBps = (bps: number) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.trace(`🕵️‍♂️ setSlippageBps called with`, bps);
-    }
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: { ...prev.tradeData, slippageBps: bps },
-    }));
+    debugLog.log('🧾 setSlippageBps:', bps);
+    setExchangeContext((prev) => {
+      const cloned = structuredClone(prev);
+      cloned.tradeData.slippage.bps = bps;
+      return cloned;
+    });
   };
 
   useEffect(() => {
-    if (contextState) return;
+    if (hasInitializedRef.current || contextState) return;
+
+    hasInitializedRef.current = true;
+    debugLog.log('🔁 Initializing ExchangeContext...');
 
     const init = async () => {
       const chain = chainId ?? 1;
-      const stored = loadStoredExchangeContext();
-      const sanitized = sanitizeExchangeContext(stored, chain);
 
-      if (!sanitized.tradeData.slippageBps || sanitized.tradeData.slippageBps <= 0) {
-        console.warn('⚠️ No valid slippageBps set — defaulting may be required.', sanitized.tradeData.slippageBps);
+      debugLog.log('🔍 Attempting to load from localStorage...');
+      const stored = loadStoredExchangeContext();
+
+      const sanitized = sanitizeExchangeContext(stored, chain);
+      debugLog.log('🧼 Sanitized context:', sanitized);
+
+      if (!sanitized.tradeData.slippage?.bps || sanitized.tradeData.slippage.bps <= 0) {
+        debugLog.warn('⚠️ Invalid slippageBps — defaulting may be required.');
       }
 
-      // Inject connected account if available
       if (isConnected && address) {
+        debugLog.log('🔌 Injecting connected account:', address);
         try {
           const res = await fetch(`/assets/accounts/${address}/wallet.json`);
           const metadata = res.ok ? await res.json() : null;
@@ -147,8 +159,10 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
                 description: `Account ${address} not registered on this site`,
                 logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
               };
+
+          debugLog.log('✅ Connected account metadata:', sanitized.accounts.connectedAccount);
         } catch (err) {
-          console.error('⚠️ Failed to load wallet.json:', err);
+          debugLog.error('⛔ Failed to load wallet.json:', err);
         }
       }
 

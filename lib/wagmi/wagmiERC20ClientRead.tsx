@@ -8,7 +8,7 @@ import { TokenContract, ContractRecs } from '@/lib/structure'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
-  console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
+  // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
   const wagmiBalanceOfRec = useReadContract({
     abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,

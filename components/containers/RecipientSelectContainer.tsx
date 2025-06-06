@@ -8,7 +8,7 @@ import { clsx } from "clsx";
 
 import cog_png from "@/public/assets/miscellaneous/cog.png";
 
-import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure/types";
+import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure";
 import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/hooks';
 import RecipientSelectDropDown from "./RecipientSelectDropDown";
@@ -29,20 +29,17 @@ const AccountSelectContainer: React.FC = () => {
   useDisplaySpCoinContainers(spCoinDisplay);
 
   useEffect(() => {
-  if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
-    setExchangeContext(prev => ({
-      ...prev,
-      accounts: {
-        ...prev.accounts,
-        recipientAccount,
-      },
-    }));
-  }
-}, [recipientAccount, exchangeContext, setExchangeContext]);
-
+    if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
+      setExchangeContext(prev => {
+        const cloned = structuredClone(prev);
+        cloned.accounts.recipientAccount = recipientAccount;
+        return cloned;
+      });
+    }
+  }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const closeRecipientSelectDropDown = useCallback(() => {
-    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER );
+    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER);
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
 
