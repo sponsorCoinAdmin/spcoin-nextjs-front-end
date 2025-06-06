@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   useSellAmount,
   useBuyAmount,
   useSellTokenContract,
   useBuyTokenContract,
   useTradeDirection,
-  useSlippageBps,
+  useSlippage,
   useErrorMessage,
   useApiErrorMessage,
   useSpCoinDisplay,
@@ -24,7 +24,7 @@ export default function ExchangeContextUsageExamples() {
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
-  const [slippageBps, setSlippageBps] = useSlippageBps();
+  const { data: slippage, setSlippage, setBps } = useSlippage();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
@@ -42,7 +42,9 @@ export default function ExchangeContextUsageExamples() {
       <pre>Sell Token Address: {sellTokenAddress ?? 'None'}</pre>
       <pre>Buy Token Address: {buyTokenAddress ?? 'None'}</pre>
       <pre>Trade Direction: {tradeDirection}</pre>
-      <pre>Slippage Bps: {slippageBps}</pre>
+      <pre>Slippage Bps: {slippage.bps}</pre>
+      <pre>Slippage Percentage: {slippage.percentage}</pre>
+      <pre>Slippage Percentage String: {slippage.percentageString}</pre>
       <pre>spCoinDisplay: {spCoinDisplay}</pre>
       <pre>Trade Data: {JSON.stringify(tradeData, null, 2)}</pre>
       <pre>Error Message: {JSON.stringify(errorMessage)}</pre>
@@ -91,8 +93,28 @@ export default function ExchangeContextUsageExamples() {
         Set Trade Direction: BUY_EXACT_IN
       </button>
 
-      <button onClick={() => setSlippageBps(slippageBps + 10)}>
-        Increase Slippage
+      <button onClick={() => setBps(slippage.bps + 10)}>
+        Increase Slippage by 10bps
+      </button>
+
+      <button onClick={() => setBps(100)}>
+        Set Bps to 100 (1%)
+      </button>
+
+      <button onClick={() => setSlippage({
+        bps: 200,
+        percentage: 2.0,
+        percentageString: '2.00%',
+      })}>
+        Set Slippage to 2.00%
+      </button>
+
+      <button onClick={() => setSlippage({
+        bps: 50,
+        percentage: 0.5,
+        percentageString: '0.50%',
+      })}>
+        Set Slippage to 0.50%
       </button>
 
       <button

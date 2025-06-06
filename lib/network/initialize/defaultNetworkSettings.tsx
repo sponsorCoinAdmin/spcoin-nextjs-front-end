@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
 import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
@@ -7,7 +7,6 @@ import defaultSoliditySettings from '@/resources/data/networks/sepolia/initializ
 import { isLowerCase } from '../utils';
 import {
   TradeData,
-  SWAP_TYPE,
   TRADE_DIRECTION,
   ExchangeContext,
   NetworkElement,
@@ -18,7 +17,6 @@ import {
   POLYGON,
   SEPOLIA,
   API_TRADING_PROVIDER,
-  CONTAINER_TYPE,
 } from '@/lib/structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -26,17 +24,16 @@ const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_NETWORK_SETTINGS === 'true';
 const logger = createDebugLogger('NetworkSettings', DEBUG_ENABLED, LOG_TIME);
 
-const defaultInitialTradeData: Omit<TradeData, 'chainId'> = {
-  signer: undefined,
+const defaultInitialTradeData: TradeData = {
   tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT,
-  swapType: SWAP_TYPE.UNDEFINED,
-  slippageBps: 100,
   sellTokenContract: undefined,
   buyTokenContract: undefined,
   rateRatio: 0,
-  slippage: 0,
-  slippagePercentage: 0,
-  slippagePercentageString: ''
+  slippage: {
+    bps: 100,
+    percentage: 0,
+    percentageString: '0.00%',
+  },
 };
 
 const initialContext = () => {
@@ -54,15 +51,23 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
   const exchangeContext: ExchangeContext = {
     network: initialContextMap.get('networkHeader') as NetworkElement,
     accounts: {
+      signer: undefined, // ✅ FIXED: signer added to accounts
       recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
       agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
       sponsorAccount: undefined,
+      sponsorAccounts: [],
+      recipientAccounts: [],
+      agentAccounts: [],
     },
-    tradeData: { ...defaultInitialTradeData, chainId },
+    tradeData: {
+      ...defaultInitialTradeData,
+    },
     settings: {
-      spCoinDisplay: SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER ,
+      spCoinDisplay: SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER,
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-    }
+    },
+    errorMessage: undefined,
+    apiErrorMessage: undefined
   };
 
   logger.log('✅ [getInitialContext] InitialContext constructed:', exchangeContext);

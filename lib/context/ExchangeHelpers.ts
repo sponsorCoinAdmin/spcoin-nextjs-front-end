@@ -1,5 +1,3 @@
-// File: lib/context/ExchangeHelpers.ts
-
 'use client';
 
 import {
@@ -12,7 +10,6 @@ import {
   POLYGON,
   SEPOLIA,
   TRADE_DIRECTION,
-  SWAP_TYPE,
   NetworkElement,
   ExchangeContext,
 } from '@/lib/structure/types';
@@ -57,6 +54,8 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
     },
     accounts: {
+      signer: undefined,
+
       connectedAccount: undefined,
       sponsorAccount: undefined,
       recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
@@ -67,17 +66,18 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       agentAccounts: [],
     },
     tradeData: {
-      signer: undefined,
       tradeDirection: TRADE_DIRECTION.SELL_EXACT_OUT,
-      swapType: SWAP_TYPE.UNDEFINED,
-      slippageBps: 200,
       sellTokenContract: undefined,
       buyTokenContract: undefined,
       rateRatio: 1,
-      slippage: 0,
-      slippagePercentage: 0,
-      slippagePercentageString: '0.00%',
+      slippage: {
+        bps: 200,
+        percentage: 0,
+        percentageString: '0.00%',
+      },
     },
+    errorMessage: undefined,
+    apiErrorMessage: undefined,
   };
 };
 
@@ -94,6 +94,8 @@ export const sanitizeExchangeContext = (
     },
     network: raw?.network ?? defaultContext.network,
     accounts: {
+      signer: raw?.accounts?.signer ?? defaultContext.accounts.signer,
+
       connectedAccount: raw?.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
       sponsorAccount: raw?.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,
       recipientAccount: raw?.accounts?.recipientAccount ?? defaultContext.accounts.recipientAccount,
@@ -105,20 +107,18 @@ export const sanitizeExchangeContext = (
     },
     tradeData: {
       tradeDirection: raw?.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
-      swapType: raw?.tradeData?.swapType ?? defaultContext.tradeData.swapType,
-      slippageBps:
-        typeof raw?.tradeData?.slippageBps === 'number' && raw.tradeData.slippageBps > 0
-          ? raw.tradeData.slippageBps
-          : defaultContext.tradeData.slippageBps,
       sellTokenContract: raw?.tradeData?.sellTokenContract ?? defaultContext.tradeData.sellTokenContract,
       buyTokenContract: raw?.tradeData?.buyTokenContract ?? defaultContext.tradeData.buyTokenContract,
-      signer: raw?.tradeData?.signer ?? defaultContext.tradeData.signer,
       rateRatio: raw?.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
-      slippage: raw?.tradeData?.slippage ?? defaultContext.tradeData.slippage,
-      slippagePercentage: raw?.tradeData?.slippagePercentage ?? defaultContext.tradeData.slippagePercentage,
-      slippagePercentageString:
-        raw?.tradeData?.slippagePercentageString ?? defaultContext.tradeData.slippagePercentageString,
+      slippage: {
+        bps: raw?.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
+        percentage: raw?.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
+        percentageString:
+          raw?.tradeData?.slippage?.percentageString ?? defaultContext.tradeData.slippage.percentageString,
+      },
     },
+    errorMessage: raw?.errorMessage ?? defaultContext.errorMessage,
+    apiErrorMessage: raw?.apiErrorMessage ?? defaultContext.apiErrorMessage,
   };
 };
 

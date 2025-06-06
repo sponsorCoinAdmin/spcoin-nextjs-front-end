@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useSlippageBps } from '@/lib/context/hooks/contextHooks';
+import { useSlippage } from '@/lib/context/hooks/contextHooks';
 
 function SlippageBpsRadioButtons() {
-  const [slippageBps, setSlippageBps] = useSlippageBps();
+  const { data: slippage, setBps } = useSlippage();
   const [value, setValue] = useState('');
 
   useEffect(() => {
-    const newValue = (slippageBps).toString();
+    const newValue = (slippage.bps).toString();
     setValue(newValue);
-  }, [slippageBps]);
+  }, [slippage.bps]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     const bps = Math.round(parseFloat(newValue));
     setValue(newValue);
-    if (bps !== slippageBps) {
-      console.log('📦 setSlippageBps called with', bps);
-      setSlippageBps(bps);
+    if (bps !== slippage.bps) {
+      console.log('📦 setBps called with', bps);
+      setBps(bps);
     }
   };
 

@@ -24,36 +24,22 @@ import {
   CONTAINER_TYPE,
   SP_COIN_DISPLAY,
   TRADE_DIRECTION,
-  SWAP_TYPE,
   API_TRADING_PROVIDER,
   ExchangeContext,
 } from '@/lib/structure/types';
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap = {
-    [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.UNDEFINED',
+    [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.EXCHANGE_ROOT',
     [SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER',
     [SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG',
     [SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG]: 'SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG',
     [SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON]: 'SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON',
   };
-  const containerTypeMap = {
-    [CONTAINER_TYPE.SELL_SELECT_CONTAINER]: 'CONTAINER_TYPE.SELL_SELECT_CONTAINER',
-    [CONTAINER_TYPE.BUY_SELECT_CONTAINER]: 'CONTAINER_TYPE.BUY_SELECT_CONTAINER',
-  };
 
   const tradeDirectionMap = {
     [TRADE_DIRECTION.SELL_EXACT_OUT]: 'TRADE_DIRECTION.SELL_EXACT_OUT',
     [TRADE_DIRECTION.BUY_EXACT_IN]: 'TRADE_DIRECTION.BUY_EXACT_IN',
-  };
-
-  const swapTypeMap = {
-    [SWAP_TYPE.SWAP]: 'SWAP_TYPE.SWAP',
-    [SWAP_TYPE.SWAP_UNWRAP]: 'SWAP_TYPE.SWAP_UNWRAP',
-    [SWAP_TYPE.UNDEFINED]: 'SWAP_TYPE.UNDEFINED',
-    [SWAP_TYPE.UNWRAP]: 'SWAP_TYPE.UNWRAP',
-    [SWAP_TYPE.WRAP]: 'SWAP_TYPE.WRAP',
-    [SWAP_TYPE.WRAP_SWAP]: 'SWAP_TYPE.WRAP_SWAP',
   };
 
   const apiProviderMap = {
@@ -62,7 +48,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   };
 
   const { spCoinDisplay, apiTradingProvider } = ctx.settings;
-  const { tradeDirection, swapType, ...restTradeData } = ctx.tradeData;
+  const { tradeDirection, slippage, ...restTradeData } = ctx.tradeData;
 
   return {
     ...ctx,
@@ -77,8 +63,8 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
     },
     tradeData: {
       ...restTradeData,
+      slippage,
       [`tradeDirection (${tradeDirection})`]: tradeDirectionMap[tradeDirection],
-      [`swapType (${swapType})`]: swapTypeMap[swapType],
     },
   };
 }

@@ -34,6 +34,12 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     return 'text-green-400';
   };
 
+  const getPathLabel = (path: string): string => {
+    if (path === 'root') return 'Exchange Context';
+    if (path === 'tradeData.slippage') return 'slippage'; // ✅ override label for slippage
+    return path;
+  };
+
   const renderValue = (value: any, key: string, currentPath: string) => {
     if (value && typeof value === 'object') {
       return (
@@ -58,7 +64,7 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     <div className="ml-2">
       <div className="cursor-pointer" onClick={toggle}>
         <span className="text-green-400">{isCollapsed ? '[+]' : '[-]'}</span>{' '}
-        <span className="text-white font-semibold">{path === 'root' ? 'Exchange Context' : path}</span>
+        <span className="text-white font-semibold">{getPathLabel(path)}</span>
       </div>
       {!isCollapsed && (
         <div className="ml-4">

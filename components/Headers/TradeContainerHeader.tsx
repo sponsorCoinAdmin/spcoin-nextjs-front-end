@@ -5,11 +5,10 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useExchangeContext, useSlippageBps } from '@/lib/context/hooks/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
 import { Settings } from 'lucide-react'; // replaces AntD icon
 
 const TradeContainerHeader = () => {
-  const [slippageBps, setSlippageBps] = useSlippageBps();
   const { exchangeContext } = useExchangeContext();
 
   return (

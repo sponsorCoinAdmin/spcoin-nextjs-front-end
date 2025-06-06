@@ -1,3 +1,4 @@
+import { JsonRpcSigner } from "ethers";
 import { Account, Address } from "viem";
 
 export const publicWalletPath: string = "assets/accounts";
@@ -121,16 +122,6 @@ enum STATUS {
   INFO
 }
 
-// Swap Types
-enum SWAP_TYPE {
-  SWAP,
-  SWAP_UNWRAP,
-  UNDEFINED,
-  UNWRAP,
-  WRAP,
-  WRAP_SWAP
-}
-
 // Transaction Types
 enum TRADE_DIRECTION {
   SELL_EXACT_OUT,
@@ -168,20 +159,22 @@ interface PriceRequestParams {
 }
 
 type ContractRecs = {
-  decimalRec: any;
-  nameRec: any;
-  symbolRec: any;
-  totalSupplyRec: any;
+  decimalRec: number;
+  nameRec: string;
+  symbolRec: string;
+  totalSupplyRec: bigint;
 };
 
 type ErrorMessage = {
   errCode: number;
-  msg: any;
+  msg: string;
   source: string;
   status: STATUS;
 };
 
 type Accounts = {
+  signer: JsonRpcSigner | undefined;
+
   connectedAccount?: WalletAccount;
   sponsorAccount?: WalletAccount;
   recipientAccount?: WalletAccount;
@@ -198,29 +191,24 @@ type Settings = {
 };
 
 type NetworkElement = {
-  readonly chainId: number;
-  readonly logoURL: string;
-  readonly name: string;
-  readonly symbol: string;
-  readonly url: string;
+  chainId: number;
+  logoURL: string;
+  name: string;
+  symbol: string;
+  url: string;
 };
 
 type Slippage = {
-  readonly bps: number;
-  readonly percentage: number;
-  readonly percentageString: string;
+  bps: number;
+  percentage: number;
+  percentageString: string;
 }
 
 type TradeData = {
   buyTokenContract?: TokenContract;
   sellTokenContract?: TokenContract;
-  signer: any;
-  slippageBps: number;
   rateRatio: number;
-  slippage: number;
-  slippagePercentage: number;
-  slippagePercentageString: string;
-  swapType: SWAP_TYPE;
+  slippage: Slippage;
   tradeDirection: TRADE_DIRECTION;
 };
 
@@ -233,7 +221,7 @@ type TokenContract = {
   logoURL?: string;
   name?: string;
   symbol?: string;
-  totalSupply: any;
+  totalSupply: bigint;
 };
 
 type ExchangeContext = {
@@ -241,9 +229,9 @@ type ExchangeContext = {
   network: NetworkElement;
   settings: Settings;
   tradeData: TradeData;
+  errorMessage: ErrorMessage | undefined;
+  apiErrorMessage: ErrorMessage | undefined; 
 };
-
-
 
 // Exports
 export {
@@ -253,7 +241,6 @@ export {
   FEED_TYPE,
   SP_COIN_DISPLAY,
   STATUS,
-  SWAP_TYPE,
   TRADE_DIRECTION,
   ERROR_CODES,
   BASE,

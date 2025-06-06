@@ -10,7 +10,7 @@ import {
   useBuyAmount,
   useExchangeContext,
   useSellAmount,
-  useSlippageBps,
+  useSlippage,
   useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract,
@@ -46,7 +46,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
-  const [slippageBps] = useSlippageBps();
+  const { data: slippage } = useSlippage();
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
   const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
   const [spCoinDisplay] = useSpCoinDisplay();
@@ -115,10 +115,10 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   const buySellText = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
     ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-        ? `You Pay ± ${slippageBps / 100}%`
+        ? `You Pay ± ${slippage.percentageString}`
         : `You Exactly Pay:`)
     : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-        ? `You Receive ± ${slippageBps / 100}%`
+        ? `You Receive ± ${slippage.percentageString}`
         : `You Exactly Receive:`);
 
   const formattedBalance = tokenContract && tokenContract.balance !== undefined
