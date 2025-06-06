@@ -1,4 +1,4 @@
-import {  POLYGON, TokenContract } from '@/lib/structure/types'
+import {  POLYGON, TokenContract } from '@/lib/structure'
  
  const defaultSellToken: TokenContract = {
    chainId: POLYGON,

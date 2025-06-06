@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
-import { CONTAINER_TYPE } from '@/lib/structure/types';
+import { CONTAINER_TYPE } from '@/lib/structure';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 

@@ -1,8 +1,8 @@
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useSpCoinDisplay } from '@/lib/context/hooks';
 import AccountSelectContainer from '@/components/containers/RecipientSelectContainer';
 
 const AddSponsorshipButton = () => {

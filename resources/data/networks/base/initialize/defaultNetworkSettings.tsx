@@ -1,4 +1,4 @@
-import {  BASE, TokenContract } from '@/lib/structure/types'
+import {  BASE, TokenContract } from '@/lib/structure'
  
  const defaultSellToken: TokenContract = {
    chainId: BASE,

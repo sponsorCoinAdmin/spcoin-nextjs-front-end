@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { defaultMissingImage } from '@/lib/network/utils'
-import { publicWalletPath, WalletAccount } from '@/lib/structure/types'
+import { publicWalletPath, WalletAccount } from '@/lib/structure'
 
 export default function Page() {
   const [wallets, setWallets] = useState<WalletAccount[]>([])

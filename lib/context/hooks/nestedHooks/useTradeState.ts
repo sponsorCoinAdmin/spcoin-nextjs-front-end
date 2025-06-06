@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import {
   TRADE_DIRECTION,
   TradeData,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

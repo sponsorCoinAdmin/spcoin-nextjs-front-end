@@ -1,6 +1,6 @@
 // File: lib/context/hooks/nestedHooks/useNetwork.ts
 
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { useChainId } from 'wagmi';
 import { useEffect } from 'react';
 import {

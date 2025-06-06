@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSlippage } from '@/lib/context/hooks/contextHooks';
+import { useSlippage } from '@/lib/context/hooks';
 
 function SlippageBpsRadioButtons() {
   const { data: slippage, setBps } = useSlippage();

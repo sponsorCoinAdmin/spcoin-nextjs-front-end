@@ -1,4 +1,4 @@
-import {  ETHEREUM, TokenContract } from '@/lib/structure/types'
+import {  ETHEREUM, TokenContract } from '@/lib/structure'
  
  const defaultSellToken: TokenContract = {
    chainId: ETHEREUM,

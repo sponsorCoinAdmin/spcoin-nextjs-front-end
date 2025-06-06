@@ -5,7 +5,7 @@ import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { defaultMissingImage, getAccountLogo } from '@/lib/network/utils';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
-import { WalletAccount } from '@/lib/structure/types';
+import { WalletAccount } from '@/lib/structure';
 
 const walletOptions = ['All', 'Recipients', 'Agents'] as const;
 

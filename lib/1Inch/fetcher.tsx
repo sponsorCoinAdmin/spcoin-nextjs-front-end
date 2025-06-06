@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure/types';
+import { TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
 import useSWR from 'swr';
 import {
   useApiErrorMessage,
@@ -8,7 +8,7 @@ import {
   useExchangeContext,
   useSellAmount,
   useTradeData,
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 import { useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import { useAccount, useChainId } from 'wagmi';

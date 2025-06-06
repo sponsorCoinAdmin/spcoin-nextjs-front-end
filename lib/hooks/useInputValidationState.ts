@@ -13,15 +13,15 @@ import {
   CONTAINER_TYPE,
   getInputStateString,
   FEED_TYPE,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 
 import {
   useBuyTokenAddress,
   useSellTokenAddress,
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useMappedTokenContract } from '@/lib/context/hooks/contextHooks';
+import { useMappedTokenContract } from '@/lib/context/hooks';
 import { getLogoURL } from '@/lib/network/utils';
 
 type AgentAccount = WalletAccount;

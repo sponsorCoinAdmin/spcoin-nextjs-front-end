@@ -1,6 +1,6 @@
 'use client';
 
-import { useBuyAmount, useExchangeContext, useSellAmount } from '@/lib/context/hooks/contextHooks';
+import { useBuyAmount, useExchangeContext, useSellAmount } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useAccount } from 'wagmi';
 import { useCallback } from 'react';

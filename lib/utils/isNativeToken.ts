@@ -1,7 +1,7 @@
 // File: lib/utils/isNativeToken.ts
 
 import { Address } from 'viem';
-import { TokenContract } from '@/lib/structure/types';
+import { TokenContract } from '@/lib/structure';
 
 const NATIVE_TOKEN_ADDRESSES: Record<number, Address> = {
   1: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', // Ethereum Mainnet

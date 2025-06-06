@@ -6,7 +6,7 @@ import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlass
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png'
 import info_png from '@/public/assets/miscellaneous/info1.png'
 import Image from 'next/image'
-import { FEED_TYPE, TokenContract } from '@/lib/structure/types';
+import { FEED_TYPE, TokenContract } from '@/lib/structure';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/guiUtils'

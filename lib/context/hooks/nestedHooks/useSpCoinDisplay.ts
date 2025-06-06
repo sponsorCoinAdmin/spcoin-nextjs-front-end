@@ -1,7 +1,7 @@
 // File: lib/context/hooks/nestedHooks/useSpCoinDisplay.ts
 
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { useExchangeContext } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

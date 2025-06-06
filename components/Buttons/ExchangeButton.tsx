@@ -6,7 +6,7 @@ import {
   useErrorMessage,
   useExchangeContext,
   useSellAmount
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 import {
   BUTTON_TYPE,
   STATUS,
@@ -14,7 +14,7 @@ import {
   TokenContract,
   TradeData,
   ExchangeContext
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import swap from '@/lib/spCoin/swap';
 import {
   isActiveAccountBuyToken,

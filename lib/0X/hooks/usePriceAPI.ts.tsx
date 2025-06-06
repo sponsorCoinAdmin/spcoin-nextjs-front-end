@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure/types';
+import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
 import { stringify } from 'qs';
 import useSWR from 'swr';
 import { isAddress } from 'viem';
@@ -10,7 +10,7 @@ import {
   useExchangeContext,
   useSellAmount,
   useTradeData
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';

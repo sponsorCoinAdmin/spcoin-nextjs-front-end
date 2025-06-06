@@ -1,0 +1,7 @@
+{
+  "directory": ["lib/structure", "lib/hooks", "lib/context/hooks"],
+  "delete": true,
+  "location": "top",
+  "structure": "flat",
+  "barrelName": "index"
+}

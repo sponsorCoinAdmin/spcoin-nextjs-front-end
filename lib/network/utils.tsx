@@ -1,4 +1,4 @@
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks'
+import { useExchangeContext } from '@/lib/context/hooks'
 
 import chainIdList from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultBaseSettings } from '@/resources/data/networks/base/initialize/defaultNetworkSettings';
@@ -18,7 +18,7 @@ import {
   TokenContract,
   TradeData,
   WalletAccount
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import { isAddress } from 'viem'
 import { createDebugLogger } from '../utils/debugLogger';
 

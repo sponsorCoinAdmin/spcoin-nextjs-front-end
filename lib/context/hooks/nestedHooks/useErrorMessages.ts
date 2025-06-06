@@ -1,7 +1,7 @@
 // File: lib/context/hooks/nestedHooks/useErrorMessages.ts
 
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
-import { ErrorMessage } from '@/lib/structure/types';
+import { useExchangeContext } from '@/lib/context/hooks';
+import { ErrorMessage } from '@/lib/structure';
 
 /**
  * Access and update the generic user-facing error message.

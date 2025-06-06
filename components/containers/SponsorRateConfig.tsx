@@ -4,8 +4,8 @@ import React from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useSpCoinDisplay } from '@/lib/context/hooks';
 
 function setRateRatios(newRate: string) {
   const numRate = Number(newRate);

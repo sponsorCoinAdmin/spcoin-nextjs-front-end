@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo } from 'react';
 import styles from '@/styles/Header.module.css';
 import { ChevronDown } from 'lucide-react';
-import { NetworkElement } from '@/lib/structure/types';
+import { NetworkElement } from '@/lib/structure';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 import networks from '@/lib/network/initialize/networks.json';
 

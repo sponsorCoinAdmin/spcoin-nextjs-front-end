@@ -10,7 +10,7 @@ import {
   STATUS,
   ERROR_CODES,
   TRADE_DIRECTION,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI.ts';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import BuySellSwapArrowButton, { useBuySellSwap } from '@/components/Buttons/BuySellSwapArrowButton';
@@ -24,7 +24,7 @@ import {
   useExchangeContext,
   useSellAmount,
   useSellTokenContract,
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { mutate } from 'swr';
 

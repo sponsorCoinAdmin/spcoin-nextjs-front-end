@@ -12,7 +12,7 @@ import {
   TRADE_DIRECTION,
   NetworkElement,
   ExchangeContext,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
 import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';

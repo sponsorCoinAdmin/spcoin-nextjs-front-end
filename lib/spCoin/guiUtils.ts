@@ -1,5 +1,5 @@
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
-import { ExchangeContext, TokenContract } from '@/lib/structure/types'
+import { ExchangeContext, TokenContract } from '@/lib/structure'
 import { toggleElement } from './guiControl'
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
 import { isAddress } from 'ethers'

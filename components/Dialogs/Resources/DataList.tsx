@@ -14,7 +14,7 @@ import {
   SEPOLIA,
   TokenContract,
   WalletAccount,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import {
   defaultMissingImage,
   getLogoURL,

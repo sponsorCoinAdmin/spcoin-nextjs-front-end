@@ -2,8 +2,8 @@
 
 'use client';
 
-import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure/types';
+import { useSpCoinDisplay } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useEffect } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

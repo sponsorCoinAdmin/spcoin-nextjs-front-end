@@ -11,7 +11,7 @@ import {
   CONTAINER_TYPE,
   TokenContract,
   InputState,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useChainId } from 'wagmi';

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAccount } from 'wagmi';
-import { WalletAccount } from '@/lib/structure/types';
+import { WalletAccount } from '@/lib/structure';
 
 const ConnectedAccountContext = createContext<WalletAccount | undefined>(undefined);
 

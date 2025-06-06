@@ -3,7 +3,7 @@
 'use client';
 
 import React from 'react';
-import { InputState } from '@/lib/structure/types';
+import { InputState } from '@/lib/structure';
 
 interface Props {
   inputState: InputState;

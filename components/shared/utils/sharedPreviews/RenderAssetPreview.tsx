@@ -2,7 +2,7 @@
 
 import React from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
-import { InputState, TokenContract, WalletAccount } from '@/lib/structure/types';
+import { InputState, TokenContract, WalletAccount } from '@/lib/structure';
 
 interface Props<T extends TokenContract | WalletAccount> {
   validatedAsset: T | undefined;

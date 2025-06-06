@@ -8,7 +8,7 @@ import {
   TokenContract,
   WalletAccount,
   CONTAINER_TYPE,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import HexAddressInput from '@/components/shared/HexAddressInput';

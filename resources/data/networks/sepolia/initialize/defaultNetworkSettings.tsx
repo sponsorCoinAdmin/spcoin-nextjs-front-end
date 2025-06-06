@@ -1,4 +1,4 @@
-import {  SEPOLIA, TokenContract } from '@/lib/structure/types'
+import {  SEPOLIA, TokenContract } from '@/lib/structure'
  
  const defaultSellToken: TokenContract = {
    chainId: SEPOLIA,

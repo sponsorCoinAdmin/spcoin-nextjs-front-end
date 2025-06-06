@@ -17,7 +17,7 @@ import {
   POLYGON,
   SEPOLIA,
   API_TRADING_PROVIDER,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME: boolean = false;

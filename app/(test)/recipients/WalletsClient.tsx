@@ -1,6 +1,6 @@
 'use client'
 
-import { WalletAccount, publicWalletPath } from '@/lib/structure/types'
+import { WalletAccount, publicWalletPath } from '@/lib/structure'
 import { defaultMissingImage } from '@/lib/network/utils'
 
 export default function WalletsClient({ wallets }: { wallets: WalletAccount[] }) {

@@ -9,11 +9,11 @@ import {
   FEED_TYPE,
   TokenContract,
   WalletAccount,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 import {
   useBuyTokenContract,
   useSellTokenContract,
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 
 // ---------------------------------------------
 // Base Modal Structure

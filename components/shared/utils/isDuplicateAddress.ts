@@ -1,6 +1,6 @@
 // File: lib/spCoin/isDuplicateAddress.ts
 
-import { TokenContract } from '@/lib/structure/types';
+import { TokenContract } from '@/lib/structure';
 
 /**
  * Case-insensitive check for whether two Ethereum addresses are equal.

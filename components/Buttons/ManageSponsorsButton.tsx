@@ -1,5 +1,5 @@
 import styles from '@/styles/Exchange.module.css';
-import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure/types';
+import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure';
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
 import { useState, useEffect } from 'react';
 

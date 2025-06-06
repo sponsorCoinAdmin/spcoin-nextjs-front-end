@@ -9,7 +9,7 @@ import {
   POLYGON,
   SEPOLIA,
   TokenContract,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).

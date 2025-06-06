@@ -10,7 +10,7 @@ import {
   TokenContract,
   ErrorMessage,
   WalletAccount,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 
 import {
   loadStoredExchangeContext,

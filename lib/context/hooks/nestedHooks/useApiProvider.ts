@@ -1,7 +1,7 @@
 // File: lib/context/hooks/nestedHooks/useApiProvider.ts
 
 import { useExchangeContext } from '../useExchangeContext';
-import { API_TRADING_PROVIDER } from '@/lib/structure/types';
+import { API_TRADING_PROVIDER } from '@/lib/structure';
 
 export const useApiProvider = (): [API_TRADING_PROVIDER, (provider: API_TRADING_PROVIDER) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();

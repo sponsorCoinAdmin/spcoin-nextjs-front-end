@@ -1,5 +1,5 @@
 // lib/utils/isWalletAccount.ts
-import { WalletAccount } from '@/lib/structure/types';
+import { WalletAccount } from '@/lib/structure';
 
 export function isWalletAccount(obj: any): obj is WalletAccount {
   return (

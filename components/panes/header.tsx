@@ -13,7 +13,7 @@ import {
   useBuyTokenContract,
   useSellTokenContract,
   useExchangeContext,
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

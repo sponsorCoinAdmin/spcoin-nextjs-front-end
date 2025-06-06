@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
-import { WalletAccount, InputState } from '@/lib/structure/types';
+import { WalletAccount, InputState } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 

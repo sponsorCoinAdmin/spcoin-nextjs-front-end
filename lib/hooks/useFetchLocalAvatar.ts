@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { InputState } from '@/lib/structure/types';
+import { InputState } from '@/lib/structure';
 import { useChainId } from 'wagmi';
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';

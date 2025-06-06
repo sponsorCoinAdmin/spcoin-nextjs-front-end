@@ -1,4 +1,4 @@
-import {  HARDHAT, TokenContract } from '@/lib/structure/types'
+import {  HARDHAT, TokenContract } from '@/lib/structure'
  
  const defaultSellToken: TokenContract = {
    chainId: HARDHAT,

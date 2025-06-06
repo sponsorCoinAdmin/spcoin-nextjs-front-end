@@ -10,9 +10,9 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure/types';
-import { useSpCoinDisplay } from '@/lib/context/hooks/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useSpCoinDisplay } from '@/lib/context/hooks';
 
 const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();

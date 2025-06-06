@@ -14,9 +14,9 @@ import {
   useTradeData,
   useSellTokenAddress,
   useBuyTokenAddress,
-} from './hooks/contextHooks';
+} from './hooks';
 
-import { TRADE_DIRECTION, STATUS } from '@/lib/structure/types';
+import { TRADE_DIRECTION, STATUS } from '@/lib/structure';
 
 export default function ExchangeContextUsageExamples() {
   const [sellAmount, setSellAmount] = useSellAmount();

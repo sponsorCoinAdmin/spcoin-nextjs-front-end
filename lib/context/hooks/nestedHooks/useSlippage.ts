@@ -1,4 +1,4 @@
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 export type Slippage = {
   bps: number;

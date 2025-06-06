@@ -14,7 +14,7 @@ import {
   useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract,
-} from '@/lib/context/hooks/contextHooks';
+} from '@/lib/context/hooks';
 
 import AddSponsorship from '../Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from './TokenSelectDropDown';
@@ -29,7 +29,7 @@ import {
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
   SP_COIN_DISPLAY,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 
 import styles from '@/styles/Exchange.module.css';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';

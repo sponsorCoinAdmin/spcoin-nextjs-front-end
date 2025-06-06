@@ -1,7 +1,7 @@
 // File: lib/hooks/useBaseSelectShared.ts
 
 import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
-import { InputState } from '@/lib/structure/types';
+import { InputState } from '@/lib/structure';
 import { useEffect, useState } from 'react';
 import { isAddress } from 'viem';
 

@@ -5,7 +5,7 @@
 import { useReadContract, useReadContracts, useAccount, useChainId } from 'wagmi';
 import { erc20Abi } from 'viem';
 import { isAddress, Address } from 'viem';
-import { TokenContract } from '@/lib/structure/types';
+import { TokenContract } from '@/lib/structure';
 import { getNativeWrapAddress, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
 

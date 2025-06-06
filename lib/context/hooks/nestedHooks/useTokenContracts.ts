@@ -1,7 +1,7 @@
 // File: lib/context/hooks/nestedHooks/useTokenContracts.ts
 
-import { TokenContract, SP_COIN_DISPLAY, ExchangeContext } from '@/lib/structure/types';
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
+import { TokenContract, SP_COIN_DISPLAY, ExchangeContext } from '@/lib/structure';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';

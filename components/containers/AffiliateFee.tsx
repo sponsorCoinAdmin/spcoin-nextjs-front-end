@@ -1,6 +1,6 @@
 import PriceResponse from '@/lib/0X/typesV1';
-import { useBuyTokenContract } from '@/lib/context/hooks/contextHooks';
-import { TokenContract } from '@/lib/structure/types';
+import { useBuyTokenContract } from '@/lib/context/hooks';
+import { TokenContract } from '@/lib/structure';
 import { formatUnits } from 'ethers';
 import React from 'react';
 const AFFILIATE_FEE:any = process.env.NEXT_PUBLIC_AFFILIATE_FEE === undefined ? "0" : process.env.NEXT_PUBLIC_AFFILIATE_FEE

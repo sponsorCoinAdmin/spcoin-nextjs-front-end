@@ -5,7 +5,7 @@ import { Address, formatUnits } from 'viem'
 // import erc20ABI from '@/resources/data/ABIs/erc20ABI.json'
 import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
-import { TokenContract, ContractRecs } from '@/lib/structure/types'
+import { TokenContract, ContractRecs } from '@/lib/structure'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 
 // console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)

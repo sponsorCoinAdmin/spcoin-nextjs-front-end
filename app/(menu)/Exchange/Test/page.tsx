@@ -17,16 +17,15 @@ import WalletsPage from '@/components/Pages/WalletsPage';
 import JsonInspector from '@/components/shared/JsonInspector';
 
 // Utilities & Context
-import { useExchangeContext } from '@/lib/context/hooks/contextHooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { usePageState } from '@/lib/context/PageStateContext';
 import {
-  CONTAINER_TYPE,
   SP_COIN_DISPLAY,
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
   ExchangeContext,
-} from '@/lib/structure/types';
+} from '@/lib/structure';
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap = {
