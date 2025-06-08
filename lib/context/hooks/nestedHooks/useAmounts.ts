@@ -2,9 +2,10 @@
 
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_AMOUNT === 'true';
 const debugLog = createDebugLogger('useAmounts', DEBUG_ENABLED, LOG_TIME);
 
 /**
@@ -12,16 +13,26 @@ const debugLog = createDebugLogger('useAmounts', DEBUG_ENABLED, LOG_TIME);
  */
 export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const sellAmount = exchangeContext.tradeData.sellTokenContract?.amount ?? 0n;
+  const token = exchangeContext.tradeData?.sellTokenContract;
+  const debugHookChange = useDebugHookChange();
+
+  if (!token) {
+    debugLog.warn('⚠️ sellTokenContract is undefined — defaulting sellAmount to 0n');
+  }
+
+  const sellAmount = token?.amount ?? 0n;
 
   const setSellAmount = (amount: bigint) => {
-    const token = exchangeContext.tradeData.sellTokenContract;
-    if (!token) return;
+    if (!token) {
+      debugLog.warn('⛔ Cannot set sellAmount — sellTokenContract is undefined');
+      return;
+    }
 
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       debugLog.log('🪙 Updating sellAmount to:', amount);
       if (cloned.tradeData.sellTokenContract) {
+        debugHookChange('buyTokenContract.amount', cloned.tradeData.buyTokenContract?.amount, amount);
         cloned.tradeData.sellTokenContract.amount = amount;
       }
       return cloned;
@@ -36,11 +47,19 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
  */
 export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const buyAmount = exchangeContext.tradeData.buyTokenContract?.amount ?? 0n;
+  const token = exchangeContext.tradeData?.buyTokenContract;
+
+  if (!token) {
+    debugLog.warn('⚠️ buyTokenContract is undefined — defaulting buyAmount to 0n');
+  }
+
+  const buyAmount = token?.amount ?? 0n;
 
   const setBuyAmount = (amount: bigint) => {
-    const token = exchangeContext.tradeData.buyTokenContract;
-    if (!token) return;
+    if (!token) {
+      debugLog.warn('⛔ Cannot set buyAmount — buyTokenContract is undefined');
+      return;
+    }
 
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);

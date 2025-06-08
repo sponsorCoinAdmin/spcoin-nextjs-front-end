@@ -16,6 +16,7 @@ import {
 } from '@/lib/context/hooks';
 import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useDidHydrate } from '@/lib/hooks/useDidHydrate'; // ✅ Hydration hook import
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
@@ -27,12 +28,14 @@ export default function Header() {
   const chainId = useChainId({ config });
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const didHydrate = useDidHydrate(); // ✅ Hydration status
 
   const [_, setSellTokenContract] = useSellTokenContract();
   const [__, setBuyTokenContract] = useBuyTokenContract();
   const { exchangeContext } = useExchangeContext();
 
-  const { name: networkName, logoURL: logo } = exchangeContext.network;
+  const networkName = exchangeContext?.network?.name ?? '';
+  const logo = exchangeContext?.network?.logoURL ?? '';
 
   const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
   const SHOW_ADMIN_LINK = process.env.NEXT_PUBLIC_SHOW_ADMIN_PAGE === 'true';
@@ -53,12 +56,16 @@ export default function Header() {
   const onMouseLeave = () => setHoveredTab(null);
 
   useEffect(() => {
-    if (!chainId) return;
+  if (!didHydrate || !chainId || !exchangeContext.network?.chainId) return;
 
+  if (chainId !== exchangeContext.network.chainId) {
     debugLog.warn(`⚠️ Clearing token contracts due to chain switch: ${chainId}`);
     setSellTokenContract(undefined);
     setBuyTokenContract(undefined);
-  }, [chainId]);
+  } else {
+    debugLog.log(`✅ Network matched: ${chainId}`);
+  }
+}, [chainId, didHydrate, exchangeContext.network?.chainId]);
 
   const staticLinks = [
     { href: '/WhitePaper', label: 'White Paper' },
@@ -131,16 +138,19 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <img
-              key={logo}
-              src={logo}
-              className="h-[36px]"
-              alt={`Header ChainId = ${chainId} Network = ${networkName}`}
-              onError={(event) => {
-                debugLog.warn(`⚠️ Failed to load logo: ${logo}, using fallback.`);
-                event.currentTarget.src = defaultMissingImage;
-              }}
-            />
+            {logo ? (
+              <img
+                key={logo}
+                src={logo}
+                className="h-[36px]"
+                alt={`Header ChainId = ${chainId} Network = ${networkName}`}
+                onError={(event) => {
+                  debugLog.warn(`⚠️ Failed to load logo: ${logo}, using fallback.`);
+                  event.currentTarget.src = defaultMissingImage;
+                }}
+              />
+            ) : null}
+
             <span className="text-[15px] font-semibold">{networkName}</span>
           </div>
           <div className="ml-2">

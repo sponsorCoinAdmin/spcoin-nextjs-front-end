@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { config } from '@/lib/wagmi/wagmiConfig';
 import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext'; // ✅ new import
-import { ExchangeWrapper } from '@/lib/context/ExchangeContextProvider';
+import { ExchangeWrapper } from '@/lib/context/ExchangeWrapper';
 import { PageStateProvider } from '@/lib/context/PageStateContext';
 
 export default function SpCoinWrapper({ children }: { children: React.ReactNode }) {

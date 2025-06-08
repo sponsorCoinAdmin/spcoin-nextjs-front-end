@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { createContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { useChainId, useAccount } from 'wagmi';
@@ -17,6 +17,7 @@ import {
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { serializeWithBigInt } from '../utils/jsonBigInt';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
@@ -24,7 +25,10 @@ const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME);
 
 export type ExchangeContextType = {
   exchangeContext: ExchangeContextTypeOnly;
-  setExchangeContext: (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => void;
+  setExchangeContext: (
+    updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
+    hookName?: string
+  ) => void;
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
   setSellTokenContract: (contract: TokenContract | undefined) => void;
@@ -44,19 +48,60 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
 
-  const [contextState, setContextState] = useState<ExchangeContextTypeOnly | null>(null);
+  const [contextState, setContextState] = useState<ExchangeContextTypeOnly | undefined>();
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
+  const didHydrate = hasInitializedRef.current;
 
-  const setExchangeContext = (updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly) => {
+  const setExchangeContext = (
+    updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
+    hookName = 'unknown'
+  ) => {
     setContextState((prev) => {
-      debugLog.log('🧪 setExchangeContext triggered');
+      debugLog.log('🧪 setExchangeContext triggered by', hookName);
+
       const updated = prev ? updater(structuredClone(prev)) : prev;
-      if (updated) {
-        debugLog.log('📦 Saving exchangeContext to localStorage...');
-        saveExchangeContext(updated);
+
+      if (prev && updated) {
+        const oldSerialized = serializeWithBigInt(prev);
+        const newSerialized = serializeWithBigInt(updated);
+
+        if (oldSerialized !== newSerialized) {
+          debugLog.log(
+            `📝 Context update detected:
+Hook: ${hookName}
+Currently Hydrating = ${!didHydrate}
+CHANGING:
+OLD: ${oldSerialized}
+NEW: ${newSerialized}`
+          );
+        }
       }
+
+      if (updated) {
+        if (!updated.tradeData.buyTokenContract) {
+          const trace = new Error().stack?.split('\n')?.slice(2, 6).join('\n') ?? 'No stack';
+          debugLog.warn(`🚨 buyTokenContract is MISSING in updated context!\n📍 Call stack:\n${trace}`);
+        }
+
+        updated.accounts = {
+          signer: updated.accounts?.signer ?? undefined,
+          connectedAccount: updated.accounts?.connectedAccount ?? undefined,
+          sponsorAccount: updated.accounts?.sponsorAccount ?? undefined,
+          recipientAccount: updated.accounts?.recipientAccount ?? undefined,
+          agentAccount: updated.accounts?.agentAccount ?? undefined,
+          sponsorAccounts: updated.accounts?.sponsorAccounts ?? [],
+          recipientAccounts: updated.accounts?.recipientAccounts ?? [],
+          agentAccounts: updated.accounts?.agentAccounts ?? [],
+        };
+
+        const serialized = serializeWithBigInt(updated);
+        debugLog.log('📦 Saving exchangeContext to localStorage:', serialized);
+        saveExchangeContext(updated);
+console.log('🔚 --- End of Context Dump ---'); // acts like a flush
+      }
+
       return updated;
     });
   };
@@ -66,7 +111,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       const cloned = structuredClone(prev);
       cloned.accounts.recipientAccount = wallet;
       return cloned;
-    });
+    }, 'setRecipientAccount');
   };
 
   const setSellAmount = (amount: bigint) => {
@@ -76,7 +121,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
         cloned.tradeData.sellTokenContract.amount = amount;
       }
       return cloned;
-    });
+    }, 'setSellAmount');
   };
 
   const setBuyAmount = (amount: bigint) => {
@@ -86,7 +131,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
         cloned.tradeData.buyTokenContract.amount = amount;
       }
       return cloned;
-    });
+    }, 'setBuyAmount');
   };
 
   const setSellTokenContract = (contract: TokenContract | undefined) => {
@@ -94,7 +139,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       const cloned = structuredClone(prev);
       cloned.tradeData.sellTokenContract = contract;
       return cloned;
-    });
+    }, 'setSellTokenContract');
   };
 
   const setBuyTokenContract = (contract: TokenContract | undefined) => {
@@ -102,7 +147,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       const cloned = structuredClone(prev);
       cloned.tradeData.buyTokenContract = contract;
       return cloned;
-    });
+    }, 'setBuyTokenContract');
   };
 
   const setTradeDirection = (type: TRADE_DIRECTION) => {
@@ -110,7 +155,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       const cloned = structuredClone(prev);
       cloned.tradeData.tradeDirection = type;
       return cloned;
-    });
+    }, 'setTradeDirection');
   };
 
   const setSlippageBps = (bps: number) => {
@@ -119,11 +164,14 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
       const cloned = structuredClone(prev);
       cloned.tradeData.slippage.bps = bps;
       return cloned;
-    });
+    }, 'setSlippageBps');
   };
 
   useEffect(() => {
-    if (hasInitializedRef.current || contextState) return;
+    if (hasInitializedRef.current) {
+      debugLog.warn('🛑 Already initialized — skipping context load');
+      return;
+    }
 
     hasInitializedRef.current = true;
     debugLog.log('🔁 Initializing ExchangeContext...');
@@ -133,12 +181,18 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
 
       debugLog.log('🔍 Attempting to load from localStorage...');
       const stored = loadStoredExchangeContext();
+      debugLog.log('📦 Re-loaded stored exchangeContext:', stored);
 
       const sanitized = sanitizeExchangeContext(stored, chain);
       debugLog.log('🧼 Sanitized context:', sanitized);
 
       if (!sanitized.tradeData.slippage?.bps || sanitized.tradeData.slippage.bps <= 0) {
         debugLog.warn('⚠️ Invalid slippageBps — defaulting may be required.');
+      }
+
+      if (!sanitized.tradeData.buyTokenContract) {
+        const trace = new Error().stack?.split('\n')?.slice(2, 6).join('\n') ?? 'No stack';
+        debugLog.warn(`🚨 buyTokenContract is MISSING during context hydration!\n📍 Call stack:\n${trace}`);
       }
 
       if (isConnected && address) {
@@ -166,18 +220,21 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
         }
       }
 
+      debugLog.log('📥 Setting contextState with sanitized object:', sanitized);
       setContextState(sanitized);
     };
 
     init();
-  }, [chainId, contextState, address, isConnected]);
-
-  if (!contextState) return null;
+  }, [chainId, address, isConnected]);
 
   return (
     <ExchangeContextState.Provider
       value={{
-        exchangeContext: contextState,
+        exchangeContext: {
+          ...contextState,
+          errorMessage,
+          apiErrorMessage,
+        } as ExchangeContextTypeOnly,
         setExchangeContext,
         setSellAmount,
         setBuyAmount,

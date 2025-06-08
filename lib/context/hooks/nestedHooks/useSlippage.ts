@@ -1,4 +1,9 @@
+// File: lib/context/hooks/nestedHooks/useSlippage.ts
+
+'use client';
+
 import { useExchangeContext } from '@/lib/context/hooks';
+import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
 
 export type Slippage = {
   bps: number;
@@ -15,29 +20,44 @@ export const useSlippage = (): {
   setBps: (bps: number) => void;
 } => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const debugHookChange = useDebugHookChange();
 
-  const setSlippage = (slippage: Slippage) => {
+  const defaultSlippage: Slippage = {
+    bps: 200,
+    percentage: 2,
+    percentageString: '2.00%',
+  };
+
+  const slippage = exchangeContext?.tradeData?.slippage ?? defaultSlippage;
+
+  const setSlippage = (newSlippage: Slippage) => {
+    const oldSlippage = exchangeContext?.tradeData?.slippage;
+    debugHookChange('slippage', oldSlippage, newSlippage);
+
+    if (!exchangeContext?.tradeData) return;
+
     setExchangeContext((prev) => ({
       ...prev,
       tradeData: {
         ...prev.tradeData,
-        slippage,
+        slippage: newSlippage,
       },
     }));
   };
 
   const setBps = (bps: number) => {
     const percentage = bps / 100;
-    const slippage: Slippage = {
+    const newSlippage: Slippage = {
       bps,
       percentage,
       percentageString: `${percentage.toFixed(2)}%`,
     };
-    setSlippage(slippage);
+
+    setSlippage(newSlippage);
   };
 
   return {
-    data: exchangeContext.tradeData.slippage,
+    data: slippage,
     setSlippage,
     setBps,
   };

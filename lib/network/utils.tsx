@@ -131,36 +131,6 @@ const useIsActiveAccountAddress = (address?: Address): boolean => {
   return isActiveAccountAddress(exchangeContext, address)
 };
 
-const mapAccountAddrToWethAddr = (exchangeContext:ExchangeContext, tokenAddress: Address): Address | undefined => {
-  const chainId = exchangeContext.network.chainId;
-  const ethAct = exchangeContext?.accounts?.connectedAccount?.address;
-
-  // console.log(`mapAccountAddrToWethAddr: chainId(${chainId}) 
-  //              Ethereum Account Address = ${ethAct} 
-  //              Token Account Address = ${tokenAddress}`);
-
-  return ethAct === tokenAddress ? getNativeWrapAddress(chainId) : tokenAddress;
-};
-
-const useMapAccountAddrToWethAddr = (tokenAddress: Address): Address | undefined => {
-  const { exchangeContext } = useExchangeContext();
-  return mapAccountAddrToWethAddr(exchangeContext, tokenAddress)
-  // return useMemo(() => mapAccountAddrToWethAddr(exchangeContext, tokenAddress), [exchangeContext, tokenAddress]);
-};
-
-const isWrappingTransaction = (exchangeContext: ExchangeContext): boolean => {
-  const sellTokenAddress = exchangeContext.tradeData.sellTokenContract?.address;
-  const buyTokenAddress = exchangeContext.tradeData.buyTokenContract?.address;
-
-  if (!sellTokenAddress || !buyTokenAddress) return false;
-
-  // ✅ Avoid redundant calls by caching mapped addresses
-  const mappedSell = mapAccountAddrToWethAddr(exchangeContext, sellTokenAddress);
-  const mappedBuy = mapAccountAddrToWethAddr(exchangeContext, buyTokenAddress);
-
-  return mappedSell === mappedBuy;
-};
-
 const getChainMap = (chainList: any[]): Map<number, any> => 
   new Map(chainList.map((e) => [e.chainId, e]));
 
@@ -283,12 +253,9 @@ export {
   isNativeToken,
   isNativeTokenAddress,
   isWrappedAddress,
-  isWrappingTransaction,
   isWrappedBuyToken,
   isWrappedToken,
   isWrappedSellToken,
-  mapAccountAddrToWethAddr,
   tokenContractsEqual,
   useIsActiveAccountAddress,
-  useMapAccountAddrToWethAddr,
-};
+  };

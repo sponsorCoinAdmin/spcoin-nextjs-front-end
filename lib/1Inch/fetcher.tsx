@@ -9,7 +9,6 @@ import {
   useSellAmount,
   useTradeData,
 } from '@/lib/context/hooks';
-import { useMapAccountAddrToWethAddr } from '../network/utils';
 import { Address } from 'viem';
 import { useAccount, useChainId } from 'wagmi';
 
@@ -51,7 +50,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 }
 
 function usePriceAPI() {
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext } = useExchangeContext(); // ✅ must call first
   const tradeData = useTradeData();
   const chainId = useChainId();
   const { address: userAddress } = useAccount();
@@ -60,24 +59,21 @@ function usePriceAPI() {
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount] = useSellAmount();
 
-  const rawSellTokenAddress = tradeData.sellTokenContract?.address;
-  const rawBuyTokenAddress = tradeData.buyTokenContract?.address;
+  // ✅ Always call hooks — use default fallback for optional data
+  const rawSellTokenAddress = tradeData?.sellTokenContract?.address ?? ZERO_ADDRESS;
+  const rawBuyTokenAddress = tradeData?.buyTokenContract?.address ?? ZERO_ADDRESS;
 
-  const mappedSellTokenAddress = useMapAccountAddrToWethAddr(
-    rawSellTokenAddress ?? ZERO_ADDRESS
-  );
+  const mappedSellTokenAddress = rawSellTokenAddress;
+  const mappedBuyTokenAddress = rawBuyTokenAddress;
 
-  const mappedBuyTokenAddress = useMapAccountAddrToWethAddr(
-    rawBuyTokenAddress ?? ZERO_ADDRESS
-  );
-
-  const slippagePercentage = Number.isFinite(tradeData.slippageBps)
-    ? (tradeData.slippageBps! / 100).toString()
-    : '1';
+  const slippagePercentage =
+    Number.isFinite(tradeData?.slippage?.bps) && tradeData.slippage.bps > 0
+      ? (tradeData.slippage.bps / 100).toString()
+      : '1';
 
   const shouldFetch =
-    !!rawSellTokenAddress &&
-    !!rawBuyTokenAddress &&
+    tradeData?.sellTokenContract &&
+    tradeData?.buyTokenContract &&
     mappedSellTokenAddress !== mappedBuyTokenAddress &&
     sellAmount > 0n &&
     !!userAddress &&
@@ -109,7 +105,6 @@ function usePriceAPI() {
   return useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
       console.log(`[1inch SUCCESS]`, data);
-
       if (data?.toTokenAmount) {
         setBuyAmount(BigInt(data.toTokenAmount));
       }

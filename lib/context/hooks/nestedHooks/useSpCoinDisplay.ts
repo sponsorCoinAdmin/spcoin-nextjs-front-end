@@ -4,6 +4,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';
@@ -14,11 +15,16 @@ const debugLog = createDebugLogger('contextHooks', DEBUG_ENABLED, LOG_TIME);
  */
 export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const debugHookChange = useDebugHookChange(); // ✅ hooked once here
 
-  const setSpCoinDisplay = (display: SP_COIN_DISPLAY) =>
-    debugSetSpCoinDisplay(exchangeContext.settings.spCoinDisplay, display, setExchangeContext);
+  const currentDisplay = exchangeContext?.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.EXCHANGE_ROOT;
 
-  return [exchangeContext.settings.spCoinDisplay, setSpCoinDisplay];
+  const setSpCoinDisplay = (display: SP_COIN_DISPLAY) => {
+    if (!exchangeContext?.settings) return;
+    debugSetSpCoinDisplay(currentDisplay, display, setExchangeContext, debugHookChange);
+  };
+
+  return [currentDisplay, setSpCoinDisplay];
 };
 
 /**
@@ -27,7 +33,8 @@ export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY)
 export const debugSetSpCoinDisplay = (
   oldDisplay: SP_COIN_DISPLAY,
   newDisplay: SP_COIN_DISPLAY,
-  setExchangeContext: (updater: (prev: any) => any) => void
+  setExchangeContext: (updater: (prev: any) => any) => void,
+  debugHookChange?: (label: string, oldVal: unknown, newVal: unknown) => void
 ): void => {
   const displayChange = `${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}`;
 
@@ -38,6 +45,10 @@ export const debugSetSpCoinDisplay = (
     } else {
       debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`);
     }
+  }
+
+  if (debugHookChange && oldDisplay !== newDisplay) {
+    debugHookChange('spCoinDisplay', oldDisplay, newDisplay);
   }
 
   setExchangeContext((prev) => ({

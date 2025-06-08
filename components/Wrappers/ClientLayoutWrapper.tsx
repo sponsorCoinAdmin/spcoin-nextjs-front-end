@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/panes/header';
-import { ExchangeWrapper } from '@/lib/context';
+import { ExchangeWrapper } from '@/lib/context/ExchangeWrapper';
 
 export default function ClientLayoutWrapper({
   children,

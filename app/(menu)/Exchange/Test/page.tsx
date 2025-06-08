@@ -46,24 +46,19 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
     [API_TRADING_PROVIDER.API_1INCH]: 'API_TRADING_PROVIDER.API_1INCH',
   };
 
-  const { spCoinDisplay, apiTradingProvider } = ctx.settings;
-  const { tradeDirection, slippage, ...restTradeData } = ctx.tradeData;
+  const settings = ctx.settings ?? {};
+  const tradeData = ctx.tradeData ?? {};
 
   return {
     ...ctx,
     settings: {
-      ...Object.fromEntries(
-        Object.entries(ctx.settings).filter(([key]) =>
-          !['spCoinDisplay', 'containerType', 'apiTradingProvider'].includes(key)
-        )
-      ),
-      [`spCoinDisplay (${spCoinDisplay})`]: spCoinDisplayMap[spCoinDisplay],
-      [`apiTradingProvider (${apiTradingProvider})`]: apiProviderMap[apiTradingProvider],
+      ...settings,
+      spCoinDisplay: spCoinDisplayMap[settings.spCoinDisplay ?? SP_COIN_DISPLAY.EXCHANGE_ROOT],
+      apiTradingProvider: apiProviderMap[settings.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X],
     },
     tradeData: {
-      ...restTradeData,
-      slippage,
-      [`tradeDirection (${tradeDirection})`]: tradeDirectionMap[tradeDirection],
+      ...tradeData,
+      tradeDirection: tradeDirectionMap[tradeData.tradeDirection ?? TRADE_DIRECTION.SELL_EXACT_OUT],
     },
   };
 }
@@ -158,7 +153,8 @@ export default function TestPage() {
           onClick={toggleContext}
           className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
         >
-          {showContext ? 'Hide Context' : 'Show Context'}
+          {'Toggle Context'}
+          {/* {showContext ? 'Hide Context' : 'Show Context'} */}
         </button>
 
         {showContext && (
@@ -166,7 +162,8 @@ export default function TestPage() {
             onClick={toggleExpandCollapse}
             className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
           >
-            {expandContext ? 'Collapse Context' : 'Expand Context'}
+          {'Collapse/Expand Context'}
+            {/* {expandContext ? 'Collapse Context' : 'Expand Context'}? */}
           </button>
         )}
 

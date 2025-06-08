@@ -10,6 +10,15 @@ interface DebugLogger {
 }
 
 /**
+ * BigInt-safe JSON.stringify helper
+ */
+function serializeWithBigInt(obj: any): string {
+  return JSON.stringify(obj, (_, value) =>
+    typeof value === 'bigint' ? value.toString() : value
+  );
+}
+
+/**
  * Creates a module-scoped debug logger.
  *
  * @param moduleName - Name of the module using the logger
@@ -49,7 +58,7 @@ export function createDebugLogger(moduleName: string, enabled: boolean, tsFlag: 
   function formatArg(arg: any): string {
     if (typeof arg === 'string') return arg;
     try {
-      return JSON.stringify(arg);
+      return serializeWithBigInt(arg);
     } catch {
       return '[Unserializable]';
     }

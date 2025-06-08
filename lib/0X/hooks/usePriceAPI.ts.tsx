@@ -11,7 +11,7 @@ import {
   useSellAmount,
   useTradeData
 } from '@/lib/context/hooks';
-import { useIsActiveAccountAddress, useMapAccountAddrToWethAddr } from '../../network/utils';
+import { useIsActiveAccountAddress } from '../../network/utils';
 import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from 'wagmi';
@@ -24,8 +24,8 @@ const apiPriceBase = '/price';
 const WRAPPED_ETHEREUM_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 // 🌐 Debug logging flag and logger controlled by .env.local
-const LOG_TIME:boolean = false;
-const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_PRICE_REQUEST=== 'true';
+const LOG_TIME: boolean = false;
+const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true';
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME); // tsFlag defaults to true
 
 const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
@@ -156,15 +156,15 @@ function usePriceAPI() {
   const isActiveSellAccount = useIsActiveAccountAddress(sellTokenAddress as Address);
   const isActiveBuyAccount = useIsActiveAccountAddress(buyTokenAddress as Address);
 
-  sellTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount));
-  buyTokenAddress = useMapAccountAddrToWethAddr(validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount));
+  sellTokenAddress = validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount);
+  buyTokenAddress = validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount);
 
   const debouncedSellToken = useDebounce(sellTokenAddress, 450);
   const debouncedBuyToken = useDebounce(buyTokenAddress, 450);
   const debouncedSellAmount = useDebounce(sellAmount, 450);
   const debouncedBuyAmount = useDebounce(buyAmount, 450);
   const debouncedSlippage = useDebounce(
-    Number.isFinite(tradeData.slippageBps) ? tradeData.slippageBps : 100,
+    Number.isFinite(tradeData?.slippage?.bps) ? tradeData.slippage.bps : 100,
     200
   );
 
@@ -212,14 +212,14 @@ function usePriceAPI() {
 
   const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken, debouncedSellAmount)
     ? getPriceApiCall(
-        tradeData.tradeDirection,
-        chainId,
-        debouncedSellToken,
-        debouncedBuyToken,
-        debouncedSellAmount,
-        debouncedBuyAmount,
-        debouncedSlippage
-      )
+      tradeData.tradeDirection,
+      chainId,
+      debouncedSellToken,
+      debouncedBuyToken,
+      debouncedSellAmount,
+      debouncedBuyAmount,
+      debouncedSlippage
+    )
     : null;
 
   useWhyDidYouUpdate('usePriceAPI', {
@@ -244,12 +244,16 @@ function usePriceAPI() {
           status: STATUS.ERROR_API_PRICE,
           source: 'ApiFetcher',
           errCode: (data as any).code,
-          msg: getApiErrorTransactionData(
-            exchangeContext,
-            sellTokenAddress,
-            buyTokenAddress,
-            tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
-            data
+          msg: JSON.stringify(
+            getApiErrorTransactionData(
+              exchangeContext,
+              sellTokenAddress,
+              buyTokenAddress,
+              tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
+              data
+            ),
+            null,
+            2 // optional: pretty print
           ),
         });
       } else {

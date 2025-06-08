@@ -2,22 +2,30 @@
 
 import { useExchangeContext } from '../useExchangeContext';
 import { API_TRADING_PROVIDER } from '@/lib/structure';
+import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
 
 export const useApiProvider = (): [API_TRADING_PROVIDER, (provider: API_TRADING_PROVIDER) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const debugHookChange = useDebugHookChange();
 
-  const apiProvider = exchangeContext.settings.apiTradingProvider;
+  const apiProvider = exchangeContext?.settings?.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X;
 
   const setApiProvider = (provider: API_TRADING_PROVIDER) => {
-    setExchangeContext((prev) => ({
-      ...prev,
-      settings: {
-        ...prev.settings,
-        apiTradingProvider: provider,
-      },
-    }));
-  };
+    if (!exchangeContext?.settings) return;
 
+    setExchangeContext((prev) => {
+      const oldValue = prev.settings.apiTradingProvider;
+      debugHookChange('settings.apiTradingProvider', oldValue, provider);
+
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          apiTradingProvider: provider,
+        },
+      };
+    });
+  };
 
   return [apiProvider, setApiProvider];
 };

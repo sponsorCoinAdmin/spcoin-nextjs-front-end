@@ -22,46 +22,91 @@ import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize
 import defaultSoliditySettings from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import {
+  serializeWithBigInt,
+  deserializeWithBigInt,
+} from '@/lib/utils/jsonBigInt';
 
 const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeHelpers', DEBUG_ENABLED, LOG_TIME);
 
-export const loadStoredExchangeContext = (): ExchangeContext | null => {
-  if (typeof window !== 'undefined') {
-    try {
-      const storedData = localStorage.getItem(STORAGE_KEY);
-      debugLog.log(`🔑 Loading exchangeContext with key: ${STORAGE_KEY}`);
-      if (storedData) {
-        const parsed = JSON.parse(storedData, (_key, value) => {
-          return typeof value === 'string' && /^\d+n?$/.test(value)
-            ? BigInt(value.replace(/n$/, ''))
-            : value;
-        });
-        debugLog.log('📥 Loaded exchangeContext from localStorage');
-        return parsed;
-      } else {
-        debugLog.warn('⚠️ No stored exchangeContext found');
-      }
-    } catch (err) {
-      debugLog.error('❌ Failed to load exchangeContext from localStorage', err);
+export function loadStoredExchangeContext(): ExchangeContext | null {
+  try {
+    const serializedContext = localStorage.getItem(STORAGE_KEY);
+
+    if (!serializedContext) {
+      debugLog.warn(`⚠️ NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${STORAGE_KEY}`);
+      return null;
     }
+
+    debugLog.log('🔓 LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(serialized)\n:', serializedContext);
+
+    let parsed: any;
+    try {
+      parsed = deserializeWithBigInt(serializedContext);
+    } catch (parseError) {
+      debugLog.error(`❌ Failed to deserializeWithBigInt: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      console.error(parseError);
+      return null;
+    }
+
+    debugLog.log('✅ PARSED LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:', parsed);
+
+    try {
+      const prettyPrinted = JSON.stringify(
+        parsed,
+        (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
+        2
+      );
+      debugLog.log('✅ (PRETTY PRINT) LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:', prettyPrinted);
+    } catch (stringifyError) {
+      debugLog.warn('⚠️ Failed to pretty-print parsed ExchangeContext:', stringifyError);
+    }
+
+    const chainId = parsed.network?.chainId ?? ETHEREUM;
+    return sanitizeExchangeContext(parsed, chainId);
+  } catch (error) {
+    debugLog.error(`⛔ Failed to load exchangeContext: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(error);
+    return null;
   }
-  return null;
-};
+}
 
 export const saveExchangeContext = (contextData: ExchangeContext): void => {
   if (typeof window !== 'undefined') {
     try {
       debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
-      const serializedContext = JSON.stringify(contextData, (_key, value) => {
-        if (typeof value === 'bigint') {
-          return value.toString();
-        }
-        return value;
-      });
-      debugLog.log('🧾 Serialized exchangeContext:', serializedContext);
+
+      const safeContext: ExchangeContext = {
+        ...contextData,
+        accounts: {
+          signer: contextData.accounts?.signer ?? undefined,
+          connectedAccount: contextData.accounts?.connectedAccount ?? undefined,
+          sponsorAccount: contextData.accounts?.sponsorAccount ?? undefined,
+          recipientAccount: contextData.accounts?.recipientAccount ?? undefined,
+          agentAccount: contextData.accounts?.agentAccount ?? undefined,
+          sponsorAccounts: contextData.accounts?.sponsorAccounts ?? [],
+          recipientAccounts: contextData.accounts?.recipientAccounts ?? [],
+          agentAccounts: contextData.accounts?.agentAccounts ?? [],
+        },
+      };
+
+      const serializedContext = serializeWithBigInt(safeContext);
+      debugLog.log('🔓 SAVING EXCHANGE CONTEXT FROM LOCALSTORAGE(serializedContext)\n:', serializedContext);
+
+      try {
+        const prettyPrinted = JSON.stringify(
+          safeContext,
+          (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
+          2
+        );
+        debugLog.log('✅ (PRETTY PRINT) SAVED EXCHANGE CONTEXT TO LOCALSTORAGE(parsed)\n:', prettyPrinted);
+      } catch (prettyError) {
+        debugLog.warn('⚠️ Failed to pretty-print exchangeContext', prettyError);
+      }
+
       localStorage.setItem(STORAGE_KEY, serializedContext);
       debugLog.log('✅ exchangeContext successfully saved');
     } catch (err) {
