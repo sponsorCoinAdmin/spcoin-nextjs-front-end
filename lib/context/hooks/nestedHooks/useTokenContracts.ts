@@ -4,7 +4,7 @@ import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';
@@ -18,8 +18,6 @@ export const useSellTokenContract = (): [
   (contract: TokenContract | undefined) => void
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const debugHookChange = useDebugHookChange();
-
   const token = exchangeContext?.tradeData?.sellTokenContract;
 
   const setToken = (contract: TokenContract | undefined) => {
@@ -49,8 +47,6 @@ export const useBuyTokenContract = (): [
   (contract: TokenContract | undefined) => void
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const debugHookChange = useDebugHookChange();
-
   const token = exchangeContext?.tradeData?.buyTokenContract;
 
   const setToken = (contract: TokenContract | undefined) => {
@@ -66,6 +62,7 @@ export const useBuyTokenContract = (): [
     if (isSame && oldDisplay === newDisplay) return;
 
     debugHookChange('buyTokenContract', oldContract, contract);
+
     setExchangeContext((prev) => ({
       ...prev,
       tradeData: {

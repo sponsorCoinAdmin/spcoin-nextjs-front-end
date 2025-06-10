@@ -2,7 +2,7 @@
 
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_AMOUNT === 'true';
@@ -14,7 +14,6 @@ const debugLog = createDebugLogger('useAmounts', DEBUG_ENABLED, LOG_TIME);
 export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const token = exchangeContext.tradeData?.sellTokenContract;
-  const debugHookChange = useDebugHookChange();
 
   if (!token) {
     debugLog.warn('⚠️ sellTokenContract is undefined — defaulting sellAmount to 0n');
@@ -31,10 +30,13 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       debugLog.log('🪙 Updating sellAmount to:', amount);
+
       if (cloned.tradeData.sellTokenContract) {
-        debugHookChange('buyTokenContract.amount', cloned.tradeData.buyTokenContract?.amount, amount);
+        const prevAmount = cloned.tradeData.sellTokenContract.amount;
+        debugHookChange('sellTokenContract.amount', prevAmount, amount);
         cloned.tradeData.sellTokenContract.amount = amount;
       }
+
       return cloned;
     });
   };
@@ -64,9 +66,13 @@ export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       debugLog.log('💰 Updating buyAmount to:', amount);
+
       if (cloned.tradeData.buyTokenContract) {
+        const prevAmount = cloned.tradeData.buyTokenContract.amount;
+        debugHookChange('buyTokenContract.amount', prevAmount, amount);
         cloned.tradeData.buyTokenContract.amount = amount;
       }
+
       return cloned;
     });
   };

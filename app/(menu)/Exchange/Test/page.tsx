@@ -19,7 +19,6 @@ import JsonInspector from '@/components/shared/JsonInspector';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
 
 import {
   SP_COIN_DISPLAY,
@@ -27,6 +26,7 @@ import {
   API_TRADING_PROVIDER,
   ExchangeContext,
 } from '@/lib/structure';
+import { useHydratingFromLocal } from '@/lib/context/HydrationContext';
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap = {
@@ -65,7 +65,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 }
 
 export default function TestPage() {
-  const didHydrate = useDidHydrate();
+  const hydratingFromLocal = useHydratingFromLocal();
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
@@ -151,7 +151,7 @@ export default function TestPage() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap gap-4">
-        {didHydrate && (
+        {!hydratingFromLocal && (
           <>
             <button
               onClick={toggleContext}
@@ -186,7 +186,7 @@ export default function TestPage() {
         )}
       </div>
 
-      {didHydrate && showContext && (
+      {!hydratingFromLocal && showContext && (
         <JsonInspector
           data={normalizeContextDisplay(exchangeContext)}
           collapsedKeys={collapsedKeys}
@@ -194,7 +194,7 @@ export default function TestPage() {
         />
       )}
 
-      {didHydrate && showWallets && (
+      {!hydratingFromLocal && showWallets && (
         <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>

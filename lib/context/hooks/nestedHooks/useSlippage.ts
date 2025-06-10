@@ -1,9 +1,7 @@
-// File: lib/context/hooks/nestedHooks/useSlippage.ts
-
 'use client';
 
 import { useExchangeContext } from '@/lib/context/hooks';
-import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 export type Slippage = {
   bps: number;
@@ -20,7 +18,6 @@ export const useSlippage = (): {
   setBps: (bps: number) => void;
 } => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const debugHookChange = useDebugHookChange();
 
   const defaultSlippage: Slippage = {
     bps: 200,

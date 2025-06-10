@@ -1,3 +1,5 @@
+// File: lib/context/hooks/nestedHooks/useExchangeTokenBalances.ts
+
 'use client';
 
 import { useEffect } from 'react';
@@ -7,8 +9,7 @@ import { Address } from 'viem';
 import { useExchangeContext } from '../useExchangeContext';
 import { useWagmiERC20TokenBalanceOf } from '@/lib/wagmi/wagmiERC20ClientRead';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
-import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_BALANCES === 'true';
@@ -17,8 +18,6 @@ const debugLog = createDebugLogger('useExchangeTokenBalances', DEBUG_ENABLED, LO
 export const useExchangeTokenBalances = () => {
   const { address } = useAccount();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const logChange = useDebugHookChange(); // ✅ use descriptive function name
-  const didHydrate = useDidHydrate();
 
   const buyToken = exchangeContext.tradeData.buyTokenContract;
   const sellToken = exchangeContext.tradeData.sellTokenContract;
@@ -32,7 +31,7 @@ export const useExchangeTokenBalances = () => {
     const updates: Partial<typeof exchangeContext['tradeData']> = {};
 
     if (buyToken?.address && buyBalance !== undefined && buyBalance !== buyToken.balance) {
-      logChange('buyToken.balance', buyToken.balance, buyBalance);
+      debugHookChange('buyToken.balance', buyToken.balance, buyBalance);
       updates.buyTokenContract = {
         ...buyToken,
         balance: buyBalance,
@@ -40,7 +39,7 @@ export const useExchangeTokenBalances = () => {
     }
 
     if (sellToken?.address && sellBalance !== undefined && sellBalance !== sellToken.balance) {
-      logChange('sellToken.balance', sellToken.balance, sellBalance);
+      debugHookChange('sellToken.balance', sellToken.balance, sellBalance);
       updates.sellTokenContract = {
         ...sellToken,
         balance: sellBalance,
@@ -58,5 +57,5 @@ export const useExchangeTokenBalances = () => {
         return next;
       });
     }
-  }, [address, buyBalance, sellBalance, buyToken, sellToken, setExchangeContext, didHydrate]);
+  }, [address, buyBalance, sellBalance, buyToken, sellToken, setExchangeContext]);
 };

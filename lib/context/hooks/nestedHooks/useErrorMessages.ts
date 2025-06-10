@@ -2,7 +2,7 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { ErrorMessage } from '@/lib/structure';
-import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 /**
  * Access and update the generic user-facing error message.
@@ -10,7 +10,6 @@ import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
  */
 export const useErrorMessage = (): [ErrorMessage | undefined, (error: ErrorMessage | undefined) => void] => {
   const { errorMessage, setErrorMessage } = useExchangeContext();
-  const debugHookChange = useDebugHookChange();
 
   const setDebuggedErrorMessage = (error: ErrorMessage | undefined) => {
     debugHookChange('errorMessage', errorMessage, error);
@@ -26,7 +25,6 @@ export const useErrorMessage = (): [ErrorMessage | undefined, (error: ErrorMessa
  */
 export const useApiErrorMessage = (): [ErrorMessage | undefined, (error: ErrorMessage | undefined) => void] => {
   const { apiErrorMessage, setApiErrorMessage } = useExchangeContext();
-  const debugHookChange = useDebugHookChange();
 
   const setDebuggedApiErrorMessage = (error: ErrorMessage | undefined) => {
     debugHookChange('apiErrorMessage', apiErrorMessage, error);

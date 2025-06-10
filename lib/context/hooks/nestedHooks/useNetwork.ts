@@ -1,17 +1,15 @@
-// File: lib/context/hooks/nestedHooks/useNetwork.ts
-
 'use client';
 
-import { useExchangeContext } from '@/lib/context/hooks';
-import { useChainId } from 'wagmi';
 import { useEffect } from 'react';
+import { useChainId } from 'wagmi';
+import { useExchangeContext } from '@/lib/context/hooks';
 import {
   getBlockChainName,
   getBlockChainLogoURL,
   getBlockExplorerURL,
 } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDebugHookChange } from '@/lib/hooks/useDebugHookChange';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_NETWORK === 'true';
@@ -20,7 +18,6 @@ const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 export const useNetwork = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const chainId = useChainId();
-  const debugHookChange = useDebugHookChange();
 
   const setNetworkChainId = (newChainId: number) => {
     const oldChainId = exchangeContext.network?.chainId;
