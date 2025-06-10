@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
 
-// Components
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
 import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields';
 import ReadWagmiERC20Records from '@/components/ERC20/ReadWagmiERC20Records';
@@ -13,13 +12,15 @@ import ReadWagmiERC20ContractName from '@/components/ERC20/ReadWagmiERC20Contrac
 import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20ContractSymbol';
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals';
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply';
+
 import WalletsPage from '@/components/Pages/WalletsPage';
 import JsonInspector from '@/components/shared/JsonInspector';
 
-// Utilities & Context
 import { useExchangeContext } from '@/lib/context/hooks';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { usePageState } from '@/lib/context/PageStateContext';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
+
 import {
   SP_COIN_DISPLAY,
   TRADE_DIRECTION,
@@ -64,6 +65,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 }
 
 export default function TestPage() {
+  const didHydrate = useDidHydrate();
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
@@ -149,40 +151,42 @@ export default function TestPage() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap gap-4">
-        <button
-          onClick={toggleContext}
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
-          {'Toggle Context'}
-          {/* {showContext ? 'Hide Context' : 'Show Context'} */}
-        </button>
+        {didHydrate && (
+          <>
+            <button
+              onClick={toggleContext}
+              className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+            >
+              {showContext ? 'Hide Context' : 'Show Context'}
+            </button>
 
-        {showContext && (
-          <button
-            onClick={toggleExpandCollapse}
-            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-          >
-          {'Collapse/Expand Context'}
-            {/* {expandContext ? 'Collapse Context' : 'Expand Context'}? */}
-          </button>
+            {showContext && (
+              <button
+                onClick={toggleExpandCollapse}
+                className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+              >
+                {expandContext ? 'Collapse Context' : 'Expand Context'}?
+              </button>
+            )}
+
+            <button
+              onClick={logContext}
+              className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+            >
+              Log Context
+            </button>
+
+            <button
+              onClick={toggleWallets}
+              className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+            >
+              {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
+            </button>
+          </>
         )}
-
-        <button
-          onClick={logContext}
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
-          Log Context
-        </button>
-
-        <button
-          onClick={toggleWallets}
-          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-        >
-          {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
-        </button>
       </div>
 
-      {showContext && (
+      {didHydrate && showContext && (
         <JsonInspector
           data={normalizeContextDisplay(exchangeContext)}
           collapsedKeys={collapsedKeys}
@@ -190,7 +194,7 @@ export default function TestPage() {
         />
       )}
 
-      {showWallets && (
+      {didHydrate && showWallets && (
         <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>

@@ -32,7 +32,7 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeHelpers', DEBUG_ENABLED, LOG_TIME);
 
-export function loadStoredExchangeContext(): ExchangeContext | null {
+export function loadLocalExchangeContext(): ExchangeContext | null {
   try {
     const serializedContext = localStorage.getItem(STORAGE_KEY);
 
@@ -74,7 +74,7 @@ export function loadStoredExchangeContext(): ExchangeContext | null {
   }
 }
 
-export const saveExchangeContext = (contextData: ExchangeContext): void => {
+export const saveLocalExchangeContext = (contextData: ExchangeContext): void => {
   if (typeof window !== 'undefined') {
     try {
       debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);

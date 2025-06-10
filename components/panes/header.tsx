@@ -55,18 +55,6 @@ export default function Header() {
   const onMouseEnter = (href: string) => () => setHoveredTab(href);
   const onMouseLeave = () => setHoveredTab(null);
 
-  useEffect(() => {
-  if (!didHydrate || !chainId || !exchangeContext.network?.chainId) return;
-
-  if (chainId !== exchangeContext.network.chainId) {
-    debugLog.warn(`⚠️ Clearing token contracts due to chain switch: ${chainId}`);
-    setSellTokenContract(undefined);
-    setBuyTokenContract(undefined);
-  } else {
-    debugLog.log(`✅ Network matched: ${chainId}`);
-  }
-}, [chainId, didHydrate, exchangeContext.network?.chainId]);
-
   const staticLinks = [
     { href: '/WhitePaper', label: 'White Paper' },
     { href: '/SpCoinAPI', label: 'Sponsor Coin API' },

@@ -3,8 +3,8 @@
 import React, { createContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { useChainId, useAccount } from 'wagmi';
 import {
-  saveExchangeContext,
-  loadStoredExchangeContext,
+  saveLocalExchangeContext,
+  loadLocalExchangeContext,
   sanitizeExchangeContext,
 } from '@/lib/context/ExchangeHelpers';
 
@@ -18,6 +18,8 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
+import { HydrationProvider } from '@/lib/context/HydrationContext';
+import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
@@ -44,7 +46,7 @@ export type ExchangeContextType = {
 
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
-export function ExchangeWrapper({ children }: { children: ReactNode }) {
+export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
 
@@ -52,7 +54,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
-  const didHydrate = hasInitializedRef.current;
+  const didHydrate = useDidHydrate();
 
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
@@ -69,12 +71,7 @@ export function ExchangeWrapper({ children }: { children: ReactNode }) {
 
         if (oldSerialized !== newSerialized) {
           debugLog.log(
-            `📝 Context update detected:
-Hook: ${hookName}
-Currently Hydrating = ${!didHydrate}
-CHANGING:
-OLD: ${oldSerialized}
-NEW: ${newSerialized}`
+            `📝 Context update detected:\nHook: ${hookName}\nCurrently Hydrating = ${!didHydrate}\nCHANGING:\nOLD: ${oldSerialized}\nNEW: ${newSerialized}`
           );
         }
       }
@@ -98,8 +95,8 @@ NEW: ${newSerialized}`
 
         const serialized = serializeWithBigInt(updated);
         debugLog.log('📦 Saving exchangeContext to localStorage:', serialized);
-        saveExchangeContext(updated);
-console.log('🔚 --- End of Context Dump ---'); // acts like a flush
+        saveLocalExchangeContext(updated);
+        debugLog.log('🔚 --- End of Context Dump ---');
       }
 
       return updated;
@@ -168,6 +165,11 @@ console.log('🔚 --- End of Context Dump ---'); // acts like a flush
   };
 
   useEffect(() => {
+    if (!didHydrate) {
+      debugLog.log('⏳ Skipping hydration — waiting for first client render');
+      return;
+    }
+
     if (hasInitializedRef.current) {
       debugLog.warn('🛑 Already initialized — skipping context load');
       return;
@@ -180,7 +182,7 @@ console.log('🔚 --- End of Context Dump ---'); // acts like a flush
       const chain = chainId ?? 1;
 
       debugLog.log('🔍 Attempting to load from localStorage...');
-      const stored = loadStoredExchangeContext();
+      const stored = loadLocalExchangeContext();
       debugLog.log('📦 Re-loaded stored exchangeContext:', stored);
 
       const sanitized = sanitizeExchangeContext(stored, chain);
@@ -204,15 +206,15 @@ console.log('🔚 --- End of Context Dump ---'); // acts like a flush
           sanitized.accounts.connectedAccount = metadata
             ? { ...metadata, address }
             : {
-                address,
-                type: 'ERC20_WALLET',
-                name: '',
-                symbol: '',
-                website: '',
-                status: 'Missing',
-                description: `Account ${address} not registered on this site`,
-                logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
-              };
+              address,
+              type: 'ERC20_WALLET',
+              name: '',
+              symbol: '',
+              website: '',
+              status: 'Missing',
+              description: `Account ${address} not registered on this site`,
+              logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
+            };
 
           debugLog.log('✅ Connected account metadata:', sanitized.accounts.connectedAccount);
         } catch (err) {
@@ -225,7 +227,7 @@ console.log('🔚 --- End of Context Dump ---'); // acts like a flush
     };
 
     init();
-  }, [chainId, address, isConnected]);
+  }, [chainId, address, isConnected, didHydrate]);
 
   return (
     <ExchangeContextState.Provider
@@ -249,7 +251,9 @@ console.log('🔚 --- End of Context Dump ---'); // acts like a flush
         setApiErrorMessage,
       }}
     >
-      {children}
+      <HydrationProvider>
+        {children}
+      </HydrationProvider>
     </ExchangeContextState.Provider>
   );
 }
