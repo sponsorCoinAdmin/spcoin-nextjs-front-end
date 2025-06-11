@@ -177,7 +177,3 @@ export {
   formatDecimals,
   useFormattedClientTotalSupply,
 }
-
-function useNetwork(): { chain: any; chains: any } {
-  throw new Error('Function not implemented.')
-}

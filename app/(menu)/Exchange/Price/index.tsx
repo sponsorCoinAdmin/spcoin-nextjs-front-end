@@ -27,7 +27,7 @@ import {
 } from '@/lib/context/hooks';
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { mutate } from 'swr';
-import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts';
+// import { useResetContracts } from '@/lib/context/hooks';
 import { useChainId } from 'wagmi';
 
 export default function PriceView() {
@@ -48,32 +48,33 @@ export default function PriceView() {
   const [containerSwapStatus, setContainerSwapStatus] = useBuySellSwap();
   const [pendingSwapAmount, setPendingSwapAmount] = useState<bigint | null>(null);
 
-useEffect(() => {
-  console.log(`[TEST] useEffect triggered: wagmiChainId = ${wagmiChainId}`);
+  // useEffect(() => {
+  //   console.log(`[TEST] useEffect triggered: wagmiChainId = ${wagmiChainId}`);
 
-  if (wagmiChainId == null) return;
+  //   if (wagmiChainId == null) return;
 
-  const timeout = setTimeout(() => {
-    const contextChainId = exchangeContext.network?.chainId;
+  //   const timeout = setTimeout(() => {
+  //     const contextChainId = exchangeContext.network?.chainId;
 
-    console.log(`[TEST] Debounce fired: wagmiChainId = ${wagmiChainId}, contextChainId = ${contextChainId}`);
+  //     console.log(`[TEST] Debounce fired: wagmiChainId = ${wagmiChainId}, contextChainId = ${contextChainId}`);
 
-    if (wagmiChainId !== contextChainId) {
-      console.warn(`[TEST] Chain mismatch → clearing tokens`);
-      setSellTokenContract(undefined);
-      setBuyTokenContract(undefined);
-    } else {
-      console.log(`[TEST] Chain ID match → no reset`);
-    }
+  //     if (wagmiChainId !== contextChainId) {
+  //       console.warn(`[TEST] Chain mismatch → clearing tokens`);
+  //       setSellTokenContract(undefined);
+  //       setBuyTokenContract(undefined);
+  //     } else {
+  //       console.log(`[TEST] Chain ID match → no reset`);
+  //     }
 
-    // alert(`wagmiChainId = ${wagmiChainId}`);
-  }, 2000);
+  //     // alert(`wagmiChainId = ${wagmiChainId}`);
+  //   }, 2000);
 
-  return () => {
-    console.log(`[TEST] Cleaning up previous timeout for wagmiChainId = ${wagmiChainId}`);
-    clearTimeout(timeout);
-  };
-}, [wagmiChainId, exchangeContext.network?.chainId]);
+  //   return () => {
+  //     console.log(`[TEST] Cleaning up previous timeout for wagmiChainId = ${wagmiChainId}`);
+  //     clearTimeout(timeout);
+  //   };
+  // }, [wagmiChainId, exchangeContext.network?.chainId]);
+
   const {
     isLoading: isLoadingPrice,
     data: priceData,

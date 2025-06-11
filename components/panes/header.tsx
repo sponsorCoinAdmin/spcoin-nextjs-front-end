@@ -14,21 +14,21 @@ import {
   useSellTokenContract,
   useExchangeContext,
 } from '@/lib/context/hooks';
-import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
+import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts'; // ✅ Import added
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDidHydrate } from '@/lib/hooks/useDidHydrate'; // ✅ Hydration hook import
+import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
-  useNetwork(); // ✅ Automatically updates exchangeContext.network
+  useResetContracts(); // ✅ Run contract reset check
 
   const chainId = useChainId({ config });
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const didHydrate = useDidHydrate(); // ✅ Hydration status
+  const didHydrate = useDidHydrate();
 
   const [_, setSellTokenContract] = useSellTokenContract();
   const [__, setBuyTokenContract] = useBuyTokenContract();

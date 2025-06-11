@@ -7,6 +7,12 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ExchangeContext } from '@/lib/structure';
 import { useHydratingFromLocal } from '@/lib/context/HydrationContext';
+import { serializeWithBigInt } from '@/lib/utils/jsonBigInt';
+import {
+  getBlockChainName,
+  getBlockChainLogoURL,
+  getBlockExplorerURL,
+} from '@/lib/network/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESET_CONTRACTS === 'true';
@@ -15,11 +21,32 @@ const debugLog = createDebugLogger('useResetContracts', DEBUG_ENABLED, LOG_TIME)
 export function useResetContracts(delay: number = 100): void {
   const wagmiChainId = useChainId();
   const stableChainId = useDebounce(wagmiChainId, delay);
-  const hydratingFromLocal = useHydratingFromLocal(); // ✅ boolean, not destructured
 
+  const { hydratingFromLocal, setHydratingFromLocal } = useHydratingFromLocal();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const contextChainId = exchangeContext.network?.chainId;
   const hasReset = useRef(false);
+  const prevChainIdRef = useRef<number | null>(null);
+
+  const updateNetwork = (chainId: number) => {
+    const name = getBlockChainName(chainId) ?? 'Unknown Network';
+    const logoURL = getBlockChainLogoURL(chainId) ?? '/assets/miscellaneous/default.png';
+    const url = getBlockExplorerURL(chainId) ?? '';
+
+    setExchangeContext((prev: ExchangeContext) => {
+      debugLog.log(`🧩 updateNetwork: name=${name}, logoURL=${logoURL}, url=${url}`);
+      return {
+        ...prev,
+        network: {
+          ...prev.network,
+          chainId,
+          name,
+          logoURL,
+          url,
+        },
+      };
+    }, 'updateNetwork');
+  };
 
   useEffect(() => {
     debugLog.log(
@@ -27,8 +54,18 @@ export function useResetContracts(delay: number = 100): void {
     );
 
     if (hydratingFromLocal) {
-      debugLog.log('🛑 Skipping: still hydrating');
-      return;
+      const isReady =
+        stableChainId !== undefined &&
+        contextChainId !== undefined &&
+        stableChainId === contextChainId;
+
+      if (isReady) {
+        debugLog.log(`✅ Hydration complete → stableChainId === contextChainId === ${stableChainId}`);
+        setHydratingFromLocal(false);
+      } else {
+        debugLog.log(`🕒 Still hydrating → wagmi=${stableChainId}, context=${contextChainId}`);
+        return;
+      }
     }
 
     if (stableChainId == null) {
@@ -41,38 +78,40 @@ export function useResetContracts(delay: number = 100): void {
       return;
     }
 
-    if (hasReset.current) {
-      debugLog.log('🛑 Skipping: already reset');
-      return;
-    }
-
     if (contextChainId !== stableChainId) {
-      debugLog.warn(
-        `⚠️ Chain mismatch detected: context=${contextChainId}, wagmi=${stableChainId} → Resetting contracts`
-      );
+      debugLog.warn(`⚠️ Chain mismatch detected → context=${contextChainId}, wagmi=${stableChainId}`);
 
-      setExchangeContext((prev: ExchangeContext) => {
-        debugLog.log(`🔁 Resetting tokens: clearing buy/sell tokens from context`);
-        debugLog.log(`🧼 Prev buyTokenContract=${JSON.stringify(prev.tradeData.buyTokenContract)}`);
-        debugLog.log(`🧼 Prev sellTokenContract=${JSON.stringify(prev.tradeData.sellTokenContract)}`);
+      if (!hasReset.current) {
+        setExchangeContext((prev: ExchangeContext) => {
+          const { buyTokenContract, sellTokenContract } = prev.tradeData;
+          debugLog.log(`🔁 Clearing tokens`);
+          debugLog.log(`🧼 buyTokenContract: ${serializeWithBigInt(buyTokenContract)}`);
+          debugLog.log(`🧼 sellTokenContract: ${serializeWithBigInt(sellTokenContract)}`);
 
-        return {
-          ...prev,
-          network: {
-            ...prev.network,
-            chainId: stableChainId,
-          },
-          tradeData: {
-            ...prev.tradeData,
-            sellTokenContract: undefined,
-            buyTokenContract: undefined,
-          },
-        };
-      }, 'useResetContracts');
+          return {
+            ...prev,
+            tradeData: {
+              ...prev.tradeData,
+              buyTokenContract: undefined,
+              sellTokenContract: undefined,
+            },
+            network: {
+              ...prev.network,
+              chainId: stableChainId,
+            },
+          };
+        }, 'useResetContracts');
 
-      hasReset.current = true;
+        updateNetwork(stableChainId);
+        hasReset.current = true;
+      } else {
+        debugLog.log('🛑 Already reset, skipping re-reset');
+      }
     } else {
-      debugLog.log(`✅ ChainId match: ${contextChainId}`);
+      debugLog.log(`✅ Chain ID match: ${contextChainId}`);
+      hasReset.current = false;
     }
-  }, [stableChainId, contextChainId, hydratingFromLocal]);
+
+    prevChainIdRef.current = stableChainId;
+  }, [stableChainId, contextChainId, hydratingFromLocal, setExchangeContext, setHydratingFromLocal]);
 }
