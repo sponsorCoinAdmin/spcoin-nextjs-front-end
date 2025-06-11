@@ -1,3 +1,4 @@
+// File: lib/context/HydrationContext.tsx
 'use client';
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
@@ -42,11 +43,6 @@ export const HydrationProvider = ({ children }: { children: React.ReactNode }) =
 
     if (!hydratingFromLocal) {
       debugLog.log(`✅ Already hydrated → skipping`);
-      return;
-    }
-
-    if (typeof window === 'undefined') {
-      debugLog.log(`❌ Not in browser → aborting`);
       return;
     }
 

@@ -14,7 +14,7 @@ const debugLog = createDebugLogger(
 );
 
 // 🌐 Blockchain provider selection (INFURA or ALCHEMY)
-const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
+export const BLOCKCHAIN_PROVIDER = process.env.NEXT_PUBLIC_BLOCKCHAIN_PROVIDER;
 let BASE_URL: string = '';
 let MAINNET_URL: string = '';
 let POLYGON_URL: string = '';
