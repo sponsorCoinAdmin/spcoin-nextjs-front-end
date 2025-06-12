@@ -19,14 +19,21 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESET_CONTRACTS === 'tru
 const debugLog = createDebugLogger('useResetContracts', DEBUG_ENABLED, LOG_TIME);
 
 enum REFRESH_STATE {
-  DISCONNECTED = '1. DISCONNECTED',
-  CHAIN_ID_RECEIVED = '5. CHAIN_ID_RECEIVED',
-  CONNECTED = '6. CONNECTED',
-  CHAIN_ID_MISMATCH = '7. CHAIN_ID_MISMATCH',
+  DISCONNECTED,
+  CHAIN_ID_RECEIVED,
+  CONNECTED,
+  CHAIN_ID_MISMATCH,
 }
 
 function logState(state: REFRESH_STATE, color: string) {
-  console.log(`%c🌐 STATE ➜ ${state}`, `background: ${color}; color: black; padding: 2px 6px; border-radius: 4px`);
+  if (DEBUG_ENABLED) {
+    const stateNum = state;
+    const stateName = REFRESH_STATE[state];
+    console.log(
+      `    🌐 STATE(${stateNum}) ➜ ${stateName}`,
+      `background: ${color}; color: black; padding: 2px 6px; border-radius: 4px`
+    );
+  }
 }
 
 export function useResetContracts(delay: number = 100): void {
@@ -86,10 +93,8 @@ export function useResetContracts(delay: number = 100): void {
       return;
     }
 
-    setState(
-      `${REFRESH_STATE.CHAIN_ID_RECEIVED} - ${stableChainId}` as REFRESH_STATE,
-      '#c8f7c5'
-    );
+    setState(REFRESH_STATE.CHAIN_ID_RECEIVED, '#c8f7c5');
+    debugLog.log(`📥 stableChainId: ${stableChainId}`);
 
     if (!isConnected) {
       debugLog.warn(`⚠️ Received chainId before connection → ignoring: stableChainId=${stableChainId}`);

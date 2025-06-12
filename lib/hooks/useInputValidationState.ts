@@ -5,6 +5,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { isAddress } from 'viem';
 import { useChainId } from 'wagmi';
+import { createDebugLogger } from '@/lib/utils/debugLogger'
 
 import {
   InputState,
@@ -23,6 +24,9 @@ import {
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from '@/lib/context/hooks';
 import { getLogoURL } from '@/lib/network/utils';
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
+const debugLog = createDebugLogger('useInputValidationState', DEBUG_ENABLED, LOG_TIME);
 
 type AgentAccount = WalletAccount;
 type SponsorAccount = WalletAccount;
@@ -37,7 +41,7 @@ function debugSetInputState(
   const prevState = getInputStateString(currentState);
   const currState = getInputStateString(state);
   const currStateImgs = '⚠️'.repeat(state);
-  console.log(`${currStateImgs} STATE CHANGE: ${prevState}(${currentState}) -> ${currState}(${state})`);
+  debugLog.log(`${currStateImgs} STATE CHANGE: ${prevState}(${currentState}) -> ${currState}(${state})`);
   setState(state);
 }
 
@@ -55,7 +59,7 @@ function isDuplicateInput(
   sellAddress?: string,
   buyAddress?: string
 ): boolean {
-  if (!sellAddress || !buyAddress || containerType === CONTAINER_TYPE.UNDEFINED) return false;
+  if (!sellAddress || !buyAddress ) return false;
   const opposite =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? buyAddress : sellAddress;
   return input.toLowerCase() === opposite.toLowerCase();
@@ -85,7 +89,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       isEmptyInput(debouncedAddress);
 
     if (shouldReset) {
-      console.debug('🔁 Validation reset loop fix triggered', {
+      debugLog.log('🔁 Validation reset loop fix triggered', {
         debouncedAddress,
         prev: previousAddressRef.current,
         inputState,

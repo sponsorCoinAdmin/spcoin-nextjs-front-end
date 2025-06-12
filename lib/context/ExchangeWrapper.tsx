@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { createContext, useEffect, useRef, useState, ReactNode } from 'react';
+import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useChainId, useAccount } from 'wagmi';
 import {
   saveLocalExchangeContext,
@@ -18,8 +18,6 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
-import { HydrationProvider } from '@/lib/context/HydrationContext';
-import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
@@ -54,7 +52,6 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
-  const didHydrate = useDidHydrate();
 
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
@@ -71,7 +68,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
         if (oldSerialized !== newSerialized) {
           debugLog.log(
-            `📝 Context update detected:\nHook: ${hookName}\nCurrently Hydrating = ${!didHydrate}\nCHANGING:\nOLD: ${oldSerialized}\nNEW: ${newSerialized}`
+            `📝 Context update detected:\nHook: ${hookName}\nCHANGING:\nOLD: ${oldSerialized}\nNEW: ${newSerialized}`
           );
         }
       }
@@ -165,11 +162,6 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (!didHydrate) {
-      debugLog.log('⏳ Skipping hydration — waiting for first client render');
-      return;
-    }
-
     if (hasInitializedRef.current) {
       debugLog.warn('🛑 Already initialized — skipping context load');
       return;
@@ -206,15 +198,15 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
           sanitized.accounts.connectedAccount = metadata
             ? { ...metadata, address }
             : {
-              address,
-              type: 'ERC20_WALLET',
-              name: '',
-              symbol: '',
-              website: '',
-              status: 'Missing',
-              description: `Account ${address} not registered on this site`,
-              logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
-            };
+                address,
+                type: 'ERC20_WALLET',
+                name: '',
+                symbol: '',
+                website: '',
+                status: 'Missing',
+                description: `Account ${address} not registered on this site`,
+                logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
+              };
 
           debugLog.log('✅ Connected account metadata:', sanitized.accounts.connectedAccount);
         } catch (err) {
@@ -227,7 +219,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     };
 
     init();
-  }, [chainId, address, isConnected, didHydrate]);
+  }, [chainId, address, isConnected]);
 
   return (
     <ExchangeContextState.Provider
@@ -251,9 +243,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      <HydrationProvider>
-        {children}
-      </HydrationProvider>
+      {children}
     </ExchangeContextState.Provider>
   );
 }
