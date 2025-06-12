@@ -46,6 +46,10 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
     let parsed: any;
     try {
       parsed = deserializeWithBigInt(serializedContext);
+      if (parsed?.network?.connected !== undefined) {
+        debugLog.warn('⚠️ Removing stale `connected` property from loaded network');
+        delete parsed.network.connected;
+      }
     } catch (parseError) {
       debugLog.error(`❌ Failed to deserializeWithBigInt: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
       console.error(parseError);
@@ -79,8 +83,12 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
     try {
       debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
 
+      // Strip `connected` before saving
+      const { connected: _omit, ...networkWithoutConnected } = contextData.network;
+
       const safeContext: ExchangeContext = {
         ...contextData,
+        network: networkWithoutConnected,
         accounts: {
           signer: contextData.accounts?.signer ?? undefined,
           connectedAccount: contextData.accounts?.connectedAccount ?? undefined,
@@ -114,6 +122,7 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
     }
   }
 };
+
 
 export const getInitialContext = (chainId: number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);

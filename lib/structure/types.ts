@@ -49,6 +49,7 @@ export type Settings = {
 };
 
 export type NetworkElement = {
+  connected: boolean;
   chainId: number;
   logoURL: string;
   name: string;

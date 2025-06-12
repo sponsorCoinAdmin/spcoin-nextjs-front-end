@@ -26,7 +26,6 @@ import {
   API_TRADING_PROVIDER,
   ExchangeContext,
 } from '@/lib/structure';
-import { useHydratingFromLocal } from '@/lib/context/HydrationContext';
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap = {
@@ -65,8 +64,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 }
 
 export default function TestPage() {
-  const hydratingFromLocal = useHydratingFromLocal();
-  const { address } = useAccount();
+  const { address, status } = useAccount(); // status: 'connected' | 'connecting' | 'disconnected'
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
@@ -76,6 +74,8 @@ export default function TestPage() {
     collapsedKeys = [],
     expandContext = false,
   } = state.page.exchangePage;
+
+  const hydrated = status === 'connected';
 
   useEffect(() => {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
@@ -151,7 +151,7 @@ export default function TestPage() {
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap gap-4">
-        {!hydratingFromLocal && (
+        {hydrated && (
           <>
             <button
               onClick={toggleContext}
@@ -186,7 +186,7 @@ export default function TestPage() {
         )}
       </div>
 
-      {!hydratingFromLocal && showContext && (
+      {hydrated && showContext && (
         <JsonInspector
           data={normalizeContextDisplay(exchangeContext)}
           collapsedKeys={collapsedKeys}
@@ -194,7 +194,7 @@ export default function TestPage() {
         />
       )}
 
-      {!hydratingFromLocal && showWallets && (
+      {hydrated && showWallets && (
         <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>

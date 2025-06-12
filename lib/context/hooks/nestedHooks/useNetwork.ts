@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useChainId } from 'wagmi';
+import { useChainId, useAccount } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import {
   getBlockChainName,
@@ -18,6 +18,7 @@ const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 export const useNetwork = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const chainId = useChainId();
+  const { status } = useAccount(); // 'connected' | 'connecting' | 'disconnected'
 
   const setNetworkChainId = (newChainId: number) => {
     const oldChainId = exchangeContext.network?.chainId;
@@ -89,6 +90,20 @@ export const useNetwork = () => {
     }));
   };
 
+  const setNetworkConnected = (connected: boolean) => {
+    const old = exchangeContext.network?.connected;
+    debugHookChange('network.connected', old, connected);
+    debugLog.log(`🔌 setNetworkConnected → ${connected}`);
+
+    setExchangeContext(prev => ({
+      ...prev,
+      network: {
+        ...prev.network,
+        connected,
+      },
+    }));
+  };
+
   useEffect(() => {
     if (!chainId) return;
 
@@ -97,12 +112,14 @@ export const useNetwork = () => {
     const name = getBlockChainName(chainId);
     const logoURL = getBlockChainLogoURL(chainId);
     const url = getBlockExplorerURL(chainId);
+    const connected = status === 'connected';
 
     setNetworkChainId(chainId);
     setNetworkName(name);
     setNetworkLogoURL(logoURL);
     setNetworkURL(url);
-  }, [chainId]);
+    setNetworkConnected(connected);
+  }, [chainId, status]);
 
   return {
     network: exchangeContext.network,
@@ -111,5 +128,6 @@ export const useNetwork = () => {
     setNetworkName,
     setNetworkSymbol,
     setNetworkURL,
+    setNetworkConnected,
   };
 };
