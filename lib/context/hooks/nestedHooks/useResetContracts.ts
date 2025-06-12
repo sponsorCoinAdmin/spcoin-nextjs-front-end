@@ -30,7 +30,7 @@ function logState(state: REFRESH_STATE, color: string) {
     const stateNum = state;
     const stateName = REFRESH_STATE[state];
     console.log(
-      `    🌐 STATE(${stateNum}) ➜ ${stateName}`,
+      `%c    🌐 STATE(${stateNum}) ➔ ${stateName}`,
       `background: ${color}; color: black; padding: 2px 6px; border-radius: 4px`
     );
   }
@@ -50,7 +50,7 @@ export function useResetContracts(delay: number = 100): void {
     const logoURL = chainId ? getBlockChainLogoURL(chainId) ?? '/assets/miscellaneous/default.png' : '';
     const url = chainId ? getBlockExplorerURL(chainId) ?? '' : '';
 
-    debugLog.log(`🧩 updateNetwork: chainId=${chainId}, name=${name}, connected=${isConnected}`);
+    debugLog.log(`🧫 updateNetwork: chainId=${chainId}, name=${name}, connected=${isConnected}`);
 
     setExchangeContext((prev: ExchangeContext) => ({
       ...prev,
@@ -89,15 +89,16 @@ export function useResetContracts(delay: number = 100): void {
     );
 
     if (stableChainId == null || currentContextChainId == null) {
-      debugLog.warn('⚠️ Ignoring chainId update because stableChainId or contextChainId is null');
+      const missing = stableChainId == null ? 'stableChainId' : 'contextChainId';
+      debugLog.warn(`⚠️ Ignoring chainId ${wagmiChainId} update because ${missing} is null.`);
       return;
     }
 
     setState(REFRESH_STATE.CHAIN_ID_RECEIVED, '#c8f7c5');
-    debugLog.log(`📥 stableChainId: ${stableChainId}`);
+    debugLog.log(`🕅 stableChainId: ${stableChainId}`);
 
     if (!isConnected) {
-      debugLog.warn(`⚠️ Received chainId before connection → ignoring: stableChainId=${stableChainId}`);
+      debugLog.warn(`⚠️ Received chainId ${stableChainId} before connection → ignoring: stableChainId = ${stableChainId}`);
       return;
     }
 
@@ -114,8 +115,8 @@ export function useResetContracts(delay: number = 100): void {
         setExchangeContext((prev: ExchangeContext) => {
           const { buyTokenContract, sellTokenContract } = prev.tradeData;
           debugLog.warn(`🔁 Clearing tokens`);
-          debugLog.log(`🧼 buyTokenContract: ${serializeWithBigInt(buyTokenContract)}`);
-          debugLog.log(`🧼 sellTokenContract: ${serializeWithBigInt(sellTokenContract)}`);
+          debugLog.log(`🫼 buyTokenContract: ${serializeWithBigInt(buyTokenContract)}`);
+          debugLog.log(`🫼 sellTokenContract: ${serializeWithBigInt(sellTokenContract)}`);
 
           return {
             ...prev,

@@ -8,13 +8,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { useChainId } from 'wagmi';
+import { useChainId, useAccount } from 'wagmi';
 import {
   useBuyTokenContract,
   useSellTokenContract,
   useExchangeContext,
 } from '@/lib/context/hooks';
-import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts'; // ✅ Import added
+import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts';
+import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
 
@@ -23,7 +24,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
-  useResetContracts(); // ✅ Run contract reset check
+  useResetContracts();
 
   const chainId = useChainId({ config });
   const pathname = usePathname();
@@ -33,6 +34,12 @@ export default function Header() {
   const [_, setSellTokenContract] = useSellTokenContract();
   const [__, setBuyTokenContract] = useBuyTokenContract();
   const { exchangeContext } = useExchangeContext();
+  const { isConnected } = useAccount();
+  const { setNetworkConnected } = useNetwork();
+
+  useEffect(() => {
+    setNetworkConnected(isConnected);
+  }, [isConnected]);
 
   const networkName = exchangeContext?.network?.name ?? '';
   const logo = exchangeContext?.network?.logoURL ?? '';

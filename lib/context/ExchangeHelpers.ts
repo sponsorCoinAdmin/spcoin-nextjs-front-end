@@ -1,5 +1,4 @@
 // File: lib/context/ExchangeHelpers.ts
-
 'use client';
 
 import {
@@ -46,10 +45,6 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
     let parsed: any;
     try {
       parsed = deserializeWithBigInt(serializedContext);
-      if (parsed?.network?.connected !== undefined) {
-        debugLog.warn('⚠️ Removing stale `connected` property from loaded network');
-        delete parsed.network.connected;
-      }
     } catch (parseError) {
       debugLog.error(`❌ Failed to deserializeWithBigInt: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
       console.error(parseError);
@@ -83,12 +78,8 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
     try {
       debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
 
-      // Strip `connected` before saving
-      const { connected: _omit, ...networkWithoutConnected } = contextData.network;
-
       const safeContext: ExchangeContext = {
         ...contextData,
-        network: networkWithoutConnected,
         accounts: {
           signer: contextData.accounts?.signer ?? undefined,
           connectedAccount: contextData.accounts?.connectedAccount ?? undefined,
@@ -123,12 +114,14 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
   }
 };
 
-
 export const getInitialContext = (chainId: number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
 
   return {
-    network: initialContextMap.get('networkHeader') as NetworkElement,
+    network: {
+      ...(initialContextMap.get('networkHeader') as NetworkElement),
+      connected: false,
+    },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
       spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
@@ -174,7 +167,11 @@ export const sanitizeExchangeContext = (
       apiTradingProvider: raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       spCoinDisplay: raw.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
     },
-    network: raw.network ?? defaultContext.network,
+    network: {
+      ...defaultContext.network,
+      ...raw.network,
+      connected: raw.network?.connected ?? defaultContext.network.connected,
+    },
     accounts: {
       signer: raw.accounts?.signer ?? defaultContext.accounts.signer,
       connectedAccount: raw.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
