@@ -46,7 +46,7 @@ debugLog.log('HARDHAT_URL         =', HARDHAT_URL);
 
 export const config = createConfig(
   getDefaultConfig({
-    chains: [base, mainnet, polygon, sepolia, hardhat],
+    chains: [mainnet, base, polygon, sepolia, hardhat],
     connectors: [
       injected(),
       // coinbaseWallet({ appName: 'SponsorCoin Exchange' }),

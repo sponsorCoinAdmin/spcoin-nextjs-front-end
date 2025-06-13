@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
@@ -26,6 +26,13 @@ import {
   API_TRADING_PROVIDER,
   ExchangeContext,
 } from '@/lib/structure';
+
+// ✅ Hydration hook
+function useDidHydrate(): boolean {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  return hydrated;
+}
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap = {
@@ -64,7 +71,8 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 }
 
 export default function TestPage() {
-  const { address, status } = useAccount(); // status: 'connected' | 'connecting' | 'disconnected'
+  const isHydrated = useDidHydrate(); // ✅ new hydration guard
+  const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
@@ -74,8 +82,6 @@ export default function TestPage() {
     collapsedKeys = [],
     expandContext = false,
   } = state.page.exchangePage;
-
-  const hydrated = status === 'connected';
 
   useEffect(() => {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
@@ -150,43 +156,43 @@ export default function TestPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex flex-wrap gap-4">
-        {hydrated && (
-          <>
+      {/* Buttons */}
+      {isHydrated && (
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={toggleContext}
+            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+          >
+            {showContext ? 'Hide Context' : 'Show Context'}
+          </button>
+
+          {showContext && (
             <button
-              onClick={toggleContext}
+              onClick={toggleExpandCollapse}
               className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
             >
-              {showContext ? 'Hide Context' : 'Show Context'}
+              {expandContext ? 'Collapse Context' : 'Expand Context'}?
             </button>
+          )}
 
-            {showContext && (
-              <button
-                onClick={toggleExpandCollapse}
-                className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-              >
-                {expandContext ? 'Collapse Context' : 'Expand Context'}?
-              </button>
-            )}
+          <button
+            onClick={logContext}
+            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+          >
+            Log Context
+          </button>
 
-            <button
-              onClick={logContext}
-              className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-            >
-              Log Context
-            </button>
+          <button
+            onClick={toggleWallets}
+            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
+          >
+            {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
+          </button>
+        </div>
+      )}
 
-            <button
-              onClick={toggleWallets}
-              className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-            >
-              {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
-            </button>
-          </>
-        )}
-      </div>
-
-      {hydrated && showContext && (
+      {/* Context */}
+      {isHydrated && showContext && (
         <JsonInspector
           data={normalizeContextDisplay(exchangeContext)}
           collapsedKeys={collapsedKeys}
@@ -194,12 +200,14 @@ export default function TestPage() {
         />
       )}
 
-      {hydrated && showWallets && (
+      {/* Wallets */}
+      {isHydrated && showWallets && (
         <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>
       )}
 
+      {/* ERC20 Read Components */}
       <div className="grid gap-6">
         <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={undefined} />
         <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={undefined} />
