@@ -20,8 +20,9 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
 
 const LOG_TIME = false;
+const LOG_LEVEL = 'info'; // 'info' | 'warn' | 'error'
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
-const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
 
 export type ExchangeContextType = {
   exchangeContext: ExchangeContextTypeOnly;
@@ -62,38 +63,15 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
       const updated = prev ? updater(structuredClone(prev)) : prev;
 
-      if (prev && updated) {
-        const oldSerialized = serializeWithBigInt(prev);
-        const newSerialized = serializeWithBigInt(updated);
-
-        if (oldSerialized !== newSerialized) {
-          debugLog.log(
-            `📝 Context update detected:\nHook: ${hookName}\nCHANGING:\nOLD: ${oldSerialized}\nNEW: ${newSerialized}`
-          );
-        }
+      if (prev && updated && updated.network?.chainId !== prev.network?.chainId) {
+        debugLog.warn(
+          `⚠️ network.chainId changed in setExchangeContext → ${prev.network?.chainId} ➝ ${updated.network?.chainId} 🔁 hook: ${hookName}`
+        );
       }
 
       if (updated) {
-        if (!updated.tradeData.buyTokenContract) {
-          const trace = new Error().stack?.split('\n')?.slice(2, 6).join('\n') ?? 'No stack';
-          debugLog.warn(`🚨 buyTokenContract is MISSING in updated context!\n📍 Call stack:\n${trace}`);
-        }
-
-        updated.accounts = {
-          signer: updated.accounts?.signer ?? undefined,
-          connectedAccount: updated.accounts?.connectedAccount ?? undefined,
-          sponsorAccount: updated.accounts?.sponsorAccount ?? undefined,
-          recipientAccount: updated.accounts?.recipientAccount ?? undefined,
-          agentAccount: updated.accounts?.agentAccount ?? undefined,
-          sponsorAccounts: updated.accounts?.sponsorAccounts ?? [],
-          recipientAccounts: updated.accounts?.recipientAccounts ?? [],
-          agentAccounts: updated.accounts?.agentAccounts ?? [],
-        };
-
-        const serialized = serializeWithBigInt(updated);
-        debugLog.log('📦 Saving exchangeContext to localStorage:', serialized);
         saveLocalExchangeContext(updated);
-        debugLog.log('🔚 --- End of Context Dump ---');
+        debugLog.log('📦 exchangeContext saved to localStorage');
       }
 
       return updated;
@@ -162,35 +140,22 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (hasInitializedRef.current) {
-      debugLog.warn('🛑 Already initialized — skipping context load');
-      return;
-    }
-
+    if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
-    debugLog.log('🔁 Initializing ExchangeContext...');
 
+    debugLog.log('🔁 Initializing ExchangeContext...');
     const init = async () => {
       const chain = chainId ?? 1;
+      debugLog.log('🔍 Loading stored ExchangeContext...');
 
-      debugLog.log('🔍 Attempting to load from localStorage...');
       const stored = loadLocalExchangeContext();
-      debugLog.log('📦 Re-loaded stored exchangeContext:', stored);
+      debugLog.log(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
 
       const sanitized = sanitizeExchangeContext(stored, chain);
-      debugLog.log('🧼 Sanitized context:', sanitized);
-
-      if (!sanitized.tradeData.slippage?.bps || sanitized.tradeData.slippage.bps <= 0) {
-        debugLog.warn('⚠️ Invalid slippageBps — defaulting may be required.');
-      }
-
-      if (!sanitized.tradeData.buyTokenContract) {
-        const trace = new Error().stack?.split('\n')?.slice(2, 6).join('\n') ?? 'No stack';
-        debugLog.warn(`🚨 buyTokenContract is MISSING during context hydration!\n📍 Call stack:\n${trace}`);
-      }
+      debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
+      debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
 
       if (isConnected && address) {
-        debugLog.log('🔌 Injecting connected account:', address);
         try {
           const res = await fetch(`/assets/accounts/${address}/wallet.json`);
           const metadata = res.ok ? await res.json() : null;
@@ -207,14 +172,11 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
                 description: `Account ${address} not registered on this site`,
                 logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
               };
-
-          debugLog.log('✅ Connected account metadata:', sanitized.accounts.connectedAccount);
         } catch (err) {
           debugLog.error('⛔ Failed to load wallet.json:', err);
         }
       }
 
-      debugLog.log('📥 Setting contextState with sanitized object:', sanitized);
       setContextState(sanitized);
     };
 
