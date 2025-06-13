@@ -107,6 +107,17 @@ export const useNetwork = () => {
   useEffect(() => {
     if (!chainId) return;
 
+    const contextChainId = exchangeContext.network?.chainId;
+    const isInitialized = typeof contextChainId === 'number' && contextChainId > 0;
+    const isMismatch = chainId !== contextChainId;
+
+    if (isInitialized && isMismatch) {
+      debugLog.warn(
+        `⚠️ Chain mismatch detected: context=${contextChainId}, wagmi=${chainId} → Skipping automatic context update`
+      );
+      return;
+    }
+
     debugLog.log(`🔄 Detected chainId from wagmi: ${chainId}`);
 
     const name = getBlockChainName(chainId);

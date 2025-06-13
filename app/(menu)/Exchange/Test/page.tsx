@@ -71,7 +71,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 }
 
 export default function TestPage() {
-  const isHydrated = useDidHydrate(); // ✅ new hydration guard
+  const isHydrated = useDidHydrate();
   const { address } = useAccount();
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
@@ -83,23 +83,11 @@ export default function TestPage() {
     expandContext = false,
   } = state.page.exchangePage;
 
+  const tokenAddress = exchangeContext?.tradeData?.sellTokenContract?.address;
+
   useEffect(() => {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
   }, [state]);
-
-  useEffect(() => {
-    if (address) {
-      setState(prev => ({
-        ...prev,
-        page: {
-          ...prev.page,
-          exchangePage: {
-            ...prev.page.exchangePage,
-          },
-        },
-      }));
-    }
-  }, [address]);
 
   const updateExchangePage = (updates: Partial<typeof state.page.exchangePage>) => {
     setState(prev => {
@@ -156,42 +144,28 @@ export default function TestPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Buttons */}
       {isHydrated && (
         <div className="flex flex-wrap gap-4">
-          <button
-            onClick={toggleContext}
-            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-          >
+          <button onClick={toggleContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
             {showContext ? 'Hide Context' : 'Show Context'}
           </button>
 
           {showContext && (
-            <button
-              onClick={toggleExpandCollapse}
-              className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-            >
+            <button onClick={toggleExpandCollapse} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
               {expandContext ? 'Collapse Context' : 'Expand Context'}?
             </button>
           )}
 
-          <button
-            onClick={logContext}
-            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-          >
+          <button onClick={logContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
             Log Context
           </button>
 
-          <button
-            onClick={toggleWallets}
-            className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500"
-          >
+          <button onClick={toggleWallets} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
             {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
           </button>
         </div>
       )}
 
-      {/* Context */}
       {isHydrated && showContext && (
         <JsonInspector
           data={normalizeContextDisplay(exchangeContext)}
@@ -200,25 +174,25 @@ export default function TestPage() {
         />
       )}
 
-      {/* Wallets */}
       {isHydrated && showWallets && (
         <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
           <WalletsPage />
         </div>
       )}
 
-      {/* ERC20 Read Components */}
-      <div className="grid gap-6">
-        <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20BalanceOf TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={undefined} />
-        <ReadWagmiERC20ContractTotalSupply TOKEN_CONTRACT_ADDRESS={undefined} />
-      </div>
+      {isHydrated && tokenAddress && (
+        <div className="grid gap-6">
+          <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20BalanceOf TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+          <ReadWagmiERC20ContractTotalSupply TOKEN_CONTRACT_ADDRESS={tokenAddress} />
+        </div>
+      )}
     </div>
   );
 }
