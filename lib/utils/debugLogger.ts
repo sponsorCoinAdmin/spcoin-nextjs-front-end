@@ -9,6 +9,15 @@ interface DebugLogger {
   clear: () => void;
 }
 
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+const LEVEL_PRIORITY: Record<LogLevel, number> = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+};
+
 /**
  * BigInt-safe JSON.stringify helper
  */
@@ -23,16 +32,22 @@ function serializeWithBigInt(obj: any): string {
  *
  * @param moduleName - Name of the module using the logger
  * @param enabled - Whether to emit debug output (default: false)
- * @param tsFlag - Whether to include timestamps in log lines (default: true)
+ * @param tsFlag - Whether to include timestamps (default: true)
+ * @param logLevel - Minimum log level to output (default: 'debug')
  */
-export function createDebugLogger(moduleName: string, enabled: boolean, tsFlag: boolean = true): DebugLogger {
+export function createDebugLogger(
+  moduleName: string,
+  enabled: boolean,
+  tsFlag: boolean = true,
+  logLevel: LogLevel = 'debug'
+): DebugLogger {
   const prefix = `[🛠️ ${moduleName}]`;
   const logBuffer: string[] = [];
-
   const shouldLog = enabled && process.env.NODE_ENV !== 'production';
+  const minLevel = LEVEL_PRIORITY[logLevel];
 
   if (shouldLog) {
-    const msg = `${prefix} DebugLogging ON — to disable, set enabled=false or tsFlag=false (timestamp=${tsFlag})`;
+    const msg = `${prefix} DebugLogging ON — level=${logLevel}, timestamp=${tsFlag}`;
     console.log(msg);
     logBuffer.push(msg);
   }
@@ -66,28 +81,28 @@ export function createDebugLogger(moduleName: string, enabled: boolean, tsFlag: 
 
   return {
     debug: (...args: any[]) => {
-      if (shouldLog) {
+      if (shouldLog && minLevel <= LEVEL_PRIORITY.debug) {
         const line = formatLine('DEBUG', args);
         console.debug(line);
         logBuffer.push(line);
       }
     },
     log: (...args: any[]) => {
-      if (shouldLog) {
+      if (shouldLog && minLevel <= LEVEL_PRIORITY.info) {
         const line = formatLine('LOG', args);
         console.log(line);
         logBuffer.push(line);
       }
     },
     warn: (...args: any[]) => {
-      if (shouldLog) {
+      if (shouldLog && minLevel <= LEVEL_PRIORITY.warn) {
         const line = formatLine('WARN ⚠️', args);
         console.warn(line);
         logBuffer.push(line);
       }
     },
     error: (...args: any[]) => {
-      if (shouldLog) {
+      if (shouldLog && minLevel <= LEVEL_PRIORITY.error) {
         const line = formatLine('ERROR ❌', args);
         console.error(line);
         logBuffer.push(line);
@@ -96,6 +111,6 @@ export function createDebugLogger(moduleName: string, enabled: boolean, tsFlag: 
     dump: () => [...logBuffer],
     clear: () => {
       logBuffer.length = 0;
-    }
+    },
   };
 }
