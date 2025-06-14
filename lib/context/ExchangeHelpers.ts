@@ -26,6 +26,12 @@ import {
   deserializeWithBigInt,
 } from '@/lib/utils/jsonBigInt';
 
+import { useEffect } from 'react';
+import { useChainId } from 'wagmi';
+import { useBalanceOf } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
+import { useExchangeContext } from '@/lib/context/hooks';
+import { Address } from 'viem';
+
 const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
@@ -82,10 +88,18 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
         ...contextData,
         accounts: {
           signer: contextData.accounts?.signer ?? undefined,
-          connectedAccount: contextData.accounts?.connectedAccount ?? undefined,
-          sponsorAccount: contextData.accounts?.sponsorAccount ?? undefined,
-          recipientAccount: contextData.accounts?.recipientAccount ?? undefined,
-          agentAccount: contextData.accounts?.agentAccount ?? undefined,
+          connectedAccount: contextData.accounts?.connectedAccount
+            ? { ...contextData.accounts.connectedAccount, balance: contextData.accounts.connectedAccount.balance ?? 0n }
+            : undefined,
+          sponsorAccount: contextData.accounts?.sponsorAccount
+            ? { ...contextData.accounts.sponsorAccount, balance: contextData.accounts.sponsorAccount.balance ?? 0n }
+            : undefined,
+          recipientAccount: contextData.accounts?.recipientAccount
+            ? { ...contextData.accounts.recipientAccount, balance: contextData.accounts.recipientAccount.balance ?? 0n }
+            : undefined,
+          agentAccount: contextData.accounts?.agentAccount
+            ? { ...contextData.accounts.agentAccount, balance: contextData.accounts.agentAccount.balance ?? 0n }
+            : undefined,
           sponsorAccounts: contextData.accounts?.sponsorAccounts ?? [],
           recipientAccounts: contextData.accounts?.recipientAccounts ?? [],
           agentAccounts: contextData.accounts?.agentAccounts ?? [],
@@ -174,10 +188,18 @@ export const sanitizeExchangeContext = (
     },
     accounts: {
       signer: raw.accounts?.signer ?? defaultContext.accounts.signer,
-      connectedAccount: raw.accounts?.connectedAccount ?? defaultContext.accounts.connectedAccount,
-      sponsorAccount: raw.accounts?.sponsorAccount ?? defaultContext.accounts.sponsorAccount,
-      recipientAccount: raw.accounts?.recipientAccount ?? defaultContext.accounts.recipientAccount,
-      agentAccount: raw.accounts?.agentAccount ?? defaultContext.accounts.agentAccount,
+      connectedAccount: raw.accounts?.connectedAccount
+        ? { ...raw.accounts.connectedAccount, balance: raw.accounts.connectedAccount.balance ?? 0n }
+        : defaultContext.accounts.connectedAccount,
+      sponsorAccount: raw.accounts?.sponsorAccount
+        ? { ...raw.accounts.sponsorAccount, balance: raw.accounts.sponsorAccount.balance ?? 0n }
+        : defaultContext.accounts.sponsorAccount,
+      recipientAccount: raw.accounts?.recipientAccount
+        ? { ...raw.accounts.recipientAccount, balance: raw.accounts.recipientAccount.balance ?? 0n }
+        : defaultContext.accounts.recipientAccount,
+      agentAccount: raw.accounts?.agentAccount
+        ? { ...raw.accounts.agentAccount, balance: raw.accounts.agentAccount.balance ?? 0n }
+        : defaultContext.accounts.agentAccount,
       sponsorAccounts: raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
       recipientAccounts: raw.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
       agentAccounts: raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,

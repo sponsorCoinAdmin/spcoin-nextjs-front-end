@@ -1,4 +1,4 @@
-import { base, mainnet, polygon, sepolia, hardhat } from 'wagmi/chains';
+import { mainnet, base, polygon, sepolia, hardhat } from 'wagmi/chains';
 import { createConfig, http } from 'wagmi';
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors';
 import { getDefaultConfig } from 'connectkit';

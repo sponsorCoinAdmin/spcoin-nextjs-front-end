@@ -12,7 +12,7 @@ export interface WalletAccount {
   website: string;
   description: string;
   status: string;
-  address: string;
+  address: Address;
   logoURL?: string;
   balance: bigint;
 }
