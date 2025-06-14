@@ -35,11 +35,16 @@ import styles from '@/styles/Exchange.module.css';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { clsx } from 'clsx';
 
+const LOG_TIME:boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SPCOIN_DISPLAY === 'true';
-const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
+const debugLog = createDebugLogger('TokenSelectContainer', DEBUG_ENABLED, LOG_TIME);
+
+let renderCount = 0;
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
-  const { exchangeContext } = useExchangeContext();
+  renderCount++;
+  debugLog.log(`🔄 Rendered ${CONTAINER_TYPE[containerType]} container: count=${renderCount}`);
+
   const [apiProvider] = useApiProvider();
   const account = useAccount();
 
@@ -122,8 +127,15 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         : `You Exactly Receive:`);
 
   const formattedBalance = tokenContract && tokenContract.balance !== undefined
-    ? formatUnits(tokenContract.balance, tokenContract.decimals || 18)
-    : '0.0';
+    ? (() => {
+        const val = formatUnits(tokenContract.balance, tokenContract.decimals || 18);
+        debugLog.log(`💰 Balance formatted for ${tokenContract.symbol}: ${val}`);
+        return val;
+      })()
+    : (() => {
+        debugLog.warn(`⚠️ No balance available for ${tokenContract?.symbol} (${tokenContract?.address})`);
+        return '0.0';
+      })();
 
   const isInputDisabled =
     !tokenContract ||

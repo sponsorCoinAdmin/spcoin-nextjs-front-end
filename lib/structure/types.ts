@@ -1,6 +1,8 @@
 // File: lib/structure/types.ts
+
 import { JsonRpcSigner } from 'ethers';
 import { Address } from 'viem';
+import { UseReadContractReturnType } from 'wagmi';
 import { STATUS, TRADE_DIRECTION, API_TRADING_PROVIDER, SP_COIN_DISPLAY } from './enums';
 
 export interface WalletAccount {
@@ -12,6 +14,7 @@ export interface WalletAccount {
   status: string;
   address: string;
   logoURL?: string;
+  balance: bigint;
 }
 
 export interface AccountAddress {
@@ -26,10 +29,10 @@ export type ErrorMessage = {
 };
 
 export type ContractRecs = {
-  decimalRec: number;
-  nameRec: string;
-  symbolRec: string;
-  totalSupplyRec: bigint;
+  nameRec: UseReadContractReturnType;
+  symbolRec: UseReadContractReturnType;
+  decimalRec: UseReadContractReturnType;
+  totalSupplyRec: UseReadContractReturnType;
 };
 
 export type Accounts = {
@@ -65,14 +68,14 @@ export type Slippage = {
 
 export type TokenContract = {
   address: Address;
-  amount: bigint;
-  balance: bigint;
-  chainId?: number;
-  decimals?: number;
-  logoURL?: string;
   name?: string;
   symbol?: string;
-  totalSupply: bigint;
+  decimals?: number;
+  totalSupply?: bigint;
+  balance: bigint;
+  amount?: bigint;
+  chainId?: number;
+  logoURL?: string;
 };
 
 export type TradeData = {

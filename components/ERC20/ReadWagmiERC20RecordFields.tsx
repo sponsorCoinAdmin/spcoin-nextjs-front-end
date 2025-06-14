@@ -5,7 +5,7 @@ import {
   useWagmiERC20TokenDecimalRec,
   useWagmiERC20TokenNameRec,
   useWagmiERC20TokenSymbolRec,
-  useWagmiERC20TokenTotalSupplyRec } from '@/lib/wagmi/wagmiERC20ClientRead'
+  useWagmiERC20TokenTotalSupplyRec } from '@/lib/hooks/wagmi/wagmiERC20ClientRead'
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS:Address|undefined

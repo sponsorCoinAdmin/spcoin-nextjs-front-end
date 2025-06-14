@@ -18,6 +18,8 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
+import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
+import { useExchangeTokenBalances } from '@/lib/context/hooks/nestedHooks/useExchangeTokenBalances';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
@@ -44,6 +46,16 @@ export type ExchangeContextType = {
 
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
+function ExchangeNetworkInitializer() {
+  useNetwork();
+  return null;
+}
+
+function ExchangeBalanceSync({ hydrated }: { hydrated: boolean }) {
+  useExchangeTokenBalances(hydrated);
+  return null;
+}
+
 export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
@@ -52,6 +64,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
@@ -216,12 +229,13 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
       debugLog.log('📥 Setting contextState with sanitized object:', sanitized);
       setContextState(sanitized);
+      setHydrated(true);
     };
 
     init();
   }, [chainId, address, isConnected]);
 
-  return (
+  return contextState ? (
     <ExchangeContextState.Provider
       value={{
         exchangeContext: {
@@ -244,6 +258,8 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      <ExchangeNetworkInitializer />
+      <ExchangeBalanceSync hydrated={hydrated} />
     </ExchangeContextState.Provider>
-  );
+  ) : null;
 }

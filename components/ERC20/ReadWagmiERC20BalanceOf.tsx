@@ -1,13 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Address } from 'viem';
 import { useAccount } from 'wagmi';
 import {
   useWagmiERC20TokenBalanceOfStr,
   useFormattedClientBalanceOf,
   useWagmiERC20TokenDecimals,
-} from '@/lib/wagmi/wagmiERC20ClientRead';
+} from '@/lib/hooks/wagmi/wagmiERC20ClientRead';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_USE_EXCHANGE_BALANCES === 'true';
+const debugLog = createDebugLogger('ReadWagmiERC20BalanceOf', DEBUG_ENABLED, false);
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS: Address | undefined;
@@ -19,6 +23,15 @@ const ReadWagmiERC20BalanceOf = ({ TOKEN_CONTRACT_ADDRESS }: Props) => {
   const balanceOf = useWagmiERC20TokenBalanceOfStr(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
   const decimals = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
   const formattedBalanceOf = useFormattedClientBalanceOf(ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS);
+
+  useEffect(() => {
+    debugLog.log(`🔍 Rendering ReadWagmiERC20BalanceOf`);
+    debugLog.log(`🏦 Wallet Address: ${ACTIVE_ACCOUNT_ADDRESS}`);
+    debugLog.log(`🪙 Token Address: ${TOKEN_CONTRACT_ADDRESS}`);
+    debugLog.log(`💰 Raw Balance: ${balanceOf}`);
+    debugLog.log(`📏 Decimals: ${decimals}`);
+    debugLog.log(`💵 Formatted Balance: ${formattedBalanceOf}`);
+  }, [ACTIVE_ACCOUNT_ADDRESS, TOKEN_CONTRACT_ADDRESS, balanceOf, decimals, formattedBalanceOf]);
 
   return (
     <>

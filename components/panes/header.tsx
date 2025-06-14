@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { config } from '@/lib/wagmi/wagmiConfig';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -36,29 +36,27 @@ export default function Header() {
   const { exchangeContext } = useExchangeContext();
   const { isConnected } = useAccount();
   const { setNetworkConnected } = useNetwork();
-  const { switchChain } = useSwitchChain();
+  const { switchChainAsync } = useSwitchChain();
 
   useEffect(() => {
     setNetworkConnected(isConnected);
   }, [isConnected]);
 
   useEffect(() => {
-    if (!isConnected || !exchangeContext?.network?.chainId) return;
+    const trySwitch = async () => {
+      if (!isConnected || !exchangeContext?.network?.chainId) return;
 
-    const contextChainId = exchangeContext.network.chainId;
-    if (chainId !== contextChainId) {
-      debugLog.warn(`⚠️ Chain mismatch: wallet=${chainId} vs context=${contextChainId}`);
-      try {
-        const result = switchChain({ chainId: contextChainId });
-        if (result?.catch) {
-          result.catch((err) =>
-            debugLog.error(`❌ switchChain failed: ${err?.message || err}`)
-          );
+      const contextChainId = exchangeContext.network.chainId;
+      if (chainId !== contextChainId) {
+        debugLog.warn(`⚠️ Chain mismatch: wallet=${chainId} vs context=${contextChainId}`);
+        try {
+          await switchChainAsync({ chainId: contextChainId });
+        } catch (err: any) {
+          debugLog.error(`❌ switchChain failed: ${err?.message || err}`);
         }
-      } catch (err: any) {
-        debugLog.error(`❌ switchChain threw error: ${err?.message || err}`);
       }
-    }
+    };
+    trySwitch();
   }, [isConnected, chainId, exchangeContext?.network?.chainId]);
 
   const networkName = exchangeContext?.network?.name ?? '';
@@ -69,37 +67,26 @@ export default function Header() {
   const SHOW_EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
   const SHOW_SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
 
+  const staticLinks = useMemo(() => [
+    { href: '/WhitePaper', label: 'White Paper' },
+    { href: '/SpCoinAPI', label: 'Sponsor Coin API' },
+    { href: '/SponsorMe', label: 'Sponsor Me' },
+    { href: '/ManageAccounts', label: 'Manage Accounts' },
+    { href: '/CreateAgent', label: 'Create Agent' },
+  ], []);
+
   const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
     const isActive = pathname === href && hoveredTab === null;
-
     return `
       px-4 py-2 rounded font-medium transition cursor-pointer
       ${isHovered || isActive ? 'bg-[#222a3a] text-[#5981F3]' : ''}
     `;
   };
 
-  const onMouseEnter = (href: string) => () => setHoveredTab(href);
-  const onMouseLeave = () => setHoveredTab(null);
-
-  const staticLinks = [
-    { href: '/WhitePaper', label: 'White Paper' },
-    { href: '/SpCoinAPI', label: 'Sponsor Coin API' },
-    { href: '/SponsorMe', label: 'Sponsor Me' },
-    { href: '/ManageAccounts', label: 'Manage Accounts' },
-    { href: '/CreateAgent', label: 'Create Agent' },
-  ];
-
   return (
-    <header
-      className="text-white border-b border-[#21273a] py-4"
-      style={{
-        background: 'rgb(119, 126, 142)',
-        paddingLeft: '15px',
-        paddingRight: '33px',
-      }}
-    >
-      <div className="flex flex-row justify-between items-center w-full">
+    <header className="text-white border-b border-[#21273a] py-4 bg-[rgb(119,126,142)] px-[15px] sm:px-[33px]">
+      <div className="flex justify-between items-center w-full">
         <div className="flex items-center gap-4 flex-shrink-0">
           <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
 
@@ -107,8 +94,9 @@ export default function Header() {
             <Link
               href="/SponsorCoin"
               className={linkClass('/SponsorCoin')}
-              onMouseEnter={onMouseEnter('/SponsorCoin')}
-              onMouseLeave={onMouseLeave}
+              aria-current={pathname === '/SponsorCoin' ? 'page' : undefined}
+              onMouseEnter={() => setHoveredTab('/SponsorCoin')}
+              onMouseLeave={() => setHoveredTab(null)}
             >
               SponsorCoin
             </Link>
@@ -118,8 +106,9 @@ export default function Header() {
             <Link
               href="/Exchange"
               className={linkClass('/Exchange')}
-              onMouseEnter={onMouseEnter('/Exchange')}
-              onMouseLeave={onMouseLeave}
+              aria-current={pathname === '/Exchange' ? 'page' : undefined}
+              onMouseEnter={() => setHoveredTab('/Exchange')}
+              onMouseLeave={() => setHoveredTab(null)}
             >
               Exchange
             </Link>
@@ -129,8 +118,9 @@ export default function Header() {
             <Link
               href="/Exchange/Test"
               className={linkClass('/Exchange/Test')}
-              onMouseEnter={onMouseEnter('/Exchange/Test')}
-              onMouseLeave={onMouseLeave}
+              aria-current={pathname === '/Exchange/Test' ? 'page' : undefined}
+              onMouseEnter={() => setHoveredTab('/Exchange/Test')}
+              onMouseLeave={() => setHoveredTab(null)}
             >
               Test
             </Link>
@@ -143,8 +133,9 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 className={linkClass(link.href)}
-                onMouseEnter={onMouseEnter(link.href)}
-                onMouseLeave={onMouseLeave}
+                aria-current="page"
+                onMouseEnter={() => setHoveredTab(link.href)}
+                onMouseLeave={() => setHoveredTab(null)}
               >
                 {link.label}
               </Link>
@@ -153,18 +144,18 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            {logo ? (
+            {logo && (
               <img
                 key={logo}
                 src={logo}
                 className="h-[36px]"
                 alt={`Header ChainId = ${chainId} Network = ${networkName}`}
-                onError={(event) => {
+                onError={(e) => {
                   debugLog.warn(`⚠️ Failed to load logo: ${logo}, using fallback.`);
-                  event.currentTarget.src = defaultMissingImage;
+                  e.currentTarget.src = defaultMissingImage;
                 }}
               />
-            ) : null}
+            )}
             <span className="text-[15px] font-semibold">{networkName}</span>
           </div>
           <div className="ml-2">

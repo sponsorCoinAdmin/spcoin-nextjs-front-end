@@ -10,7 +10,6 @@ import { getNativeWrapAddress, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils'
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
 
 function useErc20TokenContract(tokenAddress?: Address): Omit<TokenContract, 'balance'> | undefined {
-  const { address: account } = useAccount();
   const enabled = !!tokenAddress && isAddress(tokenAddress);
   const chainId = useChainId();
 
