@@ -7,7 +7,7 @@ import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 
 import { useExchangeContext } from '../useExchangeContext';
-import { useWagmiERC20TokenBalanceOf } from '@/lib/wagmi/wagmiERC20ClientRead';
+import { useWagmiERC20TokenBalanceOf } from '@/lib/hooks/wagmi/wagmiERC20ClientRead';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 

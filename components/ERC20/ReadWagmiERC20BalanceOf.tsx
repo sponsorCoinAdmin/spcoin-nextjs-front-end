@@ -7,7 +7,7 @@ import {
   useWagmiERC20TokenBalanceOfStr,
   useFormattedClientBalanceOf,
   useWagmiERC20TokenDecimals,
-} from '@/lib/wagmi/wagmiERC20ClientRead';
+} from '@/lib/hooks/wagmi/wagmiERC20ClientRead';
 
 type Props = {
   TOKEN_CONTRACT_ADDRESS: Address | undefined;

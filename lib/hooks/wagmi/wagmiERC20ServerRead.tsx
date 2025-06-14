@@ -1,6 +1,6 @@
 import { readContract } from '@wagmi/core'
 // ❗️ Make sure this is your Wagmi client config, not next/config!
-import { config } from './wagmiConfig'
+import { config } from '../../wagmi/wagmiConfig'
 
 import { erc20Abi, getAddress, Address } from 'viem'
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
