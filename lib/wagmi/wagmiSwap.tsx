@@ -118,7 +118,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
       amount:0n,
       balance:0n,
       decimals:decimals,
-      totalSupply:totalSupply,
+      totalSupply:0n,
     }
   }
   // if (TOKEN_CONTRACT_ADDRESS)
@@ -144,7 +144,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
       amount:0n,
       decimals:decimals,
       balance:0n,
-      totalSupply:undefined,
+      totalSupply:0n,
     }
   }
 
