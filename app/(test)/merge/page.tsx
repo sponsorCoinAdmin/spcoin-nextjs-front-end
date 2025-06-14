@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { defaultMissingImage } from '@/lib/network/utils'
-import { publicWalletPath, WalletAccount } from '@/lib/structure'
+import { WalletAccount } from '@/lib/structure'
 
 export default function Page() {
   const [wallets, setWallets] = useState<WalletAccount[]>([])
@@ -30,10 +30,6 @@ export default function Page() {
       return false
     })
   }, [wallets, filter])
-
-  const getLogoUrl = (walletAddress: string) => {
-    return `/${publicWalletPath}/${walletAddress}/logo.png` // let browser 404 if missing
-  }
 
   const getTitle = () => {
     if (filter === 'All') return 'All Wallets'
@@ -81,7 +77,7 @@ export default function Page() {
       <div style={{ marginTop: '90px', padding: '0 20px' }}>
         <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
           {filteredWallets.map((wallet, index) => {
-            const logoUrl = getLogoUrl(wallet.address)
+            const logoUrl = wallet.logoURL;
 
             return (
               <li key={wallet.address} style={{

@@ -32,8 +32,8 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
                 try {
                     const accountData = fs.readFileSync(accountFilePath, "utf-8");
                     const account: WalletAccount = JSON.parse(accountData);
-                    if (!account.logo) {
-                        account.logo = `/assets/accounts/${account.address}/logo.png`;
+                    if (!account.logoURL) {
+                        account.logoURL = `/assets/accounts/${account.address}/logo.png`;
                     }
                     accounts.push(account);
                 } catch (error) {
@@ -66,8 +66,8 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
                     try {
                         const accountData = fs.readFileSync(accountFilePath, "utf-8");
                         const account: WalletAccount = JSON.parse(accountData);
-                        if (!account.logo) {
-                            account.logo = `/assets/accounts/${account.address}/logo.png`;
+                        if (!account.logoURL) {
+                            account.logoURL = `/assets/accounts/${account.address}/logo.png`;
                         }
                         accounts.push(account);
                     } catch (error) {

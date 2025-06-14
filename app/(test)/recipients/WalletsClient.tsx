@@ -1,17 +1,15 @@
 'use client'
 
-import { WalletAccount, publicWalletPath } from '@/lib/structure'
+import { WalletAccount } from '@/lib/structure'
 import { defaultMissingImage } from '@/lib/network/utils'
 
 export default function WalletsClient({ wallets }: { wallets: WalletAccount[] }) {
-  const getLogoUrl = (walletAddress: string) =>
-    `/${publicWalletPath}/${walletAddress}/logo.png`
 
   return (
     <div style={{ padding: '20px' }}>
       <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
         {wallets.map((wallet, index) => {
-          const logoUrl = getLogoUrl(wallet.address)
+          const logoUrl = wallet.logoURL;
           const isMissingLogo = logoUrl === defaultMissingImage
 
           return (

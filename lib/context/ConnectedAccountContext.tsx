@@ -43,6 +43,7 @@ export const ConnectedAccountProvider = ({ children }: { children: ReactNode }) 
           symbol: '',
           website: '',
           status: 'Missing',
+          balance: 0n,
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
         };
 
