@@ -7,7 +7,6 @@ const ProviderConfigurationStatus = () => {
     <h2>Provider Configuration Status</h2>
     <div>
       Blockchain Provider = {BLOCKCHAIN_PROVIDER} <br />
-      {/* TokenContract Data: {stringifyBigInt("contract")} <br /> */}
     </div>
   </div>
 );

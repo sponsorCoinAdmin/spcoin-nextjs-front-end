@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAccount, useBalance, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
@@ -16,11 +16,6 @@ const debugLog = createDebugLogger('useActiveAccount', DEBUG_ENABLED, LOG_TIME);
 export const useActiveAccount = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { address, status } = useAccount();
-  const chainId = useChainId();
-
-  const { data: balanceData } = useBalance({
-    address: address ?? undefined,
-  });
 
   const setActiveAccountName = (name?: string) => {
     const prev = exchangeContext.accounts.connectedAccount?.name;
@@ -100,10 +95,14 @@ export const useActiveAccount = () => {
   };
 
   useEffect(() => {
-    if (balanceData?.value) {
-      setActiveAccountBalance(balanceData.value);
-    }
-  }, [chainId]);
+    debugLog.log(`🔁 useActiveAccount initialized. address=${address}, status=${status}`);
+
+    setExchangeContext(prevContext => {
+      const cloned = structuredClone(prevContext);
+      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.type = 'Active Wallet Account';
+      return cloned;
+    });
+  }, [address, status]);
 
   return {
     connectedAccount: exchangeContext.accounts.connectedAccount,

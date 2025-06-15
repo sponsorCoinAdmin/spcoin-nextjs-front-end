@@ -59,7 +59,6 @@ const useWagmiERC20TokenTotalSupplyRec = (contractAddress:Address | undefined) =
     functionName: 'totalSupply',
     config: config, 
   })
-  // console.debug("QQQQQ :\n"+stringifyBigInt(wagmiTotalSupplyRec))
   return wagmiTotalSupplyRec;
 }
 

@@ -1,12 +1,13 @@
+// File: lib/context/ExchangeWrapper.tsx
+
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useChainId, useAccount } from 'wagmi';
-import {
-  saveLocalExchangeContext,
-  loadLocalExchangeContext,
-  sanitizeExchangeContext,
-} from '@/lib/context/ExchangeHelpers';
+import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
+import { loadLocalExchangeContext } from '@/lib/context/helpers/ExchangeLoadHelpers';
+import { sanitizeExchangeContext } from '@/lib/context/helpers/ExchangeSanitizeHelpers';
+import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 
 import {
   ExchangeContext as ExchangeContextTypeOnly,
@@ -17,10 +18,9 @@ import {
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { serializeWithBigInt } from '../utils/jsonBigInt';
 
 const LOG_TIME = false;
-const LOG_LEVEL = 'info'; // 'info' | 'warn' | 'error'
+const LOG_LEVEL = 'info';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
 const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
 
@@ -143,44 +143,9 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
 
-    debugLog.log('🔁 Initializing ExchangeContext...');
-    const init = async () => {
-      const chain = chainId ?? 1;
-      debugLog.log('🔍 Loading stored ExchangeContext...');
-
-      const stored = loadLocalExchangeContext();
-      debugLog.log(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
-
-      const sanitized = sanitizeExchangeContext(stored, chain);
-      debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
-      debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
-
-      if (isConnected && address) {
-        try {
-          const res = await fetch(`/assets/accounts/${address}/wallet.json`);
-          const metadata = res.ok ? await res.json() : null;
-
-          sanitized.accounts.connectedAccount = metadata
-            ? { ...metadata, address }
-            : {
-                address,
-                type: 'ERC20_WALLET',
-                name: '',
-                symbol: '',
-                website: '',
-                status: 'Missing',
-                description: `Account ${address} not registered on this site`,
-                logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
-              };
-        } catch (err) {
-          debugLog.error('⛔ Failed to load wallet.json:', err);
-        }
-      }
-
+    initExchangeContext(chainId, isConnected, address).then((sanitized) => {
       setContextState(sanitized);
-    };
-
-    init();
+    });
   }, [chainId, address, isConnected]);
 
   return (

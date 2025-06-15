@@ -43,8 +43,6 @@ function App() {
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);
 
-  // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
-
   return (
     <>
       <ProviderConfigurationStatus />

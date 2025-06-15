@@ -32,8 +32,6 @@ function App() {
     }
   }, [ACTIVE_ACCOUNT.chainId]);
   
-  // console.debug(`XXXX ercContract = ${stringifyBigInt(ercContract)}`)
-
   return (
     <>
       <ProviderConfigurationStatus />

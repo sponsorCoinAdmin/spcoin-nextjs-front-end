@@ -12,7 +12,6 @@ import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 // console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
 
 const useWagmiWrapDeposit = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
-  // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
   const { writeContract } = useWriteContract()
   const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
 
@@ -24,8 +23,6 @@ const useWagmiWrapDeposit = (connectedAccountAddr: Address | undefined, contract
     args: [
     ],
  })
-
-  // console.debug(`useWagmiERC20TokenBalanceOfRec.wagmiBalanceOfRec = ${stringifyBigInt(wagmiBalanceOfRec)}`)
 }
 
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
@@ -65,7 +62,6 @@ const useWagmiERC20TokenTotalSupplyRec = (contractAddress:Address | undefined) =
     functionName: 'totalSupply',
     config: config, 
   })
-  // console.debug("QQQQQ :\n"+stringifyBigInt(wagmiTotalSupplyRec))
   return wagmiTotalSupplyRec;
 }
 
