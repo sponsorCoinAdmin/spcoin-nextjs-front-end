@@ -18,13 +18,13 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
   level = 0,
   path = 'root',
 }) => {
-  const isCollapsed = collapsedKeys.includes(path);
+  const isCollapsed = collapsedKeys.includes(path ?? '');
 
   const toggle = useCallback(() => {
     updateCollapsedKeys(
       isCollapsed
         ? collapsedKeys.filter((key) => key !== path)
-        : [...new Set([...collapsedKeys, path])]
+        : [...new Set([...collapsedKeys, path!])]
     );
   }, [isCollapsed, collapsedKeys, updateCollapsedKeys, path]);
 
@@ -36,25 +36,27 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
 
   const getPathLabel = (path: string): string => {
     if (path === 'root') return 'Exchange Context';
-    if (path === 'tradeData.slippage') return 'slippage'; // ✅ override label for slippage
+    if (path === 'tradeData.slippage') return 'slippage';
     return path;
   };
 
-  const renderValue = (value: any, key: string, currentPath: string) => {
+  const renderValue = (value: any, key: string) => {
+    const nextPath = `${path}.${key}`;
     if (value && typeof value === 'object') {
       return (
         <JsonInspector
-          key={currentPath}
+          key={nextPath}
           data={value}
           collapsedKeys={collapsedKeys}
           updateCollapsedKeys={updateCollapsedKeys}
           level={level + 1}
-          path={currentPath}
+          path={key} // ✅ render this subtree as key only
         />
       );
     }
+
     return (
-      <div key={currentPath} className="ml-4">
+      <div key={nextPath} className="ml-4">
         <span className="text-[#5981F3]">{key}</span>: <span className={getValueColor(value)}>{stringifyBigInt(value)}</span>
       </div>
     );
@@ -64,14 +66,11 @@ const JsonInspector: React.FC<JsonInspectorProps> = ({
     <div className="ml-2">
       <div className="cursor-pointer" onClick={toggle}>
         <span className="text-green-400">{isCollapsed ? '[+]' : '[-]'}</span>{' '}
-        <span className="text-white font-semibold">{getPathLabel(path)}</span>
+        <span className="text-white font-semibold">{getPathLabel(path ?? '')}</span>
       </div>
       {!isCollapsed && (
         <div className="ml-4">
-          {Object.entries(data).map(([key, value]) => {
-            const newPath = path === 'root' ? key : `${path}.${key}`;
-            return renderValue(value, key, newPath);
-          })}
+          {Object.entries(data).map(([key, value]) => renderValue(value, key))}
         </div>
       )}
     </div>

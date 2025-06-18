@@ -90,13 +90,13 @@ const useWagmiERC20TokenTotalSupply = (contractAddress:Address | undefined) => {
 }
 
 const useWagmiERC20TokenBalanceOf = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
-  alert("useWagmiERC20TokenBalanceOf: connectedAccountAddr = "+connectedAccountAddr+", contractAddress = "+contractAddress)
   let eRC20WagmiClientBalanceOf:bigint | undefined = BigInt(0);
   eRC20WagmiClientBalanceOf = useWagmiERC20TokenBalanceOfRec(connectedAccountAddr , contractAddress )?.data;
   return eRC20WagmiClientBalanceOf;
 }
 
 const useWagmiERC20TokenBalanceOfStr = (connectedAccountAddr: Address | undefined, contractAddress: Address |  undefined) => {
+  // alert("useWagmiERC20TokenBalanceOfStr: connectedAccountAddr = "+connectedAccountAddr+", contractAddress = "+contractAddress)
   const bigIntBalanceOf:bigint | undefined = useWagmiERC20TokenBalanceOf(connectedAccountAddr, contractAddress);
   return bigIntBalanceOf ? bigIntBalanceOf.toString() : "0";
 }

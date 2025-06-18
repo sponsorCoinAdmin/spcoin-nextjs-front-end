@@ -31,7 +31,6 @@ import { mutate } from 'swr';
 import { useChainId } from 'wagmi';
 
 export default function PriceView() {
-  const wagmiChainId = useChainId();
 
   // ✅ Call the hook directly with wagmiChainId
   // useResetContracts(wagmiChainId);

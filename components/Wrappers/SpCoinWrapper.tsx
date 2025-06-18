@@ -8,7 +8,7 @@ import { config } from '@/lib/wagmi/wagmiConfig';
 import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext'; // ✅ new import
 import { ExchangeWrapper } from '@/lib/context/ExchangeWrapper';
 import { PageStateProvider } from '@/lib/context/PageStateContext';
-
+import ExchangeMethods from '@/lib/context/ExchangeMethods'; // ❌ This will be undefined
 export default function SpCoinWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient();
 
@@ -19,7 +19,9 @@ export default function SpCoinWrapper({ children }: { children: React.ReactNode 
           <PageStateProvider>
             <ConnectedAccountProvider> {/* ✅ inserted */}
               <ExchangeWrapper>
-                {children}
+                <ExchangeMethods>
+                  {children}
+                </ExchangeMethods>
               </ExchangeWrapper>
             </ConnectedAccountProvider>
           </PageStateProvider>

@@ -1,3 +1,5 @@
+// File: components/Containers/TokenSelectContainer.tsx
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -8,7 +10,6 @@ import {
   useApiProvider,
   useSpCoinDisplay,
   useBuyAmount,
-  useExchangeContext,
   useSellAmount,
   useSlippage,
   useTradeDirection,
@@ -32,14 +33,13 @@ import {
 } from '@/lib/structure';
 
 import styles from '@/styles/Exchange.module.css';
-import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
 import { clsx } from 'clsx';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SPCOIN_DISPLAY === 'true';
-const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED);
+const LOG_TIMES = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
+const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED, LOG_TIMES);
 
 const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
-  const { exchangeContext } = useExchangeContext();
   const [apiProvider] = useApiProvider();
   const account = useAccount();
 
@@ -47,13 +47,14 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
   const { data: slippage } = useSlippage();
-  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
-  const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
+  const [sellTokenContract] = useSellTokenContract();
+  const [buyTokenContract] = useBuyTokenContract();
   const [spCoinDisplay] = useSpCoinDisplay();
 
-  const tokenContract = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    ? sellTokenContract
-    : buyTokenContract;
+  const tokenContract =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? sellTokenContract
+      : buyTokenContract;
 
   const [inputValue, setInputValue] = useState<string>('0');
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -66,20 +67,23 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   useEffect(() => {
     if (!tokenContract) return;
-
-    const currentAmount = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellAmount : buyAmount;
+    const currentAmount =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellAmount : buyAmount;
     const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
-
-    if (inputValue !== formatted) {
-      setInputValue(formatted);
-    }
+    if (inputValue !== formatted) setInputValue(formatted);
   }, [sellAmount, buyAmount, tokenContract]);
 
   useEffect(() => {
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER && tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) {
+    if (
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER &&
+      tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
+    ) {
       setSellAmount(debouncedSellAmount);
     }
-    if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER && tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN) {
+    if (
+      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER &&
+      tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
+    ) {
       setBuyAmount(debouncedBuyAmount);
     }
   }, [debouncedSellAmount, debouncedBuyAmount, containerType, tradeDirection]);
@@ -87,7 +91,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   const handleInputChange = (value: string) => {
     const isValid = /^\d*\.?\d*$/.test(value);
     if (!isValid) return;
-
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
     debugLog.log(`⌨️ User input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
@@ -100,7 +103,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     try {
       const bigIntValue = parseUnits(formatted, decimals);
       debugLog.log(`🔢 Parsed BigInt: ${bigIntValue}`);
-
       if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         setSellAmount(bigIntValue);
@@ -113,17 +115,21 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
     }
   };
 
-  const buySellText = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
+  const buySellText =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
         ? `You Pay ± ${slippage.percentageString}`
-        : `You Exactly Pay:`)
-    : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
+        : `You Exactly Pay:`
+      : tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
         ? `You Receive ± ${slippage.percentageString}`
-        : `You Exactly Receive:`);
+        : `You Exactly Receive:`;
 
-  const formattedBalance = tokenContract && tokenContract.balance !== undefined
-    ? formatUnits(tokenContract.balance, tokenContract.decimals || 18)
-    : '0.0';
+  const formattedBalance = useFormattedTokenAmount(tokenContract, tokenContract?.balance ?? 0n);
+
+  debugLog.log(
+    `💰 formattedBalance to display for ${tokenContract?.symbol || 'unknown'}:`,
+    formattedBalance
+  );
 
   const isInputDisabled =
     !tokenContract ||
@@ -151,37 +157,42 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         onBlur={() => {
           try {
             const parsed = parseFloat(inputValue);
-            if (isNaN(parsed)) {
-              setInputValue('0');
-            } else {
-              const normalized = parsed.toString();
-              setInputValue(normalized);
-            }
+            setInputValue(isNaN(parsed) ? '0' : parsed.toString());
           } catch {
             setInputValue('0');
           }
         }}
       />
-      <TokenSelectDropDown
-        containerType={containerType}
-        tokenContract={tokenContract}
-        setDecimalAdjustedContract={
-          containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-            ? setSellTokenContract
-            : setBuyTokenContract
-        }
-      />
+      <TokenSelectDropDown containerType={containerType} />
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
       {isSpCoin(tokenContract) &&
         (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
-        ) : ( 
+        ) : (
           <AddSponsorship />
         ))}
-      <span>{DEBUG_ENABLED && spCoinDisplayString(spCoinDisplay)}</span>
     </div>
   );
 };
 
 export default TokenSelectContainer;
+
+// 🔽 Local Hook to simplify balance formatting
+function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
+  const decimals = tokenContract?.decimals ?? 18;
+
+  if (!tokenContract || tokenContract.balance === undefined) {
+    debugLog.log(`💰 fallback: tokenContract or balance undefined for ${tokenContract?.symbol}`);
+    return '0.0';
+  }
+
+  try {
+    const formatted = formatUnits(amount, decimals);
+    debugLog.log(`💰 formatted display amount for ${tokenContract.symbol}: ${formatted}`);
+    return formatted;
+  } catch {
+    debugLog.warn('⚠️ Failed to format amount with decimals:', decimals);
+    return '0.0';
+  }
+}

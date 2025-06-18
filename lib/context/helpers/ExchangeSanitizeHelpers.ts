@@ -30,7 +30,6 @@ export const sanitizeExchangeContext = (
       connected: raw.network?.connected ?? defaultContext.network.connected,
     },
     accounts: {
-      signer: raw.accounts?.signer ?? defaultContext.accounts.signer,
       connectedAccount: raw.accounts?.connectedAccount
         ? { ...raw.accounts.connectedAccount, balance: raw.accounts.connectedAccount.balance ?? 0n }
         : defaultContext.accounts.connectedAccount,

@@ -27,7 +27,6 @@ import {
   ExchangeContext,
 } from '@/lib/structure';
 
-// ✅ Hydration hook
 function useDidHydrate(): boolean {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
@@ -120,19 +119,21 @@ export default function TestPage() {
 
   const toggleExpandCollapse = () => {
     const nextExpand = !expandContext;
-    const nextKeys = nextExpand ? [] : getAllKeys(exchangeContext, '');
+    const nextKeys = nextExpand ? [] : getAllKeys(exchangeContext);
     updateExchangePage({
       expandContext: nextExpand,
       collapsedKeys: nextKeys,
     });
   };
 
-  const getAllKeys = (obj: any, basePath: string): string[] => {
+  const getAllKeys = (obj: any): string[] => {
     let keys: string[] = [];
     if (typeof obj === 'object' && obj !== null) {
-      keys.push(basePath);
       Object.entries(obj).forEach(([k, v]) => {
-        keys.push(...getAllKeys(v, k));
+        keys.push(k);
+        if (typeof v === 'object' && v !== null) {
+          keys.push(...getAllKeys(v));
+        }
       });
     }
     return keys;

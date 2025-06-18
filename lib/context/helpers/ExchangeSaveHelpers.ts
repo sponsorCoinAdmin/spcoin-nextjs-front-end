@@ -39,7 +39,6 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
       },
 
       accounts: {
-        signer: contextData.accounts?.signer ?? undefined,
         connectedAccount: contextData.accounts?.connectedAccount
           ? { ...contextData.accounts.connectedAccount, balance: contextData.accounts.connectedAccount.balance ?? 0n }
           : undefined,

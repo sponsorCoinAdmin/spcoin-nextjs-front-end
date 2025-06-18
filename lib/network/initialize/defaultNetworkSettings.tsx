@@ -51,7 +51,6 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
   const exchangeContext: ExchangeContext = {
     network: initialContextMap.get('networkHeader') as NetworkElement,
     accounts: {
-      signer: undefined, // ✅ FIXED: signer added to accounts
       recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,
       agentAccount: initialContextMap.get('defaultAgent') as WalletAccount | undefined,
       sponsorAccount: undefined,

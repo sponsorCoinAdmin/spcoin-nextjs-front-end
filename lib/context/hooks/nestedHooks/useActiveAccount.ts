@@ -3,11 +3,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance, useChainId, usePublicClient } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { WalletAccount } from '@/lib/structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
-import type { WalletAccount } from '@/lib/structure/types';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_WALLET_ACCOUNT === 'true';
@@ -16,102 +15,117 @@ const debugLog = createDebugLogger('useActiveAccount', DEBUG_ENABLED, LOG_TIME);
 export const useActiveAccount = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { address, status } = useAccount();
+  const chainId = useChainId();
+  const publicClient = usePublicClient();
 
-  const setActiveAccountName = (name?: string) => {
-    const prev = exchangeContext.accounts.connectedAccount?.name;
-    debugHookChange('connectedAccount.name', prev, name);
-    debugLog.log(`🧾 setActiveAccountName → ${name}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.name = name || '';
-      return cloned;
+  const { data: balanceData } = useBalance({ address, chainId });
+
+  // === Reset connectedAccount if wallet disconnects ===
+useEffect(() => {
+  if (!publicClient || status === 'disconnected') {
+    debugLog.warn('🔌 Wallet disconnected → clearing connectedAccount');
+    setExchangeContext(prev => {
+      const next = structuredClone(prev);
+      next.accounts.connectedAccount = undefined;
+      return next;
     });
-  };
+  }
+}, [publicClient, status]);
 
-  const setActiveAccountSymbol = (symbol?: string) => {
-    const prev = exchangeContext.accounts.connectedAccount?.symbol;
-    debugHookChange('connectedAccount.symbol', prev, symbol);
-    debugLog.log(`💱 setActiveAccountSymbol → ${symbol}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.symbol = symbol || '';
-      return cloned;
-    });
-  };
-
-  const setActiveAccountWebsite = (website?: string) => {
-    const prev = exchangeContext.accounts.connectedAccount?.website;
-    debugHookChange('connectedAccount.website', prev, website);
-    debugLog.log(`🌐 setActiveAccountWebsite → ${website}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.website = website || '';
-      return cloned;
-    });
-  };
-
-  const setActiveAccountDescription = (description?: string) => {
-    const prev = exchangeContext.accounts.connectedAccount?.description;
-    debugHookChange('connectedAccount.description', prev, description);
-    debugLog.log(`📝 setActiveAccountDescription → ${description}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.description = description || '';
-      return cloned;
-    });
-  };
-
-  const setActiveAccountStatus = (status?: string) => {
-    const prev = exchangeContext.accounts.connectedAccount?.status;
-    debugHookChange('connectedAccount.status', prev, status);
-    debugLog.log(`🔖 setActiveAccountStatus → ${status}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.status = status || '';
-      return cloned;
-    });
-  };
-
-  const setActiveAccountLogoURL = (logoURL?: string) => {
-    const prev = exchangeContext.accounts.connectedAccount?.logoURL;
-    debugHookChange('connectedAccount.logoURL', prev, logoURL);
-    debugLog.log(`🖼️ setActiveAccountLogoURL → ${logoURL}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.logoURL = logoURL;
-      return cloned;
-    });
-  };
-
-  const setActiveAccountBalance = (balance: bigint) => {
-    const prev = exchangeContext.accounts.connectedAccount?.balance;
-    debugHookChange('connectedAccount.balance', prev, balance);
-    debugLog.log(`💰 setActiveAccountBalance → ${balance.toString()}`);
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.balance = balance;
-      return cloned;
-    });
-  };
-
+  // === Reset connectedAccount if publicClient is missing ===
   useEffect(() => {
-    debugLog.log(`🔁 useActiveAccount initialized. address=${address}, status=${status}`);
+    if (!publicClient) {
+      debugLog.warn('⛔ publicClient unavailable → setting connectedAccount to undefined');
+      setExchangeContext(prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount = undefined;
+        return next;
+      });
+    }
+  }, [publicClient]);
 
-    setExchangeContext(prevContext => {
-      const cloned = structuredClone(prevContext);
-      if (cloned.accounts.connectedAccount) cloned.accounts.connectedAccount.type = 'Active Wallet Account';
-      return cloned;
+  // === Update connectedAccount.address and type ===
+  useEffect(() => {
+    if (!publicClient || !address) return;
+
+    debugLog.log(`📬 Setting connectedAccount.address → ${address}`);
+    setExchangeContext(prev => {
+      const next = structuredClone(prev);
+      if (!next.accounts.connectedAccount) next.accounts.connectedAccount = {} as WalletAccount;
+      next.accounts.connectedAccount.address = address;
+      next.accounts.connectedAccount.type = 'Active Wallet Account';
+      return next;
     });
-  }, [address, status]);
+  }, [publicClient, address]);
+
+  // === Update connectedAccount.balance ===
+  useEffect(() => {
+    if (!publicClient || !address || balanceData?.value === undefined) return;
+
+    debugLog.log(`💰 Setting connectedAccount.balance → ${balanceData.value.toString()}`);
+    setExchangeContext(prev => {
+      const next = structuredClone(prev);
+      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount.balance = balanceData.value;
+      return next;
+    });
+  }, [publicClient, address, balanceData?.value]);
+
+  // === Update connectedAccount.status ===
+  useEffect(() => {
+    if (!publicClient || !status || !address) return;
+
+    debugLog.log(`📶 Setting connectedAccount.status → ${status}`);
+    setExchangeContext(prev => {
+      const next = structuredClone(prev);
+      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount.status = status.toString();
+      return next;
+    });
+  }, [publicClient, status, address]);
+
+  // === Update connectedAccount.logoURL, website, description ===
+  useEffect(() => {
+    if (!publicClient || !address || !chainId) return;
+
+    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+    const website = `https://etherscan.io/address/${address}`;
+    const description = `Chain ${chainId} Blockchain Signer account for ${address}`;
+
+    debugLog.log(`🖼️ Setting connectedAccount.logoURL → ${logoURL}`);
+    debugLog.log(`🌐 Setting connectedAccount.website → ${website}`);
+    debugLog.log(`📝 Setting connectedAccount.description → ${description}`);
+
+    setExchangeContext(prev => {
+      const next = structuredClone(prev);
+      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount.logoURL = logoURL;
+      next.accounts.connectedAccount.website = website;
+      next.accounts.connectedAccount.description = description;
+      return next;
+    });
+  }, [publicClient, address, chainId]);
+
+  // === Set name and symbol (static for now) ===
+  useEffect(() => {
+    if (!publicClient || !address) return;
+
+    const name = 'Active Wallet';
+    const symbol = chainId === 137 ? 'MATIC' : 'ETH';
+
+    debugLog.log(`🏷️ Setting connectedAccount.name → ${name}`);
+    debugLog.log(`💱 Setting connectedAccount.symbol → ${symbol}`);
+
+    setExchangeContext(prev => {
+      const next = structuredClone(prev);
+      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount.name = name;
+      next.accounts.connectedAccount.symbol = symbol;
+      return next;
+    });
+  }, [publicClient, address, chainId]);
 
   return {
     connectedAccount: exchangeContext.accounts.connectedAccount,
-    setActiveAccountName,
-    setActiveAccountSymbol,
-    setActiveAccountWebsite,
-    setActiveAccountDescription,
-    setActiveAccountStatus,
-    setActiveAccountLogoURL,
-    setActiveAccountBalance,
   };
 };

@@ -1,84 +1,62 @@
-// File: components/containers/TokenSelectDropDown.tsx
-
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { ChevronDown } from 'lucide-react';
 
 import {
   CONTAINER_TYPE,
-  TokenContract,
   InputState,
+  TokenContract,
 } from '@/lib/structure';
-import { defaultMissingImage } from '@/lib/network/utils';
+
+import {
+  useBuyTokenContract,
+  useSellTokenContract,
+} from '@/lib/context/hooks';
+
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOG_TIME: boolean = false;
+const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 const seenBrokenLogos = new Set<string>();
 
-export function useTokenLogoURL(tokenContract?: TokenContract): string {
-  return useAddressLogoURL(
-    tokenContract?.address,
-    tokenContract?.chainId,
-    true
-  );
-}
-
-export function useAddressLogoURL(
-  address?: string,
-  chainIdOverride?: number,
-  testInputState: boolean = false
-): string {
-  const fallbackChainId = useChainId();
+function useTokenLogoURL(tokenContract?: TokenContract): string {
+  const chainId = tokenContract?.chainId ?? useChainId();
+  const address = tokenContract?.address;
   const { inputState } = useInputValidationState(address);
 
-  const logoUrl = useMemo(() => {
-    const chainId = chainIdOverride ?? fallbackChainId;
-
-    if (!address || !isAddress(address)) {
-      debugLog.warn('⚠️ Invalid or missing address for logo', { address });
-      return defaultMissingImage;
-    }
-
-    if (!chainId) {
-      debugLog.warn('⚠️ Missing chainId for logo path', { address });
-      return defaultMissingImage;
-    }
-
+  return useMemo(() => {
+    if (!address || !isAddress(address)) return defaultMissingImage;
+    if (!chainId) return defaultMissingImage;
     if (seenBrokenLogos.has(address)) return defaultMissingImage;
-    if (testInputState && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY)
-      return defaultMissingImage;
+    if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
 
     const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
-    debugLog.log(`✅ getAddressLogoURL.logoURL = ${logoURL}`);
+    debugLog.log(`✅ logoURL = ${logoURL}`);
     return logoURL;
-  }, [address, chainIdOverride, fallbackChainId, inputState, testInputState]);
-
-  return logoUrl;
+  }, [address, chainId, inputState]);
 }
 
 interface Props {
-  containerType: CONTAINER_TYPE; // ✅ passed from TokenSelectContainer
-  tokenContract: TokenContract | undefined;
-  setDecimalAdjustedContract: (tokenContract: TokenContract) => void;
+  containerType: CONTAINER_TYPE;
 }
 
-function TokenSelectDropDown({
-  containerType,
-  tokenContract,
-  setDecimalAdjustedContract,
-}: Props) {
+function TokenSelectDropDown({ containerType }: Props) {
   const [showDialog, setShowDialog] = useState(false);
-  const { inputState } = useInputValidationState(tokenContract?.address);
+
+  const [tokenContract, setTokenContract] =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? useSellTokenContract()
+      : useBuyTokenContract();
 
   const logoSrc = useTokenLogoURL(tokenContract);
 
@@ -89,9 +67,7 @@ function TokenSelectDropDown({
     seenBrokenLogos.add(tokenAddr);
     event.currentTarget.src = defaultMissingImage;
 
-    console.warn(
-      `[TokenSelectDropDown] Missing logo for ${tokenContract?.symbol} (${tokenAddr})`
-    );
+    console.warn(`[TokenSelectDropDown] Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
   return (
@@ -99,11 +75,11 @@ function TokenSelectDropDown({
       <TokenDialogWrapper
         showDialog={showDialog}
         setShowDialog={setShowDialog}
-        containerType={containerType} // ✅ now passed explicitly
+        containerType={containerType}
         onSelect={(contract: TokenContract, inputState: InputState) => {
-          debugLog.log('🎯 TokenDialogWrapper.onSelect', { contract, inputState });
           if (inputState === InputState.CLOSE_INPUT && contract) {
-            setDecimalAdjustedContract(contract);
+            debugLog.log('🎯 onSelect → updating tokenContract in context', contract);
+            setTokenContract(structuredClone(contract));
           }
         }}
       />
@@ -112,7 +88,7 @@ function TokenSelectDropDown({
           <>
             <img
               className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-              alt={`${tokenContract.name} Token logoURL`}
+              alt={`${tokenContract.name} logo`}
               src={logoSrc}
               onClick={() => alert(stringifyBigInt(tokenContract))}
               onError={handleMissingLogoURL}

@@ -22,7 +22,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
     },
     accounts: {
-      signer: undefined,
       connectedAccount: undefined,
       sponsorAccount: undefined,
       recipientAccount: initialContextMap.get('defaultRecipient') as WalletAccount | undefined,

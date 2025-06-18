@@ -1,5 +1,3 @@
-// File: lib/context/ExchangeWrapper.tsx
-
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
@@ -70,6 +68,8 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
       }
 
       if (updated) {
+        debugLog.log('📤 Preview updated context BEFORE saveLocalExchangeContext()');
+        console.debug(updated);
         saveLocalExchangeContext(updated);
         debugLog.log('📦 exchangeContext saved to localStorage');
       }
@@ -144,6 +144,8 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     hasInitializedRef.current = true;
 
     initExchangeContext(chainId, isConnected, address).then((sanitized) => {
+      debugLog.log('✅ Initial exchangeContext hydrated');
+      console.debug(sanitized);
       setContextState(sanitized);
     });
   }, [chainId, address, isConnected]);
@@ -170,7 +172,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      {children}
+      {contextState && children}
     </ExchangeContextState.Provider>
   );
 }

@@ -36,7 +36,6 @@ export type ContractRecs = {
 };
 
 export type Accounts = {
-  signer: JsonRpcSigner | undefined;
   connectedAccount?: WalletAccount;
   sponsorAccount?: WalletAccount;
   recipientAccount?: WalletAccount;
