@@ -20,15 +20,6 @@ export function TokenSelectDialog(props: {
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const title = useMemo(() => {
-    const resolvedTitle =
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? 'Select a Token to Sell'
-        : 'Select a Token to Buy';
-    debugLog.log('🧠 [TokenSelectDialog] Resolved title', resolvedTitle);
-    return resolvedTitle;
-  }, [containerType]);
-
   const setTokenInContext =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? setSellTokenContract
@@ -44,7 +35,6 @@ export function TokenSelectDialog(props: {
   return (
     <AddressSelectDialog<TokenContract>
       {...props}
-      title={title}
       feedType={FEED_TYPE.TOKEN_LIST}
       inputPlaceholder="Type or paste token address"
       duplicateMessage={

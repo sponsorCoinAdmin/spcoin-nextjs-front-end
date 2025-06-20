@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
 import { BaseModalDialog } from './BaseModalDialog';
@@ -14,7 +14,6 @@ interface BaseProps<T> {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
   onSelect: (item: T, state: InputState) => void;
-  title: string;
   feedType: FEED_TYPE;
   inputPlaceholder: string;
   duplicateMessage?: string;
@@ -26,7 +25,6 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   showDialog,
   setShowDialog,
   onSelect,
-  title,
   feedType,
   inputPlaceholder,
   duplicateMessage,
@@ -36,12 +34,20 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   useEffect(() => {
     debugLog.log('📬 [AddressSelectDialog] props received', {
       showDialog,
-      title,
       feedType,
       showDuplicateCheck,
       containerType,
     });
-  }, [showDialog, title, feedType, showDuplicateCheck, containerType]);
+  }, [showDialog, feedType, showDuplicateCheck, containerType]);
+
+  const title = useMemo(() => {
+    const resolvedTitle =
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? 'Select a Token to Sell'
+        : 'Select a Token to Buy';
+    debugLog.log('🧠 [TokenSelectDialog] Resolved title', resolvedTitle);
+    return resolvedTitle;
+  }, [containerType]);
 
   return (
     <BaseModalDialog
