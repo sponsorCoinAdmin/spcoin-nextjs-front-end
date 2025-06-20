@@ -1,8 +1,6 @@
-// File: lib/hooks/validationStateHooks/useInputValidationState
-
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useChainId, useAccount } from 'wagmi';
 
 import {
@@ -48,11 +46,10 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
   const chainId = useChainId();
   const { address: accountAddress } = useAccount();
 
-  const { resolvedAsset } = useResolvedAsset(debouncedAddress);
+  // ✅ Now passes feedType into useResolvedAsset
+  const { resolvedAsset } = useResolvedAsset(debouncedAddress, feedType);
 
-  const { data: balanceData } = useTokenBalance(
-    resolvedAsset?.address
-  );
+  const { data: balanceData } = useTokenBalance(resolvedAsset?.address);
 
   const { seenBrokenLogosRef, lastTokenAddressRef } = useValidationStateManager(
     debouncedAddress,
@@ -92,12 +89,12 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     debugLog.log(`✅ New validation target: ${resolvedAsset.address}`);
     lastTokenAddressRef.current = resolvedAsset.address;
 
-    const tokenWithBalance: TokenContract = useMemo(() => ({
+    const tokenWithBalance: TokenContract = {
       ...resolvedAsset,
       balance: balanceData.value,
       chainId,
       logoURL: getLogoURL(chainId, resolvedAsset.address, feedType),
-    }), [resolvedAsset, balanceData.value, chainId, feedType]);
+    };
 
     setValidatedAsset(tokenWithBalance as T);
 

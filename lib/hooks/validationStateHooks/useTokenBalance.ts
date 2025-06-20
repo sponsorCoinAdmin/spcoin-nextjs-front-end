@@ -1,5 +1,3 @@
-// File: lib/hooks/validationStateHooks/useTokenBalance.ts
-
 'use client';
 
 import { isAddress } from 'viem';
@@ -17,32 +15,21 @@ export function useTokenBalance(tokenAddress: string | undefined) {
 
   const isValidToken = isAddress(tokenAddress || '');
   const isValidAccount = isAddress(accountAddress || '');
-  const isEnabled = isValidAccount && isValidToken && !!chainId;
 
-  const params = useMemo(() => {
-    return {
-      address: isValidAccount ? (accountAddress as `0x${string}`) : undefined,
-      token: isValidToken ? (tokenAddress as `0x${string}`) : undefined,
-      chainId,
-      query: {
-        enabled: isEnabled,
-      },
-    };
-  }, [tokenAddress, accountAddress, chainId, isValidToken, isValidAccount, isEnabled]);
+  const params = useMemo(() => ({
+    address: isValidAccount ? (accountAddress as `0x${string}`) : undefined,
+    token: isValidToken ? (tokenAddress as `0x${string}`) : undefined,
+    chainId,
+    watch: false,
+  }), [tokenAddress, accountAddress, chainId, isValidToken, isValidAccount]);
 
-  // 🔁 Log only on change
+  // 🔁 Debug log only if inputs change
   const lastHashRef = useRef('');
   const paramHash = JSON.stringify(params);
 
   if (paramHash !== lastHashRef.current) {
     lastHashRef.current = paramHash;
     debugLog.log('🔍 useTokenBalance input (changed):', params);
-  }
-
-  // ❌ Return undefined if not enabled
-  if (!isEnabled) {
-    debugLog.log('🚫 useTokenBalance disabled: invalid address or chainId');
-    return { data: undefined };
   }
 
   return useBalance(params);

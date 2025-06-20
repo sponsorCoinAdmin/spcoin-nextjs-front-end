@@ -1,5 +1,3 @@
-// File: lib/context/hooks/nestedHooks/useMappedTokenContract.ts
-
 'use client';
 
 import { useMemo } from 'react';
@@ -16,99 +14,81 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_MAPPER === 'true';
 const debugLog = createDebugLogger('useMappedTokenContract', DEBUG_ENABLED, LOG_TIME);
 
-function useErc20TokenContract(tokenAddress?: Address): Omit<TokenContract, 'balance'> | undefined {
-  const chainId = useChainId();
-  const enabled = !!tokenAddress && isAddress(tokenAddress);
-
-  if (!enabled) {
-    debugLog.log(`🔍 useErc20TokenContract() → skipped: tokenAddress=${tokenAddress}, enabled=false`);
-    return undefined;
-  }
-
-  const { data: metaData, status: metaStatus } = useReadContracts({
-    contracts: [
-      { address: tokenAddress, abi: erc20Abi, functionName: 'symbol' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'name' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'decimals' },
-      { address: tokenAddress, abi: erc20Abi, functionName: 'totalSupply' },
-    ],
-    query: { enabled },
-  });
-
-  debugLog.log(`🔍 useErc20TokenContract() → enabled=${enabled}, tokenAddress=${tokenAddress}, chainId=${chainId}`);
-  debugLog.log(`📦 Contract fetch status: ${metaStatus}, metaData:`, metaData);
-
-  if (metaStatus !== 'success' || !metaData) {
-    debugLog.log('❌ Metadata fetch failed or not ready');
-    return undefined;
-  }
-
-  const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
-
-  if (!symbolRaw || !nameRaw || decimalsRaw == null) {
-    debugLog.log('❗ Incomplete metadata:', { symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw });
-    return undefined;
-  }
-
-  const tokenInfo: Omit<TokenContract, 'balance'> = {
-    chainId,
-    address: tokenAddress!,
-    symbol: symbolRaw as string,
-    name: nameRaw as string,
-    amount: 0n,
-    decimals: Number(decimalsRaw),
-    totalSupply: totalSupplyRaw as bigint,
-  };
-
-  debugLog.log('✅ ERC20 TokenContract metadata resolved:', tokenInfo);
-  return tokenInfo;
-}
-
 export function useMappedTokenContract(tokenAddress?: Address): TokenContract | undefined | null {
   const nativeToken = useNativeToken();
   const isNativeToken = tokenAddress === NATIVE_TOKEN_ADDRESS;
+  const chainId = useChainId();
 
-  const stableTokenAddress = useMemo(() => {
-    const valid = isAddress(tokenAddress || '');
-    if (!valid) {
-      debugLog.log(`⛔ useMappedTokenContract() short-circuit → invalid address: ${tokenAddress}`);
+  const isValidAddress = isAddress(tokenAddress || '');
+
+  debugLog.log(`🔍 useMappedTokenContract() called with: ${tokenAddress}`);
+  debugLog.log(`🧪 isNativeToken: ${isNativeToken}, isValidAddress: ${isValidAddress}`);
+
+  const contracts = useMemo(() => {
+    return isValidAddress && !isNativeToken
+      ? [
+          { address: tokenAddress!, abi: erc20Abi, functionName: 'symbol' },
+          { address: tokenAddress!, abi: erc20Abi, functionName: 'name' },
+          { address: tokenAddress!, abi: erc20Abi, functionName: 'decimals' },
+          { address: tokenAddress!, abi: erc20Abi, functionName: 'totalSupply' },
+        ]
+      : [];
+  }, [tokenAddress, isValidAddress, isNativeToken]);
+
+  const { data: metaData, status: metaStatus } = useReadContracts({
+    contracts,
+    query: {
+      enabled: contracts.length > 0,
+    },
+  });
+
+  debugLog.log(`📦 Contract fetch status: ${metaStatus}, contracts: ${contracts.length}`);
+  debugLog.log(`📊 metaData:`, metaData);
+
+  const erc20Token = useMemo<Omit<TokenContract, 'balance'> | undefined>(() => {
+    if (!isValidAddress || isNativeToken || !metaData || metaStatus !== 'success') {
+      debugLog.log(`⏭️ Skipping ERC20 parse (invalid address or status)`);
       return undefined;
     }
-    return tokenAddress;
-  }, [tokenAddress]);
 
-  // 🛑 Exit early — avoids useErc20TokenContract when tokenAddress is invalid
-  if (!stableTokenAddress && !isNativeToken) {
-    debugLog.log(`🚫 useMappedTokenContract() returning null early — address is invalid`);
-    return null;
-  }
+    const [symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw] = metaData.map((res) => res.result);
 
-  const token = useErc20TokenContract(stableTokenAddress);
+    if (!symbolRaw || !nameRaw || decimalsRaw == null) {
+      debugLog.log('❗ Incomplete metadata:', { symbolRaw, nameRaw, decimalsRaw, totalSupplyRaw });
+      return undefined;
+    }
 
-  debugLog.log(`🧭 useMappedTokenContract() → isNative=${isNativeToken}, tokenAddress=${tokenAddress}`);
+    const tokenInfo: Omit<TokenContract, 'balance'> = {
+      chainId,
+      address: tokenAddress!,
+      symbol: symbolRaw as string,
+      name: nameRaw as string,
+      amount: 0n,
+      decimals: Number(decimalsRaw),
+      totalSupply: totalSupplyRaw as bigint,
+    };
+
+    debugLog.log('✅ ERC20 TokenContract metadata resolved:', tokenInfo);
+    return tokenInfo;
+  }, [metaData, metaStatus, tokenAddress, isValidAddress, isNativeToken, chainId]);
 
   return useMemo(() => {
-    if (!token) {
-      debugLog.log('⚠️ No token metadata found, returning null');
+    if (isNativeToken) {
+      debugLog.log(`🎯 Returning native token`, stringifyBigInt(nativeToken));
+      return nativeToken;
+    }
+
+    if (!erc20Token) {
+      debugLog.log('⚠️ No token metadata available, returning null');
       return null;
     }
 
-    const baseToken: TokenContract = {
-      ...token,
+    const tokenWithBalance: TokenContract = {
+      ...erc20Token,
       balance: 0n,
     };
 
-    const mapped = isNativeToken ? nativeToken : baseToken;
-    debugLog.log(`🎯 Returning mapped token:`, stringifyBigInt(mapped));
-    return mapped;
-  }, [
-    token?.address,
-    token?.symbol,
-    token?.name,
-    token?.decimals,
-    token?.totalSupply,
-    token?.chainId,
-    isNativeToken,
-    nativeToken,
-  ]);
+    debugLog.log(`🎯 Returning ERC20 token`, stringifyBigInt(tokenWithBalance));
+    return tokenWithBalance;
+  }, [isNativeToken, nativeToken, erc20Token]);
 }
