@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   InputState,
   FEED_TYPE,
@@ -9,7 +9,7 @@ import {
   WalletAccount,
   CONTAINER_TYPE,
 } from '@/lib/structure';
-import { useInputValidationState } from '@/lib/hooks/';
+import { useInputValidationState } from '@/lib/hooks';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
@@ -18,9 +18,10 @@ import DataList from '../Dialogs/AssetSelectDialogs/DataList';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
-const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME);
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
+const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
+
+let renderCount = 0;
 
 interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   feedType: FEED_TYPE;
@@ -41,7 +42,7 @@ function AddressSelectComponent<T extends TokenContract | WalletAccount>({
   showDuplicateCheck = false,
   containerType,
 }: AddressSelectProps<T>) {
-  console.debug('[🔄 RENDER] AddressSelect re-rendered');
+  renderCount += 1;
 
   const {
     inputValue,
@@ -74,6 +75,15 @@ function AddressSelectComponent<T extends TokenContract | WalletAccount>({
     stableValidationParams.containerType
   );
 
+  debugLog.log(`🔄 [RENDER #${renderCount}] rendered`, {
+    inputValue,
+    debouncedAddress,
+    inputState,
+    validatedAsset,
+    containerType,
+    feedType,
+  });
+
   const onSelect = useCallback(
     (item: TokenContract | WalletAccount) => {
       debugLog.log(`🟢 onSelect() called with:`, item);
@@ -85,16 +95,16 @@ function AddressSelectComponent<T extends TokenContract | WalletAccount>({
   );
 
   useEffect(() => {
-    debugLog.log(`📨 debouncedAddress:`, debouncedAddress);
+    debugLog.log(`📨 debouncedAddress changed:`, debouncedAddress);
   }, [debouncedAddress]);
 
   useEffect(() => {
-    debugLog.log(`📌 inputState:`, inputState);
+    debugLog.log(`📌 inputState changed:`, inputState);
   }, [inputState]);
 
   useEffect(() => {
     if (validatedAsset) {
-      debugLog.log(`✅ validatedAsset:`, validatedAsset);
+      debugLog.log(`✅ validatedAsset changed:`, validatedAsset);
     }
   }, [validatedAsset]);
 

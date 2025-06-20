@@ -1,5 +1,3 @@
-// File: lib/hooks/validationStateHooks/useValidationStateManager.ts
-
 'use client';
 
 import { useRef, useEffect } from 'react';
@@ -29,32 +27,29 @@ export function useValidationStateManager(
   setInputState: (s: InputState) => void
 ) {
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
-  const previousAddressRef = useRef<string>('');
   const lastTokenAddressRef = useRef<string>('');
 
   useEffect(() => {
+    const isEmptyAddress = !debouncedAddress.trim();
+    const isBrokenButUnrecorded = !seenBrokenLogosRef.current.has(debouncedAddress);
+
     const shouldReset =
       inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY &&
-      debouncedAddress !== previousAddressRef.current &&
-      !seenBrokenLogosRef.current.has(debouncedAddress) &&
-      !debouncedAddress.trim();
+      isEmptyAddress &&
+      isBrokenButUnrecorded;
 
     if (shouldReset) {
-      debugLog.log('🔁 Validation reset loop fix triggered', {
+      debugLog.log('🔄 Forcing EMPTY_INPUT reset (likely fallback loop fix)', {
         debouncedAddress,
-        prev: previousAddressRef.current,
         inputState,
         seenBroken: Array.from(seenBrokenLogosRef.current),
       });
       debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
     }
-
-    previousAddressRef.current = debouncedAddress;
   }, [debouncedAddress, inputState]);
 
   return {
     seenBrokenLogosRef,
-    previousAddressRef,
     lastTokenAddressRef,
   };
 }

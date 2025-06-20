@@ -1,4 +1,4 @@
-// File: lib/hooks/validationStateHooks/useLogoFallback.ts
+// File: lib/hooks/validationStateHooks/useLogoURL.ts
 
 'use client';
 
@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { InputState, getInputStateString } from '@/lib/structure';
 import { debugSetInputState } from './useValidationStateManager';
 
-export function useLogoFallback(
+export function useLogoURL(
   debouncedAddress: string,
   inputState: InputState,
   setInputState: (s: InputState) => void,

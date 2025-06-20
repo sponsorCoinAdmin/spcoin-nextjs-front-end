@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useChainId, useAccount } from 'wagmi';
 
 import {
@@ -14,8 +14,6 @@ import {
 } from '@/lib/structure';
 
 import {
-  useBuyTokenAddress,
-  useSellTokenAddress,
   useBuyTokenContract,
   useSellTokenContract,
 } from '@/lib/context/hooks';
@@ -28,7 +26,7 @@ import {
   useValidationStateManager,
   debugSetInputState,
 } from './validationStateHooks/useValidationStateManager';
-import { useLogoFallback } from './validationStateHooks/useLogoFallback';
+import { useLogoURL } from './validationStateHooks/useLogoURL';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -50,13 +48,10 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
   const chainId = useChainId();
   const { address: accountAddress } = useAccount();
 
-  const { resolvedAsset } = useResolvedAsset(debouncedAddress); // now memoized inside the hook
+  const { resolvedAsset } = useResolvedAsset(debouncedAddress);
 
-  // ✅ Only call useTokenBalance if resolvedAsset is valid
   const { data: balanceData } = useTokenBalance(
-    resolvedAsset?.address,
-    chainId,
-    accountAddress
+    resolvedAsset?.address
   );
 
   const { seenBrokenLogosRef, lastTokenAddressRef } = useValidationStateManager(
@@ -65,7 +60,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     setInputState
   );
 
-  const { reportMissingLogoURL, hasBrokenLogoURL } = useLogoFallback(
+  const { reportMissingLogoURL, hasBrokenLogoURL } = useLogoURL(
     debouncedAddress,
     inputState,
     setInputState,
@@ -79,11 +74,8 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     debugLog.log(`📌 isValidating: ${isValidating}`);
     debugLog.log(`📦 resolvedAsset:`, resolvedAsset);
     debugLog.log(`💰 balanceData:`, balanceData);
-
-    if (!chainId) {
-      debugLog.warn(`⛔ chainId not ready — skipping validation`);
-      return;
-    }
+    debugLog.log(`🔎 selectAddress: ${selectAddress}`);
+    debugLog.log(`📨 debouncedAddress: ${debouncedAddress}`);
 
     if (isValidating) return;
 
@@ -100,12 +92,12 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     debugLog.log(`✅ New validation target: ${resolvedAsset.address}`);
     lastTokenAddressRef.current = resolvedAsset.address;
 
-    const tokenWithBalance: TokenContract = {
+    const tokenWithBalance: TokenContract = useMemo(() => ({
       ...resolvedAsset,
       balance: balanceData.value,
       chainId,
       logoURL: getLogoURL(chainId, resolvedAsset.address, feedType),
-    };
+    }), [resolvedAsset, balanceData.value, chainId, feedType]);
 
     setValidatedAsset(tokenWithBalance as T);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenSelectDialog } from '@/components/Dialogs/AssetSelectDialogs';
 import { ChevronDown } from 'lucide-react';
@@ -12,7 +12,6 @@ import {
 } from '@/lib/structure';
 
 import { useTradeData } from '@/lib/context/hooks';
-import { useInputValidationState } from '@/lib/hooks/';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -28,18 +27,16 @@ const seenBrokenLogos = new Set<string>();
 function useTokenLogoURL(tokenContract?: TokenContract): string {
   const chainId = useChainId();
   const address = tokenContract?.address;
-  const { inputState } = useInputValidationState(address);
 
   return useMemo(() => {
     if (!address || !isAddress(address)) return defaultMissingImage;
     if (!chainId) return defaultMissingImage;
     if (seenBrokenLogos.has(address)) return defaultMissingImage;
-    if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
 
     const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
     debugLog.log(`✅ logoURL = ${logoURL}`);
     return logoURL;
-  }, [address, chainId, inputState]);
+  }, [address, chainId]);
 }
 
 interface Props {
