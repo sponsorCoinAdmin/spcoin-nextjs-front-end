@@ -13,6 +13,7 @@ import {
   getBlockChainLogoURL,
   getBlockExplorerURL,
 } from '@/lib/network/utils';
+import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESET_CONTRACTS === 'true';
@@ -41,7 +42,7 @@ export function useResetContracts(delay: number = 100): void {
   const stableChainId = useDebounce(wagmiChainId, delay);
   const { status, isConnected } = useAccount();
 
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
   const hasReset = useRef(false);
   const currentState = useRef<REFRESH_STATE | null>(null);
 
@@ -50,19 +51,28 @@ export function useResetContracts(delay: number = 100): void {
     const logoURL = chainId ? getBlockChainLogoURL(chainId) ?? '/assets/miscellaneous/default.png' : '';
     const url = chainId ? getBlockExplorerURL(chainId) ?? '' : '';
 
+    debugHookChange('network.chainId', exchangeContext.network?.chainId, chainId);
+    debugHookChange('network.name', exchangeContext.network?.name, name);
+    debugHookChange('network.logoURL', exchangeContext.network?.logoURL, logoURL);
+    debugHookChange('network.url', exchangeContext.network?.url, url);
+    debugHookChange('network.connected', exchangeContext.network?.connected, isConnected);
+
     debugLog.log(`🧫 updateNetwork: chainId=${chainId}, name=${name}, connected=${isConnected}`);
 
-    setExchangeContext((prev: ExchangeContext) => ({
-      ...prev,
-      network: {
-        ...prev.network,
-        chainId: chainId ?? 0,
-        name,
-        logoURL,
-        url,
-        connected: isConnected,
-      },
-    }), 'updateNetwork');
+    updateExchangeContext((prev: ExchangeContext) => {
+      const old = prev.network;
+      return {
+        ...prev,
+        network: {
+          ...old,
+          chainId: chainId ?? 0,
+          name,
+          logoURL,
+          url,
+          connected: isConnected,
+        },
+      };
+    }, `updateNetwork: updating from ${JSON.stringify(exchangeContext.network)} to chainId=${chainId}, connected=${isConnected}`);
   };
 
   function setState(newState: REFRESH_STATE, color: string) {
@@ -112,11 +122,15 @@ export function useResetContracts(delay: number = 100): void {
       debugLog.warn(`⚠️ Chain mismatch detected → context=${currentContextChainId}, wagmi=${stableChainId}`);
 
       if (!hasReset.current) {
-        setExchangeContext((prev: ExchangeContext) => {
+        updateExchangeContext((prev: ExchangeContext) => {
           const { buyTokenContract, sellTokenContract } = prev.tradeData;
           debugLog.warn(`🔁 Clearing tokens`);
           debugLog.log(`🫼 buyTokenContract: ${serializeWithBigInt(buyTokenContract)}`);
           debugLog.log(`🫼 sellTokenContract: ${serializeWithBigInt(sellTokenContract)}`);
+
+          debugHookChange('tradeData.buyTokenContract', buyTokenContract, undefined);
+          debugHookChange('tradeData.sellTokenContract', sellTokenContract, undefined);
+          debugHookChange('network.chainId', currentContextChainId, stableChainId);
 
           return {
             ...prev,
@@ -130,7 +144,7 @@ export function useResetContracts(delay: number = 100): void {
               chainId: stableChainId,
             },
           };
-        }, 'useResetContracts');
+        }, `useResetContracts: resetting from chainId=${currentContextChainId} to ${stableChainId}`);
 
         updateNetwork(stableChainId, true);
         hasReset.current = true;
@@ -158,5 +172,5 @@ export function useResetContracts(delay: number = 100): void {
     }
 
     hasReset.current = false;
-  }, [stableChainId, isConnected, setExchangeContext]);
+  }, [stableChainId, isConnected, updateExchangeContext]);
 }

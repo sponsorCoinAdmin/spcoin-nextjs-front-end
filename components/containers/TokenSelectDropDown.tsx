@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useState } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { TokenDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
+import { TokenSelectDialog } from '@/components/Dialogs/AssetSelectDialogs';
 import { ChevronDown } from 'lucide-react';
 
 import {
@@ -11,12 +11,8 @@ import {
   TokenContract,
 } from '@/lib/structure';
 
-import {
-  useBuyTokenContract,
-  useSellTokenContract,
-} from '@/lib/context/hooks';
-
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import { useTradeData } from '@/lib/context/hooks';
+import { useInputValidationState } from '@/lib/hooks/';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -30,7 +26,7 @@ const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIM
 const seenBrokenLogos = new Set<string>();
 
 function useTokenLogoURL(tokenContract?: TokenContract): string {
-  const chainId = tokenContract?.chainId ?? useChainId();
+  const chainId = useChainId();
   const address = tokenContract?.address;
   const { inputState } = useInputValidationState(address);
 
@@ -53,10 +49,11 @@ interface Props {
 function TokenSelectDropDown({ containerType }: Props) {
   const [showDialog, setShowDialog] = useState(false);
 
-  const [tokenContract, setTokenContract] =
+  const tradeData = useTradeData();
+  const tokenContract =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? useSellTokenContract()
-      : useBuyTokenContract();
+      ? tradeData.sellTokenContract
+      : tradeData.buyTokenContract;
 
   const logoSrc = useTokenLogoURL(tokenContract);
 
@@ -72,14 +69,18 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   return (
     <>
-      <TokenDialogWrapper
+      <TokenSelectDialog
         showDialog={showDialog}
         setShowDialog={setShowDialog}
         containerType={containerType}
         onSelect={(contract: TokenContract, inputState: InputState) => {
           if (inputState === InputState.CLOSE_INPUT && contract) {
             debugLog.log('🎯 onSelect → updating tokenContract in context', contract);
-            setTokenContract(structuredClone(contract));
+            if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+              tradeData.sellTokenContract = structuredClone(contract);
+            } else {
+              tradeData.buyTokenContract = structuredClone(contract);
+            }
           }
         }}
       />

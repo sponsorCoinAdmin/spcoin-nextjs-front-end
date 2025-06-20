@@ -4,26 +4,22 @@
   "name": "Ethereum",
   "symbol": "ETH",
   "decimals": 18,
-  "website": "https://tokenlon.im/lon",
+  "website": "https://ethereum.org",
   "description": "LON backs the Tokenlon decentralized exchange and payment settlement protocol based on Ethereum blockchain technology. It currently powers Tokenlon DEX, a decentralized exchange and payment settlement protocol which aims to provide a secure, reliable and seamless trading experience to the masses.",
-  "explorer": "https://etherscan.io/token/0x0000000000095413afc295d19edeb1ad7b71c952",
+  "explorer": "https://etherscan.io",
   "status": "active",
   "links": [
     {
-      "name": "x",
-      "url": "https://x.com/tokenlon"
+      "name": "https://ethereum.org",
+      "url": "https://ethereum.org"
     },
     {
-      "name": "discord",
-      "url": "https://discord.com/invite/nPmsMrG"
+      "name": "etherscan",
+      "url": "https://etherscan.io"
     },
     {
-      "name": "medium",
-      "url": "https://medium.com/@tokenlon"
-    },
-    {
-      "name": "whitepaper",
-      "url": "https://tokenlon.im/files/Tokenlon-litepaper_en-us.pdf"
+      "name": "ERC-20 Token Standard",
+      "url": "https://ethereum.org/en/developers/docs/standards/tokens/erc-20/"
     }
   ]
 }

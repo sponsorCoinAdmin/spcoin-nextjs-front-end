@@ -4,7 +4,7 @@
 
 import React from 'react';
 import styles from '@/styles/Modal.module.css';
-import DataList from '@/components/Dialogs/Resources/DataList';
+import DataList from '@/components/Dialogs/AssetSelectDialogs/DataList';
 import { FEED_TYPE } from '@/lib/structure';
 
 type ScrollableDataListProps<T> = {

@@ -1,0 +1,72 @@
+'use client';
+
+import { useEffect } from 'react';
+import AddressSelect from '@/components/shared/AddressSelect';
+import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
+import { BaseModalDialog } from './BaseModalDialog';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME: boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
+const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME);
+
+interface BaseProps<T> {
+  showDialog: boolean;
+  setShowDialog: (show: boolean) => void;
+  onSelect: (item: T, state: InputState) => void;
+  title: string;
+  feedType: FEED_TYPE;
+  inputPlaceholder: string;
+  duplicateMessage?: string;
+  showDuplicateCheck?: boolean;
+  containerType?: CONTAINER_TYPE;
+}
+
+export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
+  showDialog,
+  setShowDialog,
+  onSelect,
+  title,
+  feedType,
+  inputPlaceholder,
+  duplicateMessage,
+  showDuplicateCheck = false,
+  containerType,
+}: BaseProps<T>) {
+  useEffect(() => {
+    debugLog.log('📬 [AddressSelectDialog] props received', {
+      showDialog,
+      title,
+      feedType,
+      showDuplicateCheck,
+      containerType,
+    });
+  }, [showDialog, title, feedType, showDuplicateCheck, containerType]);
+
+  return (
+    <BaseModalDialog
+      id="AddressSelectDialog"
+      showDialog={showDialog}
+      setShowDialog={setShowDialog}
+      title={title}
+    >
+      <AddressSelect<T>
+        feedType={feedType}
+        inputPlaceholder={inputPlaceholder}
+        closeDialog={() => {
+          debugLog.log('❌ [AddressSelectDialog] closeDialog called');
+          setShowDialog(false);
+        }}
+        onSelect={(item, state) => {
+          debugLog.log('🎯 [AddressSelectDialog] onSelect triggered', { item, state });
+          if (state === InputState.CLOSE_INPUT) {
+            onSelect(item, state);
+          }
+        }}
+        duplicateMessage={duplicateMessage}
+        showDuplicateCheck={showDuplicateCheck}
+        containerType={containerType}
+      />
+    </BaseModalDialog>
+  );
+}

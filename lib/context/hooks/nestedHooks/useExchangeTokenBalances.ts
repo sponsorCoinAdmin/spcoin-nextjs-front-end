@@ -44,6 +44,7 @@ export const useExchangeTokenBalances = () => {
       buyBalance !== undefined &&
       !balancesAreEqual(buyToken.balance, buyBalance)
     ) {
+      debugLog.log(`reason: useExchangeTokenBalances updating buyToken.balance from ${buyToken.balance} to ${buyBalance}`);
       debugHookChange('buyToken.balance', buyToken.balance, buyBalance);
       newTradeData.buyTokenContract = { ...buyToken, balance: buyBalance };
       hasChanged = true;
@@ -54,6 +55,7 @@ export const useExchangeTokenBalances = () => {
       sellBalance !== undefined &&
       !balancesAreEqual(sellToken.balance, sellBalance)
     ) {
+      debugLog.log(`reason: useExchangeTokenBalances updating sellToken.balance from ${sellToken.balance} to ${sellBalance}`);
       debugHookChange('sellToken.balance', sellToken.balance, sellBalance);
       newTradeData.sellTokenContract = { ...sellToken, balance: sellBalance };
       hasChanged = true;

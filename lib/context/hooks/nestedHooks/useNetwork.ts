@@ -16,110 +16,116 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_NETWORK === 'true';
 const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 
 export const useNetwork = () => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
   const chainId = useChainId();
   const { status } = useAccount(); // 'connected' | 'connecting' | 'disconnected'
 
   const setNetworkChainId = (newChainId: number) => {
-    const oldChainId = exchangeContext.network?.chainId;
-    debugHookChange('network.chainId', oldChainId, newChainId);
-    debugLog.log(`⚙️ setNetworkChainId → ${newChainId}`);
+    const old = exchangeContext.network?.chainId;
+    debugHookChange('network.chainId', old, newChainId);
+    debugLog.log(`reason: useNetwork updating network.chainId from ${old} to ${newChainId}`);
 
-    const preview = {
-      ...exchangeContext,
-      network: {
-        ...exchangeContext.network,
-        chainId: newChainId,
-      },
-    };
-    debugLog.log(`📤 Preview BEFORE setExchangeContext(chainId):`, preview);
-
-    setExchangeContext(() => preview);
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: {
+          ...prev.network,
+          chainId: newChainId,
+        },
+      }),
+      `reason: useNetwork updating network.chainId from ${old} to ${newChainId}`
+    );
   };
 
   const setNetworkLogoURL = (logoURL?: string) => {
-    const oldLogo = exchangeContext.network?.logoURL;
-    debugHookChange('network.logoURL', oldLogo, logoURL);
-    debugLog.log(`🖼️ setNetworkLogoURL → ${logoURL}`);
+    const old = exchangeContext.network?.logoURL;
+    debugHookChange('network.logoURL', old, logoURL);
+    debugLog.log(`reason: useNetwork updating network.logoURL from ${old} to ${logoURL}`);
 
-    const preview = {
-      ...exchangeContext,
-      network: {
-        ...exchangeContext.network,
-        logoURL: logoURL || '',
-      },
-    };
-    debugLog.log(`📤 Preview BEFORE setExchangeContext(logoURL):`, preview);
-
-    setExchangeContext(() => preview);
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: {
+          ...prev.network,
+          logoURL: logoURL || '',
+        },
+      }),
+      `reason: useNetwork updating network.logoURL from ${old} to ${logoURL}`
+    );
   };
 
   const setNetworkName = (name?: string) => {
-    const oldName = exchangeContext.network?.name;
-    debugHookChange('network.name', oldName, name);
-    debugLog.log(`🧾 setNetworkName → ${name}`);
+    const old = exchangeContext.network?.name;
+    debugHookChange('network.name', old, name);
+    debugLog.log(`reason: useNetwork updating network.name from ${old} to ${name}`);
 
-    const preview = {
-      ...exchangeContext,
-      network: {
-        ...exchangeContext.network,
-        name: name || '',
-      },
-    };
-    debugLog.log(`📤 Preview BEFORE setExchangeContext(name):`, preview);
-
-    setExchangeContext(() => preview);
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: {
+          ...prev.network,
+          name: name || '',
+        },
+      }),
+      `reason: useNetwork updating network.name from ${old} to ${name}`
+    );
   };
 
   const setNetworkSymbol = (symbol?: string) => {
-    const oldSymbol = exchangeContext.network?.symbol;
-    debugHookChange('network.symbol', oldSymbol, symbol);
-    debugLog.log(`💱 setNetworkSymbol → ${symbol}`);
+    const old = exchangeContext.network?.symbol;
+    debugHookChange('network.symbol', old, symbol);
+    debugLog.log(`reason: useNetwork updating network.symbol from ${old} to ${symbol}`);
 
-    const preview = {
-      ...exchangeContext,
-      network: {
-        ...exchangeContext.network,
-        symbol: symbol || '',
-      },
-    };
-    debugLog.log(`📤 Preview BEFORE setExchangeContext(symbol):`, preview);
-
-    setExchangeContext(() => preview);
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: {
+          ...prev.network,
+          symbol: symbol || '',
+        },
+      }),
+      `reason: useNetwork updating network.symbol from ${old} to ${symbol}`
+    );
   };
 
   const setNetworkURL = (url?: string) => {
-    const oldURL = exchangeContext.network?.url;
-    debugHookChange('network.url', oldURL, url);
-    debugLog.log(`🌐 setNetworkURL → ${url}`);
+    const old = exchangeContext.network?.url;
+    debugHookChange('network.url', old, url);
+    debugLog.log(`reason: useNetwork updating network.url from ${old} to ${url}`);
 
-    const preview = {
-      ...exchangeContext,
-      network: {
-        ...exchangeContext.network,
-        url: url || '',
-      },
-    };
-    debugLog.log(`📤 Preview BEFORE setExchangeContext(url):`, preview);
-
-    setExchangeContext(() => preview);
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: {
+          ...prev.network,
+          url: url || '',
+        },
+      }),
+      `reason: useNetwork updating network.url from ${old} to ${url}`
+    );
   };
 
   const setNetworkConnected = (connected: boolean) => {
     const old = exchangeContext.network?.connected;
+
+    if (old === connected) {
+      debugLog.log(`⏭️ network.connected unchanged: ${connected} — skipping update`);
+      return;
+    }
+
     debugHookChange('network.connected', old, connected);
-    debugLog.log(`🔌 setNetworkConnected → ${connected}`);
+    debugLog.log(`reason: useNetwork updating network.connected from ${old} to ${connected}`);
 
-    const preview = {
-      ...exchangeContext,
-      network: {
-        ...exchangeContext.network,
-        connected,
-      },
-    };
-    debugLog.log(`📤 Preview BEFORE setExchangeContext(connected):`, preview);
-
-    setExchangeContext(() => preview);
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: {
+          ...prev.network,
+          connected,
+        },
+      }),
+      `reason: useNetwork updating network.connected from ${old} to ${connected}`
+    );
   };
 
   useEffect(() => {

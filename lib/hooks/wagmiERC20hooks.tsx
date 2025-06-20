@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddress, Address } from 'viem';
 import { TokenContract } from '@/lib/structure';
-import { NATIVE_TOKEN_ADDRESS, getNativeWrapAddress } from '@/lib/network/utils';
+import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useReadContract, useReadContracts, useChainId } from 'wagmi';
 import { erc20Abi } from 'viem';
 

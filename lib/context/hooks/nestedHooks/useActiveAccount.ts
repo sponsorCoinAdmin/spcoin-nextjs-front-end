@@ -1,5 +1,3 @@
-// File: lib/context/hooks/nestedHooks/useActiveAccount.ts
-
 'use client';
 
 import { useEffect } from 'react';
@@ -21,16 +19,16 @@ export const useActiveAccount = () => {
   const { data: balanceData } = useBalance({ address, chainId });
 
   // === Reset connectedAccount if wallet disconnects ===
-useEffect(() => {
-  if (!publicClient || status === 'disconnected') {
-    debugLog.warn('🔌 Wallet disconnected → clearing connectedAccount');
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.connectedAccount = undefined;
-      return next;
-    });
-  }
-}, [publicClient, status]);
+  useEffect(() => {
+    if (!publicClient || status === 'disconnected') {
+      debugLog.warn('🔌 Wallet disconnected → clearing connectedAccount');
+      setExchangeContext(prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount = undefined;
+        return next;
+      });
+    }
+  }, [publicClient, status]);
 
   // === Reset connectedAccount if publicClient is missing ===
   useEffect(() => {
@@ -51,7 +49,7 @@ useEffect(() => {
     debugLog.log(`📬 Setting connectedAccount.address → ${address}`);
     setExchangeContext(prev => {
       const next = structuredClone(prev);
-      if (!next.accounts.connectedAccount) next.accounts.connectedAccount = {} as WalletAccount;
+      next.accounts.connectedAccount ??= {} as WalletAccount;
       next.accounts.connectedAccount.address = address;
       next.accounts.connectedAccount.type = 'Active Wallet Account';
       return next;
@@ -65,7 +63,7 @@ useEffect(() => {
     debugLog.log(`💰 Setting connectedAccount.balance → ${balanceData.value.toString()}`);
     setExchangeContext(prev => {
       const next = structuredClone(prev);
-      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount ??= {} as WalletAccount;
       next.accounts.connectedAccount.balance = balanceData.value;
       return next;
     });
@@ -78,7 +76,7 @@ useEffect(() => {
     debugLog.log(`📶 Setting connectedAccount.status → ${status}`);
     setExchangeContext(prev => {
       const next = structuredClone(prev);
-      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount ??= {} as WalletAccount;
       next.accounts.connectedAccount.status = status.toString();
       return next;
     });
@@ -98,7 +96,7 @@ useEffect(() => {
 
     setExchangeContext(prev => {
       const next = structuredClone(prev);
-      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount ??= {} as WalletAccount;
       next.accounts.connectedAccount.logoURL = logoURL;
       next.accounts.connectedAccount.website = website;
       next.accounts.connectedAccount.description = description;
@@ -118,7 +116,7 @@ useEffect(() => {
 
     setExchangeContext(prev => {
       const next = structuredClone(prev);
-      if (!next.accounts.connectedAccount) return prev;
+      next.accounts.connectedAccount ??= {} as WalletAccount;
       next.accounts.connectedAccount.name = name;
       next.accounts.connectedAccount.symbol = symbol;
       return next;

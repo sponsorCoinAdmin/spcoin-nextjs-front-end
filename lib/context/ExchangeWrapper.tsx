@@ -16,6 +16,7 @@ import {
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { serializeWithBigInt } from '../utils/jsonBigInt';
 
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';
@@ -26,7 +27,7 @@ export type ExchangeContextType = {
   exchangeContext: ExchangeContextTypeOnly;
   setExchangeContext: (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
-    hookName?: string
+    reason?: string
   ) => void;
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
@@ -43,6 +44,36 @@ export type ExchangeContextType = {
 
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
+function updateExchangeContext(
+  setFn: React.Dispatch<React.SetStateAction<ExchangeContextTypeOnly | undefined>>,
+  updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
+  reason: string
+) {
+  setFn((prev) => {
+    const updated = prev ? updater(structuredClone(prev)) : prev;
+
+    if (serializeWithBigInt(updated) === serializeWithBigInt(prev)) return prev;
+
+    const reasonText = reason || '⚠️ unknown update (reason was undefined)';
+    debugLog.log(`🛠️ updateExchangeContext() called → reason: ${reasonText}`);
+
+    if (prev && updated && updated.network?.chainId !== prev.network?.chainId) {
+      debugLog.warn(
+        `⚠️ network.chainId changed in updateExchangeContext → ${prev.network?.chainId} ➝ ${updated.network?.chainId} 🔁 reason: ${reason}`
+      );
+    }
+
+    if (updated) {
+      debugLog.log('📤 Preview updated context BEFORE saveLocalExchangeContext()');
+      debugLog.debug(updated);
+      saveLocalExchangeContext(updated);
+      debugLog.log('📦 exchangeContext saved to localStorage');
+    }
+
+    return updated;
+  });
+}
+
 export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
@@ -54,89 +85,95 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
-    hookName = 'unknown'
-  ) => {
-    setContextState((prev) => {
-      debugLog.log('🧪 setExchangeContext triggered by', hookName);
-
-      const updated = prev ? updater(structuredClone(prev)) : prev;
-
-      if (prev && updated && updated.network?.chainId !== prev.network?.chainId) {
-        debugLog.warn(
-          `⚠️ network.chainId changed in setExchangeContext → ${prev.network?.chainId} ➝ ${updated.network?.chainId} 🔁 hook: ${hookName}`
-        );
-      }
-
-      if (updated) {
-        debugLog.log('📤 Preview updated context BEFORE saveLocalExchangeContext()');
-        console.debug(updated);
-        saveLocalExchangeContext(updated);
-        debugLog.log('📦 exchangeContext saved to localStorage');
-      }
-
-      return updated;
-    });
-  };
+    reason: string
+  ) => updateExchangeContext(setContextState, updater, reason);
 
   const setRecipientAccount = (wallet: WalletAccount | undefined) => {
     setExchangeContext((prev) => {
+      const old = prev.accounts.recipientAccount;
+      const reason = `ExchangeWrapper updating recipientAccount from ${JSON.stringify(old)} to ${JSON.stringify(wallet)}`;
+      debugLog.log(`reason: ${reason}`);
+      if (JSON.stringify(old) === JSON.stringify(wallet)) return prev;
       const cloned = structuredClone(prev);
       cloned.accounts.recipientAccount = wallet;
       return cloned;
-    }, 'setRecipientAccount');
+    }, 'ExchangeWrapper.recipientAccount');
   };
 
   const setSellAmount = (amount: bigint) => {
     setExchangeContext((prev) => {
+      const old = prev.tradeData.sellTokenContract?.amount;
+      const reason = `ExchangeWrapper updating sellAmount from ${old} to ${amount}`;
+      debugLog.log(`reason: ${reason}`);
+      if (old === amount) return prev;
       const cloned = structuredClone(prev);
       if (cloned.tradeData.sellTokenContract) {
         cloned.tradeData.sellTokenContract.amount = amount;
       }
       return cloned;
-    }, 'setSellAmount');
+    }, 'ExchangeWrapper.sellAmount');
   };
 
   const setBuyAmount = (amount: bigint) => {
     setExchangeContext((prev) => {
+      const old = prev.tradeData.buyTokenContract?.amount;
+      const reason = `ExchangeWrapper updating buyAmount from ${old} to ${amount}`;
+      debugLog.log(`reason: ${reason}`);
+      if (old === amount) return prev;
       const cloned = structuredClone(prev);
       if (cloned.tradeData.buyTokenContract) {
         cloned.tradeData.buyTokenContract.amount = amount;
       }
       return cloned;
-    }, 'setBuyAmount');
+    }, 'ExchangeWrapper.buyAmount');
   };
 
   const setSellTokenContract = (contract: TokenContract | undefined) => {
     setExchangeContext((prev) => {
+      const old = prev.tradeData.sellTokenContract;
+      const reason = `ExchangeWrapper updating sellTokenContract from ${JSON.stringify(old)} to ${JSON.stringify(contract)}`;
+      debugLog.log(`reason: ${reason}`);
+      if (JSON.stringify(old) === JSON.stringify(contract)) return prev;
       const cloned = structuredClone(prev);
       cloned.tradeData.sellTokenContract = contract;
       return cloned;
-    }, 'setSellTokenContract');
+    }, 'ExchangeWrapper.sellTokenContract');
   };
 
   const setBuyTokenContract = (contract: TokenContract | undefined) => {
     setExchangeContext((prev) => {
+      const old = prev.tradeData.buyTokenContract;
+      const reason = `ExchangeWrapper updating buyTokenContract from ${JSON.stringify(old)} to ${JSON.stringify(contract)}`;
+      debugLog.log(`reason: ${reason}`);
+      if (JSON.stringify(old) === JSON.stringify(contract)) return prev;
       const cloned = structuredClone(prev);
       cloned.tradeData.buyTokenContract = contract;
       return cloned;
-    }, 'setBuyTokenContract');
+    }, 'ExchangeWrapper.buyTokenContract');
   };
 
   const setTradeDirection = (type: TRADE_DIRECTION) => {
     setExchangeContext((prev) => {
+      const old = prev.tradeData.tradeDirection;
+      const reason = `ExchangeWrapper updating tradeDirection from ${old} to ${type}`;
+      debugLog.log(`reason: ${reason}`);
+      if (old === type) return prev;
       const cloned = structuredClone(prev);
       cloned.tradeData.tradeDirection = type;
       return cloned;
-    }, 'setTradeDirection');
+    }, 'ExchangeWrapper.tradeDirection');
   };
 
   const setSlippageBps = (bps: number) => {
-    debugLog.log('🧾 setSlippageBps:', bps);
     setExchangeContext((prev) => {
+      const old = prev.tradeData.slippage?.bps;
+      const reason = `ExchangeWrapper updating slippage.bps from ${old} to ${bps}`;
+      debugLog.log(`reason: ${reason}`);
+      if (old === bps) return prev;
       const cloned = structuredClone(prev);
       cloned.tradeData.slippage.bps = bps;
       return cloned;
-    }, 'setSlippageBps');
+    }, 'ExchangeWrapper.slippage.bps');
   };
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 import { CONTAINER_TYPE } from '@/lib/structure';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
-import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
+import { TokenSelectDialog, RecipientSelectDialog } from '@/components/Dialogs/AssetSelectDialogs';
 
 type GenericAsset = {
   address: string;
@@ -60,14 +60,14 @@ function AssetSelectDropDown<T extends GenericAsset>({
   return (
     <>
       {isToken ? (
-        <TokenDialogWrapper
+        <TokenSelectDialog
           showDialog={showDialog}
           setShowDialog={setShowDialog}
           containerType={containerType!} // assert present for tokens
           onSelect={handleAssetSelect as any}
         />
       ) : (
-        <RecipientDialogWrapper
+        <RecipientSelectDialog
           showDialog={showDialog}
           setShowDialog={setShowDialog}
           onSelect={handleAssetSelect as any}

@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   InputState,
   FEED_TYPE,
@@ -9,12 +9,12 @@ import {
   WalletAccount,
   CONTAINER_TYPE,
 } from '@/lib/structure';
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import { useInputValidationState } from '@/lib/hooks/';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
-import DataList from '../Dialogs/Resources/DataList';
+import DataList from '../Dialogs/AssetSelectDialogs/DataList';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -29,18 +29,20 @@ interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   onSelect: (item: T, state: InputState) => void;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE; // ✅ added
+  containerType?: CONTAINER_TYPE;
 }
 
-export default function AddressSelect<T extends TokenContract | WalletAccount>({
+function AddressSelectComponent<T extends TokenContract | WalletAccount>({
   feedType,
   inputPlaceholder,
   closeDialog,
   onSelect: onSelectProp,
   duplicateMessage,
   showDuplicateCheck = false,
-  containerType, // ✅ added
+  containerType,
 }: AddressSelectProps<T>) {
+  console.debug('[🔄 RENDER] AddressSelect re-rendered');
+
   const {
     inputValue,
     debouncedAddress,
@@ -51,16 +53,25 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     getInputStatusEmoji,
   } = useBaseSelectShared();
 
+  const stableValidationParams = useMemo(
+    () => ({
+      debouncedAddress,
+      feedType,
+      containerType,
+    }),
+    [debouncedAddress, feedType, containerType]
+  );
+
   const {
     inputState,
     validatedAsset,
-    isLoading,
+    isValidating,
     reportMissingLogoURL,
     hasBrokenLogoURL,
   } = useInputValidationState<T>(
-    debouncedAddress,
-    feedType,
-    containerType // ✅ passed to support duplicate detection
+    stableValidationParams.debouncedAddress,
+    stableValidationParams.feedType,
+    stableValidationParams.containerType
   );
 
   const onSelect = useCallback(
@@ -88,12 +99,12 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   }, [validatedAsset]);
 
   useEffect(() => {
-    if (!debouncedAddress || isLoading || !validatedAsset) return;
+    if (!debouncedAddress || isValidating || !validatedAsset) return;
     if (!manualEntryRef.current) {
       debugLog.log(`🚀 Auto-selecting validatedAsset`);
       onSelect(validatedAsset);
     }
-  }, [debouncedAddress, isLoading, validatedAsset, manualEntryRef, onSelect]);
+  }, [debouncedAddress, isValidating, validatedAsset, manualEntryRef, onSelect]);
 
   return (
     <div
@@ -145,3 +156,6 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     </div>
   );
 }
+
+const AddressSelect = React.memo(AddressSelectComponent) as typeof AddressSelectComponent;
+export default AddressSelect;

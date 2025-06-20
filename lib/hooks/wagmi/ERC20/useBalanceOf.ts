@@ -1,4 +1,3 @@
-// File: lib/hooks/wagmi/ERC20/useBalanceOf.ts
 'use client';
 
 import { useEffect, useMemo } from 'react';
@@ -6,39 +5,18 @@ import { useBalance, useChainId } from 'wagmi';
 import { Address } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';
+const debugLog = createDebugLogger('useBalanceOf', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * ✅ useBalanceOf
- * 
- * A wrapper around Wagmi’s `useBalance` that:
- * - Uses `exchangeContext.accounts.connectedAccount.address` if the passed address is `NATIVE_TOKEN_ADDRESS`
- * - Falls back to normal ERC-20 usage if a `token` is specified
- * - Updates connected account balance in context if the fetch is for that account
- *
- * @param address — target address to fetch balance for (or `NATIVE_TOKEN_ADDRESS`)
- * @param token — optional ERC-20 token contract address (ignored if native)
- * @returns Wagmi balance result
- *
- * @example Native token (ETH, MATIC, etc.)
- * ```tsx
- * import { useBalanceOf } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
- * import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
- * 
- * const { data, isLoading } = useBalanceOf({ address: NATIVE_TOKEN_ADDRESS });
- * ```
- * 
- * @example ERC-20 token balance
- * ```tsx
- * import { useBalanceOf } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
- * 
- * const userAddress = '0x123...';
- * const tokenAddress = '0xabc...';
- * 
- * const { data, isLoading } = useBalanceOf({ address: userAddress, token: tokenAddress });
- * ```
+ * Fetches balance for connected account or specified token and updates context.
  */
 export function useBalanceOf({ address, token }: { address: Address; token?: Address }) {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
 
   const isNative = address === NATIVE_TOKEN_ADDRESS;
   const connectedAccountAddress = exchangeContext.accounts?.connectedAccount?.address;
@@ -66,52 +44,44 @@ export function useBalanceOf({ address, token }: { address: Address; token?: Add
       fetchedBalance !== undefined &&
       fetchedAddress.toLowerCase() === connectedAccountAddress?.toLowerCase()
     ) {
-      setExchangeContext((prev) => {
-        const ca = prev.accounts?.connectedAccount;
-        if (!ca) return prev;
-        return {
-          ...prev,
-          accounts: {
-            ...prev.accounts,
-            connectedAccount: {
-              ...ca,
-              balance: fetchedBalance,
-              name: ca.name ?? '',
-              symbol: ca.symbol ?? '',
-              type: ca.type ?? '',
-              website: ca.website ?? '',
-              description: ca.description ?? '',
-              status: ca.status ?? '',
-              address: ca.address,
-              logoURL: ca.logoURL,
+      const oldBalance = exchangeContext.accounts?.connectedAccount?.balance;
+
+      if (oldBalance !== undefined && oldBalance !== fetchedBalance) {
+        const reason = `reason: useBalanceOf updating connectedAccount.balance from ${oldBalance} to ${fetchedBalance}`;
+        debugLog.log(`🪙 ${reason}`);
+
+        updateExchangeContext((prev) => {
+          const ca = prev.accounts?.connectedAccount;
+          if (!ca) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              connectedAccount: {
+                ...ca,
+                balance: fetchedBalance,
+              },
             },
-          },
-        };
-      });
+          };
+        }, reason);
+      }
     }
-  }, [result.data?.value, balanceParams?.address, connectedAccountAddress, setExchangeContext]);
+  }, [result.data?.value, balanceParams?.address, connectedAccountAddress]);
 
   return result;
 }
 
 /**
- * ✅ setConnectedAccountBalance
- *
- * Direct setter for `exchangeContext.accounts.connectedAccount.balance`
- *
- * @param balance — bigint balance value
- *
- * @example
- * ```ts
- * import { setConnectedAccountBalance } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
- * 
- * setConnectedAccountBalance(1234567890000000000n); // Sets balance to 1.23456789 ETH
- * ```
+ * ✅ setConnectedAccountBalance (manual setter)
  */
 export function setConnectedAccountBalance(balance: bigint) {
-  const { setExchangeContext } = useExchangeContext();
+  const { setExchangeContext: updateExchangeContext, exchangeContext } = useExchangeContext();
+  const oldBalance = exchangeContext.accounts?.connectedAccount?.balance;
+  const reason = `reason: setConnectedAccountBalance updating connectedAccount.balance from ${oldBalance} to ${balance}`;
 
-  setExchangeContext((prev) => {
+  debugLog.log(`🪙 ${reason}`);
+
+  updateExchangeContext((prev) => {
     const ca = prev.accounts?.connectedAccount;
     if (!ca) return prev;
     return {
@@ -121,16 +91,8 @@ export function setConnectedAccountBalance(balance: bigint) {
         connectedAccount: {
           ...ca,
           balance,
-          name: ca.name ?? '',
-          symbol: ca.symbol ?? '',
-          type: ca.type ?? '',
-          website: ca.website ?? '',
-          description: ca.description ?? '',
-          status: ca.status ?? '',
-          address: ca.address,
-          logoURL: ca.logoURL,
         },
       },
     };
-  });
+  }, reason);
 }

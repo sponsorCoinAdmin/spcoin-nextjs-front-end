@@ -1,8 +1,7 @@
-// File: lib/context/hooks/nestedHooks/useTradeDirection.ts
+'use client';
 
-import { useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { TRADE_DIRECTION, TradeData } from '@/lib/structure';
+import { TRADE_DIRECTION } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 
@@ -14,7 +13,7 @@ const debugLog = createDebugLogger('contextHooks', DEBUG_ENABLED, LOG_TIME);
  * Hook to get and set the current trade direction in context.
  */
 export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) => void] => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
 
   const currentDirection = exchangeContext?.tradeData?.tradeDirection ?? TRADE_DIRECTION.SELL_EXACT_OUT;
 
@@ -28,22 +27,15 @@ export const useTradeDirection = (): [TRADE_DIRECTION, (type: TRADE_DIRECTION) =
 
     debugHookChange('tradeDirection', currentDirection, type);
 
-    setExchangeContext(prev => ({
+    const reason = `tradeDirection update: ${currentDirection} ➝ ${type}`;
+    updateExchangeContext(prev => ({
       ...prev,
       tradeData: {
         ...prev.tradeData,
         tradeDirection: type,
       },
-    }));
+    }), reason);
   };
 
   return [currentDirection, setTradeDirection];
-};
-
-/**
- * Hook to memoize and return the full tradeData object.
- */
-export const useTradeData = (): TradeData => {
-  const { exchangeContext } = useExchangeContext();
-  return useMemo(() => exchangeContext?.tradeData ?? {} as TradeData, [exchangeContext?.tradeData]);
 };

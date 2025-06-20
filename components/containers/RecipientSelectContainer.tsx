@@ -31,10 +31,14 @@ const AccountSelectContainer: React.FC = () => {
   useEffect(() => {
     if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
       setExchangeContext(prev => {
+        const old = prev.accounts.recipientAccount;
+        const reason = `AccountSelectContainer updating recipientAccount from ${JSON.stringify(old)} to ${JSON.stringify(recipientAccount)}`;
+        console.debug(`reason: ${reason}`);
+
         const cloned = structuredClone(prev);
         cloned.accounts.recipientAccount = recipientAccount;
         return cloned;
-      });
+      }, 'AccountSelectContainer');
     }
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 

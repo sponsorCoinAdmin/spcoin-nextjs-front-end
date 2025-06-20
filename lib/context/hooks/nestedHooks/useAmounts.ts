@@ -29,11 +29,12 @@ export const useSellAmount = (): [bigint, (amount: bigint) => void] => {
 
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
-      debugLog.log('🪙 Updating sellAmount to:', amount);
+      const prevAmount = cloned.tradeData.sellTokenContract?.amount ?? 0n;
+
+      debugLog.log(`reason: useAmounts updating sellTokenContract.amount from ${prevAmount} to ${amount}`);
+      debugHookChange('sellTokenContract.amount', prevAmount, amount);
 
       if (cloned.tradeData.sellTokenContract) {
-        const prevAmount = cloned.tradeData.sellTokenContract.amount;
-        debugHookChange('sellTokenContract.amount', prevAmount, amount);
         cloned.tradeData.sellTokenContract.amount = amount;
       }
 
@@ -65,11 +66,12 @@ export const useBuyAmount = (): [bigint, (amount: bigint) => void] => {
 
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
-      debugLog.log('💰 Updating buyAmount to:', amount);
+      const prevAmount = cloned.tradeData.buyTokenContract?.amount ?? 0n;
+
+      debugLog.log(`reason: useAmounts updating buyTokenContract.amount from ${prevAmount} to ${amount}`);
+      debugHookChange('buyTokenContract.amount', prevAmount, amount);
 
       if (cloned.tradeData.buyTokenContract) {
-        const prevAmount = cloned.tradeData.buyTokenContract.amount;
-        debugHookChange('buyTokenContract.amount', prevAmount, amount);
         cloned.tradeData.buyTokenContract.amount = amount;
       }
 

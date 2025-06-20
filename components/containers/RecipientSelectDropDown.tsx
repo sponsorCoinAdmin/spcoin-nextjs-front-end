@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
+import { RecipientSelectDialog } from '@/components/Dialogs/AssetSelectDialogs';
 import { WalletAccount, InputState } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
@@ -52,11 +52,11 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
 
   return (
     <>
-      <RecipientDialogWrapper
+      <RecipientSelectDialog
         showDialog={showDialog}
         setShowDialog={setShowDialog}
         onSelect={(wallet, state) => {
-          console.debug('🎯 [RecipientDialogWrapper -> DropDown] onSelect triggered', { wallet, state });
+          console.debug('🎯 [RecipientSelectDialog -> DropDown] onSelect triggered', { wallet, state });
           if (state === InputState.CLOSE_INPUT) {
             handleRecipientSelect(wallet);
             setShowDialog(false);

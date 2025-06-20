@@ -17,7 +17,7 @@ export const useSlippage = (): {
   setSlippage: (slippage: Slippage) => void;
   setBps: (bps: number) => void;
 } => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
 
   const defaultSlippage: Slippage = {
     bps: 200,
@@ -33,13 +33,16 @@ export const useSlippage = (): {
 
     if (!exchangeContext?.tradeData) return;
 
-    setExchangeContext((prev) => ({
-      ...prev,
-      tradeData: {
-        ...prev.tradeData,
-        slippage: newSlippage,
-      },
-    }));
+    updateExchangeContext(
+      (prev) => ({
+        ...prev,
+        tradeData: {
+          ...prev.tradeData,
+          slippage: newSlippage,
+        },
+      }),
+      `tradeData.slippage updating from ${JSON.stringify(oldSlippage)} to ${JSON.stringify(newSlippage)}`
+    );
   };
 
   const setBps = (bps: number) => {
