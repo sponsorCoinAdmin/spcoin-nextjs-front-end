@@ -9,7 +9,6 @@ export * from "./useDebounce";
 export * from "./useDebouncedAddressInput";
 export * from "./useEthersProvider";
 export * from "./useEthersSigner";
-export * from "./useFetchLocalAvatar";
 export * from "./useHexInput";
 export * from "./useInputValidationState";
 export * from "./useJsonInspector";
