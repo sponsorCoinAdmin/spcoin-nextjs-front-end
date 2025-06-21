@@ -18,7 +18,7 @@ interface BaseProps<T> {
   inputPlaceholder: string;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE;
+  containerType: CONTAINER_TYPE;
 }
 
 export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
@@ -39,6 +39,12 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
       containerType,
     });
   }, [showDialog, feedType, showDuplicateCheck, containerType]);
+  
+  duplicateMessage={
+        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+          ? 'Sell Address Cannot Be the Same as Buy Address'
+          : 'Buy Address Cannot Be the Same as Sell Address'
+      }
 
   const title = useMemo(() => {
     const resolvedTitle =
