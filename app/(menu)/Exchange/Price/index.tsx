@@ -28,7 +28,6 @@ import {
 import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import { mutate } from 'swr';
 // import { useResetContracts } from '@/lib/context/hooks';
-import { useChainId } from 'wagmi';
 
 export default function PriceView() {
 

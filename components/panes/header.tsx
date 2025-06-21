@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { useChainId, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 import {
   useBuyTokenContract,
   useSellTokenContract,
@@ -18,6 +18,7 @@ import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContr
 import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
@@ -26,7 +27,7 @@ const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 export default function Header() {
   useResetContracts();
 
-  const chainId = useChainId({ config });
+  const chainId = useLocalChainId();
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const didHydrate = useDidHydrate();

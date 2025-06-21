@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import styles from '@/styles/Modal.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import {
   BASE,
   ETHEREUM,
@@ -57,7 +57,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
 
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const { status } = useAccount();
 
   useEffect(() => {

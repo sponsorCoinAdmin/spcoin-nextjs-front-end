@@ -10,7 +10,8 @@ import {
   useTradeData,
 } from '@/lib/context/hooks';
 import { Address } from 'viem';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useLocalChainId } from '../context/hooks/nestedHooks/useLocalChainId';
 
 const API_PROVIDER = '1Inch/';
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
@@ -52,8 +53,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 function usePriceAPI() {
   const { exchangeContext } = useExchangeContext(); // ✅ must call first
   const tradeData = useTradeData();
-  const chainId = useChainId();
-  const { address: userAddress } = useAccount();
+  const chainId = useLocalChainId();
   const [errorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();

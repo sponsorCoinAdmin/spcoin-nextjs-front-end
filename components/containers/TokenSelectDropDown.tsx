@@ -12,11 +12,11 @@ import {
 } from '@/lib/structure';
 
 import { useTradeData } from '@/lib/context/hooks';
-import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
@@ -25,7 +25,7 @@ const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIM
 const seenBrokenLogos = new Set<string>();
 
 function useTokenLogoURL(tokenContract?: TokenContract): string {
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const address = tokenContract?.address;
 
   return useMemo(() => {

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import styles from '@/styles/Modal.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
 import {
   BASE,
   ETHEREUM,
@@ -31,6 +31,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -57,8 +58,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
 
-  const chainId = useChainId();
-  const { status } = useAccount();
+  const chainId = useLocalChainId();
 
   useEffect(() => {
     setIsClient(true);
