@@ -5,7 +5,7 @@ import { useBalance, useChainId } from 'wagmi';
 import { Address } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';

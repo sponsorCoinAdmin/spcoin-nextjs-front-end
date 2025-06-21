@@ -1,9 +1,7 @@
 'use client';
 
 import { ExchangeContext, TradeData } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-
-import { serializeWithBigInt, deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
+import { createDebugLogger, deserializeWithBigInt } from '@/lib/utils';
 
 import { getInitialContext } from './ExchangeInitialContext';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';

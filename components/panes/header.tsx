@@ -16,7 +16,7 @@ import {
 } from '@/lib/context/hooks';
 import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts';
 import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
 
 const LOG_TIME = false;

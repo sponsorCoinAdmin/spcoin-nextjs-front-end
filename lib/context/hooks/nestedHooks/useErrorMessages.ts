@@ -2,7 +2,7 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { ErrorMessage } from '@/lib/structure';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
+import { debugHookChange } from '@/lib/utils';
 
 /**
  * Access and update the generic user-facing error message.

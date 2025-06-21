@@ -16,7 +16,7 @@ import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';

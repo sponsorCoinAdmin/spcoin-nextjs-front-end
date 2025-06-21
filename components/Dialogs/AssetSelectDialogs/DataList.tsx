@@ -26,7 +26,7 @@ import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import { Address, isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';

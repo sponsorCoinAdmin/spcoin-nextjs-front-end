@@ -1,7 +1,7 @@
 // File: lib/utils/debugHookChange.ts
 
-import { serializeWithBigInt } from '@/lib/utils/jsonBigInt';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { serializeWithBigInt } from './jsonBigInt';
+import { createDebugLogger } from './debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HOOKS_LOGGING === 'true';

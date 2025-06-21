@@ -18,7 +18,7 @@ import {
   SEPOLIA,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_NETWORK_SETTINGS === 'true';

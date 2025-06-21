@@ -7,7 +7,7 @@ import { isAddress, Address } from 'viem';
 import { TokenContract } from '@/lib/structure';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const LOG_TIME = false;

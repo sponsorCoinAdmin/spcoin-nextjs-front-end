@@ -3,7 +3,7 @@
 import { isAddress } from 'viem';
 import { useBalance, useAccount, useChainId } from 'wagmi';
 import { useMemo, useRef } from 'react';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';

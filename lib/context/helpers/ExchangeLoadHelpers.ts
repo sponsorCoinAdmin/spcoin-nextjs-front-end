@@ -2,9 +2,8 @@
 
 import { ExchangeContext } from '@/lib/structure';
 import { ETHEREUM } from '@/lib/structure';
-import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
+import { deserializeWithBigInt, createDebugLogger } from '@/lib/utils';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;

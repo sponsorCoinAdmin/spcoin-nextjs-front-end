@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useAccount, useBalance, useChainId, usePublicClient } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { WalletAccount } from '@/lib/structure/types';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_WALLET_ACCOUNT === 'true';

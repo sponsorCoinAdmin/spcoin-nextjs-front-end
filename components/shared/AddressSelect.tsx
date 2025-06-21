@@ -15,7 +15,7 @@ import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
 import DataList from '../Dialogs/AssetSelectDialogs/DataList';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';

@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Address, isAddress } from 'viem';
 import { WalletAccount } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_WALLET_ACCOUNT === 'true';

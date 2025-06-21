@@ -2,7 +2,7 @@ import { mainnet, base, polygon, sepolia, hardhat } from 'wagmi/chains';
 import { createConfig, http } from 'wagmi';
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors';
 import { getDefaultConfig } from 'connectkit';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 // 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME:boolean = false;

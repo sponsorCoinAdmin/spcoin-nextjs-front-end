@@ -2,8 +2,7 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { TRADE_DIRECTION } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
+import { createDebugLogger, debugHookChange } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';

@@ -16,7 +16,7 @@ import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const API_PROVIDER = '0X/';
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;

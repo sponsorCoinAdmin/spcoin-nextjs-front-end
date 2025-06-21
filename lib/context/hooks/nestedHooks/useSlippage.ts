@@ -1,7 +1,7 @@
 'use client';
 
 import { useExchangeContext } from '@/lib/context/hooks';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
+import { debugHookChange } from '@/lib/utils';
 
 export type Slippage = {
   bps: number;

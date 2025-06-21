@@ -5,7 +5,7 @@
 import { useSpCoinDisplay } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useEffect } from 'react';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_GUI_CONTROLLER === 'true';

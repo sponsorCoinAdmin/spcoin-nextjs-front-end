@@ -6,7 +6,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useMappedTokenContract } from '@/lib/context/hooks';
 import { FEED_TYPE } from '@/lib/structure';
 import { isAddress } from 'viem';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 import { useMappedWalletAccount } from './useMappedWalletAccount';
 
 const LOG_TIME = false;

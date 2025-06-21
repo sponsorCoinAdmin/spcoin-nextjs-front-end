@@ -15,7 +15,7 @@ import {
   WalletAccount,
 } from '@/lib/structure';
 
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
 
 const LOG_TIME = false;

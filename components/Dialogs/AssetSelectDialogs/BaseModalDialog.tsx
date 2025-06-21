@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import styles from '@/styles/Modal.module.css';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';

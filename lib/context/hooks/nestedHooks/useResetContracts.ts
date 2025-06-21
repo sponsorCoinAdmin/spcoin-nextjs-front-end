@@ -5,15 +5,13 @@ import { useChainId, useAccount } from 'wagmi';
 
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger, debugHookChange, serializeWithBigInt } from '@/lib/utils';
 import { ExchangeContext } from '@/lib/structure';
-import { serializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import {
   getBlockChainName,
   getBlockChainLogoURL,
   getBlockExplorerURL,
 } from '@/lib/network/utils';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESET_CONTRACTS === 'true';

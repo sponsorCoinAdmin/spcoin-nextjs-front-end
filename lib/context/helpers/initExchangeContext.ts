@@ -4,7 +4,7 @@ import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
 import { WalletAccount } from '@/lib/structure';
 import { ExchangeContext } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';

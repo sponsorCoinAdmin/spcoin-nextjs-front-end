@@ -8,8 +8,7 @@ import { Address } from 'viem';
 
 import { useExchangeContext } from '../useExchangeContext';
 import { useBalanceOf } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
+import { createDebugLogger, debugHookChange } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_BALANCES === 'true';

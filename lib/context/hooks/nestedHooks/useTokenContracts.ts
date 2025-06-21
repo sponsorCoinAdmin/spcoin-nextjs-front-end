@@ -5,8 +5,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
+import { createDebugLogger, debugHookChange } from '@/lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_CONTEXT_HOOKS === 'true';

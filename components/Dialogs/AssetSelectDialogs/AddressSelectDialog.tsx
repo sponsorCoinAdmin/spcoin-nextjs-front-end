@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
 import { BaseModalDialog } from './BaseModalDialog';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger, getContainerTitle } from '@/lib/utils';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
@@ -15,10 +15,10 @@ interface BaseProps<T> {
   setShowDialog: (show: boolean) => void;
   onSelect: (item: T, state: InputState) => void;
   feedType: FEED_TYPE;
+  containerType: CONTAINER_TYPE;
   inputPlaceholder: string;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE;
 }
 
 export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
@@ -40,14 +40,10 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
     });
   }, [showDialog, feedType, showDuplicateCheck, containerType]);
 
-  const title = useMemo(() => {
-    const resolvedTitle =
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? 'Select a Token to Sell'
-        : 'Select a Token to Buy';
-    debugLog.log('🧠 [TokenSelectDialog] Resolved title', resolvedTitle);
-    return resolvedTitle;
-  }, [containerType]);
+const title = useMemo(() => {
+  return getContainerTitle(containerType);
+}, [containerType]);
+
 
   return (
     <BaseModalDialog

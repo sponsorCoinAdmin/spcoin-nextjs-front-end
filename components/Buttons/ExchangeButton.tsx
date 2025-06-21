@@ -22,7 +22,7 @@ import {
   isActiveAccountSellToken,
   isWrappedSellToken
 } from '@/lib/network/utils';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 // 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME:boolean = false;
