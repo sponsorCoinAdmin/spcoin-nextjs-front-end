@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { InputState, FEED_TYPE, WalletAccount, CONTAINER_TYPE } from '@/lib/structure';
 import AddressSelectDialog from './AddressSelectDialog';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
@@ -22,16 +22,16 @@ export function RecipientSelectDialog(props: {
 
   return (
     <AddressSelectDialog<WalletAccount>
-      {...props}
-      feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-      containerType={CONTAINER_TYPE.RECIPIENT_CONTAINER}
-      inputPlaceholder="Paste recipient wallet address"
-      onSelect={(wallet, state) => {
-        debugLog.log('✅ [RecipientSelectDialog] selected wallet', wallet);
-        if (state === InputState.CLOSE_INPUT) {
-          props.onSelect(wallet, state);
-        }
-      }}
-    />
+    containerType={CONTAINER_TYPE.RECIPIENT_CONTAINER}
+     {...props}
+    // title="Select a Recipient"
+    feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
+    inputPlaceholder="Paste recipient wallet address"
+    onSelect={(wallet, state) => {
+      debugLog.log('✅ [RecipientSelectDialog] selected wallet', wallet);
+      if (state === InputState.CLOSE_INPUT) {
+        props.onSelect(wallet, state);
+      }
+    } }    />
   );
 }
