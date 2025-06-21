@@ -21,7 +21,7 @@ interface BaseProps<T> {
   showDuplicateCheck?: boolean;
 }
 
-export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
+export default function AssetSelectDialog<T extends TokenContract | WalletAccount>({
   showDialog,
   setShowDialog,
   onSelect,
@@ -32,7 +32,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   containerType,
 }: BaseProps<T>) {
   useEffect(() => {
-    debugLog.log('📬 [AddressSelectDialog] props received', {
+    debugLog.log('📬 [AssetSelectDialog] props received', {
       showDialog,
       feedType,
       showDuplicateCheck,
@@ -47,7 +47,7 @@ const title = useMemo(() => {
 
   return (
     <BaseModalDialog
-      id="AddressSelectDialog"
+      id="AssetSelectDialog"
       showDialog={showDialog}
       setShowDialog={setShowDialog}
       title={title}
@@ -56,11 +56,11 @@ const title = useMemo(() => {
         feedType={feedType}
         inputPlaceholder={inputPlaceholder}
         closeDialog={() => {
-          debugLog.log('❌ [AddressSelectDialog] closeDialog called');
+          debugLog.log('❌ [AssetSelectDialog] closeDialog called');
           setShowDialog(false);
         }}
         onSelect={(item, state) => {
-          debugLog.log('🎯 [AddressSelectDialog] onSelect triggered', { item, state });
+          debugLog.log('🎯 [AssetSelectDialog] onSelect triggered', { item, state });
           if (state === InputState.CLOSE_INPUT) {
             onSelect(item, state);
           }

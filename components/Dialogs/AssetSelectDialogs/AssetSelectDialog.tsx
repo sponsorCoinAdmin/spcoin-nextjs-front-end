@@ -16,18 +16,30 @@ interface BaseProps<T> {
   onSelect: (item: T, state: InputState) => void;
   feedType: FEED_TYPE;
   containerType: CONTAINER_TYPE;
-  inputPlaceholder: string;
-  showDuplicateCheck?: boolean;
 }
 
-export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
+export default function AssetSelectDialog<T extends TokenContract | WalletAccount>({
   showDialog,
   setShowDialog,
   onSelect,
   feedType,
-  inputPlaceholder,
   containerType,
 }: BaseProps<T>) {
+
+const inputPlaceholder = useMemo(() => {
+  switch (containerType) {
+    case CONTAINER_TYPE.BUY_SELECT_CONTAINER:
+    case CONTAINER_TYPE.SELL_SELECT_CONTAINER:
+      return 'Type or paste token address';
+    case CONTAINER_TYPE.RECIPIENT_CONTAINER:
+      return 'Paste recipient wallet address';
+    case CONTAINER_TYPE.AGENT_CONTAINER:
+      return 'Paste agent wallet address';
+    default:
+      return 'Enter address';
+  }
+}, [containerType]);
+
 
   const showDuplicateCheck = useMemo(() => {
     return (
@@ -37,7 +49,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   }, [containerType]);
 
   useEffect(() => {
-    debugLog.log('📬 [AddressSelectDialog] props received', {
+    debugLog.log('📬 [AssetSelectDialog] props received', {
       showDialog,
       feedType,
       containerType,
@@ -69,11 +81,11 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
         feedType={feedType}
         inputPlaceholder={inputPlaceholder}
         closeDialog={() => {
-          debugLog.log('❌ [AddressSelectDialog] closeDialog called');
+          debugLog.log('❌ [AssetSelectDialog] closeDialog called');
           setShowDialog(false);
         }}
         onSelect={(item, state) => {
-          debugLog.log('🎯 [AddressSelectDialog] onSelect triggered', { item, state });
+          debugLog.log('🎯 [AssetSelectDialog] onSelect triggered', { item, state });
           if (state === InputState.CLOSE_INPUT) {
             onSelect(item, state);
           }

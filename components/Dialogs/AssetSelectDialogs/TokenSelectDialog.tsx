@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure';
 import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
-import AddressSelectDialog from './AssetSelectDialog';
+import AssetSelectDialog from './AssetSelectDialog';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME: boolean = false;
@@ -33,10 +33,9 @@ export function TokenSelectDialog(props: {
   }, [props.showDialog, containerType]);
 
   return (
-    <AddressSelectDialog<TokenContract>
+    <AssetSelectDialog<TokenContract>
       {...props}
       feedType={FEED_TYPE.TOKEN_LIST}
-      inputPlaceholder="Type or paste token address"
       containerType={containerType}
       onSelect={(token, state) => {
         debugLog.log('✅ [TokenSelectDialog] selected token', token);

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { InputState, FEED_TYPE, WalletAccount, CONTAINER_TYPE } from '@/lib/structure';
-import AddressSelectDialog from './AssetSelectDialog';
+import AssetSelectDialog from './AssetSelectDialog';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME: boolean = false;
@@ -21,11 +21,10 @@ export function RecipientSelectDialog(props: {
   }, [props.showDialog]);
 
   return (
-    <AddressSelectDialog<WalletAccount>
+    <AssetSelectDialog<WalletAccount>
       {...props}
       feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
       containerType={CONTAINER_TYPE.RECIPIENT_CONTAINER}
-      inputPlaceholder="Paste recipient wallet address"
       onSelect={(wallet, state) => {
         debugLog.log('✅ [RecipientSelectDialog] selected wallet', wallet);
         if (state === InputState.CLOSE_INPUT) {

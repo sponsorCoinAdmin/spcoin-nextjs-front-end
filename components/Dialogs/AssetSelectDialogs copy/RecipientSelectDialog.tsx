@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { InputState, FEED_TYPE, WalletAccount, CONTAINER_TYPE } from '@/lib/structure';
-import AddressSelectDialog from './AddressSelectDialog';
+import AssetSelectDialog from './AssetSelectDialog';
 import { createDebugLogger } from '@/lib/utils';
 
 const LOG_TIME: boolean = false;
@@ -21,7 +21,7 @@ export function RecipientSelectDialog(props: {
   }, [props.showDialog]);
 
   return (
-    <AddressSelectDialog<WalletAccount>
+    <AssetSelectDialog<WalletAccount>
     containerType={CONTAINER_TYPE.RECIPIENT_CONTAINER}
      {...props}
     // title="Select a Recipient"
