@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
 import { BaseModalDialog } from './BaseModalDialog';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { createDebugLogger, getContainerTitle } from '@/lib/utils';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
@@ -15,10 +15,9 @@ interface BaseProps<T> {
   setShowDialog: (show: boolean) => void;
   onSelect: (item: T, state: InputState) => void;
   feedType: FEED_TYPE;
-  inputPlaceholder: string;
-  duplicateMessage?: string;
-  showDuplicateCheck?: boolean;
   containerType: CONTAINER_TYPE;
+  inputPlaceholder: string;
+  showDuplicateCheck?: boolean;
 }
 
 export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
@@ -27,37 +26,41 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   onSelect,
   feedType,
   inputPlaceholder,
-  duplicateMessage,
-  showDuplicateCheck = false,
   containerType,
 }: BaseProps<T>) {
+
+  const showDuplicateCheck = useMemo(() => {
+    return (
+      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER ||
+      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+    );
+  }, [containerType]);
+
   useEffect(() => {
     debugLog.log('📬 [AddressSelectDialog] props received', {
       showDialog,
       feedType,
-      showDuplicateCheck,
       containerType,
     });
   }, [showDialog, feedType, showDuplicateCheck, containerType]);
-  
-  duplicateMessage={
-        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? 'Sell Address Cannot Be the Same as Buy Address'
-          : 'Buy Address Cannot Be the Same as Sell Address'
-      }
+
+
+  const duplicateMessage = useMemo(() =>
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? 'Sell Address Cannot Be the Same as Buy Address'
+      : 'Buy Address Cannot Be the Same as Sell Address',
+    [containerType]
+  );
 
   const title = useMemo(() => {
-    const resolvedTitle =
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? 'Select a Token to Sell'
-        : 'Select a Token to Buy';
-    debugLog.log('🧠 [TokenSelectDialog] Resolved title', resolvedTitle);
-    return resolvedTitle;
+    return getContainerTitle(containerType);
   }, [containerType]);
+
+
 
   return (
     <BaseModalDialog
-      id="AddressSelectDialog"
+      id="AsetSelectDialog"
       showDialog={showDialog}
       setShowDialog={setShowDialog}
       title={title}

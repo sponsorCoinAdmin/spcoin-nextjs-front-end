@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { InputState, FEED_TYPE, WalletAccount, CONTAINER_TYPE } from '@/lib/structure';
-import AddressSelectDialog from './AddressSelectDialog';
+import AddressSelectDialog from './AssetSelectDialog';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME: boolean = false;
