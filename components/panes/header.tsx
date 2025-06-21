@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { useChainId, useAccount, useSwitchChain } from 'wagmi';
+import { useChainId, useAccount } from 'wagmi';
 import {
   useBuyTokenContract,
   useSellTokenContract,
@@ -36,25 +36,10 @@ export default function Header() {
   const { exchangeContext } = useExchangeContext();
   const { isConnected } = useAccount();
   const { setNetworkConnected } = useNetwork();
-  const { switchChain } = useSwitchChain();
 
   useEffect(() => {
     setNetworkConnected(isConnected);
   }, [isConnected]);
-
-  useEffect(() => {
-    if (!isConnected || !exchangeContext?.network?.chainId) return;
-
-    const contextChainId = exchangeContext.network.chainId;
-    if (chainId !== contextChainId) {
-      debugLog.warn(`⚠️ Chain mismatch: wallet=${chainId} vs context=${contextChainId}`);
-      try {
-        switchChain({ chainId: contextChainId });
-      } catch (err: unknown) {
-        debugLog.error(`❌ switchChain threw error: ${(err as Error)?.message || err}`);
-      }
-    }
-  }, [isConnected, chainId, exchangeContext?.network?.chainId]);
 
   const networkName = exchangeContext?.network?.name ?? '';
   const logo = exchangeContext?.network?.logoURL ?? '';

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useChainId, useAccount } from 'wagmi';
+import { config } from '@/lib/wagmi/wagmiConfig';
 import { useExchangeContext } from '@/lib/context/hooks';
 import {
   getBlockChainName,
@@ -17,7 +18,7 @@ const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 
 export const useNetwork = () => {
   const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
-  const chainId = useChainId();
+  const chainId = useChainId({ config });
   const { status } = useAccount();
 
   const setNetworkChainId = (newChainId: number) => {
