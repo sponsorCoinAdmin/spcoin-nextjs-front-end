@@ -49,14 +49,9 @@ export default function Header() {
     if (chainId !== contextChainId) {
       debugLog.warn(`⚠️ Chain mismatch: wallet=${chainId} vs context=${contextChainId}`);
       try {
-        const result = switchChain({ chainId: contextChainId });
-        if (result?.catch) {
-          result.catch((err) =>
-            debugLog.error(`❌ switchChain failed: ${err?.message || err}`)
-          );
-        }
-      } catch (err: any) {
-        debugLog.error(`❌ switchChain threw error: ${err?.message || err}`);
+        switchChain({ chainId: contextChainId });
+      } catch (err: unknown) {
+        debugLog.error(`❌ switchChain threw error: ${(err as Error)?.message || err}`);
       }
     }
   }, [isConnected, chainId, exchangeContext?.network?.chainId]);

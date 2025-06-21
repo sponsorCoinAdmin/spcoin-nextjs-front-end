@@ -19,7 +19,7 @@ export const useSellTokenContract = (): [
   TokenContract | undefined,
   (contract: TokenContract | undefined) => void
 ] => {
-  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const token = exchangeContext?.tradeData?.sellTokenContract;
 
   const setToken = (contract: TokenContract | undefined) => {
@@ -28,7 +28,7 @@ export const useSellTokenContract = (): [
 
     debugHookChange('sellTokenContract', oldContract, contract);
 
-    updateExchangeContext(
+    setExchangeContext(
       (prev) => ({
         ...prev,
         tradeData: {
@@ -36,7 +36,7 @@ export const useSellTokenContract = (): [
           sellTokenContract: contract,
         },
       }),
-      `reason: contextHooks updating sellTokenContract from ${oldContract?.symbol ?? 'none'} to ${contract?.symbol ?? 'none'}`
+      `contextHooks: sellTokenContract → ${oldContract?.symbol ?? 'none'} → ${contract?.symbol ?? 'none'}`
     );
   };
 
@@ -51,7 +51,7 @@ export const useBuyTokenContract = (): [
   TokenContract | undefined,
   (contract: TokenContract | undefined) => void
 ] => {
-  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const token = exchangeContext?.tradeData?.buyTokenContract;
 
   const setToken = (contract: TokenContract | undefined) => {
@@ -68,7 +68,7 @@ export const useBuyTokenContract = (): [
 
     debugHookChange('buyTokenContract', oldContract, contract);
 
-    updateExchangeContext(
+    setExchangeContext(
       (prev) => ({
         ...prev,
         tradeData: {
@@ -76,10 +76,10 @@ export const useBuyTokenContract = (): [
           buyTokenContract: contract,
         },
       }),
-      `reason: contextHooks updating buyTokenContract from ${oldContract?.symbol ?? 'none'} to ${contract?.symbol ?? 'none'}`
+      `contextHooks: buyTokenContract → ${oldContract?.symbol ?? 'none'} → ${contract?.symbol ?? 'none'}`
     );
 
-    debugSetSpCoinDisplay(oldDisplay, newDisplay, updateExchangeContext);
+    debugSetSpCoinDisplay(oldDisplay, newDisplay, setExchangeContext);
   };
 
   return [token, setToken];
@@ -91,7 +91,7 @@ export const useBuyTokenContract = (): [
 const debugSetSpCoinDisplay = (
   oldDisplay: SP_COIN_DISPLAY,
   newDisplay: SP_COIN_DISPLAY,
-  updateExchangeContext: (updater: (prev: ExchangeContext) => ExchangeContext, reason?: string) => void
+  updateExchangeContext: (updater: (prev: ExchangeContext) => ExchangeContext, reason: string) => void
 ): void => {
   if (oldDisplay === newDisplay) {
     if (DEBUG_ENABLED) {
@@ -114,7 +114,7 @@ const debugSetSpCoinDisplay = (
         spCoinDisplay: newDisplay,
       },
     }),
-    `reason: contextHooks updating spCoinDisplay from ${spCoinDisplayString(oldDisplay)} to ${spCoinDisplayString(newDisplay)}`
+    `contextHooks: spCoinDisplay → ${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}`
   );
 };
 

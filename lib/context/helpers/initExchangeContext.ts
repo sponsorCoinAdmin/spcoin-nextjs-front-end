@@ -1,4 +1,4 @@
-// File: lib/context/helpers/initExchangeContext.ts
+'use client';
 
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
@@ -31,7 +31,15 @@ export async function initExchangeContext(
 
   debugLog.log(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
   const sanitized = sanitizeExchangeContext(stored, effectiveChainId);
-  debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
+
+  debugLog.warn(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
+
+  // ✅ Force override chainId to match wagmi value
+  if (sanitized.network.chainId !== effectiveChainId) {
+    debugLog.warn(`⚠️ Overriding sanitized.chainId ${sanitized.network.chainId} → ${effectiveChainId}`);
+    sanitized.network.chainId = effectiveChainId;
+  }
+
   debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
 
   if (isConnected && address) {
@@ -57,5 +65,6 @@ export async function initExchangeContext(
     }
   }
 
+  debugLog.warn(`✅ After init: sanitized.network.chainId = ${sanitized.network.chainId}, wagmi = ${chainId}`);
   return sanitized;
 }

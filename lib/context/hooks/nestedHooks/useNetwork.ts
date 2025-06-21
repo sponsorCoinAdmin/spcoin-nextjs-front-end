@@ -18,10 +18,14 @@ const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 export const useNetwork = () => {
   const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
   const chainId = useChainId();
-  const { status } = useAccount(); // 'connected' | 'connecting' | 'disconnected'
+  const { status } = useAccount();
 
   const setNetworkChainId = (newChainId: number) => {
     const old = exchangeContext.network?.chainId;
+    if (old === newChainId) {
+      debugLog.log(`⏭️ network.chainId unchanged: ${newChainId} — skipping update`);
+      return;
+    }
     debugHookChange('network.chainId', old, newChainId);
     debugLog.log(`reason: useNetwork updating network.chainId from ${old} to ${newChainId}`);
 
@@ -39,6 +43,10 @@ export const useNetwork = () => {
 
   const setNetworkLogoURL = (logoURL?: string) => {
     const old = exchangeContext.network?.logoURL;
+    if (old === logoURL) {
+      debugLog.log(`⏭️ network.logoURL unchanged: ${logoURL} — skipping update`);
+      return;
+    }
     debugHookChange('network.logoURL', old, logoURL);
     debugLog.log(`reason: useNetwork updating network.logoURL from ${old} to ${logoURL}`);
 
@@ -56,6 +64,10 @@ export const useNetwork = () => {
 
   const setNetworkName = (name?: string) => {
     const old = exchangeContext.network?.name;
+    if (old === name) {
+      debugLog.log(`⏭️ network.name unchanged: ${name} — skipping update`);
+      return;
+    }
     debugHookChange('network.name', old, name);
     debugLog.log(`reason: useNetwork updating network.name from ${old} to ${name}`);
 
@@ -73,6 +85,10 @@ export const useNetwork = () => {
 
   const setNetworkSymbol = (symbol?: string) => {
     const old = exchangeContext.network?.symbol;
+    if (old === symbol) {
+      debugLog.log(`⏭️ network.symbol unchanged: ${symbol} — skipping update`);
+      return;
+    }
     debugHookChange('network.symbol', old, symbol);
     debugLog.log(`reason: useNetwork updating network.symbol from ${old} to ${symbol}`);
 
@@ -90,6 +106,10 @@ export const useNetwork = () => {
 
   const setNetworkURL = (url?: string) => {
     const old = exchangeContext.network?.url;
+    if (old === url) {
+      debugLog.log(`⏭️ network.url unchanged: ${url} — skipping update`);
+      return;
+    }
     debugHookChange('network.url', old, url);
     debugLog.log(`reason: useNetwork updating network.url from ${old} to ${url}`);
 
@@ -107,12 +127,10 @@ export const useNetwork = () => {
 
   const setNetworkConnected = (connected: boolean) => {
     const old = exchangeContext.network?.connected;
-
     if (old === connected) {
       debugLog.log(`⏭️ network.connected unchanged: ${connected} — skipping update`);
       return;
     }
-
     debugHookChange('network.connected', old, connected);
     debugLog.log(`reason: useNetwork updating network.connected from ${old} to ${connected}`);
 
@@ -135,13 +153,15 @@ export const useNetwork = () => {
     const isInitialized = typeof contextChainId === 'number' && contextChainId > 0;
     const isMismatch = chainId !== contextChainId;
 
-    debugLog.log(`🔁 useEffect([chainId=${chainId}, status=${status}]) triggered`);
+    console.group(`🔁 useEffect([chainId=${chainId}, status=${status}])`);
     debugLog.log(`📊 Context chainId: ${contextChainId}, Initialized: ${isInitialized}, Mismatch: ${isMismatch}`);
 
+    // ✅ 🔒 Prevent loops after hydration
     if (isInitialized && isMismatch) {
       debugLog.warn(
         `⚠️ Chain mismatch detected → context.chainId=${contextChainId}, wagmi.chainId=${chainId} → Skipping automatic context update`
       );
+      console.groupEnd();
       return;
     }
 
@@ -157,6 +177,8 @@ export const useNetwork = () => {
     setNetworkLogoURL(logoURL);
     setNetworkURL(url);
     setNetworkConnected(connected);
+
+    console.groupEnd();
   }, [chainId, status]);
 
   return {

@@ -8,7 +8,8 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
 const debugLog = createDebugLogger('useValidationStateManager', DEBUG_ENABLED, LOG_TIME);
 
-export function debugSetInputState(
+export function setDebugInputState(
+  debugLog: ReturnType<typeof createDebugLogger>,
   state: InputState,
   currentState: InputState,
   setState: (s: InputState) => void
@@ -17,7 +18,8 @@ export function debugSetInputState(
   const prevState = getInputStateString(currentState);
   const currState = getInputStateString(state);
   const currStateImgs = '⚠️'.repeat(state);
-  debugLog.log(`${currStateImgs} STATE CHANGE: ${prevState}(${currentState}) -> ${currState}(${state})`);
+  // alert(`setDebugInputState: ${currStateImgs} STATE CHANGE: ${prevState}(${currentState}) -> ${currState}(${state})`);
+  debugLog.log(`setDebugInputState: ${currStateImgs} STATE CHANGE: ${prevState}(${currentState}) -> ${currState}(${state})`);
   setState(state);
 }
 
@@ -44,7 +46,7 @@ export function useValidationStateManager(
         inputState,
         seenBroken: Array.from(seenBrokenLogosRef.current),
       });
-      debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
+      setDebugInputState(debugLog, InputState.EMPTY_INPUT, inputState, setInputState);
     }
   }, [debouncedAddress, inputState]);
 

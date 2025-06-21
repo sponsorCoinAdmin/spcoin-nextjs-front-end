@@ -1,10 +1,13 @@
+// File: lib/components/dialogs/AssetSelectDialog.tsx
+
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
 import { BaseModalDialog } from './BaseModalDialog';
-import { createDebugLogger, getContainerTitle } from '@/lib/utils';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useContainerType } from '@/lib/utils/useContainerType';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
@@ -25,28 +28,12 @@ export default function AssetSelectDialog<T extends TokenContract | WalletAccoun
   feedType,
   containerType,
 }: BaseProps<T>) {
-
-const inputPlaceholder = useMemo(() => {
-  switch (containerType) {
-    case CONTAINER_TYPE.BUY_SELECT_CONTAINER:
-    case CONTAINER_TYPE.SELL_SELECT_CONTAINER:
-      return 'Type or paste token address';
-    case CONTAINER_TYPE.RECIPIENT_CONTAINER:
-      return 'Paste recipient wallet address';
-    case CONTAINER_TYPE.AGENT_CONTAINER:
-      return 'Paste agent wallet address';
-    default:
-      return 'Enter address';
-  }
-}, [containerType]);
-
-
-  const showDuplicateCheck = useMemo(() => {
-    return (
-      containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER ||
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    );
-  }, [containerType]);
+  const {
+    inputPlaceholder,
+    title,
+    duplicateMessage,
+    showDuplicateCheck,
+  } = useContainerType(containerType);
 
   useEffect(() => {
     debugLog.log('📬 [AssetSelectDialog] props received', {
@@ -54,21 +41,7 @@ const inputPlaceholder = useMemo(() => {
       feedType,
       containerType,
     });
-  }, [showDialog, feedType, showDuplicateCheck, containerType]);
-
-
-  const duplicateMessage = useMemo(() =>
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? 'Sell Address Cannot Be the Same as Buy Address'
-      : 'Buy Address Cannot Be the Same as Sell Address',
-    [containerType]
-  );
-
-  const title = useMemo(() => {
-    return getContainerTitle(containerType);
-  }, [containerType]);
-
-
+  }, [showDialog, feedType, containerType]);
 
   return (
     <BaseModalDialog
