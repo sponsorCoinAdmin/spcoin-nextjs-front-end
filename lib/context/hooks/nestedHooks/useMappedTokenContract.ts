@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useReadContracts, useChainId } from 'wagmi';
+import { useReadContracts } from 'wagmi';
 import { erc20Abi } from 'viem';
 import { isAddress, Address } from 'viem';
 import { TokenContract } from '@/lib/structure';
@@ -9,6 +9,7 @@ import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useNativeToken } from '@/lib/hooks/useNativeToken';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { useLocalChainId } from './useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_MAPPER === 'true';
@@ -17,7 +18,7 @@ const debugLog = createDebugLogger('useMappedTokenContract', DEBUG_ENABLED, LOG_
 export function useMappedTokenContract(tokenAddress?: Address): TokenContract | undefined | null {
   const nativeToken = useNativeToken();
   const isNativeToken = tokenAddress === NATIVE_TOKEN_ADDRESS;
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
 
   const isValidAddress = isAddress(tokenAddress || '');
 
