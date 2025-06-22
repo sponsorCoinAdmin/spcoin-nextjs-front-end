@@ -1,4 +1,4 @@
-import { useBalance, useChainId, useReadContract, useWriteContract } from 'wagmi'
+import { useBalance, useReadContract, useWriteContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 // import { erc20ABI } from 'viem'
@@ -7,6 +7,7 @@ import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
+import { useLocalChainId } from '../context/hooks/nestedHooks/useLocalChainId'
 
 // console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)
 // console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
@@ -93,7 +94,7 @@ const useWagmiERC20TokenTotalSupply = (contractAddress:Address | undefined) => {
 }
 
 const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): TokenContract|undefined => {
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const name = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
   const symbol = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
   const decimals = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
@@ -119,7 +120,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): Toke
 
 const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined):TokenContract|undefined => {
   const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
-  const chainId:number            = useChainId();
+  const chainId:number            = useLocalChainId() as;
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
   const name                      = getBlockChainName(chainId);

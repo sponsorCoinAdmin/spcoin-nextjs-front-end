@@ -1,12 +1,14 @@
 'use client'
 
-import { useBalance, useChainId, useReadContract } from 'wagmi'
+import { useBalance, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 import { erc20Abi } from 'viem'
 import { TokenContract, ContractRecs } from '@/lib/structure'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { useLocalChainId } from '../context/hooks/nestedHooks/useLocalChainId'
+import { LargeNumberLike } from 'crypto'
 
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)
@@ -101,7 +103,7 @@ const useWagmiERC20TokenBalanceOfStr = (connectedAccountAddr: Address | undefine
 }
 
 const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const name = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
   const symbol = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
   const decimals = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
@@ -127,7 +129,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
 
 const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => {
   const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
-  const chainId:number            = useChainId();
+  const chainId:number            = useLocalChainId() as number;
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
   const name                      = getBlockChainName(chainId);

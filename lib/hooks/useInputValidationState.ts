@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useChainId, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import {
   InputState,
@@ -27,6 +27,7 @@ import {
 } from './validationStateHooks/useValidationStateManager';
 import { useLogoURL } from './validationStateHooks/useLogoURL';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useLocalChainId } from '../context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
@@ -44,7 +45,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const { address: accountAddress } = useAccount();
 
   // ✅ Now passes feedType into useResolvedAsset

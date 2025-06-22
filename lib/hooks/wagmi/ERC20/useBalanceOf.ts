@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useBalance, useChainId } from 'wagmi';
+import { useBalance } from 'wagmi';
 import { Address } from 'viem';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { useExchangeContext } from '@/lib/context/hooks';
