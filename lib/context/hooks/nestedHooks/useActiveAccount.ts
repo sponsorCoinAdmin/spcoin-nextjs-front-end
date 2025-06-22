@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAccount, useBalance, useChainId, usePublicClient } from 'wagmi';
+import { useAccount, useBalance, usePublicClient } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { WalletAccount } from '@/lib/structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useLocalChainId } from './useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_WALLET_ACCOUNT === 'true';
@@ -13,7 +14,7 @@ const debugLog = createDebugLogger('useActiveAccount', DEBUG_ENABLED, LOG_TIME);
 export const useActiveAccount = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { address, status } = useAccount();
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const publicClient = usePublicClient();
 
   const { data: balanceData } = useBalance({ address, chainId });
@@ -22,11 +23,14 @@ export const useActiveAccount = () => {
   useEffect(() => {
     if (!publicClient || status === 'disconnected') {
       debugLog.warn('🔌 Wallet disconnected → clearing connectedAccount');
-      setExchangeContext(prev => {
-        const next = structuredClone(prev);
-        next.accounts.connectedAccount = undefined;
-        return next;
-      });
+      setExchangeContext(
+        prev => {
+          const next = structuredClone(prev);
+          next.accounts.connectedAccount = undefined;
+          return next;
+        },
+        'reason: Wallet disconnected or publicClient missing'
+      );
     }
   }, [publicClient, status]);
 
@@ -34,11 +38,14 @@ export const useActiveAccount = () => {
   useEffect(() => {
     if (!publicClient) {
       debugLog.warn('⛔ publicClient unavailable → setting connectedAccount to undefined');
-      setExchangeContext(prev => {
-        const next = structuredClone(prev);
-        next.accounts.connectedAccount = undefined;
-        return next;
-      });
+      setExchangeContext(
+        prev => {
+          const next = structuredClone(prev);
+          next.accounts.connectedAccount = undefined;
+          return next;
+        },
+        'reason: publicClient missing'
+      );
     }
   }, [publicClient]);
 
@@ -47,13 +54,16 @@ export const useActiveAccount = () => {
     if (!publicClient || !address) return;
 
     debugLog.log(`📬 Setting connectedAccount.address → ${address}`);
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.connectedAccount ??= {} as WalletAccount;
-      next.accounts.connectedAccount.address = address;
-      next.accounts.connectedAccount.type = 'Active Wallet Account';
-      return next;
-    });
+    setExchangeContext(
+      prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount ??= {} as WalletAccount;
+        next.accounts.connectedAccount.address = address;
+        next.accounts.connectedAccount.type = 'Active Wallet Account';
+        return next;
+      },
+      'reason: set connectedAccount.address and type'
+    );
   }, [publicClient, address]);
 
   // === Update connectedAccount.balance ===
@@ -61,12 +71,15 @@ export const useActiveAccount = () => {
     if (!publicClient || !address || balanceData?.value === undefined) return;
 
     debugLog.log(`💰 Setting connectedAccount.balance → ${balanceData.value.toString()}`);
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.connectedAccount ??= {} as WalletAccount;
-      next.accounts.connectedAccount.balance = balanceData.value;
-      return next;
-    });
+    setExchangeContext(
+      prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount ??= {} as WalletAccount;
+        next.accounts.connectedAccount.balance = balanceData.value;
+        return next;
+      },
+      'reason: set connectedAccount.balance'
+    );
   }, [publicClient, address, balanceData?.value]);
 
   // === Update connectedAccount.status ===
@@ -74,12 +87,15 @@ export const useActiveAccount = () => {
     if (!publicClient || !status || !address) return;
 
     debugLog.log(`📶 Setting connectedAccount.status → ${status}`);
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.connectedAccount ??= {} as WalletAccount;
-      next.accounts.connectedAccount.status = status.toString();
-      return next;
-    });
+    setExchangeContext(
+      prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount ??= {} as WalletAccount;
+        next.accounts.connectedAccount.status = status.toString();
+        return next;
+      },
+      'reason: set connectedAccount.status'
+    );
   }, [publicClient, status, address]);
 
   // === Update connectedAccount.logoURL, website, description ===
@@ -94,14 +110,17 @@ export const useActiveAccount = () => {
     debugLog.log(`🌐 Setting connectedAccount.website → ${website}`);
     debugLog.log(`📝 Setting connectedAccount.description → ${description}`);
 
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.connectedAccount ??= {} as WalletAccount;
-      next.accounts.connectedAccount.logoURL = logoURL;
-      next.accounts.connectedAccount.website = website;
-      next.accounts.connectedAccount.description = description;
-      return next;
-    });
+    setExchangeContext(
+      prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount ??= {} as WalletAccount;
+        next.accounts.connectedAccount.logoURL = logoURL;
+        next.accounts.connectedAccount.website = website;
+        next.accounts.connectedAccount.description = description;
+        return next;
+      },
+      'reason: set connectedAccount.logoURL, website, description'
+    );
   }, [publicClient, address, chainId]);
 
   // === Set name and symbol (static for now) ===
@@ -114,13 +133,16 @@ export const useActiveAccount = () => {
     debugLog.log(`🏷️ Setting connectedAccount.name → ${name}`);
     debugLog.log(`💱 Setting connectedAccount.symbol → ${symbol}`);
 
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.connectedAccount ??= {} as WalletAccount;
-      next.accounts.connectedAccount.name = name;
-      next.accounts.connectedAccount.symbol = symbol;
-      return next;
-    });
+    setExchangeContext(
+      prev => {
+        const next = structuredClone(prev);
+        next.accounts.connectedAccount ??= {} as WalletAccount;
+        next.accounts.connectedAccount.name = name;
+        next.accounts.connectedAccount.symbol = symbol;
+        return next;
+      },
+      'reason: set connectedAccount.name and symbol'
+    );
   }, [publicClient, address, chainId]);
 
   return {
