@@ -8,10 +8,10 @@ type Props = {
 };
 
 const ManageSponsorsButton = ({ tokenContract }: Props) => {
-  const [showContainer, setShowDialog] = useState<boolean>(false);
+  const [showContainer, setShowContainer] = useState<boolean>(false);
 
   const openDialog2 = () => {
-    setShowDialog(true);
+    setShowContainer(true);
   };
 
   const junkManageSponsorshipCallback = (tokenContract: TokenContract) => {

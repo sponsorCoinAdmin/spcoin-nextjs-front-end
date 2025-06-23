@@ -10,7 +10,7 @@ import { useAssetSelectDialog } from '@/lib/hooks/useAssetSelectDialog';
 
 export function TokenSelectDialog(props: {
   showContainer: boolean;
-  setShowDialog: (show: boolean) => void;
+  setShowContainer: (show: boolean) => void;
   containerType: CONTAINER_TYPE;
   onSelect: (token: TokenContract, state: InputState) => void;
 }) {

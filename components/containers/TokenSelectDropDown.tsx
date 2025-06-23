@@ -44,7 +44,7 @@ interface Props {
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
-  const [showContainer, setShowDialog] = useState(false);
+  const [showContainer, setShowContainer] = useState(false);
 
   const tradeData = useTradeData();
   const tokenContract =
@@ -68,7 +68,7 @@ function TokenSelectDropDown({ containerType }: Props) {
     <>
       <TokenSelectDialog
         showContainer={showContainer}
-        setShowDialog={setShowDialog}
+        setShowContainer={setShowContainer}
         containerType={containerType}
         onSelect={(contract: TokenContract, inputState: InputState) => {
           if (inputState === InputState.CLOSE_INPUT && contract) {
@@ -99,7 +99,7 @@ function TokenSelectDropDown({ containerType }: Props) {
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={() => setShowDialog(true)}
+          onClick={() => setShowContainer(true)}
         />
       </div>
     </>

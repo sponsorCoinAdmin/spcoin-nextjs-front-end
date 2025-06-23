@@ -13,7 +13,7 @@ const debugLog = createDebugLogger('BaseModalDialog', DEBUG_ENABLED, LOG_TIME);
 interface BaseModalDialogProps {
   id: string;
   showContainer: boolean;
-  setShowDialog: (show: boolean) => void;
+  setShowContainer: (show: boolean) => void;
   title: string;
   children: React.ReactNode;
 }
@@ -21,7 +21,7 @@ interface BaseModalDialogProps {
 export function BaseModalDialog({
   id,
   showContainer,
-  setShowDialog,
+  setShowContainer,
   title,
   children,
 }: BaseModalDialogProps) {
@@ -30,10 +30,10 @@ export function BaseModalDialog({
   const closeDialog = useCallback(() => {
     debugLog.log('❌ closeDialog called');
     if (dialogRef.current?.open) {
-      setShowDialog(false);
+      setShowContainer(false);
       dialogRef.current.close();
     }
-  }, [setShowDialog]);
+  }, [setShowContainer]);
 
   useEffect(() => {
     const dialog = dialogRef.current;

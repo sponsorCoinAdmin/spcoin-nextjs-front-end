@@ -9,7 +9,7 @@ import { useAssetSelectDialog } from '@/lib/hooks/useAssetSelectDialog';
 
 export function RecipientSelectDialog(props: {
   showContainer: boolean;
-  setShowDialog: (show: boolean) => void;
+  setShowContainer: (show: boolean) => void;
   onSelect: (wallet: WalletAccount, state: InputState) => void;
 }) {
   const { handleSelect, debugLog } = useAssetSelectDialog<WalletAccount>(

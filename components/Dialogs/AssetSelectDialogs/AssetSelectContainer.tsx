@@ -15,7 +15,7 @@ const debugLog = createDebugLogger('AssetSelectDialog', DEBUG_ENABLED, LOG_TIME)
 
 interface AssetSelectDialogProps<T> {
   showContainer: boolean;
-  setShowDialog: (show: boolean) => void;
+  setShowContainer: (show: boolean) => void;
   onSelect: (item: T, state: InputState) => void;
   feedType: FEED_TYPE;
   containerType: CONTAINER_TYPE;
@@ -23,7 +23,7 @@ interface AssetSelectDialogProps<T> {
 
 export default function AssetSelectDialog<T extends TokenContract | WalletAccount>({
   showContainer,
-  setShowDialog,
+  setShowContainer,
   onSelect,
   feedType,
   containerType,
@@ -36,8 +36,8 @@ export default function AssetSelectDialog<T extends TokenContract | WalletAccoun
 
   const handleClose = useCallback(() => {
     debugLog.log('❌ closeDialog triggered');
-    setShowDialog(false);
-  }, [setShowDialog]);
+    setShowContainer(false);
+  }, [setShowContainer]);
 
   const handleSelect = useCallback(
     (item: T, state: InputState) => {
@@ -51,7 +51,7 @@ export default function AssetSelectDialog<T extends TokenContract | WalletAccoun
     <BaseModalDialog
       id="AssetSelectDialog"
       showContainer={showContainer}
-      setShowDialog={setShowDialog}
+      setShowContainer={setShowContainer}
       title={containerProps.title}
     >
       <AddressSelect<T>
