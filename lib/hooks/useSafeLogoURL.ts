@@ -1,10 +1,9 @@
 // lib\hooks\useSafeLogoURL.ts
-
-import { useChainId } from 'wagmi';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 import { isAddress } from 'viem';
 
 export function useSafeLogoURL(address?: string, chainIdOverride?: number, logo?: string): string {
-  const fallbackChainId = useChainId();
+  const fallbackChainId = useLocalChainId();
 
   if (!address || !isAddress(address)) return '/assets/miscellaneous/QuestionWhiteOnRed.png';
   if (logo) return logo;

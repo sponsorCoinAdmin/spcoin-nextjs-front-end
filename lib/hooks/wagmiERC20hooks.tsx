@@ -7,7 +7,7 @@ import { useAccount } from 'wagmi';
 import { isAddress, Address } from 'viem';
 import { TokenContract } from '@/lib/structure';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
-import { useReadContract, useReadContracts, useChainId } from 'wagmi';
+import { useReadContract, useReadContracts } from 'wagmi';
 import { erc20Abi } from 'viem';
 
 // ---------------------------------------------
@@ -16,7 +16,7 @@ import { erc20Abi } from 'viem';
 export function useErc20TokenContract(tokenAddress?: Address): TokenContract | undefined {
   const { address: account } = useAccount();
   const enabled = !!tokenAddress && isAddress(tokenAddress);
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
 
   const { data: metaData, status: metaStatus } = useReadContracts({
     contracts: [

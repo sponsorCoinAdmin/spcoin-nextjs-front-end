@@ -3,8 +3,7 @@
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
-import { useAccount } from 'wagmi';
-import { useDebugChainId } from '@/lib/hooks/useDebugChainId';
+import { useAccount, useChainId } from 'wagmi';
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 
@@ -18,6 +17,7 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
+import { useLocalChainId } from './hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';
@@ -75,7 +75,7 @@ function updateExchangeContext(
 }
 
 export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
-  const chainId = useDebugChainId('ExchangeWrapper');
+  const chainId = useChainId();
   const { address, isConnected } = useAccount();
 
   const [contextState, setContextState] = useState<ExchangeContextTypeOnly | undefined>();

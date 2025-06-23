@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TokenContract as MappedTokenContract } from '@/lib/structure';
-import { useChainId } from 'wagmi';
 import { createDebugLogger } from '../utils/debugLogger';
+import { useLocalChainId } from '../context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAP_NATIVE_TOKEN_API === 'true';
@@ -9,7 +9,7 @@ const debugLog = createDebugLogger('useNativeToken', DEBUG_ENABLED, LOG_TIME);
 
 export function useNativeToken(): MappedTokenContract | undefined {
   const [token, setToken] = useState<MappedTokenContract>();
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   useEffect(() => {
     if (!chainId) {
       debugLog.log('⚠️ No chainId available, skipping fetch.');

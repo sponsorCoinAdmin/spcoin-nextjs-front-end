@@ -19,13 +19,12 @@ export const useLocalChainId = (): number | undefined => {
   if (DEBUG_ENABLED) {
     debugLog.log(`📦 useLocalChainId → ${chainId}`);
   }
-
   return chainId;
 };
 
 /**
  * Hook to request a wallet chain switch.
- * This triggers Wagmi's useChainId update, which is then picked up by useNetwork().
+ * This triggers useLocalChainId update, which is then picked up by useNetwork().
  */
 export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) => {
   const { switchChain } = useSwitchChain();
@@ -34,7 +33,7 @@ export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) =>
     debugLog.log(`🔁 Requesting wallet switch to chainId=${newChainId}`);
 
     try {
-      await switchChain({ chainId: newChainId });
+     switchChain({ chainId: newChainId });
       debugLog.log(`✅ switchChain success → chainId=${newChainId}`);
     } catch (err: unknown) {
       debugLog.error(`❌ switchChain failed: ${(err as Error)?.message || err}`);

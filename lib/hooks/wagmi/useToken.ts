@@ -7,12 +7,13 @@ import { useName } from './ERC20/useName';
 import { useDecimals } from './ERC20/useDecimals';
 import { useTotalSupply } from './ERC20/useTotalSupply';
 import { useBalanceOf } from './ERC20/useBalanceOf';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 export function useToken(tokenAddress?: Address): TokenContract | undefined {
   const [token, setToken] = useState<TokenContract | undefined>();
   const { address: userAddress } = useAccount();
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
 
   const { data: name } = useName(tokenAddress!);
   const { data: decimals } = useDecimals(tokenAddress!);

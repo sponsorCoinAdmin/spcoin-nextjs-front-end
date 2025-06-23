@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useChainId, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -16,6 +16,7 @@ import {
   getBlockExplorerURL,
 } from '@/lib/network/utils';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
+import { useLocalChainId } from './useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESET_CONTRACTS === 'true';
@@ -40,7 +41,7 @@ function logState(state: REFRESH_STATE, color: string) {
 }
 
 export function useResetContracts(delay: number = 100): void {
-  const wagmiChainId = useChainId();
+  const wagmiChainId = useLocalChainId();
   const stableChainId = useDebounce(wagmiChainId, delay);
   const { status, isConnected } = useAccount();
 

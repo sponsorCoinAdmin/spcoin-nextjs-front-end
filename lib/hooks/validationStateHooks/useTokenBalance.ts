@@ -1,16 +1,17 @@
 'use client';
 
 import { isAddress } from 'viem';
-import { useBalance, useAccount, useChainId } from 'wagmi';
+import { useBalance, useAccount } from 'wagmi';
 import { useMemo, useRef } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
 const debugLog = createDebugLogger('useTokenBalance', DEBUG_ENABLED, LOG_TIME);
 
 export function useTokenBalance(tokenAddress: string | undefined) {
-  const chainId = useChainId();
+  const chainId = useLocalChainId();
   const { address: accountAddress } = useAccount();
 
   const isValidToken = isAddress(tokenAddress || '');
