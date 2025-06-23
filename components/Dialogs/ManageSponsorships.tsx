@@ -10,7 +10,7 @@ import { FEED_TYPE, TokenContract } from '@/lib/structure';
 import { isAddress } from 'ethers'; // ethers v6
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/guiUtils'
-import DataList from './AssetSelectDialogs/DataList';
+import DataList from '../shared/DataList';
 import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 

@@ -1,14 +1,12 @@
+// File: components/dialogs/TokenSelectDialog.tsx
+
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure';
 import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
-import AssetSelectDialog from './AssetSelectDialog';
-import { createDebugLogger } from '@/lib/utils';
-
-const LOG_TIME: boolean = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
-const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME);
+import { AssetSelectDialog } from './AssetSelectDialogs';
+import { useAssetSelectDialog } from '@/lib/hooks/useAssetSelectDialog';
 
 export function TokenSelectDialog(props: {
   showDialog: boolean;
@@ -25,6 +23,16 @@ export function TokenSelectDialog(props: {
       ? setSellTokenContract
       : setBuyTokenContract;
 
+  const { handleSelect, debugLog } = useAssetSelectDialog<TokenContract>(
+    'TokenSelectDialog',
+    (token, state) => {
+      if (state === InputState.CLOSE_INPUT) {
+        setTokenInContext(token);
+        props.onSelect(token, state);
+      }
+    }
+  );
+
   useEffect(() => {
     debugLog.log('📬 [TokenSelectDialog] props received', {
       showDialog: props.showDialog,
@@ -36,21 +44,8 @@ export function TokenSelectDialog(props: {
     <AssetSelectDialog<TokenContract>
       {...props}
       feedType={FEED_TYPE.TOKEN_LIST}
-      inputPlaceholder="Type or paste token address"
       containerType={containerType}
-      duplicateMessage={
-        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? 'Sell Address Cannot Be the Same as Buy Address'
-          : 'Buy Address Cannot Be the Same as Sell Address'
-      }
-      showDuplicateCheck
-      onSelect={(token, state) => {
-        debugLog.log('✅ [TokenSelectDialog] selected token', token);
-        if (state === InputState.CLOSE_INPUT) {
-          setTokenInContext(token);
-          props.onSelect(token, state);
-        }
-      }}
+      onSelect={handleSelect}
     />
   );
 }

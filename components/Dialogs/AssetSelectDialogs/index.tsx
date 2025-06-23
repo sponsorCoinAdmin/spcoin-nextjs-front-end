@@ -1,4 +1,4 @@
-export { default as AssetSelectDialog } from './AssetSelectDialog';
+export { default as AssetSelectDialog } from './AssetSelectContainer';
 export * from './BaseModalDialog';
-export * from './TokenSelectDialog';
-export * from './RecipientSelectDialog';
+export * from '../TokenSelectDialog';
+export * from './RecipientSelectContainer';

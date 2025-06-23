@@ -1,19 +1,26 @@
+// File: components/dialogs/RecipientSelectDialog.tsx
+
 'use client';
 
 import { useEffect } from 'react';
 import { InputState, FEED_TYPE, WalletAccount, CONTAINER_TYPE } from '@/lib/structure';
-import AssetSelectDialog from './AssetSelectDialog';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-
-const LOG_TIME: boolean = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS === 'true';
-const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME);
+import AssetSelectDialog from './AssetSelectContainer';
+import { useAssetSelectDialog } from '@/lib/hooks/useAssetSelectDialog';
 
 export function RecipientSelectDialog(props: {
   showDialog: boolean;
   setShowDialog: (show: boolean) => void;
   onSelect: (wallet: WalletAccount, state: InputState) => void;
 }) {
+  const { handleSelect, debugLog } = useAssetSelectDialog<WalletAccount>(
+    'RecipientSelectDialog',
+    (wallet, state) => {
+      if (state === InputState.CLOSE_INPUT) {
+        props.onSelect(wallet, state);
+      }
+    }
+  );
+
   useEffect(() => {
     debugLog.log('📬 [RecipientSelectDialog] props received', {
       showDialog: props.showDialog,
@@ -25,12 +32,7 @@ export function RecipientSelectDialog(props: {
       {...props}
       feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
       containerType={CONTAINER_TYPE.RECIPIENT_CONTAINER}
-      onSelect={(wallet, state) => {
-        debugLog.log('✅ [RecipientSelectDialog] selected wallet', wallet);
-        if (state === InputState.CLOSE_INPUT) {
-          props.onSelect(wallet, state);
-        }
-      }}
+      onSelect={handleSelect}
     />
   );
 }
