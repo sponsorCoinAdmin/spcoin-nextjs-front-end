@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from 'react'
 
 type Props = {
     errMsg: any,
-    showDialog:boolean
+    showContainer:boolean
 }
 
-export default function Dialog({showDialog, errMsg}:Props) {
+export default function Dialog({showContainer, errMsg}:Props) {
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     // const [errorMessage, setErrorMessage] = useState<ErrorMessage>({source:"", errCode:0, msg:""});
 
@@ -17,8 +17,8 @@ export default function Dialog({showDialog, errMsg}:Props) {
     // }, [errorMessage])
   
     useEffect(() => {
-        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
-    }, [showDialog])
+        showContainer ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showContainer])
 
     const closeDialog = () => {
         dialogRef.current?.close();

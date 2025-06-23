@@ -14,7 +14,7 @@ interface Props {
 }
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
-  const [showDialog, setShowDialog] = useState(false);
+  const [showContainer, setShowDialog] = useState(false);
   const hasErroredRef = useRef(false); // 🛑 Prevents infinite retry loops
 
   const openDialog = useCallback(() => setShowDialog(true), []);
@@ -53,7 +53,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
   return (
     <>
       <RecipientSelectDialog
-        showDialog={showDialog}
+        showContainer={showContainer}
         setShowDialog={setShowDialog}
         onSelect={(wallet, state) => {
           console.debug('🎯 [RecipientSelectDialog -> DropDown] onSelect triggered', { wallet, state });

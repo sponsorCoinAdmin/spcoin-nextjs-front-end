@@ -32,19 +32,19 @@ const popup = {
 };
 
 type Props = {
-  showDialog: boolean;
+  showContainer: boolean;
 };
 
-export default function Dialog({ showDialog }: Props) {
+export default function Dialog({ showContainer }: Props) {
   const dialogRef = useRef<null | HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (showDialog) {
+    if (showContainer) {
       dialogRef.current?.showModal();
     } else {
       dialogRef.current?.close();
     }
-  }, [showDialog]);
+  }, [showContainer]);
 
   const closeDialog = () => {
     dialogRef.current?.close();

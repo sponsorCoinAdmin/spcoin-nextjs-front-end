@@ -6,17 +6,17 @@ import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef } from 'react';
 
 type Props = {
-  showDialog: boolean;
+  showContainer: boolean;
   closeDialog: () => void;
   message?: ErrorMessage;
 };
 
-export default function ErrorDialog({ showDialog, closeDialog, message }: Props) {
+export default function ErrorDialog({ showContainer, closeDialog, message }: Props) {
   const dialogRef = useRef<null | HTMLDialogElement>(null);
 
   useEffect(() => {
-    showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close();
-  }, [showDialog]);
+    showContainer ? dialogRef.current?.showModal() : dialogRef.current?.close();
+  }, [showContainer]);
 
   return (
     <dialog id="errorDialog" ref={dialogRef} className={styles.modalContainer}>

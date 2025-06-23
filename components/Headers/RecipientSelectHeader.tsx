@@ -30,7 +30,7 @@ const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
 
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog showDialog={false} />
+      <ConfigDialog showContainer={false} />
       <div onClick={() => exchangeContextDump(exchangeContext)}>
         <Image src={spCoin_png} className={styles.logoImg} width={30} height={30} alt="SponsorCoin Logo" />
       </div>

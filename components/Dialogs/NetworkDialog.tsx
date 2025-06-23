@@ -12,17 +12,17 @@ type ErrorType = {
 
 type Props = {
   errMsg: ErrorType;
-  showDialog: boolean;
+  showContainer: boolean;
 };
 
-export default function Dialog({ showDialog, errMsg }: Props) {
+export default function Dialog({ showContainer, errMsg }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (dialogRef.current) {
-      showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
+      showContainer ? dialogRef.current.showModal() : dialogRef.current.close();
     }
-  }, [showDialog]);
+  }, [showContainer]);
 
   return (
     <dialog

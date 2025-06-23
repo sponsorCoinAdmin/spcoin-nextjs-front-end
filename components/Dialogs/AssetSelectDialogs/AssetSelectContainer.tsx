@@ -14,7 +14,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DIALOGS ===
 const debugLog = createDebugLogger('AssetSelectDialog', DEBUG_ENABLED, LOG_TIME);
 
 interface AssetSelectDialogProps<T> {
-  showDialog: boolean;
+  showContainer: boolean;
   setShowDialog: (show: boolean) => void;
   onSelect: (item: T, state: InputState) => void;
   feedType: FEED_TYPE;
@@ -22,7 +22,7 @@ interface AssetSelectDialogProps<T> {
 }
 
 export default function AssetSelectDialog<T extends TokenContract | WalletAccount>({
-  showDialog,
+  showContainer,
   setShowDialog,
   onSelect,
   feedType,
@@ -31,8 +31,8 @@ export default function AssetSelectDialog<T extends TokenContract | WalletAccoun
   const containerProps = useContainerType(containerType);
 
   useEffect(() => {
-    debugLog.log('📬 Props received', { showDialog, feedType, containerType });
-  }, [showDialog, feedType, containerType]);
+    debugLog.log('📬 Props received', { showContainer, feedType, containerType });
+  }, [showContainer, feedType, containerType]);
 
   const handleClose = useCallback(() => {
     debugLog.log('❌ closeDialog triggered');
@@ -50,7 +50,7 @@ export default function AssetSelectDialog<T extends TokenContract | WalletAccoun
   return (
     <BaseModalDialog
       id="AssetSelectDialog"
-      showDialog={showDialog}
+      showContainer={showContainer}
       setShowDialog={setShowDialog}
       title={containerProps.title}
     >

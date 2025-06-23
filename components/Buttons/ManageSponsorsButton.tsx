@@ -8,7 +8,7 @@ type Props = {
 };
 
 const ManageSponsorsButton = ({ tokenContract }: Props) => {
-  const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [showContainer, setShowDialog] = useState<boolean>(false);
 
   const openDialog2 = () => {
     setShowDialog(true);
@@ -21,7 +21,7 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
   return (
     <>
       <ManageSponsorships
-        showDialog={showDialog}
+        showContainer={showContainer}
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}
       />

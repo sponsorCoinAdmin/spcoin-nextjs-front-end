@@ -26,10 +26,10 @@ const ELEMENT_DETAILS = "This container allows for the entry selection of a vali
 type Props = {
     tokenContract: TokenContract|undefined,
     callBackSetter: (listElement:TokenContract) => null,
-    showDialog:boolean
+    showContainer:boolean
 }
 
-export default function Dialog({showDialog, tokenContract, callBackSetter }: Props) {
+export default function Dialog({showContainer, tokenContract, callBackSetter }: Props) {
     const ACTIVE_ACCOUNT = useAccount();
     const dialogRef = useRef<null | HTMLDialogElement>(null)
     const [tokenInput, setTokenInput] = useState("");
@@ -42,8 +42,8 @@ export default function Dialog({showDialog, tokenContract, callBackSetter }: Pro
     }, []);
 
     useEffect(() => {
-        showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close()
-    }, [showDialog])
+        showContainer ? dialogRef.current?.showModal() : dialogRef.current?.close()
+    }, [showContainer])
 
     useEffect( () => {
         // alert("tokenInput Changed "+tokenInput)

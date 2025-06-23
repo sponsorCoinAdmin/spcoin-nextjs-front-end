@@ -8,7 +8,7 @@ import AssetSelectDialog from './AssetSelectContainer';
 import { useAssetSelectDialog } from '@/lib/hooks/useAssetSelectDialog';
 
 export function RecipientSelectDialog(props: {
-  showDialog: boolean;
+  showContainer: boolean;
   setShowDialog: (show: boolean) => void;
   onSelect: (wallet: WalletAccount, state: InputState) => void;
 }) {
@@ -23,9 +23,9 @@ export function RecipientSelectDialog(props: {
 
   useEffect(() => {
     debugLog.log('📬 [RecipientSelectDialog] props received', {
-      showDialog: props.showDialog,
+      showContainer: props.showContainer,
     });
-  }, [props.showDialog]);
+  }, [props.showContainer]);
 
   return (
     <AssetSelectDialog<WalletAccount>

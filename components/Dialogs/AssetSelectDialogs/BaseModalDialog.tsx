@@ -12,7 +12,7 @@ const debugLog = createDebugLogger('BaseModalDialog', DEBUG_ENABLED, LOG_TIME);
 
 interface BaseModalDialogProps {
   id: string;
-  showDialog: boolean;
+  showContainer: boolean;
   setShowDialog: (show: boolean) => void;
   title: string;
   children: React.ReactNode;
@@ -20,7 +20,7 @@ interface BaseModalDialogProps {
 
 export function BaseModalDialog({
   id,
-  showDialog,
+  showContainer,
   setShowDialog,
   title,
   children,
@@ -39,14 +39,14 @@ export function BaseModalDialog({
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    if (showDialog && !dialog.open) {
+    if (showContainer && !dialog.open) {
       debugLog.log(`🟢 Opening dialog: ${id}`);
       dialog.showModal();
-    } else if (!showDialog && dialog.open) {
+    } else if (!showContainer && dialog.open) {
       debugLog.log(`🔴 Closing dialog: ${id}`);
       dialog.close();
     }
-  }, [showDialog, id]);
+  }, [showContainer, id]);
 
   return (
     <dialog id={id} ref={dialogRef} className={styles.modalContainer} aria-labelledby={`${id}-title`}>

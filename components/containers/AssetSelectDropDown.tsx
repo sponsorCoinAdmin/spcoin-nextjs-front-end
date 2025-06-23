@@ -27,7 +27,7 @@ function AssetSelectDropDown<T extends GenericAsset>({
   containerType,
   isToken = false,
 }: AssetSelectDropDownProps<T>) {
-  const [showDialog, setShowDialog] = useState(false);
+  const [showContainer, setShowDialog] = useState(false);
 
   const logoSrc = useSafeLogoURL(asset?.address, undefined, asset?.logo);
 
@@ -61,14 +61,14 @@ function AssetSelectDropDown<T extends GenericAsset>({
     <>
       {isToken ? (
         <TokenSelectDialog
-          showDialog={showDialog}
+          showContainer={showContainer}
           setShowDialog={setShowDialog}
           containerType={containerType!} // assert present for tokens
           onSelect={handleAssetSelect as any}
         />
       ) : (
         <RecipientSelectDialog
-          showDialog={showDialog}
+          showContainer={showContainer}
           setShowDialog={setShowDialog}
           onSelect={handleAssetSelect as any}
         />

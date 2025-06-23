@@ -13,7 +13,7 @@ const TradeContainerHeader = () => {
 
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog showDialog={false} />
+      <ConfigDialog showContainer={false} />
 
       <div onClick={() => exchangeContextDump(exchangeContext)}>
         <Image

@@ -44,7 +44,7 @@ interface Props {
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
-  const [showDialog, setShowDialog] = useState(false);
+  const [showContainer, setShowDialog] = useState(false);
 
   const tradeData = useTradeData();
   const tokenContract =
@@ -67,7 +67,7 @@ function TokenSelectDropDown({ containerType }: Props) {
   return (
     <>
       <TokenSelectDialog
-        showDialog={showDialog}
+        showContainer={showContainer}
         setShowDialog={setShowDialog}
         containerType={containerType}
         onSelect={(contract: TokenContract, inputState: InputState) => {

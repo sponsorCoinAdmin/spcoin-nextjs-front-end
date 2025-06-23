@@ -159,7 +159,7 @@ export default function PriceView() {
   return (
     <div className={styles.pageWrap}>
       <ErrorDialog
-        showDialog={showError}
+        showContainer={showError}
         closeDialog={() => setShowError(false)}
         message={errorMessage}
       />
