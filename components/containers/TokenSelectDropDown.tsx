@@ -53,11 +53,10 @@ interface Props {
 function TokenSelectDropDown({ containerType }: Props) {
   const [showDialog, setShowDialog] = useState(false);
 
+  const sellHook = useSellTokenContract();
+  const buyHook = useBuyTokenContract();
   const [tokenContract, setTokenContract] =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? useSellTokenContract()
-      : useBuyTokenContract();
-
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
   const logoSrc = useTokenLogoURL(tokenContract);
 
   const handleMissingLogoURL = (event: React.SyntheticEvent<HTMLImageElement>) => {

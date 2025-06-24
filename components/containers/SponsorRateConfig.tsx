@@ -57,6 +57,7 @@ const SponsorRateConfig = () => {
         </div>
         <input
           type="range"
+          title="Adjust reward ratio"
           className={styles["range-slider"]}
           min="2"
           max="10"
