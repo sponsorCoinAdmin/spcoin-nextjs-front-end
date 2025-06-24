@@ -12,13 +12,14 @@ const debugLog = createDebugLogger('useLocalChainId', DEBUG_ENABLED, LOG_TIME);
  * Hook to read the local chainId from the ExchangeContext.
  * This is the authoritative value used throughout the app (instead of Wagmi's useChainId).
  */
-export const useLocalChainId = (): number | undefined => {
+export const useLocalChainId = (): number => {
   const { network } = useNetwork();
-  const chainId = network?.chainId;
+  const chainId = network?.chainId ?? 1;
 
   if (DEBUG_ENABLED) {
     debugLog.log(`📦 useLocalChainId → ${chainId}`);
   }
+
   return chainId;
 };
 
@@ -33,7 +34,7 @@ export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) =>
     debugLog.log(`🔁 Requesting wallet switch to chainId=${newChainId}`);
 
     try {
-     switchChain({ chainId: newChainId });
+      switchChain({ chainId: newChainId });
       debugLog.log(`✅ switchChain success → chainId=${newChainId}`);
     } catch (err: unknown) {
       debugLog.error(`❌ switchChain failed: ${(err as Error)?.message || err}`);
