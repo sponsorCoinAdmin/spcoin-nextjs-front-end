@@ -142,6 +142,9 @@ const getBlockChainLogoURL = (chainId:number): string =>
 const getBlockChainName = (chainId: number): string | undefined => 
   chainIdMap.get(chainId)?.name;
 
+const getBlockChainSymbol = (chainId: number): string | undefined => 
+  chainIdMap.get(chainId)?.symbol;
+
 type RequiredAssetMembers = { address: string; chainId: number };
 
 const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string => {
@@ -235,6 +238,7 @@ export {
   getLogoURL,
   getBlockChainLogoURL,
   getBlockChainName,
+  getBlockChainSymbol,
   getNativeWrapAddress,
   getTokenLogoURL,
   type RequiredAssetMembers,

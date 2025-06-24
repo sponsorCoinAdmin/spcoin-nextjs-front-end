@@ -25,6 +25,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
+  const { setNetworkConnected } = useNetwork();
+  // const { setNetworkConnected } = useNetwork();
   useResetContracts();
 
   const chainId = useLocalChainId();
@@ -36,7 +38,6 @@ export default function Header() {
   const [__, setBuyTokenContract] = useBuyTokenContract();
   const { exchangeContext } = useExchangeContext();
   const { isConnected } = useAccount();
-  const { setNetworkConnected } = useNetwork();
 
   useEffect(() => {
     setNetworkConnected(isConnected);

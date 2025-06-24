@@ -1,6 +1,7 @@
+// File: lib/context/hooks/nestedHooks/useLocalChainId.ts
 'use client';
 
-import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { useSwitchChain } from 'wagmi';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -13,12 +14,15 @@ const debugLog = createDebugLogger('useLocalChainId', DEBUG_ENABLED, LOG_TIME);
  * This is the authoritative value used throughout the app (instead of Wagmi's useChainId).
  */
 export const useLocalChainId = (): number | undefined => {
-  const { network } = useNetwork();
-  const chainId = network?.chainId;
+  const { exchangeContext } = useExchangeContext();
+  const chainId = exchangeContext.network?.chainId;
 
   if (DEBUG_ENABLED) {
+    debugLog.log(`📦 useLocalChainId triggered`);
+    debugLog.log(`🌐 exchangeContext.network =`, exchangeContext.network);
     debugLog.log(`📦 useLocalChainId → ${chainId}`);
   }
+
   return chainId;
 };
 
@@ -33,7 +37,7 @@ export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) =>
     debugLog.log(`🔁 Requesting wallet switch to chainId=${newChainId}`);
 
     try {
-     switchChain({ chainId: newChainId });
+      switchChain({ chainId: newChainId });
       debugLog.log(`✅ switchChain success → chainId=${newChainId}`);
     } catch (err: unknown) {
       debugLog.error(`❌ switchChain failed: ${(err as Error)?.message || err}`);

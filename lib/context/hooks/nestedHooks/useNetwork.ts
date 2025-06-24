@@ -1,194 +1,115 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useChainId, useAccount } from 'wagmi';
-import { config } from '@/lib/wagmi/wagmiConfig';
 import { useExchangeContext } from '@/lib/context/hooks';
-import {
-  getBlockChainName,
-  getBlockChainLogoURL,
-  getBlockExplorerURL,
-} from '@/lib/network/utils';
+import { createNetworkObject } from '@/lib/network/createNetworkObject';
+import { NetworkElement } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_NETWORK === 'true';
 const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 
 export const useNetwork = () => {
-  const { exchangeContext, setExchangeContext: updateExchangeContext } = useExchangeContext();
-  const chainId = useChainId({ config });
-  const { status } = useAccount();
+  debugLog.log('🟡 useNetwork hook initialized'); // Add this
+  console.log('🟡 FROM CONSOLE.log useNetwork hook initialized'); // Add this
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const prevNetwork = exchangeContext.network;
 
-  const setNetworkChainId = (newChainId: number) => {
-    const old = exchangeContext.network?.chainId;
-    if (old === newChainId) {
-      debugLog.log(`⏭️ network.chainId unchanged: ${newChainId} — skipping update`);
-      return;
+  // Unified setter
+  const setNetwork = (input: number | NetworkElement) => {
+    let newNetwork: NetworkElement;
+
+    if (typeof input === 'number') {
+      if (input === prevNetwork.chainId) {
+        debugLog.log(`⏭️ setNetwork(chainId=${input}) skipped — same as current`);
+        return;
+      }
+      newNetwork = createNetworkObject(input);
+    } else {
+      const prevStr = JSON.stringify(prevNetwork);
+      const nextStr = JSON.stringify(input);
+      if (prevStr === nextStr) {
+        debugLog.log(`⏭️ setNetwork(NetworkElement) skipped — no structural change`);
+        return;
+      }
+      newNetwork = input;
     }
-    debugHookChange('network.chainId', old, newChainId);
-    debugLog.log(`reason: useNetwork updating network.chainId from ${old} to ${newChainId}`);
 
-    updateExchangeContext(
+    debugLog.log(`🔁 setNetwork() →`, newNetwork);
+    setExchangeContext(
       (prev) => ({
         ...prev,
-        network: {
-          ...prev.network,
-          chainId: newChainId,
-        },
+        network: newNetwork,
       }),
-      `reason: useNetwork updating network.chainId from ${old} to ${newChainId}`
+      `useNetwork.setNetwork()`
     );
+  };
+
+  // Internal utility to apply changes
+  const internalSetNetwork = (newNetwork: NetworkElement, reason: string) => {
+    debugLog.log(`🔧 internalSetNetwork() →`, newNetwork);
+    setExchangeContext(
+      (prev) => ({
+        ...prev,
+        network: newNetwork,
+      }),
+      reason
+    );
+  };
+
+  // Individual field setters
+  const setNetworkConnected = (connected: boolean) => {
+    if (prevNetwork.connected === connected) {
+      debugLog.log(`⏭️ setNetworkConnected skipped — already ${connected}`);
+      return;
+    }
+    const newNetwork = { ...prevNetwork, connected };
+    internalSetNetwork(newNetwork, `setNetworkConnected → ${connected}`);
   };
 
   const setNetworkLogoURL = (logoURL?: string) => {
-    const old = exchangeContext.network?.logoURL;
-    if (old === logoURL) {
-      debugLog.log(`⏭️ network.logoURL unchanged: ${logoURL} — skipping update`);
+    if (prevNetwork.logoURL === logoURL) {
+      debugLog.log(`⏭️ setNetworkLogoURL skipped — no change`);
       return;
     }
-    debugHookChange('network.logoURL', old, logoURL);
-    debugLog.log(`reason: useNetwork updating network.logoURL from ${old} to ${logoURL}`);
-
-    updateExchangeContext(
-      (prev) => ({
-        ...prev,
-        network: {
-          ...prev.network,
-          logoURL: logoURL || '',
-        },
-      }),
-      `reason: useNetwork updating network.logoURL from ${old} to ${logoURL}`
-    );
+    const newNetwork = { ...prevNetwork, logoURL: logoURL || '' };
+    internalSetNetwork(newNetwork, `setNetworkLogoURL → ${logoURL}`);
   };
 
   const setNetworkName = (name?: string) => {
-    const old = exchangeContext.network?.name;
-    if (old === name) {
-      debugLog.log(`⏭️ network.name unchanged: ${name} — skipping update`);
+    if (prevNetwork.name === name) {
+      debugLog.log(`⏭️ setNetworkName skipped — no change`);
       return;
     }
-    debugHookChange('network.name', old, name);
-    debugLog.log(`reason: useNetwork updating network.name from ${old} to ${name}`);
-
-    updateExchangeContext(
-      (prev) => ({
-        ...prev,
-        network: {
-          ...prev.network,
-          name: name || '',
-        },
-      }),
-      `reason: useNetwork updating network.name from ${old} to ${name}`
-    );
-  };
-
-  const setNetworkSymbol = (symbol?: string) => {
-    const old = exchangeContext.network?.symbol;
-    if (old === symbol) {
-      debugLog.log(`⏭️ network.symbol unchanged: ${symbol} — skipping update`);
-      return;
-    }
-    debugHookChange('network.symbol', old, symbol);
-    debugLog.log(`reason: useNetwork updating network.symbol from ${old} to ${symbol}`);
-
-    updateExchangeContext(
-      (prev) => ({
-        ...prev,
-        network: {
-          ...prev.network,
-          symbol: symbol || '',
-        },
-      }),
-      `reason: useNetwork updating network.symbol from ${old} to ${symbol}`
-    );
+    const newNetwork = { ...prevNetwork, name: name || '' };
+    internalSetNetwork(newNetwork, `setNetworkName → ${name}`);
   };
 
   const setNetworkURL = (url?: string) => {
-    const old = exchangeContext.network?.url;
-    if (old === url) {
-      debugLog.log(`⏭️ network.url unchanged: ${url} — skipping update`);
+    if (prevNetwork.url === url) {
+      debugLog.log(`⏭️ setNetworkURL skipped — no change`);
       return;
     }
-    debugHookChange('network.url', old, url);
-    debugLog.log(`reason: useNetwork updating network.url from ${old} to ${url}`);
-
-    updateExchangeContext(
-      (prev) => ({
-        ...prev,
-        network: {
-          ...prev.network,
-          url: url || '',
-        },
-      }),
-      `reason: useNetwork updating network.url from ${old} to ${url}`
-    );
+    const newNetwork = { ...prevNetwork, url: url || '' };
+    internalSetNetwork(newNetwork, `setNetworkURL → ${url}`);
   };
 
-  const setNetworkConnected = (connected: boolean) => {
-    const old = exchangeContext.network?.connected;
-    if (old === connected) {
-      debugLog.log(`⏭️ network.connected unchanged: ${connected} — skipping update`);
+  const setNetworkSymbol = (symbol?: string) => {
+    if (prevNetwork.symbol === symbol) {
+      debugLog.log(`⏭️ setNetworkSymbol skipped — no change`);
       return;
     }
-    debugHookChange('network.connected', old, connected);
-    debugLog.log(`reason: useNetwork updating network.connected from ${old} to ${connected}`);
-
-    updateExchangeContext(
-      (prev) => ({
-        ...prev,
-        network: {
-          ...prev.network,
-          connected,
-        },
-      }),
-      `reason: useNetwork updating network.connected from ${old} to ${connected}`
-    );
+    const newNetwork = { ...prevNetwork, symbol: symbol || '' };
+    internalSetNetwork(newNetwork, `setNetworkSymbol → ${symbol}`);
   };
-
-  useEffect(() => {
-    if (!chainId) return;
-
-    const contextChainId = exchangeContext.network?.chainId;
-    const isInitialized = typeof contextChainId === 'number' && contextChainId > 0;
-    const isMismatch = chainId !== contextChainId;
-
-    console.group(`🔁 useEffect([chainId=${chainId}, status=${status}])`);
-    debugLog.log(`📊 Context chainId: ${contextChainId}, Initialized: ${isInitialized}, Mismatch: ${isMismatch}`);
-
-    // ✅ 🔒 Prevent loops after hydration
-    if (isInitialized && isMismatch) {
-      debugLog.warn(
-        `⚠️ Chain mismatch detected → context.chainId=${contextChainId}, wagmi.chainId=${chainId} → Skipping automatic context update`
-      );
-      console.groupEnd();
-      return;
-    }
-
-    debugLog.log(`✅ Accepting wagmi.chainId: ${chainId} → Updating context`);
-
-    const name = getBlockChainName(chainId);
-    const logoURL = getBlockChainLogoURL(chainId);
-    const url = getBlockExplorerURL(chainId);
-    const connected = status === 'connected';
-
-    setNetworkChainId(chainId);
-    setNetworkName(name);
-    setNetworkLogoURL(logoURL);
-    setNetworkURL(url);
-    setNetworkConnected(connected);
-
-    console.groupEnd();
-  }, [chainId, status]);
 
   return {
-    network: exchangeContext.network,
-    setNetworkChainId,
+    network: prevNetwork,
+    setNetwork,            // Accepts either chainId (number) or full NetworkElement
+    setNetworkConnected,   // Individual field setters
     setNetworkLogoURL,
     setNetworkName,
-    setNetworkSymbol,
     setNetworkURL,
-    setNetworkConnected,
+    setNetworkSymbol,
   };
 };

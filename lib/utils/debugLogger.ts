@@ -1,4 +1,4 @@
-// lib/utils/debugLogger.ts
+// File: lib/utils/debugLogger.ts
 
 interface DebugLogger {
   debug: (...args: any[]) => void;
@@ -28,6 +28,24 @@ function serializeWithBigInt(obj: any): string {
 }
 
 /**
+ * Determines if a log should be emitted based on level and environment
+ */
+function shouldEmit(level: LogLevel, minLevel: number, enabled: boolean): boolean {
+  return enabled && LEVEL_PRIORITY[level] >= minLevel && process.env.NODE_ENV !== 'production';
+}
+
+/**
+ * If the last argument is a valid log level, treat it as override
+ */
+function extractLevel(args: any[], defaultLevel: LogLevel): { actualArgs: any[]; level: LogLevel } {
+  const maybeLevel = args[args.length - 1];
+  if (typeof maybeLevel === 'string' && maybeLevel in LEVEL_PRIORITY) {
+    return { actualArgs: args.slice(0, -1), level: maybeLevel as LogLevel };
+  }
+  return { actualArgs: args, level: defaultLevel };
+}
+
+/**
  * Creates a module-scoped debug logger.
  *
  * @param moduleName - Name of the module using the logger
@@ -43,10 +61,9 @@ export function createDebugLogger(
 ): DebugLogger {
   const prefix = `[🛠️ ${moduleName}]`;
   const logBuffer: string[] = [];
-  const shouldLog = enabled && process.env.NODE_ENV !== 'production';
   const minLevel = LEVEL_PRIORITY[logLevel];
 
-  if (shouldLog) {
+  if (enabled && process.env.NODE_ENV !== 'production') {
     const msg = `${prefix} DebugLogging ON — level=${logLevel}, timestamp=${tsFlag}`;
     console.log(msg);
     logBuffer.push(msg);
@@ -81,29 +98,33 @@ export function createDebugLogger(
 
   return {
     debug: (...args: any[]) => {
-      if (shouldLog && minLevel <= LEVEL_PRIORITY.debug) {
-        const line = formatLine('DEBUG', args);
+      const { actualArgs, level } = extractLevel(args, 'debug');
+      if (shouldEmit(level, minLevel, enabled)) {
+        const line = formatLine('DEBUG', actualArgs);
         console.debug(line);
         logBuffer.push(line);
       }
     },
     log: (...args: any[]) => {
-      if (shouldLog && minLevel <= LEVEL_PRIORITY.info) {
-        const line = formatLine('LOG', args);
+      const { actualArgs, level } = extractLevel(args, 'info');
+      if (shouldEmit(level, minLevel, enabled)) {
+        const line = formatLine('LOG', actualArgs);
         console.log(line);
         logBuffer.push(line);
       }
     },
     warn: (...args: any[]) => {
-      if (shouldLog && minLevel <= LEVEL_PRIORITY.warn) {
-        const line = formatLine('WARN ⚠️', args);
+      const { actualArgs, level } = extractLevel(args, 'warn');
+      if (shouldEmit(level, minLevel, enabled)) {
+        const line = formatLine('WARN ⚠️', actualArgs);
         console.warn(line);
         logBuffer.push(line);
       }
     },
     error: (...args: any[]) => {
-      if (shouldLog && minLevel <= LEVEL_PRIORITY.error) {
-        const line = formatLine('ERROR ❌', args);
+      const { actualArgs, level } = extractLevel(args, 'error');
+      if (shouldEmit(level, minLevel, enabled)) {
+        const line = formatLine('ERROR ❌', actualArgs);
         console.error(line);
         logBuffer.push(line);
       }

@@ -129,7 +129,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
 
 const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => {
   const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
-  const chainId:number            = useLocalChainId() as number;
+  const chainId:number            = useLocalChainId() ?? 1;
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
   const name                      = getBlockChainName(chainId);

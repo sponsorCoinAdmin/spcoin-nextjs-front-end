@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { createContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useEffect, useRef, useState, useMemo } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
@@ -17,10 +17,9 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { serializeWithBigInt } from '../utils/jsonBigInt';
-import { useLocalChainId } from './hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
-const LOG_LEVEL = 'info';
+const LOG_LEVEL = 'warn';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
 const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
 
@@ -64,7 +63,7 @@ function updateExchangeContext(
     }
 
     if (updated) {
-      debugLog.log('📤 Preview updated context BEFORE saveLocalExchangeContext()');
+      debugLog.debug('📤 Preview updated context BEFORE saveLocalExchangeContext()');
       debugLog.debug(updated);
       saveLocalExchangeContext(updated);
       debugLog.log('📦 exchangeContext saved to localStorage');
@@ -168,33 +167,35 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
     initExchangeContext(chainId, isConnected, address).then((sanitized) => {
       debugLog.log('✅ Initial exchangeContext hydrated');
-      console.debug(sanitized);
+      debugLog.debug(sanitized);
       setContextState(sanitized);
     });
   }, [chainId, address, isConnected]);
 
-  return (
-    <ExchangeContextState.Provider
-      value={{
-        exchangeContext: {
-          ...contextState,
-          errorMessage,
-          apiErrorMessage,
-        } as ExchangeContextTypeOnly,
-        setExchangeContext,
-        setSellAmount,
-        setBuyAmount,
-        setSellTokenContract,
-        setBuyTokenContract,
-        setTradeDirection,
-        setSlippageBps,
-        setRecipientAccount,
+  const memoizedContext = useMemo(() => {
+    return {
+      exchangeContext: {
+        ...contextState,
         errorMessage,
-        setErrorMessage,
         apiErrorMessage,
-        setApiErrorMessage,
-      }}
-    >
+      } as ExchangeContextTypeOnly,
+      setExchangeContext,
+      setSellAmount,
+      setBuyAmount,
+      setSellTokenContract,
+      setBuyTokenContract,
+      setTradeDirection,
+      setSlippageBps,
+      setRecipientAccount,
+      errorMessage,
+      setErrorMessage,
+      apiErrorMessage,
+      setApiErrorMessage,
+    } satisfies ExchangeContextType;
+  }, [contextState, errorMessage, apiErrorMessage]);
+
+  return (
+    <ExchangeContextState.Provider value={memoizedContext}>
       {contextState && children}
     </ExchangeContextState.Provider>
   );
