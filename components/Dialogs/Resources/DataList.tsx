@@ -1,3 +1,5 @@
+// File: components/Dialogs/Resources/DataList.tsx
+
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';

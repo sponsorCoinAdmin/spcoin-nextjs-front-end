@@ -30,7 +30,7 @@ const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIM
 const seenBrokenLogos = new Set<string>();
 
 function useTokenLogoURL(tokenContract?: TokenContract): string {
-  const chainId = tokenContract?.chainId ?? useChainId();
+  const chainId = useChainId();
   const address = tokenContract?.address;
   const { inputState } = useInputValidationState(address);
 

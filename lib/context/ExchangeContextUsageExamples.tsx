@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   useSellAmount,
   useBuyAmount,
@@ -33,7 +33,7 @@ export default function ExchangeContextUsageExamples() {
   const buyTokenAddress = useBuyTokenAddress();
 
   return (
-    <div style={{ fontFamily: 'monospace', padding: '1rem' }}>
+      <div className="font-mono p-4">
       <h2>🧪 Exchange Context Hook Tester</h2>
       <pre>Sell Amount: {sellAmount.toString()}</pre>
       <pre>Buy Amount: {buyAmount.toString()}</pre>
@@ -93,27 +93,31 @@ export default function ExchangeContextUsageExamples() {
         Set Trade Direction: BUY_EXACT_IN
       </button>
 
-      <button onClick={() => setBps(slippage.bps + 10)}>
-        Increase Slippage by 10bps
-      </button>
+      <button onClick={() => setBps(slippage.bps + 10)}>Increase Slippage by 10bps</button>
 
-      <button onClick={() => setBps(100)}>
-        Set Bps to 100 (1%)
-      </button>
+      <button onClick={() => setBps(100)}>Set Bps to 100 (1%)</button>
 
-      <button onClick={() => setSlippage({
-        bps: 200,
-        percentage: 2.0,
-        percentageString: '2.00%',
-      })}>
+      <button
+        onClick={() =>
+          setSlippage({
+            bps: 200,
+            percentage: 2.0,
+            percentageString: '2.00%',
+          })
+        }
+      >
         Set Slippage to 2.00%
       </button>
 
-      <button onClick={() => setSlippage({
-        bps: 50,
-        percentage: 0.5,
-        percentageString: '0.50%',
-      })}>
+      <button
+        onClick={() =>
+          setSlippage({
+            bps: 50,
+            percentage: 0.5,
+            percentageString: '0.50%',
+          })
+        }
+      >
         Set Slippage to 0.50%
       </button>
 
