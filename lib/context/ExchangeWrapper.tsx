@@ -1,3 +1,5 @@
+// File: lib/context/ExchangeWrapper.tsx
+
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';

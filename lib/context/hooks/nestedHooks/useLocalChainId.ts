@@ -1,4 +1,5 @@
 // File: lib/context/hooks/nestedHooks/useLocalChainId.ts
+
 'use client';
 
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -11,19 +12,21 @@ const debugLog = createDebugLogger('useLocalChainId', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Hook to read the local chainId from the ExchangeContext.
- * This is the authoritative value used throughout the app (instead of Wagmi's useChainId).
+ * Returns `exchangeContext.network.chainId`, or defaults to `1` if undefined.
  */
-export const useLocalChainId = (): number | undefined => {
+export const useLocalChainId = (): number => {
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext.network?.chainId;
+
+  const returnValue = typeof chainId === 'number' && chainId > 0 ? chainId : 1;
 
   if (DEBUG_ENABLED) {
     debugLog.log(`📦 useLocalChainId triggered`);
     debugLog.log(`🌐 exchangeContext.network =`, exchangeContext.network);
-    debugLog.log(`📦 useLocalChainId → ${chainId}`);
+    debugLog.log(`📦 useLocalChainId → ${returnValue}`);
   }
 
-  return chainId;
+  return returnValue;
 };
 
 /**
