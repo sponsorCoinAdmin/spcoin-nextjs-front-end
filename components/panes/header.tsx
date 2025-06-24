@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { useChainId, useAccount, useSwitchChain } from 'wagmi';
+import { useAccount } from 'wagmi';
 import {
   useBuyTokenContract,
   useSellTokenContract,
@@ -18,15 +18,18 @@ import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContr
 import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
+  const { setNetworkConnected } = useNetwork();
+  // const { setNetworkConnected } = useNetwork();
   useResetContracts();
 
-  const chainId = useChainId({ config });
+  const chainId = useLocalChainId();
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const didHydrate = useDidHydrate();
@@ -35,31 +38,10 @@ export default function Header() {
   const [__, setBuyTokenContract] = useBuyTokenContract();
   const { exchangeContext } = useExchangeContext();
   const { isConnected } = useAccount();
-  const { setNetworkConnected } = useNetwork();
-  const { switchChain } = useSwitchChain();
 
   useEffect(() => {
     setNetworkConnected(isConnected);
   }, [isConnected]);
-
-  useEffect(() => {
-    if (!isConnected || !exchangeContext?.network?.chainId) return;
-
-    const contextChainId = exchangeContext.network.chainId;
-    if (chainId !== contextChainId) {
-      debugLog.warn(`⚠️ Chain mismatch: wallet=${chainId} vs context=${contextChainId}`);
-      try {
-        const result = switchChain({ chainId: contextChainId });
-        if (result?.catch) {
-          result.catch((err) =>
-            debugLog.error(`❌ switchChain failed: ${err?.message || err}`)
-          );
-        }
-      } catch (err: any) {
-        debugLog.error(`❌ switchChain threw error: ${err?.message || err}`);
-      }
-    }
-  }, [isConnected, chainId, exchangeContext?.network?.chainId]);
 
   const networkName = exchangeContext?.network?.name ?? '';
   const logo = exchangeContext?.network?.logoURL ?? '';
