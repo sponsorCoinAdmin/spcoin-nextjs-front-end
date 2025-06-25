@@ -2,31 +2,6 @@
 
 import React from 'react';
 
-// ✅ Grouped styles under `hexInput`
-const hexInput = {
-  containerStyle: {
-    backgroundColor: '#243056',
-    color: '#5981F3',
-    width: '100%',
-    marginBottom: '0px',
-    borderRadius: '22px',
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 0.75rem',
-    gap: '0.5rem',
-  } as React.CSSProperties,
-
-  inputStyle: {
-    backgroundColor: 'transparent',
-    border: 'none',
-    outline: 'none',
-    color: '#ffffff',
-    fontSize: '14px',
-    width: '100%',
-    padding: '0.5rem 0',
-  } as React.CSSProperties,
-};
-
 type HexAddressInputProps = {
   inputValue: string;
   onChange: (val: string) => void;
@@ -41,10 +16,30 @@ export default function HexAddressInput({
   statusEmoji,
 }: HexAddressInputProps) {
   return (
-    <div style={hexInput.containerStyle}>
+    <div
+      className={`
+        bg-[#243056]
+        text-[#5981F3]
+        w-full
+        mb-0
+        rounded-[22px]
+        flex
+        items-center
+        px-3
+        gap-2
+      `}
+    >
       <div className="text-lg">{statusEmoji}</div>
       <input
-        style={hexInput.inputStyle}
+        className={`
+          bg-transparent
+          border-none
+          outline-none
+          text-white
+          text-sm
+          w-full
+          py-2
+        `}
         autoComplete="off"
         placeholder={placeholder}
         value={inputValue}

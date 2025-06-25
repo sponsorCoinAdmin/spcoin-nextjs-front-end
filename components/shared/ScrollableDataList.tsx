@@ -12,13 +12,13 @@ type ScrollableDataListProps<T> = {
   onSelect: (entry: T) => void;
 };
 
-export default function ScrollableDataList<T>({
-  dataFeedType,
-  onSelect,
-}: ScrollableDataListProps<T>) {
-  return (
-    <div className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
-      <DataList<T> dataFeedType={dataFeedType} onSelect={onSelect} />
-    </div>
-  );
-}
+// export default function ScrollableDataList<T>({
+//   dataFeedType,
+//   onSelect,
+// }: ScrollableDataListProps<T>) {
+//   return (
+//     <div className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
+//       <DataList<T> dataFeedType={dataFeedType} onSelect={onSelect} />
+//     </div>
+//   );
+// }

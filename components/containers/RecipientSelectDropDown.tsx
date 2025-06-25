@@ -7,6 +7,11 @@ import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { WalletAccount, InputState } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
+const debugLog = createDebugLogger('RecipientSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
   recipientAccount: WalletAccount | undefined;
@@ -21,7 +26,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
 
   const handleRecipientSelect = useCallback(
     (wallet: WalletAccount) => {
-      console.debug('✅ [RecipientSelectDropDown] Received wallet from dialog:', wallet);
+      debugLog.log('✅ [RecipientSelectDropDown] Received wallet from dialog:', wallet);
       callBackAccount(wallet);
       hasErroredRef.current = false; // Reset error tracking on new selection
     },
@@ -38,7 +43,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (!recipientAccount || hasErroredRef.current) return;
 
-      console.warn(
+      debugLog.log(
         `[RecipientSelectDropDown] Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
       );
 
@@ -56,7 +61,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
         showDialog={showDialog}
         setShowDialog={setShowDialog}
         onSelect={(wallet, state) => {
-          console.debug('🎯 [RecipientDialogWrapper -> DropDown] onSelect triggered', { wallet, state });
+          debugLog.log('🎯 [RecipientDialogWrapper -> DropDown] onSelect triggered', { wallet, state });
           if (state === InputState.CLOSE_INPUT) {
             handleRecipientSelect(wallet);
             setShowDialog(false);

@@ -2,23 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { config } from '@/lib/wagmi/wagmiConfig';
+import { useAccount } from 'wagmi';
+import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts';
+import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
+import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
+import { useExchangeContext, useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';
+import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { defaultMissingImage } from '@/lib/network/utils';
+
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
-import { defaultMissingImage } from '@/lib/network/utils';
-import { useAccount } from 'wagmi';
-import {
-  useBuyTokenContract,
-  useSellTokenContract,
-  useExchangeContext,
-} from '@/lib/context/hooks';
-import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts';
-import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
-import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
@@ -26,14 +22,12 @@ const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
   const { setNetworkConnected } = useNetwork();
-  // const { setNetworkConnected } = useNetwork();
   useResetContracts();
 
   const chainId = useLocalChainId();
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const didHydrate = useDidHydrate();
-
   const [_, setSellTokenContract] = useSellTokenContract();
   const [__, setBuyTokenContract] = useBuyTokenContract();
   const { exchangeContext } = useExchangeContext();
@@ -73,14 +67,7 @@ export default function Header() {
   ];
 
   return (
-    <header
-      className="text-white border-b border-[#21273a] py-4"
-      style={{
-        background: 'rgb(119, 126, 142)',
-        paddingLeft: '15px',
-        paddingRight: '33px',
-      }}
-    >
+    <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
       <div className="flex flex-row justify-between items-center w-full">
         <div className="flex items-center gap-4 flex-shrink-0">
           <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
@@ -135,7 +122,7 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            {logo ? (
+            {logo && (
               <img
                 key={logo}
                 src={logo}
@@ -146,7 +133,7 @@ export default function Header() {
                   event.currentTarget.src = defaultMissingImage;
                 }}
               />
-            ) : null}
+            )}
             <span className="text-[15px] font-semibold">{networkName}</span>
           </div>
           <div className="ml-2">

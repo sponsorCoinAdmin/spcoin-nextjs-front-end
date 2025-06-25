@@ -6,6 +6,11 @@ import { ChevronDown } from 'lucide-react';
 import { CONTAINER_TYPE } from '@/lib/structure';
 import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
 import { TokenDialogWrapper, RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT_DROP_DOWN === 'true';
+const debugLog = createDebugLogger('AssetSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 type GenericAsset = {
   address: string;
@@ -35,7 +40,7 @@ function AssetSelectDropDown<T extends GenericAsset>({
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (asset) {
         event.currentTarget.src = logoSrc;
-        console.warn(`[AssetSelectDropDown] Missing logo for ${asset.symbol} (${asset.logo})`);
+        debugLog.log(`[AssetSelectDropDown] Missing logo for ${asset.symbol} (${asset.logo})`);
       }
     },
     [asset, logoSrc]
@@ -43,7 +48,7 @@ function AssetSelectDropDown<T extends GenericAsset>({
 
   const handleAssetSelect = useCallback(
     (selected: T) => {
-      console.debug('✅ [AssetSelectDropDown] Received asset from dialog:', selected);
+      debugLog.log('✅ [AssetSelectDropDown] Received asset from dialog:', selected);
       onSelectAsset(selected);
       setShowDialog(false);
     },

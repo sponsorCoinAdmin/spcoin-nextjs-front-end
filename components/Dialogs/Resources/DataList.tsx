@@ -200,7 +200,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
             return;
           }
 
-          debugLog.log(`[DataList] Selected: ${selectedAddress}`);
+          debugLog.log(`Selected: ${selectedAddress}`);
           const tokenContract: TokenContract = {
             address: selectedAddress as `0x${string}`,
             symbol: token.symbol,

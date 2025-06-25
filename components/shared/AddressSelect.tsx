@@ -20,7 +20,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
-const debugLog = createDebugLogger('apiResponse', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
 interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   feedType: FEED_TYPE;
