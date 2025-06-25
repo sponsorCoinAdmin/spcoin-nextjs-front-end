@@ -27,23 +27,27 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
+// Shared broken logo tracker
 const seenBrokenLogos = new Set<string>();
 
-function useTokenLogoURL(tokenContract?: TokenContract): string {
+function useAssetLogoURL(address: string, type: 'wallet' | 'token', fallbackURL = defaultMissingImage): string {
   const chainId = useChainId();
-  const address = tokenContract?.address;
   const { inputState } = useInputValidationState(address);
 
   return useMemo(() => {
-    if (!address || !isAddress(address)) return defaultMissingImage;
-    if (!chainId) return defaultMissingImage;
-    if (seenBrokenLogos.has(address)) return defaultMissingImage;
-    if (inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return defaultMissingImage;
+    if (!address || !isAddress(address)) return fallbackURL;
+    if (!chainId) return fallbackURL;
+    if (seenBrokenLogos.has(address)) return fallbackURL;
+    if (type === 'token' && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return fallbackURL;
 
-    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
-    debugLog.log(`✅ logoURL = ${logoURL}`);
+    const logoURL =
+      type === 'wallet'
+        ? `/assets/wallets/${address}/avatar.png`
+        : `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+
+    debugLog.log(`✅ logoURL (${type}) = ${logoURL}`);
     return logoURL;
-  }, [address, chainId, inputState]);
+  }, [address, type, chainId, inputState]);
 }
 
 interface Props {
@@ -57,7 +61,8 @@ function TokenSelectDropDown({ containerType }: Props) {
   const buyHook = useBuyTokenContract();
   const [tokenContract, setTokenContract] =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
-  const logoSrc = useTokenLogoURL(tokenContract);
+
+  const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
 
   const handleMissingLogoURL = (event: React.SyntheticEvent<HTMLImageElement>) => {
     const tokenAddr = tokenContract?.address;

@@ -1,17 +1,38 @@
-// File: components/containers/RecipientSelectDropDown.tsx
-
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { WalletAccount, InputState } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
-import { useSafeLogoURL } from '@/lib/hooks/useSafeLogoURL';
+import { isAddress } from 'viem';
+import { useChainId } from 'wagmi';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('RecipientSelectDropDown', DEBUG_ENABLED, LOG_TIME);
+
+// Shared broken logo tracker
+const seenBrokenLogos = new Set<string>();
+
+function useAssetLogoURL(address: string, type: 'wallet' | 'token', fallbackURL = defaultMissingImage): string {
+  const chainId = useChainId();
+
+  return useMemo(() => {
+    if (!address || !isAddress(address)) return fallbackURL;
+    if (!chainId) return fallbackURL;
+    if (seenBrokenLogos.has(address)) return fallbackURL;
+
+    const logoURL =
+      type === 'wallet'
+        ? `/assets/wallets/${address}/avatar.png`
+        : `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+
+    debugLog.log(`✅ logoURL (${type}) = ${logoURL}`);
+    return logoURL;
+  }, [address, type, chainId]);
+}
 
 interface Props {
   recipientAccount: WalletAccount | undefined;
@@ -20,7 +41,7 @@ interface Props {
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
   const [showDialog, setShowDialog] = useState(false);
-  const hasErroredRef = useRef(false); // 🛑 Prevents infinite retry loops
+  const hasErroredRef = useRef(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
 
@@ -28,16 +49,12 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     (wallet: WalletAccount) => {
       debugLog.log('✅ [RecipientSelectDropDown] Received wallet from dialog:', wallet);
       callBackAccount(wallet);
-      hasErroredRef.current = false; // Reset error tracking on new selection
+      hasErroredRef.current = false;
     },
     [callBackAccount]
   );
 
-  const logoSrc = useSafeLogoURL(
-    recipientAccount?.address,
-    undefined,
-    recipientAccount?.logoURL
-  );
+  const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
   const handleLogoError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -47,10 +64,9 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
         `[RecipientSelectDropDown] Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
       );
 
-      // Prevent retry loop
+      seenBrokenLogos.add(recipientAccount.address);
       hasErroredRef.current = true;
-      // Swap to fallback (this may already be logoSrc if useSafeLogoURL returned fallback)
-      event.currentTarget.src = '/assets/miscellaneous/badTokenAddressImage.png';
+      event.currentTarget.src = defaultMissingImage;
     },
     [recipientAccount]
   );
