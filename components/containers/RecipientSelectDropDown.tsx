@@ -1,38 +1,18 @@
+// File: components/containers/RecipientSelectDropDown.tsx
+
 'use client';
 
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
 import { WalletAccount, InputState } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
-import { isAddress } from 'viem';
-import { useChainId } from 'wagmi';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('RecipientSelectDropDown', DEBUG_ENABLED, LOG_TIME);
-
-// Shared broken logo tracker
-const seenBrokenLogos = new Set<string>();
-
-function useAssetLogoURL(address: string, type: 'wallet' | 'token', fallbackURL = defaultMissingImage): string {
-  const chainId = useChainId();
-
-  return useMemo(() => {
-    if (!address || !isAddress(address)) return fallbackURL;
-    if (!chainId) return fallbackURL;
-    if (seenBrokenLogos.has(address)) return fallbackURL;
-
-    const logoURL =
-      type === 'wallet'
-        ? `/assets/wallets/${address}/avatar.png`
-        : `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
-
-    debugLog.log(`✅ logoURL (${type}) = ${logoURL}`);
-    return logoURL;
-  }, [address, type, chainId]);
-}
 
 interface Props {
   recipientAccount: WalletAccount | undefined;
@@ -64,7 +44,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
         `[RecipientSelectDropDown] Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
       );
 
-      seenBrokenLogos.add(recipientAccount.address);
+      markLogoAsBroken(recipientAccount.address);
       hasErroredRef.current = true;
       event.currentTarget.src = defaultMissingImage;
     },
@@ -84,21 +64,26 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
           }
         }}
       />
-      {recipientAccount ? (
-        <>
-          <img
-            alt={recipientAccount.name}
-            className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            src={logoSrc}
-            onClick={() => alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`)}
-            onError={handleLogoError}
-          />
-          {recipientAccount.symbol}
-        </>
-      ) : (
-        <> &nbsp; Select Recipient: </>
-      )}
-      <ChevronDown size={16} onClick={openDialog} style={{ cursor: 'pointer', marginLeft: '0.5rem' }} />
+      <div className="flex items-center cursor-pointer" onClick={openDialog}>
+        {recipientAccount ? (
+          <>
+            <img
+              alt={recipientAccount.name}
+              className="h-9 w-9 mr-2 rounded-md"
+              src={logoSrc}
+              onClick={(e) => {
+                e.stopPropagation();
+                alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`);
+              }}
+              onError={handleLogoError}
+            />
+            {recipientAccount.symbol}
+          </>
+        ) : (
+          <> &nbsp; Select Recipient: </>
+        )}
+        <ChevronDown size={16} className="ml-2" />
+      </div>
     </>
   );
 };
