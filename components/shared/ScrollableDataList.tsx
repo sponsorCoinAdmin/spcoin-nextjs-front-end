@@ -1,4 +1,4 @@
-// File: components\shared\ScrollableDataList.tsx
+// File: components/shared/ScrollableDataList.tsx
 
 'use client';
 

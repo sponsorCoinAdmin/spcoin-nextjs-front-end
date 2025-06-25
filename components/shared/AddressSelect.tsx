@@ -1,26 +1,25 @@
-'use client';
+"use client";
 
-import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from "react";
 import {
   InputState,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
   CONTAINER_TYPE,
-} from '@/lib/structure';
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
-import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
-import HexAddressInput from '@/components/shared/HexAddressInput';
-import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
-import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
-import DataList from '../Dialogs/Resources/DataList';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+} from "@/lib/structure";
+import { useInputValidationState } from "@/lib/hooks/useInputValidationState";
+import { useBaseSelectShared } from "@/lib/hooks/useBaseSelectShared";
+import HexAddressInput from "@/components/shared/HexAddressInput";
+import RenderAssetPreview from "@/components/shared/utils/sharedPreviews/RenderAssetPreview";
+import ValidateAssetPreview from "@/components/shared/utils/sharedPreviews/ValidateAssetPreview";
+import DataList from "../Dialogs/Resources/DataList";
+import { createDebugLogger } from "@/lib/utils/debugLogger";
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
-const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
+  process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === "true";
+const debugLog = createDebugLogger("addressSelect", DEBUG_ENABLED, LOG_TIME);
 
 interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   feedType: FEED_TYPE;
@@ -29,7 +28,7 @@ interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   onSelect: (item: T, state: InputState) => void;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE; // ✅ added
+  containerType?: CONTAINER_TYPE;
 }
 
 export default function AddressSelect<T extends TokenContract | WalletAccount>({
@@ -39,7 +38,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   onSelect: onSelectProp,
   duplicateMessage,
   showDuplicateCheck = false,
-  containerType, // ✅ added
+  containerType,
 }: AddressSelectProps<T>) {
   const {
     inputValue,
@@ -60,7 +59,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   } = useInputValidationState<T>(
     debouncedAddress,
     feedType,
-    containerType // ✅ passed to support duplicate detection
+    containerType
   );
 
   const onSelect = useCallback(
@@ -98,7 +97,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   return (
     <div
       id="inputSelectDiv"
-      className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}
+      className="flex flex-col h-full min-h-0 w-full gap-[0.2rem]"
     >
       <HexAddressInput
         inputValue={inputValue}
@@ -125,12 +124,11 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
       <div
         id="inputSelectFlexDiv"
-        className="flex flex-col flex-grow min-h-0"
-        style={{ gap: '0.2rem' }}
+        className="flex flex-col flex-grow min-h-0 gap-[0.2rem]"
       >
         <div
           id="DataListDiv"
-          className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}
+          className="bg-[#243056] w-full h-full overflow-y-auto flex-grow scrollbar-thin p-2 text-[#5981F3] mb-1 rounded-[22px]"
         >
           <DataList<T>
             dataFeedType={feedType}
