@@ -20,6 +20,8 @@ export const sanitizeExchangeContext = (
     settings: {
       apiTradingProvider: raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       spCoinDisplay: raw.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
+      assetSelectScrollDisplay: raw.settings?.assetSelectScrollDisplay ?? defaultContext.settings.assetSelectScrollDisplay,
+      errorDisplay: raw.settings?.errorDisplay ?? defaultContext.settings.errorDisplay,
     },
     network: {
       ...defaultContext.network,

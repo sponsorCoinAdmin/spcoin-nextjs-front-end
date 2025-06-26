@@ -62,8 +62,10 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
       ...defaultInitialTradeData,
     },
     settings: {
-      spCoinDisplay: SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER,
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
+      spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
+      assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
+      errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
     },
     errorMessage: undefined,
     apiErrorMessage: undefined

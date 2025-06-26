@@ -16,7 +16,7 @@ import { useSpCoinDisplay } from '@/lib/context/hooks';
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
 
-const AccountSelectContainer: React.FC = () => {
+const RecipientSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
@@ -122,4 +122,4 @@ const AccountSelectContainer: React.FC = () => {
   );
 };
 
-export default AccountSelectContainer;
+export default RecipientSelectContainer;

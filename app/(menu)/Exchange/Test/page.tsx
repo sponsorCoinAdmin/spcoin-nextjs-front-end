@@ -34,12 +34,16 @@ function useDidHydrate(): boolean {
 }
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
-  const spCoinDisplayMap = {
+  const spCoinDisplayMap: Record<SP_COIN_DISPLAY, string> = {
+    [SP_COIN_DISPLAY.DISPLAY_OFF]: 'SP_COIN_DISPLAY.DISPLAY_OFF',
     [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.EXCHANGE_ROOT',
     [SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER',
     [SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG',
     [SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG]: 'SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG',
     [SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON]: 'SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON',
+    [SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER',
+    [SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER',
+    [SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE]: 'SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE',
   };
 
   const tradeDirectionMap = {
@@ -55,11 +59,27 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
 
+  // 🌟 Apply your logic rule
+  const sp = settings.spCoinDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
+  const asset = settings.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
+  const err = settings.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
+
+  let spFixed = sp;
+  if (
+    asset === SP_COIN_DISPLAY.DISPLAY_OFF &&
+    err === SP_COIN_DISPLAY.DISPLAY_OFF &&
+    sp === SP_COIN_DISPLAY.DISPLAY_OFF
+  ) {
+    spFixed = SP_COIN_DISPLAY.EXCHANGE_ROOT;
+  }
+
   return {
     ...ctx,
     settings: {
       ...settings,
-      spCoinDisplay: spCoinDisplayMap[settings.spCoinDisplay ?? SP_COIN_DISPLAY.EXCHANGE_ROOT],
+      spCoinDisplay: spCoinDisplayMap[spFixed],
+      assetSelectScrollDisplay: spCoinDisplayMap[asset],
+      errorDisplay: spCoinDisplayMap[err],
       apiTradingProvider: apiProviderMap[settings.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X],
     },
     tradeData: {
@@ -75,12 +95,13 @@ export default function TestPage() {
   const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
+  const page = state.page?.exchangePage ?? {};
   const {
     showContext = false,
     showWallets = false,
     collapsedKeys = [],
     expandContext = false,
-  } = state.page.exchangePage;
+  } = page;
 
   const tokenAddress = exchangeContext?.tradeData?.sellTokenContract?.address;
 
@@ -88,7 +109,7 @@ export default function TestPage() {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
   }, [state]);
 
-  const updateExchangePage = (updates: Partial<typeof state.page.exchangePage>) => {
+  const updateExchangePage = (updates: Partial<typeof page>) => {
     setState(prev => {
       const newState = {
         ...prev,
@@ -119,20 +140,20 @@ export default function TestPage() {
 
   const toggleExpandCollapse = () => {
     const nextExpand = !expandContext;
-    const nextKeys = nextExpand ? [] : getAllKeys(exchangeContext);
+    const nextKeys = nextExpand ? [] : getAllNestedKeys(exchangeContext);
     updateExchangePage({
       expandContext: nextExpand,
       collapsedKeys: nextKeys,
     });
   };
 
-  const getAllKeys = (obj: any): string[] => {
+  const getAllNestedKeys = (obj: any): string[] => {
     let keys: string[] = [];
     if (typeof obj === 'object' && obj !== null) {
       Object.entries(obj).forEach(([k, v]) => {
         keys.push(k);
         if (typeof v === 'object' && v !== null) {
-          keys.push(...getAllKeys(v));
+          keys.push(...getAllNestedKeys(v));
         }
       });
     }
@@ -153,7 +174,7 @@ export default function TestPage() {
 
           {showContext && (
             <button onClick={toggleExpandCollapse} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-              {expandContext ? 'Collapse Context' : 'Expand Context'}?
+              {expandContext ? 'Collapse Context' : 'Expand Context'}
             </button>
           )}
 

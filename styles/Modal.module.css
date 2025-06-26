@@ -34,21 +34,26 @@
   gap: 0.2rem;
 }
 
-.modalContainer{
-  position:absolute;
-  transform: translate(0px, 0px);
-  font-weight: bold;
+.modalContainer {
+  position: fixed; /* 🔄 absolute → fixed for proper modal behavior */
+  top: 50%;         /* 🧭 center vertically */
+  left: 50%;        /* 🧭 center horizontally */
+  transform: translate(-50%, -50%); /* 🧭 exact centering */
+  z-index: 9999;    /* 🔝 ensure it's on top */
+
   width: 520px;
-  color: white;
-  background-color: #0E111B;
-  border: 2px solid #21273a;
   min-height: 300px;
-  border-radius: 15px;
   padding-left: 0px;
   padding-right: 0px;
   margin: auto;
-  margin-left: auto;
+
+  font-weight: bold;
+  color: white;
+  background-color: #0E111B;
+  border: 2px solid #21273a;
+  border-radius: 15px;
 }
+
 
 .modalBox {
   display: flex;
@@ -75,7 +80,6 @@
   height: 100%;
   overflow-y: auto;            /* 🔥 allow vertical scroll */
   flex-grow: 1;                /* 🔥 grow and fill available space */
-  scrollbar-width: thin;       /* 🔥 Firefox: show a thin scrollbar */
   padding: 10px;
   color: #5981F3;
   border-width: 0px !important;
@@ -90,7 +94,6 @@
 
 .modalScrollBarHidden {
   overflow-y: auto;
-  scrollbar-width: none;
 }
 .modalScrollBarHidden::-webkit-scrollbar {
   display: none;

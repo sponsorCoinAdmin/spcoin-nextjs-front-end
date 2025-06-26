@@ -49,12 +49,14 @@ footer {
 
 /* Page Layout */
 .pageWrap {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-bottom: 60px; /* Leave space for fixed footer */
-  background: transparent;
+  position: relative;
+  z-index: 0;                  /* ✅ Ensures it doesn't compete with modals */
+  min-height: 100vh;           /* ✅ Full vertical space */
+  display: flex;               /* ✅ Flexbox layout */
+  flex-direction: column;      /* ✅ Stack children vertically */
+  align-items: center;         /* ✅ Center horizontally */
+  padding-bottom: 60px;        /* ✅ Room for fixed footer */
+  background: transparent;     /* ✅ No background interference */
 }
 
 /* Token Logos */

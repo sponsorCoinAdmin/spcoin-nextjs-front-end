@@ -26,6 +26,7 @@ export async function initExchangeContext(
   address?: `0x${string}`
 ): Promise<ExchangeContext> {
   const effectiveChainId = chainId ?? 1;
+
   debugLog.log('🔍 Loading stored ExchangeContext...');
   const stored = loadLocalExchangeContext();
 

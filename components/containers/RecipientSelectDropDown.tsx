@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { RecipientDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
+import { RecipientSelectScrollPanel } from '@/components/containers/AssetSelectScrollContainer';
 import { WalletAccount, InputState } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { defaultMissingImage } from '@/lib/network/utils';
@@ -53,17 +53,19 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
 
   return (
     <>
-      <RecipientDialogWrapper
-        showDialog={showDialog}
-        setShowDialog={setShowDialog}
-        onSelect={(wallet, state) => {
-          debugLog.log('🎯 [RecipientDialogWrapper -> DropDown] onSelect triggered', { wallet, state });
-          if (state === InputState.CLOSE_INPUT) {
-            handleRecipientSelect(wallet);
-            setShowDialog(false);
-          }
-        }}
-      />
+      {showDialog && (
+        <RecipientSelectScrollPanel
+          setShowDialog={setShowDialog}
+          onSelect={(wallet, state) => {
+            debugLog.log('🎯 [RecipientSelectScrollPanel -> DropDown] onSelect triggered', { wallet, state });
+            if (state === InputState.CLOSE_INPUT) {
+              handleRecipientSelect(wallet);
+              setShowDialog(false);
+            }
+          }}
+        />
+      )}
+
       <div className="flex items-center cursor-pointer" onClick={openDialog}>
         {recipientAccount ? (
           <>

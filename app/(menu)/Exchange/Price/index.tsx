@@ -1,7 +1,6 @@
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import { ErrorDialog } from '@/components/Dialogs/Dialogs';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import {
@@ -10,13 +9,11 @@ import {
   STATUS,
   ERROR_CODES,
   TRADE_DIRECTION,
+  InputState,
+  TokenContract,
+  WalletAccount,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
-import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI.ts';
-import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
-import BuySellSwapArrowButton, { useBuySellSwap } from '@/components/Buttons/BuySellSwapArrowButton';
-import AffiliateFee from '@/components/containers/AffiliateFee';
-import PriceButton from '@/components/Buttons/PriceButton';
-import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import {
   useBuyAmount,
   useBuyTokenContract,
@@ -25,18 +22,25 @@ import {
   useSellAmount,
   useSellTokenContract,
 } from '@/lib/context/hooks';
-import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
+import { useDisplayControls } from '@/lib/context/hooks/';
+import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI.ts';
 import { mutate } from 'swr';
-// import { useResetContracts } from '@/lib/context/hooks';
-import { useChainId } from 'wagmi';
+
+import { ErrorDialog } from '@/components/Dialogs/Dialogs';
+import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
+import BuySellSwapArrowButton, { useBuySellSwap } from '@/components/Buttons/BuySellSwapArrowButton';
+import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
+import PriceButton from '@/components/Buttons/PriceButton';
+import AffiliateFee from '@/components/containers/AffiliateFee';
+import FeeDisclosure from '@/components/containers/FeeDisclosure';
+import RecipientSelectContainer from '@/components/containers/RecipientSelectContainer';
+import { RecipientSelectScrollPanel, TokenSelectScrollPanel } from '@/components/containers/AssetSelectScrollContainer';
 
 export default function PriceView() {
-
-  // ✅ Call the hook directly with wagmiChainId
-  // useResetContracts(wagmiChainId);
-
   const { exchangeContext } = useExchangeContext();
   const tradeData = exchangeContext?.tradeData;
+  const { errorDisplay, assetSelectScrollDisplay } = exchangeContext.settings;
+  const { updateAssetScrollDisplay } = useDisplayControls();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -47,39 +51,7 @@ export default function PriceView() {
   const [containerSwapStatus, setContainerSwapStatus] = useBuySellSwap();
   const [pendingSwapAmount, setPendingSwapAmount] = useState<bigint | null>(null);
 
-  // useEffect(() => {
-  //   console.log(`[TEST] useEffect triggered: wagmiChainId = ${wagmiChainId}`);
-
-  //   if (wagmiChainId == null) return;
-
-  //   const timeout = setTimeout(() => {
-  //     const contextChainId = exchangeContext.network?.chainId;
-
-  //     console.log(`[TEST] Debounce fired: wagmiChainId = ${wagmiChainId}, contextChainId = ${contextChainId}`);
-
-  //     if (wagmiChainId !== contextChainId) {
-  //       console.warn(`[TEST] Chain mismatch → clearing tokens`);
-  //       setSellTokenContract(undefined);
-  //       setBuyTokenContract(undefined);
-  //     } else {
-  //       console.log(`[TEST] Chain ID match → no reset`);
-  //     }
-
-  //     // alert(`wagmiChainId = ${wagmiChainId}`);
-  //   }, 2000);
-
-  //   return () => {
-  //     console.log(`[TEST] Cleaning up previous timeout for wagmiChainId = ${wagmiChainId}`);
-  //     clearTimeout(timeout);
-  //   };
-  // }, [wagmiChainId, exchangeContext.network?.chainId]);
-
-  const {
-    isLoading: isLoadingPrice,
-    data: priceData,
-    error: priceError,
-    swrKey,
-  } = usePriceAPI();
+  const { isLoading: isLoadingPrice, data: priceData, error: priceError, swrKey } = usePriceAPI();
 
   const apiErrorCallBack = useCallback(
     (apiErrorObj: ErrorMessage) => {
@@ -116,19 +88,14 @@ export default function PriceView() {
       setBuyTokenContract(newBuyToken);
       setContainerSwapStatus(false);
 
-      if (swrKey) {
-        console.log('🔁 Forcing mutate', swrKey);
-        mutate(swrKey);
-      }
+      if (swrKey) mutate(swrKey);
     }
   }, [containerSwapStatus, tradeData, swrKey]);
 
   useEffect(() => {
     if (pendingSwapAmount !== null) {
-      if (sellTokenContract) {
-        setSellAmount(pendingSwapAmount);
-      }
-      setPendingSwapAmount(null); // Always clear
+      if (sellTokenContract) setSellAmount(pendingSwapAmount);
+      setPendingSwapAmount(null);
     }
   }, [sellTokenContract, pendingSwapAmount]);
 
@@ -138,18 +105,13 @@ export default function PriceView() {
   useEffect(() => {
     if (!tradeData) return;
 
-    const sellChanged =
-      previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
-    const buyChanged =
-      previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
+    const sellChanged = previousSellToken.current?.address !== tradeData.sellTokenContract?.address;
+    const buyChanged = previousBuyToken.current?.address !== tradeData.buyTokenContract?.address;
 
     if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (sellChanged || buyChanged)) {
-      console.debug('[PriceView] Resetting buy amount due to token change');
       setBuyAmount(0n);
     }
-
     if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (sellChanged || buyChanged)) {
-      console.debug('[PriceView] Resetting sell amount due to token change');
       setSellAmount(0n);
     }
 
@@ -159,20 +121,57 @@ export default function PriceView() {
 
   return (
     <div className={styles.pageWrap}>
-      <ErrorDialog
-        showDialog={showError}
-        closeDialog={() => setShowError(false)}
-        message={errorMessage}
-      />
-      <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
-        <TradeContainerHeader />
-        <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-        <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-        <BuySellSwapArrowButton />
-        <PriceButton isLoadingPrice={isLoadingPrice} />
-        <AffiliateFee priceResponse={priceData} />
-      </div>
-      <FeeDisclosure />
+      {errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE && (
+        <ErrorDialog
+          showDialog={true}
+          closeDialog={() => setShowError(false)}
+          message={errorMessage}
+        />
+      )}
+
+      {errorDisplay !== SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE &&
+        assetSelectScrollDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER && (
+          <TokenSelectScrollPanel
+            containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
+            setShowDialog={show => {
+              if (!show) updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+            }}
+            onSelect={(token: TokenContract, state: InputState) => {
+              if (state === InputState.CLOSE_INPUT) {
+                updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+              }
+            }}
+          />
+        )}
+
+      {errorDisplay !== SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE &&
+        assetSelectScrollDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER && (
+          <RecipientSelectScrollPanel
+            setShowDialog={show => {
+              if (!show) updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+            }}
+            onSelect={(wallet: WalletAccount, state: InputState) => {
+              if (state === InputState.CLOSE_INPUT) {
+                updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+              }
+            }}
+          />
+        )}
+
+      {errorDisplay !== SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE &&
+        assetSelectScrollDisplay === SP_COIN_DISPLAY.EXCHANGE_ROOT && (
+          <div id="MainPage_ID">
+            <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
+              <TradeContainerHeader />
+              <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
+              <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
+              <BuySellSwapArrowButton />
+              <PriceButton isLoadingPrice={isLoadingPrice} />
+              <AffiliateFee priceResponse={priceData} />
+            </div>
+            <FeeDisclosure />
+          </div>
+        )}
     </div>
   );
 }

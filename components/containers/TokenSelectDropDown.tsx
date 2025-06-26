@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { TokenDialogWrapper } from '@/components/Dialogs/AssetSelectDialog';
+import { TokenSelectScrollPanel } from '@/components/containers/AssetSelectScrollContainer';
 import { ChevronDown } from 'lucide-react';
 
 import {
@@ -58,17 +58,18 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   return (
     <>
-      <TokenDialogWrapper
-        showDialog={showDialog}
-        setShowDialog={setShowDialog}
-        containerType={containerType}
-        onSelect={(contract: TokenContract, inputState: InputState) => {
-          if (inputState === InputState.CLOSE_INPUT && contract) {
-            debugLog.log('🎯 onSelect → updating tokenContract in context', contract);
-            setTokenContract(structuredClone(contract));
-          }
-        }}
-      />
+      {showDialog && (
+        <TokenSelectScrollPanel
+          setShowDialog={setShowDialog}
+          containerType={containerType}
+          onSelect={(contract: TokenContract, inputState: InputState) => {
+            if (inputState === InputState.CLOSE_INPUT && contract) {
+              debugLog.log('🎯 onSelect → updating tokenContract in context', contract);
+              setTokenContract(structuredClone(contract));
+            }
+          }}
+        />
+      )}
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>

@@ -1,6 +1,8 @@
+// File: components/containers/AssetSelectScrollContainer.tsx
+
 'use client';
 
-import { useMemo, useRef, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
 import styles from '@/styles/Modal.module.css';
 import {
@@ -10,17 +12,12 @@ import {
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
-import {
-  useBuyTokenContract,
-  useSellTokenContract,
-} from '@/lib/context/hooks';
 
 // ---------------------------------------------
 // Base Modal Structure
 // ---------------------------------------------
 
 interface BaseProps<T> {
-  showDialog: boolean;
   setShowDialog: (show: boolean) => void;
   onSelect: (item: T, state: InputState) => void;
   title: string;
@@ -33,47 +30,46 @@ interface BaseProps<T> {
 
 function BaseModalDialog({
   id,
-  showDialog,
   setShowDialog,
   title,
   children,
 }: {
   id: string;
-  showDialog: boolean;
   setShowDialog: (show: boolean) => void;
   title: string;
   children: React.ReactNode;
 }) {
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
-
   const closeDialog = useCallback(() => {
     setShowDialog(false);
-    dialogRef.current?.close();
   }, [setShowDialog]);
 
-  useEffect(() => {
-    if (dialogRef.current) {
-      showDialog
-        ? dialogRef.current.showModal()
-        : dialogRef.current.close();
-    }
-  }, [showDialog]);
-
   return (
-    <dialog id={id} ref={dialogRef} className={styles.modalContainer}>
+    <div
+      id={id}
+      className={styles.modalContainer}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={`${id}-title`}
+    >
       <div className="relative h-8 px-3 mb-1 text-gray-600">
-        <h1 className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg">{title}</h1>
-        <div
-          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white"
-          onClick={closeDialog}
+        <h1
+          id={`${id}-title`}
+          className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg"
         >
-          X
-        </div>
+          {title}
+        </h1>
+        <button
+          aria-label="Close dialog"
+          onClick={closeDialog}
+          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
+        >
+          ×
+        </button>
       </div>
       <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>
         {children}
       </div>
-    </dialog>
+    </div>
   );
 }
 
@@ -82,7 +78,6 @@ function BaseModalDialog({
 // ---------------------------------------------
 
 export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
-  showDialog,
   setShowDialog,
   onSelect,
   title,
@@ -92,10 +87,19 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
   showDuplicateCheck = false,
   containerType,
 }: BaseProps<T>) {
+  const handleSelect = useCallback(
+    (item: T, state: InputState) => {
+      console.debug('🎯 [AddressSelectDialog] onSelect triggered', { item, state });
+      if (state === InputState.CLOSE_INPUT) {
+        onSelect(item, state);
+      }
+    },
+    [onSelect]
+  );
+
   return (
     <BaseModalDialog
       id="AddressSelectDialog"
-      showDialog={showDialog}
       setShowDialog={setShowDialog}
       title={title}
     >
@@ -103,12 +107,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
         feedType={feedType}
         inputPlaceholder={inputPlaceholder}
         closeDialog={() => setShowDialog(false)}
-        onSelect={(item, state) => {
-          console.debug('🎯 [AddressSelectDialog] onSelect triggered', { item, state });
-          if (state === InputState.CLOSE_INPUT) {
-            onSelect(item, state);
-          }
-        }}
+        onSelect={handleSelect}
         duplicateMessage={duplicateMessage}
         showDuplicateCheck={showDuplicateCheck}
         containerType={containerType}
@@ -118,52 +117,64 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
 }
 
 // ---------------------------------------------
-// Token Dialog Wrapper (uses containerType prop)
+// Token Dialog Wrapper
 // ---------------------------------------------
 
-export function TokenDialogWrapper(props: {
-  showDialog: boolean;
+export function TokenSelectScrollPanel({
+  setShowDialog,
+  containerType,
+  onSelect,
+}: {
   setShowDialog: (show: boolean) => void;
   containerType: CONTAINER_TYPE;
   onSelect: (token: TokenContract, state: InputState) => void;
 }) {
-  const { containerType } = props;
+  const {
+    useSellTokenContract,
+    useBuyTokenContract,
+  } = require('@/lib/context/hooks');
+
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const title = useMemo(
-    () =>
-      containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? 'Select a Token to Sell'
-        : 'Select a Token to Buy',
-    [containerType]
-  );
+  const contractSetters = {
+    [CONTAINER_TYPE.SELL_SELECT_CONTAINER]: setSellTokenContract,
+    [CONTAINER_TYPE.BUY_SELECT_CONTAINER]: setBuyTokenContract,
+  };
 
-  const setTokenInContext =
+  const setTokenInContext = contractSetters[containerType];
+
+  const title =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? setSellTokenContract
-      : setBuyTokenContract;
+      ? 'Select a Token to Sell'
+      : 'Select a Token to Buy';
+
+  const duplicateMessage =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? 'Sell Address Cannot Be the Same as Buy Address'
+      : 'Buy Address Cannot Be the Same as Sell Address';
+
+  const handleSelect = useCallback(
+    (token: TokenContract, state: InputState) => {
+      console.debug('✅ [TokenSelectScrollPanel] selected token', token);
+      if (state === InputState.CLOSE_INPUT) {
+        setTokenInContext(token);
+        onSelect(token, state);
+      }
+    },
+    [setTokenInContext, onSelect]
+  );
 
   return (
     <AddressSelectDialog<TokenContract>
-      {...props}
+      setShowDialog={setShowDialog}
+      onSelect={handleSelect}
       title={title}
       feedType={FEED_TYPE.TOKEN_LIST}
       inputPlaceholder="Type or paste token address"
-      duplicateMessage={
-        containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-          ? 'Sell Address Cannot Be the Same as Buy Address'
-          : 'Buy Address Cannot Be the Same as Sell Address'
-      }
+      duplicateMessage={duplicateMessage}
       showDuplicateCheck
       containerType={containerType}
-      onSelect={(token, state) => {
-        console.debug('✅ [TokenDialogWrapper] selected token', token);
-        if (state === InputState.CLOSE_INPUT) {
-          setTokenInContext(token);
-          props.onSelect(token, state);
-        }
-      }}
     />
   );
 }
@@ -172,23 +183,30 @@ export function TokenDialogWrapper(props: {
 // Recipient Dialog Wrapper
 // ---------------------------------------------
 
-export function RecipientDialogWrapper(props: {
-  showDialog: boolean;
+export function RecipientSelectScrollPanel({
+  setShowDialog,
+  onSelect,
+}: {
   setShowDialog: (show: boolean) => void;
   onSelect: (wallet: WalletAccount, state: InputState) => void;
 }) {
+  const handleSelect = useCallback(
+    (wallet: WalletAccount, state: InputState) => {
+      console.debug('✅ [RecipientSelectScrollPanel] selected wallet', wallet);
+      if (state === InputState.CLOSE_INPUT) {
+        onSelect(wallet, state);
+      }
+    },
+    [onSelect]
+  );
+
   return (
     <AddressSelectDialog<WalletAccount>
-      {...props}
+      setShowDialog={setShowDialog}
+      onSelect={handleSelect}
       title="Select a Recipient"
       feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
       inputPlaceholder="Paste recipient wallet address"
-      onSelect={(wallet, state) => {
-        console.debug('✅ [RecipientDialogWrapper] selected wallet', wallet);
-        if (state === InputState.CLOSE_INPUT) {
-          props.onSelect(wallet, state);
-        }
-      }}
     />
   );
 }

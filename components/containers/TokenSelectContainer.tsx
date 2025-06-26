@@ -176,7 +176,6 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
   );
 };
 
-export default TokenSelectContainer;
 
 // 🔽 Local Hook to simplify balance formatting
 function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
@@ -196,3 +195,5 @@ function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
     return '0.0';
   }
 }
+
+export default TokenSelectContainer;
