@@ -1,72 +1,58 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useMemo } from 'react'
-import { defaultMissingImage } from '@/lib/network/utils'
-import { WalletAccount } from '@/lib/structure'
+import { useState, useEffect, useMemo } from 'react';
+import { defaultMissingImage } from '@/lib/network/utils';
+import { WalletAccount } from '@/lib/structure';
 
 export default function Page() {
-  const [wallets, setWallets] = useState<WalletAccount[]>([])
-  const [filter, setFilter] = useState<'All' | 'Recipients' | 'Agents'>('All')
+  const [wallets, setWallets] = useState<WalletAccount[]>([]);
+  const [filter, setFilter] = useState<'All' | 'Recipients' | 'Agents'>('All');
 
   useEffect(() => {
     async function loadWallets() {
       try {
-        const res = await fetch('/wallets.json') // ✅ replace with your data source
-        const data = await res.json()
-        setWallets(data)
+        const res = await fetch('/wallets.json');
+        const data = await res.json();
+        setWallets(data);
       } catch (err) {
-        console.error('Failed to load wallets', err)
+        console.error('Failed to load wallets', err);
       }
     }
 
-    loadWallets()
-  }, [])
+    loadWallets();
+  }, []);
 
   const filteredWallets = useMemo(() => {
     return wallets.filter(wallet => {
-      if (filter === 'All') return true
-      if (filter === 'Recipients') return wallet.type === 'recipient'
-      if (filter === 'Agents') return wallet.type === 'agent'
-      return false
-    })
-  }, [wallets, filter])
+      if (filter === 'All') return true;
+      if (filter === 'Recipients') return wallet.type === 'recipient';
+      if (filter === 'Agents') return wallet.type === 'agent';
+      return false;
+    });
+  }, [wallets, filter]);
 
   const getTitle = () => {
-    if (filter === 'All') return 'All Wallets'
-    if (filter === 'Recipients') return 'Recipient Wallets'
-    if (filter === 'Agents') return 'Agent Wallets'
-    return 'Wallets'
-  }
+    if (filter === 'All') return 'All Wallets';
+    if (filter === 'Recipients') return 'Recipient Wallets';
+    if (filter === 'Agents') return 'Agent Wallets';
+    return 'Wallets';
+  };
 
   return (
     <div>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        backgroundColor: '#333',
-        color: '#fff',
-        padding: '10px 20px',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        zIndex: 1000
-      }}>
-        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>
-          {getTitle()}
-        </h1>
-        <div style={{ display: 'flex', gap: '10px', fontSize: '16px', marginTop: '8px' }}>
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 w-full bg-gray-800 text-white px-5 py-3 flex flex-col items-center z-50">
+        <h1 className="text-xl font-bold">{getTitle()}</h1>
+        <div className="flex gap-4 text-base mt-2">
           {['All', 'Recipients', 'Agents'].map(option => (
-            <label key={option} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <label key={option} className="flex items-center cursor-pointer">
               <input
-                type='radio'
-                name='walletFilter'
+                type="radio"
+                name="walletFilter"
                 value={option}
                 checked={filter === option}
                 onChange={() => setFilter(option as any)}
-                style={{ marginRight: '5px' }}
+                className="mr-2"
               />
               {option}
             </label>
@@ -74,49 +60,44 @@ export default function Page() {
         </div>
       </div>
 
-      <div style={{ marginTop: '90px', padding: '0 20px' }}>
-        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+      {/* Wallet List */}
+      <div className="mt-[90px] px-5">
+        <ul className="list-none p-0 m-0">
           {filteredWallets.map((wallet, index) => {
             const logoUrl = wallet.logoURL;
 
             return (
-              <li key={wallet.address} style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '12px',
-                backgroundColor: index % 2 === 0 ? '#d6d6d6' : '#f5f5f5',
-                marginBottom: '10px',
-                borderRadius: '8px'
-              }}>
-                <div style={{ textAlign: 'center', marginRight: '12px' }}>
+              <li
+                key={wallet.address}
+                className={`flex items-center p-4 mb-3 rounded-lg ${
+                  index % 2 === 0 ? 'bg-gray-300' : 'bg-gray-100'
+                }`}
+              >
+                <div className="text-center mr-4">
                   <img
                     src={logoUrl}
-                    alt='Logo'
-                    width='100'
-                    height='100'
-                    style={{ borderRadius: '50%', border: '2px solid #ccc' }}
-                    onError={(e) => { (e.target as HTMLImageElement).src = defaultMissingImage }}
+                    alt="Logo"
+                    width="100"
+                    height="100"
+                    className="rounded-full border-2 border-gray-400"
+                    onError={e => {
+                      (e.target as HTMLImageElement).src = defaultMissingImage;
+                    }}
                   />
                 </div>
                 <div>
-                  <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
+                  <div className="text-lg font-bold mb-2">
                     {wallet.name || 'Unknown Wallet'}
                   </div>
-                  <pre style={{
-                    whiteSpace: 'pre-wrap',
-                    wordWrap: 'break-word',
-                    margin: '4px 0 0 12px',
-                    fontSize: '14px',
-                    color: '#333'
-                  }}>
+                  <pre className="whitespace-pre-wrap break-words ml-3 text-sm text-gray-800">
                     {JSON.stringify(wallet, null, 2)}
                   </pre>
                 </div>
               </li>
-            )
+            );
           })}
         </ul>
       </div>
     </div>
-  )
+  );
 }

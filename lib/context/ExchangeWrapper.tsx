@@ -71,7 +71,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
       if (updated) {
         debugLog.log('📤 Preview updated context BEFORE saveLocalExchangeContext()');
-        console.debug(updated);
+        debugLog.log(updated);
         saveLocalExchangeContext(updated);
         debugLog.log('📦 exchangeContext saved to localStorage');
       }
@@ -147,7 +147,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
     initExchangeContext(chainId, isConnected, address).then((sanitized) => {
       debugLog.log('✅ Initial exchangeContext hydrated');
-      console.debug(sanitized);
+      debugLog.debug(sanitized);
       setContextState(sanitized);
     });
   }, [chainId, address, isConnected]);

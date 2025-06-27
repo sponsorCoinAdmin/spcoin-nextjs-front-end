@@ -29,7 +29,7 @@ interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   onSelect: (item: T, state: InputState) => void;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE; // ✅ added
+  containerType?: CONTAINER_TYPE;
 }
 
 export default function AddressSelect<T extends TokenContract | WalletAccount>({
@@ -39,7 +39,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   onSelect: onSelectProp,
   duplicateMessage,
   showDuplicateCheck = false,
-  containerType, // ✅ added
+  containerType,
 }: AddressSelectProps<T>) {
   const {
     inputValue,
@@ -60,12 +60,13 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   } = useInputValidationState<T>(
     debouncedAddress,
     feedType,
-    containerType // ✅ passed to support duplicate detection
+    containerType
   );
 
   const onSelect = useCallback(
     (item: TokenContract | WalletAccount) => {
       debugLog.log(`🟢 onSelect() called with:`, item);
+      manualEntryRef.current = false; // ✅ reset
       clearInput();
       onSelectProp(item as T, InputState.CLOSE_INPUT);
       closeDialog();
@@ -89,9 +90,12 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
   useEffect(() => {
     if (!debouncedAddress || isLoading || !validatedAsset) return;
+
     if (!manualEntryRef.current) {
-      debugLog.log(`🚀 Auto-selecting validatedAsset`);
+      debugLog.log(`🚀 Auto-selecting validatedAsset (DataList path)`);
       onSelect(validatedAsset);
+    } else {
+      debugLog.log(`🧍‍♂️ Manual entry in progress — not auto-selecting`);
     }
   }, [debouncedAddress, isLoading, validatedAsset, manualEntryRef, onSelect]);
 
@@ -104,6 +108,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
         inputValue={inputValue}
         onChange={(val) => {
           debugLog.log(`⌨️ onChange inputValue: ${val}`);
+          manualEntryRef.current = true; // ✅ mark as manual input
           onChange(val);
         }}
         placeholder={inputPlaceholder}

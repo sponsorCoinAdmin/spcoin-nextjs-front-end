@@ -56,11 +56,15 @@ function debugSetInputState(
 }
 
 function isEmptyInput(input: string | undefined): boolean {
-  return !input?.trim();
+  const empty = !input?.trim();
+  if (empty) debugLog.log('⛔ Detected empty input');
+  return empty;
 }
 
 function isInvalidAddress(input: string): boolean {
-  return !isAddress(input);
+  const invalid = !isAddress(input);
+  if (invalid) debugLog.log(`⛔ Invalid address input: ${input}`);
+  return invalid;
 }
 
 function isDuplicateInput(
@@ -103,6 +107,10 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
   );
 
   const isResolved = !!resolvedAsset;
+  if (debouncedAddress && isAddress(debouncedAddress)) {
+    debugLog.log(`🔍 resolvedAsset ${isResolved ? 'found' : 'missing'} for ${debouncedAddress}`);
+  }
+
   const isLoading = isAddress(debouncedAddress) && resolvedAsset === undefined;
 
   const { data: balanceData } = useBalance({
@@ -141,6 +149,8 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
   useEffect(() => {
     if (!resolvedAsset || !balanceData) return;
 
+    debugLog.log(`💰 Balance fetched:`, balanceData);
+
     if (lastTokenAddressRef.current === resolvedAsset.address) return;
     lastTokenAddressRef.current = resolvedAsset.address;
 
@@ -151,6 +161,7 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
       logoURL: getLogoURL(chainId!, resolvedAsset.address, feedType),
     };
 
+    debugLog.log(`✅ Validated tokenWithBalance:`, tokenWithBalance);
     setValidatedAsset(tokenWithBalance as unknown as T);
 
     if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {

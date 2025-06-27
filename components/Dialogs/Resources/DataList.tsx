@@ -29,7 +29,6 @@ import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json
 import { Address, isAddress } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
@@ -119,6 +118,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
             key={wallet.address}
             className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
             onClick={() => {
+              debugLog.log(`[DataList] Clicked wallet: ${wallet.address}`);
               if (!wallet.address || !isAddress(wallet.address)) {
                 debugLog.warn(`🚫 Invalid wallet address selected: ${wallet.address}`);
                 onSelect({
@@ -127,8 +127,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 } as T);
                 return;
               }
-
-              debugLog.log(`[DataList] Selected: ${wallet.address}`);
+              debugLog.log(`[DataList] Selected wallet address: ${wallet.address}`);
               onSelect(wallet as T);
             }}
           >
@@ -175,12 +174,13 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
         const handleSelect = () => {
           const selectedAddress = token.address?.trim();
 
-          // ✅ Explicitly insert empty string into the address input
+          debugLog.log(`[DataList] Clicked token: ${selectedAddress}`);
+
           if (!selectedAddress) {
             debugLog.warn(`⚠️ Empty address selected for token: ${token.name}`);
             onSelect({
               ...token,
-              address: '' // Pass blank address to flow through onChange('')
+              address: '',
             } as T);
             return;
           }
@@ -200,7 +200,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
             return;
           }
 
-          debugLog.log(`Selected: ${selectedAddress}`);
+          debugLog.log(`[DataList] Selected token address: ${selectedAddress}`);
           const tokenContract: TokenContract = {
             address: selectedAddress as `0x${string}`,
             symbol: token.symbol,
@@ -214,14 +214,13 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
           onSelect(tokenContract as T);
         };
 
-
         return (
           <div
             key={token.address}
-            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+            className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
             onClick={handleSelect}
           >
-            <div className="cursor-pointer flex flex-row justify-between">
+            <div className="flex flex-row items-center gap-3">
               <img
                 className={styles.elementLogo}
                 src={token.logoURL || defaultMissingImage}
@@ -238,7 +237,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
               className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
               onClick={(e) => {
                 e.stopPropagation();
-                alert(`${token.name} Address: ${console.log(stringifyBigInt(token))}`);
+                alert(`${token.name} Address: ${debugLog.log(stringifyBigInt(token))}`);
               }}
               onContextMenu={(e) => {
                 e.preventDefault();

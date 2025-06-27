@@ -53,7 +53,7 @@ function TokenSelectDropDown({ containerType }: Props) {
     markLogoAsBroken(tokenAddr);
     event.currentTarget.src = defaultMissingImage;
 
-    console.warn(`[TokenSelectDropDown] Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
+    debugLog.log(`Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
   return (
@@ -62,12 +62,14 @@ function TokenSelectDropDown({ containerType }: Props) {
         <TokenSelectScrollPanel
           setShowDialog={setShowDialog}
           containerType={containerType}
-          onSelect={(contract: TokenContract, inputState: InputState) => {
-            if (inputState === InputState.CLOSE_INPUT && contract) {
-              debugLog.log('🎯 onSelect → updating tokenContract in context', contract);
+          onSelect={(contract, state) => {
+            debugLog.log('🎯 onSelect fired', contract, state);
+            if (state === InputState.CLOSE_INPUT) {
+              debugLog.log('🧬 Cloning and setting tokenContract');
               setTokenContract(structuredClone(contract));
             }
           }}
+
         />
       )}
       <div className={styles.assetSelect}>

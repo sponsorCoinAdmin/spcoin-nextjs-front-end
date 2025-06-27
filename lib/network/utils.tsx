@@ -100,7 +100,7 @@ const getNativeWrapAddress = (chainId: number) : Address | undefined => {
     [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
   };
   const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
-  // console.log(`getNativeWrapAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
+  // debugLog.log(`getNativeWrapAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
   return WETH_ADDRESS || BURN_ADDRESS;
 };
 
@@ -179,7 +179,7 @@ const createNetworkJsonList = () => {
     sepolia: defaultSepoliaSettings
   };
   const networkSettings = JSON.stringify(defaultNetworkSettings, null, 2);
-  console.log(`Default JSON Network Settings:\n${networkSettings}`);
+  debugLog.log(`Default JSON Network Settings:\n${networkSettings}`);
   alert(`Network Settings: ${networkSettings}`);
 };
 
