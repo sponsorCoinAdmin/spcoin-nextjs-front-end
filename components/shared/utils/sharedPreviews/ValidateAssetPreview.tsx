@@ -19,22 +19,22 @@ const emojiMap: Partial<Record<InputState, {
   [InputState.INVALID_ADDRESS_INPUT]: {
     emoji: '❓',
     text: 'Valid address required.',
-    color: 'red',
+    color: 'text-red-500',
   },
   [InputState.DUPLICATE_INPUT]: {
     text: 'Duplicate input selected.',
-    color: 'orange',
+    color: 'text-orange-400',
     useLogo: true,
   },
   [InputState.CONTRACT_NOT_FOUND_LOCALLY]: {
     emoji: '⚠️',
     text: 'Missing local image for asset.',
-    color: 'orange',
+    color: 'text-orange-400',
   },
   [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: {
     emoji: '❌',
     text: 'Address not found on blockchain.',
-    color: 'red',
+    color: 'text-red-500',
   },
 };
 
@@ -49,20 +49,12 @@ const ValidateAssetPreview: React.FC<Props> = ({ inputState, duplicateMessage })
 
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '170px',
-        backgroundColor: '#243056',
-        color: item.color || '#5981F3',
-        padding: '8px',
-        borderRadius: '22px',
-      }}
+      className={`flex items-center h-[170px] bg-[#243056] rounded-[22px] p-2 ${item.color ?? 'text-[#5981F3]'}`}
     >
       {item.emoji && (
-        <span style={{ fontSize: 28, marginRight: 6 }}>{item.emoji}</span>
+        <span className="text-[28px] mr-1.5">{item.emoji}</span>
       )}
-      <span style={{ fontSize: '15px' }}>{message}</span>
+      <span className="text-[15px]">{message}</span>
     </div>
   );
 };

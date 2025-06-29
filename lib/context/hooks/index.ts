@@ -7,7 +7,6 @@ export * from "./nestedHooks/useAmounts";
 export * from "./nestedHooks/useApiProvider";
 export * from "./nestedHooks/useErrorMessages";
 export * from "./nestedHooks/useExchangeTokenBalances";
-export * from "./nestedHooks/useMappedTokenContract";
 export * from "./nestedHooks/useNetwork";
 export * from "./nestedHooks/useSlippage";
 export * from "./nestedHooks/useSpCoinDisplay";

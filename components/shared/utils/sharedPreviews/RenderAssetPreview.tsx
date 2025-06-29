@@ -1,3 +1,5 @@
+// File: components/shared/AssetPreviews/RenderAssetPreview.tsx
+
 'use client';
 
 import React from 'react';
@@ -25,12 +27,12 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
   onSelect,
 }: Props<T>) {
   if (!validatedAsset) {
-    debugLog.log('🚫 RenderAssetPreview: validatedAsset is undefined');
+    debugLog.log('🚫 RenderAssetPreview skipped: validatedAsset is undefined');
     return null;
   }
 
   if (inputState !== InputState.VALID_INPUT_PENDING) {
-    debugLog.log(`🚫 RenderAssetPreview: inputState is not VALID_INPUT_PENDING →`, inputState);
+    debugLog.log(`🚫 RenderAssetPreview skipped: inputState=${inputState} (expected VALID_INPUT_PENDING)`);
     return null;
   }
 
@@ -53,13 +55,7 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
     <div
       id="pendingDiv"
       onClick={handleClick}
-      className="cursor-pointer"
-      style={{
-        padding: '8px',
-        backgroundColor: '#243056',
-        color: '#5981F3',
-        borderRadius: '22px',
-      }}
+      className="cursor-pointer p-2 bg-[#243056] text-[#5981F3] rounded-[22px]"
     >
       <BasePreviewCard
         name={name}

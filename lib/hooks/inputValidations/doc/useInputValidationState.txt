@@ -1,0 +1,10 @@
+lib/hooks/useInputValidationState/
+├── index.ts                      ← barrel file
+├── helpers/
+│   └── debugSetInputState.ts     ← state transition logger
+├── types/
+│   └── validationTypes.ts        ← [optional] shared types if needed
+└── validations/
+    ├── isEmptyInput.ts
+    ├── isInvalidAddress.ts
+    └── isDuplicateInput.ts

@@ -8,8 +8,8 @@ import { TRADE_DIRECTION } from '@/lib/structure';
 
 export function useResetAmountsOnTokenChange() {
   const { exchangeContext } = useExchangeContext();
-  const [setSellAmount] = useSellAmount();
-  const [setBuyAmount] = useBuyAmount();
+  const [, setSellAmount] = useSellAmount();
+  const [, setBuyAmount] = useBuyAmount();
   const tradeData = exchangeContext.tradeData;
 
   const previousSell = useRef(tradeData?.sellTokenContract);
