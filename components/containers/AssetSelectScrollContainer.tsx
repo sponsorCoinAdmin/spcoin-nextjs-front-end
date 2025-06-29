@@ -77,7 +77,7 @@ function BaseModalDialog({
 // Generic Address Selection Dialog
 // ---------------------------------------------
 
-export default function AddressSelectDialog<T extends TokenContract | WalletAccount>({
+export default function AssetSelectScrollContainer<T extends TokenContract | WalletAccount>({
   setShowDialog,
   onSelect,
   title,
@@ -89,7 +89,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
 }: BaseProps<T>) {
   const handleSelect = useCallback(
     (item: T, state: InputState) => {
-      console.debug('🎯 [AddressSelectDialog] onSelect triggered', { item, state });
+      console.debug('🎯 [AssetSelectScrollContainer] onSelect triggered', { item, state });
       if (state === InputState.CLOSE_INPUT) {
         onSelect(item, state);
       }
@@ -99,7 +99,7 @@ export default function AddressSelectDialog<T extends TokenContract | WalletAcco
 
   return (
     <BaseModalDialog
-      id="AddressSelectDialog"
+      id="AssetSelectScrollContainer"
       setShowDialog={setShowDialog}
       title={title}
     >
@@ -166,7 +166,7 @@ export function TokenSelectScrollPanel({
   );
 
   return (
-    <AddressSelectDialog<TokenContract>
+    <AssetSelectScrollContainer<TokenContract>
       setShowDialog={setShowDialog}
       onSelect={handleSelect}
       title={title}
@@ -201,7 +201,7 @@ export function RecipientSelectScrollPanel({
   );
 
   return (
-    <AddressSelectDialog<WalletAccount>
+    <AssetSelectScrollContainer<WalletAccount>
       setShowDialog={setShowDialog}
       onSelect={handleSelect}
       title="Select a Recipient"
