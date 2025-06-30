@@ -1,7 +1,6 @@
 // File: lib/hooks/inputValidations/helpers/fetchTokenBalance.ts
 
 import { PublicClient, erc20Abi, Address } from 'viem';
-import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';

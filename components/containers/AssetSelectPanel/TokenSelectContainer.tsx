@@ -31,7 +31,8 @@ import {
 import styles from '@/styles/Exchange.module.css';
 import { clsx } from 'clsx';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
-import TokenSelectDropDown from '../TokenSelectDropDown';
+import TokenSelectDropDown from '../AssetSelectDropDown/TokenSelectDropDown';
+import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -168,7 +169,7 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
-          <AddSponsorship />
+          <AddSponsorshipButton />
         ))}
     </div>
   );

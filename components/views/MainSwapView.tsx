@@ -9,11 +9,11 @@ import {
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
-import TokenSelectContainer from '@/components/containers/TokenSelectContainer';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
+import { TokenSelectContainer } from '../containers/AssetSelectPanel';
 
 export default function MainSwapView() {
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();

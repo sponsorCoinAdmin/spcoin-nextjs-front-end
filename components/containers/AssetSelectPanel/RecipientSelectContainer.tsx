@@ -1,3 +1,5 @@
+//File: components/containers/AssetSelectPanel/RecipientSelectContainer.tsx
+
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -13,7 +15,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { useSpCoinDisplay } from '@/lib/context/hooks';
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
-import RecipientSelectDropDown from "../RecipientSelectDropDown";
+import RecipientSelectDropDown from "../AssetSelectDropDown/RecipientSelectDropDown";
 import SponsorRateConfig from "../SponsorRateConfig";
 
 const RecipientSelectContainer: React.FC = () => {

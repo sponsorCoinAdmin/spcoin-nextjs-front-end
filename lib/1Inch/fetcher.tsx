@@ -25,7 +25,6 @@ const API_PROVIDER = '1Inch/';
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
 const apiPriceBase = '/quote';
 
-const WRAPPED_ETHEREUM_ADDRESS: Address = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
 
 const fetcher = async ([url]: [string]) => {

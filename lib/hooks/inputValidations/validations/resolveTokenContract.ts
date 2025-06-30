@@ -4,7 +4,8 @@ import { isAddress, Address, getAddress, PublicClient } from 'viem';
 import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
 import { TokenContract, FEED_TYPE } from '@/lib/structure';
-import { getNativeWrapAddress, getLogoURL, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
+import { getLogoURL, NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
+import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
 
 export async function resolveTokenContract(
   tokenAddress: string,
@@ -16,21 +17,33 @@ export async function resolveTokenContract(
   if (!isAddress(tokenAddress)) return undefined;
 
   const isNative = tokenAddress === NATIVE_TOKEN_ADDRESS;
+  const resolvedAddress = getAddress(tokenAddress) as `0x${string}`;
 
-  const rawAddress = isNative
-    ? getNativeWrapAddress(chainId)
-    : getAddress(tokenAddress);
-
-  if (!rawAddress || !isAddress(rawAddress)) return undefined;
-
-  const resolvedAddress = rawAddress as `0x${string}`;
-const metadata = await fetchTokenMetadata(resolvedAddress, publicClient);
-  if (!metadata) return undefined;
+  if (!resolvedAddress || !isAddress(resolvedAddress)) return undefined;
 
   const logoURL = getLogoURL(chainId, resolvedAddress, feedType);
+
   const balance = accountAddress
     ? await fetchTokenBalance(resolvedAddress, accountAddress, isNative, publicClient)
     : 0n;
+
+  if (isNative) {
+    const nativeInfo = getNativeTokenInfo(chainId);
+    return {
+      chainId,
+      address: resolvedAddress,
+      symbol: nativeInfo.symbol,
+      name: nativeInfo.name,
+      decimals: nativeInfo.decimals,
+      totalSupply: nativeInfo.totalSupply,
+      amount: 0n,
+      balance,
+      logoURL,
+    };
+  }
+
+  const metadata = await fetchTokenMetadata(resolvedAddress, publicClient);
+  if (!metadata) return undefined;
 
   return {
     chainId,
