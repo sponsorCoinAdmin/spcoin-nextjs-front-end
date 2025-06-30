@@ -67,9 +67,9 @@ function TokenSelectDropDown({ containerType }: Props) {
             if (state === InputState.CLOSE_INPUT) {
               debugLog.log('🧬 Cloning and setting tokenContract');
               setTokenContract(structuredClone(contract));
+              setShowDialog(false); // ✅ Ensures dialog always closes
             }
           }}
-
         />
       )}
       <div className={styles.assetSelect}>
