@@ -1,3 +1,5 @@
+// File: components/containers/RecipientSelectScrollPanel.tsx
+
 'use client';
 
 import { useCallback, useEffect } from 'react';
@@ -7,6 +9,7 @@ import {
   WalletAccount,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
+
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import { useDisplayControls } from '@/lib/context/hooks';
@@ -32,7 +35,7 @@ export default function RecipientSelectScrollPanel() {
 
   return (
     <AssetSelectScrollContainer<WalletAccount>
-      setShowDialog={() => {}} // ignored now
+      setShowDialog={() => {}} // deprecated – no longer controls visibility
       onSelect={handleSelect}
       title="Select a Recipient"
       feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}

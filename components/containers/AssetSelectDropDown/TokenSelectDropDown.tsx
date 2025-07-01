@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 
@@ -22,10 +22,16 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
+
 import { TokenSelectScrollPanel } from '../AssetSelectScroll';
+import {
+  SharedPanelProvider,
+  useSharedPanelContext,
+} from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
@@ -33,13 +39,6 @@ interface Props {
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
-  const [showDialog, setShowDialog] = useState(false);
-
-  const openDialog = useCallback(() => {
-    debugLog.log('📂 Opening Token dialog');
-    setShowDialog(true);
-  }, []);
-
   const sellHook = useSellTokenContract();
   const buyHook = useBuyTokenContract();
   const [tokenContract, setTokenContract] =
@@ -58,28 +57,57 @@ function TokenSelectDropDown({ containerType }: Props) {
   };
 
   const processSelect = useCallback(
-  (contract: TokenContract, state: InputState) => {
-    const stateLabel = getInputStateString(state);
-    debugLog.log(`🎯 onSelect fired: state = ${state} → ${stateLabel}`, contract);
+    (contract: TokenContract, state: InputState) => {
+      const stateLabel = getInputStateString(state);
+      debugLog.log(`🎯 onSelect fired: state = ${state} → ${stateLabel}`, contract);
 
-    if (state === InputState.CLOSE_INPUT) {
-      debugLog.log('🧬 Cloning and setting tokenContract');
-      setTokenContract(structuredClone(contract));
-      setShowDialog(false);
-    }
-  },
-  [setTokenContract]
-);
+      if (state === InputState.CLOSE_INPUT) {
+        debugLog.log('🧬 Cloning and setting tokenContract');
+        setTokenContract(structuredClone(contract));
+      }
+    },
+    [setTokenContract]
+  );
+
+  return (
+    <SharedPanelProvider
+      containerType={containerType}
+      onSelect={processSelect}
+    >
+      <InnerDropDown
+        tokenContract={tokenContract}
+        setTokenContract={setTokenContract}
+        containerType={containerType}
+        logoSrc={logoSrc}
+        onError={handleMissingLogoURL}
+      />
+    </SharedPanelProvider>
+  );
+}
+
+function InnerDropDown({
+  tokenContract,
+  setTokenContract,
+  containerType,
+  logoSrc,
+  onError,
+}: {
+  tokenContract: TokenContract | undefined;
+  setTokenContract: (t: TokenContract) => void;
+  containerType: CONTAINER_TYPE;
+  logoSrc: string;
+  onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
+}) {
+  const { setInputState } = useSharedPanelContext();
+
+  const openDialog = useCallback(() => {
+    debugLog.log('📂 Opening Token dialog');
+    setInputState(InputState.VALID_INPUT); // 🟡 This opens the panel
+  }, [setInputState]);
 
   return (
     <>
-      {showDialog && (
-        <TokenSelectScrollPanel
-          setShowDialog={setShowDialog}
-          containerType={containerType}
-          onSelect={processSelect}
-        />
-      )}
+      <TokenSelectScrollPanel />
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>
@@ -88,7 +116,7 @@ function TokenSelectDropDown({ containerType }: Props) {
               alt={`${tokenContract.name} logo`}
               src={logoSrc}
               onClick={() => alert(stringifyBigInt(tokenContract))}
-              onError={handleMissingLogoURL}
+              onError={onError}
             />
             {tokenContract.symbol}
           </>

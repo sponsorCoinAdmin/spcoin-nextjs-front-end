@@ -61,8 +61,6 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     <>
       {showDialog && (
         <RecipientSelectScrollPanel
-          setShowDialog={setShowDialog}
-          onSelect={processSelect}
         />
       )}
 

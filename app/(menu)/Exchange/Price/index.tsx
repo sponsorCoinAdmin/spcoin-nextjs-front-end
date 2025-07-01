@@ -46,16 +46,16 @@ export default function PriceView() {
         });
 
         if (errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE) {
-          debugLog.log('🟥 Showing ErrorView');
+          debugLog.log('🟥 Price Showing ErrorView');
           return <ErrorView />;
         }
 
         if (assetSelectScrollDisplay !== SP_COIN_DISPLAY.DISPLAY_OFF) {
-          debugLog.log('🟦 Showing ScrollPanelView');
+          debugLog.log('🟦 Price Showing ScrollPanelView');
           return <ScrollPanelView />;
         }
 
-        debugLog.log('🟩 Showing MainSwapView');
+        debugLog.log('🟩 Price Showing MainSwapView');
         return <MainSwapView />;
       })()}
     </div>
