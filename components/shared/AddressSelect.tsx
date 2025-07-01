@@ -8,6 +8,7 @@ import {
   TokenContract,
   WalletAccount,
   CONTAINER_TYPE,
+  getInputStateString,
 } from '@/lib/structure';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { BaseSelectSharedState } from '@/lib/hooks/useBaseSelectShared';
@@ -81,6 +82,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     debugLog.log(`📜 onDataListSelect():`, item);
     manualEntryRef.current = true;
     validateHexInput(item.address);
+    alert(`🎯 onDataListSelect(): CHANGING Input State ${getInputStateString(inputState)}`);
      /* ToDo: Move to proper Location*/   setInputState(InputState.CLOSE_SELECT_INPUT);
      
   }, [validateHexInput]);
