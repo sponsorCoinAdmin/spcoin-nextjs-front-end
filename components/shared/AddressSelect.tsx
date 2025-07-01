@@ -18,6 +18,8 @@ import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/Valid
 import DataList from '../Dialogs/Resources/DataList';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
@@ -30,7 +32,7 @@ interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
   containerType?: CONTAINER_TYPE;
-  sharedState: BaseSelectSharedState; // ✅ Accept shared state as prop
+  sharedState: BaseSelectSharedState;
 }
 
 export default function AddressSelect<T extends TokenContract | WalletAccount>({
@@ -54,46 +56,68 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
   const {
     inputState,
-    validatedAsset,
-    isLoading,
     setInputState,
+    validatedAsset,
+    setValidatedAsset,
+    onSelect,
+  } = useSharedPanelContext();
+
+  const {
+    validatedAsset: localValidatedAsset,
+    isLoading,
     reportMissingLogoURL,
     hasBrokenLogoURL,
   } = useInputValidationState<T>(debouncedAddress, feedType, containerType);
 
-  const manualEntryRef = useRef(false); // ✅ default false
+  const manualEntryRef = useRef(false);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       manualEntryRef.current = false;
     };
   }, []);
 
-  // ✅ Manual select from token preview
+  useEffect(() => {
+    if (localValidatedAsset && setValidatedAsset) {
+      debugLog.log(`✅ Syncing validated asset to context`, localValidatedAsset);
+      setValidatedAsset(localValidatedAsset);
+    }
+  }, [localValidatedAsset, setValidatedAsset]);
+
   const onManualSelect = useCallback((item: T) => {
     debugLog.log(`🧍‍♂️ onManualSelect():`, item);
     manualEntryRef.current = false;
     validateHexInput(item.address);
   }, [validateHexInput]);
 
-  // ✅ Select from DataList
   const onDataListSelect = useCallback((item: T) => {
-    debugLog.log(`📜 onDataListSelect():`, item);
-    manualEntryRef.current = true;
-    validateHexInput(item.address);
-    alert(`🎯 onDataListSelect(): CHANGING Input State ${getInputStateString(inputState)}`);
-     /* ToDo: Move to proper Location*/   setInputState(InputState.CLOSE_SELECT_INPUT);
-     
-  }, [validateHexInput]);
+  debugLog.log(`📜 onDataListSelect():`, item);
+  manualEntryRef.current = true;
+  validateHexInput(item.address);
 
-  // ✅ Promote VALID_INPUT → CLOSE_INPUT if manualEntry === true
-  useEffect(() => {
-    if (inputState === InputState.VALID_INPUT && manualEntryRef.current && validatedAsset) {
-      debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`);
+  // NEW: wait a tick then force close if validatedAsset is already set
+  setTimeout(() => {
+    if (validatedAsset && onSelect) {
+      debugLog.log(`✅ Forcing CLOSE_SELECT_INPUT via onDataListSelect`, validatedAsset);
+      onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
       setInputState(InputState.CLOSE_SELECT_INPUT);
     }
-  }, [inputState, validatedAsset, setInputState]);
+  }, 0);
+}, [validateHexInput, validatedAsset, onSelect, setInputState]);
+
+
+  useEffect(() => {
+    if (
+      inputState === InputState.VALID_INPUT &&
+      manualEntryRef.current &&
+      validatedAsset &&
+      onSelect
+    ) {
+      debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`);
+      onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
+      setInputState(InputState.CLOSE_SELECT_INPUT);
+    }
+  }, [inputState, validatedAsset, setInputState, onSelect]);
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
@@ -110,7 +134,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
 
       <RenderAssetPreview
         inputState={inputState}
-        validatedAsset={validatedAsset}
+        validatedAsset={validatedAsset as T}
         hasBrokenLogoURL={hasBrokenLogoURL}
         reportMissingLogoURL={reportMissingLogoURL}
         onSelect={onManualSelect}

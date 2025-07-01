@@ -1,8 +1,6 @@
-// File: components/containers/TokenSelectDropDown.tsx
-
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 
@@ -24,10 +22,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 import { TokenSelectScrollPanel } from '../AssetSelectScroll';
-import {
-  SharedPanelProvider,
-  useSharedPanelContext,
-} from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -41,9 +36,8 @@ interface Props {
 function TokenSelectDropDown({ containerType }: Props) {
   const sellHook = useSellTokenContract();
   const buyHook = useBuyTokenContract();
-  const [tokenContract, setTokenContract] =
+  const [tokenContract] =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
-  // const { inputState, setInputState } = useSharedPanelContext();
 
   const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
 
@@ -57,51 +51,23 @@ function TokenSelectDropDown({ containerType }: Props) {
     debugLog.log(`Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
-  const processSelect = useCallback(
-    (contract: TokenContract, state: InputState) => {
-      const stateLabel = getInputStateString(state);
-      debugLog.log(`🎯 onSelect fired: state = ${state} → ${stateLabel}`, contract);
-
-
-// setInputState(InputState.CLOSE_SELECT_INPUT)
-
-
-
-      if (state === InputState.CLOSE_SELECT_INPUT) {
-        debugLog.log('🧬 Cloning and setting tokenContract');
-        setTokenContract(structuredClone(contract));
-      }
-    },
-    [setTokenContract]
-  );
-
   return (
-    <SharedPanelProvider
+    <InnerDropDown
+      tokenContract={tokenContract}
       containerType={containerType}
-      onSelect={processSelect}
-    >
-      <InnerDropDown
-        tokenContract={tokenContract}
-        setTokenContract={setTokenContract}
-        containerType={containerType}
-        logoSrc={logoSrc}
-        onError={handleMissingLogoURL}
-      />
-    </SharedPanelProvider>
+      logoSrc={logoSrc}
+      onError={handleMissingLogoURL}
+    />
   );
 }
 
-import { useEffect } from 'react'; // ✅ Make sure this is imported
-
 function InnerDropDown({
   tokenContract,
-  setTokenContract,
   containerType,
   logoSrc,
   onError,
 }: {
   tokenContract: TokenContract | undefined;
-  setTokenContract: (t: TokenContract) => void;
   containerType: CONTAINER_TYPE;
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
@@ -110,10 +76,9 @@ function InnerDropDown({
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
-    setInputState(InputState.VALID_INPUT); // 🟡 This opens the panel
+    setInputState(InputState.VALID_INPUT);
   }, [setInputState]);
 
-  // ✅ Alert on inputState change
   useEffect(() => {
     alert(`🎯 inputState changed → ${getInputStateString(inputState)}`);
   }, [inputState]);

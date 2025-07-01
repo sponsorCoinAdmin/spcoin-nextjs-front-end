@@ -1,9 +1,21 @@
-// File: lib/context/ScrollSelectPanel/SharedPanelContext.tsx
-
 'use client';
 
-import { createContext, useContext, useMemo, useEffect } from 'react';
-import { InputState, CONTAINER_TYPE, getInputStateString, TokenContract } from '@/lib/structure';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  InputState,
+  CONTAINER_TYPE,
+  getInputStateString,
+  TokenContract,
+  WalletAccount,
+} from '@/lib/structure';
+
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -17,11 +29,15 @@ declare global {
   }
 }
 
+type ValidatedAsset = TokenContract | WalletAccount | undefined;
+
 export interface SharedPanelContextType {
   inputState: InputState;
   setInputState: (state: InputState) => void;
+  validatedAsset?: ValidatedAsset;
+  setValidatedAsset?: (asset: ValidatedAsset) => void;
   containerType: CONTAINER_TYPE;
-  onSelect?: (token: TokenContract, state: InputState) => void;
+  onSelect?: (item: ValidatedAsset, state: InputState) => void;
 }
 
 const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
@@ -33,9 +49,10 @@ export const SharedPanelProvider = ({
 }: {
   children: React.ReactNode;
   containerType: CONTAINER_TYPE;
-  onSelect?: (token: TokenContract, state: InputState) => void;
+  onSelect?: (item: ValidatedAsset, state: InputState) => void;
 }) => {
   const shared = useBaseSelectShared();
+  const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>(undefined);
 
   useEffect(() => {
     debugLog.log(
@@ -56,18 +73,17 @@ export const SharedPanelProvider = ({
     }
   }, [shared.inputState]);
 
-  const value = useMemo(
-    () => ({
-      inputState: shared.inputState,
-      setInputState: (state: InputState) => {
-        debugLog.log(`📝 setInputState called → ${getInputStateString(state)}`);
-        shared.setInputState(state);
-      },
-      containerType,
-      onSelect,
-    }),
-    [shared.inputState, shared.setInputState, containerType, onSelect]
-  );
+  const value = useMemo<SharedPanelContextType>(() => ({
+    inputState: shared.inputState,
+    setInputState: (state: InputState) => {
+      debugLog.log(`📝 setInputState called → ${getInputStateString(state)}`);
+      shared.setInputState(state);
+    },
+    validatedAsset,
+    setValidatedAsset,
+    containerType,
+    onSelect,
+  }), [shared.inputState, shared.setInputState, validatedAsset, containerType, onSelect]);
 
   return (
     <SharedPanelContext.Provider value={value}>

@@ -4,7 +4,7 @@ import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useExchangeContext } from '@/lib/context/hooks';
 
-import { ScrollPanelView, MainSwapView, ErrorView } from '@/components/views';
+import { ScrollPanelView, TokenSelectContextView, ErrorView } from '@/components/views';
 
 import { useDisplayStateCorrection } from '@/lib/hooks/useDisplayStateCorrection';
 import { useSwapDirectionEffect } from '@/lib/hooks/useSwapDirectionEffect';
@@ -55,8 +55,8 @@ export default function PriceView() {
           return <ScrollPanelView />;
         }
 
-        debugLog.log('🟩 Price Showing MainSwapView');
-        return <MainSwapView />;
+        debugLog.log('🟩 Price Showing TokenSelectContextView');
+        return <TokenSelectContextView />;
       })()}
     </div>
   );
