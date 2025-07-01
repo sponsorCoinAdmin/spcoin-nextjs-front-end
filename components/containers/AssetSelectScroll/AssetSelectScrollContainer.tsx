@@ -1,6 +1,7 @@
+// File: components/containers/AssetSelectScrollContainer.tsx
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import {
@@ -9,8 +10,14 @@ import {
   FEED_TYPE,
   TokenContract,
   WalletAccount,
+  getInputStateString,
 } from '@/lib/structure';
 import BaseModalDialog from './BaseModalDialog';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
+const debugLog = createDebugLogger('ScrollPanelContext', DEBUG_ENABLED, LOG_TIME);
 
 // ---------------------------------------------
 // Shared Interface
@@ -43,10 +50,24 @@ export default function AssetSelectScrollContainer<T extends TokenContract | Wal
 }: BaseProps<T>) {
   const sharedState = useBaseSelectShared();
 
+  useEffect(() => {
+    debugLog.log(`📥 AssetSelectScrollContainer mounted`);
+    debugLog.log(`📦 containerType = ${containerType}`);
+  }, [containerType]);
+
+  useEffect(() => {
+    const stateStr = getInputStateString(sharedState.inputState);
+    debugLog.log(`🔁 inputState changed → ${stateStr}`);
+  }, [sharedState.inputState]);
+
   const handleSelect = useCallback(
     (item: T, state: InputState) => {
-      console.debug('🎯 [AssetSelectScrollContainer] onSelect triggered', { item, state });
+      const stateStr = getInputStateString(state);
+      debugLog.log(`🎯 handleSelect called with state=${stateStr}`);
+      debugLog.log(`📦 item = ${JSON.stringify(item, null, 2)}`);
+
       if (state === InputState.CLOSE_INPUT) {
+        debugLog.log(`✅ onSelect forwarding CLOSE_INPUT`);
         onSelect(item, state);
       }
     },
@@ -56,13 +77,15 @@ export default function AssetSelectScrollContainer<T extends TokenContract | Wal
   return (
     <BaseModalDialog
       id="AssetSelectScrollContainer"
-      setShowDialog={setShowDialog}
       title={title}
     >
       <AddressSelect<T>
         feedType={feedType}
         inputPlaceholder={inputPlaceholder}
-        closeDialog={() => setShowDialog(false)}
+        closeDialog={() => {
+          debugLog.log(`❌ closeDialog() called → setShowDialog(false)`);
+          setShowDialog(false);
+        }}
         onSelect={handleSelect}
         duplicateMessage={duplicateMessage}
         showDuplicateCheck={showDuplicateCheck}

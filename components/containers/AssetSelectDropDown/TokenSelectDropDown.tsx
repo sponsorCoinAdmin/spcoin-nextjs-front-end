@@ -98,8 +98,7 @@ function InnerDropDown({
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
-  const { setInputState } = useSharedPanelContext();
-
+  const { inputState, setInputState } = useSharedPanelContext();
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
     setInputState(InputState.VALID_INPUT); // 🟡 This opens the panel
@@ -107,7 +106,7 @@ function InnerDropDown({
 
   return (
     <>
-      <TokenSelectScrollPanel />
+        {inputState !== InputState.CLOSE_INPUT && <TokenSelectScrollPanel />}
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>

@@ -1,22 +1,25 @@
+// File: components/Dialogs/BaseModalDialog.tsx
 'use client';
 
 import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
+import { InputState } from '@/lib/structure';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 
 export default function BaseModalDialog({
   id,
-  setShowDialog,
   title,
   children,
 }: {
   id: string;
-  setShowDialog: (show: boolean) => void;
   title: string;
   children: React.ReactNode;
 }) {
+  const { setInputState } = useSharedPanelContext();
+
   const closeDialog = useCallback(() => {
-    setShowDialog(false);
-  }, [setShowDialog]);
+    setInputState(InputState.CLOSE_INPUT);
+  }, [setInputState]);
 
   return (
     <div
