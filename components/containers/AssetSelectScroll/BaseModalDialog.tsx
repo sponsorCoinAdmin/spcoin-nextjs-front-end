@@ -18,7 +18,7 @@ export default function BaseModalDialog({
   const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
-    setInputState(InputState.CLOSE_INPUT);
+    setInputState(InputState.CLOSE_SELECT_INPUT);
   }, [setInputState]);
 
   return (

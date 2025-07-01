@@ -81,13 +81,14 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     debugLog.log(`📜 onDataListSelect():`, item);
     manualEntryRef.current = true;
     validateHexInput(item.address);
+     /* ToDo: Move to proper Location*/   setInputState(InputState.CLOSE_SELECT_INPUT);
   }, [validateHexInput]);
 
   // ✅ Promote VALID_INPUT → CLOSE_INPUT if manualEntry === true
   useEffect(() => {
     if (inputState === InputState.VALID_INPUT && manualEntryRef.current && validatedAsset) {
       debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`);
-      setInputState(InputState.CLOSE_INPUT);
+      setInputState(InputState.CLOSE_SELECT_INPUT);
     }
   }, [inputState, validatedAsset, setInputState]);
 

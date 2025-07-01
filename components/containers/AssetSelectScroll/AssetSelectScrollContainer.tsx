@@ -66,8 +66,8 @@ export default function AssetSelectScrollContainer<T extends TokenContract | Wal
       debugLog.log(`🎯 handleSelect called with state=${stateStr}`);
       debugLog.log(`📦 item = ${JSON.stringify(item, null, 2)}`);
 
-      if (state === InputState.CLOSE_INPUT) {
-        debugLog.log(`✅ onSelect forwarding CLOSE_INPUT`);
+      if (state === InputState.CLOSE_SELECT_INPUT) {
+        debugLog.log(`✅ onSelect forwarding CLOSE_SELECT_INPUT`);
         onSelect(item, state);
       }
     },

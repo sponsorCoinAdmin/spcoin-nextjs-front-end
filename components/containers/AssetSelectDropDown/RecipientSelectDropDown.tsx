@@ -47,7 +47,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     (wallet: WalletAccount, state: InputState) => {
       const stateLabel = getInputStateString(state);
       debugLog.log('🎯 [RecipientSelectScrollPanel -> DropDown] onSelect fired: state = ${state} → ${stateLabel}', { wallet, state });
-      if (state === InputState.CLOSE_INPUT) {
+      if (state === InputState.CLOSE_SELECT_INPUT) {
         debugLog.log('✅ [RecipientSelectDropDown] Selected wallet and closing dialog');
         callBackAccount(wallet);
         hasErroredRef.current = false;

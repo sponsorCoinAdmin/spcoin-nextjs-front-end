@@ -55,8 +55,8 @@ export default function TokenSelectScrollPanel() {
     const stateStr = getInputStateString(sharedState.inputState);
     debugLog.log(`🌀 inputState changed → ${stateStr}`);
 
-    if (sharedState.inputState === InputState.CLOSE_INPUT) {
-      debugLog.log(`✅ CLOSE_INPUT triggered, calling updateAssetScrollDisplay → EXCHANGE_ROOT`);
+    if (sharedState.inputState === InputState.CLOSE_SELECT_INPUT) {
+      debugLog.log(`✅ CLOSE_SELECT_INPUT triggered, calling updateAssetScrollDisplay → EXCHANGE_ROOT`);
       updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
     }
   }, [sharedState.inputState, updateAssetScrollDisplay]);
@@ -66,7 +66,7 @@ export default function TokenSelectScrollPanel() {
       const stateStr = getInputStateString(state);
       debugLog.log(`🎯 handleSelect called with state=${stateStr} and token=${token?.symbol || token?.address}`);
 
-      if (state === InputState.CLOSE_INPUT) {
+      if (state === InputState.CLOSE_SELECT_INPUT) {
         debugLog.log(`✅ Setting token in context → ${token.symbol || token.address}`);
         setTokenInContext(token);
       }

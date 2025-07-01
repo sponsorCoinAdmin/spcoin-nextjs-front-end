@@ -75,7 +75,7 @@ export enum InputState {
   CONTRACT_NOT_FOUND_LOCALLY,
   VALID_INPUT_PENDING,
   VALID_INPUT,
-  CLOSE_INPUT,
+  CLOSE_SELECT_INPUT,
 }
 
 export const getInputStateString = (state: InputState): string => {
@@ -96,8 +96,8 @@ export const getInputStateString = (state: InputState): string => {
       return 'DUPLICATE_INPUT';
     case InputState.IS_LOADING:
       return 'IS_LOADING';
-    case InputState.CLOSE_INPUT:
-      return 'CLOSE_INPUT';
+    case InputState.CLOSE_SELECT_INPUT:
+      return 'CLOSE_SELECT_INPUT';
     default:
       return 'UNKNOWN_INPUT_STATE';
   }

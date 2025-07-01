@@ -43,6 +43,7 @@ function TokenSelectDropDown({ containerType }: Props) {
   const buyHook = useBuyTokenContract();
   const [tokenContract, setTokenContract] =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
+  // const { inputState, setInputState } = useSharedPanelContext();
 
   const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
 
@@ -61,7 +62,12 @@ function TokenSelectDropDown({ containerType }: Props) {
       const stateLabel = getInputStateString(state);
       debugLog.log(`🎯 onSelect fired: state = ${state} → ${stateLabel}`, contract);
 
-      if (state === InputState.CLOSE_INPUT) {
+
+// setInputState(InputState.CLOSE_SELECT_INPUT)
+
+
+
+      if (state === InputState.CLOSE_SELECT_INPUT) {
         debugLog.log('🧬 Cloning and setting tokenContract');
         setTokenContract(structuredClone(contract));
       }
@@ -99,6 +105,7 @@ function InnerDropDown({
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
   const { inputState, setInputState } = useSharedPanelContext();
+
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
     setInputState(InputState.VALID_INPUT); // 🟡 This opens the panel
@@ -106,7 +113,7 @@ function InnerDropDown({
 
   return (
     <>
-        {inputState !== InputState.CLOSE_INPUT && <TokenSelectScrollPanel />}
+        {inputState !== InputState.CLOSE_SELECT_INPUT && <TokenSelectScrollPanel />}
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>
