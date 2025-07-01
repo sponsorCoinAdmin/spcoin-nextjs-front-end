@@ -176,12 +176,14 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
     return seenBrokenLogosRef.current.has(debouncedAddress);
   }, [debouncedAddress]);
 
-  return {
-    inputState,
-    validatedAsset,
-    isLoading: inputState === InputState.VALID_INPUT_PENDING,
-    chainId,
-    reportMissingLogoURL,
-    hasBrokenLogoURL,
-  };
+// ✅ Final return inside the hook
+return {
+  inputState,
+  setInputState, // ✅ add this line
+  validatedAsset,
+  isLoading: inputState === InputState.VALID_INPUT_PENDING,
+  chainId,
+  reportMissingLogoURL,
+  hasBrokenLogoURL,
+};
 };

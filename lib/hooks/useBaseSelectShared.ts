@@ -1,11 +1,21 @@
-// File: lib/hooks/useBaseSelectShared.ts
-
+import { useState } from 'react';
 import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 import { InputState } from '@/lib/structure';
-import { useEffect, useState } from 'react';
-import { isAddress } from 'viem';
 
-export function useBaseSelectShared() {
+export interface BaseSelectSharedState {
+  inputValue: string;
+  debouncedAddress: string;
+  onChange: (val: string) => void;
+  clearInput: () => void;
+  manualEntryRef: React.MutableRefObject<boolean>;
+  validateHexInput: (val: string) => void;
+  inputState: InputState;
+  setInputState: React.Dispatch<React.SetStateAction<InputState>>;
+  getInputStatusEmoji: (state: InputState) => string;
+  validateInputStatusMessage: (state: InputState, duplicateMessage?: string) => { emoji?: string; text: string; useLogo?: boolean } | undefined;
+}
+
+export function useBaseSelectShared(): BaseSelectSharedState {
   const {
     inputValue,
     debouncedAddress,
@@ -35,7 +45,10 @@ export function useBaseSelectShared() {
     }
   };
 
-  const validateInputStatusMessage = (state: InputState, duplicateMessage = 'Duplicate token') => {
+  const validateInputStatusMessage = (
+    state: InputState,
+    duplicateMessage = 'Duplicate token'
+  ) => {
     const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useLogo?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid address required.' },
       [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useLogo: true },

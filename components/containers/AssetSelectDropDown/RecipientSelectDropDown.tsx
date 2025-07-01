@@ -3,12 +3,12 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { RecipientSelectScrollPanel } from '@/components/containers/AssetSelectScrollContainer';
-import { WalletAccount, InputState } from '@/lib/structure';
+import { WalletAccount, InputState, TokenContract, getInputStateString } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
+import { RecipientSelectScrollPanel } from '../AssetSelectScroll';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
@@ -24,15 +24,6 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
   const hasErroredRef = useRef(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
-
-  const handleRecipientSelect = useCallback(
-    (wallet: WalletAccount) => {
-      debugLog.log('✅ [RecipientSelectDropDown] Received wallet from dialog:', wallet);
-      callBackAccount(wallet);
-      hasErroredRef.current = false;
-    },
-    [callBackAccount]
-  );
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
@@ -51,18 +42,27 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     [recipientAccount]
   );
 
+
+  const processSelect = useCallback(
+    (wallet: WalletAccount, state: InputState) => {
+      const stateLabel = getInputStateString(state);
+      debugLog.log('🎯 [RecipientSelectScrollPanel -> DropDown] onSelect fired: state = ${state} → ${stateLabel}', { wallet, state });
+      if (state === InputState.CLOSE_INPUT) {
+        debugLog.log('✅ [RecipientSelectDropDown] Selected wallet and closing dialog');
+        callBackAccount(wallet);
+        hasErroredRef.current = false;
+        setShowDialog(false);
+      }
+    },
+    [callBackAccount]
+  );
+
   return (
     <>
       {showDialog && (
         <RecipientSelectScrollPanel
           setShowDialog={setShowDialog}
-          onSelect={(wallet, state) => {
-            debugLog.log('🎯 [RecipientSelectScrollPanel -> DropDown] onSelect triggered', { wallet, state });
-            if (state === InputState.CLOSE_INPUT) {
-              handleRecipientSelect(wallet);
-              setShowDialog(false);
-            }
-          }}
+          onSelect={processSelect}
         />
       )}
 

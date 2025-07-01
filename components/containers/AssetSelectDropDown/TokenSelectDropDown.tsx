@@ -4,11 +4,11 @@
 
 import { useState, useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { TokenSelectScrollPanel } from '@/components/containers/AssetSelectScrollContainer';
 import { ChevronDown } from 'lucide-react';
 
 import {
   CONTAINER_TYPE,
+  getInputStateString,
   InputState,
   TokenContract,
 } from '@/lib/structure';
@@ -22,6 +22,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
+import { TokenSelectScrollPanel } from '../AssetSelectScroll';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
@@ -56,20 +57,27 @@ function TokenSelectDropDown({ containerType }: Props) {
     debugLog.log(`Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
+  const processSelect = useCallback(
+  (contract: TokenContract, state: InputState) => {
+    const stateLabel = getInputStateString(state);
+    debugLog.log(`🎯 onSelect fired: state = ${state} → ${stateLabel}`, contract);
+
+    if (state === InputState.CLOSE_INPUT) {
+      debugLog.log('🧬 Cloning and setting tokenContract');
+      setTokenContract(structuredClone(contract));
+      setShowDialog(false);
+    }
+  },
+  [setTokenContract]
+);
+
   return (
     <>
       {showDialog && (
         <TokenSelectScrollPanel
           setShowDialog={setShowDialog}
           containerType={containerType}
-          onSelect={(contract, state) => {
-            debugLog.log('🎯 onSelect fired', contract, state);
-            if (state === InputState.CLOSE_INPUT) {
-              debugLog.log('🧬 Cloning and setting tokenContract');
-              setTokenContract(structuredClone(contract));
-              setShowDialog(false); // ✅ Ensures dialog always closes
-            }
-          }}
+          onSelect={processSelect}
         />
       )}
       <div className={styles.assetSelect}>

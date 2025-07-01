@@ -1,18 +1,18 @@
 'use client';
 
-import { useCallback } from 'react';
-import { CONTAINER_TYPE, InputState, TokenContract, FEED_TYPE } from '@/lib/structure';
+import { useCallback, useEffect } from 'react';
+import {
+  CONTAINER_TYPE,
+  FEED_TYPE,
+  InputState,
+  TokenContract,
+  SP_COIN_DISPLAY,
+} from '@/lib/structure';
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
+import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
+import { useDisplayControls } from '@/lib/context/hooks';
 
-export default function TokenSelectScrollPanel({
-  setShowDialog,
-  containerType,
-  onSelect,
-}: {
-  setShowDialog: (show: boolean) => void;
-  containerType: CONTAINER_TYPE;
-  onSelect: (token: TokenContract, state: InputState) => void;
-}) {
+export default function TokenSelectScrollPanel() {
   const {
     useSellTokenContract,
     useBuyTokenContract,
@@ -21,12 +21,14 @@ export default function TokenSelectScrollPanel({
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const contractSetters = {
-    [CONTAINER_TYPE.SELL_SELECT_CONTAINER]: setSellTokenContract,
-    [CONTAINER_TYPE.BUY_SELECT_CONTAINER]: setBuyTokenContract,
-  };
+  const { updateAssetScrollDisplay } = useDisplayControls();
+  const sharedState = useBaseSelectShared();
 
-  const setTokenInContext = contractSetters[containerType];
+  const containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER;
+
+  const setTokenInContext = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+    ? setSellTokenContract
+    : setBuyTokenContract;
 
   const title =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
@@ -38,20 +40,24 @@ export default function TokenSelectScrollPanel({
       ? 'Sell Address Cannot Be the Same as Buy Address'
       : 'Buy Address Cannot Be the Same as Sell Address';
 
+  useEffect(() => {
+    if (sharedState.inputState === InputState.CLOSE_INPUT) {
+      updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+    }
+  }, [sharedState.inputState, updateAssetScrollDisplay]);
+
   const handleSelect = useCallback(
     (token: TokenContract, state: InputState) => {
-      console.debug('✅ [TokenSelectScrollPanel] selected token', token);
       if (state === InputState.CLOSE_INPUT) {
         setTokenInContext(token);
-        onSelect(token, state);
       }
     },
-    [setTokenInContext, onSelect]
+    [setTokenInContext]
   );
 
   return (
     <AssetSelectScrollContainer<TokenContract>
-      setShowDialog={setShowDialog}
+      setShowDialog={() => {}} // ignored now
       onSelect={handleSelect}
       title={title}
       feedType={FEED_TYPE.TOKEN_LIST}

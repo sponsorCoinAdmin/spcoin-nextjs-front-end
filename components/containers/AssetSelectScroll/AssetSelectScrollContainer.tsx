@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import AddressSelect from '@/components/shared/AddressSelect';
+import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import {
   CONTAINER_TYPE,
   InputState,
@@ -40,6 +41,8 @@ export default function AssetSelectScrollContainer<T extends TokenContract | Wal
   showDuplicateCheck = false,
   containerType,
 }: BaseProps<T>) {
+  const sharedState = useBaseSelectShared();
+
   const handleSelect = useCallback(
     (item: T, state: InputState) => {
       console.debug('🎯 [AssetSelectScrollContainer] onSelect triggered', { item, state });
@@ -64,6 +67,7 @@ export default function AssetSelectScrollContainer<T extends TokenContract | Wal
         duplicateMessage={duplicateMessage}
         showDuplicateCheck={showDuplicateCheck}
         containerType={containerType}
+        sharedState={sharedState} // ✅ required prop
       />
     </BaseModalDialog>
   );
