@@ -82,6 +82,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     manualEntryRef.current = true;
     validateHexInput(item.address);
      /* ToDo: Move to proper Location*/   setInputState(InputState.CLOSE_SELECT_INPUT);
+     
   }, [validateHexInput]);
 
   // ✅ Promote VALID_INPUT → CLOSE_INPUT if manualEntry === true

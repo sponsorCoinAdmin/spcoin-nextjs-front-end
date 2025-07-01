@@ -91,6 +91,8 @@ function TokenSelectDropDown({ containerType }: Props) {
   );
 }
 
+import { useEffect } from 'react'; // ✅ Make sure this is imported
+
 function InnerDropDown({
   tokenContract,
   setTokenContract,
@@ -111,9 +113,14 @@ function InnerDropDown({
     setInputState(InputState.VALID_INPUT); // 🟡 This opens the panel
   }, [setInputState]);
 
+  // ✅ Alert on inputState change
+  useEffect(() => {
+    alert(`🎯 inputState changed → ${getInputStateString(inputState)}`);
+  }, [inputState]);
+
   return (
     <>
-        {inputState !== InputState.CLOSE_SELECT_INPUT && <TokenSelectScrollPanel />}
+      {inputState !== InputState.CLOSE_SELECT_INPUT && <TokenSelectScrollPanel />}
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>
