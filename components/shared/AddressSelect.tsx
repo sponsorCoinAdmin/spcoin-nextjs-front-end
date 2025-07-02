@@ -7,8 +7,6 @@ import {
   FEED_TYPE,
   TokenContract,
   WalletAccount,
-  CONTAINER_TYPE,
-  getInputStateString,
 } from '@/lib/structure';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { BaseSelectSharedState } from '@/lib/hooks/useBaseSelectShared';
@@ -27,22 +25,16 @@ const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 interface AddressSelectProps<T extends TokenContract | WalletAccount> {
   feedType: FEED_TYPE;
   inputPlaceholder: string;
-  closeDialog: () => void;
-  onSelect: (item: T, state: InputState) => void;
   duplicateMessage?: string;
   showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE;
   sharedState: BaseSelectSharedState;
 }
 
 export default function AddressSelect<T extends TokenContract | WalletAccount>({
   feedType,
   inputPlaceholder,
-  closeDialog,
-  onSelect: onSelectProp,
   duplicateMessage,
   showDuplicateCheck = false,
-  containerType,
   sharedState,
 }: AddressSelectProps<T>) {
   const {
@@ -60,6 +52,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     validatedAsset,
     setValidatedAsset,
     onSelect,
+    containerType,
   } = useSharedPanelContext();
 
   const {
@@ -91,20 +84,18 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
   }, [validateHexInput]);
 
   const onDataListSelect = useCallback((item: T) => {
-  debugLog.log(`📜 onDataListSelect():`, item);
-  manualEntryRef.current = true;
-  validateHexInput(item.address);
+    debugLog.log(`📜 onDataListSelect():`, item);
+    manualEntryRef.current = true;
+    validateHexInput(item.address);
 
-  // NEW: wait a tick then force close if validatedAsset is already set
-  setTimeout(() => {
-    if (validatedAsset && onSelect) {
-      debugLog.log(`✅ Forcing CLOSE_SELECT_INPUT via onDataListSelect`, validatedAsset);
-      onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
-      setInputState(InputState.CLOSE_SELECT_INPUT);
-    }
-  }, 0);
-}, [validateHexInput, validatedAsset, onSelect, setInputState]);
-
+    setTimeout(() => {
+      if (validatedAsset && onSelect) {
+        debugLog.log(`✅ Forcing CLOSE_SELECT_INPUT via onDataListSelect`, validatedAsset);
+        onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
+        setInputState(InputState.CLOSE_SELECT_INPUT);
+      }
+    }, 0);
+  }, [validateHexInput, validatedAsset, onSelect, setInputState]);
 
   useEffect(() => {
     if (
