@@ -1,0 +1,38 @@
+<ExchangeWrapper>
+  └── <TokenSelectContextView>
+        └── <mainSwapContainer>
+              ├── <TradeContainerHeader>
+
+              ├── <TokenSelectSection>
+              │     ├── <SharedPanelProvider> (SELL)
+              │     │     └── <TokenSelectContainer> (SELL)
+              │     │           ├── <TokenSelectDropDown>
+              │     │           │     └── onClick → openDialog()
+              │     │           │             └── setInputState(VALID_INPUT)
+              │     │           │             └── causes render of: (<TokenSelectScrollPanel>)
+              │     │           │
+              │     │           └── <TokenSelectScrollPanel> ← conditionally rendered
+              │     │                 └── <AddressSelect> (SELL)
+              │     │                       ├── <HexAddressInput>
+              │     │                       ├── <RenderAssetPreview>
+              │     │                       ├── <ValidateAssetPreview>
+              │     │                       └── <DataList>
+
+              │     ├── <BuySellSwapArrowButton>
+
+              │     └── <SharedPanelProvider> (BUY)
+              │           └── <TokenSelectContainer> (BUY)
+              │                 ├── <TokenSelectDropDown>
+              │                 │     └── onClick → openDialog()
+              │                 │             └── setInputState(VALID_INPUT)
+              │                 │             └── causes render o)f: (<TokenSelectScrollPanel>)
+              │                 │
+              │                 └── <TokenSelectScrollPanel> ← conditionally rendered
+              │                       └── <AddressSelect> (BUY)
+              │                             ├── <HexAddressInput>
+              │                             ├── <RenderAssetPreview>
+              │                             ├── <ValidateAssetPreview>
+              │                             └── <DataList>
+              ├── <PriceButton>
+              ├── <AffiliateFee>
+              └── <FeeDisclosure>
