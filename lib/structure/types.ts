@@ -17,7 +17,7 @@ export interface WalletAccount {
 }
 
 export interface AccountAddress {
-  address: string;
+  address: string | Address;
 }
 
 export type ErrorMessage = {

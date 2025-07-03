@@ -7,6 +7,7 @@ import {
   WalletAccount,
   InputState,
   getInputStateString,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
@@ -24,6 +25,7 @@ import {
 import {
   useSellTokenContract,
   useBuyTokenContract,
+  useExchangeContext,
 } from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -33,12 +35,29 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true
 const debugLog = createDebugLogger('TokenSelectContextView', DEBUG_ENABLED, LOG_TIME);
 
 export default function TokenSelectContextView() {
-  const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
+  const { exchangeContext } = useExchangeContext();
+  const { assetSelectScrollDisplay } = exchangeContext.settings;
 
+  // 🔍 Log display state at render start
+  debugLog.log(`🔍 TokenSelectContextView render triggered`);
+  debugLog.log(`🧩 Current assetSelectScrollDisplay = ${assetSelectScrollDisplay}`);
+  debugLog.log(`🎯 Enum Comparisons:`, {
+    SHOW_TOKEN_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER,
+    SHOW_RECIPIENT_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER,
+    DISPLAY_OFF: SP_COIN_DISPLAY.DISPLAY_OFF,
+    isTokenPanel: assetSelectScrollDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER,
+    isRecipientPanel: assetSelectScrollDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER,
+    isOff: assetSelectScrollDisplay === SP_COIN_DISPLAY.DISPLAY_OFF,
+  });
+
+  const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const handleSellSelect = (item: TokenContract | WalletAccount | undefined, state: InputState) => {
+  const handleSellSelect = (
+    item: TokenContract | WalletAccount | undefined,
+    state: InputState
+  ) => {
     if (!item) {
       debugLog.warn('🟠 SELL onSelect called with undefined item');
       return;
@@ -50,7 +69,10 @@ export default function TokenSelectContextView() {
     }
   };
 
-  const handleBuySelect = (item: TokenContract | WalletAccount | undefined, state: InputState) => {
+  const handleBuySelect = (
+    item: TokenContract | WalletAccount | undefined,
+    state: InputState
+  ) => {
     if (!item) {
       debugLog.warn('🔵 BUY onSelect called with undefined item');
       return;

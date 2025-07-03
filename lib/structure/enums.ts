@@ -16,8 +16,10 @@ export enum BUTTON_TYPE {
 }
 
 export enum CONTAINER_TYPE {
-  SELL_SELECT_CONTAINER,
-  BUY_SELECT_CONTAINER,
+  SELL_SELECT_CONTAINER = 'SELL_SELECT_CONTAINER',
+  BUY_SELECT_CONTAINER = 'BUY_SELECT_CONTAINER',
+  AGENT_SELECT_CONTAINER = 'RECIPIENT_SELECT_CONTAINER',
+  RECIPIENT_SELECT_CONTAINER = 'RECIPIENT_SELECT_CONTAINER',
 }
 
 export enum EXCHANGE_STATE {
@@ -66,39 +68,87 @@ export enum API_TRADING_PROVIDER {
   API_1INCH
 }
 
+
 export enum InputState {
-  EMPTY_INPUT,
-  INVALID_ADDRESS_INPUT,
-  DUPLICATE_INPUT,
-  IS_LOADING,
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  CONTRACT_NOT_FOUND_LOCALLY,
-  VALID_INPUT_PENDING,
-  VALID_INPUT,
-  CLOSE_SELECT_INPUT,
+  // 0️⃣ Initial Trigger
+  VALIDATE_INPUT,                     // Initial trigger on input change
+
+  // 1️⃣ Input Check
+  EMPTY_INPUT,                        // Input is blank → stop early
+
+  // 2️⃣ Address Validation
+  VALIDATE_ADDRESS,                   // Test if Address is Valid
+  INVALID_ADDRESS_INPUT,             // Not a valid hex address
+
+  // 3️⃣ Duplication Check
+  TEST_DUPLICATE_INPUT,              // Check if token/account already selected
+  DUPLICATE_INPUT,                   // It is a duplicate → exit
+
+  // 4️⃣ Blockchain Existence Check
+  VALIDATE_EXISTS_ON_CHAIN,          // Trigger async contract resolution
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,  // Valid address, but not a contract
+
+  // 5️⃣ Local Metadata Check
+  VALIDATE_CONTRACT_EXISTS_LOCALLY,  // Check if image/logo metadata exists
+  CONTRACT_NOT_FOUND_LOCALLY,        // Metadata or logo missing
+
+  // 6️⃣ Final Success
+  VALID_INPUT,                       // Fully validated
+
+  // 7️⃣ Close Trigger
+  CLOSE_SELECT_INPUT,                // Close after valid input
+
+  // 8️⃣ Running Status (Non-linear)
+  IS_LOADING                         // Indicates a check is in progress
 }
 
 export const getInputStateString = (state: InputState): string => {
   switch (state) {
+    // 🔹 Phase 1: Trigger
+    case InputState.VALIDATE_INPUT:
+      return 'VALIDATE_INPUT';
+
+    // 🔹 Phase 2: Input Checks
     case InputState.EMPTY_INPUT:
       return 'EMPTY_INPUT';
-    case InputState.VALID_INPUT:
-      return 'VALID_INPUT';
-    case InputState.VALID_INPUT_PENDING:
-      return 'VALID_INPUT_PENDING';
+
+    // 🔹 Phase 3: Address Validation
+    case InputState.VALIDATE_ADDRESS:
+      return 'VALIDATE_ADDRESS';
     case InputState.INVALID_ADDRESS_INPUT:
       return 'INVALID_ADDRESS_INPUT';
-    case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-      return 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN';
-    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-      return 'CONTRACT_NOT_FOUND_LOCALLY';
+
+    // 🔹 Phase 4: Duplication Check
+    case InputState.TEST_DUPLICATE_INPUT:
+      return 'TEST_DUPLICATE_INPUT';
     case InputState.DUPLICATE_INPUT:
       return 'DUPLICATE_INPUT';
-    case InputState.IS_LOADING:
-      return 'IS_LOADING';
+
+    // 🔹 Phase 5: Blockchain Contract Resolution
+    case InputState.VALIDATE_EXISTS_ON_CHAIN:
+      return 'VALIDATE_EXISTS_ON_CHAIN';
+    case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+      return 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN';
+
+    // 🔹 Phase 6: Local Metadata Validation
+    case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
+      return 'VALIDATE_CONTRACT_EXISTS_LOCALLY';
+    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+      return 'CONTRACT_NOT_FOUND_LOCALLY';
+
+    // 🔹 Phase 7: Final State
+    case InputState.VALID_INPUT:
+      return 'VALID_INPUT';
     case InputState.CLOSE_SELECT_INPUT:
       return 'CLOSE_SELECT_INPUT';
+
+    // 🔹 Utility
+    case InputState.IS_LOADING:
+      return 'IS_LOADING';
+
+    // 🔹 Unknown (fallback)
     default:
       return 'UNKNOWN_INPUT_STATE';
   }
 };
+

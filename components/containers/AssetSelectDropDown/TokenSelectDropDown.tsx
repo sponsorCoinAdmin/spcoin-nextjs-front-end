@@ -80,7 +80,8 @@ function InnerDropDown({
   }, [setInputState]);
 
   useEffect(() => {
-    alert(`🎯 inputState changed → ${getInputStateString(inputState)}`);
+    console.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
+    // alert(`🎯 inputState changed → ${getInputStateString(inputState)}`);
   }, [inputState]);
 
   return (

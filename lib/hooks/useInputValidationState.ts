@@ -1,4 +1,4 @@
-// File: @/lib/hooks/useInputValidationState.ts
+// File: lib/hooks/useInputValidationState.ts
 
 'use client';
 
@@ -7,6 +7,7 @@ import { isAddress } from 'viem';
 import { useChainId, useAccount, usePublicClient, useBalance } from 'wagmi';
 import { getLogoURL } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+
 import {
   useBuyTokenAddress,
   useSellTokenAddress,
@@ -14,7 +15,14 @@ import {
   useSellTokenContract,
 } from '@/lib/context/hooks';
 
-import { InputState, TokenContract, WalletAccount, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
+import {
+  InputState,
+  TokenContract,
+  WalletAccount,
+  CONTAINER_TYPE,
+  FEED_TYPE,
+} from '@/lib/structure';
+
 import { debugLog } from './inputValidations/helpers/debugLogInstance';
 import { debugSetInputState } from './inputValidations/helpers/debugSetInputState';
 import { isEmptyInput } from './inputValidations/validations/isEmptyInput';
@@ -22,17 +30,13 @@ import { isValidAddress } from './inputValidations/validations/isValidAddress';
 import { isDuplicateInput } from './inputValidations/validations/isDuplicateInput';
 import { resolveTokenContract } from './inputValidations/validations/resolveTokenContract';
 
-type AgentAccount = WalletAccount;
-type SponsorAccount = WalletAccount;
-type ValidAddressAccount = WalletAccount | SponsorAccount | AgentAccount;
-
-export const useInputValidationState = <T extends TokenContract | ValidAddressAccount>(
+export const useInputValidationState = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
   feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
   containerType?: CONTAINER_TYPE
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+  const [inputState, setInputState] = useState<InputState>(InputState.VALIDATE_INPUT);
   const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);
 
   const buyAddress = useBuyTokenAddress();
@@ -42,104 +46,99 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
   const [, setBuyTokenContract] = useBuyTokenContract();
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
-  const previousAddressRef = useRef<string>('');
   const lastTokenAddressRef = useRef<string>('');
 
   const chainId = useChainId();
   const publicClient = usePublicClient();
   const { address: accountAddress } = useAccount();
 
+  // ✅ Finite State Machine — single useEffect
   useEffect(() => {
-    // Step 0: Empty input check
-    if (isEmptyInput(debouncedAddress)) {
-      debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
-      return;
-    }
+    const runValidationFSM = async () => {
+      switch (inputState) {
+        case InputState.VALIDATE_INPUT:
+          if (isEmptyInput(debouncedAddress)) {
+            debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
+          } else {
+            debugSetInputState(InputState.VALIDATE_ADDRESS, inputState, setInputState);
+          }
+          break;
 
-    // Step 1: Invalid address check
-    if (!isValidAddress(debouncedAddress)) {
-      debugSetInputState(InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
-      return;
-    }
+        case InputState.VALIDATE_ADDRESS:
+          if (!isValidAddress(debouncedAddress)) {
+            debugSetInputState(InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
+          } else {
+            debugSetInputState(InputState.TEST_DUPLICATE_INPUT, inputState, setInputState);
+          }
+          break;
 
-    // Step 2: Duplicate address check
-    if (isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)) {
-      debugSetInputState(InputState.DUPLICATE_INPUT, inputState, setInputState);
-      return;
-    }
+        case InputState.TEST_DUPLICATE_INPUT:
+          if (isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)) {
+            debugSetInputState(InputState.DUPLICATE_INPUT, inputState, setInputState);
+          } else {
+            debugSetInputState(InputState.VALIDATE_EXISTS_ON_CHAIN, inputState, setInputState);
+          }
+          break;
 
-    // Step 3: Resolve token contract
-    const resolve = async () => {
-      if (!publicClient) {
-        debugLog.warn('❌ publicClient is undefined – skipping token resolution');
-        return;
-      }
+        case InputState.VALIDATE_EXISTS_ON_CHAIN:
+          if (!publicClient) {
+            debugLog.warn('❌ publicClient is undefined – skipping resolution');
+            return;
+          }
 
-      debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
-      const resolved = await resolveTokenContract(
-        debouncedAddress,
-        chainId,
-        feedType,
-        publicClient,
-        accountAddress
-      );
+          const resolved = await resolveTokenContract(
+            debouncedAddress,
+            chainId,
+            feedType,
+            publicClient,
+            accountAddress
+          );
 
-      if (!resolved) {
-        debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
-        return;
-      }
+          if (!resolved) {
+            debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
+            return;
+          }
 
-      debugLog.log(`🎯 Successfully resolved token contract`, resolved);
-      setValidatedAsset(resolved as unknown as T);
+          debugLog.log(`🎯 Resolved token contract`, resolved);
+          setValidatedAsset(resolved as unknown as T);
 
-      if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-        debugLog.log(`📦 [Context] Setting SELL token in context`, resolved);
-        setSellTokenContract(resolved);
-      } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-        debugLog.log(`📦 [Context] Setting BUY token in context`, resolved);
-        setBuyTokenContract(resolved);
+          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+            setSellTokenContract(resolved);
+          } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+            setBuyTokenContract(resolved);
+          }
+
+          debugSetInputState(InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY, inputState, setInputState);
+          break;
+
+        case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
+          if (seenBrokenLogosRef.current.has(debouncedAddress)) {
+            debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
+          } else {
+            debugSetInputState(InputState.IS_LOADING, inputState, setInputState);
+          }
+          break;
+
+        case InputState.IS_LOADING:
+          // wait for balance effect to resolve
+          break;
       }
     };
 
-    resolve();
-  }, [debouncedAddress, containerType, sellAddress, buyAddress, chainId, publicClient]);
+    runValidationFSM();
+  }, [inputState, debouncedAddress, publicClient]);
 
   const { data: balanceData } = useBalance({
     address: accountAddress,
     token: isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined,
     chainId,
-    query: {
-      enabled: Boolean(accountAddress),
-    },
+    query: { enabled: Boolean(accountAddress) },
   });
-
-  useEffect(() => {
-    const shouldReset =
-      inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY &&
-      debouncedAddress !== previousAddressRef.current &&
-      !seenBrokenLogosRef.current.has(debouncedAddress) &&
-      isEmptyInput(debouncedAddress);
-
-    if (shouldReset) {
-      debugLog.log('🔁 Validation reset loop fix triggered', {
-        debouncedAddress,
-        prev: previousAddressRef.current,
-        inputState,
-        seenBroken: Array.from(seenBrokenLogosRef.current),
-      });
-      debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
-    }
-
-    previousAddressRef.current = debouncedAddress;
-  }, [debouncedAddress, inputState]);
-
-  useEffect(() => {
-    seenBrokenLogosRef.current.clear();
-  }, [chainId]);
 
   useEffect(() => {
     if (!balanceData || !validatedAsset) return;
     if (lastTokenAddressRef.current === validatedAsset.address) return;
+
     lastTokenAddressRef.current = validatedAsset.address;
 
     const tokenWithBalance: TokenContract = {
@@ -153,10 +152,8 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
     setValidatedAsset(tokenWithBalance as unknown as T);
 
     if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      debugLog.log(`📦 [Context] Setting SELL token in context`, tokenWithBalance);
       setSellTokenContract(tokenWithBalance);
     } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-      debugLog.log(`📦 [Context] Setting BUY token in context`, tokenWithBalance);
       setBuyTokenContract(tokenWithBalance);
     }
 
@@ -176,14 +173,13 @@ export const useInputValidationState = <T extends TokenContract | ValidAddressAc
     return seenBrokenLogosRef.current.has(debouncedAddress);
   }, [debouncedAddress]);
 
-// ✅ Final return inside the hook
-return {
-  inputState,
-  setInputState, // ✅ add this line
-  validatedAsset,
-  isLoading: inputState === InputState.VALID_INPUT_PENDING,
-  chainId,
-  reportMissingLogoURL,
-  hasBrokenLogoURL,
-};
+  return {
+    inputState,
+    setInputState,
+    validatedAsset,
+    isLoading: inputState === InputState.IS_LOADING,
+    chainId,
+    reportMissingLogoURL,
+    hasBrokenLogoURL,
+  };
 };

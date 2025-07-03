@@ -2,57 +2,33 @@
 
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useCallback, useRef } from 'react';
-import {
-  InputState,
-  FEED_TYPE,
-  TokenContract,
-  WalletAccount,
-} from '@/lib/structure';
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
-import { BaseSelectSharedState } from '@/lib/hooks/useBaseSelectShared';
+import { InputState } from '@/lib/structure';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-
+import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
-interface AddressSelectProps<T extends TokenContract | WalletAccount> {
-  feedType: FEED_TYPE;
-  inputPlaceholder: string;
-  duplicateMessage?: string;
-  showDuplicateCheck?: boolean;
-  sharedState: BaseSelectSharedState;
-}
-
-export default function AddressSelect<T extends TokenContract | WalletAccount>({
-  feedType,
-  inputPlaceholder,
-  duplicateMessage,
-  showDuplicateCheck = false,
-  sharedState,
-}: AddressSelectProps<T>) {
+export default function AddressSelect() {
   const {
     inputValue,
     debouncedAddress,
     onChange,
-    clearInput,
     validateHexInput,
     getInputStatusEmoji,
-  } = sharedState;
-
-  const {
     inputState,
     setInputState,
     validatedAsset,
     setValidatedAsset,
     onSelect,
-    containerType,
+    feedType,
   } = useSharedPanelContext();
 
   const {
@@ -60,7 +36,7 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     isLoading,
     reportMissingLogoURL,
     hasBrokenLogoURL,
-  } = useInputValidationState<T>(debouncedAddress, feedType, containerType);
+  } = useInputValidationState(debouncedAddress, feedType);
 
   const manualEntryRef = useRef(false);
 
@@ -77,25 +53,17 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
     }
   }, [localValidatedAsset, setValidatedAsset]);
 
-  const onManualSelect = useCallback((item: T) => {
+  const onManualSelect = useCallback((item: ValidatedAsset) => {
     debugLog.log(`🧍‍♂️ onManualSelect():`, item);
     manualEntryRef.current = false;
     validateHexInput(item.address);
   }, [validateHexInput]);
 
-  const onDataListSelect = useCallback((item: T) => {
+  const onDataListSelect = useCallback((item: ValidatedAsset) => {
     debugLog.log(`📜 onDataListSelect():`, item);
     manualEntryRef.current = true;
-    validateHexInput(item.address);
-
-    setTimeout(() => {
-      if (validatedAsset && onSelect) {
-        debugLog.log(`✅ Forcing CLOSE_SELECT_INPUT via onDataListSelect`, validatedAsset);
-        onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
-        setInputState(InputState.CLOSE_SELECT_INPUT);
-      }
-    }, 0);
-  }, [validateHexInput, validatedAsset, onSelect, setInputState]);
+    onChange(item.address); // triggers validation
+  }, [onChange]);
 
   useEffect(() => {
     if (
@@ -104,9 +72,10 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
       validatedAsset &&
       onSelect
     ) {
-      debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`);
+      debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`, validatedAsset);
       onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
       setInputState(InputState.CLOSE_SELECT_INPUT);
+      manualEntryRef.current = false;
     }
   }, [inputState, validatedAsset, setInputState, onSelect]);
 
@@ -119,26 +88,23 @@ export default function AddressSelect<T extends TokenContract | WalletAccount>({
           manualEntryRef.current = false;
           onChange(val);
         }}
-        placeholder={inputPlaceholder}
+        placeholder="Enter address"
         statusEmoji={getInputStatusEmoji(inputState)}
       />
 
       <RenderAssetPreview
         inputState={inputState}
-        validatedAsset={validatedAsset as T}
+        validatedAsset={validatedAsset}
         hasBrokenLogoURL={hasBrokenLogoURL}
         reportMissingLogoURL={reportMissingLogoURL}
         onSelect={onManualSelect}
       />
 
-      <ValidateAssetPreview
-        inputState={inputState}
-        duplicateMessage={showDuplicateCheck ? duplicateMessage : undefined}
-      />
+      <ValidateAssetPreview inputState={inputState} />
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0 gap-[0.2rem]">
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
-          <DataList<T>
+          <DataList
             dataFeedType={feedType}
             onSelect={onDataListSelect}
           />

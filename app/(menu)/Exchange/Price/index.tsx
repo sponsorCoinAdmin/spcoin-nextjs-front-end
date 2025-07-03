@@ -1,10 +1,11 @@
+// File: components/views/PriceView.tsx
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useExchangeContext } from '@/lib/context/hooks';
 
-import { ScrollPanelView, TokenSelectContextView, ErrorView } from '@/components/views';
+import { TokenSelectContextView, ErrorView } from '@/components/views';
 
 import { useDisplayStateCorrection } from '@/lib/hooks/useDisplayStateCorrection';
 import { useSwapDirectionEffect } from '@/lib/hooks/useSwapDirectionEffect';
@@ -19,7 +20,7 @@ const debugLog = createDebugLogger('PriceView', DEBUG_ENABLED, LOG_TIME);
 
 export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
-  const { errorDisplay, assetSelectScrollDisplay, spCoinDisplay } = exchangeContext.settings;
+  const { errorDisplay, spCoinDisplay } = exchangeContext.settings;
 
   useDisplayStateCorrection();
   useSwapDirectionEffect();
@@ -31,29 +32,16 @@ export default function PriceView() {
       {(() => {
         debugLog.log('🧪 PriceView DisplayState Check', {
           errorDisplay,
-          assetSelectScrollDisplay,
           spCoinDisplay,
           stringValues: {
             errorDisplay: JSON.stringify(errorDisplay),
-            assetSelectScrollDisplay: JSON.stringify(assetSelectScrollDisplay),
             spCoinDisplay: JSON.stringify(spCoinDisplay),
           },
           comparisons: {
             isError: errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE,
-            isScroll: assetSelectScrollDisplay !== SP_COIN_DISPLAY.DISPLAY_OFF,
             isSwap: spCoinDisplay === SP_COIN_DISPLAY.EXCHANGE_ROOT,
           },
         });
-
-        if (errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE) {
-          debugLog.log('🟥 Price Showing ErrorView');
-          return <ErrorView />;
-        }
-
-        if (assetSelectScrollDisplay !== SP_COIN_DISPLAY.DISPLAY_OFF) {
-          debugLog.log('🟦 Price Showing ScrollPanelView');
-          return <ScrollPanelView />;
-        }
 
         debugLog.log('🟩 Price Showing TokenSelectContextView');
         return <TokenSelectContextView />;

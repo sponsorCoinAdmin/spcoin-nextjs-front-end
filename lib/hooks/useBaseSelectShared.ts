@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
-import { InputState } from '@/lib/structure';
+import { InputState, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
 
 export interface BaseSelectSharedState {
   inputValue: string;
@@ -12,10 +12,30 @@ export interface BaseSelectSharedState {
   inputState: InputState;
   setInputState: React.Dispatch<React.SetStateAction<InputState>>;
   getInputStatusEmoji: (state: InputState) => string;
-  validateInputStatusMessage: (state: InputState, duplicateMessage?: string) => { emoji?: string; text: string; useLogo?: boolean } | undefined;
+  validateInputStatusMessage: (
+    state: InputState,
+    duplicateMessage?: string
+  ) => { emoji?: string; text: string; useLogo?: boolean } | undefined;
+  feedType: FEED_TYPE;
 }
 
-export function useBaseSelectShared(): BaseSelectSharedState {
+// ✅ Correct CONTAINER_TYPE → FEED_TYPE mapping
+function getFeedTypeFromContainer(containerType: CONTAINER_TYPE): FEED_TYPE {
+  switch (containerType) {
+    case CONTAINER_TYPE.BUY_SELECT_CONTAINER:
+    case CONTAINER_TYPE.SELL_SELECT_CONTAINER:
+      return FEED_TYPE.TOKEN_LIST;
+    case CONTAINER_TYPE.RECIPIENT_SELECT_CONTAINER:
+      return FEED_TYPE.RECIPIENT_ACCOUNTS;
+    default:
+      return FEED_TYPE.TOKEN_LIST;
+  }
+}
+
+// ✅ Hook now expects CONTAINER_TYPE
+export function useBaseSelectShared(containerType: CONTAINER_TYPE): BaseSelectSharedState {
+  const feedType = getFeedTypeFromContainer(containerType);
+
   const {
     inputValue,
     debouncedAddress,
@@ -38,7 +58,7 @@ export function useBaseSelectShared(): BaseSelectSharedState {
         return '⚠️';
       case InputState.VALID_INPUT:
         return '✅';
-      case InputState.VALID_INPUT_PENDING:
+      case InputState.IS_LOADING:
         return '⏳';
       default:
         return '🔍';
@@ -69,5 +89,6 @@ export function useBaseSelectShared(): BaseSelectSharedState {
     setInputState,
     getInputStatusEmoji,
     validateInputStatusMessage,
+    feedType,
   };
 }
