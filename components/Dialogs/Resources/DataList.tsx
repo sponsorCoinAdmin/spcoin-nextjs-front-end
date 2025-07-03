@@ -237,7 +237,7 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
               className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
               onClick={(e) => {
                 e.stopPropagation();
-                alert(`${token.name} Address: ${debugLog.log(stringifyBigInt(token))}`);
+                alert(`${token.name} Address: ${stringifyBigInt(token)}`);
               }}
               onContextMenu={(e) => {
                 e.preventDefault();

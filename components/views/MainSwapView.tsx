@@ -3,12 +3,9 @@
 import styles from '@/styles/Exchange.module.css';
 import {
   CONTAINER_TYPE,
-  TokenContract,
-  WalletAccount,
-  InputState,
-  getInputStateString,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
+
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -23,8 +20,6 @@ import {
 } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 
 import {
-  useSellTokenContract,
-  useBuyTokenContract,
   useExchangeContext,
 } from '@/lib/context/hooks';
 
@@ -38,7 +33,6 @@ export default function MainSwapView() {
   const { exchangeContext } = useExchangeContext();
   const { assetSelectScrollDisplay } = exchangeContext.settings;
 
-  // 🔍 Log display state at render start
   debugLog.log(`🔍 MainSwapView render triggered`);
   debugLog.log(`🧩 Current assetSelectScrollDisplay = ${assetSelectScrollDisplay}`);
   debugLog.log(`🎯 Enum Comparisons:`, {
@@ -51,55 +45,17 @@ export default function MainSwapView() {
   });
 
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
-  const [, setSellTokenContract] = useSellTokenContract();
-  const [, setBuyTokenContract] = useBuyTokenContract();
-
-  const handleSellSelect = (
-    item: TokenContract | WalletAccount | undefined,
-    state: InputState
-  ) => {
-    if (!item) {
-      debugLog.warn('🟠 SELL onSelect called with undefined item');
-      return;
-    }
-    const label = getInputStateString(state);
-    debugLog.log(`🟠 SELL onSelect: ${label}`, item);
-    if (state === InputState.CLOSE_SELECT_INPUT) {
-      setSellTokenContract(structuredClone(item as TokenContract));
-    }
-  };
-
-  const handleBuySelect = (
-    item: TokenContract | WalletAccount | undefined,
-    state: InputState
-  ) => {
-    if (!item) {
-      debugLog.warn('🔵 BUY onSelect called with undefined item');
-      return;
-    }
-    const label = getInputStateString(state);
-    debugLog.log(`🔵 BUY onSelect: ${label}`, item);
-    if (state === InputState.CLOSE_SELECT_INPUT) {
-      setBuyTokenContract(structuredClone(item as TokenContract));
-    }
-  };
 
   return (
     <div id="MainPage_ID">
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        <SharedPanelProvider
-          containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}
-          onSelect={handleSellSelect}
-        >
+        <SharedPanelProvider containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}>
           <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
         </SharedPanelProvider>
 
-        <SharedPanelProvider
-          containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}
-          onSelect={handleBuySelect}
-        >
+        <SharedPanelProvider containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}>
           <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
         </SharedPanelProvider>
 

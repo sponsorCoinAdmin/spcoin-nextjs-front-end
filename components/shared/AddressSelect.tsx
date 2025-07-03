@@ -2,7 +2,7 @@
 
 import styles from '@/styles/Modal.module.css';
 import React, { useEffect, useCallback, useRef } from 'react';
-import { InputState } from '@/lib/structure';
+import { InputState, CONTAINER_TYPE } from '@/lib/structure';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
@@ -11,6 +11,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+import { useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -20,14 +21,13 @@ export default function AddressSelect() {
   const {
     inputValue,
     debouncedAddress,
-    onChange,
     validateHexInput,
     getInputStatusEmoji,
     inputState,
     setInputState,
     validatedAsset,
     setValidatedAsset,
-    onSelect,
+    containerType,
     feedType,
   } = useSharedPanelContext();
 
@@ -37,6 +37,9 @@ export default function AddressSelect() {
     reportMissingLogoURL,
     hasBrokenLogoURL,
   } = useInputValidationState(debouncedAddress, feedType);
+
+  const [, setSellTokenContract] = useSellTokenContract();
+  const [, setBuyTokenContract] = useBuyTokenContract();
 
   const manualEntryRef = useRef(false);
 
@@ -54,39 +57,50 @@ export default function AddressSelect() {
   }, [localValidatedAsset, setValidatedAsset]);
 
   const onManualSelect = useCallback((item: ValidatedAsset) => {
-    debugLog.log(`🧍‍♂️ onManualSelect():`, item);
-    manualEntryRef.current = false;
+    debugLog.log(`🧝‍♂️ onManualSelect():`, item);
+    manualEntryRef.current = true;
     validateHexInput(item.address);
   }, [validateHexInput]);
 
   const onDataListSelect = useCallback((item: ValidatedAsset) => {
     debugLog.log(`📜 onDataListSelect():`, item);
-    manualEntryRef.current = true;
-    onChange(item.address); // triggers validation
-  }, [onChange]);
+    manualEntryRef.current = false;
+    validateHexInput(item.address);
+    setInputState(InputState.CLOSE_SELECT_INPUT);
+  }, [validateHexInput, setInputState]);
 
   useEffect(() => {
     if (
       inputState === InputState.VALID_INPUT &&
       manualEntryRef.current &&
-      validatedAsset &&
-      onSelect
+      validatedAsset
     ) {
       debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`, validatedAsset);
-      onSelect(validatedAsset, InputState.CLOSE_SELECT_INPUT);
       setInputState(InputState.CLOSE_SELECT_INPUT);
       manualEntryRef.current = false;
     }
-  }, [inputState, validatedAsset, setInputState, onSelect]);
+  }, [inputState, validatedAsset, setInputState]);
+
+  useEffect(() => {
+    if (inputState === InputState.CLOSE_SELECT_INPUT && validatedAsset) {
+      debugLog.log(`📦 Applying validatedAsset from CLOSE_SELECT_INPUT`, validatedAsset);
+      if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+        setSellTokenContract(structuredClone(validatedAsset));
+      } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+        setBuyTokenContract(structuredClone(validatedAsset));
+      }
+      setInputState(InputState.EMPTY_INPUT);
+    }
+  }, [inputState, validatedAsset, containerType, setSellTokenContract, setBuyTokenContract, setInputState]);
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
         onChange={(val) => {
-          debugLog.log(`⌨️ onChange inputValue: ${val}`);
+          debugLog.log(`⌨️ onChange validateHexInput: ${val}`);
           manualEntryRef.current = false;
-          onChange(val);
+          validateHexInput(val);
         }}
         placeholder="Enter address"
         statusEmoji={getInputStatusEmoji(inputState)}

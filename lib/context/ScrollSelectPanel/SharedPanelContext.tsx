@@ -6,7 +6,6 @@ import React, {
   useMemo,
   useEffect,
   useState,
-  useRef,
 } from 'react';
 
 import {
@@ -37,10 +36,8 @@ export interface SharedPanelContextType {
   validatedAsset?: ValidatedAsset;
   setValidatedAsset?: (asset: ValidatedAsset) => void;
   containerType: CONTAINER_TYPE;
-  onSelect: (item: ValidatedAsset, state: InputState) => void;
   inputValue: string;
   debouncedAddress: string;
-  onChange: (val: string) => void;
   validateHexInput: (val: string) => void;
   getInputStatusEmoji: (state: InputState) => string;
   feedType: FEED_TYPE;
@@ -65,11 +62,9 @@ function getFeedTypeFromContainer(containerType: CONTAINER_TYPE): FEED_TYPE {
 export const SharedPanelProvider = ({
   children,
   containerType,
-  onSelect,
 }: {
   children: React.ReactNode;
   containerType: CONTAINER_TYPE;
-  onSelect: (item: ValidatedAsset, state: InputState) => void;
 }) => {
   const feedType = getFeedTypeFromContainer(containerType);
   const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
@@ -78,9 +73,6 @@ export const SharedPanelProvider = ({
   const {
     inputValue,
     debouncedAddress,
-    onChange,
-    clearInput,
-    manualEntryRef,
     validateHexInput,
   } = useDebouncedAddressInput();
 
@@ -131,10 +123,8 @@ export const SharedPanelProvider = ({
       validatedAsset,
       setValidatedAsset,
       containerType,
-      onSelect,
       inputValue,
       debouncedAddress,
-      onChange,
       validateHexInput,
       getInputStatusEmoji,
       feedType,
@@ -143,10 +133,8 @@ export const SharedPanelProvider = ({
       inputState,
       validatedAsset,
       containerType,
-      onSelect,
       inputValue,
       debouncedAddress,
-      onChange,
       validateHexInput,
       feedType,
     ]

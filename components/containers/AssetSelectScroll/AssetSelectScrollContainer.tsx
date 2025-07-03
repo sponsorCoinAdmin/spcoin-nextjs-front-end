@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import {
-  getInputStateString,
-} from '@/lib/structure';
+import { getInputStateString } from '@/lib/structure';
 
 import BaseModalDialog from './BaseModalDialog';
 import AddressSelect from '@/components/shared/AddressSelect';
@@ -19,7 +17,7 @@ interface Props {
 }
 
 export default function AssetSelectScrollContainer({ title }: Props) {
-  const { onSelect, containerType } = useSharedPanelContext();
+  const { containerType } = useSharedPanelContext();
 
   useEffect(() => {
     debugLog.log(`📥 AssetSelectScrollContainer mounted`);
