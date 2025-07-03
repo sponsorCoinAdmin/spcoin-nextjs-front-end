@@ -6,23 +6,23 @@ import React, {
   useMemo,
   useEffect,
   useState,
+  useRef,
 } from 'react';
 
 import {
   InputState,
   CONTAINER_TYPE,
   getInputStateString,
-  TokenContract,
-  WalletAccount,
   FEED_TYPE,
 } from '@/lib/structure';
 
-import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('ScrollPanelContext', DEBUG_ENABLED, LOG_TIME);
 
 declare global {
@@ -37,7 +37,7 @@ export interface SharedPanelContextType {
   validatedAsset?: ValidatedAsset;
   setValidatedAsset?: (asset: ValidatedAsset) => void;
   containerType: CONTAINER_TYPE;
-  onSelect?: (item: ValidatedAsset, state: InputState) => void;
+  onSelect: (item: ValidatedAsset, state: InputState) => void;
   inputValue: string;
   debouncedAddress: string;
   onChange: (val: string) => void;
@@ -69,60 +69,88 @@ export const SharedPanelProvider = ({
 }: {
   children: React.ReactNode;
   containerType: CONTAINER_TYPE;
-  onSelect?: (item: ValidatedAsset, state: InputState) => void;
+  onSelect: (item: ValidatedAsset, state: InputState) => void;
 }) => {
-  const shared = useBaseSelectShared(containerType); // ✅ FIXED: pass containerType, not feedType
   const feedType = getFeedTypeFromContainer(containerType);
   const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
+  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+
+  const {
+    inputValue,
+    debouncedAddress,
+    onChange,
+    clearInput,
+    manualEntryRef,
+    validateHexInput,
+  } = useDebouncedAddressInput();
 
   useEffect(() => {
     debugLog.log(
       `📦 SharedPanelProvider mount: containerType=${containerType}, inputState=${getInputStateString(
-        shared.inputState
+        inputState
       )}`
     );
     window.__scrollPanelDebug = {
       containerType,
-      inputState: shared.inputState,
+      inputState,
     };
   }, []);
 
   useEffect(() => {
-    debugLog.log(`🔁 inputState updated → ${getInputStateString(shared.inputState)}`);
+    debugLog.log(`🔁 inputState updated → ${getInputStateString(inputState)}`);
     if (window.__scrollPanelDebug) {
-      window.__scrollPanelDebug.inputState = shared.inputState;
+      window.__scrollPanelDebug.inputState = inputState;
     }
-  }, [shared.inputState]);
+  }, [inputState]);
 
-  const value = useMemo<SharedPanelContextType>(() => ({
-    inputState: shared.inputState,
-    setInputState: (state: InputState) => {
-      debugLog.log(`📝 setInputState called → ${getInputStateString(state)}`);
-      shared.setInputState(state);
-    },
-    validatedAsset,
-    setValidatedAsset,
-    containerType,
-    onSelect,
-    inputValue: shared.inputValue,
-    debouncedAddress: shared.debouncedAddress,
-    onChange: shared.onChange,
-    validateHexInput: shared.validateHexInput,
-    getInputStatusEmoji: shared.getInputStatusEmoji,
-    feedType: feedType,
-  }), [
-    shared.inputState,
-    shared.setInputState,
-    validatedAsset,
-    containerType,
-    onSelect,
-    shared.inputValue,
-    shared.debouncedAddress,
-    shared.onChange,
-    shared.validateHexInput,
-    shared.getInputStatusEmoji,
-    feedType,
-  ]);
+  const getInputStatusEmoji = (state: InputState): string => {
+    switch (state) {
+      case InputState.INVALID_ADDRESS_INPUT:
+        return '❓';
+      case InputState.DUPLICATE_INPUT:
+      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        return '❌';
+      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+        return '⚠️';
+      case InputState.VALID_INPUT:
+        return '✅';
+      case InputState.IS_LOADING:
+        return '⏳';
+      default:
+        return '🔍';
+    }
+  };
+
+  const value = useMemo<SharedPanelContextType>(
+    () => ({
+      inputState,
+      setInputState: (state: InputState) => {
+        debugLog.log(`📝 setInputState called → ${getInputStateString(state)}`);
+        setInputState(state);
+      },
+      validatedAsset,
+      setValidatedAsset,
+      containerType,
+      onSelect,
+      inputValue,
+      debouncedAddress,
+      onChange,
+      validateHexInput,
+      getInputStatusEmoji,
+      feedType,
+    }),
+    [
+      inputState,
+      validatedAsset,
+      containerType,
+      onSelect,
+      inputValue,
+      debouncedAddress,
+      onChange,
+      validateHexInput,
+      feedType,
+    ]
+  );
 
   return (
     <SharedPanelContext.Provider value={value}>
@@ -133,6 +161,7 @@ export const SharedPanelProvider = ({
 
 export const useSharedPanelContext = (): SharedPanelContextType => {
   const ctx = useContext(SharedPanelContext);
-  if (!ctx) throw new Error('❌ useSharedPanelContext must be used within a SharedPanelProvider');
+  if (!ctx)
+    throw new Error('❌ useSharedPanelContext must be used within a SharedPanelProvider');
   return ctx;
 };

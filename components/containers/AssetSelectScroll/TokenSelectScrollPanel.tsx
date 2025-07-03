@@ -1,18 +1,16 @@
-// File: components/containers/TokenSelectScrollPanel.tsx
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   CONTAINER_TYPE,
-  FEED_TYPE,
   InputState,
-  TokenContract,
   SP_COIN_DISPLAY,
   getInputStateString,
 } from '@/lib/structure';
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -28,62 +26,37 @@ export default function TokenSelectScrollPanel() {
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const { updateAssetScrollDisplay } = useDisplayControls();
   const sharedState = useBaseSelectShared();
-
-  const containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER;
-
-  const setTokenInContext = containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-    ? setSellTokenContract
-    : setBuyTokenContract;
+  const { inputState, setInputState, containerType } = sharedState;
+  const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
 
   const title =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? 'Select a Token to Sell'
       : 'Select a Token to Buy';
 
-  const duplicateMessage =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-      ? 'Sell Address Cannot Be the Same as Buy Address'
-      : 'Buy Address Cannot Be the Same as Sell Address';
-
   useEffect(() => {
     debugLog.log(`🧩 TokenSelectScrollPanel mounted for containerType=${containerType}`);
   }, [containerType]);
 
   useEffect(() => {
-    const stateStr = getInputStateString(sharedState.inputState);
+    const stateStr = getInputStateString(inputState);
     debugLog.log(`🌀 inputState changed → ${stateStr}`);
 
-    if (sharedState.inputState === InputState.CLOSE_SELECT_INPUT) {
+    if (inputState === InputState.CLOSE_SELECT_INPUT) {
       debugLog.log(`✅ CLOSE_SELECT_INPUT triggered, calling updateAssetScrollDisplay → EXCHANGE_ROOT`);
       updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+
+      // ✅ Prevent infinite loop by resetting inputState
+      setInputState(InputState.EMPTY_INPUT);
     }
-  }, [sharedState.inputState, updateAssetScrollDisplay]);
-
-  const handleSelect = useCallback(
-    (token: TokenContract, state: InputState) => {
-      const stateStr = getInputStateString(state);
-      debugLog.log(`🎯 handleSelect called with state=${stateStr} and token=${token?.symbol || token?.address}`);
-
-      if (state === InputState.CLOSE_SELECT_INPUT) {
-        debugLog.log(`✅ Setting token in context → ${token.symbol || token.address}`);
-        setTokenInContext(token);
-      }
-    },
-    [setTokenInContext]
-  );
+  }, [inputState, updateAssetScrollDisplay, setInputState]);
 
   return (
-    <AssetSelectScrollContainer<TokenContract>
-      setShowDialog={() => {}} // unused legacy param
-      onSelect={handleSelect}
-      title={title}
-      feedType={FEED_TYPE.TOKEN_LIST}
-      inputPlaceholder="Type or paste token address"
-      duplicateMessage={duplicateMessage}
-      showDuplicateCheck
-      containerType={containerType}
-    />
+    <>
+      {assetSelectScrollDisplay === SP_COIN_DISPLAY.DISPLAY_ON && (
+        <AssetSelectScrollContainer title={title} />
+      )}
+    </>
   );
 }

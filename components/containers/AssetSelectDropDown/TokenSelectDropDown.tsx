@@ -3,6 +3,8 @@
 import { useCallback, useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useDisplayControls } from '@/lib/context/hooks';
 
 import {
   CONTAINER_TYPE,
@@ -36,6 +38,7 @@ interface Props {
 function TokenSelectDropDown({ containerType }: Props) {
   const sellHook = useSellTokenContract();
   const buyHook = useBuyTokenContract();
+
   const [tokenContract] =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
 
@@ -73,10 +76,12 @@ function InnerDropDown({
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
   const { inputState, setInputState } = useSharedPanelContext();
+const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();  
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
     setInputState(InputState.VALID_INPUT);
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
   }, [setInputState]);
 
   useEffect(() => {
@@ -86,8 +91,7 @@ function InnerDropDown({
 
   return (
     <>
-      {inputState !== InputState.CLOSE_SELECT_INPUT && <TokenSelectScrollPanel />}
-      <div className={styles.assetSelect}>
+      {<TokenSelectScrollPanel />}      <div className={styles.assetSelect}>
         {tokenContract ? (
           <>
             <img

@@ -1,8 +1,11 @@
 // File: lib/hooks/inputValidations/validations/isDuplicateInput.ts
 
 import { CONTAINER_TYPE } from '@/lib/structure';
-import { debugLog } from '../helpers/debugLogInstance';
+import { getDuplicateMessage } from './getDuplicateMessage';
 
+/**
+ * Checks if the input address is a duplicate based on containerType and triggers an alert with explanation.
+ */
 export function isDuplicateInput(
   containerType: CONTAINER_TYPE,
   input: string,
@@ -16,13 +19,11 @@ export function isDuplicateInput(
       ? buyAddress
       : sellAddress;
 
-  const isDuplicate =
-    input.toLowerCase() === oppositeAddress.toLowerCase();
+  const isDuplicate = input.toLowerCase() === oppositeAddress.toLowerCase();
 
   if (isDuplicate) {
-    debugLog.log(`⛔ Duplicate token input: ${input} matches ${oppositeAddress}`);
-  } else {
-    debugLog.log(`✅ Unique token input: ${input} ≠ ${oppositeAddress}`);
+    const msg = getDuplicateMessage(containerType);
+    alert(msg);
   }
 
   return isDuplicate;

@@ -42,8 +42,8 @@
               │                 └── renderDebugText('❌ No matching panel, returning null')
               │
               └── else if spCoinDisplay === EXCHANGE_ROOT
-                    ├── debugLog: '🟩 Price Showing TokenSelectContextView'
-                    └── <TokenSelectContextView>
+                    ├── debugLog: '🟩 Price Showing MainSwapView'
+                    └── <MainSwapView>
                           └── <mainSwapContainer>
                                 ├── <TradeContainerHeader>
                                 ├── <TokenSelectSection>

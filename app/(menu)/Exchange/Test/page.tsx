@@ -36,10 +36,8 @@ function useDidHydrate(): boolean {
 function normalizeContextDisplay(ctx: ExchangeContext): any {
   const spCoinDisplayMap: Record<SP_COIN_DISPLAY, string> = {
     [SP_COIN_DISPLAY.DISPLAY_OFF]: 'SP_COIN_DISPLAY.DISPLAY_OFF',
+    [SP_COIN_DISPLAY.DISPLAY_ON]: 'SP_COIN_DISPLAY.DISPLAY_ON',
     [SP_COIN_DISPLAY.EXCHANGE_ROOT]: 'SP_COIN_DISPLAY.EXCHANGE_ROOT',
-    [SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER',
-    [SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG',
-    [SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG]: 'SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG',
     [SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON]: 'SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON',
     [SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER',
     [SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER',
@@ -59,7 +57,6 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
 
-  // 🌟 Apply your logic rule
   const sp = settings.spCoinDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
   const asset = settings.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
   const err = settings.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
@@ -77,9 +74,9 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
     ...ctx,
     settings: {
       ...settings,
-      spCoinDisplay: spCoinDisplayMap[spFixed],
-      assetSelectScrollDisplay: spCoinDisplayMap[asset],
-      errorDisplay: spCoinDisplayMap[err],
+      spCoinDisplay: spCoinDisplayMap[spFixed as SP_COIN_DISPLAY],
+      assetSelectScrollDisplay: spCoinDisplayMap[asset as SP_COIN_DISPLAY],
+      errorDisplay: spCoinDisplayMap[err as SP_COIN_DISPLAY],
       apiTradingProvider: apiProviderMap[settings.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X],
     },
     tradeData: {

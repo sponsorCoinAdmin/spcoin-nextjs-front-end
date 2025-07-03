@@ -32,14 +32,14 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
-const debugLog = createDebugLogger('TokenSelectContextView', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('MainSwapView', DEBUG_ENABLED, LOG_TIME);
 
-export default function TokenSelectContextView() {
+export default function MainSwapView() {
   const { exchangeContext } = useExchangeContext();
   const { assetSelectScrollDisplay } = exchangeContext.settings;
 
   // 🔍 Log display state at render start
-  debugLog.log(`🔍 TokenSelectContextView render triggered`);
+  debugLog.log(`🔍 MainSwapView render triggered`);
   debugLog.log(`🧩 Current assetSelectScrollDisplay = ${assetSelectScrollDisplay}`);
   debugLog.log(`🎯 Enum Comparisons:`, {
     SHOW_TOKEN_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER,
