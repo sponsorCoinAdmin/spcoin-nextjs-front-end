@@ -1,8 +1,8 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useCallback, useRef } from 'react';
-import { InputState, CONTAINER_TYPE } from '@/lib/structure';
+import React, { useEffect, useRef } from 'react';
+import { InputState, CONTAINER_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
@@ -11,8 +11,8 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import { useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';
-
+import { useSellTokenContract, useBuyTokenContract, useDisplayControls } from '@/lib/context/hooks';
+import { useValidateHexInputChange } from '@/lib/hooks/inputValidations';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
@@ -38,11 +38,12 @@ export default function AddressSelect() {
     hasBrokenLogoURL,
   } = useInputValidationState(debouncedAddress, feedType);
 
+  const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
   const manualEntryRef = useRef(false);
-
+  const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput, manualEntryRef);
   useEffect(() => {
     return () => {
       manualEntryRef.current = false;
@@ -56,18 +57,16 @@ export default function AddressSelect() {
     }
   }, [localValidatedAsset, setValidatedAsset]);
 
-  const onManualSelect = useCallback((item: ValidatedAsset) => {
+  const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, item);
-    manualEntryRef.current = true;
-    validateHexInput(item.address);
-  }, [validateHexInput]);
+    handleInputChange(item.address, true);
+  };
 
-  const onDataListSelect = useCallback((item: ValidatedAsset) => {
+  const onDataListSelect = (item: ValidatedAsset) => {
     debugLog.log(`📜 onDataListSelect():`, item);
-    manualEntryRef.current = false;
-    validateHexInput(item.address);
-    setInputState(InputState.CLOSE_SELECT_INPUT);
-  }, [validateHexInput, setInputState]);
+    handleInputChange(item.address, false);
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF)
+  };
 
   useEffect(() => {
     if (
@@ -97,11 +96,7 @@ export default function AddressSelect() {
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
-        onChange={(val) => {
-          debugLog.log(`⌨️ onChange validateHexInput: ${val}`);
-          manualEntryRef.current = false;
-          validateHexInput(val);
-        }}
+        onChange={(val) => handleInputChange(val, false)}
         placeholder="Enter address"
         statusEmoji={getInputStatusEmoji(inputState)}
       />
