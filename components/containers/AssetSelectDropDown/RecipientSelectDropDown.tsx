@@ -1,17 +1,23 @@
-// File: components/containers/RecipientSelectDropDown.tsx
-
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
-import { WalletAccount, InputState, TokenContract, getInputStateString } from '@/lib/structure';
+import { useCallback, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { RecipientSelectScrollPanel } from '../AssetSelectScroll';
+import {
+  InputState,
+  WalletAccount,
+  getInputStateString,
+} from '@/lib/structure';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+import styles from '@/styles/Exchange.module.css';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
 const debugLog = createDebugLogger('RecipientSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
@@ -19,22 +25,28 @@ interface Props {
   callBackAccount: (walletAccount: WalletAccount) => void;
 }
 
-const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
-  const [showDialog, setShowDialog] = useState(false);
-  const hasErroredRef = useRef(false);
-
-  const openDialog = useCallback(() => setShowDialog(true), []);
+function RecipientSelectDropDown({ recipientAccount, callBackAccount }: Props) {
+  const {
+    inputState,
+    setInputState,
+    feedType,
+    activePanelFeed,
+    setActivePanelFeed,
+  } = useSharedPanelContext();
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
+  const hasErroredRef = useRef(false);
+
+  const openDialog = useCallback(() => {
+    debugLog.log('📂 Opening Recipient dialog');
+    setInputState(InputState.VALID_INPUT);
+    setActivePanelFeed(feedType); // FEED_TYPE.RECIPIENT_ACCOUNTS
+  }, [setInputState, setActivePanelFeed, feedType]);
 
   const handleLogoError = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       if (!recipientAccount || hasErroredRef.current) return;
-
-      debugLog.log(
-        `[RecipientSelectDropDown] Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL})`
-      );
-
+      debugLog.log(`🛑 Missing logo for ${recipientAccount.symbol} (${recipientAccount.logoURL})`);
       markLogoAsBroken(recipientAccount.address);
       hasErroredRef.current = true;
       event.currentTarget.src = defaultMissingImage;
@@ -42,50 +54,55 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     [recipientAccount]
   );
 
-
   const processSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
       const stateLabel = getInputStateString(state);
-      debugLog.log('🎯 [RecipientSelectScrollPanel -> DropDown] onSelect fired: state = ${state} → ${stateLabel}', { wallet, state });
+      debugLog.log(`🎯 onSelect fired: state=${state} → ${stateLabel}`, { wallet, state });
+
       if (state === InputState.CLOSE_SELECT_INPUT) {
-        debugLog.log('✅ [RecipientSelectDropDown] Selected wallet and closing dialog');
+        debugLog.log('✅ Recipient selected and dialog closed');
         callBackAccount(wallet);
         hasErroredRef.current = false;
-        setShowDialog(false);
+        setActivePanelFeed(null);
       }
     },
-    [callBackAccount]
+    [callBackAccount, setActivePanelFeed]
   );
+
+  const isPanelVisible = activePanelFeed === feedType;
+
+  useEffect(() => {
+    debugLog.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
+  }, [inputState]);
 
   return (
     <>
-      {showDialog && (
-        <RecipientSelectScrollPanel
-        />
+      {isPanelVisible && (
+        <RecipientSelectScrollPanel />
       )}
 
-      <div className="flex items-center cursor-pointer" onClick={openDialog}>
+      <div className={styles.assetSelect} onClick={openDialog}>
         {recipientAccount ? (
           <>
             <img
-              alt={recipientAccount.name}
-              className="h-9 w-9 mr-2 rounded-md"
+              className="h-9 w-9 mr-2 rounded-md cursor-pointer"
+              alt={`${recipientAccount.name} logo`}
               src={logoSrc}
               onClick={(e) => {
                 e.stopPropagation();
-                alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`);
+                alert(stringifyBigInt(recipientAccount));
               }}
               onError={handleLogoError}
             />
             {recipientAccount.symbol}
           </>
         ) : (
-          <> &nbsp; Select Recipient: </>
+          <>Select Recipient:</>
         )}
-        <ChevronDown size={16} className="ml-2" />
+        <ChevronDown size={18} className="ml-2 cursor-pointer" />
       </div>
     </>
   );
-};
+}
 
 export default RecipientSelectDropDown;

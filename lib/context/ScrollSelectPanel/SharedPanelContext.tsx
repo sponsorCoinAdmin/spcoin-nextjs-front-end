@@ -1,159 +1,149 @@
-// File: lib/context/ScrollSelectPanel/SharedPanelContext.tsx
+// File: components/containers/TokenSelectDropDown.tsx
 
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useMemo,
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect } from 'react';
+import styles from '@/styles/Exchange.module.css';
+import { ChevronDown } from 'lucide-react';
 
 import {
-  InputState,
   CONTAINER_TYPE,
   getInputStateString,
-  FEED_TYPE,
+  InputState,
+  SP_COIN_DISPLAY,
+  TokenContract,
 } from '@/lib/structure';
 
+import {
+  useBuyTokenContract,
+  useSellTokenContract,
+  useDisplayControls,
+} from '@/lib/context/hooks';
+
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
+import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
+
+import { TokenSelectScrollPanel } from '@/components/containers/AssetSelectScroll';
+import useSharedPanelContext from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
-const debugLog = createDebugLogger('ScrollPanelContext', DEBUG_ENABLED, LOG_TIME);
+  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
+const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
-declare global {
-  interface Window {
-    __scrollPanelDebug?: any;
-  }
-}
-
-export interface SharedPanelContextType {
-  inputState: InputState;
-  setInputState: (state: InputState) => void;
-  validatedAsset?: ValidatedAsset;
-  setValidatedAsset?: (asset: ValidatedAsset) => void;
+interface Props {
   containerType: CONTAINER_TYPE;
-  inputValue: string;
-  debouncedAddress: string;
-  validateHexInput: (val: string) => void;
-  getInputStatusEmoji: (state: InputState) => string;
-  feedType: FEED_TYPE;
 }
 
-// ✅ DO NOT pass in a shared defaultState (this ensures state isolation)
-const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
+function TokenSelectDropDown({ containerType }: Props) {
+  const sellHook = useSellTokenContract();
+  const buyHook = useBuyTokenContract();
 
-function getFeedTypeFromContainer(containerType: CONTAINER_TYPE): FEED_TYPE {
-  switch (containerType) {
-    case CONTAINER_TYPE.BUY_SELECT_CONTAINER:
-    case CONTAINER_TYPE.SELL_SELECT_CONTAINER:
-      return FEED_TYPE.TOKEN_LIST;
-    case CONTAINER_TYPE.RECIPIENT_SELECT_CONTAINER:
-      return FEED_TYPE.RECIPIENT_ACCOUNTS;
-    case CONTAINER_TYPE.AGENT_SELECT_CONTAINER:
-      return FEED_TYPE.AGENT_ACCOUNTS;
-    default:
-      return FEED_TYPE.TOKEN_LIST;
-  }
-}
+  const [tokenContract] =
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
 
-export const SharedPanelProvider = ({
-  children,
-  containerType,
-}: {
-  children: React.ReactNode;
-  containerType: CONTAINER_TYPE;
-}) => {
-  const feedType = getFeedTypeFromContainer(containerType);
-  const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+  const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
 
-  const {
-    inputValue,
-    debouncedAddress,
-    validateHexInput,
-  } = useDebouncedAddressInput();
+  const handleMissingLogoURL = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const tokenAddr = tokenContract?.address;
+    if (!tokenAddr) return;
 
-  useEffect(() => {
-    debugLog.log(
-      `📦 SharedPanelProvider mount: containerType=${containerType}, inputState=${getInputStateString(
-        inputState
-      )}`
-    );
-    window.__scrollPanelDebug = {
-      containerType,
-      inputState,
-    };
-  }, [containerType, inputState]);
+    markLogoAsBroken(tokenAddr);
+    event.currentTarget.src = defaultMissingImage;
 
-  useEffect(() => {
-    debugLog.log(`🔁 inputState updated → ${getInputStateString(inputState)}`);
-    if (window.__scrollPanelDebug) {
-      window.__scrollPanelDebug.inputState = inputState;
-    }
-  }, [inputState]);
-
-  const getInputStatusEmoji = (state: InputState): string => {
-    switch (state) {
-      case InputState.INVALID_ADDRESS_INPUT:
-        return '❓';
-      case InputState.DUPLICATE_INPUT:
-      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        return '❌';
-      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-        return '⚠️';
-      case InputState.VALID_INPUT:
-        return '✅';
-      case InputState.IS_LOADING:
-        return '⏳';
-      default:
-        return '🔍';
-    }
+    debugLog.log(`❌ Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
-  // ✅ Construct fully independent state per instance
-  const value = useMemo<SharedPanelContextType>(
-    () => ({
-      inputState,
-      setInputState: (state: InputState) => {
-        debugLog.log(`📝 setInputState called → ${getInputStateString(state)}`);
-        setInputState(state);
-      },
-      validatedAsset,
-      setValidatedAsset,
-      containerType,
-      inputValue,
-      debouncedAddress,
-      validateHexInput,
-      getInputStatusEmoji,
-      feedType,
-    }),
-    [
-      inputState,
-      validatedAsset,
-      containerType,
-      inputValue,
-      debouncedAddress,
-      validateHexInput,
-      feedType,
-    ]
+  return (
+    <InnerDropDown
+      tokenContract={tokenContract}
+      containerType={containerType}
+      logoSrc={logoSrc}
+      onError={handleMissingLogoURL}
+    />
   );
+}
+
+function InnerDropDown({
+  tokenContract,
+  containerType,
+  logoSrc,
+  onError,
+}: {
+  tokenContract: TokenContract | undefined;
+  containerType: CONTAINER_TYPE;
+  logoSrc: string;
+  onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
+}) {
+  const {
+    inputState,
+    setInputState,
+    activePanelFeed,
+    setActivePanelFeed,
+    activeContainerType,
+    setActiveContainerType,
+    feedType,
+  } = useSharedPanelContext();
+
+  const { updateAssetScrollDisplay } = useDisplayControls();
+
+  const openDialog = useCallback(() => {
+    debugLog.log(`📂 Opening Token dialog for containerType=${containerType}`);
+    setInputState(InputState.VALID_INPUT);
+    setActivePanelFeed(feedType);
+    setActiveContainerType(containerType);
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
+  }, [
+    setInputState,
+    setActivePanelFeed,
+    setActiveContainerType,
+    containerType,
+    feedType,
+    updateAssetScrollDisplay,
+  ]);
+
+  useEffect(() => {
+    debugLog.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
+    debugLog.log(`🧭 containerType=${containerType}, activeContainerType=${activeContainerType}`);
+  }, [inputState, containerType, activeContainerType]);
+
+  const isPanelVisible =
+    activePanelFeed === feedType &&
+    activeContainerType === containerType;
 
   return (
-    <SharedPanelContext.Provider value={value}>
-      {children}
-    </SharedPanelContext.Provider>
+    <>
+      {isPanelVisible && (
+        <>
+          {debugLog.log(`🔓 Showing TokenSelectScrollPanel for containerType=${containerType}`)}
+          <TokenSelectScrollPanel />
+        </>
+      )}
+      <div className={styles.assetSelect}>
+        {tokenContract ? (
+          <>
+            <img
+              className="h-9 w-9 mr-2 rounded-md cursor-pointer"
+              alt={`${tokenContract.name} logo`}
+              src={logoSrc}
+              onClick={() => alert(stringifyBigInt(tokenContract))}
+              onError={onError}
+            />
+            {tokenContract.symbol}
+          </>
+        ) : (
+          <>Select Token:</>
+        )}
+        <ChevronDown
+          size={18}
+          className="ml-2 cursor-pointer"
+          onClick={openDialog}
+        />
+      </div>
+    </>
   );
-};
+}
 
-export const useSharedPanelContext = (): SharedPanelContextType => {
-  const ctx = useContext(SharedPanelContext);
-  if (!ctx)
-    throw new Error('❌ useSharedPanelContext must be used within a SharedPanelProvider');
-  return ctx;
-};
+export default TokenSelectDropDown;
