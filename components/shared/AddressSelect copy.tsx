@@ -44,8 +44,6 @@ export default function AddressSelect() {
 
   const manualEntryRef = useRef(false);
   const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput, manualEntryRef);
-
-
   useEffect(() => {
     return () => {
       manualEntryRef.current = false;
@@ -59,6 +57,17 @@ export default function AddressSelect() {
     }
   }, [localValidatedAsset, setValidatedAsset]);
 
+  const onManualSelect = (item: ValidatedAsset) => {
+    debugLog.log(`🧝‍♂️ onManualSelect():`, item);
+    handleInputChange(item.address, true);
+  };
+
+  const onDataListSelect = (item: ValidatedAsset) => {
+    debugLog.log(`📜 onDataListSelect():`, item);
+    handleInputChange(item.address, false);
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF)
+  };
+
   useEffect(() => {
     if (
       inputState === InputState.VALID_INPUT &&
@@ -71,40 +80,17 @@ export default function AddressSelect() {
     }
   }, [inputState, validatedAsset, setInputState]);
 
-  const updateValidTokenSelection = (asset: ValidatedAsset) => {
-    debugLog.log(`✅ updateValidTokenSelection():`, asset);
-    debugLog.log(
-      `📦 containerType (${containerType}): ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
-        ? 'SELL_SELECT_CONTAINER'
-        : containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER
-          ? 'BUY_SELECT_CONTAINER'
-          : 'UNKNOWN'
-      } at updateValidTokenSelection()`
-    );
-
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      debugLog.log(`🟦 Applying to SELL container`);
-      setSellTokenContract(structuredClone(asset));
-    } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-      debugLog.log(`🟥 Applying to BUY container`);
-      setBuyTokenContract(structuredClone(asset));
-    } else {
-      debugLog.warn(`⚠️ Unexpected containerType: ${containerType}`);
+  useEffect(() => {
+    if (inputState === InputState.CLOSE_SELECT_INPUT && validatedAsset) {
+      debugLog.log(`📦 Applying validatedAsset from CLOSE_SELECT_INPUT`, validatedAsset);
+      if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+        setSellTokenContract(structuredClone(validatedAsset));
+      } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+        setBuyTokenContract(structuredClone(validatedAsset));
+      }
+      setInputState(InputState.EMPTY_INPUT);
     }
-
-    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
-  };
-
-  const onManualSelect = (item: ValidatedAsset) => {
-    debugLog.log(`🧝‍♂️ onManualSelect():`, item);
-    handleInputChange(item.address, true);
-  };
-
-  const onDataListSelect = (item: ValidatedAsset) => {
-    debugLog.log(`📜 onDataListSelect():`, item);
-    handleInputChange(item.address, false);
-    updateValidTokenSelection(item);
-  };
+  }, [inputState, validatedAsset, containerType, setSellTokenContract, setBuyTokenContract, setInputState]);
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>

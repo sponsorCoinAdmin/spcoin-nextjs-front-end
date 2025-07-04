@@ -1,3 +1,5 @@
+// File: lib/context/ScrollSelectPanel/SharedPanelContext.tsx
+
 'use client';
 
 import React, {
@@ -43,6 +45,7 @@ export interface SharedPanelContextType {
   feedType: FEED_TYPE;
 }
 
+// ✅ DO NOT pass in a shared defaultState (this ensures state isolation)
 const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
 
 function getFeedTypeFromContainer(containerType: CONTAINER_TYPE): FEED_TYPE {
@@ -86,7 +89,7 @@ export const SharedPanelProvider = ({
       containerType,
       inputState,
     };
-  }, []);
+  }, [containerType, inputState]);
 
   useEffect(() => {
     debugLog.log(`🔁 inputState updated → ${getInputStateString(inputState)}`);
@@ -113,6 +116,7 @@ export const SharedPanelProvider = ({
     }
   };
 
+  // ✅ Construct fully independent state per instance
   const value = useMemo<SharedPanelContextType>(
     () => ({
       inputState,
