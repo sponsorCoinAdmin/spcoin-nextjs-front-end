@@ -17,7 +17,6 @@ export interface UsePanelFeedContextResult {
   inputValue: string;
   debouncedAddress: string;
   validateHexInput: (val: string) => void;
-  getInputStatusEmoji: (state: InputState) => string;
   feedType: FEED_TYPE;
   containerType: CONTAINER_TYPE;
   instanceId: string;
@@ -33,7 +32,6 @@ export function usePanelFeedContext(): UsePanelFeedContextResult {
     inputValue: ctx.inputValue,
     debouncedAddress: ctx.debouncedAddress,
     validateHexInput: ctx.validateHexInput,
-    getInputStatusEmoji: ctx.getInputStatusEmoji,
     feedType: ctx.feedType,
     containerType: ctx.containerType,
     instanceId: ctx.instanceId,

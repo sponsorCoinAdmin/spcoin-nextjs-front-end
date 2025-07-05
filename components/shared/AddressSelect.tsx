@@ -24,6 +24,7 @@ import {
 import { useValidateHexInputChange } from '@/lib/hooks/inputValidations';
 
 import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { getInputStatusEmoji } from '@/lib/hooks/inputValidations/helpers/getInputStatusEmoji';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -34,7 +35,6 @@ export default function AddressSelect() {
     inputValue,
     debouncedAddress,
     validateHexInput,
-    getInputStatusEmoji,
     inputState,
     setInputState,
     validatedAsset,
