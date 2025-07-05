@@ -46,6 +46,7 @@ export interface SharedPanelContextType {
   instanceId: string;
   activePanelFeed?: FEED_TYPE;
   setActivePanelFeed?: (f: FEED_TYPE) => void;
+  isActivePanel?: boolean;
 }
 
 const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
@@ -122,6 +123,8 @@ export const SharedPanelProvider = ({
     }
   };
 
+  const isActivePanel = activePanelFeed === feedType;
+
   const value = useMemo<SharedPanelContextType>(
     () => ({
       inputState,
@@ -140,6 +143,7 @@ export const SharedPanelProvider = ({
       instanceId,
       activePanelFeed,
       setActivePanelFeed,
+      isActivePanel,
     }),
     [
       inputState,
@@ -151,6 +155,7 @@ export const SharedPanelProvider = ({
       feedType,
       instanceId,
       activePanelFeed,
+      isActivePanel,
     ]
   );
 
