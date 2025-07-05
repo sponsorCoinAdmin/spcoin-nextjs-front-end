@@ -15,9 +15,9 @@ export interface SharedPanelContextType {
   inputValue: string;
   debouncedAddress: string;
   validateHexInput: (val: string) => void;
-  getInputStatusEmoji: (state: InputState) => string;
   feedType: FEED_TYPE;
   instanceId: string;
+  // ❌ getInputStatusEmoji removed
 }
 
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
