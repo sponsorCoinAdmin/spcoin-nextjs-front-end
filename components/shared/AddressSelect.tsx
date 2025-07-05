@@ -25,6 +25,7 @@ import { useValidateHexInputChange } from '@/lib/hooks/inputValidations';
 
 import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 import { getInputStatusEmoji } from '@/lib/hooks/inputValidations/helpers/getInputStatusEmoji';
+import { useDebouncedAddressInput } from '@/lib/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -32,16 +33,23 @@ const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function AddressSelect() {
   const {
-    inputValue,
-    debouncedAddress,
-    validateHexInput,
+    // inputValue,
+    // debouncedAddress,
+    // validateHexInput,
     inputState,
     setInputState,
     validatedAsset,
-    setValidatedAsset,
     containerType,
     feedType,
   } = usePanelFeedContext();
+
+  const {
+    inputValue,
+    debouncedAddress,
+    validateHexInput,
+  } = useDebouncedAddressInput();
+
+  const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput);
 
   const {
     isLoading,
@@ -55,7 +63,6 @@ export default function AddressSelect() {
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
 
-  const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput);
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
