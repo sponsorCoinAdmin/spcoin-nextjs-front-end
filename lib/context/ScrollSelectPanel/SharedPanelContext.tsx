@@ -22,8 +22,7 @@ import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTyp
 import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('ScrollPanelContext', DEBUG_ENABLED, LOG_TIME);
 
 declare global {
