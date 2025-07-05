@@ -22,7 +22,8 @@ import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTyp
 import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('ScrollPanelContext', DEBUG_ENABLED, LOG_TIME);
 
 declare global {
@@ -43,6 +44,8 @@ export interface SharedPanelContextType {
   getInputStatusEmoji: (state: InputState) => string;
   feedType: FEED_TYPE;
   instanceId: string;
+  activePanelFeed?: FEED_TYPE;
+  setActivePanelFeed?: (f: FEED_TYPE) => void;
 }
 
 const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
@@ -71,6 +74,7 @@ export const SharedPanelProvider = ({
   const feedType = getFeedTypeFromContainer(containerType);
   const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+  const [activePanelFeed, setActivePanelFeed] = useState<FEED_TYPE | undefined>();
   const {
     inputValue,
     debouncedAddress,
@@ -134,6 +138,8 @@ export const SharedPanelProvider = ({
       getInputStatusEmoji,
       feedType,
       instanceId,
+      activePanelFeed,
+      setActivePanelFeed,
     }),
     [
       inputState,
@@ -144,6 +150,7 @@ export const SharedPanelProvider = ({
       validateHexInput,
       feedType,
       instanceId,
+      activePanelFeed,
     ]
   );
 

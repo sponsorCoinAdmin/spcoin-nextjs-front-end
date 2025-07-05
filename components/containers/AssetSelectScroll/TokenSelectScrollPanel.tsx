@@ -5,11 +5,13 @@ import {
   CONTAINER_TYPE,
   InputState,
   SP_COIN_DISPLAY,
+  FEED_TYPE,
   getInputStateString,
 } from '@/lib/structure';
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
 import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -22,9 +24,10 @@ export default function TokenSelectScrollPanel() {
     inputState,
     setInputState,
     containerType,
-    instanceId, // ✅ debug
+    instanceId,
   } = sharedState;
 
+  const { activePanelFeed } = useSharedPanelContext();
   const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
 
   const title =
@@ -43,17 +46,15 @@ export default function TokenSelectScrollPanel() {
     if (inputState === InputState.CLOSE_SELECT_INPUT) {
       debugLog.log(`✅ [${instanceId}] CLOSE_SELECT_INPUT triggered → updateAssetScrollDisplay(EXCHANGE_ROOT)`);
       updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
-
-      // ✅ Prevent infinite loop
       setInputState(InputState.EMPTY_INPUT);
     }
   }, [inputState, updateAssetScrollDisplay, setInputState, instanceId]);
 
-  return (
-    <>
-      {assetSelectScrollDisplay === SP_COIN_DISPLAY.DISPLAY_ON && (
-        <AssetSelectScrollContainer title={title} />
-      )}
-    </>
-  );
+  useEffect(() => {
+    debugLog.log(`📡 [${instanceId}] activePanelFeed = ${activePanelFeed}`);
+  }, [activePanelFeed, instanceId]);
+
+  const shouldRender = assetSelectScrollDisplay === SP_COIN_DISPLAY.DISPLAY_ON && activePanelFeed === FEED_TYPE.TOKEN_LIST;
+
+  return <>{shouldRender && <AssetSelectScrollContainer title={title} />}</>;
 }

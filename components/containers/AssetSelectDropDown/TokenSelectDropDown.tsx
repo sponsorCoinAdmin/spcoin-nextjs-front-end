@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { useDisplayControls } from '@/lib/context/hooks';
 
 import {
@@ -79,18 +79,20 @@ function InnerDropDown({
     inputState,
     setInputState,
     instanceId,
+    setActivePanelFeed,
   } = useSharedPanelContext();
 
   const { updateAssetScrollDisplay } = useDisplayControls();
 
   const openDialog = useCallback(() => {
-    debugLog.log(`📂 [${instanceId}] Opening Token dialog for containerType=${containerType}`);
+    debugLog.log(`📂 Opening Token dialog for containerType=${containerType}`);
     setInputState(InputState.VALID_INPUT);
+    setActivePanelFeed?.(FEED_TYPE.TOKEN_LIST); // ✅ safe call
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
-  }, [setInputState, updateAssetScrollDisplay, containerType, instanceId]);
+  }, [setInputState, setActivePanelFeed, updateAssetScrollDisplay, containerType]);
 
   useEffect(() => {
-    debugLog.log(`🎯 [${instanceId}] inputState changed → ${getInputStateString(inputState)}`);
+    debugLog.log(`🌟 [${instanceId}] inputState changed → ${getInputStateString(inputState)}`);
   }, [inputState, instanceId]);
 
   debugLog.log(`🔓 [${instanceId}] Rendering TokenSelectScrollPanel for containerType=${containerType}`);
