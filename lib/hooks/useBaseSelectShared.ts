@@ -10,7 +10,6 @@ import {
 export interface BaseSelectSharedState {
   inputValue: string;
   debouncedAddress: string;
-  onChange: (val: string) => void;
   validateHexInput: (val: string) => void;
   inputState: InputState;
   setInputState: (state: InputState) => void;
@@ -21,19 +20,20 @@ export interface BaseSelectSharedState {
   ) => { emoji?: string; text: string; useLogo?: boolean } | undefined;
   feedType: FEED_TYPE;
   containerType: CONTAINER_TYPE;
+  instanceId: string;
 }
 
 export function useBaseSelectShared(): BaseSelectSharedState {
   const {
     inputValue,
     debouncedAddress,
-    onChange,
     validateHexInput,
     inputState,
     setInputState,
     getInputStatusEmoji,
     feedType,
     containerType,
+    instanceId,
   } = useSharedPanelContext();
 
   const validateInputStatusMessage = (
@@ -52,7 +52,6 @@ export function useBaseSelectShared(): BaseSelectSharedState {
   return {
     inputValue,
     debouncedAddress,
-    onChange,
     validateHexInput,
     inputState,
     setInputState,
@@ -60,5 +59,6 @@ export function useBaseSelectShared(): BaseSelectSharedState {
     validateInputStatusMessage,
     feedType,
     containerType,
+    instanceId,
   };
 }

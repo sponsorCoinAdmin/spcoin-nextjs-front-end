@@ -29,6 +29,7 @@ export default function AddressSelect() {
     setValidatedAsset,
     containerType,
     feedType,
+    instanceId,
   } = useSharedPanelContext();
 
   const {
@@ -44,6 +45,7 @@ export default function AddressSelect() {
 
   const manualEntryRef = useRef(false);
   const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput, manualEntryRef);
+
   useEffect(() => {
     return () => {
       manualEntryRef.current = false;
@@ -52,21 +54,10 @@ export default function AddressSelect() {
 
   useEffect(() => {
     if (localValidatedAsset && setValidatedAsset) {
-      debugLog.log(`✅ Syncing validated asset to context`, localValidatedAsset);
+      debugLog.log(`✅ Syncing validated asset to context (instanceId=${instanceId})`, localValidatedAsset);
       setValidatedAsset(localValidatedAsset);
     }
-  }, [localValidatedAsset, setValidatedAsset]);
-
-  const onManualSelect = (item: ValidatedAsset) => {
-    debugLog.log(`🧝‍♂️ onManualSelect():`, item);
-    handleInputChange(item.address, true);
-  };
-
-  const onDataListSelect = (item: ValidatedAsset) => {
-    debugLog.log(`📜 onDataListSelect():`, item);
-    handleInputChange(item.address, false);
-    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF)
-  };
+  }, [localValidatedAsset, setValidatedAsset, instanceId]);
 
   useEffect(() => {
     if (
@@ -74,23 +65,46 @@ export default function AddressSelect() {
       manualEntryRef.current &&
       validatedAsset
     ) {
-      debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry`, validatedAsset);
+      debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_INPUT due to manual entry (instanceId=${instanceId})`, validatedAsset);
       setInputState(InputState.CLOSE_SELECT_INPUT);
       manualEntryRef.current = false;
     }
-  }, [inputState, validatedAsset, setInputState]);
+  }, [inputState, validatedAsset, setInputState, instanceId]);
 
-  useEffect(() => {
-    if (inputState === InputState.CLOSE_SELECT_INPUT && validatedAsset) {
-      debugLog.log(`📦 Applying validatedAsset from CLOSE_SELECT_INPUT`, validatedAsset);
-      if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-        setSellTokenContract(structuredClone(validatedAsset));
-      } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-        setBuyTokenContract(structuredClone(validatedAsset));
-      }
-      setInputState(InputState.EMPTY_INPUT);
+  const updateValidTokenSelection = (asset: ValidatedAsset) => {
+    debugLog.log(`✅ updateValidTokenSelection() (instanceId=${instanceId}):`, asset);
+    debugLog.log(
+      `📦 containerType (${containerType}): ${containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+        ? 'SELL_SELECT_CONTAINER'
+        : containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER
+          ? 'BUY_SELECT_CONTAINER'
+          : 'UNKNOWN'
+      } at updateValidTokenSelection()`
+    );
+
+    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+      debugLog.log(`🟦 Applying to SELL container`);
+      setSellTokenContract(structuredClone(asset));
+    } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+      debugLog.log(`🟥 Applying to BUY container`);
+      setBuyTokenContract(structuredClone(asset));
+    } else {
+      debugLog.warn(`⚠️ Unexpected containerType: ${containerType}`);
     }
-  }, [inputState, validatedAsset, containerType, setSellTokenContract, setBuyTokenContract, setInputState]);
+
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
+  };
+
+  const onManualSelect = (item: ValidatedAsset) => {
+    debugLog.log(`🧝‍♂️ onManualSelect() (instanceId=${instanceId}):`, item);
+    handleInputChange(item.address, true);
+  };
+
+  const onDataListSelect = (item: ValidatedAsset) => {
+    debugLog.log(`📜 onDataListSelect() (instanceId=${instanceId}):`, item);
+    handleInputChange(item.address, false);
+    updateValidTokenSelection(item);
+  };
 
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>

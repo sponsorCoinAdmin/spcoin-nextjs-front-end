@@ -13,9 +13,10 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPan
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import { useSellTokenContract, useBuyTokenContract, useDisplayControls } from '@/lib/context/hooks';
 import { useValidateHexInputChange } from '@/lib/hooks/inputValidations';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
-const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function AddressSelect() {
   const {
@@ -45,9 +46,9 @@ export default function AddressSelect() {
   const manualEntryRef = useRef(false);
   const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput, manualEntryRef);
 
-
   useEffect(() => {
     return () => {
+      debugLog.log(`🧼 Cleaning up manualEntryRef`);
       manualEntryRef.current = false;
     };
   }, []);
@@ -110,7 +111,10 @@ export default function AddressSelect() {
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
-        onChange={(val) => handleInputChange(val, false)}
+        onChange={(val) => {
+          debugLog.log(`⌨️ Manual input change: ${val}`);
+          handleInputChange(val, false);
+        }}
         placeholder="Enter address"
         statusEmoji={getInputStatusEmoji(inputState)}
       />

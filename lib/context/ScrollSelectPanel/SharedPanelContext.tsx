@@ -43,9 +43,9 @@ export interface SharedPanelContextType {
   validateHexInput: (val: string) => void;
   getInputStatusEmoji: (state: InputState) => string;
   feedType: FEED_TYPE;
+  instanceId: string;
 }
 
-// ✅ DO NOT pass in a shared defaultState (this ensures state isolation)
 const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
 
 function getFeedTypeFromContainer(containerType: CONTAINER_TYPE): FEED_TYPE {
@@ -72,24 +72,27 @@ export const SharedPanelProvider = ({
   const feedType = getFeedTypeFromContainer(containerType);
   const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-
   const {
     inputValue,
     debouncedAddress,
     validateHexInput,
   } = useDebouncedAddressInput();
 
+  // ✅ Unique instance ID for debugging
+  const instanceId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 10000)}`;
+
   useEffect(() => {
     debugLog.log(
-      `📦 SharedPanelProvider mount: containerType=${containerType}, inputState=${getInputStateString(
+      `📦 SharedPanelProvider mount: containerType=${containerType}, instanceId=${instanceId}, inputState=${getInputStateString(
         inputState
       )}`
     );
     window.__scrollPanelDebug = {
       containerType,
       inputState,
+      instanceId,
     };
-  }, [containerType, inputState]);
+  }, [containerType, inputState, instanceId]);
 
   useEffect(() => {
     debugLog.log(`🔁 inputState updated → ${getInputStateString(inputState)}`);
@@ -116,12 +119,11 @@ export const SharedPanelProvider = ({
     }
   };
 
-  // ✅ Construct fully independent state per instance
   const value = useMemo<SharedPanelContextType>(
     () => ({
       inputState,
       setInputState: (state: InputState) => {
-        debugLog.log(`📝 setInputState called → ${getInputStateString(state)}`);
+        debugLog.log(`📝 setInputState called → ${getInputStateString(state)} (instanceId=${instanceId})`);
         setInputState(state);
       },
       validatedAsset,
@@ -132,6 +134,7 @@ export const SharedPanelProvider = ({
       validateHexInput,
       getInputStatusEmoji,
       feedType,
+      instanceId,
     }),
     [
       inputState,
@@ -141,6 +144,7 @@ export const SharedPanelProvider = ({
       debouncedAddress,
       validateHexInput,
       feedType,
+      instanceId,
     ]
   );
 

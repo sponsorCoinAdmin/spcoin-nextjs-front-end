@@ -51,7 +51,7 @@ function TokenSelectDropDown({ containerType }: Props) {
     markLogoAsBroken(tokenAddr);
     event.currentTarget.src = defaultMissingImage;
 
-    debugLog.log(`Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
+    debugLog.warn(`❌ Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
   return (
@@ -75,23 +75,30 @@ function InnerDropDown({
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
-  const { inputState, setInputState } = useSharedPanelContext();
-const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();  
+  const {
+    inputState,
+    setInputState,
+    instanceId,
+  } = useSharedPanelContext();
+
+  const { updateAssetScrollDisplay } = useDisplayControls();
 
   const openDialog = useCallback(() => {
-    debugLog.log('📂 Opening Token dialog');
+    debugLog.log(`📂 [${instanceId}] Opening Token dialog for containerType=${containerType}`);
     setInputState(InputState.VALID_INPUT);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
-  }, [setInputState]);
+  }, [setInputState, updateAssetScrollDisplay, containerType, instanceId]);
 
   useEffect(() => {
-    console.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
-    // alert(`🎯 inputState changed → ${getInputStateString(inputState)}`);
-  }, [inputState]);
+    debugLog.log(`🎯 [${instanceId}] inputState changed → ${getInputStateString(inputState)}`);
+  }, [inputState, instanceId]);
+
+  debugLog.log(`🔓 [${instanceId}] Rendering TokenSelectScrollPanel for containerType=${containerType}`);
 
   return (
     <>
-      {<TokenSelectScrollPanel />}      <div className={styles.assetSelect}>
+      <TokenSelectScrollPanel />
+      <div className={styles.assetSelect}>
         {tokenContract ? (
           <>
             <img

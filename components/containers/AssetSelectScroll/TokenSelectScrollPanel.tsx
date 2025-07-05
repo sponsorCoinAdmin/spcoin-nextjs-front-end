@@ -18,7 +18,13 @@ const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_
 
 export default function TokenSelectScrollPanel() {
   const sharedState = useBaseSelectShared();
-  const { inputState, setInputState, containerType } = sharedState;
+  const {
+    inputState,
+    setInputState,
+    containerType,
+    instanceId, // ✅ debug
+  } = sharedState;
+
   const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
 
   const title =
@@ -27,21 +33,21 @@ export default function TokenSelectScrollPanel() {
       : 'Select a Token to Buy';
 
   useEffect(() => {
-    debugLog.log(`🧩 TokenSelectScrollPanel mounted for containerType=${containerType}`);
-  }, [containerType]);
+    debugLog.log(`🧩 [${instanceId}] TokenSelectScrollPanel mounted for containerType=${containerType}`);
+  }, [containerType, instanceId]);
 
   useEffect(() => {
     const stateStr = getInputStateString(inputState);
-    debugLog.log(`🌀 inputState changed → ${stateStr}`);
+    debugLog.log(`🌀 [${instanceId}] inputState changed → ${stateStr}`);
 
     if (inputState === InputState.CLOSE_SELECT_INPUT) {
-      debugLog.log(`✅ CLOSE_SELECT_INPUT triggered, calling updateAssetScrollDisplay → EXCHANGE_ROOT`);
+      debugLog.log(`✅ [${instanceId}] CLOSE_SELECT_INPUT triggered → updateAssetScrollDisplay(EXCHANGE_ROOT)`);
       updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
 
-      // ✅ Prevent infinite loop by resetting inputState
+      // ✅ Prevent infinite loop
       setInputState(InputState.EMPTY_INPUT);
     }
-  }, [inputState, updateAssetScrollDisplay, setInputState]);
+  }, [inputState, updateAssetScrollDisplay, setInputState, instanceId]);
 
   return (
     <>
