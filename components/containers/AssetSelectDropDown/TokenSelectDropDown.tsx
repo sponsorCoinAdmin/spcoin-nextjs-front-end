@@ -1,21 +1,23 @@
+// File: components/containers/TokenSelectDropDown.tsx
+
 'use client';
 
 import { useCallback, useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useDisplayControls } from '@/lib/context/hooks';
 
 import {
   CONTAINER_TYPE,
   getInputStateString,
   InputState,
   TokenContract,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
 import {
   useBuyTokenContract,
   useSellTokenContract,
+  useDisplayControls,
 } from '@/lib/context/hooks';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -24,7 +26,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 import { TokenSelectScrollPanel } from '../AssetSelectScroll';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -75,23 +77,23 @@ function InnerDropDown({
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
-  const { inputState, setInputState } = useSharedPanelContext();
-const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();  
+  const { inputState, setInputState } = usePanelFeedContext();
+  const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
     setInputState(InputState.VALID_INPUT);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
-  }, [setInputState]);
+  }, [setInputState, updateAssetScrollDisplay]);
 
   useEffect(() => {
     console.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
-    // alert(`🎯 inputState changed → ${getInputStateString(inputState)}`);
   }, [inputState]);
 
   return (
     <>
-      {<TokenSelectScrollPanel />}      <div className={styles.assetSelect}>
+      {<TokenSelectScrollPanel />}
+      <div className={styles.assetSelect}>
         {tokenContract ? (
           <>
             <img

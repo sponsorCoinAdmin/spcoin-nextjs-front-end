@@ -1,3 +1,5 @@
+// File: components/views/MainSwapView.tsx
+
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
@@ -15,14 +17,9 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { TokenSelectContainer } from '../containers/AssetSelectPanel';
 
-import {
-  SharedPanelProvider,
-} from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+import { SellTokenPanelProvider, BuyTokenPanelProvider } from '@/lib/context/ScrollSelectPanels';
 
-import {
-  useExchangeContext,
-} from '@/lib/context/hooks';
-
+import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -35,7 +32,7 @@ export default function MainSwapView() {
 
   debugLog.log(`🔍 MainSwapView render triggered`);
   debugLog.log(`🧩 Current assetSelectScrollDisplay = ${assetSelectScrollDisplay}`);
-  debugLog.log(`🎯 Enum Comparisons:`, {
+  debugLog.log(`🏂 Enum Comparisons:`, {
     SHOW_TOKEN_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER,
     SHOW_RECIPIENT_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER,
     DISPLAY_OFF: SP_COIN_DISPLAY.DISPLAY_OFF,
@@ -51,13 +48,13 @@ export default function MainSwapView() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        <SharedPanelProvider containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}>
+        <SellTokenPanelProvider>
           <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-        </SharedPanelProvider>
+        </SellTokenPanelProvider>
 
-        <SharedPanelProvider containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}>
+        <BuyTokenPanelProvider>
           <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-        </SharedPanelProvider>
+        </BuyTokenPanelProvider>
 
         <BuySellSwapArrowButton />
         <PriceButton isLoadingPrice={isLoadingPrice} />

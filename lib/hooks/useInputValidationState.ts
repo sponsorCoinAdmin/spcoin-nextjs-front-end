@@ -52,6 +52,13 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
   const publicClient = usePublicClient();
   const { address: accountAddress } = useAccount();
 
+  const { data: balanceData } = useBalance({
+    address: accountAddress,
+    token: isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined,
+    chainId,
+    query: { enabled: Boolean(accountAddress) },
+  });
+
   // ✅ Finite State Machine — single useEffect
   useEffect(() => {
     const runValidationFSM = async () => {
@@ -115,50 +122,41 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
           if (seenBrokenLogosRef.current.has(debouncedAddress)) {
             debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
           } else {
-            debugSetInputState(InputState.IS_LOADING, inputState, setInputState);
+            debugSetInputState(InputState.VALIDATE_BALANCE, inputState, setInputState);
           }
           break;
 
-        case InputState.IS_LOADING:
-          // wait for balance effect to resolve
+        case InputState.VALIDATE_BALANCE:
+          debugLog.log('⏳ Waiting for balance data...');
+          if (!balanceData || !validatedAsset) return;
+
+          if (lastTokenAddressRef.current === validatedAsset.address) return;
+
+          lastTokenAddressRef.current = validatedAsset.address;
+
+          const tokenWithBalance: TokenContract = {
+            ...validatedAsset,
+            balance: balanceData.value,
+            chainId: chainId!,
+            logoURL: getLogoURL(chainId!, validatedAsset.address, feedType),
+          };
+
+          debugLog.log(`✅ Fully validated tokenWithBalance`, tokenWithBalance);
+          setValidatedAsset(tokenWithBalance as unknown as T);
+
+          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+            setSellTokenContract(tokenWithBalance);
+          } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+            setBuyTokenContract(tokenWithBalance);
+          }
+
+          debugSetInputState(InputState.VALID_INPUT, inputState, setInputState);
           break;
       }
     };
 
     runValidationFSM();
-  }, [inputState, debouncedAddress, publicClient]);
-
-  const { data: balanceData } = useBalance({
-    address: accountAddress,
-    token: isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined,
-    chainId,
-    query: { enabled: Boolean(accountAddress) },
-  });
-
-  useEffect(() => {
-    if (!balanceData || !validatedAsset) return;
-    if (lastTokenAddressRef.current === validatedAsset.address) return;
-
-    lastTokenAddressRef.current = validatedAsset.address;
-
-    const tokenWithBalance: TokenContract = {
-      ...validatedAsset,
-      balance: balanceData.value,
-      chainId: chainId!,
-      logoURL: getLogoURL(chainId!, validatedAsset.address, feedType),
-    };
-
-    debugLog.log(`✅ Fully validated tokenWithBalance`, tokenWithBalance);
-    setValidatedAsset(tokenWithBalance as unknown as T);
-
-    if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-      setSellTokenContract(tokenWithBalance);
-    } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-      setBuyTokenContract(tokenWithBalance);
-    }
-
-    debugSetInputState(InputState.VALID_INPUT, inputState, setInputState);
-  }, [balanceData, validatedAsset, chainId]);
+  }, [inputState, debouncedAddress, publicClient, balanceData, validatedAsset, chainId]);
 
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedAddress) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 import {
   InputState,
   FEED_TYPE,
@@ -10,7 +10,6 @@ import {
 export interface BaseSelectSharedState {
   inputValue: string;
   debouncedAddress: string;
-  onChange: (val: string) => void;
   validateHexInput: (val: string) => void;
   inputState: InputState;
   setInputState: (state: InputState) => void;
@@ -27,7 +26,6 @@ export function useBaseSelectShared(): BaseSelectSharedState {
   const {
     inputValue,
     debouncedAddress,
-    onChange,
     validateHexInput,
     inputState,
     setInputState,
@@ -52,7 +50,6 @@ export function useBaseSelectShared(): BaseSelectSharedState {
   return {
     inputValue,
     debouncedAddress,
-    onChange,
     validateHexInput,
     inputState,
     setInputState,

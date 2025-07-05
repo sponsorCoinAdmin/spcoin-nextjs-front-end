@@ -1,16 +1,15 @@
-import { MutableRefObject, useCallback } from 'react';
+// File: lib/hooks/inputValidations/useValidateHexInputChange.ts
 
-export function useValidateHexInputChange(
-  validateHexInput: (value: string) => void,
-  manualEntryRef: MutableRefObject<boolean>
-) {
-  const onChange = useCallback((val: string, isManual: boolean = false) => {
-    manualEntryRef.current = isManual;
+'use client';
+
+import { useCallback, useRef } from 'react';
+
+export function useValidateHexInputChange(validateHexInput: (value: string) => void) {
+  const onChange = useCallback((val: string, _isManual?: boolean) => {
     validateHexInput(val);
-  }, [validateHexInput, manualEntryRef]);
+  }, [validateHexInput]);
 
   return {
     onChange,
-    manualEntryRef,
   };
 }

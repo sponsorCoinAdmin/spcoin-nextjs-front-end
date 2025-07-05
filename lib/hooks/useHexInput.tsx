@@ -1,3 +1,5 @@
+// File: lib/hooks/useHexInput.tsx
+
 import { useState, useCallback } from 'react';
 
 export function useHexInput(initialValue: string = '') {

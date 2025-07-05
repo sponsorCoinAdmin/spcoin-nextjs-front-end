@@ -4,8 +4,8 @@
 import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
 import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
 import { useDisplayControls } from '@/lib/context/hooks';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 
 export default function BaseModalDialog({
   id,
@@ -16,14 +16,13 @@ export default function BaseModalDialog({
   title: string;
   children: React.ReactNode;
 }) {
-  const { setInputState } = useSharedPanelContext();
-const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();  
+  const { setInputState } = usePanelFeedContext();
+  const { updateAssetScrollDisplay } = useDisplayControls();
 
   const closeDialog = useCallback(() => {
     setInputState(InputState.CLOSE_SELECT_INPUT);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
-
-  }, [setInputState]);
+  }, [setInputState, updateAssetScrollDisplay]);
 
   return (
     <div

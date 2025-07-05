@@ -137,9 +137,11 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   const showNoRadius = () => {
     const isBuyTokenContainer = containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
-    const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER;
-    const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
-    return isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
+    const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER;
+    // const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY;
+    // return isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
+    // ToDo Fix
+    return true
   };
 
   return (

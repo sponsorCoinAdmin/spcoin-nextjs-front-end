@@ -1,3 +1,5 @@
+// File: components/AssetSelectScroll/AssetSelectScrollContainer.tsx
+
 'use client';
 
 import { useEffect } from 'react';
@@ -5,8 +7,9 @@ import { getInputStateString } from '@/lib/structure';
 
 import BaseModalDialog from './BaseModalDialog';
 import AddressSelect from '@/components/shared/AddressSelect';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanel/SharedPanelContext';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
@@ -17,7 +20,7 @@ interface Props {
 }
 
 export default function AssetSelectScrollContainer({ title }: Props) {
-  const { containerType } = useSharedPanelContext();
+  const { containerType } = usePanelFeedContext();
 
   useEffect(() => {
     debugLog.log(`📥 AssetSelectScrollContainer mounted`);
