@@ -2,14 +2,37 @@
 
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
+import { useDebouncedAddressInput } from '@/lib/hooks';
+import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import { FEED_TYPE } from '@/lib/structure';
 
-export function useValidateHexInputChange(validateHexInput: (value: string) => void) {
-  const onChange = useCallback((val: string, _isManual?: boolean) => {
-    validateHexInput(val);
-  }, [validateHexInput]);
+export function useValidateHexInputChange(feedType: FEED_TYPE) {
+  const {
+    inputValue,
+    debouncedAddress,
+    validateHexInput,
+  } = useDebouncedAddressInput();
+
+  const {
+    isLoading,
+    reportMissingLogoURL,
+    hasBrokenLogoURL,
+  } = useInputValidationState(debouncedAddress, feedType);
+
+  const onChange = useCallback(
+    (val: string, _isManual?: boolean) => {
+      validateHexInput(val);
+    },
+    [validateHexInput]
+  );
 
   return {
+    inputValue,
+    debouncedAddress,
     onChange,
+    isLoading,
+    reportMissingLogoURL,
+    hasBrokenLogoURL,
   };
 }

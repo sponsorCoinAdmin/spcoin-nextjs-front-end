@@ -19,7 +19,7 @@ export interface UsePanelFeedContextResult {
   // validateHexInput: (val: string) => void;
   feedType: FEED_TYPE;
   containerType: CONTAINER_TYPE;
-  instanceId: string;
+  // instanceId: string;
 }
 
 export function usePanelFeedContext(): UsePanelFeedContextResult {
@@ -34,6 +34,6 @@ export function usePanelFeedContext(): UsePanelFeedContextResult {
     // validateHexInput: ctx.validateHexInput,
     feedType: ctx.feedType,
     containerType: ctx.containerType,
-    instanceId: ctx.instanceId,
+    // instanceId: ctx.instanceId,
   };
 }

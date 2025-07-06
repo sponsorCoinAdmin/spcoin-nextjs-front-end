@@ -14,7 +14,6 @@ import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/Valid
 import DataList from '../Dialogs/Resources/DataList';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import {
   useSellTokenContract,
@@ -25,7 +24,6 @@ import { useValidateHexInputChange } from '@/lib/hooks/inputValidations';
 
 import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 import { getInputStatusEmoji } from '@/lib/hooks/inputValidations/helpers/getInputStatusEmoji';
-import { useDebouncedAddressInput } from '@/lib/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -33,9 +31,6 @@ const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function AddressSelect() {
   const {
-    // inputValue,
-    // debouncedAddress,
-    // validateHexInput,
     inputState,
     setInputState,
     validatedAsset,
@@ -45,24 +40,16 @@ export default function AddressSelect() {
 
   const {
     inputValue,
-    debouncedAddress,
-    validateHexInput,
-  } = useDebouncedAddressInput();
-
-  const { onChange: handleInputChange } = useValidateHexInputChange(validateHexInput);
-
-  const {
-    isLoading,
-    reportMissingLogoURL,
     hasBrokenLogoURL,
-  } = useInputValidationState(debouncedAddress, feedType);
+    reportMissingLogoURL,
+    onChange: handleInputChange,
+  } = useValidateHexInputChange(feedType);
 
   const MANUAL_ENTRY = true;
 
   const { updateAssetScrollDisplay } = useDisplayControls();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
-
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
@@ -77,7 +64,6 @@ export default function AddressSelect() {
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
   };
 
-  // ✅ Always promote VALID_INPUT to CLOSE_SELECT_INPUT
   useEffect(() => {
     if (inputState === InputState.VALID_INPUT && validatedAsset) {
       debugLog.log(`🎯 Promoting VALID_INPUT → CLOSE_SELECT_INPUT`, validatedAsset);
@@ -85,7 +71,6 @@ export default function AddressSelect() {
     }
   }, [inputState, validatedAsset, setInputState]);
 
-  // ✅ Apply the selected token to context when input closes
   useEffect(() => {
     if (inputState === InputState.CLOSE_SELECT_INPUT && validatedAsset) {
       debugLog.log(`📦 Applying validatedAsset from CLOSE_SELECT_INPUT`, validatedAsset);

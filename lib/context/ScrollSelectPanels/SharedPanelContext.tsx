@@ -13,10 +13,9 @@ export interface SharedPanelContextType {
   setValidatedAsset?: (asset: ValidatedAsset) => void;
   containerType: CONTAINER_TYPE;
   // inputValue: string;
-  debouncedAddress: string;
+  // debouncedAddress: string;
   // validateHexInput: (val: string) => void;
   feedType: FEED_TYPE;
-  instanceId: string;
   // ❌ getInputStatusEmoji removed
 }
 
