@@ -27,11 +27,11 @@ export function usePanelContextBase(
   const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
 
-  const {
-    inputValue,
-    debouncedAddress,
-    validateHexInput,
-  } = useDebouncedAddressInput();
+  // const {
+  //   inputValue,
+  //   debouncedAddress,
+  //   validateHexInput,
+  // } = useDebouncedAddressInput();
 
   const instanceId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 10000)}`;
 
@@ -43,18 +43,18 @@ export function usePanelContextBase(
     },
     validatedAsset,
     setValidatedAsset,
-    inputValue,
-    debouncedAddress,
-    validateHexInput,
+    // inputValue,
+    // debouncedAddress,
+    // validateHexInput,
     feedType,
     containerType,
     instanceId,
   }), [
     inputState,
     validatedAsset,
-    inputValue,
-    debouncedAddress,
-    validateHexInput,
+    // inputValue,
+    // debouncedAddress,
+    // validateHexInput,
     feedType,
     containerType,
     instanceId,

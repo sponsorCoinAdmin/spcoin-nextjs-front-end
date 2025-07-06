@@ -14,9 +14,9 @@ export interface UsePanelFeedContextResult {
   setInputState: (state: InputState) => void;
   validatedAsset?: ValidatedAsset;
   setValidatedAsset?: (asset: ValidatedAsset) => void;
-  inputValue: string;
-  debouncedAddress: string;
-  validateHexInput: (val: string) => void;
+  // inputValue: string;
+  // debouncedAddress: string;
+  // validateHexInput: (val: string) => void;
   feedType: FEED_TYPE;
   containerType: CONTAINER_TYPE;
   instanceId: string;
@@ -29,9 +29,9 @@ export function usePanelFeedContext(): UsePanelFeedContextResult {
     setInputState: ctx.setInputState,
     validatedAsset: ctx.validatedAsset,
     setValidatedAsset: ctx.setValidatedAsset,
-    inputValue: ctx.inputValue,
-    debouncedAddress: ctx.debouncedAddress,
-    validateHexInput: ctx.validateHexInput,
+    // inputValue: ctx.inputValue,
+    // debouncedAddress: ctx.debouncedAddress,
+    // validateHexInput: ctx.validateHexInput,
     feedType: ctx.feedType,
     containerType: ctx.containerType,
     instanceId: ctx.instanceId,
