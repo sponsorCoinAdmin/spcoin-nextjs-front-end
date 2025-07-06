@@ -3,26 +3,23 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useHexInput } from '@/lib/hooks/useHexInput';
-import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useDebouncedAddressInput } from '@/lib/hooks';
 import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
 import { FEED_TYPE } from '@/lib/structure';
 
 export function useValidateHexInputChange(feedType: FEED_TYPE) {
-  // ✅ Inline useHexInput
-  const { inputValue, validateHexInput, clearInput } = useHexInput();
+  const {
+    inputValue,
+    debouncedAddress,
+    validateHexInput,
+  } = useDebouncedAddressInput();
 
-  // ✅ Inline debounce logic
-  const debouncedAddress = useDebounce(inputValue, 250);
-
-  // ✅ Validation FSM uses debounced address
   const {
     isLoading,
     reportMissingLogoURL,
     hasBrokenLogoURL,
   } = useInputValidationState(debouncedAddress, feedType);
 
-  // ✅ Handle input change (calls validateHexInput)
   const onChange = useCallback(
     (val: string, _isManual?: boolean) => {
       validateHexInput(val);
@@ -37,6 +34,5 @@ export function useValidateHexInputChange(feedType: FEED_TYPE) {
     isLoading,
     reportMissingLogoURL,
     hasBrokenLogoURL,
-    clearInput, // Optional: exposed in case it's needed
   };
 }
