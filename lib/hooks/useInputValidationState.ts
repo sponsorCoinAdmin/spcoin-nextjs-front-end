@@ -16,17 +16,16 @@ import {
 } from '@/lib/context/hooks';
 
 import {
+  CONTAINER_TYPE,
+  FEED_TYPE,
   InputState,
   TokenContract,
   WalletAccount,
-  CONTAINER_TYPE,
-  FEED_TYPE,
 } from '@/lib/structure';
 
 import { debugLog } from './inputValidations/helpers/debugLogInstance';
 import { debugSetInputState } from './inputValidations/helpers/debugSetInputState';
 import { isEmptyInput } from './inputValidations/validations/isEmptyInput';
-import { isValidAddress } from './inputValidations/validations/isValidAddress';
 import { isDuplicateInput } from './inputValidations/validations/isDuplicateInput';
 import { resolveTokenContract } from './inputValidations/validations/resolveTokenContract';
 
@@ -38,6 +37,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
   const debouncedAddress = useDebounce(selectAddress || '', 250);
   const [inputState, setInputState] = useState<InputState>(InputState.VALIDATE_INPUT);
   const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);
+  const [validationPending, setValidationPending] = useState(true);
 
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
@@ -53,7 +53,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
   const { address: accountAddress } = useAccount();
 
   const { data: balanceData } = useBalance({
-    address: accountAddress,
+    address: isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined,
     token: isAddress(debouncedAddress) ? (debouncedAddress as `0x${string}`) : undefined,
     chainId,
     query: { enabled: Boolean(accountAddress) },
@@ -64,20 +64,41 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     const runValidationFSM = async () => {
       switch (inputState) {
         case InputState.VALIDATE_INPUT:
+          setValidationPending(true);
           if (isEmptyInput(debouncedAddress)) {
             debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
+          } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedAddress)) {
+            debugSetInputState(InputState.INVALID_HEX_INPUT, inputState, setInputState);
+            alert('Hex Input Address Required');
           } else {
             debugSetInputState(InputState.VALIDATE_ADDRESS, inputState, setInputState);
           }
           break;
 
-        case InputState.VALIDATE_ADDRESS:
-          if (!isValidAddress(debouncedAddress)) {
+        case InputState.INVALID_HEX_INPUT:
+          alert('Hex Input Address Required');
+          setValidationPending(false);
+          break;
+
+        case InputState.EMPTY_INPUT:
+        case InputState.INVALID_ADDRESS_INPUT:
+        case InputState.DUPLICATE_INPUT:
+        case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
+        case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+        case InputState.VALID_INPUT:
+          setValidationPending(false);
+          break;
+
+        case InputState.VALIDATE_ADDRESS: {
+          const isCompleteAddress = isAddress(debouncedAddress);
+          if (!isCompleteAddress) {
+            setValidationPending(false);
             debugSetInputState(InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
           } else {
             debugSetInputState(InputState.TEST_DUPLICATE_INPUT, inputState, setInputState);
           }
           break;
+        }
 
         case InputState.TEST_DUPLICATE_INPUT:
           if (isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)) {
@@ -90,6 +111,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
         case InputState.VALIDATE_EXISTS_ON_CHAIN:
           if (!publicClient) {
             debugLog.warn('❌ publicClient is undefined – skipping resolution');
+            setValidationPending(false);
             return;
           }
 
@@ -151,6 +173,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
           }
 
           debugSetInputState(InputState.VALID_INPUT, inputState, setInputState);
+          setValidationPending(false);
           break;
       }
     };
@@ -179,5 +202,6 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     chainId,
     reportMissingLogoURL,
     hasBrokenLogoURL,
+    validationPending,
   };
 };

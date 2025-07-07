@@ -67,43 +67,42 @@ export enum API_TRADING_PROVIDER {
   API_1INCH,
 }
 
-// File: lib/structure/enums.ts
-
 export enum InputState {
-  // 0️⃣ Triggered by user input
-  VALIDATE_INPUT,                      // 0
+  // 0️⃣ Blank input
+  EMPTY_INPUT = 'EMPTY_INPUT',                    // 0
 
-  // 1️⃣ Blank input
-  EMPTY_INPUT,                         // 1
+  // 1️⃣ Triggered by user input
+  VALIDATE_INPUT = 'VALIDATE_INPUT',              // 1
+  INVALID_HEX_INPUT = 'INVALID_HEX_INPUT',        // 2
 
   // 2️⃣ Hex address validation
-  VALIDATE_ADDRESS,                    // 2
-  INVALID_ADDRESS_INPUT,              // 3
+  VALIDATE_ADDRESS = 'VALIDATE_ADDRESS',          // 3
+  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',// 4
 
   // 3️⃣ Duplication check
-  TEST_DUPLICATE_INPUT,               // 4
-  DUPLICATE_INPUT,                    // 5
+  TEST_DUPLICATE_INPUT = 'TEST_DUPLICATE_INPUT',  // 5
+  DUPLICATE_INPUT = 'DUPLICATE_INPUT',            // 6
 
   // 4️⃣ Blockchain existence check
-  VALIDATE_EXISTS_ON_CHAIN,           // 6
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,   // 7
+  VALIDATE_EXISTS_ON_CHAIN = 'VALIDATE_EXISTS_ON_CHAIN',              // 7
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN = 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN', // 8
 
   // 5️⃣ Local metadata check
-  VALIDATE_CONTRACT_EXISTS_LOCALLY,   // 8
-  CONTRACT_NOT_FOUND_LOCALLY,         // 9
+  VALIDATE_CONTRACT_EXISTS_LOCALLY = 'VALIDATE_CONTRACT_EXISTS_LOCALLY', // 9
+  CONTRACT_NOT_FOUND_LOCALLY = 'CONTRACT_NOT_FOUND_LOCALLY',             // 10
 
   // 6️⃣ Balance check
-  VALIDATE_BALANCE,                   // 10
-  VALIDATE_BALANCE_ERROR,             // 11
+  VALIDATE_BALANCE = 'VALIDATE_BALANCE',          // 11
+  VALIDATE_BALANCE_ERROR = 'VALIDATE_BALANCE_ERROR', // 12
 
   // 7️⃣ Final validated state
-  VALID_INPUT,                         // 12
+  VALID_INPUT = 'VALID_INPUT',                    // 13
 
   // 8️⃣ Close panel trigger
-  CLOSE_SELECT_INPUT,                 // 13
+  CLOSE_SELECT_INPUT = 'CLOSE_SELECT_INPUT',      // 14
 
   // 9️⃣ Async indicator
-  IS_LOADING,                         // 14
+  IS_LOADING = 'IS_LOADING',                      // 15
 }
 
 export const getInputStateString = (state: InputState): string =>

@@ -43,6 +43,7 @@ export default function AddressSelect() {
     hasBrokenLogoURL,
     reportMissingLogoURL,
     onChange: handleInputChange,
+    isValidHex,
   } = useValidateHexInputChange(feedType);
 
   const MANUAL_ENTRY = true;
@@ -50,6 +51,13 @@ export default function AddressSelect() {
   const { updateAssetScrollDisplay } = useDisplayControls();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
+
+  useEffect(() => {
+    alert(`inputState(${inputState}) = ${InputState[inputState]}`);
+    if (!isValidHex) {
+      setInputState(InputState.INVALID_HEX_INPUT);
+    }
+  }, [isValidHex]);
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);

@@ -23,7 +23,7 @@ export function isDuplicateInput(
 
   if (isDuplicate) {
     const msg = getDuplicateMessage(containerType);
-    alert(msg);
+    // alert(msg);
   }
 
   return isDuplicate;
