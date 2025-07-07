@@ -4,8 +4,10 @@
 
 import React from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
-import { InputState, TokenContract, WalletAccount } from '@/lib/structure';
+import { TokenContract, WalletAccount, FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
@@ -13,7 +15,6 @@ const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED, LOG_TIME
 
 interface Props<T extends TokenContract | WalletAccount> {
   validatedAsset: T | undefined;
-  inputState: InputState;
   hasBrokenLogoURL: () => boolean;
   reportMissingLogoURL: () => void;
   onSelect: (asset: T) => void;
@@ -21,18 +22,15 @@ interface Props<T extends TokenContract | WalletAccount> {
 
 export default function RenderAssetPreview<T extends TokenContract | WalletAccount>({
   validatedAsset,
-  inputState,
   hasBrokenLogoURL,
   reportMissingLogoURL,
   onSelect,
 }: Props<T>) {
+  const { containerType, feedType } = usePanelFeedContext();
+  const { inputState } = useValidateFSMInput(validatedAsset?.address, feedType, containerType);
+
   if (!validatedAsset) {
     debugLog.log('🚫 RenderAssetPreview skipped: validatedAsset is undefined');
-    return null;
-  }
-
-  if (inputState !== InputState.VALID_INPUT_PENDING) {
-    debugLog.log(`🚫 RenderAssetPreview skipped: inputState=${inputState} (expected VALID_INPUT_PENDING)`);
     return null;
   }
 

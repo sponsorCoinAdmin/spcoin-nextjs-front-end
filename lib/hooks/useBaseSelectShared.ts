@@ -1,3 +1,5 @@
+// File: lib/hooks/inputValidations/useBaseSelectShared.ts
+
 'use client';
 
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
@@ -6,6 +8,9 @@ import {
   FEED_TYPE,
   CONTAINER_TYPE,
 } from '@/lib/structure';
+import { useValidateHexInput } from './inputValidations';
+import { useValidateFSMInput } from './inputValidations/validations/useValidateFSMInput';
+import { getInputStatusEmoji } from './inputValidations/helpers/getInputStatusEmoji';
 
 export interface BaseSelectSharedState {
   inputValue: string;
@@ -23,16 +28,19 @@ export interface BaseSelectSharedState {
 }
 
 export function useBaseSelectShared(): BaseSelectSharedState {
+  const { feedType, containerType } = useSharedPanelContext();
+
+  // Get values from correct sources
   const {
     inputValue,
     debouncedAddress,
-    validateHexInput,
+    handleHexInputChange,
+  } = useValidateHexInput(feedType);
+
+  const {
     inputState,
     setInputState,
-    getInputStatusEmoji,
-    feedType,
-    containerType,
-  } = useSharedPanelContext();
+  } = useValidateFSMInput(debouncedAddress, feedType, containerType);
 
   const validateInputStatusMessage = (
     state: InputState,
@@ -50,7 +58,7 @@ export function useBaseSelectShared(): BaseSelectSharedState {
   return {
     inputValue,
     debouncedAddress,
-    validateHexInput,
+    validateHexInput: handleHexInputChange, // rename for clarity
     inputState,
     setInputState,
     getInputStatusEmoji,

@@ -1,23 +1,31 @@
-// File: components/Dialogs/BaseModalDialog.tsx
 'use client';
 
 import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
-import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
+import { InputState, SP_COIN_DISPLAY, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
 import { useDisplayControls } from '@/lib/context/hooks';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 export default function BaseModalDialog({
   id,
   title,
   children,
+  feedType = FEED_TYPE.TOKEN_LIST,
+  containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER,
 }: {
   id: string;
   title: string;
   children: React.ReactNode;
+  feedType?: FEED_TYPE;
+  containerType?: CONTAINER_TYPE;
 }) {
-  const { setInputState } = usePanelFeedContext();
   const { updateAssetScrollDisplay } = useDisplayControls();
+
+  const { setInputState } = useValidateFSMInput(
+    undefined,
+    feedType,
+    containerType
+  );
 
   const closeDialog = useCallback(() => {
     setInputState(InputState.CLOSE_SELECT_INPUT);

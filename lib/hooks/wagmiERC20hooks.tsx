@@ -1,14 +1,9 @@
-// File: lib/hooks/wagmiERC20hooks.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { isAddress, Address } from 'viem';
+import { useAccount, useReadContract, useReadContracts, useChainId } from 'wagmi';
+import { isAddress, Address, erc20Abi } from 'viem';
 import { TokenContract } from '@/lib/structure';
-import { NATIVE_TOKEN_ADDRESS, getNativeWrapAddress } from '@/lib/network/utils';
-import { useReadContract, useReadContracts, useChainId } from 'wagmi';
-import { erc20Abi } from 'viem';
 
 // ---------------------------------------------
 // 🧩 Hook: useErc20TokenContract (Wagmi v2.5+)
@@ -105,30 +100,30 @@ export function TokenFetchGuiExamples() {
   };
 
   return (
-    <div style={{ marginTop: '2rem' }}>
-      <h3>🔎 Fetch ERC20 Token</h3>
+    <div className="mt-8">
+      <h3 className="text-lg font-semibold mb-4">🔎 Fetch ERC20 Token</h3>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label>
-          <strong>Token Contract Address:</strong>
+      <div className="mb-4">
+        <label className="block font-medium">
+          Token Contract Address:
           <input
             type="text"
             value={tokenAddressInput}
             onChange={(e) => setTokenAddressInput(e.target.value)}
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.5rem' }}
+            className="w-full mt-2 p-2 bg-gray-800 text-white rounded"
             placeholder="0x..."
           />
         </label>
       </div>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label>
-          <strong>Account Address (optional):</strong>
+      <div className="mb-4">
+        <label className="block font-medium">
+          Account Address (optional):
           <input
             type="text"
             value={accountAddressInput}
             onChange={(e) => setAccountAddressInput(e.target.value)}
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.5rem' }}
+            className="w-full mt-2 p-2 bg-gray-800 text-white rounded"
             placeholder="0x..."
           />
         </label>
@@ -137,17 +132,18 @@ export function TokenFetchGuiExamples() {
       <button
         onClick={handleFetch}
         disabled={!tokenAddressInput}
-        style={{ padding: '0.5rem 1rem', marginBottom: '1rem' }}>
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-4"
+      >
         Fetch
       </button>
 
       {notFoundMessage && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>{notFoundMessage}</div>
+        <div className="text-red-500 mb-4">{notFoundMessage}</div>
       )}
 
       {tokenResult && (
-        <div style={{ border: '1px solid #ccc', padding: '1rem' }}>
-          <h4>🎉 Token Found</h4>
+        <div className="border border-gray-500 rounded p-4">
+          <h4 className="text-green-400 text-lg font-semibold mb-2">🎉 Token Found</h4>
           <p><strong>Symbol:</strong> {tokenResult.symbol}</p>
           <p><strong>Name:</strong> {tokenResult.name}</p>
           <p><strong>Decimals:</strong> {tokenResult.decimals}</p>

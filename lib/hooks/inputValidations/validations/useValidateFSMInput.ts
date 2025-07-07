@@ -1,4 +1,4 @@
-// File: lib/hooks/useInputValidationState.ts
+// File: lib/hooks/inputValidations/validations/useValidateFSMInput.ts
 
 'use client';
 
@@ -23,19 +23,19 @@ import {
   WalletAccount,
 } from '@/lib/structure';
 
-import { debugLog } from './inputValidations/helpers/debugLogInstance';
-import { debugSetInputState } from './inputValidations/helpers/debugSetInputState';
-import { isEmptyInput } from './inputValidations/validations/isEmptyInput';
-import { isDuplicateInput } from './inputValidations/validations/isDuplicateInput';
-import { resolveTokenContract } from './inputValidations/validations/resolveTokenContract';
+import { debugLog } from '../helpers/debugLogInstance';
+import { debugSetInputState } from '../helpers/debugSetInputState';
+import { isEmptyInput } from './isEmptyInput';
+import { isDuplicateInput } from './isDuplicateInput';
+import { resolveTokenContract } from './resolveTokenContract';
 
-export const useInputValidationState = <T extends TokenContract | WalletAccount>(
+export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
   feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
   containerType?: CONTAINER_TYPE
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
-  const [inputState, setInputState] = useState<InputState>(InputState.VALIDATE_INPUT);
+  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);
   const [validationPending, setValidationPending] = useState(true);
 
@@ -59,29 +59,13 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     query: { enabled: Boolean(accountAddress) },
   });
 
-  // ✅ Finite State Machine — single useEffect
+  // ✅ FSM Processor
   useEffect(() => {
     const runValidationFSM = async () => {
       switch (inputState) {
-        case InputState.VALIDATE_INPUT:
-          setValidationPending(true);
-          if (isEmptyInput(debouncedAddress)) {
-            debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
-          } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedAddress)) {
-            debugSetInputState(InputState.INVALID_HEX_INPUT, inputState, setInputState);
-            alert('Hex Input Address Required');
-          } else {
-            debugSetInputState(InputState.VALIDATE_ADDRESS, inputState, setInputState);
-          }
-          break;
-
-        case InputState.INVALID_HEX_INPUT:
-          alert('Hex Input Address Required');
-          setValidationPending(false);
-          break;
-
         case InputState.EMPTY_INPUT:
         case InputState.INVALID_ADDRESS_INPUT:
+        case InputState.INVALID_HEX_INPUT:
         case InputState.DUPLICATE_INPUT:
         case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         case InputState.CONTRACT_NOT_FOUND_LOCALLY:
@@ -90,9 +74,15 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
           break;
 
         case InputState.VALIDATE_ADDRESS: {
-          const isCompleteAddress = isAddress(debouncedAddress);
-          if (!isCompleteAddress) {
-            setValidationPending(false);
+          setValidationPending(true);
+
+          if (isEmptyInput(debouncedAddress)) {
+            debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
+          } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedAddress)) {
+            alert('Hex Input Address Required');
+            debugSetInputState(InputState.INVALID_HEX_INPUT, inputState, setInputState);
+          } else if (!isAddress(debouncedAddress)) {
+            alert('Invalid address format');
             debugSetInputState(InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
           } else {
             debugSetInputState(InputState.TEST_DUPLICATE_INPUT, inputState, setInputState);
@@ -102,13 +92,14 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
 
         case InputState.TEST_DUPLICATE_INPUT:
           if (isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)) {
+            alert('Duplicate address detected');
             debugSetInputState(InputState.DUPLICATE_INPUT, inputState, setInputState);
           } else {
             debugSetInputState(InputState.VALIDATE_EXISTS_ON_CHAIN, inputState, setInputState);
           }
           break;
 
-        case InputState.VALIDATE_EXISTS_ON_CHAIN:
+        case InputState.VALIDATE_EXISTS_ON_CHAIN: {
           if (!publicClient) {
             debugLog.warn('❌ publicClient is undefined – skipping resolution');
             setValidationPending(false);
@@ -124,6 +115,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
           );
 
           if (!resolved) {
+            alert('Contract not found on blockchain');
             debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
             return;
           }
@@ -139,9 +131,11 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
 
           debugSetInputState(InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY, inputState, setInputState);
           break;
+        }
 
         case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
           if (seenBrokenLogosRef.current.has(debouncedAddress)) {
+            alert('Local contract logo missing');
             debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
           } else {
             debugSetInputState(InputState.VALIDATE_BALANCE, inputState, setInputState);
@@ -149,9 +143,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
           break;
 
         case InputState.VALIDATE_BALANCE:
-          debugLog.log('⏳ Waiting for balance data...');
           if (!balanceData || !validatedAsset) return;
-
           if (lastTokenAddressRef.current === validatedAsset.address) return;
 
           lastTokenAddressRef.current = validatedAsset.address;
@@ -186,6 +178,7 @@ export const useInputValidationState = <T extends TokenContract | WalletAccount>
     if (!seenBrokenLogosRef.current.has(debouncedAddress)) {
       seenBrokenLogosRef.current.add(debouncedAddress);
       console.warn(`🛑 Missing logoURL image for ${debouncedAddress}`);
+      alert('Missing logo — contract not found locally');
       debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
     }
   }, [debouncedAddress, inputState]);

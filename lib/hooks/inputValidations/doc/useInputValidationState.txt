@@ -1,4 +1,4 @@
-lib/hooks/useInputValidationState/
+lib/hooks/useValidateFSMInput/
 ├── index.ts                      ← barrel file
 ├── helpers/
 │   └── debugSetInputState.ts     ← state transition logger

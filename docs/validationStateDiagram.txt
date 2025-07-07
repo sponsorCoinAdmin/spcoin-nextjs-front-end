@@ -1,4 +1,4 @@
-<useInputValidationState>
+<useValidateFSMInput>
   └── VALIDATE_INPUT
         ├── isEmptyInput(address)?
         │     └── YES → EMPTY_INPUT

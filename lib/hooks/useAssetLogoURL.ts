@@ -8,7 +8,7 @@ import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_ASSET_LOGO_URL === 'true';
@@ -26,7 +26,7 @@ export function useAssetLogoURL(
   fallbackURL: string = defaultMissingImage
 ): string {
   const chainId = useChainId();
-  const { inputState } = useInputValidationState(address);
+  const { inputState } = useValidateFSMInput(address);
 
   return useMemo(() => {
     if (!address || !isAddress(address)) return fallbackURL;

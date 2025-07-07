@@ -7,8 +7,6 @@ import { InputState, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 export interface SharedPanelContextType {
-  inputState: InputState;
-  setInputState: (state: InputState) => void;
   validatedAsset?: ValidatedAsset;
   setValidatedAsset?: (asset: ValidatedAsset) => void;
   containerType: CONTAINER_TYPE;

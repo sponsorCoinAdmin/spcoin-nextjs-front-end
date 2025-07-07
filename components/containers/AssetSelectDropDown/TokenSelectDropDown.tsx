@@ -1,5 +1,3 @@
-// File: components/containers/TokenSelectDropDown.tsx
-
 'use client';
 
 import { useCallback, useEffect } from 'react';
@@ -12,6 +10,7 @@ import {
   InputState,
   TokenContract,
   SP_COIN_DISPLAY,
+  FEED_TYPE,
 } from '@/lib/structure';
 
 import {
@@ -26,7 +25,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 import { TokenSelectScrollPanel } from '../AssetSelectScroll';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -77,12 +76,20 @@ function InnerDropDown({
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
-  const { inputState, setInputState } = usePanelFeedContext();
-  const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
+  const { updateAssetScrollDisplay } = useDisplayControls();
+
+  const {
+    inputState,
+    setInputState,
+  } = useValidateFSMInput<TokenContract>(
+    tokenContract?.address,
+    FEED_TYPE.TOKEN_LIST,
+    containerType
+  );
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
-    setInputState(InputState.VALID_INPUT);
+    setInputState(InputState.VALID_INPUT); // This will eventually promote to CLOSE_SELECT_INPUT
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
   }, [setInputState, updateAssetScrollDisplay]);
 

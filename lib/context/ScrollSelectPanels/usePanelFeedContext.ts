@@ -10,8 +10,7 @@ import { InputState, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 export interface UsePanelFeedContextResult {
-  inputState: InputState;
-  setInputState: (state: InputState) => void;
+
   validatedAsset?: ValidatedAsset;
   setValidatedAsset?: (asset: ValidatedAsset) => void;
   // inputValue: string;
@@ -25,8 +24,6 @@ export interface UsePanelFeedContextResult {
 export function usePanelFeedContext(): UsePanelFeedContextResult {
   const ctx = useSharedPanelContext();
   return {
-    inputState: ctx.inputState,
-    setInputState: ctx.setInputState,
     validatedAsset: ctx.validatedAsset,
     setValidatedAsset: ctx.setValidatedAsset,
     // inputValue: ctx.inputValue,
