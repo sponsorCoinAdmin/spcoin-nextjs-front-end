@@ -6,8 +6,7 @@ import { useEffect } from 'react';
 import { useExchangeContext, useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';
 import { useBuySellSwap } from '@/components/Buttons/BuySellSwapArrowButton';
 import { mutate } from 'swr';
-import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
-
+import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI'
 
 export function useSwapDirectionEffect() {
   const { exchangeContext } = useExchangeContext();
