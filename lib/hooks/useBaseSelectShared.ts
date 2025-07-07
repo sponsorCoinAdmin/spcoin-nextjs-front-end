@@ -1,41 +1,51 @@
-// File: lib/hooks/useBaseSelectShared.ts
+// File: lib/hooks/inputValidations/useBaseSelectShared.ts
 
-import { useDebouncedAddressInput } from '@/lib/hooks/useDebouncedAddressInput';
-import { InputState } from '@/lib/structure';
-import { useEffect, useState } from 'react';
-import { isAddress } from 'viem';
+'use client';
 
-export function useBaseSelectShared() {
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import {
+  InputState,
+  FEED_TYPE,
+  CONTAINER_TYPE,
+} from '@/lib/structure';
+import { useValidateHexInput } from './inputValidations';
+import { useValidateFSMInput } from './inputValidations/validations/useValidateFSMInput';
+import { getInputStatusEmoji } from './inputValidations/helpers/getInputStatusEmoji';
+
+export interface BaseSelectSharedState {
+  inputValue: string;
+  debouncedAddress: string;
+  validateHexInput: (val: string) => void;
+  inputState: InputState;
+  setInputState: (state: InputState) => void;
+  getInputStatusEmoji: (state: InputState) => string;
+  validateInputStatusMessage: (
+    state: InputState,
+    duplicateMessage?: string
+  ) => { emoji?: string; text: string; useLogo?: boolean } | undefined;
+  feedType: FEED_TYPE;
+  containerType: CONTAINER_TYPE;
+}
+
+export function useBaseSelectShared(): BaseSelectSharedState {
+  const { feedType, containerType } = useSharedPanelContext();
+
+  // Get values from correct sources
   const {
     inputValue,
     debouncedAddress,
-    onChange,
-    clearInput,
-    manualEntryRef,
-    validateHexInput,
-  } = useDebouncedAddressInput();
+    handleHexInputChange,
+  } = useValidateHexInput(feedType);
 
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+  const {
+    inputState,
+    setInputState,
+  } = useValidateFSMInput(debouncedAddress, feedType, containerType);
 
-  const getInputStatusEmoji = (state: InputState) => {
-    switch (state) {
-      case InputState.INVALID_ADDRESS_INPUT:
-        return '❓';
-      case InputState.DUPLICATE_INPUT:
-      case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        return '❌';
-      case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-        return '⚠️';
-      case InputState.VALID_INPUT:
-        return '✅';
-      case InputState.VALID_INPUT_PENDING:
-        return '⏳';
-      default:
-        return '🔍';
-    }
-  };
-
-  const validateInputStatusMessage = (state: InputState, duplicateMessage = 'Duplicate token') => {
+  const validateInputStatusMessage = (
+    state: InputState,
+    duplicateMessage = 'Duplicate token'
+  ) => {
     const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useLogo?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid address required.' },
       [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useLogo: true },
@@ -48,13 +58,12 @@ export function useBaseSelectShared() {
   return {
     inputValue,
     debouncedAddress,
-    onChange,
-    clearInput,
-    manualEntryRef,
-    validateHexInput,
+    validateHexInput: handleHexInputChange, // rename for clarity
     inputState,
     setInputState,
     getInputStatusEmoji,
     validateInputStatusMessage,
+    feedType,
+    containerType,
   };
 }

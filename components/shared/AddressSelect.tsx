@@ -1,143 +1,89 @@
+// File: components/shared/AddressSelect.tsx
+
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect, useCallback } from 'react';
+import React from 'react';
 import {
-  InputState,
-  FEED_TYPE,
-  TokenContract,
-  WalletAccount,
   CONTAINER_TYPE,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
-import { useInputValidationState } from '@/lib/hooks/useInputValidationState';
-import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
+
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+import {
+  useSellTokenContract,
+  useBuyTokenContract,
+  useDisplayControls,
+} from '@/lib/context/hooks';
+
+import { useValidateHexInput } from '@/lib/hooks/inputValidations';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
-interface AddressSelectProps<T extends TokenContract | WalletAccount> {
-  feedType: FEED_TYPE;
-  inputPlaceholder: string;
-  closeDialog: () => void;
-  onSelect: (item: T, state: InputState) => void;
-  duplicateMessage?: string;
-  showDuplicateCheck?: boolean;
-  containerType?: CONTAINER_TYPE; // ✅ added
-}
+export default function AddressSelect() {
+  const {
+    validatedAsset,
+    containerType,
+    feedType,
+  } = usePanelFeedContext();
 
-export default function AddressSelect<T extends TokenContract | WalletAccount>({
-  feedType,
-  inputPlaceholder,
-  closeDialog,
-  onSelect: onSelectProp,
-  duplicateMessage,
-  showDuplicateCheck = false,
-  containerType, // ✅ added
-}: AddressSelectProps<T>) {
   const {
     inputValue,
-    debouncedAddress,
-    onChange,
-    clearInput,
-    manualEntryRef,
-    validateHexInput,
-    getInputStatusEmoji,
-  } = useBaseSelectShared();
-
-  const {
-    inputState,
-    validatedAsset,
-    isLoading,
-    reportMissingLogoURL,
+    handleHexInputChange,
     hasBrokenLogoURL,
-  } = useInputValidationState<T>(
-    debouncedAddress,
-    feedType,
-    containerType // ✅ passed to support duplicate detection
-  );
+    reportMissingLogoURL,
+  } = useValidateHexInput(feedType); // ✅ Now the only validation hook
 
-  const onSelect = useCallback(
-    (item: TokenContract | WalletAccount) => {
-      debugLog.log(`🟢 onSelect() called with:`, item);
-      clearInput();
-      onSelectProp(item as T, InputState.CLOSE_INPUT);
-      closeDialog();
-    },
-    [clearInput, closeDialog, onSelectProp]
-  );
+  const MANUAL_ENTRY = true;
 
-  useEffect(() => {
-    debugLog.log(`📨 debouncedAddress:`, debouncedAddress);
-  }, [debouncedAddress]);
+  const { updateAssetScrollDisplay } = useDisplayControls();
+  const [, setSellTokenContract] = useSellTokenContract();
+  const [, setBuyTokenContract] = useBuyTokenContract();
 
-  useEffect(() => {
-    debugLog.log(`📌 inputState:`, inputState);
-  }, [inputState]);
+  const onManualSelect = (item: ValidatedAsset) => {
+    debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
+    handleHexInputChange(item.address, true);
+  };
 
-  useEffect(() => {
-    if (validatedAsset) {
-      debugLog.log(`✅ validatedAsset:`, validatedAsset);
-    }
-  }, [validatedAsset]);
-
-  useEffect(() => {
-    if (!debouncedAddress || isLoading || !validatedAsset) return;
-    if (!manualEntryRef.current) {
-      debugLog.log(`🚀 Auto-selecting validatedAsset`);
-      onSelect(validatedAsset);
-    }
-  }, [debouncedAddress, isLoading, validatedAsset, manualEntryRef, onSelect]);
+  const onDataListSelect = (item: ValidatedAsset) => {
+    debugLog.log(`📜 onDataListSelect():`, item);
+    handleHexInputChange(item.address, !MANUAL_ENTRY);
+    alert(`onDataListSelect(${item.address})`);
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
+  };
 
   return (
-    <div
-      id="inputSelectDiv"
-      className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}
-    >
+    <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={inputValue}
-        onChange={(val) => {
-          debugLog.log(`⌨️ onChange inputValue: ${val}`);
-          onChange(val);
-        }}
-        placeholder={inputPlaceholder}
-        statusEmoji={getInputStatusEmoji(inputState)}
+        onChange={(val) => handleHexInputChange(val, MANUAL_ENTRY)}
+        placeholder="Enter address"
+        statusEmoji="" // 💡 Optionally pass emoji from useValidateFSMInput
       />
 
       <RenderAssetPreview
-        inputState={inputState}
         validatedAsset={validatedAsset}
         hasBrokenLogoURL={hasBrokenLogoURL}
         reportMissingLogoURL={reportMissingLogoURL}
-        onSelect={onSelect}
+        onSelect={onManualSelect}
       />
 
-      <ValidateAssetPreview
-        inputState={inputState}
-        duplicateMessage={showDuplicateCheck ? duplicateMessage : undefined}
-      />
+      <ValidateAssetPreview />
 
-      <div
-        id="inputSelectFlexDiv"
-        className="flex flex-col flex-grow min-h-0 gap-[0.2rem]"
-      >
-        <div
-          id="DataListDiv"
-          className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}
-        >
-          <DataList<T>
+      <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0 gap-[0.2rem]">
+        <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
+          <DataList
             dataFeedType={feedType}
-            onSelect={(item) => {
-              debugLog.log(`🧾 DataList onSelect:`, item);
-              manualEntryRef.current = false;
-              validateHexInput(item.address);
-            }}
+            onSelect={onDataListSelect}
           />
         </div>
       </div>

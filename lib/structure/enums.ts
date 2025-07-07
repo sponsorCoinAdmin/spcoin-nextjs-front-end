@@ -1,4 +1,5 @@
 // File: lib/structure/enums.ts
+
 export enum BUTTON_TYPE {
   API_TRANSACTION_ERROR,
   BUY_ERROR_REQUIRED,
@@ -12,12 +13,14 @@ export enum BUTTON_TYPE {
   SWAP,
   TOKENS_REQUIRED,
   UNDEFINED,
-  ZERO_AMOUNT
+  ZERO_AMOUNT,
 }
 
 export enum CONTAINER_TYPE {
-  SELL_SELECT_CONTAINER,
-  BUY_SELECT_CONTAINER,
+  SELL_SELECT_CONTAINER = 'SELL_SELECT_CONTAINER',
+  BUY_SELECT_CONTAINER = 'BUY_SELECT_CONTAINER',
+  AGENT_SELECT_CONTAINER = 'RECIPIENT_SELECT_CONTAINER',
+  RECIPIENT_SELECT_CONTAINER = 'RECIPIENT_SELECT_CONTAINER',
 }
 
 export enum EXCHANGE_STATE {
@@ -26,21 +29,23 @@ export enum EXCHANGE_STATE {
   MISSING_SELL_AMOUNT,
   NOT_CONNECTED,
   PENDING,
-  SWAP
+  SWAP,
 }
 
 export enum FEED_TYPE {
   AGENT_ACCOUNTS,
   RECIPIENT_ACCOUNTS,
-  TOKEN_LIST
+  TOKEN_LIST,
 }
 
 export enum SP_COIN_DISPLAY {
+  DISPLAY_OFF,
+  DISPLAY_ON,
   EXCHANGE_ROOT,
-  SHOW_ACTIVE_RECIPIENT_CONTAINER,
-  SHOW_RECIPIENT_SELECT_DIALOG,
-  SHOW_SPONSOR_RATE_CONFIG,
-  SHOW_MANAGE_SPONSORS_BUTTON
+  SHOW_MANAGE_SPONSORS_BUTTON,
+  SHOW_RECIPIENT_SCROLL_CONTAINER,
+  SHOW_TOKEN_SCROLL_CONTAINER,
+  SHOW_ERROR_MESSAGE,
 }
 
 export enum STATUS {
@@ -49,52 +54,56 @@ export enum STATUS {
   MESSAGE_ERROR,
   SUCCESS,
   WARNING_HARDHAT,
-  INFO
+  INFO,
 }
 
 export enum TRADE_DIRECTION {
   SELL_EXACT_OUT,
-  BUY_EXACT_IN
+  BUY_EXACT_IN,
 }
 
 export enum API_TRADING_PROVIDER {
   API_0X,
-  API_1INCH
+  API_1INCH,
 }
 
 export enum InputState {
-  EMPTY_INPUT,
-  INVALID_ADDRESS_INPUT,
-  DUPLICATE_INPUT,
-  IS_LOADING,
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  CONTRACT_NOT_FOUND_LOCALLY,
-  VALID_INPUT_PENDING,
-  VALID_INPUT,
-  CLOSE_INPUT,
+  // 0️⃣ Blank input
+  EMPTY_INPUT = 'EMPTY_INPUT',                    // 0
+
+  // 1️⃣ Triggered by user input
+  VALIDATE_INPUT = 'VALIDATE_INPUT',              // 1
+  INVALID_HEX_INPUT = 'INVALID_HEX_INPUT',        // 2
+
+  // 2️⃣ Hex address validation
+  VALIDATE_ADDRESS = 'VALIDATE_ADDRESS',          // 3
+  INVALID_ADDRESS_INPUT = 'INVALID_ADDRESS_INPUT',// 4
+
+  // 3️⃣ Duplication check
+  TEST_DUPLICATE_INPUT = 'TEST_DUPLICATE_INPUT',  // 5
+  DUPLICATE_INPUT = 'DUPLICATE_INPUT',            // 6
+
+  // 4️⃣ Blockchain existence check
+  VALIDATE_EXISTS_ON_CHAIN = 'VALIDATE_EXISTS_ON_CHAIN',              // 7
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN = 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN', // 8
+
+  // 5️⃣ Local metadata check
+  VALIDATE_CONTRACT_EXISTS_LOCALLY = 'VALIDATE_CONTRACT_EXISTS_LOCALLY', // 9
+  CONTRACT_NOT_FOUND_LOCALLY = 'CONTRACT_NOT_FOUND_LOCALLY',             // 10
+
+  // 6️⃣ Balance check
+  VALIDATE_BALANCE = 'VALIDATE_BALANCE',          // 11
+  VALIDATE_BALANCE_ERROR = 'VALIDATE_BALANCE_ERROR', // 12
+
+  // 7️⃣ Final validated state
+  VALID_INPUT = 'VALID_INPUT',                    // 13
+
+  // 8️⃣ Close panel trigger
+  CLOSE_SELECT_INPUT = 'CLOSE_SELECT_INPUT',      // 14
+
+  // 9️⃣ Async indicator
+  IS_LOADING = 'IS_LOADING',                      // 15
 }
 
-export const getInputStateString = (state: InputState): string => {
-  switch (state) {
-    case InputState.EMPTY_INPUT:
-      return 'EMPTY_INPUT';
-    case InputState.VALID_INPUT:
-      return 'VALID_INPUT';
-    case InputState.VALID_INPUT_PENDING:
-      return 'VALID_INPUT_PENDING';
-    case InputState.INVALID_ADDRESS_INPUT:
-      return 'INVALID_ADDRESS_INPUT';
-    case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-      return 'CONTRACT_NOT_FOUND_ON_BLOCKCHAIN';
-    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-      return 'CONTRACT_NOT_FOUND_LOCALLY';
-    case InputState.DUPLICATE_INPUT:
-      return 'DUPLICATE_INPUT';
-    case InputState.IS_LOADING:
-      return 'IS_LOADING';
-    case InputState.CLOSE_INPUT:
-      return 'CLOSE_INPUT';
-    default:
-      return 'UNKNOWN_INPUT_STATE';
-  }
-};
+export const getInputStateString = (state: InputState): string =>
+  InputState[state] ?? 'UNKNOWN_INPUT_STATE';

@@ -1,3 +1,5 @@
+//File: components/containers/AssetSelectPanel/RecipientSelectContainer.tsx
+
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -9,14 +11,14 @@ import { clsx } from "clsx";
 import cog_png from "@/public/assets/miscellaneous/cog.png";
 
 import { WalletAccount, SP_COIN_DISPLAY } from "@/lib/structure";
-import SponsorRateConfig from "./SponsorRateConfig";
 import { useExchangeContext } from '@/lib/context/hooks';
-import RecipientSelectDropDown from "./RecipientSelectDropDown";
 import { useSpCoinDisplay } from '@/lib/context/hooks';
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
+import RecipientSelectDropDown from "../AssetSelectDropDown/RecipientSelectDropDown";
+import SponsorRateConfig from "../SponsorRateConfig";
 
-const AccountSelectContainer: React.FC = () => {
+const RecipientSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
@@ -122,4 +124,4 @@ const AccountSelectContainer: React.FC = () => {
   );
 };
 
-export default AccountSelectContainer;
+export default RecipientSelectContainer;

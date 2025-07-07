@@ -1,6 +1,5 @@
 // File: lib/structure/types.ts
 
-import { JsonRpcSigner } from 'ethers';
 import { Address } from 'viem';
 import { UseReadContractReturnType } from 'wagmi';
 import { STATUS, TRADE_DIRECTION, API_TRADING_PROVIDER, SP_COIN_DISPLAY } from './enums';
@@ -18,7 +17,7 @@ export interface WalletAccount {
 }
 
 export interface AccountAddress {
-  address: string;
+  address: string | Address;
 }
 
 export type ErrorMessage = {
@@ -45,9 +44,17 @@ export type Accounts = {
   agentAccounts?: WalletAccount[];
 };
 
+export type DisplaySettings = {
+  errorDisplay: SP_COIN_DISPLAY;
+  assetSelectScrollDisplay: SP_COIN_DISPLAY;
+  spCoinDisplay: SP_COIN_DISPLAY;
+};
+
 export type Settings = {
-  readonly apiTradingProvider: API_TRADING_PROVIDER;
-  readonly spCoinDisplay: SP_COIN_DISPLAY;
+  apiTradingProvider: API_TRADING_PROVIDER;
+  spCoinDisplay: SP_COIN_DISPLAY;
+  assetSelectScrollDisplay: SP_COIN_DISPLAY;
+  errorDisplay: SP_COIN_DISPLAY;
 };
 
 export type NetworkElement = {

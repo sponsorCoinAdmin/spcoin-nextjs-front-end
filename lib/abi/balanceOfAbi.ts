@@ -29,7 +29,7 @@ const updateBalance = async () => {
             setValidatedAsset(tokenWithBalance as unknown as T);
             debugSetInputState(InputState.VALID_INPUT_PENDING, inputState, setInputState);
           } catch (err) {
-            console.error(`❌ Failed to fetch balance for ${tokenWithBalance.symbol}:`, err);
+            debugLog.error(`❌ Failed to fetch balance for ${tokenWithBalance.symbol}:`, err);
           }
         }
       };

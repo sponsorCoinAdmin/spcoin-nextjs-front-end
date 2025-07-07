@@ -1,3 +1,7 @@
+// File: lib/hooks/usePriceAPI.ts
+
+'use client';
+
 import { useEffect, useRef } from 'react';
 import { TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
 import useSWR from 'swr';
@@ -11,16 +15,20 @@ import {
 } from '@/lib/context/hooks';
 import { Address } from 'viem';
 import { useAccount, useChainId } from 'wagmi';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PRICE_API === 'true';
+const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
 const API_PROVIDER = '1Inch/';
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
 const apiPriceBase = '/quote';
 
-const WRAPPED_ETHEREUM_ADDRESS: Address = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
 const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
 
 const fetcher = async ([url]: [string]) => {
-  console.log(`[1inch Fetch] ${url}`);
+  debugLog.log(`[1inch Fetch] ${url}`);
   const response = await fetch(url);
   return response.json();
 };
@@ -42,7 +50,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
     });
 
     if (Object.keys(changesObj).length) {
-      console.log(`[why-did-you-update] ${name}`, changesObj);
+      debugLog.log(`[why-did-you-update] ${name}`, changesObj);
     }
 
     previousProps.current = props;
@@ -104,7 +112,7 @@ function usePriceAPI() {
 
   return useSWR(swrKey, fetcher, {
     onSuccess: (data) => {
-      console.log(`[1inch SUCCESS]`, data);
+      debugLog.log(`[1inch SUCCESS]`, data);
       if (data?.toTokenAmount) {
         setBuyAmount(BigInt(data.toTokenAmount));
       }

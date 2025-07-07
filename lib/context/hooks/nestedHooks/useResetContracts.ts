@@ -29,7 +29,7 @@ function logState(state: REFRESH_STATE, color: string) {
   if (DEBUG_ENABLED) {
     const stateNum = state;
     const stateName = REFRESH_STATE[state];
-    console.log(
+    debugLog.log(
       `%c    🌐 STATE(${stateNum}) ➔ ${stateName}`,
       `background: ${color}; color: black; padding: 2px 6px; border-radius: 4px`
     );

@@ -8,13 +8,13 @@ import { defaultNetworkSettings as defaultPolygonSettings } from '@/resources/da
 import { defaultNetworkSettings as defaultSepoliaSettings } from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings';
 import { Address } from 'viem';
 import {
-  BASE,     BASE_WETH_ADDRESS,
-  ETHEREUM, ETHEREUM_WETH_ADDRESS,
+  BASE,
+  ETHEREUM,
   ExchangeContext,
   FEED_TYPE,
-  HARDHAT,  HARDHAT_WETH_ADDRESS,
-  POLYGON,  POLYGON_WETH_ADDRESS,
-  SEPOLIA,  SEPOLIA_WETH_ADDRESS,
+  HARDHAT,
+  POLYGON,
+  SEPOLIA,
   TokenContract,
   TradeData,
   WalletAccount
@@ -46,18 +46,6 @@ const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: T
 const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address ) =>
   address ? address === exchangeContext?.accounts?.connectedAccount?.address : false;
 
-const isWrappedSellToken = (tradeData: TradeData): boolean =>
-  tradeData.sellTokenContract ? isWrappedToken(tradeData.sellTokenContract) : false;
-
-const isWrappedBuyToken = (tradeData: TradeData): boolean =>
-  tradeData.buyTokenContract ? isWrappedToken(tradeData.buyTokenContract) : false;
-
-const isWrappedToken = (tokenContract: TokenContract): boolean =>
-  tokenContract.chainId ? isWrappedAddress(tokenContract.address, tokenContract.chainId) : false;
-
-const isWrappedAddress = (address:Address, chainId:number): boolean =>
-  address === getNativeWrapAddress(chainId);
-
 const isNativeSellToken = (tradeData: TradeData) : boolean => 
   tradeData.sellTokenContract ? isNativeToken(tradeData.sellTokenContract) : false;
 
@@ -71,38 +59,11 @@ const isNativeTokenAddress = (address?: Address) : boolean => {
   return address === NATIVE_TOKEN_ADDRESS;
 }
 
-const isBlockChainSellToken = (exchangeContext:ExchangeContext) : boolean =>
-  exchangeContext?.tradeData?.sellTokenContract ? isBlockChainToken(exchangeContext, exchangeContext.tradeData.sellTokenContract) : false;
-
-const isBlockChainBuyToken = (exchangeContext:ExchangeContext) : boolean =>
-  exchangeContext?.tradeData?.buyTokenContract ? isBlockChainToken(exchangeContext, exchangeContext.tradeData.buyTokenContract) : false;
-
-const isBlockChainToken = (exchangeContext:ExchangeContext, tokenContract: TokenContract) : boolean => {
-    return isActiveAccountToken(exchangeContext, tokenContract) ||
-  isNativeToken(tokenContract) ||
-  isWrappedToken(tokenContract) ||
-  isBurnToken(tokenContract);
-}
-
 const isBurnToken = (tokenContract:TokenContract) : boolean => 
   tokenContract?.address ? isBurnTokenAddress(tokenContract.address) : false;
 
 const isBurnTokenAddress = (address?: Address) : boolean => 
   address === BURN_ADDRESS
-
-// *** WARNING: To be fixed for other networks ***
-const getNativeWrapAddress = (chainId: number) : Address | undefined => {
-  const wethAddresses: Record<number, Address> = {
-    [BASE]: BASE_WETH_ADDRESS,
-    [ETHEREUM]: ETHEREUM_WETH_ADDRESS,
-    [POLYGON]: POLYGON_WETH_ADDRESS,
-    [HARDHAT]: HARDHAT_WETH_ADDRESS,
-    [SEPOLIA]: SEPOLIA_WETH_ADDRESS,
-  };
-  const WETH_ADDRESS = wethAddresses[chainId]; // No need for explicit type annotation
-  // console.log(`getNativeWrapAddress(${chainId}): WETH ADDRESS: ${WETH_ADDRESS}`);
-  return WETH_ADDRESS || BURN_ADDRESS;
-};
 
 const getLogoURL = (
   chainId: number | undefined,
@@ -179,7 +140,7 @@ const createNetworkJsonList = () => {
     sepolia: defaultSepoliaSettings
   };
   const networkSettings = JSON.stringify(defaultNetworkSettings, null, 2);
-  console.log(`Default JSON Network Settings:\n${networkSettings}`);
+  debugLog.log(`Default JSON Network Settings:\n${networkSettings}`);
   alert(`Network Settings: ${networkSettings}`);
 };
 
@@ -235,7 +196,6 @@ export {
   getLogoURL,
   getBlockChainLogoURL,
   getBlockChainName,
-  getNativeWrapAddress,
   getTokenLogoURL,
   type RequiredAssetMembers,
   getAccountLogo,
@@ -243,19 +203,12 @@ export {
   isActiveAccountBuyToken,
   isActiveAccountSellToken,
   isActiveAccountToken,
-  isBlockChainSellToken,
-  isBlockChainBuyToken,
-  isBlockChainToken,
   isBurnTokenAddress,
   isLowerCase,
   isNativeBuyToken,
   isNativeSellToken,
   isNativeToken,
   isNativeTokenAddress,
-  isWrappedAddress,
-  isWrappedBuyToken,
-  isWrappedToken,
-  isWrappedSellToken,
   tokenContractsEqual,
   useIsActiveAccountAddress,
   };

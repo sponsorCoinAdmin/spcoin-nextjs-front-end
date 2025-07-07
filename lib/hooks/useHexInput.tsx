@@ -1,38 +1,46 @@
+// File: lib/hooks/useHexInput.ts
+
+'use client';
+
 import { useState, useCallback } from 'react';
 
 export function useHexInput(initialValue: string = '') {
   const [inputValue, setInputValue] = useState(initialValue);
+  const [failedHexInput, setFailedHexInput] = useState<string | undefined>(undefined);
+  const [failedHexCount, setFailedHexCount] = useState(0); // acts as both flag and invalid entry counter
 
-  const validateHexInput = useCallback((rawInput: string) => {
+  const validateHexInput = useCallback((rawInput: string): boolean => {
     const trimmed = rawInput.trim();
 
-    if (trimmed === '') {
-      setInputValue('');
-      return;
-    }
+    const isValid =
+      trimmed === '' ||
+      trimmed === '0' ||
+      trimmed === '0x' ||
+      /^0x[0-9a-fA-F]*$/.test(trimmed);
 
-    if (trimmed === '0') {
-      // Allow user to type just "0" temporarily (to reach "0x")
+    if (isValid) {
       setInputValue(trimmed);
-      return;
+      setFailedHexInput(undefined);
+      setFailedHexCount(0); // ✅ reset on valid input
+    } else {
+      setFailedHexInput(trimmed);
+      setFailedHexCount((prev) => prev + 1); // ✅ always increment
     }
 
-    if (trimmed === '0x' || /^0x[0-9a-fA-F]*$/.test(trimmed)) {
-      // Allow "0x" exactly or "0x" followed by hex digits
-      setInputValue(trimmed);
-      return;
-    }
-
-    // else: invalid, ignore
+    return isValid;
   }, []);
 
-  const clearInput = useCallback(() => {
+  const resetInput = useCallback(() => {
     setInputValue('');
+    setFailedHexInput(undefined);
+    setFailedHexCount(0);
   }, []);
 
   return {
     inputValue,
     validateHexInput,
-    clearInput,
+    resetInput,
+    failedHexInput,     // ❗️shows last failed input
+    failedHexCount,     // ❗️used as isValidHex trigger alternative
   };
 }

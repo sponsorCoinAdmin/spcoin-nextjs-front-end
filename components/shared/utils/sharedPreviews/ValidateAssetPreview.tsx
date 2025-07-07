@@ -3,10 +3,11 @@
 'use client';
 
 import React from 'react';
-import { InputState } from '@/lib/structure';
+import { InputState, TokenContract, WalletAccount } from '@/lib/structure';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 interface Props {
-  inputState: InputState;
   duplicateMessage?: string;
 }
 
@@ -19,28 +20,31 @@ const emojiMap: Partial<Record<InputState, {
   [InputState.INVALID_ADDRESS_INPUT]: {
     emoji: '❓',
     text: 'Valid address required.',
-    color: 'red',
+    color: 'text-red-500',
   },
   [InputState.DUPLICATE_INPUT]: {
     text: 'Duplicate input selected.',
-    color: 'orange',
+    color: 'text-orange-400',
     useLogo: true,
   },
   [InputState.CONTRACT_NOT_FOUND_LOCALLY]: {
     emoji: '⚠️',
     text: 'Missing local image for asset.',
-    color: 'orange',
+    color: 'text-orange-400',
   },
   [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: {
     emoji: '❌',
     text: 'Address not found on blockchain.',
-    color: 'red',
+    color: 'text-red-500',
   },
 };
 
-const ValidateAssetPreview: React.FC<Props> = ({ inputState, duplicateMessage }) => {
+const ValidateAssetPreview: React.FC<Props> = ({ duplicateMessage }) => {
+  const { feedType, containerType } = usePanelFeedContext();
+  const { inputState } = useValidateFSMInput(undefined, feedType, containerType);
+
   const item = emojiMap[inputState];
-  if (!item || inputState === InputState.VALID_INPUT_PENDING || inputState === InputState.EMPTY_INPUT) return null;
+  if (!item || inputState === InputState.IS_LOADING || inputState === InputState.EMPTY_INPUT) return null;
 
   const message =
     inputState === InputState.DUPLICATE_INPUT && duplicateMessage
@@ -49,20 +53,12 @@ const ValidateAssetPreview: React.FC<Props> = ({ inputState, duplicateMessage })
 
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '170px',
-        backgroundColor: '#243056',
-        color: item.color || '#5981F3',
-        padding: '8px',
-        borderRadius: '22px',
-      }}
+      className={`flex items-center h-[170px] bg-[#243056] rounded-[22px] p-2 ${item.color ?? 'text-[#5981F3]'}`}
     >
       {item.emoji && (
-        <span style={{ fontSize: 28, marginRight: 6 }}>{item.emoji}</span>
+        <span className="text-[28px] mr-1.5">{item.emoji}</span>
       )}
-      <span style={{ fontSize: '15px' }}>{message}</span>
+      <span className="text-[15px]">{message}</span>
     </div>
   );
 };

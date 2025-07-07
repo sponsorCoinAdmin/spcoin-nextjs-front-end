@@ -1,0 +1,53 @@
+// File: components/Dialogs/BaseModalContainer.tsx
+'use client';
+
+import React, { useCallback } from 'react';
+import styles from '@/styles/Modal.module.css';
+import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
+import { useDisplayControls } from '@/lib/context/hooks';
+import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+
+export default function BaseModalContainer({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const { setInputState } = usePanelFeedContext();
+  const { updateAssetScrollDisplay } = useDisplayControls();
+
+  const closeSelectContainer = useCallback(() => {
+    setInputState(InputState.CLOSE_SELECT_INPUT);
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
+  }, [setInputState, updateAssetScrollDisplay]);
+
+  return (
+    <div
+      id={id}
+      className={styles.modalContainer}
+      aria-labelledby={`${id}-title`}
+    >
+      <div className="relative h-8 px-3 mb-1 text-gray-600">
+        <h1
+          id={`${id}-title`}
+          className="absolute left-1/2 bottom-0 translate-x-[-50%] text-lg"
+        >
+          {title}
+        </h1>
+        <button
+          aria-label="Close container"
+          onClick={closeSelectContainer}
+          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
+        >
+          ×
+        </button>
+      </div>
+      <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>
+        {children}
+      </div>
+    </div>
+  );
+}

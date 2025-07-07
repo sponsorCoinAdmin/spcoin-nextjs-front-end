@@ -17,10 +17,6 @@ import {
   useBuyTokenContract,
 } from '@/lib/context/hooks';
 
-import AddSponsorship from '../Buttons/AddSponsorshipButton';
-import TokenSelectDropDown from './TokenSelectDropDown';
-import ManageSponsorsButton from '../Buttons/ManageSponsorsButton';
-
 import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -34,6 +30,9 @@ import {
 
 import styles from '@/styles/Exchange.module.css';
 import { clsx } from 'clsx';
+import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
+import TokenSelectDropDown from '../AssetSelectDropDown/TokenSelectDropDown';
+import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -138,9 +137,11 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
 
   const showNoRadius = () => {
     const isBuyTokenContainer = containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
-    const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER;
-    const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG;
-    return isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
+    const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER;
+    // const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY;
+    // return isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
+    // ToDo Fix
+    return true
   };
 
   return (
@@ -170,13 +171,12 @@ const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE
         (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
-          <AddSponsorship />
+          <AddSponsorshipButton />
         ))}
     </div>
   );
 };
 
-export default TokenSelectContainer;
 
 // 🔽 Local Hook to simplify balance formatting
 function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
@@ -196,3 +196,5 @@ function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
     return '0.0';
   }
 }
+
+export default TokenSelectContainer;

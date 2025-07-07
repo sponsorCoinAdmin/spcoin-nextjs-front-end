@@ -8,23 +8,6 @@ import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure'
 import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
 
-// console.log(`AAAAAAAAA erc20ABI = ${JSON.stringify(erc20ABI)}`)
-// console.log(`BBBBBBBBB erc20ABI2 = ${JSON.stringify(erc20ABI2)}`)
-
-const useWagmiWrapDeposit = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
-  const { writeContract } = useWriteContract()
-  const WETH = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
-
-  writeContract({ 
-    abi: wethAbi,
-    address: WETH,
-    functionName: 'deposit',
-    value:5n,
-    args: [
-    ],
- })
-}
-
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
   const wagmiDecimalsRec = useReadContract({
     abi: erc20ABI,

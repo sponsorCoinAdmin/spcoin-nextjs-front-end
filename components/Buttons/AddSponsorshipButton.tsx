@@ -3,7 +3,7 @@
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useSpCoinDisplay } from '@/lib/context/hooks';
-import AccountSelectContainer from '@/components/containers/RecipientSelectContainer';
+import { RecipientSelectContainer } from '../containers/AssetSelectPanel';
 
 const AddSponsorshipButton = () => {
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
@@ -22,7 +22,7 @@ const AddSponsorshipButton = () => {
         <div className={styles.centerBottom}>Sponsorship</div>
       </div>
 
-      {isContainerVisible && <AccountSelectContainer />}
+      {isContainerVisible && <RecipientSelectContainer />}
     </>
   );
 };

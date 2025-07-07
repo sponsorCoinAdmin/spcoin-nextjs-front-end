@@ -1,34 +1,49 @@
 // File: lib/hooks/useAssetLogoURL.ts
+
 'use client';
 
 import { useMemo } from 'react';
 import { useChainId } from 'wagmi';
 import { isAddress } from 'viem';
+import { InputState } from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/network/utils';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_ASSET_LOGO_URL === 'true';
+const debugLog = createDebugLogger('useAssetLogoURL', DEBUG_ENABLED, LOG_TIME);
 
 const seenBrokenLogos = new Set<string>();
 
-export function markLogoAsBroken(address?: string) {
-  if (address) seenBrokenLogos.add(address);
-}
-
+/**
+ * Returns a logo URL based on the given address and type.
+ * Falls back to a default image if the address is invalid, the logo has been seen to fail, or validation fails (for tokens).
+ */
 export function useAssetLogoURL(
   address: string,
   type: 'wallet' | 'token',
-  fallbackURL?: string
+  fallbackURL: string = defaultMissingImage
 ): string {
   const chainId = useChainId();
+  const { inputState } = useValidateFSMInput(address);
 
   return useMemo(() => {
-    if (!address || !isAddress(address)) return fallbackURL || defaultMissingImage;
-    if (seenBrokenLogos.has(address)) return fallbackURL || defaultMissingImage;
-    if (!chainId) return fallbackURL || defaultMissingImage;
+    if (!address || !isAddress(address)) return fallbackURL;
+    if (!chainId) return fallbackURL;
+    if (seenBrokenLogos.has(address)) return fallbackURL;
+    if (type === 'token' && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return fallbackURL;
 
-    if (type === 'token') {
-      return `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
-    }
+    const logoURL =
+      type === 'wallet'
+        ? `/assets/wallets/${address}/avatar.png`
+        : `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
 
-    // type === 'wallet'
-    return `/assets/accounts/${address}/avatar.png`;
-  }, [address, chainId, fallbackURL, type]);
+    debugLog.log(`✅ logoURL (${type}) = ${logoURL}`);
+    return logoURL;
+  }, [address, type, chainId, inputState]);
+}
+
+export function markLogoAsBroken(address: string) {
+  seenBrokenLogos.add(address);
 }
