@@ -27,15 +27,14 @@ import { debugSetInputState } from '../helpers/debugSetInputState';
 import { isEmptyInput } from './isEmptyInput';
 import { isDuplicateInput } from './isDuplicateInput';
 import { resolveTokenContract } from './resolveTokenContract';
-import { useBaseSelectShared } from '../../useBaseSelectShared';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
   feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
-    const sharedState = useBaseSelectShared();
-    const { inputState, setInputState, containerType } = sharedState;
+    const { inputState, setInputState, containerType } = useSharedPanelContext();
   
   // const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);

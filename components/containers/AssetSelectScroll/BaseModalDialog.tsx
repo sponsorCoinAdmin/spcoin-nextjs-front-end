@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
 import { InputState, SP_COIN_DISPLAY, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
 import { useDisplayControls } from '@/lib/context/hooks';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 export default function BaseModalDialog({
   id,
@@ -20,12 +20,7 @@ export default function BaseModalDialog({
   containerType?: CONTAINER_TYPE;
 }) {
   const { updateAssetScrollDisplay } = useDisplayControls();
-
-  const { setInputState } = useValidateFSMInput(
-    undefined,
-    feedType,
-    containerType
-  );
+  const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
     setInputState(InputState.CLOSE_SELECT_INPUT);

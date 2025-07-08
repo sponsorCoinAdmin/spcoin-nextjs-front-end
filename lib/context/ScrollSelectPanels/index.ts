@@ -3,5 +3,4 @@ export * from './SellTokenPanelProvider';
 export * from './RecipientPanelProvider';
 export * from './AgentPanelProvider';
 export * from './usePanelFeedContext';
-export * from './usePanelContextBase';
 export * from './SharedPanelContext';

@@ -11,34 +11,25 @@ import {
 
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
-import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
-import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useDisplayControls } from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import {
   useSellTokenContract,
   useBuyTokenContract,
-  useDisplayControls,
 } from '@/lib/context/hooks';
 
 import { useValidateHexInput } from '@/lib/hooks/inputValidations';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function AddressSelect() {
-  const {
-    validatedAsset,
-    containerType,
-    feedType,
-  } = usePanelFeedContext();
-
-  const sharedState = useBaseSelectShared();
-  const { inputState, setInputState, containerType } = sharedState;
+  const { inputState, setInputState, containerType, validatedAsset, feedType } = useSharedPanelContext();
 
   const {
     inputValue,

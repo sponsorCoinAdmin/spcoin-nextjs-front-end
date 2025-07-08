@@ -11,18 +11,17 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
-import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
-import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 
 export default function RecipientSelectScrollPanel() {
+  const { inputState, setInputState, containerType } = useSharedPanelContext();
   const { updateAssetScrollDisplay } = useDisplayControls();
-  const sharedState = useBaseSelectShared();
 
   useEffect(() => {
-    if (sharedState.inputState === InputState.CLOSE_SELECT_INPUT) {
+    if (inputState === InputState.CLOSE_SELECT_INPUT) {
       updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
     }
-  }, [sharedState.inputState, updateAssetScrollDisplay]);
+  }, [inputState, updateAssetScrollDisplay]);
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
@@ -34,12 +33,8 @@ export default function RecipientSelectScrollPanel() {
   );
 
   return (
-    <AssetSelectScrollContainer<WalletAccount>
-      setShowDialog={() => {}} // deprecated – no longer controls visibility
-      onSelect={handleSelect}
+    <AssetSelectScrollContainer
       title="Select a Recipient"
-      feedType={FEED_TYPE.RECIPIENT_ACCOUNTS}
-      inputPlaceholder="Paste recipient wallet address"
     />
   );
 }

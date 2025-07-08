@@ -8,7 +8,7 @@ import BaseModalContainer from './BaseModalContainer';
 import AddressSelect from '@/components/shared/AddressSelect';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
@@ -19,7 +19,7 @@ interface Props {
 }
 
 export default function AssetSelectContainer({ title }: Props) {
-  const { containerType } = usePanelFeedContext();
+  const { containerType } = useSharedPanelContext();
 
   useEffect(() => {
     debugLog.log(`📥 AssetSelectContainer mounted`);

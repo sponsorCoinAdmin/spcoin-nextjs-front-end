@@ -7,7 +7,7 @@ import { useHexInput } from '@/lib/hooks/useHexInput';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 import { FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 export function useValidateHexInput(feedType: FEED_TYPE) {
   const {
@@ -18,16 +18,8 @@ export function useValidateHexInput(feedType: FEED_TYPE) {
     failedHexCount,
   } = useHexInput();
 
-  const { containerType } = usePanelFeedContext(); // ✅ Get containerType from context
+  const { containerType, inputState, setInputState } = useSharedPanelContext(); // ✅ Get containerType from context
   const debouncedAddress = useDebounce(inputValue, 250);
-
-  const {
-    inputState,
-    setInputState,
-    isLoading,
-    reportMissingLogoURL,
-    hasBrokenLogoURL,
-  } = useValidateFSMInput(debouncedAddress, feedType, containerType); // ✅ Pass containerType here
 
   // --- Handle input change: validate + spawn FSM ---
   const handleHexInputChange = useCallback(
@@ -63,9 +55,9 @@ export function useValidateHexInput(feedType: FEED_TYPE) {
     inputState,             // ✅ include for consumers like AddressSelect
     setInputState,          // ✅ include for consumers like AddressSelect
     handleHexInputChange,
-    isLoading,
-    reportMissingLogoURL,
-    hasBrokenLogoURL,
+    // isLoading,
+    // reportMissingLogoURL,
+    // hasBrokenLogoURL,
     resetInput,
     failedHexInput,
     failedHexCount,

@@ -7,7 +7,7 @@ import BasePreviewCard from '../../BasePreviewCard';
 import { TokenContract, WalletAccount, FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
@@ -26,8 +26,8 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
   reportMissingLogoURL,
   onSelect,
 }: Props<T>) {
-  const { containerType, feedType } = usePanelFeedContext();
-  const { inputState } = useValidateFSMInput(validatedAsset?.address, feedType, containerType);
+  const { containerType, feedType } = useSharedPanelContext();
+  const { inputState } = useValidateFSMInput(validatedAsset?.address, feedType);
 
   if (!validatedAsset) {
     debugLog.log('🚫 RenderAssetPreview skipped: validatedAsset is undefined');

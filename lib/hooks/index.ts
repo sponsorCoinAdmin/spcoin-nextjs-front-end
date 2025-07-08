@@ -4,7 +4,6 @@
 
 export * from "./useBalanceInWei";
 export * from "./UseBalanceOf";
-export * from "./useBaseSelectShared";
 export * from "./useDebounce";
 export * from "./useEthersProvider";
 export * from "./useEthersSigner";

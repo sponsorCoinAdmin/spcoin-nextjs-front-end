@@ -8,8 +8,7 @@ import {
   getInputStateString,
 } from '@/lib/structure';
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
-import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
-import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -17,8 +16,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT ===
 const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function TokenSelectScrollPanel() {
-  const sharedState = useBaseSelectShared();
-  const { inputState, setInputState, containerType } = sharedState;
+  const { inputState, setInputState, containerType } = useSharedPanelContext();
   const { assetSelectScrollDisplay, updateAssetScrollDisplay } = useDisplayControls();
 
   const title =

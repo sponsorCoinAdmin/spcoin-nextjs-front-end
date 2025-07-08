@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
 import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
 import { useDisplayControls } from '@/lib/context/hooks';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 export default function BaseModalContainer({
   id,
@@ -16,7 +16,7 @@ export default function BaseModalContainer({
   title: string;
   children: React.ReactNode;
 }) {
-  const { setInputState } = usePanelFeedContext();
+  const { setInputState } = useSharedPanelContext();
   const { updateAssetScrollDisplay } = useDisplayControls();
 
   const closeSelectContainer = useCallback(() => {

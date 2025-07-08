@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 import { InputState, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
@@ -10,11 +10,9 @@ export interface SharedPanelContextType {
   validatedAsset?: ValidatedAsset;
   setValidatedAsset?: (asset: ValidatedAsset) => void;
   containerType: CONTAINER_TYPE;
-  // inputValue: string;
-  // debouncedAddress: string;
-  // validateHexInput: (val: string) => void;
+  inputState: InputState;
+  setInputState: (state: InputState) => void;
   feedType: FEED_TYPE;
-  // ❌ getInputStateEmoji removed
 }
 
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);

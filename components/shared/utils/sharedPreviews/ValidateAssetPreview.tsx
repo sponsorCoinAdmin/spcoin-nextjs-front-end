@@ -4,9 +4,8 @@
 
 import React from 'react';
 import { InputState } from '@/lib/structure';
-import { useBaseSelectShared } from '@/lib/hooks';
-  const sharedState = useBaseSelectShared();
-  const { inputState, setInputState, containerType } = sharedState;
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+  const { inputState, setInputState, containerType } = useSharedPanelContext();
 
 
 interface Props {
@@ -41,6 +40,8 @@ const emojiMap: Partial<Record<InputState, {
     color: 'text-red-500',
   },
 };
+
+const duplicateMessage:string = 'ToDo: Duplicate input selected.';
 
 const ValidateAssetPreview: React.FC<Props> = () => {
   const item = emojiMap[inputState];
