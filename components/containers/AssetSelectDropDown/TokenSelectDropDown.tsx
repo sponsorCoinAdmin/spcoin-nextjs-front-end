@@ -10,7 +10,6 @@ import {
   InputState,
   TokenContract,
   SP_COIN_DISPLAY,
-  FEED_TYPE,
 } from '@/lib/structure';
 
 import {
@@ -25,7 +24,8 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 import { TokenSelectScrollPanel } from '../AssetSelectScroll';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput'; // ✅ Mounted
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -79,9 +79,12 @@ function InnerDropDown({
   const { updateAssetScrollDisplay } = useDisplayControls();
   const { inputState, setInputState } = useSharedPanelContext();
 
+  // ✅ Mount FSM validation here — it will automatically run when inputState changes
+  useValidateFSMInput(undefined);
+
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
-    setInputState(InputState.VALID_INPUT); // This will eventually promote to CLOSE_SELECT_INPUT
+    setInputState(InputState.VALID_INPUT);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
   }, [setInputState, updateAssetScrollDisplay]);
 
@@ -91,7 +94,7 @@ function InnerDropDown({
 
   return (
     <>
-      {<TokenSelectScrollPanel />}
+      <TokenSelectScrollPanel />
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>

@@ -19,7 +19,7 @@ export function usePanelContextBase(
 ) {
   const debugLog = createDebugLogger(label, debugEnabled, false);
 
-  const [validatedAsset, setValidatedAssetRaw] = useState<ValidatedAsset>();
+  const [validatedAsset, setValidatedAssetRaw] = useState<ValidatedAsset | undefined>();
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
 
   const setInputState = (next: InputState) => {
@@ -31,16 +31,22 @@ export function usePanelContextBase(
     setInputStateRaw(next);
   };
 
-  const setValidatedAsset = (next: ValidatedAsset) => {
+  const setValidatedAsset = (next: ValidatedAsset | undefined) => {
     if (
       validatedAsset &&
-      validatedAsset.address === next.address &&
-      validatedAsset.chainId === next.chainId
+      next &&
+      validatedAsset.address === next.address
     ) {
       debugLog.log(`🚫 Skipping setValidatedAsset — already set to ${next.symbol || next.address}`);
       return;
     }
-    debugLog.log(`✅ setValidatedAsset → ${next.symbol || next.address}`);
+
+    if (!next) {
+      debugLog.log(`🧹 Clearing validated asset`);
+    } else {
+      debugLog.log(`✅ setValidatedAsset → ${next.symbol || next.address}`);
+    }
+
     setValidatedAssetRaw(next);
   };
 
