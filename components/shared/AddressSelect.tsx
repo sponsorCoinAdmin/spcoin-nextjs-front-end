@@ -5,7 +5,6 @@
 import styles from '@/styles/Modal.module.css';
 import React from 'react';
 import {
-  CONTAINER_TYPE,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
@@ -34,8 +33,6 @@ export default function AddressSelect() {
   const {
     inputValue,
     handleHexInputChange,
-    hasBrokenLogoURL,
-    reportMissingLogoURL,
   } = useValidateHexInput(feedType); // ✅ Now the only validation hook
 
   const MANUAL_ENTRY = true;
@@ -62,13 +59,11 @@ export default function AddressSelect() {
         inputValue={inputValue}
         onChange={(val) => handleHexInputChange(val, MANUAL_ENTRY)}
         placeholder="Enter address"
-        statusEmoji="" // 💡 Optionally pass emoji from useValidateFSMInput
+        statusEmoji=""
       />
 
       <RenderAssetPreview
         validatedAsset={validatedAsset}
-        hasBrokenLogoURL={hasBrokenLogoURL}
-        reportMissingLogoURL={reportMissingLogoURL}
         onSelect={onManualSelect}
       />
 

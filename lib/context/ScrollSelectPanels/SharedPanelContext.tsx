@@ -8,7 +8,7 @@ import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTyp
 
 export interface SharedPanelContextType {
   validatedAsset?: ValidatedAsset;
-  setValidatedAsset?: (asset: ValidatedAsset) => void;
+  setValidatedAsset?: (asset: ValidatedAsset | undefined) => void;
   containerType: CONTAINER_TYPE;
   inputState: InputState;
   setInputState: (state: InputState) => void;

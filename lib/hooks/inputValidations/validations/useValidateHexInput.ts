@@ -5,8 +5,7 @@
 import { useCallback, useEffect } from 'react';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
-import { FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
+import { FEED_TYPE, InputState } from '@/lib/structure';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 export function useValidateHexInput(feedType: FEED_TYPE) {
@@ -55,9 +54,6 @@ export function useValidateHexInput(feedType: FEED_TYPE) {
     inputState,             // ✅ include for consumers like AddressSelect
     setInputState,          // ✅ include for consumers like AddressSelect
     handleHexInputChange,
-    // isLoading,
-    // reportMissingLogoURL,
-    // hasBrokenLogoURL,
     resetInput,
     failedHexInput,
     failedHexCount,
