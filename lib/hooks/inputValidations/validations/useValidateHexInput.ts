@@ -20,6 +20,11 @@ export function useValidateHexInput(feedType: FEED_TYPE) {
   const { containerType, inputState, setInputState } = useSharedPanelContext(); // ✅ Get containerType from context
   const debouncedAddress = useDebounce(inputValue, 250);
 
+  useEffect(() => {
+  console.log(`🧪 useValidateHexInput: setInputState(VA) called for "${debouncedAddress}"`);
+  setInputState(InputState.VALIDATE_ADDRESS);
+}, [debouncedAddress]);
+
   // --- Handle input change: validate + spawn FSM ---
   const handleHexInputChange = useCallback(
     (val: string, _isManual?: boolean) => {

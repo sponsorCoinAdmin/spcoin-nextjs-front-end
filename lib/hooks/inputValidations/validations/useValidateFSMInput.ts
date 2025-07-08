@@ -67,6 +67,10 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const [validationPending, setValidationPending] = useState(true);
 
   useEffect(() => {
+  debugLog.log(`🎯 FSM useEffect triggered → state: ${InputState[inputState]}, debounced: ${debouncedAddress}`);
+}, [inputState, debouncedAddress]);
+
+  useEffect(() => {
     if (debouncedAddress !== selectAddress) {
       debugLog.log(`⏭️ Skipping FSM: debounced="${debouncedAddress}" hasn't caught up with input="${selectAddress}"`);
       return;
@@ -186,21 +190,6 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     runValidationFSM();
   }, [
     inputState,
-    debouncedAddress,
-    selectAddress,
-    publicClient,
-    chainId,
-    accountAddress,
-    feedType,
-    containerType,
-    validatedAsset,
-    sellAddress,
-    buyAddress,
-    setInputState,
-    setValidatedAsset,
-    setSellTokenContract,
-    setBuyTokenContract,
-    balanceData,
   ]);
 
   const reportMissingLogoURL = useCallback(() => {

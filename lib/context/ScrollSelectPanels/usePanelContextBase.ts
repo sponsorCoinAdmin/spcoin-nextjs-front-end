@@ -19,12 +19,29 @@ export function usePanelContextBase(
 ) {
   const debugLog = createDebugLogger(label, debugEnabled, false);
 
-  const [validatedAsset, setValidatedAsset] = useState<ValidatedAsset>();
+  const [validatedAsset, setValidatedAssetRaw] = useState<ValidatedAsset>();
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
 
-  const setInputState = (state: InputState) => {
-    debugLog.log(`📝 setInputState → ${getInputStateString(state)}`);
-    setInputStateRaw(state);
+  const setInputState = (next: InputState) => {
+    if (next === inputState) {
+      debugLog.log(`🚫 Skipping setInputState — already in ${getInputStateString(next)}`);
+      return;
+    }
+    debugLog.log(`📝 setInputState → ${getInputStateString(next)}`);
+    setInputStateRaw(next);
+  };
+
+  const setValidatedAsset = (next: ValidatedAsset) => {
+    if (
+      validatedAsset &&
+      validatedAsset.address === next.address &&
+      validatedAsset.chainId === next.chainId
+    ) {
+      debugLog.log(`🚫 Skipping setValidatedAsset — already set to ${next.symbol || next.address}`);
+      return;
+    }
+    debugLog.log(`✅ setValidatedAsset → ${next.symbol || next.address}`);
+    setValidatedAssetRaw(next);
   };
 
   const contextValue = useMemo(() => ({
