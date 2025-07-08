@@ -1,5 +1,3 @@
-// File: lib/hooks/inputValidations/validations/useValidateFSMInput.ts
-
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -7,6 +5,7 @@ import { isAddress } from 'viem';
 import { useChainId, useAccount, usePublicClient, useBalance } from 'wagmi';
 import { getLogoURL } from '@/lib/network/utils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { getInputStateEmoji } from '@/lib/hooks/inputValidations/helpers/getInputStateEmoji';
 
 import {
   useBuyTokenAddress,
@@ -28,14 +27,17 @@ import { debugSetInputState } from '../helpers/debugSetInputState';
 import { isEmptyInput } from './isEmptyInput';
 import { isDuplicateInput } from './isDuplicateInput';
 import { resolveTokenContract } from './resolveTokenContract';
+import { useBaseSelectShared } from '../../useBaseSelectShared';
 
 export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
   feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
-  containerType?: CONTAINER_TYPE
 ) => {
   const debouncedAddress = useDebounce(selectAddress || '', 250);
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+    const sharedState = useBaseSelectShared();
+    const { inputState, setInputState, containerType } = sharedState;
+  
+  // const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAsset] = useState<T | undefined>(undefined);
   const [validationPending, setValidationPending] = useState(true);
 
@@ -61,11 +63,24 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
 
   // ✅ FSM Processor
   useEffect(() => {
+    // 🛑 Wait until debounce has caught up with input
+    if (debouncedAddress !== selectAddress) {
+      debugLog.log(
+        `🛑 Skipping FSM: debounced="${debouncedAddress}" has not caught up to input="${selectAddress}"`
+      );
+      return;
+    }
+
+    const stateLabel = `${getInputStateEmoji(inputState)} ${InputState[inputState]}`;
+    debugLog.log(
+      `🧵 FSM useEffect for state ${stateLabel} (${inputState}) on debouncedAddress: "${debouncedAddress}"`
+    );
+
     const runValidationFSM = async () => {
       switch (inputState) {
         case InputState.EMPTY_INPUT:
         case InputState.INVALID_ADDRESS_INPUT:
-        case InputState.INVALID_HEX_INPUT:
+        case InputState.INCOMPLETE_ADDRESS:
         case InputState.DUPLICATE_INPUT:
         case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
         case InputState.CONTRACT_NOT_FOUND_LOCALLY:
@@ -77,25 +92,56 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
           setValidationPending(true);
 
           if (isEmptyInput(debouncedAddress)) {
-            debugSetInputState(InputState.EMPTY_INPUT, inputState, setInputState);
+            debugSetInputState(
+              `isEmptyInput(${debouncedAddress})`,
+              InputState.EMPTY_INPUT,
+              inputState,
+              setInputState
+            );
           } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedAddress)) {
             alert('Hex Input Address Required');
-            debugSetInputState(InputState.INVALID_HEX_INPUT, inputState, setInputState);
+            debugSetInputState(
+              `INCOMPLETE_ADDRESS(${debouncedAddress})`,
+              InputState.INCOMPLETE_ADDRESS,
+              inputState,
+              setInputState
+            );
           } else if (!isAddress(debouncedAddress)) {
-            alert('Invalid address format');
-            debugSetInputState(InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
+            debugSetInputState(
+              `INVALID_ADDRESS(${debouncedAddress})`,
+              InputState.INVALID_ADDRESS_INPUT,
+              inputState,
+              setInputState
+            );
           } else {
-            debugSetInputState(InputState.TEST_DUPLICATE_INPUT, inputState, setInputState);
+            debugSetInputState(
+              `PASS → TEST_DUPLICATE(${debouncedAddress})`,
+              InputState.TEST_DUPLICATE_INPUT,
+              inputState,
+              setInputState
+            );
           }
           break;
         }
 
         case InputState.TEST_DUPLICATE_INPUT:
-          if (isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)) {
+          if (
+            isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)
+          ) {
             alert('Duplicate address detected');
-            debugSetInputState(InputState.DUPLICATE_INPUT, inputState, setInputState);
+            debugSetInputState(
+              `TEST_DUPLICATE_INPUT(${debouncedAddress})`,
+              InputState.DUPLICATE_INPUT,
+              inputState,
+              setInputState
+            );
           } else {
-            debugSetInputState(InputState.VALIDATE_EXISTS_ON_CHAIN, inputState, setInputState);
+            debugSetInputState(
+              `PASS → VALIDATE_EXISTS_ON_CHAIN(${debouncedAddress})`,
+              InputState.VALIDATE_EXISTS_ON_CHAIN,
+              inputState,
+              setInputState
+            );
           }
           break;
 
@@ -116,7 +162,12 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
 
           if (!resolved) {
             alert('Contract not found on blockchain');
-            debugSetInputState(InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
+            debugSetInputState(
+              `NOT_FOUND(${debouncedAddress})`,
+              InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+              inputState,
+              setInputState
+            );
             return;
           }
 
@@ -129,16 +180,31 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
             setBuyTokenContract(resolved);
           }
 
-          debugSetInputState(InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY, inputState, setInputState);
+          debugSetInputState(
+            `PASS → VALIDATE_CONTRACT_EXISTS_LOCALLY(${debouncedAddress})`,
+            InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY,
+            inputState,
+            setInputState
+          );
           break;
         }
 
         case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
           if (seenBrokenLogosRef.current.has(debouncedAddress)) {
             alert('Local contract logo missing');
-            debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
+            debugSetInputState(
+              `BROKEN_LOGO(${debouncedAddress})`,
+              InputState.CONTRACT_NOT_FOUND_LOCALLY,
+              inputState,
+              setInputState
+            );
           } else {
-            debugSetInputState(InputState.VALIDATE_BALANCE, inputState, setInputState);
+            debugSetInputState(
+              `PASS → VALIDATE_BALANCE(${debouncedAddress})`,
+              InputState.VALIDATE_BALANCE,
+              inputState,
+              setInputState
+            );
           }
           break;
 
@@ -164,14 +230,19 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
             setBuyTokenContract(tokenWithBalance);
           }
 
-          debugSetInputState(InputState.VALID_INPUT, inputState, setInputState);
+          debugSetInputState(
+            `PASS → VALID_INPUT(${debouncedAddress})`,
+            InputState.VALID_INPUT,
+            inputState,
+            setInputState
+          );
           setValidationPending(false);
           break;
       }
     };
 
     runValidationFSM();
-  }, [inputState, debouncedAddress, publicClient, balanceData, validatedAsset, chainId]);
+  }, [inputState, debouncedAddress, selectAddress]);
 
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedAddress) return;
@@ -179,7 +250,12 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
       seenBrokenLogosRef.current.add(debouncedAddress);
       console.warn(`🛑 Missing logoURL image for ${debouncedAddress}`);
       alert('Missing logo — contract not found locally');
-      debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
+      debugSetInputState(
+        `reportMissingLogoURL(${debouncedAddress})`,
+        InputState.CONTRACT_NOT_FOUND_LOCALLY,
+        inputState,
+        setInputState
+      );
     }
   }, [debouncedAddress, inputState]);
 

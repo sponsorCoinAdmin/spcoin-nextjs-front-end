@@ -1,0 +1,29 @@
+          [EMPTY_INPUT]
+                │
+                ▼
+      [VALIDATE_ADDRESS] ─────────────┐
+         │      │        │           │
+         │      │        │           │
+         ▼      ▼        ▼           │
+[INCOMPLETE_ADDRESS] [INVALID_ADDRESS_INPUT]
+                                   │
+                                   ▼
+                     [TEST_DUPLICATE_INPUT]
+                         │        │
+                         ▼        ▼
+            [DUPLICATE_INPUT]   [VALIDATE_EXISTS_ON_CHAIN]
+                                         │
+                                         ▼
+                         [CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]
+                                         │
+                                         ▼
+                          [VALIDATE_CONTRACT_EXISTS_LOCALLY]
+                                         │
+                                         ▼
+                          [CONTRACT_NOT_FOUND_LOCALLY]
+                                         │
+                                         ▼
+                              [VALIDATE_BALANCE]
+                                         │
+                                         ▼
+                                 [VALID_INPUT]

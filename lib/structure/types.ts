@@ -2,7 +2,7 @@
 
 import { Address } from 'viem';
 import { UseReadContractReturnType } from 'wagmi';
-import { STATUS, TRADE_DIRECTION, API_TRADING_PROVIDER, SP_COIN_DISPLAY } from './enums';
+import { STATUS, TRADE_DIRECTION, API_TRADING_PROVIDER, SP_COIN_DISPLAY } from '@/lib/structure';
 
 export interface WalletAccount {
   name: string;

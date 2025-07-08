@@ -33,10 +33,16 @@ export function useValidateHexInput(feedType: FEED_TYPE) {
   const handleHexInputChange = useCallback(
     (val: string, _isManual?: boolean) => {
       validateHexInput(val);
-      setInputState(InputState.VALIDATE_ADDRESS);
+      // alert(`hex input changed ${val}`)
+      // setInputState(InputState.VALIDATE_ADDRESS);
     },
     [validateHexInput, setInputState]
   );
+
+  useEffect(() => {
+    alert(`useEffect debouncedAddress Input: "${debouncedAddress}"`);
+    setInputState(InputState.VALIDATE_ADDRESS);
+  }, [debouncedAddress]);
 
   // --- Handle reset ---
   const resetInput = useCallback(() => {

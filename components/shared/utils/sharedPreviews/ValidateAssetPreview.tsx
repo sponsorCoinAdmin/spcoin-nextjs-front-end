@@ -3,11 +3,14 @@
 'use client';
 
 import React from 'react';
-import { InputState, TokenContract, WalletAccount } from '@/lib/structure';
-import { usePanelFeedContext } from '@/lib/context/ScrollSelectPanels';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
+import { InputState } from '@/lib/structure';
+import { useBaseSelectShared } from '@/lib/hooks';
+  const sharedState = useBaseSelectShared();
+  const { inputState, setInputState, containerType } = sharedState;
+
 
 interface Props {
+  inputState: InputState;
   duplicateMessage?: string;
 }
 
@@ -39,10 +42,7 @@ const emojiMap: Partial<Record<InputState, {
   },
 };
 
-const ValidateAssetPreview: React.FC<Props> = ({ duplicateMessage }) => {
-  const { feedType, containerType } = usePanelFeedContext();
-  const { inputState } = useValidateFSMInput(undefined, feedType, containerType);
-
+const ValidateAssetPreview: React.FC<Props> = () => {
   const item = emojiMap[inputState];
   if (!item || inputState === InputState.IS_LOADING || inputState === InputState.EMPTY_INPUT) return null;
 

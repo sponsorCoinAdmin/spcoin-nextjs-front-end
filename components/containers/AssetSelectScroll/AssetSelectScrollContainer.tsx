@@ -3,7 +3,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getInputStateString } from '@/lib/structure';
 
 import BaseModalDialog from './BaseModalDialog';
 import AddressSelect from '@/components/shared/AddressSelect';

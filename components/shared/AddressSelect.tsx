@@ -13,6 +13,7 @@ import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import ValidateAssetPreview from '@/components/shared/utils/sharedPreviews/ValidateAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
+import { useBaseSelectShared } from '@/lib/hooks/useBaseSelectShared';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
@@ -35,6 +36,9 @@ export default function AddressSelect() {
     containerType,
     feedType,
   } = usePanelFeedContext();
+
+  const sharedState = useBaseSelectShared();
+  const { inputState, setInputState, containerType } = sharedState;
 
   const {
     inputValue,
@@ -77,7 +81,7 @@ export default function AddressSelect() {
         onSelect={onManualSelect}
       />
 
-      <ValidateAssetPreview />
+      {/* <ValidateAssetPreview /> */}
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0 gap-[0.2rem]">
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>

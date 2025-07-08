@@ -4,6 +4,7 @@ import { InputState, getInputStateString } from '@/lib/structure';
 import { debugLog } from './debugLogInstance';
 
 export function debugSetInputState(
+  source: string,
   nextState: InputState,
   currentState: InputState,
   setState: (s: InputState) => void
@@ -12,8 +13,9 @@ export function debugSetInputState(
 
   const prevStateStr = getInputStateString(currentState);
   const nextStateStr = getInputStateString(nextState);
-  const stateSymbol = '⚠️'.repeat(nextState);
-
-  debugLog.log(`${stateSymbol} STATE CHANGE: ${prevStateStr} (${currentState}) → ${nextStateStr} (${nextState})`);
+  const stateSymbol = '⏩'.repeat(nextState);
+  const debugMsg = `${source}{STATE CHANGE): ${prevStateStr}(${currentState}) → ${nextStateStr}(${nextState})`;
+  alert(`${debugMsg}`);
+  debugLog.log(`${debugMsg}`);
   setState(nextState);
 }

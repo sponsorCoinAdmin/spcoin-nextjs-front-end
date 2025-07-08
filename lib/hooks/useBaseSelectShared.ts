@@ -8,9 +8,7 @@ import {
   FEED_TYPE,
   CONTAINER_TYPE,
 } from '@/lib/structure';
-import { useValidateHexInput } from './inputValidations';
-import { useValidateFSMInput } from './inputValidations/validations/useValidateFSMInput';
-import { getInputStatusEmoji } from './inputValidations/helpers/getInputStatusEmoji';
+import { getInputStateEmoji } from './inputValidations/helpers/getInputStateEmoji';
 
 export interface BaseSelectSharedState {
   inputValue: string;
@@ -18,7 +16,7 @@ export interface BaseSelectSharedState {
   validateHexInput: (val: string) => void;
   inputState: InputState;
   setInputState: (state: InputState) => void;
-  getInputStatusEmoji: (state: InputState) => string;
+  getInputStateEmoji: (state: InputState) => string;
   validateInputStatusMessage: (
     state: InputState,
     duplicateMessage?: string
@@ -27,20 +25,16 @@ export interface BaseSelectSharedState {
   containerType: CONTAINER_TYPE;
 }
 
+// ⚠️ Placeholder implementation — you must supply actual values via context or props
 export function useBaseSelectShared(): BaseSelectSharedState {
   const { feedType, containerType } = useSharedPanelContext();
 
-  // Get values from correct sources
-  const {
-    inputValue,
-    debouncedAddress,
-    handleHexInputChange,
-  } = useValidateHexInput(feedType);
-
-  const {
-    inputState,
-    setInputState,
-  } = useValidateFSMInput(debouncedAddress, feedType, containerType);
+  // These must now be supplied via context, wrapper hook, or parent
+  const inputValue = '';
+  const debouncedAddress = '';
+  const inputState = InputState.EMPTY_INPUT;
+  const setInputState = () => {};
+  const validateHexInput = () => {};
 
   const validateInputStatusMessage = (
     state: InputState,
@@ -58,10 +52,10 @@ export function useBaseSelectShared(): BaseSelectSharedState {
   return {
     inputValue,
     debouncedAddress,
-    validateHexInput: handleHexInputChange, // rename for clarity
+    validateHexInput,
     inputState,
     setInputState,
-    getInputStatusEmoji,
+    getInputStateEmoji,
     validateInputStatusMessage,
     feedType,
     containerType,
