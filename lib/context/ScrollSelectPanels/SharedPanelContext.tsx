@@ -1,4 +1,5 @@
 // File: lib/context/ScrollSelectPanels/SharedPanelContext.tsx
+
 'use client';
 
 import { createContext, useContext } from 'react';
@@ -17,20 +18,18 @@ export interface SharedPanelContextType {
   containerType: CONTAINER_TYPE;
   feedType: FEED_TYPE;
 
-  // Hex‐input state + setters
+  // Hex-input state + setters
   validHexInput: string;
   failedHexInput?: string;
-  failedHexCount: number;
   isValidHexInput: (raw: string) => boolean;
-  resetHexInput: () => void;
   setValidHexInput: (raw: string) => void;
   setFailedHexInput: (raw?: string) => void;
 
   // Debounced version
   debouncedHexInput: string;
 
-  // Convenience
-  handleHexInputChange: (raw: string) => void;
+  // Debug
+  dumpSharedPanelContext: () => void;
 }
 
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
