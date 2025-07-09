@@ -11,6 +11,7 @@ import {
   FEED_TYPE,
   CONTAINER_TYPE,
 } from '@/lib/structure';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './SharedPanelContext';
@@ -51,21 +52,23 @@ export function usePanelContextBase(
     setValidatedAssetRaw(next);
   };
 
-  // ─── Hex-input tracking ───────────────────────
+  // ─── Hex‐input tracking ──────────────────────
   const {
     validHexInput,
     failedHexInput,
     isValidHexInput,
     resetHexInput,
-    failedHexCount,
   } = useHexInput();
 
-  // Grab the internal setters so we can mirror them into context
-  const { setValidHexValue, setFailedHexInput } = (() => {
+  // Grab the internal setters from a fresh instance so we can re‐expose them
+  const {
+    setValidHexValue: setValidHexInput,
+    setFailedHexInput,
+  } = (() => {
     const tmp: any = useHexInput();
     return {
-      setValidHexValue: tmp.__proto__?.setValidHexValue || tmp.setValidHexValue,
-      setFailedHexInput: tmp.__proto__?.setFailedHexInput || tmp.setFailedHexInput,
+      setValidHexValue: tmp.setValidHexValue,
+      setFailedHexInput: tmp.setFailedHexInput,
     };
   })();
 
@@ -78,7 +81,6 @@ export function usePanelContextBase(
     console.log('validatedAsset:', validatedAsset);
     console.log('validHexInput:', validHexInput);
     console.log('failedHexInput:', failedHexInput);
-    console.log('failedHexCount:', failedHexCount);
     console.log('debouncedHexInput:', debouncedHexInput);
     console.log('feedType:', feedType);
     console.log('containerType:', containerType);
@@ -86,7 +88,7 @@ export function usePanelContextBase(
   };
 
   // ─── bundle it all ─────────────────────────
-  return useMemo<SharedPanelContextType>(
+  const contextValue = useMemo<SharedPanelContextType>(
     () => ({
       // FSM
       inputState,
@@ -95,40 +97,35 @@ export function usePanelContextBase(
       setValidatedAsset,
 
       // identity
-      containerType,
       feedType,
+      containerType,
 
-      // hex-input
+      // hex‐input state + setters
       validHexInput,
       failedHexInput,
-      failedHexCount,
       isValidHexInput,
       resetHexInput,
-      setValidHexInput: setValidHexValue,
+      setValidHexInput,
       setFailedHexInput,
 
-      // debounced
+      // debounced version
       debouncedHexInput,
 
       // debug
       dumpSharedPanelContext,
     }),
     [
-      // FSM
       inputState,
       validatedAsset,
-      // identity
-      containerType,
       feedType,
-      // raw hex
+      containerType,
       validHexInput,
       failedHexInput,
-      failedHexCount,
       isValidHexInput,
       resetHexInput,
-      // debounced
       debouncedHexInput,
-      // debug helper itself is stable
     ]
   );
+
+  return contextValue;
 }

@@ -3,55 +3,42 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { useHexInput } from '@/lib/hooks/useHexInput';
-import { useDebounce } from '@/lib/hooks/useDebounce';
 import { InputState } from '@/lib/structure';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
 
 export function useValidateHexInput() {
-
-  const { inputState, setInputState } = useSharedPanelContext(); // ✅ Get containerType from context
-
   const {
+    // hex‐input state & setters from context
     validHexInput,
-    failedHexInput,
+    debouncedHexInput,
     isValidHexInput,
-    resetHexInput,
-    failedHexCount,
-  } = useHexInput();
+    setValidHexInput,
+    setFailedHexInput,
+    // FSM trigger
+    setInputState,
+  } = useSharedPanelContext();
 
-  const debouncedHexInput = useDebounce(validHexInput, 250);
-
-  useEffect(() => {
-    console.log(`🧪 useValidateHexInput: setInputState(VA) called for "${debouncedHexInput}"`);
-    setInputState(InputState.VALIDATE_ADDRESS);
-  }, [debouncedHexInput]);
-
-  // --- Handle input change: validate + spawn FSM ---
+  // 1) Handle each keystroke immediately
   const handleHexInputChange = useCallback(
-    (val: string, _isManual?: boolean) => {
-      isValidHexInput(val);
-      // alert(`hex input changed ${val}`)
+    (raw: string, _isManual?: boolean) => {
+      const ok = isValidHexInput(raw);
+      setValidHexInput(raw);
+      if (!ok) {
+        setFailedHexInput(raw);
+      }
+      // we don’t fire the FSM here; that waits for the debounced value
     },
-    [isValidHexInput, setInputState]
+    [isValidHexInput, setValidHexInput, setFailedHexInput]
   );
 
+  // 2) Once the debounced value settles, kick off the FSM
   useEffect(() => {
-    alert(`useEffect debouncedHexInput Input: "${debouncedHexInput}"`);
     setInputState(InputState.VALIDATE_ADDRESS);
-  }, [debouncedHexInput]);
-
-  // --- Alert on failed input ---
-  useEffect(() => {
-    if (typeof failedHexInput === 'string' && failedHexCount > 0) {
-      alert(`Invalid Hex Input: "${failedHexInput}"`);
-    }
-  }, [failedHexCount, failedHexInput]);
+  }, [debouncedHexInput, setInputState]);
 
   return {
     validHexInput,
+    debouncedHexInput,
     handleHexInputChange,
-    resetHexInput,
-    failedHexInput,
   };
 }

@@ -37,9 +37,9 @@ export default function AddressSelect() {
     handleHexInputChange,
   } = useValidateHexInput(); // ✅ Now the only validation hook
 
-  useEffect(() => {
-    alert(`validHexInput: ${validHexInput}, testHexInput: ${testHexInput}`)
-  }, [validHexInput, testHexInput]);
+  // useEffect(() => {
+  //   alert(`validHexInput: ${validHexInput}, testHexInput: ${testHexInput}`)
+  // }, [validHexInput, testHexInput]);
 
   const MANUAL_ENTRY = true;
 
