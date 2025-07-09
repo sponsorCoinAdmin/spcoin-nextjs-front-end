@@ -5,11 +5,11 @@
 import { useState, useCallback } from 'react';
 
 export function useHexInput(initialValue: string = '') {
-  const [inputValue, setInputValue] = useState(initialValue);
+  const [validHexInput, setValidHexValue] = useState(initialValue);
   const [failedHexInput, setFailedHexInput] = useState<string | undefined>(undefined);
   const [failedHexCount, setFailedHexCount] = useState(0); // acts as both flag and invalid entry counter
 
-  const validateHexInput = useCallback((rawInput: string): boolean => {
+  const isValidHexInput = useCallback((rawInput: string): boolean => {
     const trimmed = rawInput.trim();
 
     const isValid =
@@ -19,7 +19,7 @@ export function useHexInput(initialValue: string = '') {
       /^0x[0-9a-fA-F]*$/.test(trimmed);
 
     if (isValid) {
-      setInputValue(trimmed);
+      setValidHexValue(trimmed);
       setFailedHexInput(undefined);
       setFailedHexCount(0); // ✅ reset on valid input
     } else {
@@ -30,16 +30,16 @@ export function useHexInput(initialValue: string = '') {
     return isValid;
   }, []);
 
-  const resetInput = useCallback(() => {
-    setInputValue('');
+  const resetHexInput = useCallback(() => {
+    setValidHexValue('');
     setFailedHexInput(undefined);
     setFailedHexCount(0);
   }, []);
 
   return {
-    inputValue,
-    validateHexInput,
-    resetInput,
+    validHexInput,
+    isValidHexInput,
+    resetHexInput,
     failedHexInput,     // ❗️shows last failed input
     failedHexCount,     // ❗️used as isValidHex trigger alternative
   };

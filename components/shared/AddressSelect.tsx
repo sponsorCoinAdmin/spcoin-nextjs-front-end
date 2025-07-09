@@ -16,10 +16,6 @@ import { useDisplayControls } from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import {
-  useSellTokenContract,
-  useBuyTokenContract,
-} from '@/lib/context/hooks';
 
 import { useValidateHexInput } from '@/lib/hooks/inputValidations';
 
@@ -28,18 +24,16 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function AddressSelect() {
-  const { inputState, setInputState, containerType, validatedAsset, feedType } = useSharedPanelContext();
+  const { validatedAsset, feedType } = useSharedPanelContext();
 
   const {
-    inputValue,
+    validHexInput,
     handleHexInputChange,
-  } = useValidateHexInput(feedType); // ✅ Now the only validation hook
+  } = useValidateHexInput(); // ✅ Now the only validation hook
 
   const MANUAL_ENTRY = true;
 
   const { updateAssetScrollDisplay } = useDisplayControls();
-  const [, setSellTokenContract] = useSellTokenContract();
-  const [, setBuyTokenContract] = useBuyTokenContract();
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
@@ -56,7 +50,7 @@ export default function AddressSelect() {
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
-        inputValue={inputValue}
+        inputValue={validHexInput}
         onChange={(val) => handleHexInputChange(val, MANUAL_ENTRY)}
         placeholder="Enter address"
         statusEmoji=""

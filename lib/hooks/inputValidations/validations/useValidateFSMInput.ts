@@ -35,15 +35,15 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPa
 
 export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
-  feedType: FEED_TYPE = FEED_TYPE.TOKEN_LIST,
 ) => {
-  const debouncedAddress = useDebounce(selectAddress || '', 250);
+  const debouncedHexInput = useDebounce(selectAddress || '', 250);
   const {
     inputState,
     setInputState,
     containerType,
     validatedAsset,
     setValidatedAsset,
+    feedType
   } = useSharedPanelContext();
 
   const buyAddress = useBuyTokenAddress();
@@ -56,8 +56,8 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const { address: accountAddress } = useAccount();
 
   const { data: balanceData } = useBalance({
-    address: isAddress(debouncedAddress) ? debouncedAddress as `0x${string}` : undefined,
-    token: isAddress(debouncedAddress) ? debouncedAddress as `0x${string}` : undefined,
+    address: isAddress(debouncedHexInput) ? debouncedHexInput as `0x${string}` : undefined,
+    token: isAddress(debouncedHexInput) ? debouncedHexInput as `0x${string}` : undefined,
     chainId,
     query: { enabled: Boolean(accountAddress) },
   });
@@ -67,17 +67,17 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const [validationPending, setValidationPending] = useState(true);
 
   useEffect(() => {
-  debugLog.log(`🎯 FSM useEffect triggered → state: ${InputState[inputState]}, debounced: ${debouncedAddress}`);
-}, [inputState, debouncedAddress]);
+  debugLog.log(`🎯 FSM useEffect triggered → state: ${InputState[inputState]}, debounced: ${debouncedHexInput}`);
+}, [inputState, debouncedHexInput]);
 
   useEffect(() => {
-    if (debouncedAddress !== selectAddress) {
-      debugLog.log(`⏭️ Skipping FSM: debounced="${debouncedAddress}" hasn't caught up with input="${selectAddress}"`);
+    if (debouncedHexInput !== selectAddress) {
+      debugLog.log(`⏭️ Skipping FSM: debounced="${debouncedHexInput}" hasn't caught up with input="${selectAddress}"`);
       return;
     }
 
     const stateLabel = `${getInputStateEmoji(inputState)} ${InputState[inputState]}`;
-    debugLog.log(`🧵 FSM triggered for state ${stateLabel} on debouncedAddress: "${debouncedAddress}"`);
+    debugLog.log(`🧵 FSM triggered for state ${stateLabel} on debouncedHexInput: "${debouncedHexInput}"`);
 
     const runValidationFSM = async () => {
       switch (inputState) {
@@ -94,13 +94,13 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         case InputState.VALIDATE_ADDRESS: {
           setValidationPending(true);
 
-          if (isEmptyInput(debouncedAddress)) {
+          if (isEmptyInput(debouncedHexInput)) {
             setValidatedAsset?.(undefined);
             debugSetInputState('EMPTY_INPUT', InputState.EMPTY_INPUT, inputState, setInputState);
-          } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedAddress)) {
+          } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedHexInput)) {
             alert('Hex Input Address Required');
             debugSetInputState('INCOMPLETE_ADDRESS', InputState.INCOMPLETE_ADDRESS, inputState, setInputState);
-          } else if (!isAddress(debouncedAddress)) {
+          } else if (!isAddress(debouncedHexInput)) {
             debugSetInputState('INVALID_ADDRESS', InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
           } else {
             debugSetInputState('PASS → TEST_DUPLICATE', InputState.TEST_DUPLICATE_INPUT, inputState, setInputState);
@@ -109,7 +109,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         }
 
         case InputState.TEST_DUPLICATE_INPUT:
-          if (isDuplicateInput(containerType!, debouncedAddress, sellAddress, buyAddress)) {
+          if (isDuplicateInput(containerType!, debouncedHexInput, sellAddress, buyAddress)) {
             alert('Duplicate address detected');
             debugSetInputState('DUPLICATE_INPUT', InputState.DUPLICATE_INPUT, inputState, setInputState);
           } else {
@@ -125,7 +125,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
           }
 
           const resolved = await resolveTokenContract(
-            debouncedAddress,
+            debouncedHexInput,
             chainId,
             feedType,
             publicClient,
@@ -151,7 +151,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
           return;
 
         case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
-          if (seenBrokenLogosRef.current.has(debouncedAddress)) {
+          if (seenBrokenLogosRef.current.has(debouncedHexInput)) {
             alert('Local contract logo missing');
             debugSetInputState('BROKEN_LOGO', InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
           } else {
@@ -193,23 +193,23 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   ]);
 
   const reportMissingLogoURL = useCallback(() => {
-    if (!debouncedAddress) return;
-    if (!seenBrokenLogosRef.current.has(debouncedAddress)) {
-      seenBrokenLogosRef.current.add(debouncedAddress);
-      console.warn(`🛑 Missing logoURL for ${debouncedAddress}`);
+    if (!debouncedHexInput) return;
+    if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
+      seenBrokenLogosRef.current.add(debouncedHexInput);
+      console.warn(`🛑 Missing logoURL for ${debouncedHexInput}`);
       alert('Missing logo — contract not found locally');
       debugSetInputState(
-        `reportMissingLogoURL(${debouncedAddress})`,
+        `reportMissingLogoURL(${debouncedHexInput})`,
         InputState.CONTRACT_NOT_FOUND_LOCALLY,
         inputState,
         setInputState
       );
     }
-  }, [debouncedAddress, inputState, setInputState]);
+  }, [debouncedHexInput, inputState, setInputState]);
 
   const hasBrokenLogoURL = useCallback(() => {
-    return seenBrokenLogosRef.current.has(debouncedAddress);
-  }, [debouncedAddress]);
+    return seenBrokenLogosRef.current.has(debouncedHexInput);
+  }, [debouncedHexInput]);
 
   return {
     inputState,

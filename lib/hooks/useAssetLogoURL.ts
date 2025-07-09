@@ -8,7 +8,6 @@ import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 import { useSharedPanelContext } from '../context/ScrollSelectPanels';
 
 const LOG_TIME = false;
