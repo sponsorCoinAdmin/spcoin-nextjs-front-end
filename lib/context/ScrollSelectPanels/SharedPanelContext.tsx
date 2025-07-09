@@ -31,10 +31,6 @@ export interface SharedPanelContextType {
   failedHexInput?: string;
   /** Predicate to check if a raw input is valid */
   isValidHexInput: (raw: string) => boolean;
-  /** Overwrite the raw hex input in context */
-  setValidHexInput: (raw: string) => void;
-  /** Overwrite the failed hex input in context */
-  setFailedHexInput: (raw?: string) => void;
 
   // ─── Debounced hex‐input ────────────────────────
   /** A debounced version of `validHexInput` (e.g. 250 ms delay) */

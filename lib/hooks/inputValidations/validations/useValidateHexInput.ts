@@ -7,18 +7,14 @@ export function useValidateHexInput() {
     validHexInput,
     debouncedHexInput,
     isValidHexInput,
-    setValidHexInput,
-    setFailedHexInput,
     setInputState,
   } = useSharedPanelContext();
 
   const handleHexInputChange = useCallback(
     (raw: string, _isManual?: boolean) => {
       const ok = isValidHexInput(raw);
-      setValidHexInput(raw);
-      if (!ok) setFailedHexInput(raw);
     },
-    [isValidHexInput, setValidHexInput, setFailedHexInput]
+    [isValidHexInput]
   );
 
   useEffect(() => {

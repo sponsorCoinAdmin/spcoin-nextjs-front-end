@@ -60,18 +60,6 @@ export function usePanelContextBase(
     resetHexInput,
   } = useHexInput();
 
-  // Grab the internal setters from a fresh instance so we can re‐expose them
-  const {
-    setValidHexValue: setValidHexInput,
-    setFailedHexInput,
-  } = (() => {
-    const tmp: any = useHexInput();
-    return {
-      setValidHexValue: tmp.setValidHexValue,
-      setFailedHexInput: tmp.setFailedHexInput,
-    };
-  })();
-
   const debouncedHexInput = useDebounce(validHexInput, 250);
 
   // ─── Debug dump helper ──────────────────────
@@ -105,9 +93,7 @@ export function usePanelContextBase(
       failedHexInput,
       isValidHexInput,
       resetHexInput,
-      setValidHexInput,
-      setFailedHexInput,
-
+  
       // debounced version
       debouncedHexInput,
 
