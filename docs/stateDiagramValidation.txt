@@ -1,29 +1,72 @@
-          [EMPTY_INPUT]
-                │
-                ▼
-      [VALIDATE_ADDRESS] ─────────────┐
-         │      │        │           │
-         │      │        │           │
-         ▼      ▼        ▼           │
-[INCOMPLETE_ADDRESS] [INVALID_ADDRESS_INPUT]
-                                   │
-                                   ▼
-                     [TEST_DUPLICATE_INPUT]
-                         │        │
-                         ▼        ▼
-            [DUPLICATE_INPUT]   [VALIDATE_EXISTS_ON_CHAIN]
-                                         │
-                                         ▼
-                         [CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]
-                                         │
-                                         ▼
-                          [VALIDATE_CONTRACT_EXISTS_LOCALLY]
-                                         │
-                                         ▼
-                          [CONTRACT_NOT_FOUND_LOCALLY]
-                                         │
-                                         ▼
-                              [VALIDATE_BALANCE]
-                                         │
-                                         ▼
-                                 [VALID_INPUT]
+User types raw hex ──► useHexInput ──► validHexInput ──► useDebounce (250 ms) ──► debouncedHexInput event
+                                                              │
+                                                              ▼
+                                                  setInputState(VALIDATE_ADDRESS)
+                                                              │
+                                                              ▼
+                 ┌───────────────────────────────────────────────────────────┐
+                 │                           FSM                             │
+                 └───────────────────────────────────────────────────────────┘
+                             ┌───────────────┐
+                             │ EMPTY_INPUT   │
+                             └───────┬───────┘
+                                     │
+                                     ▼
+                           ┌───────────────────────┐
+                           │ VALIDATE_ADDRESS      │
+                           └──────┬───────┬────────┘
+                                  │       │
+                    isEmpty?      │       │   not hex?
+                   ┌──Yes──►      │       │──► INVALID_HEX_INPUT
+                   │              │       │
+                   │              │       └────────┐
+                   │              │                │
+                   │           invalid             │
+                   │           regex               ▼
+                   │              │    ┌───────────────────────┐
+                   │              │    │ INVALID_ADDRESS_INPUT │
+                   │              │    └───────────┬───────────┘
+                   │              │                │
+                   │              │        passes isAddress
+                   │              │                │
+                   │              │                ▼
+                   │              │       ┌────────────────┐
+                   │              └──────►│ TEST_DUPLICATE │
+                   │                      └─────────┬──────┘
+                   │                   duplicate?   │ not duplicate
+                   │                     ┌──Yes──►  │──►PASS→VALIDATE_EXISTS_ON_CHAIN
+                   │                     │          │
+                   │                     │          ▼
+                   │                     │   ┌─────────────────┐
+                   │                     └──►│ DUPLICATE_INPUT │
+                   │                         └──────┬──────────┘
+                   │                                │
+                   │                                ▼
+                   │                        ┌────────────────────┐
+                   │                        │VALIDATE_EXISTS_ON_ │
+                   │                        │      CHAIN         │
+                   │                        └───────┬────────────┘
+                   │                                │ found?
+                   │                            ┌───┴───┐
+                   │                            │   No  │──►CONTRACT_NOT_FOUND_ON_CHAIN
+                   │                            └───┬───┘
+                   │                                │
+                   │                                ▼
+                   │                    ┌────────────────────────┐
+                   │                    │VALIDATE_CONTRACT_EXISTS│
+                   │                    │       _LOCALLY         │
+                   │                    └───────────┬────────────┘
+                   │                                │ broken logo?
+                   │                            ┌───┴───┐
+                   │                            │ Yes   │──►CONTRACT_NOT_FOUND_LOCALLY
+                   │                            └───┬───┘
+                   │                                │
+                   │                                ▼
+                   │                       ┌──────────────────┐
+                   │                       │ VALIDATE_BALANCE │
+                   │                       └────────┬─────────┘
+                   │                                │
+                   │                                ▼
+                   │                         ┌─────────────┐
+                   └────────────────────────►│ VALID_INPUT │
+                                             └─────────────┘

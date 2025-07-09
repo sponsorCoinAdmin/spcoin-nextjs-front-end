@@ -1,4 +1,5 @@
 // File: lib/context/ScrollSelectPanels/usePanelContextBase.ts
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -13,7 +14,7 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import type { SharedPanelContextType } from './SharedPanelContext'; 
+import type { SharedPanelContextType } from './SharedPanelContext';
 
 const LOG_TIME = false;
 
@@ -22,7 +23,7 @@ export function usePanelContextBase(
   containerType: CONTAINER_TYPE,
   label: string,
   debugEnabled: boolean = false
-) {
+): SharedPanelContextType {
   const debugLog = createDebugLogger(label, debugEnabled, LOG_TIME);
 
   // ─── FSM core state ──────────────────────────
@@ -40,10 +41,13 @@ export function usePanelContextBase(
 
   const setValidatedAsset = (next: ValidatedAsset | undefined) => {
     if (validatedAsset && next && validatedAsset.address === next.address) {
-      debugLog.log(`🚫 Skipping setValidatedAsset — already ${next.symbol}`);
+      debugLog.log(`🚫 Skipping setValidatedAsset — already ${next.symbol || next.address}`);
       return;
     }
-    debugLog.log(next ? `✅ setValidatedAsset → ${next.symbol}` : '🧹 Clearing validated asset');
+    debugLog.log(next
+      ? `✅ setValidatedAsset → ${next.symbol || next.address}`
+      : '🧹 Clearing validated asset'
+    );
     setValidatedAssetRaw(next);
   };
 
@@ -54,16 +58,15 @@ export function usePanelContextBase(
     isValidHexInput,
     resetHexInput,
     failedHexCount,
-    // these two setters aren’t returned by default, so we grab them by shadowing the hook’s internals:
+    // internal setters not exposed by default:
   } = useHexInput();
 
-  // We need the raw setters from useHexInput – so grab them out of the hook closure:
-  const { setValidHexValue, setFailedHexInput } = ((): any => {
-    // hack: pull the internal setters
-    const tmp = useHexInput() as any;
+  // Hack: grab internal setters from another hook instance
+  const { setValidHexValue, setFailedHexInput } = (() => {
+    const tmp: any = useHexInput();
     return {
-      setValidHexValue: tmp.__proto__.setValidHexValue || tmp.setValidHexValue,
-      setFailedHexInput: tmp.__proto__.setFailedHexInput || tmp.setFailedHexInput,
+      setValidHexValue: tmp.__proto__?.setValidHexValue || tmp.setValidHexValue,
+      setFailedHexInput: tmp.__proto__?.setFailedHexInput || tmp.setFailedHexInput,
     };
   })();
 
@@ -73,6 +76,20 @@ export function usePanelContextBase(
     const ok = isValidHexInput(raw);
     setValidHexValue(raw);
     if (!ok) setFailedHexInput(raw);
+  };
+
+  // ─── Debug dump helper ──────────────────────
+  const dumpSharedPanelContext = () => {
+    console.group(`🔍 dumpSharedPanelContext (${label})`);
+    console.log('inputState:', getInputStateString(inputState), inputState);
+    console.log('validatedAsset:', validatedAsset);
+    console.log('validHexInput:', validHexInput);
+    console.log('failedHexInput:', failedHexInput);
+    console.log('failedHexCount:', failedHexCount);
+    console.log('debouncedHexInput:', debouncedHexInput);
+    console.log('feedType:', feedType);
+    console.log('containerType:', containerType);
+    console.groupEnd();
   };
 
   // ─── bundle it all ─────────────────────────
@@ -102,6 +119,9 @@ export function usePanelContextBase(
 
       // convenience
       handleHexInputChange,
+
+      // debug
+      dumpSharedPanelContext,
     }),
     [
       inputState,
@@ -114,7 +134,6 @@ export function usePanelContextBase(
       isValidHexInput,
       resetHexInput,
       debouncedHexInput,
-      // Note: setValidHexValue & setFailedHexInput are stable
     ]
   );
 
