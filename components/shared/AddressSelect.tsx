@@ -29,7 +29,6 @@ export default function AddressSelect() {
     feedType,
     debouncedHexInput,
     validHexInput,
-    dumpSharedPanelContext,
   } = useSharedPanelContext();
 
   const {
