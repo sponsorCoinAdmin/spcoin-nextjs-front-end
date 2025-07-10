@@ -11,7 +11,7 @@ import {
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useDisplayControls } from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';

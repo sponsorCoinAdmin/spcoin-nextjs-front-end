@@ -6,7 +6,7 @@ import React from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
 import { TokenContract, WalletAccount, FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';

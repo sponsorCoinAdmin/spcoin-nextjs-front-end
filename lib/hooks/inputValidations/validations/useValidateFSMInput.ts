@@ -31,7 +31,7 @@ import { debugSetInputState } from '../helpers/debugSetInputState';
 import { isEmptyInput } from './isEmptyInput';
 import { isDuplicateInput } from './isDuplicateInput';
 import { resolveTokenContract } from './resolveTokenContract';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,

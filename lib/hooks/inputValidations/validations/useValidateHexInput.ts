@@ -8,6 +8,7 @@ export function useValidateHexInput() {
     debouncedHexInput,
     isValidHexInput,
     setInputState,
+    dumpSharedPanelContext,
   } = useSharedPanelContext();
 
   const handleHexInputChange = useCallback(

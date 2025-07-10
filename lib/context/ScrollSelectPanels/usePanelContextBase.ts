@@ -14,7 +14,7 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import type { SharedPanelContextType } from './SharedPanelContext';
+import type { SharedPanelContextType } from './useSharedPanelContext';
 
 const LOG_TIME = false;
 
