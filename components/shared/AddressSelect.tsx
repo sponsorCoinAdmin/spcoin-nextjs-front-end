@@ -28,12 +28,10 @@ export default function AddressSelect() {
     validatedAsset,
     feedType,
     debouncedHexInput,
-    validHexInput: testHexInput,
-    dumpSharedPanelContext,
+    validHexInput,
   } = useSharedPanelContext();
 
   const {
-    validHexInput,
     handleHexInputChange,
   } = useValidateHexInput(); // ✅ Now the only validation hook
 

@@ -57,58 +57,69 @@ export function usePanelContextBase(
     validHexInput,
     failedHexInput,
     isValidHexInput,
-    resetHexInput,
   } = useHexInput();
 
   const debouncedHexInput = useDebounce(validHexInput, 250);
 
-  // ─── Debug dump helper ──────────────────────
-  const dumpSharedPanelContext = () => {
-    console.group(`🔍 dumpSharedPanelContext (${label})`);
-    console.log('inputState:', getInputStateString(inputState), inputState);
-    console.log('validatedAsset:', validatedAsset);
-    console.log('validHexInput:', validHexInput);
-    console.log('failedHexInput:', failedHexInput);
-    console.log('debouncedHexInput:', debouncedHexInput);
-    console.log('feedType:', feedType);
-    console.log('containerType:', containerType);
+  // ─── Debug dump helpers ──────────────────────
+  const dumpFSMContext = () => {
+    console.group(`[FSM Context] (${label})`);
+    console.log({
+      inputState: getInputStateString(inputState),
+      validatedAsset,
+      containerType,
+      feedType,
+    });
+    console.groupEnd();
+  };
+
+  const dumpInputFeedContext = () => {
+    console.group(`[InputFeed Context] (${label})`);
+    console.log({
+      validHexInput,
+      failedHexInput,
+      debouncedHexInput,
+    });
+    console.groupEnd();
+  };
+
+  const dumpPanelContext = () => {
+    console.group(`[Panel Context] (${label})`);
+    dumpFSMContext();
+    dumpInputFeedContext();
     console.groupEnd();
   };
 
   // ─── bundle it all ─────────────────────────
   const contextValue = useMemo<SharedPanelContextType>(
     () => ({
-      // FSM
+      // FSM context
       inputState,
       setInputState,
       validatedAsset,
       setValidatedAsset,
-
-      // identity
-      feedType,
       containerType,
+      feedType,
+      dumpFSMContext,
 
-      // hex‐input state + setters
+      // input feed context
       validHexInput,
       failedHexInput,
       isValidHexInput,
-      resetHexInput,
-  
-      // debounced version
       debouncedHexInput,
+      dumpInputFeedContext,
 
-      // debug
-      dumpSharedPanelContext,
+      // combined
+      dumpPanelContext,
     }),
     [
       inputState,
       validatedAsset,
-      feedType,
       containerType,
+      feedType,
       validHexInput,
       failedHexInput,
       isValidHexInput,
-      resetHexInput,
       debouncedHexInput,
     ]
   );
