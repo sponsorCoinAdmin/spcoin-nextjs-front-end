@@ -6,8 +6,7 @@ import React from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
 import { TokenContract, WalletAccount, FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
@@ -15,19 +14,20 @@ const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED, LOG_TIME
 
 interface Props<T extends TokenContract | WalletAccount> {
   validatedAsset: T | undefined;
-  hasBrokenLogoURL: () => boolean;
-  reportMissingLogoURL: () => void;
   onSelect: (asset: T) => void;
 }
 
 export default function RenderAssetPreview<T extends TokenContract | WalletAccount>({
   validatedAsset,
-  hasBrokenLogoURL,
-  reportMissingLogoURL,
   onSelect,
 }: Props<T>) {
-  const { containerType, feedType } = useSharedPanelContext();
-  const { inputState } = useValidateFSMInput(validatedAsset?.address, feedType);
+  const { feedType } = useSharedPanelContext();
+
+  // 🔧ToDo TEMPORARY placeholder functions — to be replaced with real FSM hook output
+  const hasBrokenLogoURL = () => false;
+  const reportMissingLogoURL = () => {
+    debugLog.warn(`⚠️ reportMissingLogoURL called but no FSM hook connected.`);
+  };
 
   if (!validatedAsset) {
     debugLog.log('🚫 RenderAssetPreview skipped: validatedAsset is undefined');

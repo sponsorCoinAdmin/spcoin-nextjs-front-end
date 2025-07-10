@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
-import { SharedPanelContext } from './SharedPanelContext';
+import { SharedPanelContext } from './useSharedPanelContext';
 import { usePanelContextBase } from './usePanelContextBase';
 
 export function AgentPanelProvider({ children }: { children: React.ReactNode }) {

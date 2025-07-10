@@ -3,24 +3,19 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
-  CONTAINER_TYPE,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useDisplayControls } from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import {
-  useSellTokenContract,
-  useBuyTokenContract,
-} from '@/lib/context/hooks';
 
 import { useValidateHexInput } from '@/lib/hooks/inputValidations';
 
@@ -29,20 +24,26 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function AddressSelect() {
-  const { inputState, setInputState, containerType, validatedAsset, feedType } = useSharedPanelContext();
+  const {
+    validatedAsset,
+    feedType,
+    debouncedHexInput,
+    validHexInput: testHexInput,
+    dumpSharedPanelContext,
+  } = useSharedPanelContext();
 
   const {
-    inputValue,
+    validHexInput,
     handleHexInputChange,
-    hasBrokenLogoURL,
-    reportMissingLogoURL,
-  } = useValidateHexInput(feedType); // ✅ Now the only validation hook
+  } = useValidateHexInput(); // ✅ Now the only validation hook
+
+  // useEffect(() => {
+  //   alert(`validHexInput: ${validHexInput}, testHexInput: ${testHexInput}`)
+  // }, [validHexInput, testHexInput]);
 
   const MANUAL_ENTRY = true;
 
   const { updateAssetScrollDisplay } = useDisplayControls();
-  const [, setSellTokenContract] = useSellTokenContract();
-  const [, setBuyTokenContract] = useBuyTokenContract();
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
@@ -59,16 +60,14 @@ export default function AddressSelect() {
   return (
     <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
       <HexAddressInput
-        inputValue={inputValue}
+        inputValue={validHexInput}
         onChange={(val) => handleHexInputChange(val, MANUAL_ENTRY)}
         placeholder="Enter address"
-        statusEmoji="" // 💡 Optionally pass emoji from useValidateFSMInput
+        statusEmoji=""
       />
 
       <RenderAssetPreview
         validatedAsset={validatedAsset}
-        hasBrokenLogoURL={hasBrokenLogoURL}
-        reportMissingLogoURL={reportMissingLogoURL}
         onSelect={onManualSelect}
       />
 

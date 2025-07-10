@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
 import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
 import { useDisplayControls } from '@/lib/context/hooks';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 export default function BaseModalContainer({
   id,

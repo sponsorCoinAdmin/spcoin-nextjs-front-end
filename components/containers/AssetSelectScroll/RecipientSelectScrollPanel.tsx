@@ -11,7 +11,7 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectScrollContainer from './AssetSelectScrollContainer';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 
 export default function RecipientSelectScrollPanel() {
   const { inputState, setInputState, containerType } = useSharedPanelContext();

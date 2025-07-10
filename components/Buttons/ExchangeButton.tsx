@@ -18,9 +18,7 @@ import {
 import swap from '@/lib/spCoin/swap';
 import {
   isActiveAccountBuyToken,
-  isWrappedBuyToken,
   isActiveAccountSellToken,
-  isWrappedSellToken
 } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -52,16 +50,6 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
     const buyTokenContract = tradeData.buyTokenContract;
     const sellTokenContract = tradeData.sellTokenContract;
 
-    if (isActiveAccountSellToken(exchangeContext)) {
-      return isWrappedBuyToken(tradeData)
-        ? 'SWAP WRAP ( ETH -> WETH )'
-        : `${tradeDirection} ( WRAP ETH -> WETH ) -> ${buyTokenContract?.symbol}`;
-    }
-    if (isActiveAccountBuyToken(exchangeContext)) {
-      return isWrappedSellToken(tradeData)
-        ? 'SWAP UN-WRAP\n( WETH -> ETH )'
-        : `${tradeDirection} ${sellTokenContract?.symbol} -> ( WETH -> ETH )`;
-    }
     return `${tradeDirection} SWAP`;
   };
 

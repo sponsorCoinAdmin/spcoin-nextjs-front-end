@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { InputState } from '@/lib/structure';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
   const { inputState, setInputState, containerType } = useSharedPanelContext();
 
 

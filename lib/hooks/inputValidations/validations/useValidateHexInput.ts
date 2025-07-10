@@ -1,65 +1,26 @@
-// File: lib/hooks/inputValidations/validations/useValidateHexInput.ts
+import { useSharedPanelContext } from "@/lib/context/ScrollSelectPanels";
+import { InputState } from "@/lib/structure";
+import { useCallback, useEffect } from "react";
 
-'use client';
-
-import { useCallback, useEffect } from 'react';
-import { useHexInput } from '@/lib/hooks/useHexInput';
-import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
-import { FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';
-
-export function useValidateHexInput(feedType: FEED_TYPE) {
+export function useValidateHexInput() {
   const {
-    inputValue,
-    validateHexInput,
-    resetInput: resetHexInput,
-    failedHexInput,
-    failedHexCount,
-  } = useHexInput();
+    validHexInput,
+    debouncedHexInput,
+    isValidHexInput,
+    setInputState,
+    dumpSharedPanelContext,
+  } = useSharedPanelContext();
 
-  const { containerType, inputState, setInputState } = useSharedPanelContext(); // ✅ Get containerType from context
-  const debouncedAddress = useDebounce(inputValue, 250);
-
-  // --- Handle input change: validate + spawn FSM ---
   const handleHexInputChange = useCallback(
-    (val: string, _isManual?: boolean) => {
-      validateHexInput(val);
-      // alert(`hex input changed ${val}`)
-      // setInputState(InputState.VALIDATE_ADDRESS);
+    (raw: string, _isManual?: boolean) => {
+      const ok = isValidHexInput(raw);
     },
-    [validateHexInput, setInputState]
+    [isValidHexInput]
   );
 
   useEffect(() => {
-    alert(`useEffect debouncedAddress Input: "${debouncedAddress}"`);
     setInputState(InputState.VALIDATE_ADDRESS);
-  }, [debouncedAddress]);
+  }, [debouncedHexInput, setInputState]);
 
-  // --- Handle reset ---
-  const resetInput = useCallback(() => {
-    resetHexInput(); // clears local input state
-    setInputState(InputState.EMPTY_INPUT); // resets FSM
-  }, [resetHexInput, setInputState]);
-
-  // --- Alert on failed input ---
-  useEffect(() => {
-    if (typeof failedHexInput === 'string' && failedHexCount > 0) {
-      alert(`Invalid Hex Input: "${failedHexInput}"`);
-    }
-  }, [failedHexCount, failedHexInput]);
-
-  return {
-    inputValue,
-    debouncedAddress,
-    inputState,             // ✅ include for consumers like AddressSelect
-    setInputState,          // ✅ include for consumers like AddressSelect
-    handleHexInputChange,
-    // isLoading,
-    // reportMissingLogoURL,
-    // hasBrokenLogoURL,
-    resetInput,
-    failedHexInput,
-    failedHexCount,
-  };
+  return { validHexInput, debouncedHexInput, handleHexInputChange };
 }

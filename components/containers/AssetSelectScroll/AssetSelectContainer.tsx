@@ -8,7 +8,7 @@ import BaseModalContainer from './BaseModalContainer';
 import AddressSelect from '@/components/shared/AddressSelect';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/SharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';

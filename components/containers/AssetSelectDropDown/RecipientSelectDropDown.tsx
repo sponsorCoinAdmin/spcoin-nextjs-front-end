@@ -3,12 +3,13 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { WalletAccount, InputState, TokenContract, getInputStateString } from '@/lib/structure';
+import { WalletAccount, InputState, getInputStateString } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { RecipientSelectScrollPanel } from '../AssetSelectScroll';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
@@ -22,6 +23,7 @@ interface Props {
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
   const [showDialog, setShowDialog] = useState(false);
   const hasErroredRef = useRef(false);
+  const { inputState, setInputState } = useSharedPanelContext();
 
   const openDialog = useCallback(() => setShowDialog(true), []);
 
@@ -41,7 +43,6 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     },
     [recipientAccount]
   );
-
 
   const processSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
