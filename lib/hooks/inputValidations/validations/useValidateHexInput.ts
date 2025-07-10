@@ -4,11 +4,9 @@ import { useCallback, useEffect } from "react";
 
 export function useValidateHexInput() {
   const {
-    validHexInput,
     debouncedHexInput,
     isValidHexInput,
     setInputState,
-    dumpSharedPanelContext,
   } = useSharedPanelContext();
 
   const handleHexInputChange = useCallback(
@@ -22,5 +20,5 @@ export function useValidateHexInput() {
     setInputState(InputState.VALIDATE_ADDRESS);
   }, [debouncedHexInput, setInputState]);
 
-  return { validHexInput, debouncedHexInput, handleHexInputChange };
+  return { handleHexInputChange };
 }
