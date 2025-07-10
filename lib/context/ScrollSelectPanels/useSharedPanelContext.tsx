@@ -1,4 +1,4 @@
-// File: lib/context/ScrollSelectPanels/SharedPanelContext.tsx
+// File: lib/context/ScrollSelectPanels/useSharedPanelContext.tsx
 
 'use client';
 
@@ -6,41 +6,32 @@ import { createContext, useContext } from 'react';
 import { InputState, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-export interface SharedPanelContextType {
-  // ─── FSM state ─────────────────────────────────
-  /** The current step of your validation FSM */
+export interface FSMContextType {
   inputState: InputState;
-  /** Move the FSM to a new step */
   setInputState: (state: InputState) => void;
-
-  /** The currently validated asset (if any) */
   validatedAsset?: ValidatedAsset;
-  /** Setter for the validated asset */
-  setValidatedAsset?: (asset: ValidatedAsset | undefined) => void;
-
-  // ─── Panel identity ─────────────────────────────
-  /** Which container this context drives (buy / sell / agent etc.) */
+  setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
   containerType: CONTAINER_TYPE;
-  /** Which data‐feed this panel is bound to */
   feedType: FEED_TYPE;
-
-  // ─── Hex‐input state + setters ───────────────────
-  /** The raw hex string as the user types */
-  validHexInput: string;
-  /** The last *invalid* hex string the user tried */
-  failedHexInput?: string;
-  /** Predicate to check if a raw input is valid */
-  isValidHexInput: (raw: string) => boolean;
-
-  // ─── Debounced hex‐input ────────────────────────
-  /** A debounced version of `validHexInput` (e.g. 250 ms delay) */
-  debouncedHexInput: string;
-
-  // ─── Debug helper ───────────────────────────────
-  /** Dumps *all* of the above into the console for inspection */
-  dumpSharedPanelContext: () => void;
+  dumpFSMContext: () => void;
 }
 
+export interface FeedContextType {
+  validHexInput: string;
+  failedHexInput?: string;
+  isValidHexInput: (raw: string) => boolean;
+  debouncedHexInput: string;
+  dumpInputFeedContext: () => void;
+}
+
+// Combined type with unified dump
+export type SharedPanelContextType = FSMContextType &
+  FeedContextType & {
+    /** Combined debug dump of both FSM and InputFeed contexts */
+    dumpPanelContext: () => void;
+  };
+
+// Context setup
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
 
 export const useSharedPanelContext = (): SharedPanelContextType => {
