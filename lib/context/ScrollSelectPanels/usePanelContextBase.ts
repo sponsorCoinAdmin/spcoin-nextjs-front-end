@@ -53,9 +53,11 @@ export function usePanelContextBase(
 
   // ─── Hex‐input tracking ──────────────────────
   const {
-    validHexInput,      // ✅ single value: debounced or immediate, based on debounceDelay
+    validHexInput,        // immediate: for input UI
+    debouncedHexInput,    // debounced: for effects, validation, API calls
     failedHexInput,
     isValidHexInput,
+    handleHexInputChange, // ✅ added: wrapped handler
     resetHexInput,
   } = useHexInput();
 
@@ -75,6 +77,7 @@ export function usePanelContextBase(
     console.group(`[InputFeed Context] (${label})`);
     console.log({
       validHexInput,
+      debouncedHexInput,
       failedHexInput,
     });
     console.groupEnd();
@@ -101,8 +104,10 @@ export function usePanelContextBase(
 
       // Input feed context
       validHexInput,
+      debouncedHexInput,
       failedHexInput,
       isValidHexInput,
+      handleHexInputChange, // ✅ now included for context consumers
       resetHexInput,
       dumpInputFeedContext,
 
@@ -115,8 +120,10 @@ export function usePanelContextBase(
       containerType,
       feedType,
       validHexInput,
+      debouncedHexInput,
       failedHexInput,
       isValidHexInput,
+      handleHexInputChange,
       resetHexInput,
     ]
   );

@@ -18,6 +18,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 import { useValidateHexInput } from '@/lib/hooks/inputValidations';
+import { useHexInput } from '@/lib/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -33,10 +34,6 @@ export default function AddressSelect() {
   const {
     handleHexInputChange,
   } = useValidateHexInput(); // ✅ Now the only validation hook
-
-  // useEffect(() => {
-  //   alert(`validHexInput: ${validHexInput}, testHexInput: ${testHexInput}`)
-  // }, [validHexInput, testHexInput]);
 
   const MANUAL_ENTRY = true;
 

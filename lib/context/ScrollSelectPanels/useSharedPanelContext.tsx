@@ -18,10 +18,11 @@ export interface FSMContextType {
 
 export interface FeedContextType {
   validHexInput: string;
+  debouncedHexInput: string;
   failedHexInput?: string;
   isValidHexInput: (raw: string) => boolean;
-  debouncedHexInput: string;
-  resetHexInput: () => void;  // ✅ added here
+  handleHexInputChange: (raw: string, isManual?: boolean) => boolean;  // ✅ added here
+  resetHexInput: () => void;
   dumpInputFeedContext: () => void;
 }
 
