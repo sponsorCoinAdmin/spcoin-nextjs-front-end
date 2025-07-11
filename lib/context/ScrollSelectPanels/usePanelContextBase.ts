@@ -3,7 +3,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import {
   InputState,
@@ -54,12 +53,11 @@ export function usePanelContextBase(
 
   // ─── Hex‐input tracking ──────────────────────
   const {
-    validHexInput,
+    validHexInput,      // ✅ single value: debounced or immediate, based on debounceDelay
     failedHexInput,
     isValidHexInput,
+    resetHexInput,
   } = useHexInput();
-
-  const debouncedHexInput = useDebounce(validHexInput, 250);
 
   // ─── Debug dump helpers ──────────────────────
   const dumpFSMContext = () => {
@@ -78,7 +76,6 @@ export function usePanelContextBase(
     console.log({
       validHexInput,
       failedHexInput,
-      debouncedHexInput,
     });
     console.groupEnd();
   };
@@ -90,7 +87,7 @@ export function usePanelContextBase(
     console.groupEnd();
   };
 
-  // ─── bundle it all ─────────────────────────
+  // ─── Bundle all context values ─────────────────────────
   const contextValue = useMemo<SharedPanelContextType>(
     () => ({
       // FSM context
@@ -102,14 +99,14 @@ export function usePanelContextBase(
       feedType,
       dumpFSMContext,
 
-      // input feed context
+      // Input feed context
       validHexInput,
       failedHexInput,
       isValidHexInput,
-      debouncedHexInput,
+      resetHexInput,
       dumpInputFeedContext,
 
-      // combined
+      // Combined
       dumpPanelContext,
     }),
     [
@@ -120,7 +117,7 @@ export function usePanelContextBase(
       validHexInput,
       failedHexInput,
       isValidHexInput,
-      debouncedHexInput,
+      resetHexInput,
     ]
   );
 

@@ -3,11 +3,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 
-export function useHexInput(initialValue: string = '') {
-  const [validHexInput, setValidHexValue] = useState(initialValue);
+export function useHexInput(initialValue: string = '', debounceDelay: number = 250) {
+  const [rawHexInput, setRawHexInput] = useState(initialValue);
   const [failedHexInput, setFailedHexInput] = useState<string | undefined>(undefined);
-  const [failedHexCount, setFailedHexCount] = useState(0); // acts as both flag and invalid entry counter
+  const [failedHexCount, setFailedHexCount] = useState(0);
 
   const isValidHexInput = useCallback((rawInput: string): boolean => {
     const trimmed = rawInput.trim();
@@ -19,28 +20,32 @@ export function useHexInput(initialValue: string = '') {
       /^0x[0-9a-fA-F]*$/.test(trimmed);
 
     if (isValid) {
-      setValidHexValue(trimmed);
+      setRawHexInput(trimmed);
       setFailedHexInput(undefined);
-      setFailedHexCount(0); // ✅ reset on valid input
+      setFailedHexCount(0);
     } else {
       setFailedHexInput(trimmed);
-      setFailedHexCount((prev) => prev + 1); // ✅ always increment
+      setFailedHexCount((prev) => prev + 1);
     }
 
     return isValid;
   }, []);
 
   const resetHexInput = useCallback(() => {
-    setValidHexValue('');
+    setRawHexInput('');
     setFailedHexInput(undefined);
     setFailedHexCount(0);
   }, []);
 
+  // ✅ Final exposed value — either immediate or debounced, based on debounceDelay
+  const validHexInput =
+    debounceDelay === 0 ? rawHexInput : useDebounce(rawHexInput, debounceDelay);
+
   return {
-    validHexInput,
+    validHexInput,        // ✅ single, clean exposed value
     isValidHexInput,
     resetHexInput,
-    failedHexInput,     // ❗️shows last failed input
-    failedHexCount,     // ❗️used as isValidHex trigger alternative
+    failedHexInput,
+    failedHexCount,
   };
 }

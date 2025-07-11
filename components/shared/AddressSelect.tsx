@@ -27,7 +27,6 @@ export default function AddressSelect() {
   const {
     validatedAsset,
     feedType,
-    debouncedHexInput,
     validHexInput,
   } = useSharedPanelContext();
 
