@@ -17,20 +17,26 @@ export interface FSMContextType {
 }
 
 export interface FeedContextType {
-  validHexInput: string;
-  debouncedHexInput: string;
-  failedHexInput?: string;
-  isValidHexInput: (raw: string) => boolean;
-  handleHexInputChange: (raw: string, isManual?: boolean) => boolean;  // ✅ added here
-  resetHexInput: () => void;
-  dumpInputFeedContext: () => void;
+  validHexInput: string;                                // ✅ immediate input value
+  debouncedHexInput: string;                            // ✅ debounced input value
+  failedHexInput?: string;                              // ✅ last invalid input (optional)
+  isValid: boolean;                                     // ✅ NEW: reactive boolean for last validation result
+  handleHexInputChange: (raw: string, isManual?: boolean) => boolean; // ✅ input handler, returns validity
+  resetHexInput: () => void;                            // ✅ clears input + error state
+  failedHexCount: number;                               // ✅ count of consecutive invalid attempts
+  isValidHexString: (raw: string) => boolean;           // ✅ pure validator, no state change
+  dumpInputFeedContext: () => void;                     // ✅ debug helper
 }
 
-// Combined type with unified dump
+// Combined type with unified dump + optional manager methods
 export type SharedPanelContextType = FSMContextType &
   FeedContextType & {
     /** Combined debug dump of both FSM and InputFeed contexts */
     dumpPanelContext: () => void;
+
+    /** Optional manager actions */
+    forceReset?: () => void;
+    forceClose?: () => void;
   };
 
 // Context setup

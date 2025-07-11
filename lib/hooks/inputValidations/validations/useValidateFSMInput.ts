@@ -3,13 +3,11 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { isAddress } from 'viem';
+import { isAddress, Address } from 'viem';
 import { useChainId, useAccount, usePublicClient, useBalance } from 'wagmi';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { getLogoURL } from '@/lib/network/utils';
 import { getInputStateEmoji } from '@/lib/hooks/inputValidations/helpers/getInputStateEmoji';
-
 import {
   InputState,
   CONTAINER_TYPE,
@@ -27,11 +25,8 @@ import {
 
 import { debugLog } from '../helpers/debugLogInstance';
 import { debugSetInputState } from '../helpers/debugSetInputState';
-
-import { isEmptyInput } from './isEmptyInput';
-import { isDuplicateInput } from './isDuplicateInput';
-import { resolveTokenContract } from './resolveTokenContract';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { validateFSMCore } from '../FSM_Core/validateFSMCore';
 
 export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
@@ -43,7 +38,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     containerType,
     validatedAsset,
     setValidatedAsset,
-    feedType
+    feedType,
   } = useSharedPanelContext();
 
   const buyAddress = useBuyTokenAddress();
@@ -56,19 +51,14 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const { address: accountAddress } = useAccount();
 
   const { data: balanceData } = useBalance({
-    address: isAddress(debouncedHexInput) ? debouncedHexInput as `0x${string}` : undefined,
-    token: isAddress(debouncedHexInput) ? debouncedHexInput as `0x${string}` : undefined,
+    address: isAddress(debouncedHexInput) ? (debouncedHexInput as Address) : undefined,
+    token: isAddress(debouncedHexInput) ? (debouncedHexInput as Address) : undefined,
     chainId,
     query: { enabled: Boolean(accountAddress) },
   });
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
-  const lastTokenAddressRef = useRef<string>('');
   const [validationPending, setValidationPending] = useState(true);
-
-  useEffect(() => {
-  debugLog.log(`🎯 FSM useEffect triggered → state: ${InputState[inputState]}, debounced: ${debouncedHexInput}`);
-}, [inputState, debouncedHexInput]);
 
   useEffect(() => {
     if (debouncedHexInput !== selectAddress) {
@@ -76,120 +66,57 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
       return;
     }
 
-    const stateLabel = `${getInputStateEmoji(inputState)} ${InputState[inputState]}`;
-    debugLog.log(`🧵 FSM triggered for state ${stateLabel} on debouncedHexInput: "${debouncedHexInput}"`);
+    debugLog.log(`🧵 FSM triggered → ${getInputStateEmoji(inputState)} ${InputState[inputState]} on: "${debouncedHexInput}"`);
 
-    const runValidationFSM = async () => {
-      switch (inputState) {
-        case InputState.EMPTY_INPUT:
-        case InputState.INVALID_ADDRESS_INPUT:
-        case InputState.INCOMPLETE_ADDRESS:
-        case InputState.DUPLICATE_INPUT:
-        case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-        case InputState.VALID_INPUT:
-          setValidationPending(false);
-          return;
+    const runFSM = async () => {
+      const result = await validateFSMCore({
+        inputState,
+        debouncedHexInput,
+        containerType: containerType!,
+        sellAddress,
+        buyAddress,
+        chainId: chainId!,
+        publicClient,
+        accountAddress: accountAddress as Address,
+        seenBrokenLogos: seenBrokenLogosRef.current,
+        feedType,
+        balanceData, // ✅ pass full balanceData object, not just .value
+        validatedAsset,
+      });
 
-        case InputState.VALIDATE_ADDRESS: {
-          setValidationPending(true);
+      debugLog.log(`🔄 FSM next state → ${InputState[result.nextState]}`);
+      setInputState(result.nextState);
 
-          if (isEmptyInput(debouncedHexInput)) {
-            setValidatedAsset?.(undefined);
-            debugSetInputState('EMPTY_INPUT', InputState.EMPTY_INPUT, inputState, setInputState);
-          } else if (!/^0x[0-9a-fA-F]*$/.test(debouncedHexInput)) {
-            alert('Hex Input Address Required');
-            debugSetInputState('INCOMPLETE_ADDRESS', InputState.INCOMPLETE_ADDRESS, inputState, setInputState);
-          } else if (!isAddress(debouncedHexInput)) {
-            debugSetInputState('INVALID_ADDRESS', InputState.INVALID_ADDRESS_INPUT, inputState, setInputState);
-          } else {
-            debugSetInputState('PASS → TEST_DUPLICATE', InputState.TEST_DUPLICATE_INPUT, inputState, setInputState);
-          }
-          return;
+      if (result.validatedAsset) {
+        setValidatedAsset(result.validatedAsset as unknown as T);
+        if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+          setSellTokenContract(result.validatedAsset as TokenContract);
+        } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+          setBuyTokenContract(result.validatedAsset as TokenContract);
         }
-
-        case InputState.TEST_DUPLICATE_INPUT:
-          if (isDuplicateInput(containerType!, debouncedHexInput, sellAddress, buyAddress)) {
-            alert('Duplicate address detected');
-            debugSetInputState('DUPLICATE_INPUT', InputState.DUPLICATE_INPUT, inputState, setInputState);
-          } else {
-            debugSetInputState('PASS → VALIDATE_EXISTS_ON_CHAIN', InputState.VALIDATE_EXISTS_ON_CHAIN, inputState, setInputState);
-          }
-          return;
-
-        case InputState.VALIDATE_EXISTS_ON_CHAIN:
-          if (!publicClient) {
-            debugLog.warn('❌ publicClient is undefined – skipping resolution');
-            setValidationPending(false);
-            return;
-          }
-
-          const resolved = await resolveTokenContract(
-            debouncedHexInput,
-            chainId,
-            feedType,
-            publicClient,
-            accountAddress
-          );
-
-          if (!resolved) {
-            alert('Contract not found on blockchain');
-            debugSetInputState('NOT_FOUND', InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN, inputState, setInputState);
-            return;
-          }
-
-          debugLog.log('🎯 Resolved token contract', resolved);
-          setValidatedAsset?.(resolved as unknown as T);
-
-          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-            setSellTokenContract(resolved);
-          } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-            setBuyTokenContract(resolved);
-          }
-
-          debugSetInputState('PASS → VALIDATE_CONTRACT_EXISTS_LOCALLY', InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY, inputState, setInputState);
-          return;
-
-        case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
-          if (seenBrokenLogosRef.current.has(debouncedHexInput)) {
-            alert('Local contract logo missing');
-            debugSetInputState('BROKEN_LOGO', InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
-          } else {
-            debugSetInputState('PASS → VALIDATE_BALANCE', InputState.VALIDATE_BALANCE, inputState, setInputState);
-          }
-          return;
-
-        case InputState.VALIDATE_BALANCE:
-          if (!balanceData || !validatedAsset) return;
-          if (lastTokenAddressRef.current === validatedAsset.address) return;
-
-          lastTokenAddressRef.current = validatedAsset.address;
-
-          const tokenWithBalance: TokenContract = {
-            ...validatedAsset,
-            balance: balanceData.value,
-            chainId: chainId!,
-            logoURL: getLogoURL(chainId!, validatedAsset.address, feedType),
-          };
-
-          debugLog.log('✅ Fully validated tokenWithBalance', tokenWithBalance);
-          setValidatedAsset?.(tokenWithBalance as unknown as T);
-
-          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-            setSellTokenContract(tokenWithBalance);
-          } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-            setBuyTokenContract(tokenWithBalance);
-          }
-
-          debugSetInputState('PASS → VALID_INPUT', InputState.VALID_INPUT, inputState, setInputState);
-          setValidationPending(false);
-          return;
       }
+
+      setValidationPending(false);
     };
 
-    runValidationFSM();
+    runFSM();
   }, [
     inputState,
+    debouncedHexInput,
+    selectAddress,
+    chainId,
+    publicClient,
+    accountAddress,
+    containerType,
+    feedType,
+    balanceData,
+    validatedAsset,
+    sellAddress,
+    buyAddress,
+    setInputState,
+    setValidatedAsset,
+    setSellTokenContract,
+    setBuyTokenContract,
   ]);
 
   const reportMissingLogoURL = useCallback(() => {
@@ -197,7 +124,6 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
       seenBrokenLogosRef.current.add(debouncedHexInput);
       console.warn(`🛑 Missing logoURL for ${debouncedHexInput}`);
-      alert('Missing logo — contract not found locally');
       debugSetInputState(
         `reportMissingLogoURL(${debouncedHexInput})`,
         InputState.CONTRACT_NOT_FOUND_LOCALLY,

@@ -3,10 +3,8 @@
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import React, { useEffect } from 'react';
-import {
-  SP_COIN_DISPLAY,
-} from '@/lib/structure';
+import React from 'react';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
@@ -17,9 +15,6 @@ import { useDisplayControls } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-import { useInputStateManager } from '@/lib/hooks/inputValidations';
-import { useHexInput } from '@/lib/hooks';
-
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('addressSelect', DEBUG_ENABLED, LOG_TIME);
@@ -29,11 +24,8 @@ export default function AddressSelect() {
     validatedAsset,
     feedType,
     validHexInput,
+    handleHexInputChange,   // ✅ pulled from context, not state manager hook
   } = useSharedPanelContext();
-
-  const {
-    handleHexInputChange,
-  } = useInputStateManager(); // ✅ Now the only validation hook
 
   const MANUAL_ENTRY = true;
 
@@ -64,8 +56,6 @@ export default function AddressSelect() {
         validatedAsset={validatedAsset}
         onSelect={onManualSelect}
       />
-
-      {/* <ValidateAssetPreview /> */}
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0 gap-[0.2rem]">
         <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>

@@ -4,16 +4,11 @@
 
 import { useState, useMemo } from 'react';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import {
-  InputState,
-  getInputStateString,
-  FEED_TYPE,
-  CONTAINER_TYPE,
-} from '@/lib/structure';
-
+import { InputState, getInputStateString, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './useSharedPanelContext';
+import { useInputStateManager } from '@/lib/hooks/inputValidations';
 
 const LOG_TIME = false;
 
@@ -25,7 +20,6 @@ export function usePanelContextBase(
 ): SharedPanelContextType {
   const debugLog = createDebugLogger(label, debugEnabled, LOG_TIME);
 
-  // ─── FSM core state ──────────────────────────
   const [validatedAsset, setValidatedAssetRaw] = useState<ValidatedAsset | undefined>();
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
 
@@ -44,24 +38,31 @@ export function usePanelContextBase(
       return;
     }
     debugLog.log(
-      next
-        ? `✅ setValidatedAsset → ${next.symbol || next.address}`
-        : '🧹 Clearing validated asset'
+      next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset'
     );
     setValidatedAssetRaw(next);
   };
 
-  // ─── Hex‐input tracking ──────────────────────
   const {
-    validHexInput,        // immediate: for input UI
-    debouncedHexInput,    // debounced: for effects, validation, API calls
+    validHexInput,
+    debouncedHexInput,
     failedHexInput,
-    isValidHexInput,
-    handleHexInputChange, // ✅ added: wrapped handler
+    failedHexCount,
+    isValid,
+    isValidHexString,
+    handleHexInputChange,
     resetHexInput,
   } = useHexInput();
 
-  // ─── Debug dump helpers ──────────────────────
+  // ─── Mount the state manager ────────────────────────
+  const { forceReset, forceClose } = useInputStateManager({
+    validHexInput,
+    debouncedHexInput,
+    setInputState,
+    setValidatedAsset,
+    resetHexInput,
+  });
+
   const dumpFSMContext = () => {
     console.group(`[FSM Context] (${label})`);
     console.log({
@@ -79,6 +80,8 @@ export function usePanelContextBase(
       validHexInput,
       debouncedHexInput,
       failedHexInput,
+      failedHexCount,
+      isValid,
     });
     console.groupEnd();
   };
@@ -90,8 +93,7 @@ export function usePanelContextBase(
     console.groupEnd();
   };
 
-  // ─── Bundle all context values ─────────────────────────
-  const contextValue = useMemo<SharedPanelContextType>(
+  return useMemo<SharedPanelContextType>(
     () => ({
       // FSM context
       inputState,
@@ -106,13 +108,19 @@ export function usePanelContextBase(
       validHexInput,
       debouncedHexInput,
       failedHexInput,
-      isValidHexInput,
-      handleHexInputChange, // ✅ now included for context consumers
+      failedHexCount,
+      isValid,
+      isValidHexString,
+      handleHexInputChange,
       resetHexInput,
       dumpInputFeedContext,
 
       // Combined
       dumpPanelContext,
+
+      // Manager actions
+      forceReset,
+      forceClose,
     }),
     [
       inputState,
@@ -122,11 +130,13 @@ export function usePanelContextBase(
       validHexInput,
       debouncedHexInput,
       failedHexInput,
-      isValidHexInput,
+      failedHexCount,
+      isValid,
+      isValidHexString,
       handleHexInputChange,
       resetHexInput,
+      forceReset,
+      forceClose,
     ]
   );
-
-  return contextValue;
 }

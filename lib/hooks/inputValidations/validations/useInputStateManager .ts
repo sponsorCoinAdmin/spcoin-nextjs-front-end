@@ -2,31 +2,51 @@
 
 'use client';
 
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels';
-import { InputState } from '@/lib/structure';
+/**
+ * @internal
+ * Do not use directly unless you have advanced needs.
+ * Normally wired via usePanelContextBase.
+ */
+
 import { useEffect } from 'react';
+import { InputState } from '@/lib/structure';
+import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-export function useInputStateManager() {
-  const {
-    debouncedHexInput,
-    failedHexInput,
-    handleHexInputChange,
-    isValidHexInput,
-    resetHexInput,
-    validHexInput,
-    setInputState,
-  } = useSharedPanelContext();
+export interface InputStateManagerOptions {
+  validHexInput: string;
+  debouncedHexInput: string;
+  setInputState: (state: InputState) => void;
+  setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
+  resetHexInput: () => void;
+}
 
+export function useInputStateManager({
+  validHexInput,
+  debouncedHexInput,
+  setInputState,
+  setValidatedAsset,
+  resetHexInput,
+}: InputStateManagerOptions) {
+  // Example: Always trigger validate on input change
   useEffect(() => {
     setInputState(InputState.VALIDATE_ADDRESS);
   }, [validHexInput, setInputState]);
 
+  // Optional: Add more FSM actions here later
+
+  // Expose optional manual actions
+  const forceReset = () => {
+    setValidatedAsset(undefined);
+    resetHexInput();
+    setInputState(InputState.EMPTY_INPUT);
+  };
+
+  const forceClose = () => {
+    setInputState(InputState.CLOSE_SELECT_INPUT);
+  };
+
   return {
-    debouncedHexInput,
-    failedHexInput,
-    handleHexInputChange,
-    isValidHexInput,
-    resetHexInput,
-    validHexInput,
+    forceReset,
+    forceClose,
   };
 }

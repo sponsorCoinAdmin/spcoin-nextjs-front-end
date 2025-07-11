@@ -5,57 +5,66 @@
 import { useState, useCallback } from 'react';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 
+/**
+ * ✅ Pure utility function to validate a hex string.
+ */
+const _isValidHexString = (rawInput: string): boolean => {
+  const trimmed = rawInput.trim();
+  return (
+    trimmed === '' ||
+    trimmed === '0' ||
+    trimmed === '0x' ||
+    /^0x[0-9a-fA-F]*$/.test(trimmed)
+  );
+};
+
 export function useHexInput(initialValue: string = '', debounceDelay: number = 250) {
   const [validHexInput, setValidHexInput] = useState(initialValue);
   const [failedHexInput, setFailedHexInput] = useState<string | undefined>(undefined);
   const [failedHexCount, setFailedHexCount] = useState(0);
+  const [isValid, setIsValid] = useState(true);
 
-  const isValidHexInput = useCallback((rawInput: string): boolean => {
-    const trimmed = rawInput.trim();
-
-    const isValid =
-      trimmed === '' ||
-      trimmed === '0' ||
-      trimmed === '0x' ||
-      /^0x[0-9a-fA-F]*$/.test(trimmed);
-
-    if (isValid) {
-      setValidHexInput(trimmed);
-      setFailedHexInput(undefined);
-      setFailedHexCount(0);
-    } else {
-      setFailedHexInput(trimmed);
-      setFailedHexCount((prev) => prev + 1);
-    }
-
-    return isValid;
+  const isValidHexString = useCallback((rawInput: string): boolean => {
+    return _isValidHexString(rawInput);
   }, []);
 
   const handleHexInputChange = useCallback(
     (rawInput: string, _isManual?: boolean) => {
-      const ok = isValidHexInput(rawInput);
+      const ok = _isValidHexString(rawInput);
+      setIsValid(ok);
+
+      if (ok) {
+        setValidHexInput(rawInput.trim());
+        setFailedHexInput(undefined);
+        setFailedHexCount(0);
+      } else {
+        setFailedHexInput(rawInput.trim());
+        setFailedHexCount((prev) => prev + 1);
+      }
+
       return ok;
     },
-    [isValidHexInput]
+    []
   );
 
   const resetHexInput = useCallback(() => {
     setValidHexInput('');
     setFailedHexInput(undefined);
     setFailedHexCount(0);
+    setIsValid(true);
   }, []);
 
   const debouncedHexInput =
     debounceDelay === 0 ? validHexInput : useDebounce(validHexInput, debounceDelay);
 
   return {
-    validHexInput,        // ✅ immediate valid hex input value: for binding to input UI
-    debouncedHexInput,    // ✅ debounced hex input value: for effects, validations, API calls (updates after debounceDelay)
-    handleHexInputChange, // ✅ wrapped input handler: recommended for passing directly to onChange in components
-    isValidHexInput,      // ✅ direct validator function: for manual raw string validation if needed outside the handler
-    resetHexInput,        // ✅ function to reset the input and error state back to initial (clears both valid and failed input)
-    failedHexInput,       // ✅ last invalid raw input string (if any), for displaying user-facing error messages or debug info
-    failedHexCount,       // ✅ count of consecutive invalid input attempts, useful for limiting retries or triggering warnings
+    validHexInput,        // ✅ immediate input value
+    debouncedHexInput,    // ✅ debounced input value
+    handleHexInputChange, // ✅ main input change handler
+    isValid,              // ✅ reactive validity state
+    resetHexInput,        // ✅ clears all input + error state
+    failedHexInput,       // ✅ last invalid input string
+    failedHexCount,       // ✅ invalid input count
+    isValidHexString,     // ✅ exported as part of the hook's return for pure validation needs
   };
-
 }
