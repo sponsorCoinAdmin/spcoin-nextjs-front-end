@@ -17,7 +17,7 @@ import { useDisplayControls } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-import { useValidateHexInput } from '@/lib/hooks/inputValidations';
+import { useInputStateManager } from '@/lib/hooks/inputValidations';
 import { useHexInput } from '@/lib/hooks';
 
 const LOG_TIME = false;
@@ -33,7 +33,7 @@ export default function AddressSelect() {
 
   const {
     handleHexInputChange,
-  } = useValidateHexInput(); // ✅ Now the only validation hook
+  } = useInputStateManager(); // ✅ Now the only validation hook
 
   const MANUAL_ENTRY = true;
 

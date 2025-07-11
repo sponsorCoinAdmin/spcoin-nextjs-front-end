@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/useValidateHexInput.ts
+// File: lib/hooks/inputValidations/useInputStateManager.ts
 
 'use client';
 
@@ -6,7 +6,7 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels';
 import { InputState } from '@/lib/structure';
 import { useEffect } from 'react';
 
-export function useValidateHexInput() {
+export function useInputStateManager() {
   const {
     debouncedHexInput,
     failedHexInput,
