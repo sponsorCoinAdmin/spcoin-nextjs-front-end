@@ -16,9 +16,9 @@
                                                      └── found
                                                            ├── setValidatedAsset()
                                                            ├── setTokenContract (context)
-                                                           └── VALIDATE_CONTRACT_EXISTS_LOCALLY
+                                                           └── PREVIEW_CONTRACT_EXISTS_LOCALLY
                                                                  └── hasBrokenLogoURL?
-                                                                       ├── YES → CONTRACT_NOT_FOUND_LOCALLY
+                                                                       ├── YES → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
                                                                        └── NO  → IS_LOADING
                                                                               └── wait for balanceData
                                                                                     └── when ready:

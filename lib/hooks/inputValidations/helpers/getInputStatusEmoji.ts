@@ -10,7 +10,7 @@ export function getInputStatusEmoji(state: InputState): string {
       return '❓';
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       return '❌';
-    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+    case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
       return '⚠️';
     case InputState.DUPLICATE_INPUT:
       return '♻️';

@@ -49,7 +49,7 @@ export function useBaseSelectShared(): BaseSelectSharedState {
     const emojiMap: Partial<Record<InputState, { emoji?: string; text: string; useLogo?: boolean }>> = {
       [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid address required.' },
       [InputState.DUPLICATE_INPUT]: { text: duplicateMessage, useLogo: true },
-      [InputState.CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Missing local metadata.' },
+      [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '⚠️', text: 'Missing local metadata.' },
       [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Not found on blockchain.' },
     };
     return emojiMap[state];

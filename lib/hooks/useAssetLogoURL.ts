@@ -32,7 +32,7 @@ export function useAssetLogoURL(
     if (!address || !isAddress(address)) return fallbackURL;
     if (!chainId) return fallbackURL;
     if (seenBrokenLogos.has(address)) return fallbackURL;
-    if (type === 'token' && inputState === InputState.CONTRACT_NOT_FOUND_LOCALLY) return fallbackURL;
+    if (type === 'token' && inputState === InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY) return fallbackURL;
 
     const logoURL =
       type === 'wallet'

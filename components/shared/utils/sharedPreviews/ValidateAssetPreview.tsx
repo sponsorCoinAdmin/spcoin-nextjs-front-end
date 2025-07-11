@@ -27,7 +27,7 @@ const emojiMap: Partial<Record<InputState, {
     color: 'text-orange-400',
     useLogo: true,
   },
-  [InputState.CONTRACT_NOT_FOUND_LOCALLY]: {
+  [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: {
     emoji: '⚠️',
     text: 'Missing local image for asset.',
     color: 'text-orange-400',

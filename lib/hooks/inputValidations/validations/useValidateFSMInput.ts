@@ -68,7 +68,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         case InputState.INVALID_HEX_INPUT:
         case InputState.DUPLICATE_INPUT:
         case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-        case InputState.CONTRACT_NOT_FOUND_LOCALLY:
+        case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
         case InputState.VALID_INPUT:
           setValidationPending(false);
           break;
@@ -129,14 +129,14 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
             setBuyTokenContract(resolved);
           }
 
-          debugSetInputState(InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY, inputState, setInputState);
+          debugSetInputState(InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY, inputState, setInputState);
           break;
         }
 
-        case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
+        case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
           if (seenBrokenLogosRef.current.has(debouncedAddress)) {
             alert('Local contract logo missing');
-            debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
+            debugSetInputState(InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
           } else {
             debugSetInputState(InputState.VALIDATE_BALANCE, inputState, setInputState);
           }
@@ -179,7 +179,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
       seenBrokenLogosRef.current.add(debouncedAddress);
       console.warn(`🛑 Missing logoURL image for ${debouncedAddress}`);
       alert('Missing logo — contract not found locally');
-      debugSetInputState(InputState.CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
+      debugSetInputState(InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY, inputState, setInputState);
     }
   }, [debouncedAddress, inputState]);
 
