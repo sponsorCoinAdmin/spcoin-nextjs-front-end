@@ -7,7 +7,6 @@ import { isAddress, Address } from 'viem';
 import { useChainId, useAccount, usePublicClient, useBalance } from 'wagmi';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { getInputStateEmoji } from '@/lib/hooks/inputValidations/helpers/getInputStateEmoji';
 import {
   InputState,
   CONTAINER_TYPE,
@@ -89,6 +88,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     }
 
     // 🚨 Guard: skip if in terminal state
+    // 🚨 Guard: skip if in terminal state
     const terminalStates = [
       InputState.INVALID_ADDRESS_INPUT,
       InputState.DUPLICATE_INPUT,
@@ -96,7 +96,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
       InputState.CONTRACT_NOT_FOUND_LOCALLY,
     ];
     if (terminalStates.includes(inputStateRef.current)) {
-      debugLog.log(`🛑 [TERMINAL] Current state is terminal (${InputState[inputStateRef.current]}), skipping FSM run`);
+      dumpPanelContext?.('useValidateFSMInput(${debouncedHexInput}):Skipping FSM run:(${InputState[inputStateRef.current]} state is terminal)');
       return;
     }
 
