@@ -6,7 +6,18 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'tr
 const debugLog = createDebugLogger('isEmptyInput', DEBUG_ENABLED);
 
 export function isEmptyInput(input: string | undefined): boolean {
-  const empty = !input?.trim();
-  if (empty) debugLog.log('⛔ Detected empty input');
-  return empty;
+  debugLog.log(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
+  alert(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
+
+  const trimmed = input?.trim() ?? '';
+  const isEmpty = trimmed === '';
+
+  if (isEmpty) {
+    debugLog.log('⛔ Detected empty input (undefined or blank)');
+  }
+
+  debugLog.log(`✅ EXIT → isEmptyInput result: ${isEmpty}`);
+
+  return isEmpty;
 }
+

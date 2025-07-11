@@ -13,33 +13,31 @@ export interface FSMContextType {
   setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
   containerType: CONTAINER_TYPE;
   feedType: FEED_TYPE;
-  dumpFSMContext: () => void;
+  dumpFSMContext: (headerInfo?: string) => void; // 🔧 updated here
 }
 
 export interface FeedContextType {
-  validHexInput: string;                                // ✅ immediate input value
-  debouncedHexInput: string;                            // ✅ debounced input value
-  failedHexInput?: string;                              // ✅ last invalid input (optional)
-  isValid: boolean;                                     // ✅ NEW: reactive boolean for last validation result
-  handleHexInputChange: (raw: string, isManual?: boolean) => boolean; // ✅ input handler, returns validity
-  resetHexInput: () => void;                            // ✅ clears input + error state
-  failedHexCount: number;                               // ✅ count of consecutive invalid attempts
-  isValidHexString: (raw: string) => boolean;           // ✅ pure validator, no state change
-  dumpInputFeedContext: () => void;                     // ✅ debug helper
+  validHexInput: string;
+  debouncedHexInput: string;
+  failedHexInput?: string;
+  isValid: boolean;
+  handleHexInputChange: (raw: string, isManual?: boolean) => boolean;
+  resetHexInput: () => void;
+  failedHexCount: number;
+  isValidHexString: (raw: string) => boolean;
+  dumpInputFeedContext: (headerInfo?: string) => void; // 🔧 updated here
 }
 
-// Combined type with unified dump + optional manager methods
 export type SharedPanelContextType = FSMContextType &
   FeedContextType & {
     /** Combined debug dump of both FSM and InputFeed contexts */
-    dumpPanelContext: () => void;
+    dumpPanelContext: (headerInfo?: string) => void; // 🔧 updated here
 
     /** Optional manager actions */
     forceReset?: () => void;
     forceClose?: () => void;
   };
 
-// Context setup
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
 
 export const useSharedPanelContext = (): SharedPanelContextType => {

@@ -39,6 +39,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     validatedAsset,
     setValidatedAsset,
     feedType,
+    dumpPanelContext, // ✅ include optional dump
   } = useSharedPanelContext();
 
   const buyAddress = useBuyTokenAddress();
@@ -61,10 +62,14 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const [validationPending, setValidationPending] = useState(true);
 
   useEffect(() => {
+    debugLog.log(`🔥 FSM hook mounted, selectAddress: ${selectAddress}`);
+
     if (debouncedHexInput !== selectAddress) {
       debugLog.log(`⏭️ Skipping FSM: debounced="${debouncedHexInput}" hasn't caught up with input="${selectAddress}"`);
       return;
     }
+
+    dumpPanelContext?.(`📦 BEFORE FSM run — debouncedHexInput="${debouncedHexInput}"`);
 
     debugLog.log(`🧵 FSM triggered → ${getInputStateEmoji(inputState)} ${InputState[inputState]} on: "${debouncedHexInput}"`);
 
@@ -80,11 +85,13 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         accountAddress: accountAddress as Address,
         seenBrokenLogos: seenBrokenLogosRef.current,
         feedType,
-        balanceData, // ✅ pass full balanceData object, not just .value
+        balanceData: balanceData?.value, // ✅ pass bigint only
         validatedAsset,
       });
 
       debugLog.log(`🔄 FSM next state → ${InputState[result.nextState]}`);
+      dumpPanelContext?.(`✅ AFTER FSM core result — nextState="${InputState[result.nextState]}"`);
+
       setInputState(result.nextState);
 
       if (result.validatedAsset) {
@@ -97,6 +104,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
       }
 
       setValidationPending(false);
+      dumpPanelContext?.('✅ AFTER state + asset update');
     };
 
     runFSM();
@@ -117,6 +125,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     setValidatedAsset,
     setSellTokenContract,
     setBuyTokenContract,
+    dumpPanelContext, // ✅ ensure included
   ]);
 
   const reportMissingLogoURL = useCallback(() => {

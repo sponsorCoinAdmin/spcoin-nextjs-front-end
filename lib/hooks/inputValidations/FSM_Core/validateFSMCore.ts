@@ -12,6 +12,10 @@ import { getLogoURL } from '@/lib/network/utils';
 import { isEmptyInput } from '../validations/isEmptyInput';
 import { isDuplicateInput } from '../validations/isDuplicateInput';
 import { resolveTokenContract } from '../validations/resolveTokenContract';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED);
 
 export interface ValidateFSMInput {
   inputState: InputState;
@@ -20,16 +24,11 @@ export interface ValidateFSMInput {
   sellAddress?: string;
   buyAddress?: string;
   chainId: number;
-  publicClient: any; // wagmi PublicClient
+  publicClient: any;
   accountAddress?: string;
   seenBrokenLogos: Set<string>;
   feedType: FEED_TYPE;
-  balanceData?: {
-    decimals: number;
-    formatted: string;
-    symbol: string;
-    value: bigint;
-  }; // ✅ full wagmi balance object
+  balanceData?: bigint;
   validatedAsset?: TokenContract | WalletAccount;
 }
 
@@ -58,6 +57,10 @@ export async function validateFSMCore(
     validatedAsset,
   } = input;
 
+  debugLog.log(`🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${debouncedHexInput}"`);
+
+  let result: ValidateFSMOutput;
+
   switch (inputState) {
     case InputState.EMPTY_INPUT:
     case InputState.INVALID_ADDRESS_INPUT:
@@ -66,16 +69,19 @@ export async function validateFSMCore(
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
     case InputState.CONTRACT_NOT_FOUND_LOCALLY:
     case InputState.VALID_INPUT:
-      return { nextState: inputState };
+      result = { nextState: inputState };
+      break;
 
     case InputState.VALIDATE_ADDRESS:
+      alert(`🔥 ENTERED InputState.VALIDATE_ADDRESS with: ${debouncedHexInput}`);
       if (isEmptyInput(debouncedHexInput)) {
-        return { nextState: InputState.EMPTY_INPUT };
+        result = { nextState: InputState.EMPTY_INPUT };
       } else if (!isAddress(debouncedHexInput)) {
-        return { nextState: InputState.INVALID_ADDRESS_INPUT };
+        result = { nextState: InputState.INVALID_ADDRESS_INPUT };
       } else {
-        return { nextState: InputState.TEST_DUPLICATE_INPUT };
+        result = { nextState: InputState.TEST_DUPLICATE_INPUT };
       }
+      break;
 
     case InputState.TEST_DUPLICATE_INPUT:
       if (
@@ -86,20 +92,22 @@ export async function validateFSMCore(
           buyAddress
         )
       ) {
-        return {
+        result = {
           nextState: InputState.DUPLICATE_INPUT,
           errorMessage: 'Duplicate address detected',
         };
       } else {
-        return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+        result = { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
       }
+      break;
 
     case InputState.VALIDATE_EXISTS_ON_CHAIN: {
       if (!publicClient) {
-        return {
+        result = {
           nextState: inputState,
           errorMessage: 'Public client missing',
         };
+        break;
       }
 
       const resolved = await resolveTokenContract(
@@ -111,50 +119,61 @@ export async function validateFSMCore(
       );
 
       if (!resolved) {
-        return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
+        result = { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
+        break;
       }
 
-      return {
+      result = {
         nextState: InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY,
         validatedAsset: resolved,
       };
+      break;
     }
 
     case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
       if (seenBrokenLogos.has(debouncedHexInput)) {
-        return { nextState: InputState.CONTRACT_NOT_FOUND_LOCALLY };
+        result = { nextState: InputState.CONTRACT_NOT_FOUND_LOCALLY };
       } else {
-        return { nextState: InputState.VALIDATE_BALANCE };
+        result = { nextState: InputState.VALIDATE_BALANCE };
       }
+      break;
 
     case InputState.VALIDATE_BALANCE:
       if (
         !balanceData ||
-        !('address' in validatedAsset!) ||
-        !isAddress((validatedAsset as TokenContract).address)
+        !validatedAsset ||
+        !('address' in validatedAsset) ||
+        !isAddress(validatedAsset.address)
       ) {
-        return { nextState: InputState.INVALID_ADDRESS_INPUT };
+        result = { nextState: InputState.INVALID_ADDRESS_INPUT };
+        break;
       }
 
-      const safeAddress = (validatedAsset as TokenContract).address as `0x${string}`;
+      const safeAddress = validatedAsset.address as `0x${string}`;
 
       const updatedToken: TokenContract = {
-        ...(validatedAsset as TokenContract),
-        balance: balanceData.value, // ✅ safely extract .value
+        ...validatedAsset,
+        balance: balanceData,
         chainId,
         logoURL: getLogoURL(chainId, safeAddress, feedType),
       };
 
-      return {
+      result = {
         nextState: InputState.VALID_INPUT,
         validatedAsset: updatedToken,
-        updatedBalance: balanceData.value,
+        updatedBalance: balanceData,
       };
+      break;
+
+    default:
+      result = {
+        nextState: inputState,
+        errorMessage: 'Unhandled input state',
+      };
+      break;
   }
 
-  // ✅ fallback to satisfy TypeScript exhaustiveness
-  return {
-    nextState: inputState,
-    errorMessage: 'Unhandled input state',
-  };
+  debugLog.log(`✅ EXIT → nextState: ${InputState[result.nextState]}, validatedAsset: ${result.validatedAsset ? result.validatedAsset.address : 'none'}, error: ${result.errorMessage || 'none'}`);
+
+  return result;
 }

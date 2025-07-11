@@ -54,7 +54,6 @@ export function usePanelContextBase(
     resetHexInput,
   } = useHexInput();
 
-  // ─── Mount the state manager ────────────────────────
   const { forceReset, forceClose } = useInputStateManager({
     validHexInput,
     debouncedHexInput,
@@ -63,39 +62,56 @@ export function usePanelContextBase(
     resetHexInput,
   });
 
-  const dumpFSMContext = () => {
-    console.group(`[FSM Context] (${label})`);
-    console.log({
-      inputState: getInputStateString(inputState),
-      validatedAsset,
-      containerType,
-      feedType,
-    });
-    console.groupEnd();
+  const dumpFSMContext = (headerInfo?: string) => {
+    try {
+      debugLog.log(`🧩 dumpFSMContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
+      console.group(`[FSM Context Dump] (${label})`);
+      if (headerInfo) console.log(`📝 ${headerInfo}`);
+      console.log({
+        inputState: getInputStateString(inputState),
+        validatedAsset,
+        containerType,
+        feedType,
+      });
+      console.groupEnd();
+    } catch (err) {
+      console.warn('⚠️ dumpFSMContext failed:', err);
+    }
   };
 
-  const dumpInputFeedContext = () => {
-    console.group(`[InputFeed Context] (${label})`);
-    console.log({
-      validHexInput,
-      debouncedHexInput,
-      failedHexInput,
-      failedHexCount,
-      isValid,
-    });
-    console.groupEnd();
+  const dumpInputFeedContext = (headerInfo?: string) => {
+    try {
+      debugLog.log(`💬 dumpInputFeedContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
+      console.group(`[InputFeed Context Dump] (${label})`);
+      if (headerInfo) console.log(`📝 ${headerInfo}`);
+      console.log({
+        validHexInput,
+        debouncedHexInput,
+        failedHexInput,
+        failedHexCount,
+        isValid,
+      });
+      console.groupEnd();
+    } catch (err) {
+      console.warn('⚠️ dumpInputFeedContext failed:', err);
+    }
   };
 
-  const dumpPanelContext = () => {
-    console.group(`[Panel Context] (${label})`);
-    dumpFSMContext();
-    dumpInputFeedContext();
-    console.groupEnd();
+  const dumpPanelContext = (headerInfo?: string) => {
+    try {
+      debugLog.log(`🛠 dumpPanelContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
+      console.group(`[Panel Context Dump] (${label})`);
+      if (headerInfo) console.log(`📝 ${headerInfo}`);
+      dumpFSMContext();
+      dumpInputFeedContext();
+      console.groupEnd();
+    } catch (err) {
+      console.warn('⚠️ dumpPanelContext failed:', err);
+    }
   };
 
   return useMemo<SharedPanelContextType>(
     () => ({
-      // FSM context
       inputState,
       setInputState,
       validatedAsset,
@@ -103,8 +119,6 @@ export function usePanelContextBase(
       containerType,
       feedType,
       dumpFSMContext,
-
-      // Input feed context
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -114,11 +128,7 @@ export function usePanelContextBase(
       handleHexInputChange,
       resetHexInput,
       dumpInputFeedContext,
-
-      // Combined
       dumpPanelContext,
-
-      // Manager actions
       forceReset,
       forceClose,
     }),
