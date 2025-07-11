@@ -20,6 +20,7 @@ export interface FeedContextType {
   validHexInput: string;
   failedHexInput?: string;
   isValidHexInput: (raw: string) => boolean;
+  debouncedHexInput: string;
   resetHexInput: () => void;  // ✅ added here
   dumpInputFeedContext: () => void;
 }

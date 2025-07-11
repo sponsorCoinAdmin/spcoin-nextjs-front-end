@@ -4,10 +4,11 @@ import { useCallback, useEffect } from 'react';
 
 export function useValidateHexInput() {
   const {
-    validHexInput,
+    debouncedHexInput,
     failedHexInput,
     isValidHexInput,
     resetHexInput,
+    validHexInput,
     setInputState,
   } = useSharedPanelContext();
 
@@ -24,10 +25,11 @@ export function useValidateHexInput() {
   }, [validHexInput, setInputState]);
 
   return {
-    handleHexInputChange,
-    validHexInput,
+    debouncedHexInput,
     failedHexInput,
+    handleHexInputChange,
     isValidHexInput,
     resetHexInput,
+    validHexInput,
   };
 }
