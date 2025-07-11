@@ -73,7 +73,7 @@ export async function validateFSMCore(
       break;
 
     case InputState.VALIDATE_ADDRESS:
-      alert(`🔥 ENTERED InputState.VALIDATE_ADDRESS with: ${debouncedHexInput}`);
+      // alert(`🔥 ENTERED InputState.VALIDATE_ADDRESS with: ${debouncedHexInput}`);
       if (isEmptyInput(debouncedHexInput)) {
         result = { nextState: InputState.EMPTY_INPUT };
       } else if (!isAddress(debouncedHexInput)) {

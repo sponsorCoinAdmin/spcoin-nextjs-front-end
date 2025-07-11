@@ -7,7 +7,7 @@ const debugLog = createDebugLogger('isEmptyInput', DEBUG_ENABLED);
 
 export function isEmptyInput(input: string | undefined): boolean {
   debugLog.log(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
-  alert(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
+  // alert(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
 
   const trimmed = input?.trim() ?? '';
   const isEmpty = trimmed === '';

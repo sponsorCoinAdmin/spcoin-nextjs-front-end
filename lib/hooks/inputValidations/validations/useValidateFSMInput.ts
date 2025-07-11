@@ -11,7 +11,6 @@ import { getInputStateEmoji } from '@/lib/hooks/inputValidations/helpers/getInpu
 import {
   InputState,
   CONTAINER_TYPE,
-  FEED_TYPE,
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
@@ -39,8 +38,11 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     validatedAsset,
     setValidatedAsset,
     feedType,
-    dumpPanelContext, // ✅ include optional dump
+    dumpPanelContext,
   } = useSharedPanelContext();
+
+  const inputStateRef = useRef(inputState);
+  inputStateRef.current = inputState;
 
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
@@ -59,57 +61,95 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   });
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
-  const [validationPending, setValidationPending] = useState(true);
+  const [validationPending, setValidationPending] = useState(false);
 
   useEffect(() => {
-    debugLog.log(`🔥 FSM hook mounted, selectAddress: ${selectAddress}`);
+    debugLog.log(`🔥 [ENTRY] useValidateFSMInput → selectAddress="${selectAddress}", debouncedHexInput="${debouncedHexInput}"`);
 
-    if (debouncedHexInput !== selectAddress) {
-      debugLog.log(`⏭️ Skipping FSM: debounced="${debouncedHexInput}" hasn't caught up with input="${selectAddress}"`);
+    // 🚨 Guard: skip if no input, but reset state if needed
+    if (!selectAddress || selectAddress.trim() === '') {
+      debugLog.log('⏭️ [SKIP] selectAddress is empty or undefined → CLEAR to EMPTY_INPUT');
+      if (inputStateRef.current !== InputState.EMPTY_INPUT) {
+        debugLog.log(`🔄 [STATE UPDATE] Changing state from ${InputState[inputStateRef.current]} to EMPTY_INPUT`);
+        setInputState(InputState.EMPTY_INPUT);
+      }
       return;
     }
 
-    dumpPanelContext?.(`📦 BEFORE FSM run — debouncedHexInput="${debouncedHexInput}"`);
+    // 🚨 Guard: skip if debounce hasn’t caught up
+    if (debouncedHexInput !== selectAddress) {
+      debugLog.log(`⏭️ [SKIP] debouncedHexInput ("${debouncedHexInput}") hasn't caught up with selectAddress ("${selectAddress}")`);
+      return;
+    }
 
-    debugLog.log(`🧵 FSM triggered → ${getInputStateEmoji(inputState)} ${InputState[inputState]} on: "${debouncedHexInput}"`);
+    // 🚨 Guard: skip if validation is pending
+    if (validationPending) {
+      debugLog.log('⏳ [SKIP] validation already in progress, holding...');
+      return;
+    }
+
+    // 🚨 Guard: skip if in terminal state
+    const terminalStates = [
+      InputState.INVALID_ADDRESS_INPUT,
+      InputState.DUPLICATE_INPUT,
+      InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+      InputState.CONTRACT_NOT_FOUND_LOCALLY,
+    ];
+    if (terminalStates.includes(inputStateRef.current)) {
+      debugLog.log(`🛑 [TERMINAL] Current state is terminal (${InputState[inputStateRef.current]}), skipping FSM run`);
+      return;
+    }
+
+    dumpPanelContext?.(`[BEFORE FSM] debouncedHexInput="${debouncedHexInput}" state=${InputState[inputStateRef.current]}`);
 
     const runFSM = async () => {
-      const result = await validateFSMCore({
-        inputState,
-        debouncedHexInput,
-        containerType: containerType!,
-        sellAddress,
-        buyAddress,
-        chainId: chainId!,
-        publicClient,
-        accountAddress: accountAddress as Address,
-        seenBrokenLogos: seenBrokenLogosRef.current,
-        feedType,
-        balanceData: balanceData?.value, // ✅ pass bigint only
-        validatedAsset,
-      });
+      setValidationPending(true);
+      debugLog.log(`🧵 [FSM RUN] state=${InputState[inputStateRef.current]}, input="${debouncedHexInput}"`);
 
-      debugLog.log(`🔄 FSM next state → ${InputState[result.nextState]}`);
-      dumpPanelContext?.(`✅ AFTER FSM core result — nextState="${InputState[result.nextState]}"`);
+      try {
+        const result = await validateFSMCore({
+          inputState: inputStateRef.current,
+          debouncedHexInput,
+          containerType: containerType!,
+          sellAddress,
+          buyAddress,
+          chainId: chainId!,
+          publicClient,
+          accountAddress: accountAddress as Address,
+          seenBrokenLogos: seenBrokenLogosRef.current,
+          feedType,
+          balanceData: balanceData?.value,
+          validatedAsset,
+        });
 
-      setInputState(result.nextState);
+        debugLog.log(`✅ [FSM RESULT] nextState=${InputState[result.nextState]}`);
+        dumpPanelContext?.(`[AFTER FSM CORE] nextState=${InputState[result.nextState]}`);
 
-      if (result.validatedAsset) {
-        setValidatedAsset(result.validatedAsset as unknown as T);
-        if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
-          setSellTokenContract(result.validatedAsset as TokenContract);
-        } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
-          setBuyTokenContract(result.validatedAsset as TokenContract);
+        if (result.nextState !== inputStateRef.current) {
+          debugLog.log(`🔄 [STATE UPDATE] Changing state from ${InputState[inputStateRef.current]} to ${InputState[result.nextState]}`);
+          setInputState(result.nextState);
+        } else {
+          debugLog.log(`⚠️ [SKIP] nextState same as current, no update`);
         }
-      }
 
-      setValidationPending(false);
-      dumpPanelContext?.('✅ AFTER state + asset update');
+        if (result.validatedAsset) {
+          setValidatedAsset(result.validatedAsset as unknown as T);
+          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+            setSellTokenContract(result.validatedAsset as TokenContract);
+          } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+            setBuyTokenContract(result.validatedAsset as TokenContract);
+          }
+        }
+      } catch (err) {
+        console.error('❌ [FSM ERROR]', err);
+      } finally {
+        setValidationPending(false);
+        dumpPanelContext?.(`[AFTER FSM UPDATE]`);
+      }
     };
 
     runFSM();
   }, [
-    inputState,
     debouncedHexInput,
     selectAddress,
     chainId,
@@ -125,22 +165,22 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     setValidatedAsset,
     setSellTokenContract,
     setBuyTokenContract,
-    dumpPanelContext, // ✅ ensure included
+    dumpPanelContext,
   ]);
 
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedHexInput) return;
     if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
       seenBrokenLogosRef.current.add(debouncedHexInput);
-      console.warn(`🛑 Missing logoURL for ${debouncedHexInput}`);
+      console.warn(`🛑 [MISSING LOGO] ${debouncedHexInput}`);
       debugSetInputState(
         `reportMissingLogoURL(${debouncedHexInput})`,
         InputState.CONTRACT_NOT_FOUND_LOCALLY,
-        inputState,
+        inputStateRef.current,
         setInputState
       );
     }
-  }, [debouncedHexInput, inputState, setInputState]);
+  }, [debouncedHexInput, setInputState]);
 
   const hasBrokenLogoURL = useCallback(() => {
     return seenBrokenLogosRef.current.has(debouncedHexInput);

@@ -1,3 +1,5 @@
+// File: components/containers/TokenSelectDropDown.tsx
+
 'use client';
 
 import { useCallback, useEffect } from 'react';
@@ -25,7 +27,7 @@ import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 import { TokenSelectScrollPanel } from '../AssetSelectScroll';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput'; // ✅ Mounted
+import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -77,10 +79,12 @@ function InnerDropDown({
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
   const { updateAssetScrollDisplay } = useDisplayControls();
-  const { inputState, setInputState } = useSharedPanelContext();
+  const { inputState, setInputState, validHexInput } = useSharedPanelContext();
 
-  // ✅ Mount FSM validation here — it will automatically run when inputState changes
-  useValidateFSMInput(undefined);
+  // ✅ Only pass to FSM if trimmed input is non-empty
+  const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
+
+  useValidateFSMInput(safeInput);
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
@@ -89,7 +93,7 @@ function InnerDropDown({
   }, [setInputState, updateAssetScrollDisplay]);
 
   useEffect(() => {
-    console.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
+    debugLog.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
   }, [inputState]);
 
   return (
@@ -121,4 +125,3 @@ function InnerDropDown({
 }
 
 export default TokenSelectDropDown;
-
