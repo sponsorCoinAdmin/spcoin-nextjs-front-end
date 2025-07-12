@@ -84,7 +84,7 @@ export enum InputState {
 
   // 3️⃣ Duplication check
   TEST_DUPLICATE_INPUT,          // 5
-  DUPLICATE_INPUT,               // 6
+  DUPLICATE_INPUT_ERROR,               // 6
 
   // 4️⃣ Blockchain existence check
   VALIDATE_EXISTS_ON_CHAIN,              // 7

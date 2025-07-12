@@ -30,7 +30,7 @@ export function useInputStateManager({
 }: InputStateManagerOptions) {
   const terminalStates = [
     InputState.INVALID_ADDRESS_INPUT,
-    InputState.DUPLICATE_INPUT,
+    InputState.DUPLICATE_INPUT_ERROR,
     InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
     InputState.CONTRACT_NOT_FOUND_LOCALLY,
     InputState.VALID_INPUT,

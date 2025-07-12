@@ -54,6 +54,8 @@ export function usePanelContextBase(
     resetHexInput,
   } = useHexInput();
 
+console.log(validHexInput)
+
   // ✅ FIXED: added currentInputState to match InputStateManagerOptions type
   const { forceReset, forceClose } = useInputStateManager({
     currentInputState: inputState,

@@ -24,7 +24,7 @@ const emojiMap: Partial<Record<InputState, {
     text: 'Valid address required.',
     color: 'text-red-500',
   },
-  [InputState.DUPLICATE_INPUT]: {
+  [InputState.DUPLICATE_INPUT_ERROR]: {
     text: 'Duplicate input selected.',
     color: 'text-orange-400',
     useLogo: true,
@@ -48,7 +48,7 @@ const ValidateAssetPreview: React.FC<Props> = () => {
   if (!item || inputState === InputState.IS_LOADING || inputState === InputState.EMPTY_INPUT) return null;
 
   const message =
-    inputState === InputState.DUPLICATE_INPUT && duplicateMessage
+    inputState === InputState.DUPLICATE_INPUT_ERROR && duplicateMessage
       ? duplicateMessage
       : item.text;
 

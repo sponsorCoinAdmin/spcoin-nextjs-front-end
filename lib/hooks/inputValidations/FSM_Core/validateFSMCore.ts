@@ -65,7 +65,7 @@ export async function validateFSMCore(
     case InputState.EMPTY_INPUT:
     case InputState.INVALID_ADDRESS_INPUT:
     case InputState.INCOMPLETE_ADDRESS:
-    case InputState.DUPLICATE_INPUT:
+    case InputState.DUPLICATE_INPUT_ERROR:
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
     case InputState.CONTRACT_NOT_FOUND_LOCALLY:
     case InputState.VALID_INPUT:
@@ -93,7 +93,7 @@ export async function validateFSMCore(
         )
       ) {
         result = {
-          nextState: InputState.DUPLICATE_INPUT,
+          nextState: InputState.DUPLICATE_INPUT_ERROR,
           errorMessage: 'Duplicate address detected',
         };
       } else {

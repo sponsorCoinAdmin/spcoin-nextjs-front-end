@@ -14,7 +14,7 @@ export function getInputStateEmoji(state: InputState): string {
       return '📬';
     case InputState.TEST_DUPLICATE_INPUT:
       return '🧪';
-    case InputState.DUPLICATE_INPUT:
+    case InputState.DUPLICATE_INPUT_ERROR:
       return '♻️';
     case InputState.VALIDATE_EXISTS_ON_CHAIN:
       return '🔗';

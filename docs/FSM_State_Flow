@@ -1,0 +1,17 @@
+→ EMPTY_INPUT → Check if input is empty
+→ VALIDATE_INPUT → Triggered by user input
+→ INVALID_HEX_INPUT → Invalid hex input check
+→ VALIDATE_ADDRESS → Check input address validity
+        └── if invalid → INVALID_ADDRESS_INPUT
+→ TEST_DUPLICATE_INPUT → Check if duplicate
+        └── if duplicate → DUPLICATE_INPUT_ERROR
+→ VALIDATE_EXISTS_ON_CHAIN → Check if exists on-chain
+        ├── found → PREVIEW_CONTRACT_EXISTS_LOCALLY
+        └── not found → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY (terminal state)
+→ PREVIEW_CONTRACT_EXISTS_LOCALLY → Prieview Exists Locally
+→ CONTRACT_NOT_FOUND_ON_BLOCKCHAIN → Prieview Does not Exist Locally
+→ VALIDATE_BALANCE → Check balance
+        ├── if error → VALIDATE_BALANCE_ERROR (terminal state)
+        └── if ok → VALID_INPUT
+→ CLOSE_SELECT_INPUT → Promote and close
+        └── set token in context, clear input → EMPTY_INPUT

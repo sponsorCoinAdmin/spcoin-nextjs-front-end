@@ -38,7 +38,7 @@ User types raw hex ──► useHexInput ──► validHexInput ──► useDe
                    │                     │          │
                    │                     │          ▼
                    │                     │   ┌─────────────────┐
-                   │                     └──►│ DUPLICATE_INPUT │
+                   │                     └──►│ DUPLICATE_INPUT_ERROR │
                    │                         └──────┬──────────┘
                    │                                │
                    │                                ▼

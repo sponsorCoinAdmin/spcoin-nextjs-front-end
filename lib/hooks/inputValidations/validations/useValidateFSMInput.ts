@@ -91,7 +91,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     // 🚨 Guard: skip if in terminal state
     const terminalStates = [
       InputState.INVALID_ADDRESS_INPUT,
-      InputState.DUPLICATE_INPUT,
+      InputState.DUPLICATE_INPUT_ERROR,
       InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
       InputState.CONTRACT_NOT_FOUND_LOCALLY,
     ];
