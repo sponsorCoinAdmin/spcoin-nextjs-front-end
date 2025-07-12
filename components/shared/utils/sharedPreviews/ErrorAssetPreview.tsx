@@ -1,11 +1,10 @@
-// File: components/shared/AssetPreviews/ValidateAssetPreview.tsx
+// File: components/shared/AssetPreviews/ErrorAssetPreview.tsx
 
 'use client';
 
 import React from 'react';
 import { InputState } from '@/lib/structure';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-  const { inputState, setInputState, containerType } = useSharedPanelContext();
 
 
 interface Props {
@@ -29,7 +28,7 @@ const emojiMap: Partial<Record<InputState, {
     color: 'text-orange-400',
     useLogo: true,
   },
-  [InputState.CONTRACT_NOT_FOUND_LOCALLY]: {
+  [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: {
     emoji: '⚠️',
     text: 'Missing local image for asset.',
     color: 'text-orange-400',
@@ -43,9 +42,10 @@ const emojiMap: Partial<Record<InputState, {
 
 const duplicateMessage:string = 'ToDo: Duplicate input selected.';
 
-const ValidateAssetPreview: React.FC<Props> = () => {
+const ErrorAssetPreview: React.FC<Props> = () => {
+  const { inputState, setInputState, containerType } = useSharedPanelContext();
   const item = emojiMap[inputState];
-  if (!item || inputState === InputState.IS_LOADING || inputState === InputState.EMPTY_INPUT) return null;
+  if (!item  || inputState === InputState.EMPTY_INPUT) return null;
 
   const message =
     inputState === InputState.DUPLICATE_INPUT_ERROR && duplicateMessage
@@ -64,4 +64,4 @@ const ValidateAssetPreview: React.FC<Props> = () => {
   );
 };
 
-export default ValidateAssetPreview;
+export default ErrorAssetPreview;

@@ -4,7 +4,7 @@
 
 import styles from '@/styles/Modal.module.css';
 import React from 'react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
@@ -14,6 +14,7 @@ import { useDisplayControls } from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+import ErrorAssetPreview from './utils/sharedPreviews/ErrorAssetPreview';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -51,6 +52,8 @@ export default function AddressSelect() {
         placeholder="Enter address"
         statusEmoji=""
       />
+
+      <ErrorAssetPreview inputState={InputState.EMPTY_INPUT} />
 
       <RenderAssetPreview
         validatedAsset={validatedAsset}

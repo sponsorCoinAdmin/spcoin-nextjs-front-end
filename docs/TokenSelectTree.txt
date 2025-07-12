@@ -19,7 +19,7 @@
         │                 │     │           │           └── <AddressSelect> (SELL)
         │                 │     │           │                 ├── <HexAddressInput>
         │                 │     │           │                 ├── <RenderAssetPreview>
-        │                 │     │           │                 ├── <ValidateAssetPreview>
+        │                 │     │           │                 ├── <ErrorAssetPreview>
         │                 │     │           │                 └── <DataList>
         │                 │     │           ├── Balance: {formattedBalance}
         │                 │     │           ├── {buySellText}
@@ -36,7 +36,7 @@
         │                 │                 │           └── <AddressSelect> (BUY)
         │                 │                 │                 ├── <HexAddressInput>
         │                 │                 │                 ├── <RenderAssetPreview>
-        │                 │                 │                 ├── <ValidateAssetPreview>
+        │                 │                 │                 ├── <ErrorAssetPreview>
         │                 │                 │                 └── <DataList>
         │                 │                 ├── Balance: {formattedBalance}
         │                 │                 ├── {buySellText}
@@ -52,10 +52,10 @@
         │                 │                                   │     └── <AddressSelect> (Recipient)
         │                 │                                   │           ├── <HexAddressInput>
         │                 │                                   │           ├── <RenderAssetPreview>
-        │                 │                                   │           ├── <ValidateAssetPreview>
+        │                 │                                   │           ├── <ErrorAssetPreview>
         │                 │                                   │           └── <DataList>
         │                 │                                   └── onSelect(wallet, state)
-        │                 │                                         └── if state === CLOSE_SELECT_INPUT:
+        │                 │                                         └── if state === CLOSE_SELECT_SCROLL_PANEL:
         │                 │                                               ├── callBackAccount(wallet)
         │                 │                                               ├── hasErroredRef = false
         │                 │                                               └── setShowDialog(false)

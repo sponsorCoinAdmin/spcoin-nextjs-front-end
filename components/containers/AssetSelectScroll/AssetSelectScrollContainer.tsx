@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import BaseModalDialog from './BaseModalDialog';
+import BaseModalPanel from './BaseModalPanel';
 import AddressSelect from '@/components/shared/AddressSelect';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -27,8 +27,8 @@ export default function AssetSelectScrollContainer({ title }: Props) {
   }, [containerType]);
 
   return (
-    <BaseModalDialog id="AssetSelectScrollContainer" title={title}>
+    <BaseModalPanel id="AssetSelectScrollContainer" title={title}>
       <AddressSelect />
-    </BaseModalDialog>
+    </BaseModalPanel>
   );
 }

@@ -88,7 +88,7 @@ function InnerDropDown({
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
-    setInputState(InputState.VALID_INPUT);
+    setInputState(InputState.EMPTY_INPUT);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
   }, [setInputState, updateAssetScrollDisplay]);
 

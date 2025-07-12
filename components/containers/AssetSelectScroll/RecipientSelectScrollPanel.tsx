@@ -18,14 +18,14 @@ export default function RecipientSelectScrollPanel() {
   const { updateAssetScrollDisplay } = useDisplayControls();
 
   useEffect(() => {
-    if (inputState === InputState.CLOSE_SELECT_INPUT) {
+    if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
       updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
     }
   }, [inputState, updateAssetScrollDisplay]);
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
-      if (state === InputState.CLOSE_SELECT_INPUT) {
+      if (state === InputState.CLOSE_SELECT_SCROLL_PANEL) {
         console.debug('✅ [RecipientSelectScrollPanel] selected wallet', wallet);
       }
     },

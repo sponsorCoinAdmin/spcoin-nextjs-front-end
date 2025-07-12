@@ -1,5 +1,3 @@
-// File: lib/hooks/inputValidations/useValidateFSMInput.ts
-
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
@@ -43,6 +41,8 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const inputStateRef = useRef(inputState);
   inputStateRef.current = inputState;
 
+  const prevInputRef = useRef<string | undefined>(undefined);
+
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
   const [, setSellTokenContract] = useSellTokenContract();
@@ -62,41 +62,33 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
   const [validationPending, setValidationPending] = useState(false);
 
+  // 🚀 NEW: Reset FSM to VALIDATE_ADDRESS on input change
+  useEffect(() => {
+    if (debouncedHexInput !== prevInputRef.current) {
+      debugLog.log('🔄 [RESET] New input detected, resetting FSM to VALIDATE_ADDRESS');
+      setInputState(InputState.VALIDATE_ADDRESS);
+    }
+    prevInputRef.current = debouncedHexInput;
+  }, [debouncedHexInput, setInputState]);
+
   useEffect(() => {
     debugLog.log(`🔥 [ENTRY] useValidateFSMInput → selectAddress="${selectAddress}", debouncedHexInput="${debouncedHexInput}"`);
 
-    // 🚨 Guard: skip if no input, but reset state if needed
     if (!selectAddress || selectAddress.trim() === '') {
       debugLog.log('⏭️ [SKIP] selectAddress is empty or undefined → CLEAR to EMPTY_INPUT');
       if (inputStateRef.current !== InputState.EMPTY_INPUT) {
-        debugLog.log(`🔄 [STATE UPDATE] Changing state from ${InputState[inputStateRef.current]} to EMPTY_INPUT`);
         setInputState(InputState.EMPTY_INPUT);
       }
       return;
     }
 
-    // 🚨 Guard: skip if debounce hasn’t caught up
     if (debouncedHexInput !== selectAddress) {
       debugLog.log(`⏭️ [SKIP] debouncedHexInput ("${debouncedHexInput}") hasn't caught up with selectAddress ("${selectAddress}")`);
       return;
     }
 
-    // 🚨 Guard: skip if validation is pending
     if (validationPending) {
       debugLog.log('⏳ [SKIP] validation already in progress, holding...');
-      return;
-    }
-
-    // 🚨 Guard: skip if in terminal state
-    // 🚨 Guard: skip if in terminal state
-    const terminalStates = [
-      InputState.INVALID_ADDRESS_INPUT,
-      InputState.DUPLICATE_INPUT_ERROR,
-      InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-      InputState.CONTRACT_NOT_FOUND_LOCALLY,
-    ];
-    if (terminalStates.includes(inputStateRef.current)) {
-      dumpPanelContext?.('useValidateFSMInput(${debouncedHexInput}):Skipping FSM run:(${InputState[inputStateRef.current]} state is terminal)');
       return;
     }
 
@@ -126,7 +118,6 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         dumpPanelContext?.(`[AFTER FSM CORE] nextState=${InputState[result.nextState]}`);
 
         if (result.nextState !== inputStateRef.current) {
-          debugLog.log(`🔄 [STATE UPDATE] Changing state from ${InputState[inputStateRef.current]} to ${InputState[result.nextState]}`);
           setInputState(result.nextState);
         } else {
           debugLog.log(`⚠️ [SKIP] nextState same as current, no update`);
@@ -166,16 +157,16 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     setSellTokenContract,
     setBuyTokenContract,
     dumpPanelContext,
+    validationPending,
   ]);
 
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedHexInput) return;
     if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
       seenBrokenLogosRef.current.add(debouncedHexInput);
-      console.warn(`🛑 [MISSING LOGO] ${debouncedHexInput}`);
       debugSetInputState(
         `reportMissingLogoURL(${debouncedHexInput})`,
-        InputState.CONTRACT_NOT_FOUND_LOCALLY,
+        InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
         inputStateRef.current,
         setInputState
       );
@@ -190,7 +181,6 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     inputState,
     setInputState,
     validatedAsset,
-    isLoading: inputState === InputState.IS_LOADING,
     chainId,
     reportMissingLogoURL,
     hasBrokenLogoURL,

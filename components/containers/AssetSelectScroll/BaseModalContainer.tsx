@@ -20,7 +20,7 @@ export default function BaseModalContainer({
   const { updateAssetScrollDisplay } = useDisplayControls();
 
   const closeSelectContainer = useCallback(() => {
-    setInputState(InputState.CLOSE_SELECT_INPUT);
+    setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
   }, [setInputState, updateAssetScrollDisplay]);
 

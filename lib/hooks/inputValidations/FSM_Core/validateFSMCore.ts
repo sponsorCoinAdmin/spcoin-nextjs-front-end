@@ -1,5 +1,3 @@
-// File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
-
 import { Address, isAddress } from 'viem';
 import {
   InputState,
@@ -63,35 +61,29 @@ export async function validateFSMCore(
 
   switch (inputState) {
     case InputState.EMPTY_INPUT:
-    case InputState.INVALID_ADDRESS_INPUT:
     case InputState.INCOMPLETE_ADDRESS:
+    case InputState.INVALID_HEX_INPUT:
+    case InputState.INVALID_ADDRESS_INPUT:
     case InputState.DUPLICATE_INPUT_ERROR:
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
-    case InputState.CONTRACT_NOT_FOUND_LOCALLY:
-    case InputState.VALID_INPUT:
+    case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
+    case InputState.VALIDATE_BALANCE_ERROR:
+    case InputState.CLOSE_SELECT_SCROLL_PANEL:
       result = { nextState: inputState };
       break;
 
     case InputState.VALIDATE_ADDRESS:
-      // alert(`🔥 ENTERED InputState.VALIDATE_ADDRESS with: ${debouncedHexInput}`);
       if (isEmptyInput(debouncedHexInput)) {
         result = { nextState: InputState.EMPTY_INPUT };
       } else if (!isAddress(debouncedHexInput)) {
-        result = { nextState: InputState.INVALID_ADDRESS_INPUT };
+        result = { nextState: InputState.INCOMPLETE_ADDRESS }; // treat all invalid as incomplete
       } else {
         result = { nextState: InputState.TEST_DUPLICATE_INPUT };
       }
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
-      if (
-        isDuplicateInput(
-          containerType,
-          debouncedHexInput,
-          sellAddress,
-          buyAddress
-        )
-      ) {
+      if (isDuplicateInput(containerType, debouncedHexInput, sellAddress, buyAddress)) {
         result = {
           nextState: InputState.DUPLICATE_INPUT_ERROR,
           errorMessage: 'Duplicate address detected',
@@ -104,7 +96,7 @@ export async function validateFSMCore(
     case InputState.VALIDATE_EXISTS_ON_CHAIN: {
       if (!publicClient) {
         result = {
-          nextState: inputState,
+          nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
           errorMessage: 'Public client missing',
         };
         break;
@@ -124,18 +116,26 @@ export async function validateFSMCore(
       }
 
       result = {
-        nextState: InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY,
+        nextState: InputState.VALIDATE_PREVIEW,
         validatedAsset: resolved,
       };
       break;
     }
 
-    case InputState.VALIDATE_CONTRACT_EXISTS_LOCALLY:
+    case InputState.VALIDATE_PREVIEW:
+      result = { nextState: InputState.PREVIEW_ASSET };
+      break;
+
+    case InputState.PREVIEW_ASSET:
       if (seenBrokenLogos.has(debouncedHexInput)) {
-        result = { nextState: InputState.CONTRACT_NOT_FOUND_LOCALLY };
+        result = { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
       } else {
-        result = { nextState: InputState.VALIDATE_BALANCE };
+        result = { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
       }
+      break;
+
+    case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
+      result = { nextState: InputState.VALIDATE_BALANCE };
       break;
 
     case InputState.VALIDATE_BALANCE:
@@ -145,7 +145,7 @@ export async function validateFSMCore(
         !('address' in validatedAsset) ||
         !isAddress(validatedAsset.address)
       ) {
-        result = { nextState: InputState.INVALID_ADDRESS_INPUT };
+        result = { nextState: InputState.VALIDATE_BALANCE_ERROR };
         break;
       }
 
@@ -159,7 +159,7 @@ export async function validateFSMCore(
       };
 
       result = {
-        nextState: InputState.VALID_INPUT,
+        nextState: InputState.CLOSE_SELECT_SCROLL_PANEL,
         validatedAsset: updatedToken,
         updatedBalance: balanceData,
       };

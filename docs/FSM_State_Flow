@@ -1,17 +1,27 @@
-→ EMPTY_INPUT → Check if input is empty
-→ VALIDATE_INPUT → Triggered by user input
-→ INVALID_HEX_INPUT → Invalid hex input check
-→ VALIDATE_ADDRESS → Check input address validity
-        └── if invalid → INVALID_ADDRESS_INPUT
+→ INVALID_HEX_INPUT → Display <ErrorAssetPreview />
+→ VALIDATE_ADDRESS → Triggered by user input
+        ├── undefined or empty → EMPTY_INPUT
+        ├── Incomplete Address → INCOMPLETE_ADDRESS
+		├── Invalid address → INVALID_ADDRESS_INPUT
+		└── Valid address → TEST_DUPLICATE_INPUT
+→ EMPTY_INPUT → Do Nothing 
+→ INCOMPLETE_ADDRESS  → Display <ErrorAssetPreview />
+→ INVALID_HEX_INPUT → Display <ErrorAssetPreview />
+→ INVALID_ADDRESS_INPUT → Display <ErrorAssetPreview />
 → TEST_DUPLICATE_INPUT → Check if duplicate
-        └── if duplicate → DUPLICATE_INPUT_ERROR
+        ├── if duplicate  → DUPLICATE_INPUT_ERROR
+        └── not duplicate → VALIDATE_EXISTS_ON_CHAIN
+→ DUPLICATE_INPUT_ERROR → Display <ErrorAssetPreview />
 → VALIDATE_EXISTS_ON_CHAIN → Check if exists on-chain
-        ├── found → PREVIEW_CONTRACT_EXISTS_LOCALLY
-        └── not found → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY (terminal state)
-→ PREVIEW_CONTRACT_EXISTS_LOCALLY → Prieview Exists Locally
-→ CONTRACT_NOT_FOUND_ON_BLOCKCHAIN → Prieview Does not Exist Locally
+        ├── if found → VALIDATE_PREVIEW
+        └── if not found → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN
+→ CONTRACT_NOT_FOUND_ON_BLOCKCHAIN → Display <ErrorAssetPreview />
+→ VALIDATE_PREVIEW → Check preview step
+→ PREVIEW_ASSET → Check if Asset Exists Locally
+        ├── if found → PREVIEW_CONTRACT_EXISTS_LOCALLY
+        └── if not found → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY 
 → VALIDATE_BALANCE → Check balance
-        ├── if error → VALIDATE_BALANCE_ERROR (terminal state)
-        └── if ok → VALID_INPUT
-→ CLOSE_SELECT_INPUT → Promote and close
-        └── set token in context, clear input → EMPTY_INPUT
+        ├── if error → VALIDATE_BALANCE_ERROR 
+        └── if ok → CLOSE_SELECT_SCROLL_PANEL
+→ CLOSE_SELECT_SCROLL_PANEL → Promote and close
+        └── set token in context, clear input

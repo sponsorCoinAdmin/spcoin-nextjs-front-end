@@ -27,7 +27,6 @@ const updateBalance = async () => {
             debugLog.log(`💰 Updated balance for ${tokenWithBalance.symbol}: ${balance.toString()}`);
             tokenWithBalance.balance = balance;
             setValidatedAsset(tokenWithBalance as unknown as T);
-            debugSetInputState('balanceOfABI',InputState.IS_LOADING, inputState, setInputState);
           } catch (err) {
             debugLog.error(`❌ Failed to fetch balance for ${tokenWithBalance.symbol}:`, err);
           }

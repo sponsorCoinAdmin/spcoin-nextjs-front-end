@@ -6,7 +6,7 @@ import { InputState, SP_COIN_DISPLAY, FEED_TYPE, CONTAINER_TYPE } from '@/lib/st
 import { useDisplayControls } from '@/lib/context/hooks';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
-export default function BaseModalDialog({
+export default function BaseModalPanel({
   id,
   title,
   children,
@@ -23,7 +23,7 @@ export default function BaseModalDialog({
   const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
-    setInputState(InputState.CLOSE_SELECT_INPUT);
+    setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
   }, [setInputState, updateAssetScrollDisplay]);
 

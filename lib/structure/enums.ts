@@ -71,43 +71,35 @@ export enum API_TRADING_PROVIDER {
 
 export enum InputState {
   // 0️⃣ Blank input
-  EMPTY_INPUT,                    // 0
+  EMPTY_INPUT,                            // 0
 
-  // 1️⃣ Triggered by user input
-  VALIDATE_INPUT,                // 1
+  // 1️⃣ Hex input validation
+  INVALID_HEX_INPUT,                      // 1
+  VALIDATE_ADDRESS,                       // 2
+  INCOMPLETE_ADDRESS,                     // 3
+  INVALID_ADDRESS_INPUT,                  // 4
 
-  // 2️⃣ Hex address validation
-  VALIDATE_ADDRESS,              // 2
-  INCOMPLETE_ADDRESS,             // 3
+  // 2️⃣ Duplication check
+  TEST_DUPLICATE_INPUT,                   // 5
+  DUPLICATE_INPUT_ERROR,                  // 6
 
-  INVALID_ADDRESS_INPUT,         // 4
+  // 3️⃣ Blockchain existence check
+  VALIDATE_EXISTS_ON_CHAIN,               // 7
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,       // 8
 
-  // 3️⃣ Duplication check
-  TEST_DUPLICATE_INPUT,          // 5
-  DUPLICATE_INPUT_ERROR,               // 6
+  // 4️⃣ Preview check phase
+  VALIDATE_PREVIEW,                       // 9
+  PREVIEW_ASSET,                          // 10
+  PREVIEW_CONTRACT_EXISTS_LOCALLY,        // 11
+  PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,     // 12
 
-  // 4️⃣ Blockchain existence check
-  VALIDATE_EXISTS_ON_CHAIN,              // 7
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,      // 8
+  // 5️⃣ Balance check
+  VALIDATE_BALANCE,                       // 13
+  VALIDATE_BALANCE_ERROR,                 // 14
 
-  // 5️⃣ Local metadata check
-  VALIDATE_CONTRACT_EXISTS_LOCALLY,      // 9
-  CONTRACT_NOT_FOUND_LOCALLY,            // 10
-
-  // 6️⃣ Balance check
-  VALIDATE_BALANCE,                      // 11
-  VALIDATE_BALANCE_ERROR,                // 12
-
-  // 7️⃣ Final validated state
-  VALID_INPUT,                           // 13
-
-  // 8️⃣ Close panel trigger
-  CLOSE_SELECT_INPUT,                    // 14
-
-  // 9️⃣ Async indicator
-  IS_LOADING                             // 15
+  // 6️⃣ Final close
+  CLOSE_SELECT_SCROLL_PANEL,              // 15
 }
-
 
 export const getInputStateString = (state: InputState): string =>
   InputState[state] ?? 'UNKNOWN_INPUT_STATE';
