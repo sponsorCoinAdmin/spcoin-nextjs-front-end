@@ -6,7 +6,7 @@ import { InputState, SP_COIN_DISPLAY, FEED_TYPE, CONTAINER_TYPE } from '@/lib/st
 import { useDisplayControls } from '@/lib/context/hooks';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
-export default function BaseModalPanel({
+export default function BaseModalScrollPanel({
   id,
   title,
   children,

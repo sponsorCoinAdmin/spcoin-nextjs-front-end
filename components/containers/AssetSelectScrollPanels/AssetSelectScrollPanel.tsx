@@ -1,10 +1,10 @@
-// File: components/AssetSelectScroll/AssetSelectScrollContainer.tsx
+// File: components/AssetSelectScroll/AssetSelectScrollPanel.tsx
 
 'use client';
 
 import { useEffect } from 'react';
 
-import BaseModalPanel from './BaseModalPanel';
+import BaseModalScrollPanel from './BaseModalScrollPanel';
 import AddressSelect from '@/components/shared/AddressSelect';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -12,23 +12,23 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useShare
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
-const debugLog = createDebugLogger('AssetSelectScrollContainer', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('AssetSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
   title: string;
 }
 
-export default function AssetSelectScrollContainer({ title }: Props) {
+export default function AssetSelectScrollPanel({ title }: Props) {
   const { containerType } = useSharedPanelContext();
 
   useEffect(() => {
-    debugLog.log(`📥 AssetSelectScrollContainer mounted`);
+    debugLog.log(`📥 AssetSelectScrollPanel mounted`);
     debugLog.log(`📦 containerType = ${containerType}`);
   }, [containerType]);
 
   return (
-    <BaseModalPanel id="AssetSelectScrollContainer" title={title}>
+    <BaseModalScrollPanel id="AssetSelectScrollPanel" title={title}>
       <AddressSelect />
-    </BaseModalPanel>
+    </BaseModalScrollPanel>
   );
 }

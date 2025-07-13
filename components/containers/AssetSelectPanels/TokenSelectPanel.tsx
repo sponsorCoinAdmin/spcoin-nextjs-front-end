@@ -1,4 +1,4 @@
-// File: components/Containers/TokenSelectContainer.tsx
+// File: components/Containers/TokenSelectPanel.tsx
 
 'use client';
 
@@ -31,14 +31,14 @@ import {
 import styles from '@/styles/Exchange.module.css';
 import { clsx } from 'clsx';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
-import TokenSelectDropDown from '../AssetSelectDropDown/TokenSelectDropDown';
+import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TokenSelect', DEBUG_ENABLED, LOG_TIMES);
 
-const TokenSelectContainer = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
+const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const [apiProvider] = useApiProvider();
   const account = useAccount();
 
@@ -197,4 +197,4 @@ function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
   }
 }
 
-export default TokenSelectContainer;
+export default TokenSelectPanel;

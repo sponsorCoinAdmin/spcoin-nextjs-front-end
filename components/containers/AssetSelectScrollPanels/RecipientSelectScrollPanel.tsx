@@ -10,7 +10,7 @@ import {
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
-import AssetSelectScrollContainer from './AssetSelectScrollContainer';
+import AssetSelectScrollPanel from './AssetSelectScrollPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 
 export default function RecipientSelectScrollPanel() {
@@ -33,7 +33,7 @@ export default function RecipientSelectScrollPanel() {
   );
 
   return (
-    <AssetSelectScrollContainer
+    <AssetSelectScrollPanel
       title="Select a Recipient"
     />
   );

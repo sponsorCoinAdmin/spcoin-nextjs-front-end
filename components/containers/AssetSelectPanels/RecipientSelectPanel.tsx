@@ -1,4 +1,4 @@
-//File: components/containers/AssetSelectPanel/RecipientSelectContainer.tsx
+//File: components/containers/AssetSelectPanel/RecipientSelectPanel.tsx
 
 'use client';
 
@@ -15,10 +15,10 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { useSpCoinDisplay } from '@/lib/context/hooks';
 import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
 import { useDisplaySpCoinContainers } from "@/lib/spCoin/guiControl";
-import RecipientSelectDropDown from "../AssetSelectDropDown/RecipientSelectDropDown";
+import RecipientSelectDropDown from "../AssetSelectDropDowns/RecipientSelectDropDown";
 import SponsorRateConfig from "../SponsorRateConfig";
 
-const RecipientSelectContainer: React.FC = () => {
+const RecipientSelectPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const [recipientAccount, setRecipientAccount] = useState<WalletAccount | undefined>(
@@ -124,4 +124,4 @@ const RecipientSelectContainer: React.FC = () => {
   );
 };
 
-export default RecipientSelectContainer;
+export default RecipientSelectPanel;

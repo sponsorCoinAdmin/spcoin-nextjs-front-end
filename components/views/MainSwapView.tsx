@@ -15,7 +15,7 @@ import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton'
 import PriceButton from '@/components/Buttons/PriceButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
-import { TokenSelectContainer } from '../containers/AssetSelectPanel';
+import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 
 import { SellTokenPanelProvider, BuyTokenPanelProvider } from '@/lib/context/ScrollSelectPanels';
 
@@ -49,11 +49,11 @@ export default function MainSwapView() {
         <TradeContainerHeader />
 
         <SellTokenPanelProvider>
-          <TokenSelectContainer containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
+          <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
         </SellTokenPanelProvider>
 
         <BuyTokenPanelProvider>
-          <TokenSelectContainer containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
+          <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
         </BuyTokenPanelProvider>
 
         <BuySellSwapArrowButton />

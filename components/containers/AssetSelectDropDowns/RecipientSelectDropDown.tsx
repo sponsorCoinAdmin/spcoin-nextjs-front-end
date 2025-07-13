@@ -8,7 +8,7 @@ import { ChevronDown } from 'lucide-react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
-import { RecipientSelectScrollPanel } from '../AssetSelectScroll';
+import { RecipientSelectScrollPanel } from '../AssetSelectScrollPanels';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 

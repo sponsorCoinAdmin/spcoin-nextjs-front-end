@@ -7,7 +7,7 @@ import {
   SP_COIN_DISPLAY,
   getInputStateString,
 } from '@/lib/structure';
-import AssetSelectScrollContainer from './AssetSelectScrollContainer';
+import AssetSelectScrollPanel from './AssetSelectScrollPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -44,7 +44,7 @@ export default function TokenSelectScrollPanel() {
   return (
     <>
       {assetSelectScrollDisplay === SP_COIN_DISPLAY.DISPLAY_ON && (
-        <AssetSelectScrollContainer title={title} />
+        <AssetSelectScrollPanel title={title} />
       )}
     </>
   );
