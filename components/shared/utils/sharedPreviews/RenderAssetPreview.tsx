@@ -1,16 +1,14 @@
-// File: components/shared/AssetPreviews/RenderAssetPreview.tsx
-
 'use client';
 
 import React from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
-import { TokenContract, WalletAccount, FEED_TYPE, CONTAINER_TYPE, InputState } from '@/lib/structure';
+import { InputState, TokenContract, WalletAccount } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
-const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 interface Props<T extends TokenContract | WalletAccount> {
   validatedAsset: T | undefined;
@@ -21,16 +19,11 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
   validatedAsset,
   onSelect,
 }: Props<T>) {
-  const { feedType } = useSharedPanelContext();
+  const { inputState, showRenderPanel } = useTerminalFSMState();
 
-  // 🔧ToDo TEMPORARY placeholder functions — to be replaced with real FSM hook output
-  const hasBrokenLogoURL = () => false;
-  const reportMissingLogoURL = () => {
-    debugLog.warn(`⚠️ reportMissingLogoURL called but no FSM hook connected.`);
-  };
-
-  if (!validatedAsset) {
-    debugLog.log('🚫 RenderAssetPreview skipped: validatedAsset is undefined');
+  // ✅ Show if FSM is at or beyond VALIDATE_BALANCE
+  if (!showRenderPanel || !validatedAsset) {
+    debugLog.log(`🚫 RenderAssetPreview hidden: inputState=${InputState[inputState]}, showRenderPanel=${showRenderPanel}, validatedAsset=${!!validatedAsset}`);
     return null;
   }
 
@@ -40,7 +33,7 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
   const symbol = 'symbol' in validatedAsset ? validatedAsset.symbol ?? '' : '';
 
   let logoURL = '/assets/miscellaneous/badTokenAddressImage.png';
-  if ('logoURL' in validatedAsset && 'address' in validatedAsset && !hasBrokenLogoURL()) {
+  if ('logoURL' in validatedAsset && 'address' in validatedAsset) {
     logoURL = validatedAsset.logoURL || logoURL;
   }
 
@@ -60,7 +53,6 @@ export default function RenderAssetPreview<T extends TokenContract | WalletAccou
         symbol={symbol}
         logoSrc={logoURL}
         onSelect={handleClick}
-        onError={reportMissingLogoURL}
       />
     </div>
   );

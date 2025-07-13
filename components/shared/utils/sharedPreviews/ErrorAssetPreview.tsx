@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { InputState } from '@/lib/structure';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
 
 const emojiMap: Partial<Record<InputState, {
   emoji?: string;
@@ -46,20 +46,10 @@ const emojiMap: Partial<Record<InputState, {
   },
 };
 
-const errorStates = [
-  InputState.INVALID_HEX_INPUT,
-  InputState.INCOMPLETE_ADDRESS,
-  InputState.INVALID_ADDRESS_INPUT,
-  InputState.DUPLICATE_INPUT_ERROR,
-  InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
-  InputState.VALIDATE_BALANCE_ERROR,
-];
-
 const ErrorAssetPreview: React.FC = () => {
-  const { inputState } = useSharedPanelContext();
+  const { inputState, isTerminalState, isErrorState } = useTerminalFSMState();
 
-  if (!errorStates.includes(inputState)) return null;
+  if (!isTerminalState || !isErrorState) return null;
 
   const item = emojiMap[inputState];
   const message = item?.text ?? 'An error occurred.';
