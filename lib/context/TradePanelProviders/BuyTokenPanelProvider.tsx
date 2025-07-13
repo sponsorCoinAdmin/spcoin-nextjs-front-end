@@ -1,0 +1,47 @@
+// File: lib/context/TradePanelProviders/BuyTradePanelProvider.tsx
+
+'use client';
+
+import React, { useState, ReactNode } from 'react';
+import { CONTAINER_TYPE, FEED_TYPE, InputState, TokenContract } from '@/lib/structure';
+import { TradePanelContext } from './useTradePanelContext';
+
+export const BuyTokenPanelProvider = ({ children }: { children: ReactNode }) => {
+  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
+  const [validatedAsset, setValidatedAsset] = useState<any>(undefined);
+
+  // ✅ ADD HERE
+  const [localTokenContract, setLocalTokenContract] = useState<TokenContract | undefined>(undefined);
+  const [localAmount, setLocalAmount] = useState<bigint>(0n);
+
+  const dumpContext = (headerInfo?: string) => {
+    console.log(`🛠️ [BuyTradePanelProvider Dump] ${headerInfo || ''}`, {
+      inputState,
+      validatedAsset,
+      localTokenContract,
+      localAmount,
+      containerType: CONTAINER_TYPE.BUY_SELECT_CONTAINER,
+      feedType: FEED_TYPE.TOKEN_LIST,
+    });
+  };
+
+  return (
+    <TradePanelContext.Provider
+      value={{
+        inputState,
+        setInputState,
+        validatedAsset,
+        setValidatedAsset,
+        localTokenContract,
+        setLocalTokenContract,
+        localAmount,
+        setLocalAmount,
+        containerType: CONTAINER_TYPE.BUY_SELECT_CONTAINER,
+        feedType: FEED_TYPE.TOKEN_LIST,
+        dumpContext,
+      }}
+    >
+      {children}
+    </TradePanelContext.Provider>
+  );
+};
