@@ -17,6 +17,7 @@ const debugLog = createDebugLogger('AssetSelectContainer', DEBUG_ENABLED, LOG_TI
 interface Props {
   title: string;
 }
+console.log('⚡ AssetSelectContainer re-rendered');
 
 export default function AssetSelectContainer({ title }: Props) {
   const { containerType } = useSharedPanelContext();

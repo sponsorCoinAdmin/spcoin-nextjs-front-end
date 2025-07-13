@@ -1,3 +1,5 @@
+// File: lib/hooks/inputValidations/useValidateFSMInput.ts
+
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
@@ -62,7 +64,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
   const [validationPending, setValidationPending] = useState(false);
 
-  // 🚀 NEW: Reset FSM to VALIDATE_ADDRESS on input change
+  // 🆕 Reset FSM to VALIDATE_ADDRESS on input change
   useEffect(() => {
     if (debouncedHexInput !== prevInputRef.current) {
       debugLog.log('🔄 [RESET] New input detected, resetting FSM to VALIDATE_ADDRESS');
@@ -74,8 +76,9 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   useEffect(() => {
     debugLog.log(`🔥 [ENTRY] useValidateFSMInput → selectAddress="${selectAddress}", debouncedHexInput="${debouncedHexInput}"`);
 
+    // 🛡️ HARD SKIP IF DEBOUNCE NOT READY
     if (!selectAddress || selectAddress.trim() === '') {
-      debugLog.log('⏭️ [SKIP] selectAddress is empty or undefined → CLEAR to EMPTY_INPUT');
+      debugLog.log('⏭️ [SKIP EMPTY] selectAddress is empty → set EMPTY_INPUT');
       if (inputStateRef.current !== InputState.EMPTY_INPUT) {
         setInputState(InputState.EMPTY_INPUT);
       }
@@ -83,7 +86,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     }
 
     if (debouncedHexInput !== selectAddress) {
-      debugLog.log(`⏭️ [SKIP] debouncedHexInput ("${debouncedHexInput}") hasn't caught up with selectAddress ("${selectAddress}")`);
+      debugLog.log(`⏭️ [HARD SKIP] debounce not caught up → skip FSM run until ready`);
       return;
     }
 

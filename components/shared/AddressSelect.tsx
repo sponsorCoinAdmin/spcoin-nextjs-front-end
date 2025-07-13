@@ -27,6 +27,7 @@ export default function AddressSelect() {
     validHexInput,
     handleHexInputChange,   // ✅ pulled from context, not state manager hook
   } = useSharedPanelContext();
+console.log('⚡ AddressSelect re-rendered');
 
   const MANUAL_ENTRY = true;
 
