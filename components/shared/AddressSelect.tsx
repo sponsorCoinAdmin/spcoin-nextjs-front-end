@@ -53,7 +53,7 @@ export default function AddressSelect() {
         statusEmoji=""
       />
 
-      <ErrorAssetPreview inputState={InputState.EMPTY_INPUT} />
+      <ErrorAssetPreview />
 
       <RenderAssetPreview
         validatedAsset={validatedAsset}
