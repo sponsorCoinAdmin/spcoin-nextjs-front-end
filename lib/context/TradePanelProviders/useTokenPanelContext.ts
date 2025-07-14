@@ -1,4 +1,4 @@
-// File: lib/context/TradePanelProviders/useTradePanelContext.ts
+// File: lib/context/TradePanelProviders/useTokenPanelContext.ts
 
 'use client';
 
@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 import { InputState, CONTAINER_TYPE, FEED_TYPE, TokenContract } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-export interface TradePanelContextType {
+export interface TokenPanelContextType {
   inputState: InputState;
   setInputState: (state: InputState) => void;
 
@@ -25,10 +25,10 @@ export interface TradePanelContextType {
   dumpContext: (headerInfo?: string) => void;
 }
 
-export const TradePanelContext = createContext<TradePanelContextType | undefined>(undefined);
+export const TokenPanelContext = createContext<TokenPanelContextType | undefined>(undefined);
 
-export const useTradePanelContext = (): TradePanelContextType => {
-  const ctx = useContext(TradePanelContext);
-  if (!ctx) throw new Error('❌ useTradePanelContext must be used within a TradePanelProvider');
+export const useTokenPanelContext = (): TokenPanelContextType => {
+  const ctx = useContext(TokenPanelContext);
+  if (!ctx) throw new Error('❌ useTokenPanelContext must be used within a TradePanelProvider');
   return ctx;
 };

@@ -34,7 +34,6 @@ import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import { useTokenPanelContext } from '@/lib/context/TradePanelProviders';
-import { useTradePanelContext } from '@/lib/context/TradePanelProviders';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -70,10 +69,10 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
 
-const tradePanelContext = useTradePanelContext();
+const tradePanelContext = useTokenPanelContext();
 
 useEffect(() => {
-  debugLog.log(`✅ [TokenSelectPanel] Connected to TradePanelContext`, tradePanelContext);
+  debugLog.log(`✅ [TokenSelectPanel] Connected to TokenPanelContext`, tradePanelContext);
 }, []);
 
   useEffect(() => {

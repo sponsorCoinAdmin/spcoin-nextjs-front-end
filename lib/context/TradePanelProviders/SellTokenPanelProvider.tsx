@@ -4,7 +4,7 @@
 
 import React, { useState, ReactNode } from 'react';
 import { CONTAINER_TYPE, FEED_TYPE, InputState, TokenContract } from '@/lib/structure';
-import { TradePanelContext } from './useTradePanelContext';
+import { TokenPanelContext } from './useTokenPanelContext';
 
 export const SellTokenPanelProvider = ({ children }: { children: ReactNode }) => {
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
@@ -26,7 +26,7 @@ export const SellTokenPanelProvider = ({ children }: { children: ReactNode }) =>
   };
 
   return (
-    <TradePanelContext.Provider
+    <TokenPanelContext.Provider
       value={{
         inputState,
         setInputState,
@@ -42,6 +42,6 @@ export const SellTokenPanelProvider = ({ children }: { children: ReactNode }) =>
       }}
     >
       {children}
-    </TradePanelContext.Provider>
+    </TokenPanelContext.Provider>
   );
 };

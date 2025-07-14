@@ -20,13 +20,11 @@ import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 import {
   SellTokenPanelProvider,
   BuyTokenPanelProvider,
-  TokenPanelProvider,
 } from '@/lib/context/TradePanelProviders';
 
-
+import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -54,19 +52,15 @@ export default function MainSwapView() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        {/* ✅ Add SharedPanelProvider around both to satisfy old hooks */}
+        {/* ✅ Wrap once with SharedPanelProvider, then both trade panel providers inside */}
         <SharedPanelProvider>
-          <TokenPanelProvider>
-            <SellTokenPanelProvider>
-              <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-            </SellTokenPanelProvider>
-          </TokenPanelProvider>
+          <SellTokenPanelProvider>
+            <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
+          </SellTokenPanelProvider>
 
-          <TokenPanelProvider>
-            <BuyTokenPanelProvider>
-              <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-            </BuyTokenPanelProvider>
-          </TokenPanelProvider>
+          <BuyTokenPanelProvider>
+            <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
+          </BuyTokenPanelProvider>
         </SharedPanelProvider>
 
         <BuySellSwapArrowButton />
