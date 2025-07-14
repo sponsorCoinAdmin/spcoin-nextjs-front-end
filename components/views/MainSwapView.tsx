@@ -17,11 +17,16 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 
-import { SellTokenPanelProvider, BuyTokenPanelProvider } from '@/lib/context/ScrollSelectPanels';
-import { TokenPanelProvider } from '@/lib/context/TradePanelProviders';
+import {
+  SellTokenPanelProvider,
+  BuyTokenPanelProvider,
+  TokenPanelProvider,
+} from '@/lib/context/TradePanelProviders';
+
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -49,17 +54,20 @@ export default function MainSwapView() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        <TokenPanelProvider>
-          <SellTokenPanelProvider>
-            <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-          </SellTokenPanelProvider>
-        </TokenPanelProvider>
+        {/* ✅ Add SharedPanelProvider around both to satisfy old hooks */}
+        <SharedPanelProvider>
+          <TokenPanelProvider>
+            <SellTokenPanelProvider>
+              <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
+            </SellTokenPanelProvider>
+          </TokenPanelProvider>
 
-        <TokenPanelProvider>
-          <BuyTokenPanelProvider>
-            <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-          </BuyTokenPanelProvider>
-        </TokenPanelProvider>
+          <TokenPanelProvider>
+            <BuyTokenPanelProvider>
+              <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
+            </BuyTokenPanelProvider>
+          </TokenPanelProvider>
+        </SharedPanelProvider>
 
         <BuySellSwapArrowButton />
         <PriceButton isLoadingPrice={isLoadingPrice} />

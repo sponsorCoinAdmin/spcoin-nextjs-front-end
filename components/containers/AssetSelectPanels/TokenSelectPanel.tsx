@@ -33,6 +33,8 @@ import { clsx } from 'clsx';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
+import { useTokenPanelContext } from '@/lib/context/TradePanelProviders';
+import { useTradePanelContext } from '@/lib/context/TradePanelProviders';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -50,6 +52,14 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const [buyTokenContract] = useBuyTokenContract();
   const [spCoinDisplay] = useSpCoinDisplay();
 
+  const {
+    localTokenContract,
+    setLocalTokenContract,
+    localAmount,
+    setLocalAmount,
+    dumpContext,
+  } = useTokenPanelContext();
+
   const tokenContract =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? sellTokenContract
@@ -59,10 +69,18 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const debouncedSellAmount = useDebounce(sellAmount, 600);
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
+
+const tradePanelContext = useTradePanelContext();
+
+useEffect(() => {
+  debugLog.log(`✅ [TokenSelectPanel] Connected to TradePanelContext`, tradePanelContext);
+}, []);
+
   useEffect(() => {
     if (!tokenContract) return;
     debugLog.log(`📦 tokenContract loaded for ${CONTAINER_TYPE[containerType]}:`, tokenContract);
-  }, [tokenContract]);
+    setLocalTokenContract(tokenContract); // mirror to local context
+  }, [tokenContract, setLocalTokenContract]);
 
   useEffect(() => {
     if (!tokenContract) return;
@@ -102,6 +120,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
     try {
       const bigIntValue = parseUnits(formatted, decimals);
       debugLog.log(`🔢 Parsed BigInt: ${bigIntValue}`);
+      setLocalAmount(bigIntValue); // mirror to local context
       if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         setSellAmount(bigIntValue);
@@ -138,10 +157,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const showNoRadius = () => {
     const isBuyTokenContainer = containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER;
     const isShowRecipient = spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER;
-    // const isShowRateConfig = spCoinDisplay === SP_COIN_DISPLAY;
-    // return isBuyTokenContainer && (isShowRecipient || isShowRateConfig);
-    // ToDo Fix
-    return true
+    return true;
   };
 
   return (
@@ -177,8 +193,6 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   );
 };
 
-
-// 🔽 Local Hook to simplify balance formatting
 function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
   const decimals = tokenContract?.decimals ?? 18;
 
@@ -192,7 +206,7 @@ function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
     debugLog.log(`💰 formatted display amount for ${tokenContract.symbol}: ${formatted}`);
     return formatted;
   } catch {
-    debugLog.warn('⚠️ Failed to format amount with decimals:', decimals);
+    debugLog.warn(`⚠️ Failed to format amount with decimals:`, decimals);
     return '0.0';
   }
 }
