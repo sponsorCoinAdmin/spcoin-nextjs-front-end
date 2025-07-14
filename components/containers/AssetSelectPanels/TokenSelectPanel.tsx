@@ -46,7 +46,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [tradeDirection, setTradeDirection] = useTradeDirection();
-  const { data: slippage } = useSlippage();
+  const {data: slippage } = useSlippage();
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
   const [spCoinDisplay] = useSpCoinDisplay();
@@ -62,7 +62,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
         localTokenContract: tokenPanelContext.localTokenContract,
         localAmount: tokenPanelContext.localAmount,
       });
-      tokenPanelContext.dumpContext('TEST DUMP');
+      tokenPanelContext.dumpTokenContext('TEST DUMP');
     }, []);
 
     // ... rest of component ...
@@ -73,7 +73,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
     setLocalTokenContract,
     localAmount,
     setLocalAmount,
-    dumpContext,
+    dumpTokenContext,
   } = useTokenPanelContext();
 
   const tokenContract =

@@ -31,7 +31,7 @@ export interface FeedContextType {
 export type SharedPanelContextType = FSMContextType &
   FeedContextType & {
     /** Combined debug dump of both FSM and InputFeed contexts */
-    dumpPanelContext: (headerInfo?: string) => void; // 🔧 updated here
+    dumpSharedPanelContext: (headerInfo?: string) => void; // 🔧 updated here
 
     /** Optional manager actions */
     forceReset?: () => void;

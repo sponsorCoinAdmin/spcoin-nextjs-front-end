@@ -37,7 +37,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     validatedAsset,
     setValidatedAsset,
     feedType,
-    dumpPanelContext,
+    dumpSharedPanelContext,
   } = useSharedPanelContext();
 
   const inputStateRef = useRef(inputState);
@@ -95,7 +95,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
       return;
     }
 
-    dumpPanelContext?.(`[BEFORE FSM] debouncedHexInput="${debouncedHexInput}" state=${InputState[inputStateRef.current]}`);
+    dumpSharedPanelContext?.(`[BEFORE FSM] debouncedHexInput="${debouncedHexInput}" state=${InputState[inputStateRef.current]}`);
 
     const runFSM = async () => {
       setValidationPending(true);
@@ -118,7 +118,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         });
 
         debugLog.log(`✅ [FSM RESULT] nextState=${InputState[result.nextState]}`);
-        dumpPanelContext?.(`[AFTER FSM CORE] nextState=${InputState[result.nextState]}`);
+        dumpSharedPanelContext?.(`[AFTER FSM CORE] nextState=${InputState[result.nextState]}`);
 
         if (result.nextState !== inputStateRef.current) {
           setInputState(result.nextState);
@@ -138,7 +138,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
         console.error('❌ [FSM ERROR]', err);
       } finally {
         setValidationPending(false);
-        dumpPanelContext?.(`[AFTER FSM UPDATE]`);
+        dumpSharedPanelContext?.(`[AFTER FSM UPDATE]`);
       }
     };
 
@@ -159,7 +159,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     setValidatedAsset,
     setSellTokenContract,
     setBuyTokenContract,
-    dumpPanelContext,
+    dumpSharedPanelContext,
     validationPending,
   ]);
 

@@ -101,16 +101,16 @@ console.log(validHexInput)
     }
   };
 
-  const dumpPanelContext = (headerInfo?: string) => {
+  const dumpSharedPanelContext = (headerInfo?: string) => {
     try {
-      debugLog.log(`🛠 dumpPanelContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
+      debugLog.log(`🛠 dumpSharedPanelContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
       console.group(`[Panel Context Dump] (${label})`);
       if (headerInfo) console.log(`📝 ${headerInfo}`);
       dumpFSMContext();
       dumpInputFeedContext();
       console.groupEnd();
     } catch (err) {
-      console.warn('⚠️ dumpPanelContext failed:', err);
+      console.warn('⚠️ dumpSharedPanelContext failed:', err);
     }
   };
 
@@ -132,7 +132,7 @@ console.log(validHexInput)
       handleHexInputChange,
       resetHexInput,
       dumpInputFeedContext,
-      dumpPanelContext,
+      dumpSharedPanelContext,
       forceReset,
       forceClose,
     }),

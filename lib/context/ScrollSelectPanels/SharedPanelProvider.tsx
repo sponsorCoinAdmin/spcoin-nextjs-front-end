@@ -25,7 +25,7 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
     isValidHexString: () => false,
     dumpFSMContext: () => {},
     dumpInputFeedContext: () => {},
-    dumpPanelContext: () => {},
+    dumpSharedPanelContext: () => {},
     containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER, // ✅ enum, not string
     feedType: FEED_TYPE.TOKEN_LIST,                     // ✅ enum, not string
     forceReset: () => {},
