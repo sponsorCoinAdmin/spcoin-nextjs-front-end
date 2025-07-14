@@ -20,7 +20,7 @@ import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 import {
   SellTokenPanelProvider,
   BuyTokenPanelProvider,
-} from '@/lib/context/TradePanelProviders';
+} from '@/lib/context/TokenPanelProviders';
 
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 import { useExchangeContext } from '@/lib/context/hooks';

@@ -33,7 +33,7 @@ import { clsx } from 'clsx';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
-import { useTokenPanelContext } from '@/lib/context/TradePanelProviders';
+import { useTokenPanelContext } from '@/lib/context/TokenPanelProviders';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -50,6 +50,23 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
   const [spCoinDisplay] = useSpCoinDisplay();
+
+  const DEBUG_ENABLED = true;
+  const debugLog = createDebugLogger('TokenSelectPanelTest', DEBUG_ENABLED, false);
+
+  const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
+    const tokenPanelContext = useTokenPanelContext();
+
+    useEffect(() => {
+      debugLog.log('✅ [TEST] useTokenPanelContext is working →', {
+        localTokenContract: tokenPanelContext.localTokenContract,
+        localAmount: tokenPanelContext.localAmount,
+      });
+      tokenPanelContext.dumpContext('TEST DUMP');
+    }, []);
+
+    // ... rest of component ...
+  };
 
   const {
     localTokenContract,
@@ -69,11 +86,11 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
 
-const tradePanelContext = useTokenPanelContext();
+  const tradePanelContext = useTokenPanelContext();
 
-useEffect(() => {
-  debugLog.log(`✅ [TokenSelectPanel] Connected to TokenPanelContext`, tradePanelContext);
-}, []);
+  useEffect(() => {
+    debugLog.log(`✅ [TokenSelectPanel] Connected to TokenPanelContext`, tradePanelContext);
+  }, []);
 
   useEffect(() => {
     if (!tokenContract) return;
