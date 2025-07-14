@@ -3,5 +3,5 @@
 export { SellTokenPanelProvider } from './SellTokenPanelProvider';
 export { BuyTokenPanelProvider } from './BuyTokenPanelProvider';
 export { useTradePanelContext } from './useTradePanelContext';
-export { SharedPanelProvider } from './SharedPanelProvider';
-export { useSharedPanelContext } from './SharedPanelProvider';
+export { TokenPanelProvider } from './TokenPanelProvider';
+export { useTokenPanelContext } from './TokenPanelProvider';

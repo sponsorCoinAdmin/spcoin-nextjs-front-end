@@ -18,7 +18,7 @@ import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 
 import { SellTokenPanelProvider, BuyTokenPanelProvider } from '@/lib/context/ScrollSelectPanels';
-import { SharedPanelProvider } from '@/lib/context/TradePanelProviders';
+import { TokenPanelProvider } from '@/lib/context/TradePanelProviders';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -49,17 +49,17 @@ export default function MainSwapView() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        <SharedPanelProvider>
+        <TokenPanelProvider>
           <SellTokenPanelProvider>
             <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
           </SellTokenPanelProvider>
-        </SharedPanelProvider>
+        </TokenPanelProvider>
 
-        <SharedPanelProvider>
+        <TokenPanelProvider>
           <BuyTokenPanelProvider>
             <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
           </BuyTokenPanelProvider>
-        </SharedPanelProvider>
+        </TokenPanelProvider>
 
         <BuySellSwapArrowButton />
         <PriceButton isLoadingPrice={isLoadingPrice} />

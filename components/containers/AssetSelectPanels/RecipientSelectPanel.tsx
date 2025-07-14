@@ -41,7 +41,7 @@ const RecipientSelectPanel: React.FC = () => {
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const closeRecipientSelectDropDown = useCallback(() => {
-    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER);
+    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER);
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
 
@@ -67,7 +67,7 @@ const RecipientSelectPanel: React.FC = () => {
   }, [recipientAccount?.website]);
 
   const toggleSponsorRateConfig = () => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG) {
+    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER) {
       setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
     } else {
       setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG);
