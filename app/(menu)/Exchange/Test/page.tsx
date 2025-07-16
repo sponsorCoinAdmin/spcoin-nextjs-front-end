@@ -1,3 +1,5 @@
+// File: app/(menu)/Exchange/Test/page.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -27,6 +29,20 @@ import {
   ExchangeContext,
 } from '@/lib/structure';
 
+// ✅ Helper to map enums to string labels
+function createEnumStringMap<T extends Record<string | number, string | number>>(
+  enumObj: T,
+  enumName: string
+): Record<number, string> {
+  const map: Record<number, string> = {};
+  for (const [key, value] of Object.entries(enumObj)) {
+    if (typeof value === 'number') {
+      map[value] = `${enumName}.${key}`;
+    }
+  }
+  return map;
+}
+
 function useDidHydrate(): boolean {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
@@ -34,25 +50,9 @@ function useDidHydrate(): boolean {
 }
 
 function normalizeContextDisplay(ctx: ExchangeContext): any {
-  const spCoinDisplayMap: Record<SP_COIN_DISPLAY, string> = {
-    [SP_COIN_DISPLAY.DISPLAY_OFF]: 'SP_COIN_DISPLAY.DISPLAY_OFF',
-    [SP_COIN_DISPLAY.DISPLAY_ON]: 'SP_COIN_DISPLAY.DISPLAY_ON',
-    [SP_COIN_DISPLAY.TRADING_STATION_PANEL]: 'SP_COIN_DISPLAY.TRADING_STATION_PANEL',
-    [SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON]: 'SP_COIN_DISPLAY.SHOW_MANAGE_SPONSORS_BUTTON',
-    [SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER',
-    [SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER]: 'SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER',
-    [SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE]: 'SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE',
-  };
-
-  const tradeDirectionMap = {
-    [TRADE_DIRECTION.SELL_EXACT_OUT]: 'TRADE_DIRECTION.SELL_EXACT_OUT',
-    [TRADE_DIRECTION.BUY_EXACT_IN]: 'TRADE_DIRECTION.BUY_EXACT_IN',
-  };
-
-  const apiProviderMap = {
-    [API_TRADING_PROVIDER.API_0X]: 'API_TRADING_PROVIDER.API_0X',
-    [API_TRADING_PROVIDER.API_1INCH]: 'API_TRADING_PROVIDER.API_1INCH',
-  };
+  const spCoinDisplayMap = createEnumStringMap(SP_COIN_DISPLAY, 'SP_COIN_DISPLAY');
+  const tradeDirectionMap = createEnumStringMap(TRADE_DIRECTION, 'TRADE_DIRECTION');
+  const apiProviderMap = createEnumStringMap(API_TRADING_PROVIDER, 'API_TRADING_PROVIDER');
 
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
@@ -60,13 +60,10 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   const sp = settings.spCoinDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
   const asset = settings.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
   const err = settings.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
+  const active = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
 
   let spFixed = sp;
-  if (
-    asset === SP_COIN_DISPLAY.DISPLAY_OFF &&
-    err === SP_COIN_DISPLAY.DISPLAY_OFF &&
-    sp === SP_COIN_DISPLAY.DISPLAY_OFF
-  ) {
+  if (asset === SP_COIN_DISPLAY.DISPLAY_OFF && err === SP_COIN_DISPLAY.DISPLAY_OFF && sp === SP_COIN_DISPLAY.DISPLAY_OFF) {
     spFixed = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
   }
 
@@ -74,9 +71,10 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
     ...ctx,
     settings: {
       ...settings,
-      spCoinDisplay: spCoinDisplayMap[spFixed as SP_COIN_DISPLAY],
-      assetSelectScrollDisplay: spCoinDisplayMap[asset as SP_COIN_DISPLAY],
-      errorDisplay: spCoinDisplayMap[err as SP_COIN_DISPLAY],
+      spCoinDisplay: spCoinDisplayMap[spFixed],
+      assetSelectScrollDisplay: spCoinDisplayMap[asset],
+      errorDisplay: spCoinDisplayMap[err],
+      activeDisplay: spCoinDisplayMap[active],
       apiTradingProvider: apiProviderMap[settings.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X],
     },
     tradeData: {
@@ -107,7 +105,7 @@ export default function TestPage() {
   }, [state]);
 
   const updateExchangePage = (updates: Partial<typeof page>) => {
-    setState(prev => {
+    setState((prev) => {
       const newState = {
         ...prev,
         page: {
