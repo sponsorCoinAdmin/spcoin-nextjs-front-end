@@ -51,13 +51,13 @@ export const useBuyTokenContract = (): [
 
   const setToken = (contract: TokenContract | undefined) => {
     const oldContract = exchangeContext?.tradeData?.buyTokenContract;
-    const oldDisplay = exchangeContext?.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.EXCHANGE_ROOT;
+    const oldDisplay = exchangeContext?.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
     const isSame = tokenContractsEqual(oldContract, contract);
     const isSp = contract && isSpCoin(contract);
     const newDisplay = isSp
       ? SP_COIN_DISPLAY.SHOW_ACTIVE_RECIPIENT_CONTAINER
-      : SP_COIN_DISPLAY.EXCHANGE_ROOT;
+      : SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
     if (isSame && oldDisplay === newDisplay) return;
 

@@ -19,7 +19,7 @@ export default function RecipientSelectScrollPanel() {
 
   useEffect(() => {
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-      updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+      updateAssetScrollDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     }
   }, [inputState, updateAssetScrollDisplay]);
 

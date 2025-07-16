@@ -13,7 +13,7 @@ const debugLog = createDebugLogger('resolveDisplay', DEBUG_ENABLED, LOG_TIME);
  * - Normalizes undefined values to DISPLAY_OFF.
  * - Only one display panel should be active (≠ DISPLAY_OFF).
  * - Priority: errorDisplay > assetSelectScrollDisplay > spCoinDisplay
- * - If all are DISPLAY_OFF → default spCoinDisplay = EXCHANGE_ROOT
+ * - If all are DISPLAY_OFF → default spCoinDisplay = TRADING_STATION_PANEL
  */
 export function resolveDisplaySettings(settings: DisplaySettings): DisplaySettings {
   const normalized: DisplaySettings = {
@@ -30,11 +30,11 @@ export function resolveDisplaySettings(settings: DisplaySettings): DisplaySettin
     normalized.spCoinDisplay === SP_COIN_DISPLAY.DISPLAY_OFF;
 
   if (allOff) {
-    debugLog.warn('⚠️ All panels are DISPLAY_OFF → Defaulting spCoinDisplay = EXCHANGE_ROOT');
+    debugLog.warn('⚠️ All panels are DISPLAY_OFF → Defaulting spCoinDisplay = TRADING_STATION_PANEL');
     return {
       errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
       assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-      spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
+      spCoinDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     };
   }
 

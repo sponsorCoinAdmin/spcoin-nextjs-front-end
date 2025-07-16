@@ -39,7 +39,7 @@ export default function PriceView() {
           },
           comparisons: {
             isError: errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE,
-            isSwap: spCoinDisplay === SP_COIN_DISPLAY.EXCHANGE_ROOT,
+            isSwap: spCoinDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL,
           },
         });
 

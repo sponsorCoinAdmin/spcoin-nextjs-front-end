@@ -33,8 +33,8 @@ export default function TokenSelectScrollPanel() {
     debugLog.log(`🌀 inputState changed → ${stateStr}`);
 
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered, calling updateAssetScrollDisplay → EXCHANGE_ROOT`);
-      updateAssetScrollDisplay(SP_COIN_DISPLAY.EXCHANGE_ROOT);
+      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered, calling updateAssetScrollDisplay → TRADING_STATION_PANEL`);
+      updateAssetScrollDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
       // ✅ Prevent infinite loop by resetting inputState
       setInputState(InputState.EMPTY_INPUT);
