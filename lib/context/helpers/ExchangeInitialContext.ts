@@ -1,3 +1,5 @@
+// File: lib/context/helpers/ExchangeInitialContext.ts
+
 import {
   API_TRADING_PROVIDER,
   SP_COIN_DISPLAY,
@@ -20,6 +22,9 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
       spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
+      assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
+      errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
+      activeDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT, // ✅ added here (non-functional)
     },
     accounts: {
       connectedAccount: undefined,
@@ -49,4 +54,4 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
 function getInitialContextMap(chain: number) {
   const initialNetworkContext = getDefaultNetworkSettings(chain);
   return new Map(Object.entries(initialNetworkContext));
-} 
+}

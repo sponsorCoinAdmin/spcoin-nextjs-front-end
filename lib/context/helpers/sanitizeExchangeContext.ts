@@ -1,3 +1,5 @@
+// File: lib/context/ExchangeSanitizeHelpers.ts
+
 import { ExchangeContext, TradeData } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -22,6 +24,7 @@ export const sanitizeExchangeContext = (
       spCoinDisplay: raw.settings?.spCoinDisplay ?? defaultContext.settings.spCoinDisplay,
       assetSelectScrollDisplay: raw.settings?.assetSelectScrollDisplay ?? defaultContext.settings.assetSelectScrollDisplay,
       errorDisplay: raw.settings?.errorDisplay ?? defaultContext.settings.errorDisplay,
+      activeDisplay: raw.settings?.activeDisplay ?? defaultContext.settings.activeDisplay, // ✅ added here
     },
     network: {
       ...defaultContext.network,

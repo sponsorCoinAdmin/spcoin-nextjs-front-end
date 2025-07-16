@@ -22,6 +22,11 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
     const safeContext: ExchangeContext = {
       ...contextData,
 
+      settings: {
+        ...contextData.settings,
+        activeDisplay: contextData.settings.activeDisplay ?? contextData.settings.spCoinDisplay, // ✅ added (non-functional)
+      },
+
       tradeData: {
         ...contextData.tradeData,
         sellTokenContract: contextData.tradeData.sellTokenContract
