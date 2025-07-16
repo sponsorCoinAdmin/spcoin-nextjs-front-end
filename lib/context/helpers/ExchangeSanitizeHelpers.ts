@@ -25,7 +25,7 @@ export const sanitizeExchangeContext = (
       spCoinDisplay: raw.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL,
       assetSelectScrollDisplay: raw.settings?.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
       errorDisplay: raw.settings?.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
-      activeDisplay: raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF
+      activeDisplay: raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL,  // ✅ use TRADING_STATION_PANEL fallback
     },
     network: {
       ...defaultContext.network,

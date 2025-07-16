@@ -3,7 +3,7 @@
 import { ExchangeContext, TradeData } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import { serializeWithBigInt, deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
+import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 
 import { getInitialContext } from './ExchangeInitialContext';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';

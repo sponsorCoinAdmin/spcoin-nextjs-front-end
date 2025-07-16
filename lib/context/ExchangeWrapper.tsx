@@ -5,8 +5,6 @@
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useChainId, useAccount } from 'wagmi';
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
-import { loadLocalExchangeContext } from '@/lib/context/helpers/ExchangeLoadHelpers';
-import { sanitizeExchangeContext } from '@/lib/context/helpers/ExchangeSanitizeHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 
 import {
