@@ -21,11 +21,10 @@ export const sanitizeExchangeContext = (
 
   return {
     settings: {
-      apiTradingProvider: raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
-      spCoinDisplay: raw.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-      assetSelectScrollDisplay: raw.settings?.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
-      errorDisplay: raw.settings?.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
-      activeDisplay: raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL,  // ✅ use TRADING_STATION_PANEL fallback
+      apiTradingProvider:
+        raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
+      activeDisplay:
+        raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ only activeDisplay
     },
     network: {
       ...defaultContext.network,
@@ -85,11 +84,9 @@ export const sanitizeExchangeContext = (
         raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
       slippage: {
         bps:
-          raw.tradeData?.slippage?.bps ??
-          defaultContext.tradeData.slippage.bps,
+          raw.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
         percentage:
-          raw.tradeData?.slippage?.percentage ??
-          defaultContext.tradeData.slippage.percentage,
+          raw.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
         percentageString:
           raw.tradeData?.slippage?.percentageString ??
           defaultContext.tradeData.slippage.percentageString,

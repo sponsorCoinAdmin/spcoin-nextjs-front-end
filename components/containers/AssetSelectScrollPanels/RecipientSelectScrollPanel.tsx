@@ -11,17 +11,18 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectScrollPanel from './AssetSelectScrollPanel';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';import { useDisplayControls } from '@/lib/context/hooks';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useDisplayControls } from '@/lib/context/hooks';
 
 export default function RecipientSelectScrollPanel() {
   const { inputState, setInputState, containerType } = useSharedPanelContext();
-  const { updateAssetScrollDisplay } = useDisplayControls();
+  const { updateActiveDisplay } = useDisplayControls(); // ✅ switched to updateActiveDisplay
 
   useEffect(() => {
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-      updateAssetScrollDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+      updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ fallback when closing
     }
-  }, [inputState, updateAssetScrollDisplay]);
+  }, [inputState, updateActiveDisplay]);
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
@@ -33,8 +34,6 @@ export default function RecipientSelectScrollPanel() {
   );
 
   return (
-    <AssetSelectScrollPanel
-      title="Select a Recipient"
-    />
+    <AssetSelectScrollPanel title="Select a Recipient" />
   );
 }

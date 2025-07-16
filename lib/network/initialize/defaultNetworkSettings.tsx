@@ -1,3 +1,5 @@
+// File: lib/context/ExchangeInitialContext.ts
+
 'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
@@ -63,12 +65,10 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      spCoinDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-      assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-      errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
+      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ ONLY activeDisplay kept
     },
     errorMessage: undefined,
-    apiErrorMessage: undefined
+    apiErrorMessage: undefined,
   };
 
   logger.log('✅ [getInitialContext] InitialContext constructed:', exchangeContext);

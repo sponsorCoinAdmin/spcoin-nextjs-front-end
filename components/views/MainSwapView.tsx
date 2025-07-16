@@ -3,10 +3,7 @@
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import {
-  CONTAINER_TYPE,
-  SP_COIN_DISPLAY,
-} from '@/lib/structure';
+import { CONTAINER_TYPE } from '@/lib/structure';
 
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
@@ -25,6 +22,7 @@ import {
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -32,18 +30,10 @@ const debugLog = createDebugLogger('MainSwapView', DEBUG_ENABLED, LOG_TIME);
 
 export default function MainSwapView() {
   const { exchangeContext } = useExchangeContext();
-  const { assetSelectScrollDisplay } = exchangeContext.settings;
+  const { activeDisplay } = exchangeContext.settings;
 
   debugLog.log(`🔍 MainSwapView render triggered`);
-  debugLog.log(`🧩 Current assetSelectScrollDisplay = ${assetSelectScrollDisplay}`);
-  debugLog.log(`🏂 Enum Comparisons:`, {
-    SHOW_TOKEN_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER,
-    SHOW_RECIPIENT_SCROLL_CONTAINER: SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER,
-    DISPLAY_OFF: SP_COIN_DISPLAY.DISPLAY_OFF,
-    isTokenPanel: assetSelectScrollDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER,
-    isRecipientPanel: assetSelectScrollDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER,
-    isOff: assetSelectScrollDisplay === SP_COIN_DISPLAY.DISPLAY_OFF,
-  });
+  debugLog.log(`🧩 Current activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
 
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
 
@@ -52,7 +42,6 @@ export default function MainSwapView() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        {/* ✅ Wrap once with SharedPanelProvider, then both trade panel providers inside */}
         <SharedPanelProvider>
           <SellTokenPanelProvider>
             <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />

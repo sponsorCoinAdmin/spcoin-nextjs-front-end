@@ -25,13 +25,14 @@ export default function AddressSelect() {
     validatedAsset,
     feedType,
     validHexInput,
-    handleHexInputChange,   // ✅ pulled from context, not state manager hook
+    handleHexInputChange,
   } = useSharedPanelContext();
-console.log('⚡ AddressSelect re-rendered');
+
+  console.log('⚡ AddressSelect re-rendered');
 
   const MANUAL_ENTRY = true;
 
-  const { updateAssetScrollDisplay } = useDisplayControls();
+  const { updateActiveDisplay } = useDisplayControls(); // ✅ switched here
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
@@ -42,7 +43,7 @@ console.log('⚡ AddressSelect re-rendered');
     debugLog.log(`📜 onDataListSelect():`, item);
     handleHexInputChange(item.address, !MANUAL_ENTRY);
     alert(`onDataListSelect(${item.address})`);
-    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
+    updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ fallback to main view
   };
 
   return (

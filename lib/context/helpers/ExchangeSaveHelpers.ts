@@ -24,7 +24,7 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
 
       settings: {
         ...contextData.settings,
-        activeDisplay: contextData.settings.activeDisplay ?? contextData.settings.spCoinDisplay, // ✅ added (non-functional)
+        activeDisplay: contextData.settings.activeDisplay, // ✅ only activeDisplay kept
       },
 
       tradeData: {

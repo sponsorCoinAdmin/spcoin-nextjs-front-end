@@ -30,7 +30,7 @@ import {
 } from '@/lib/structure';
 
 // ✅ Helper to map enums to string labels
-function createEnumStringMap<T extends Record<string | number, string | number>>(
+function createEnumStringMap<T extends Record<string, string | number>>(
   enumObj: T,
   enumName: string
 ): Record<number, string> {
@@ -57,23 +57,12 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
 
-  const sp = settings.spCoinDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
-  const asset = settings.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
-  const err = settings.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
   const active = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
-
-  let spFixed = sp;
-  if (asset === SP_COIN_DISPLAY.DISPLAY_OFF && err === SP_COIN_DISPLAY.DISPLAY_OFF && sp === SP_COIN_DISPLAY.DISPLAY_OFF) {
-    spFixed = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-  }
 
   return {
     ...ctx,
     settings: {
       ...settings,
-      spCoinDisplay: spCoinDisplayMap[spFixed],
-      assetSelectScrollDisplay: spCoinDisplayMap[asset],
-      errorDisplay: spCoinDisplayMap[err],
       activeDisplay: spCoinDisplayMap[active],
       apiTradingProvider: apiProviderMap[settings.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X],
     },

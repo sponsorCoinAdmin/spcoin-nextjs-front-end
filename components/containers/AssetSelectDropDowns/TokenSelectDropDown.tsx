@@ -11,7 +11,7 @@ import {
   getInputStateString,
   InputState,
   TokenContract,
-  SP_COIN_DISPLAY,
+  SP_COIN_DISPLAY, // ✅ make sure this is imported
 } from '@/lib/structure';
 
 import {
@@ -78,10 +78,9 @@ function InnerDropDown({
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
-  const { updateAssetScrollDisplay } = useDisplayControls();
+  const { updateActiveDisplay } = useDisplayControls();
   const { inputState, setInputState, validHexInput } = useSharedPanelContext();
 
-  // ✅ Only pass to FSM if trimmed input is non-empty
   const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
 
   useValidateFSMInput(safeInput);
@@ -89,8 +88,8 @@ function InnerDropDown({
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
     setInputState(InputState.EMPTY_INPUT);
-    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
-  }, [setInputState, updateAssetScrollDisplay]);
+    updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ FIXED: pass valid SP_COIN_DISPLAY value
+  }, [setInputState, updateActiveDisplay]);
 
   useEffect(() => {
     debugLog.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);

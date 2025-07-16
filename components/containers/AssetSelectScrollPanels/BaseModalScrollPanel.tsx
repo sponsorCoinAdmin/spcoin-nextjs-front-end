@@ -1,3 +1,5 @@
+// File: components/containers/AssetSelectScrollPanels/BaseModalScrollPanel.tsx
+
 'use client';
 
 import React, { useCallback } from 'react';
@@ -19,13 +21,13 @@ export default function BaseModalScrollPanel({
   feedType?: FEED_TYPE;
   containerType?: CONTAINER_TYPE;
 }) {
-  const { updateAssetScrollDisplay } = useDisplayControls();
+  const { updateActiveDisplay } = useDisplayControls(); // ✅ use only updateActiveDisplay
   const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
     setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
-    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
-  }, [setInputState, updateAssetScrollDisplay]);
+    updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ fallback when closing
+  }, [setInputState, updateActiveDisplay]);
 
   return (
     <div
