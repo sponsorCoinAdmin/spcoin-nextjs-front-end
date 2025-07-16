@@ -70,7 +70,7 @@ const RecipientSelectPanel: React.FC = () => {
     if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER) {
       setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
     } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG);
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER);
     }
   };
 

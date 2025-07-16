@@ -19,12 +19,12 @@ const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
   const { exchangeContext } = useExchangeContext();
 
   const toggleSponsorRateConfig = () => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG) {
-      alert("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG");
+    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER) {
+      alert("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER");
       setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
     } else {
       alert("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG");
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG);
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER);
     }
   };
 

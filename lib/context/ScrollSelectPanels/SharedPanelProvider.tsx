@@ -1,39 +1,22 @@
-// File: lib/context/ScrollSelectPanels/SharedPanelProvider.tsx
-
 'use client';
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { SharedPanelContext } from './useSharedPanelContext';
-import { CONTAINER_TYPE, FEED_TYPE, InputState } from '@/lib/structure';
+import { CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
+import { usePanelContextBase } from './usePanelContextBase';
+import { SharedPanelManager } from './SharedPanelManager';
 
 export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-  const [validatedAsset, setValidatedAsset] = useState<any>(undefined);
-
-  const contextValue = {
-    inputState,
-    setInputState,
-    validatedAsset,
-    setValidatedAsset,
-    validHexInput: '',
-    debouncedHexInput: '',
-    failedHexInput: '',
-    isValid: false,
-    handleHexInputChange: () => false,
-    resetHexInput: () => {},
-    failedHexCount: 0,
-    isValidHexString: () => false,
-    dumpFSMContext: () => {},
-    dumpInputFeedContext: () => {},
-    dumpSharedPanelContext: () => {},
-    containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER, // ✅ enum, not string
-    feedType: FEED_TYPE.TOKEN_LIST,                     // ✅ enum, not string
-    forceReset: () => {},
-    forceClose: () => {},
-  };
+  const contextValue = usePanelContextBase(
+    FEED_TYPE.TOKEN_LIST,
+    CONTAINER_TYPE.SELL_SELECT_CONTAINER,
+    'SharedPanelProvider',
+    process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true'
+  );
 
   return (
     <SharedPanelContext.Provider value={contextValue}>
+      <SharedPanelManager />
       {children}
     </SharedPanelContext.Provider>
   );

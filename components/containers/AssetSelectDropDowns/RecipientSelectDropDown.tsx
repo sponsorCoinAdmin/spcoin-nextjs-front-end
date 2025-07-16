@@ -1,16 +1,13 @@
-// File: components/containers/RecipientSelectDropDown.tsx
-
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { WalletAccount, InputState, getInputStateString } from '@/lib/structure';
+import React, { useCallback, useRef } from 'react';
+import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { RecipientSelectScrollPanel } from '../AssetSelectScrollPanels';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
+import { useDisplayControls } from '@/lib/context/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -23,21 +20,8 @@ interface Props {
 }
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAccount }) => {
-  const [showDialog, setShowDialog] = useState(false);
   const hasErroredRef = useRef(false);
-
-  const {
-    inputState,
-    setInputState,
-    validHexInput,
-  } = useSharedPanelContext();
-
-  // ✅ Only pass to FSM if trimmed input is non-empty
-  const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
-
-  useValidateFSMInput(safeInput);
-
-  const openDialog = useCallback(() => setShowDialog(true), []);
+  const { updateAssetScrollDisplay } = useDisplayControls();
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
@@ -56,30 +40,14 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount, callBackAc
     [recipientAccount]
   );
 
-  const processSelect = useCallback(
-    (wallet: WalletAccount, state: InputState) => {
-      const stateLabel = getInputStateString(state);
-      debugLog.log(
-        `🎯 [RecipientSelectScrollPanel -> DropDown] onSelect fired: state = ${state} → ${stateLabel}`,
-        { wallet, state }
-      );
-      if (state === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-        debugLog.log('✅ [RecipientSelectDropDown] Selected wallet and closing dialog');
-        callBackAccount(wallet);
-        hasErroredRef.current = false;
-        setShowDialog(false);
-      }
-    },
-    [callBackAccount]
-  );
-
-  useEffect(() => {
-    debugLog.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
-  }, [inputState]);
+  const openDialog = useCallback(() => {
+    debugLog.log('📂 Opening Recipient scroll panel');
+    updateAssetScrollDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER);
+  }, [updateAssetScrollDisplay]);
 
   return (
     <>
-      {showDialog && <RecipientSelectScrollPanel />}
+      <RecipientSelectScrollPanel />
 
       <div className="flex items-center cursor-pointer" onClick={openDialog}>
         {recipientAccount ? (

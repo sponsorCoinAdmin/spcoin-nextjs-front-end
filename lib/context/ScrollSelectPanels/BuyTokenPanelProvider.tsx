@@ -1,17 +1,17 @@
-// File: lib/context/ScrollSelectPanels/BuyTokenPanelProvider.tsx
+// File: lib/context/ScrollSelectPanels/BuyTradePanelProvider.tsx
 // Author: Robin
 // Date: 2023-07-07
-// Description: Provider for the BuyTokenPanelContext
+// Description: Provider for the BuyTradePanelContext
 
 import { CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
 import { SharedPanelContext } from './useSharedPanelContext';
 import { usePanelContextBase } from './usePanelContextBase';
 
-export function BuyTokenPanelProvider({ children }: { children: React.ReactNode }) {
+export function BuyTradePanelProvider({ children }: { children: React.ReactNode }) {
     const value = usePanelContextBase(
         FEED_TYPE.TOKEN_LIST,
         CONTAINER_TYPE.BUY_SELECT_CONTAINER,
-        'BuyTokenPanelProvider',
+        'BuyTradePanelProvider',
         process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true'
     );
 

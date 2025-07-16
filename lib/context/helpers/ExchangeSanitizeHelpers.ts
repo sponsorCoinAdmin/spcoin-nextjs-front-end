@@ -24,11 +24,13 @@ export const sanitizeExchangeContext = (
       apiTradingProvider:
         raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       spCoinDisplay:
-        raw.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.EXCHANGE_ROOT,
+        raw.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL,
       assetSelectScrollDisplay:
         raw.settings?.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
       errorDisplay:
         raw.settings?.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
+      activeDisplay:
+        raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ NEW
     },
     network: {
       ...defaultContext.network,

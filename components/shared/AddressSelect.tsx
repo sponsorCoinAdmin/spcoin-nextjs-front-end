@@ -27,7 +27,7 @@ export default function AddressSelect() {
     validHexInput,
     handleHexInputChange,   // ✅ pulled from context, not state manager hook
   } = useSharedPanelContext();
-console.log('⚡ AddressSelect re-rendered');
+  console.log('⚡ AddressSelect re-rendered');
 
   const MANUAL_ENTRY = true;
 
@@ -35,7 +35,7 @@ console.log('⚡ AddressSelect re-rendered');
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
-    handleHexInputChange(item.address, true);
+    handleHexInputChange(item.address, MANUAL_ENTRY);
   };
 
   const onDataListSelect = (item: ValidatedAsset) => {

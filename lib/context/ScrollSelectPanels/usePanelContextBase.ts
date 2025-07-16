@@ -8,7 +8,6 @@ import { InputState, getInputStateString, FEED_TYPE, CONTAINER_TYPE } from '@/li
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './useSharedPanelContext';
-import { useInputStateManager } from '@/lib/hooks/inputValidations';
 
 const LOG_TIME = false;
 
@@ -22,6 +21,18 @@ export function usePanelContextBase(
 
   const [validatedAsset, setValidatedAssetRaw] = useState<ValidatedAsset | undefined>();
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
+  const [manualEntry, setManualEntry] = useState<boolean>(true);
+
+  const {
+    validHexInput,
+    debouncedHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValid,
+    isValidHexString,
+    handleHexInputChange,
+    resetHexInput,
+  } = useHexInput();
 
   const setInputState = (next: InputState) => {
     if (next === inputState) {
@@ -37,81 +48,35 @@ export function usePanelContextBase(
       debugLog.log(`🚫 Skipping setValidatedAsset — already ${next.symbol || next.address}`);
       return;
     }
-    debugLog.log(
-      next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset'
-    );
+    debugLog.log(next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset');
     setValidatedAssetRaw(next);
   };
 
-  const {
-    validHexInput,
-    debouncedHexInput,
-    failedHexInput,
-    failedHexCount,
-    isValid,
-    isValidHexString,
-    handleHexInputChange,
-    resetHexInput,
-  } = useHexInput();
-
-console.log(validHexInput)
-
-  // ✅ FIXED: added currentInputState to match InputStateManagerOptions type
-  const { forceReset, forceClose } = useInputStateManager({
-    currentInputState: inputState,
-    validHexInput,
-    debouncedHexInput,
-    setInputState,
-    setValidatedAsset,
-    resetHexInput,
-  });
+  const handleHexInputChangeWithManualFlag = (input: string, isManual = true) => {
+    setManualEntry(isManual);
+    return handleHexInputChange(input);
+  };
 
   const dumpFSMContext = (headerInfo?: string) => {
-    try {
-      debugLog.log(`🧩 dumpFSMContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
-      console.group(`[FSM Context Dump] (${label})`);
-      if (headerInfo) console.log(`📝 ${headerInfo}`);
-      console.log({
-        inputState: getInputStateString(inputState),
-        validatedAsset,
-        containerType,
-        feedType,
-      });
-      console.groupEnd();
-    } catch (err) {
-      console.warn('⚠️ dumpFSMContext failed:', err);
-    }
+    debugLog.log(`🧩 dumpFSMContext${headerInfo ? ` → ${headerInfo}` : ''}`);
+    console.group(`[FSM Context Dump] (${label})`);
+    console.log({ inputState: getInputStateString(inputState), validatedAsset, containerType, feedType, manualEntry });
+    console.groupEnd();
   };
 
   const dumpInputFeedContext = (headerInfo?: string) => {
-    try {
-      debugLog.log(`💬 dumpInputFeedContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
-      console.group(`[InputFeed Context Dump] (${label})`);
-      if (headerInfo) console.log(`📝 ${headerInfo}`);
-      console.log({
-        validHexInput,
-        debouncedHexInput,
-        failedHexInput,
-        failedHexCount,
-        isValid,
-      });
-      console.groupEnd();
-    } catch (err) {
-      console.warn('⚠️ dumpInputFeedContext failed:', err);
-    }
+    debugLog.log(`💬 dumpInputFeedContext${headerInfo ? ` → ${headerInfo}` : ''}`);
+    console.group(`[InputFeed Context Dump] (${label})`);
+    console.log({ validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid });
+    console.groupEnd();
   };
 
   const dumpSharedPanelContext = (headerInfo?: string) => {
-    try {
-      debugLog.log(`🛠 dumpSharedPanelContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
-      console.group(`[Panel Context Dump] (${label})`);
-      if (headerInfo) console.log(`📝 ${headerInfo}`);
-      dumpFSMContext();
-      dumpInputFeedContext();
-      console.groupEnd();
-    } catch (err) {
-      console.warn('⚠️ dumpSharedPanelContext failed:', err);
-    }
+    debugLog.log(`🛠 dumpSharedPanelContext${headerInfo ? ` → ${headerInfo}` : ''}`);
+    console.group(`[Panel Context Dump] (${label})`);
+    dumpFSMContext();
+    dumpInputFeedContext();
+    console.groupEnd();
   };
 
   return useMemo<SharedPanelContextType>(
@@ -122,35 +87,34 @@ console.log(validHexInput)
       setValidatedAsset,
       containerType,
       feedType,
-      dumpFSMContext,
+      manualEntry,
+      setManualEntry,
       validHexInput,
       debouncedHexInput,
       failedHexInput,
       failedHexCount,
       isValid,
       isValidHexString,
-      handleHexInputChange,
+      handleHexInputChange: handleHexInputChangeWithManualFlag,
       resetHexInput,
+      dumpFSMContext,
       dumpInputFeedContext,
       dumpSharedPanelContext,
-      forceReset,
-      forceClose,
     }),
     [
       inputState,
       validatedAsset,
       containerType,
       feedType,
+      manualEntry,
       validHexInput,
       debouncedHexInput,
       failedHexInput,
       failedHexCount,
       isValid,
       isValidHexString,
-      handleHexInputChange,
+      handleHexInputChangeWithManualFlag,
       resetHexInput,
-      forceReset,
-      forceClose,
     ]
   );
 }

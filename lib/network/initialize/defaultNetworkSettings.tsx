@@ -63,7 +63,7 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      spCoinDisplay: SP_COIN_DISPLAY.EXCHANGE_ROOT,
+      spCoinDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
       assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
       errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
     },

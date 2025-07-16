@@ -1,5 +1,5 @@
 // File: lib/context/TradePanelProviders/index.ts
 
-export { SellTokenPanelProvider } from './SellTokenPanelProvider';
-export { BuyTokenPanelProvider } from './BuyTokenPanelProvider';
-export { useTokenPanelContext } from './useTokenPanelContext';
+export { SellTradePanelProvider } from './SellTradePanelProvider';
+export { BuyTradePanelProvider } from './BuyTradePanelProvider';
+export { useTradePanelContext } from './useTradePanelContext';

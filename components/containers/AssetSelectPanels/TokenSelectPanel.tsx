@@ -33,7 +33,7 @@ import { clsx } from 'clsx';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
-import { useTokenPanelContext } from '@/lib/context/TokenPanelProviders';
+import { useTradePanelContext } from '@/lib/context/TokenPanelProviders';
 
 const LOG_TIMES = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -55,14 +55,14 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const debugLog = createDebugLogger('TokenSelectPanelTest', DEBUG_ENABLED, false);
 
   const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
-    const tokenPanelContext = useTokenPanelContext();
+    const TradePanelContext = useTradePanelContext();
 
     useEffect(() => {
-      debugLog.log('✅ [TEST] useTokenPanelContext is working →', {
-        localTokenContract: tokenPanelContext.localTokenContract,
-        localAmount: tokenPanelContext.localAmount,
+      debugLog.log('✅ [TEST] useTradePanelContext is working →', {
+        localTokenContract: TradePanelContext.localTokenContract,
+        localAmount: TradePanelContext.localAmount,
       });
-      tokenPanelContext.dumpTokenContext('TEST DUMP');
+      TradePanelContext.dumpTokenContext('TEST DUMP');
     }, []);
 
     // ... rest of component ...
@@ -74,7 +74,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
     localAmount,
     setLocalAmount,
     dumpTokenContext,
-  } = useTokenPanelContext();
+  } = useTradePanelContext();
 
   const tokenContract =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
@@ -86,10 +86,10 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
 
-  const tradePanelContext = useTokenPanelContext();
+  const tradePanelContext = useTradePanelContext();
 
   useEffect(() => {
-    debugLog.log(`✅ [TokenSelectPanel] Connected to TokenPanelContext`, tradePanelContext);
+    debugLog.log(`✅ [TokenSelectPanel] Connected to TradePanelContext`, tradePanelContext);
   }, []);
 
   useEffect(() => {

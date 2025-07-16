@@ -18,8 +18,8 @@ import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 
 import {
-  SellTokenPanelProvider,
-  BuyTokenPanelProvider,
+  SellTradePanelProvider,
+  BuyTradePanelProvider,
 } from '@/lib/context/TokenPanelProviders';
 
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
@@ -54,13 +54,13 @@ export default function MainSwapView() {
 
         {/* ✅ Wrap once with SharedPanelProvider, then both trade panel providers inside */}
         <SharedPanelProvider>
-          <SellTokenPanelProvider>
+          <SellTradePanelProvider>
             <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-          </SellTokenPanelProvider>
+          </SellTradePanelProvider>
 
-          <BuyTokenPanelProvider>
+          <BuyTradePanelProvider>
             <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-          </BuyTokenPanelProvider>
+          </BuyTradePanelProvider>
         </SharedPanelProvider>
 
         <BuySellSwapArrowButton />

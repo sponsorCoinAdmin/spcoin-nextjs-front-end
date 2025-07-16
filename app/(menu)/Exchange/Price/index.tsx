@@ -12,6 +12,13 @@ import { useSwapDirectionEffect } from '@/lib/hooks/useSwapDirectionEffect';
 import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
 
+import {
+  getActiveDisplayString,
+  isActiveMainPanel,
+  isActiveScrollPanel,
+  isActiveErrorPanel,
+} from '@/lib/context/helpers/activeDisplayHelpers';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -20,30 +27,50 @@ const debugLog = createDebugLogger('PriceView', DEBUG_ENABLED, LOG_TIME);
 
 export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
-  const { errorDisplay, spCoinDisplay } = exchangeContext.settings;
+  const { activeDisplay, errorDisplay, spCoinDisplay } = exchangeContext.settings;
 
   useDisplayStateCorrection();
   useSwapDirectionEffect();
   usePriceErrorEffect();
   useResetAmountsOnTokenChange();
 
+  const activeDisplayStr = getActiveDisplayString(activeDisplay);
+
+  debugLog.log('🧪 PriceView DisplayState Check', {
+    activeDisplay,
+    activeDisplayStr,
+    legacy: {
+      errorDisplay,
+      spCoinDisplay,
+      errorDisplayStr: SP_COIN_DISPLAY[errorDisplay],
+      spCoinDisplayStr: SP_COIN_DISPLAY[spCoinDisplay],
+    },
+    comparisons: {
+      isError: isActiveErrorPanel(activeDisplay),
+      isSwap: isActiveMainPanel(activeDisplay),
+      isScrollPanel: isActiveScrollPanel(activeDisplay),
+    },
+  });
+
   return (
     <div className={styles.pageWrap}>
       {(() => {
-        debugLog.log('🧪 PriceView DisplayState Check', {
-          errorDisplay,
-          spCoinDisplay,
-          stringValues: {
-            errorDisplay: JSON.stringify(errorDisplay),
-            spCoinDisplay: JSON.stringify(spCoinDisplay),
-          },
-          comparisons: {
-            isError: errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE,
-            isSwap: spCoinDisplay === SP_COIN_DISPLAY.EXCHANGE_ROOT,
-          },
-        });
+        if (isActiveErrorPanel(activeDisplay)) {
+          debugLog.log('🟥 Price Showing ErrorView');
+          return <ErrorView />;
+        }
 
-        debugLog.log('🟩 Price Showing MainSwapView');
+        if (isActiveScrollPanel(activeDisplay)) {
+          debugLog.log('🟦 Price Showing ScrollPanel (hooked elsewhere)');
+          return null; // scroll panels are handled in other components, so no main render here
+        }
+
+        if (isActiveMainPanel(activeDisplay)) {
+          debugLog.log('🟩 Price Showing MainSwapView');
+          return <MainSwapView />;
+        }
+
+        debugLog.warn('⚠️ Unknown activeDisplay, falling back to MainSwapView');
         return <MainSwapView />;
       })()}
     </div>

@@ -1,15 +1,11 @@
-// File: components/containers/TokenSelectDropDown.tsx
-
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 
 import {
   CONTAINER_TYPE,
-  getInputStateString,
-  InputState,
   TokenContract,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
@@ -26,8 +22,6 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 
 import { TokenSelectScrollPanel } from '../AssetSelectScrollPanels';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -39,11 +33,10 @@ interface Props {
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
-  const sellHook = useSellTokenContract();
-  const buyHook = useBuyTokenContract();
-
   const [tokenContract] =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
+    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+      ? useSellTokenContract()
+      : useBuyTokenContract();
 
   const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
 
@@ -54,47 +47,16 @@ function TokenSelectDropDown({ containerType }: Props) {
     markLogoAsBroken(tokenAddr);
     event.currentTarget.src = defaultMissingImage;
 
-    debugLog.log(`Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
+    debugLog.log(`❌ Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
   };
 
-  return (
-    <InnerDropDown
-      tokenContract={tokenContract}
-      containerType={containerType}
-      logoSrc={logoSrc}
-      onError={handleMissingLogoURL}
-    />
-  );
-}
-
-function InnerDropDown({
-  tokenContract,
-  containerType,
-  logoSrc,
-  onError,
-}: {
-  tokenContract: TokenContract | undefined;
-  containerType: CONTAINER_TYPE;
-  logoSrc: string;
-  onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
-}) {
   const { updateAssetScrollDisplay } = useDisplayControls();
-  const { inputState, setInputState, validHexInput } = useSharedPanelContext();
-
-  // ✅ Only pass to FSM if trimmed input is non-empty
-  const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
-
-  useValidateFSMInput(safeInput);
 
   const openDialog = useCallback(() => {
-    debugLog.log('📂 Opening Token dialog');
-    setInputState(InputState.EMPTY_INPUT);
-    updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_ON);
-  }, [setInputState, updateAssetScrollDisplay]);
+    debugLog.log('📂 Opening Token scroll panel');
 
-  useEffect(() => {
-    debugLog.log(`🎯 inputState changed → ${getInputStateString(inputState)}`);
-  }, [inputState]);
+  updateAssetScrollDisplay(SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER);
+  }, [updateAssetScrollDisplay]);
 
   return (
     <>
@@ -107,7 +69,7 @@ function InnerDropDown({
               alt={`${tokenContract.name} logo`}
               src={logoSrc}
               onClick={() => alert(stringifyBigInt(tokenContract))}
-              onError={onError}
+              onError={handleMissingLogoURL}
             />
             {tokenContract.symbol}
           </>

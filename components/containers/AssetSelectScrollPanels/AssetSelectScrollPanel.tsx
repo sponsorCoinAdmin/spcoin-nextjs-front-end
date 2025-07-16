@@ -22,6 +22,10 @@ export default function AssetSelectScrollPanel({ title }: Props) {
   const { containerType } = useSharedPanelContext();
 
   useEffect(() => {
+    console.log('[AssetSelectScrollPanel] mounted');
+  }, []);
+
+  useEffect(() => {
     debugLog.log(`📥 AssetSelectScrollPanel mounted`);
     debugLog.log(`📦 containerType = ${containerType}`);
   }, [containerType]);

@@ -13,8 +13,11 @@ export interface FSMContextType {
   setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
   containerType: CONTAINER_TYPE;
   feedType: FEED_TYPE;
-  dumpFSMContext: (headerInfo?: string) => void; // 🔧 updated here
+  manualEntry: boolean; // ✅ NEW
+  setManualEntry: (isManual: boolean) => void; // ✅ NEW
+  dumpFSMContext: (headerInfo?: string) => void;
 }
+
 
 export interface FeedContextType {
   validHexInput: string;

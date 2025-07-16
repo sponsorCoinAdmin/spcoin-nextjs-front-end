@@ -5,10 +5,7 @@
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useChainId, useAccount } from 'wagmi';
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
-import { loadLocalExchangeContext } from '@/lib/context/helpers/ExchangeLoadHelpers';
-import { sanitizeExchangeContext } from '@/lib/context/helpers/ExchangeSanitizeHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
-
 import {
   ExchangeContext as ExchangeContextTypeOnly,
   TRADE_DIRECTION,
@@ -16,13 +13,20 @@ import {
   ErrorMessage,
   WalletAccount,
 } from '@/lib/structure';
-
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
 const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
+
+// ✅ Inline switches
+const UPDATE_TRADE_DATA_TRADE_PANELS = process.env.NEXT_PUBLIC_UPDATE_TRADE_DATA_VIA_TRADE_PANELS === 'true';
+const UPDATE_TRADE_DATA_DIRECT = process.env.NEXT_PUBLIC_UPDATE_TRADE_DATA_VIA_DIRECT === 'true';
+
+if (UPDATE_TRADE_DATA_DIRECT && UPDATE_TRADE_DATA_TRADE_PANELS) {
+  console.warn('⚠️ Both UPDATE_TRADE_PANELS_TRADE_DATA and UPDATE_EXCHANGE_PANELS_TRADE_DATA are enabled! This may cause parallel updates.');
+}
 
 export type ExchangeContextType = {
   exchangeContext: ExchangeContextTypeOnly;
@@ -58,15 +62,17 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     hookName = 'unknown'
   ) => {
+    if (!UPDATE_TRADE_DATA_DIRECT) {
+      debugLog.log(`⚠️ [BLOCKED] setExchangeContext skipped → NEXT_PUBLIC_UPDATE_TRADE_DATA_VIA_DIRECT is false → hook: ${hookName}`);
+      return (prev: ExchangeContextTypeOnly) => prev;
+    }
+
     setContextState((prev) => {
       debugLog.log('🧪 setExchangeContext triggered by', hookName);
-
       const updated = prev ? updater(structuredClone(prev)) : prev;
 
       if (prev && updated && updated.network?.chainId !== prev.network?.chainId) {
-        debugLog.warn(
-          `⚠️ network.chainId changed in setExchangeContext → ${prev.network?.chainId} ➝ ${updated.network?.chainId} 🔁 hook: ${hookName}`
-        );
+        debugLog.warn(`⚠️ network.chainId changed → ${prev.network?.chainId} ➝ ${updated.network?.chainId} 🔁 hook: ${hookName}`);
       }
 
       if (updated) {
@@ -81,7 +87,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   const setRecipientAccount = (wallet: WalletAccount | undefined) => {
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       cloned.accounts.recipientAccount = wallet;
       return cloned;
@@ -89,7 +95,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   const setSellAmount = (amount: bigint) => {
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       if (cloned.tradeData.sellTokenContract) {
         cloned.tradeData.sellTokenContract.amount = amount;
@@ -99,7 +105,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   const setBuyAmount = (amount: bigint) => {
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       if (cloned.tradeData.buyTokenContract) {
         cloned.tradeData.buyTokenContract.amount = amount;
@@ -109,7 +115,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   const setSellTokenContract = (contract: TokenContract | undefined) => {
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       cloned.tradeData.sellTokenContract = contract;
       return cloned;
@@ -117,7 +123,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   const setBuyTokenContract = (contract: TokenContract | undefined) => {
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       cloned.tradeData.buyTokenContract = contract;
       return cloned;
@@ -125,7 +131,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
   };
 
   const setTradeDirection = (type: TRADE_DIRECTION) => {
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       cloned.tradeData.tradeDirection = type;
       return cloned;
@@ -134,7 +140,7 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
 
   const setSlippageBps = (bps: number) => {
     debugLog.log('🧾 setSlippageBps:', bps);
-    setExchangeContext((prev) => {
+    setExchangeContext(prev => {
       const cloned = structuredClone(prev);
       cloned.tradeData.slippage.bps = bps;
       return cloned;

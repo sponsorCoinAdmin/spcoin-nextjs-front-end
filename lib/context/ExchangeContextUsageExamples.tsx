@@ -27,7 +27,7 @@ export default function ExchangeContextUsageExamples() {
   const { data: slippage, setSlippage, setBps } = useSlippage();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
-  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+  const [spCoinDisplay] = useSpCoinDisplay();
   const tradeData = useTradeData();
   const sellTokenAddress = useSellTokenAddress();
   const buyTokenAddress = useBuyTokenAddress();

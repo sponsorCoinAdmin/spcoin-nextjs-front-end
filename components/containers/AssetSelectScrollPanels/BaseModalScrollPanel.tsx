@@ -23,6 +23,7 @@ export default function BaseModalScrollPanel({
   const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
+    console.log('⚠️ [BaseModalScrollPanel] closeDialog called → setting CLOSE_SELECT_SCROLL_PANEL + DISPLAY_OFF');
     setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
     updateAssetScrollDisplay(SP_COIN_DISPLAY.DISPLAY_OFF);
   }, [setInputState, updateAssetScrollDisplay]);
