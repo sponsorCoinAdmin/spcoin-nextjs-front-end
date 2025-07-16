@@ -14,14 +14,14 @@ const debugLog = createDebugLogger('resolveDisplay', DEBUG_ENABLED, LOG_TIME);
  * - Only one display panel should be active (≠ DISPLAY_OFF).
  * - Priority: errorDisplay > assetSelectScrollDisplay > spCoinDisplay
  * - If all are DISPLAY_OFF → default spCoinDisplay = TRADING_STATION_PANEL
- * - Sets activeDisplay = the active one (placeholder only, no logic wiring yet)
+ * - activeDisplay is synced to the winner (temporary bridge)
  */
 export function resolveDisplaySettings(settings: DisplaySettings): DisplaySettings {
   const normalized: DisplaySettings = {
     errorDisplay: settings.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
     assetSelectScrollDisplay: settings.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
     spCoinDisplay: settings.spCoinDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
-    activeDisplay: settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF, // ✅ add placeholder
+    activeDisplay: settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
   };
 
   debugLog.log('🧩 Normalized Settings:', normalized);
@@ -32,41 +32,49 @@ export function resolveDisplaySettings(settings: DisplaySettings): DisplaySettin
     normalized.spCoinDisplay === SP_COIN_DISPLAY.DISPLAY_OFF;
 
   if (allOff) {
+    const winner = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
     debugLog.warn('⚠️ All panels are DISPLAY_OFF → Defaulting spCoinDisplay = TRADING_STATION_PANEL');
+    debugLog.log(`🎯 Resolved activeDisplay = ${SP_COIN_DISPLAY[winner]}`);
     return {
       errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
       assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-      spCoinDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ set activeDisplay same as fallback
+      spCoinDisplay: winner,
+      activeDisplay: winner,
     };
   }
 
   if (normalized.errorDisplay !== SP_COIN_DISPLAY.DISPLAY_OFF) {
+    const winner = normalized.errorDisplay;
     debugLog.log('🟥 Showing errorDisplay → Hiding others');
+    debugLog.log(`🎯 Resolved activeDisplay = ${SP_COIN_DISPLAY[winner]}`);
     return {
-      errorDisplay: normalized.errorDisplay,
+      errorDisplay: winner,
       assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
       spCoinDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-      activeDisplay: normalized.errorDisplay, // ✅ sync activeDisplay
+      activeDisplay: winner,
     };
   }
 
   if (normalized.assetSelectScrollDisplay !== SP_COIN_DISPLAY.DISPLAY_OFF) {
+    const winner = normalized.assetSelectScrollDisplay;
     debugLog.log('🟦 Showing assetSelectScrollDisplay → Hiding others');
+    debugLog.log(`🎯 Resolved activeDisplay = ${SP_COIN_DISPLAY[winner]}`);
     return {
       errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-      assetSelectScrollDisplay: normalized.assetSelectScrollDisplay,
+      assetSelectScrollDisplay: winner,
       spCoinDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-      activeDisplay: normalized.assetSelectScrollDisplay, // ✅ sync activeDisplay
+      activeDisplay: winner,
     };
   }
 
+  const winner = normalized.spCoinDisplay;
   debugLog.log('🟩 Showing spCoinDisplay → Hiding others');
+  debugLog.log(`🎯 Resolved activeDisplay = ${SP_COIN_DISPLAY[winner]}`);
   return {
     errorDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
     assetSelectScrollDisplay: SP_COIN_DISPLAY.DISPLAY_OFF,
-    spCoinDisplay: normalized.spCoinDisplay,
-    activeDisplay: normalized.spCoinDisplay, // ✅ sync activeDisplay
+    spCoinDisplay: winner,
+    activeDisplay: winner,
   };
 }
 
@@ -79,7 +87,7 @@ export function validateDisplaySettings(settings: DisplaySettings): boolean {
     errorDisplay: settings.errorDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
     assetSelectScrollDisplay: settings.assetSelectScrollDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
     spCoinDisplay: settings.spCoinDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
-    activeDisplay: settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF, // ✅ add placeholder
+    activeDisplay: settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF,
   };
 
   const allOff =

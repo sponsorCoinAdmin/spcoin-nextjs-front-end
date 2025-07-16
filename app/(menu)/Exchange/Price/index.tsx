@@ -14,7 +14,7 @@ import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers'; // ✅ added import
+import { getActiveDisplayString, isErrorDisplay, isTradingStationPanel } from '@/lib/context/helpers/activeDisplayHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PRICE_VIEW === 'true';
@@ -22,34 +22,40 @@ const debugLog = createDebugLogger('PriceView', DEBUG_ENABLED, LOG_TIME);
 
 export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
-  const { errorDisplay, spCoinDisplay, activeDisplay } = exchangeContext.settings; // ✅ added activeDisplay
+  const { activeDisplay } = exchangeContext.settings;
 
   useDisplayStateCorrection();
   useSwapDirectionEffect();
   usePriceErrorEffect();
   useResetAmountsOnTokenChange();
 
+  const isError = isErrorDisplay(activeDisplay);
+  const isSwap = isTradingStationPanel(activeDisplay);
+
+  debugLog.log('🧪 PriceView DisplayState Check', {
+    activeDisplay,
+    stringValue: getActiveDisplayString(activeDisplay),
+    isError,
+    isSwap,
+  });
+
   return (
     <div className={styles.pageWrap}>
-      {(() => {
-        debugLog.log('🧪 PriceView DisplayState Check', {
-          errorDisplay,
-          spCoinDisplay,
-          activeDisplay, // ✅ added logging
-          stringValues: {
-            errorDisplay: getActiveDisplayString(errorDisplay), // ✅ helper
-            spCoinDisplay: getActiveDisplayString(spCoinDisplay), // ✅ helper
-            activeDisplay: getActiveDisplayString(activeDisplay), // ✅ helper
-          },
-          comparisons: {
-            isError: errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE,
-            isSwap: spCoinDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-          },
-        });
-
-        debugLog.log('🟩 Price Showing MainSwapView');
-        return <MainSwapView />;
-      })()}
+      {isError ? (
+        <>
+          {debugLog.log('🟥 PriceView → Showing ErrorView')}
+          <ErrorView />
+        </>
+      ) : isSwap ? (
+        <>
+          {debugLog.log('🟩 PriceView → Showing MainSwapView')}
+          <MainSwapView />
+        </>
+      ) : (
+        <>
+          {debugLog.warn('⚠️ PriceView → Unknown display, showing nothing')}
+        </>
+      )}
     </div>
   );
 }

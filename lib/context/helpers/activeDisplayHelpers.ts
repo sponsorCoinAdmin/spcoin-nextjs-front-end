@@ -32,3 +32,11 @@ export function isErrorDisplay(value: SP_COIN_DISPLAY): boolean {
 export function isTradingStationPanel(value: SP_COIN_DISPLAY): boolean {
   return value === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 }
+
+/**
+ * Normalizes an input display value to a known SP_COIN_DISPLAY enum.
+ * For now, it simply returns the input — can extend later.
+ */
+export function normalizeActiveDisplay(value: SP_COIN_DISPLAY): SP_COIN_DISPLAY {
+  return value;
+}
