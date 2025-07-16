@@ -1,4 +1,5 @@
 // File: components/views/PriceView.tsx
+
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
@@ -13,6 +14,7 @@ import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers'; // ✅ added import
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PRICE_VIEW === 'true';
@@ -20,7 +22,7 @@ const debugLog = createDebugLogger('PriceView', DEBUG_ENABLED, LOG_TIME);
 
 export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
-  const { errorDisplay, spCoinDisplay } = exchangeContext.settings;
+  const { errorDisplay, spCoinDisplay, activeDisplay } = exchangeContext.settings; // ✅ added activeDisplay
 
   useDisplayStateCorrection();
   useSwapDirectionEffect();
@@ -33,9 +35,11 @@ export default function PriceView() {
         debugLog.log('🧪 PriceView DisplayState Check', {
           errorDisplay,
           spCoinDisplay,
+          activeDisplay, // ✅ added logging
           stringValues: {
-            errorDisplay: JSON.stringify(errorDisplay),
-            spCoinDisplay: JSON.stringify(spCoinDisplay),
+            errorDisplay: getActiveDisplayString(errorDisplay), // ✅ helper
+            spCoinDisplay: getActiveDisplayString(spCoinDisplay), // ✅ helper
+            activeDisplay: getActiveDisplayString(activeDisplay), // ✅ helper
           },
           comparisons: {
             isError: errorDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE,

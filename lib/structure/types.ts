@@ -56,7 +56,7 @@ export type Settings = {
   spCoinDisplay: SP_COIN_DISPLAY;
   assetSelectScrollDisplay: SP_COIN_DISPLAY;
   errorDisplay: SP_COIN_DISPLAY;
-  activeDisplay: SP_COIN_DISPLAY;  // ✅ ADD THIS
+  activeDisplay: SP_COIN_DISPLAY;  // ✅ ADDED
 };
 
 export type NetworkElement = {
