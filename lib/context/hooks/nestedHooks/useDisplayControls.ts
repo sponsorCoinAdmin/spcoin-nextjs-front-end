@@ -1,3 +1,5 @@
+// File: lib/hooks/useDisplayControls.ts
+
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -8,8 +10,9 @@ export function useDisplayControls() {
   const spCoinDisplay = exchangeContext.settings.spCoinDisplay;
   const assetSelectScrollDisplay = exchangeContext.settings.assetSelectScrollDisplay;
   const errorDisplay = exchangeContext.settings.errorDisplay;
+  const activeDisplay = exchangeContext.settings.activeDisplay; // ✅ inserted, no functional use
 
-  // 🟦 Setters
+  // 🟦 Setters (no activeDisplay writes)
   const updateSpCoinDisplay = (value: SP_COIN_DISPLAY) => {
     setExchangeContext(prev => ({
       ...prev,
@@ -44,6 +47,7 @@ export function useDisplayControls() {
     spCoinDisplay,
     assetSelectScrollDisplay,
     errorDisplay,
+    activeDisplay, // ✅ inserted, no functional use
     updateSpCoinDisplay,
     updateAssetScrollDisplay,
     updateErrorDisplay,
