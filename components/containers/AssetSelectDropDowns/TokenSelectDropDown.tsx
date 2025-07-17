@@ -17,7 +17,7 @@ import {
 import {
   useBuyTokenContract,
   useSellTokenContract,
-  useDisplayControls,
+  useActiveDisplay,
 } from '@/lib/context/hooks';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -78,17 +78,17 @@ function InnerDropDown({
   logoSrc: string;
   onError: (event: React.SyntheticEvent<HTMLImageElement>) => void;
 }) {
-  const { updateActiveDisplay } = useDisplayControls();
+  const { updateActiveDisplay } = useActiveDisplay();
   const { inputState, setInputState, validHexInput } = useSharedPanelContext();
 
   const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
 
   useValidateFSMInput(safeInput);
 
-  const openDialog = useCallback(() => {
+  const showPanel = useCallback(() => {
     debugLog.log('📂 Opening Token dialog');
     setInputState(InputState.EMPTY_INPUT);
-    updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ FIXED: pass valid SP_COIN_DISPLAY value
+    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL); // ✅ FIXED: pass valid SP_COIN_DISPLAY value
   }, [setInputState, updateActiveDisplay]);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ function InnerDropDown({
         <ChevronDown
           size={18}
           className="ml-2 cursor-pointer"
-          onClick={openDialog}
+          onClick={showPanel}
         />
       </div>
     </>

@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
 import { InputState, SP_COIN_DISPLAY, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
-import { useDisplayControls } from '@/lib/context/hooks';
+import { useActiveDisplay} from '@/lib/context/hooks';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 export default function BaseModalScrollPanel({
@@ -21,12 +21,12 @@ export default function BaseModalScrollPanel({
   feedType?: FEED_TYPE;
   containerType?: CONTAINER_TYPE;
 }) {
-  const { updateActiveDisplay } = useDisplayControls(); // ✅ use only updateActiveDisplay
+  const { updateActiveDisplay } = useActiveDisplay(); // ✅ only activeDisplay now
   const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
     setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
-    updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ fallback when closing
+    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL); // ✅ switch back to main panel
   }, [setInputState, updateActiveDisplay]);
 
   return (

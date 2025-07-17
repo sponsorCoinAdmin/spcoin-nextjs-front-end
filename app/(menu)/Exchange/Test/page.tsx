@@ -76,7 +76,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 export default function TestPage() {
   const isHydrated = useDidHydrate();
   const { address } = useAccount();
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
   const page = state.page?.exchangePage ?? {};
@@ -148,6 +148,23 @@ export default function TestPage() {
     console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
   };
 
+  // ✅ NEW: Toggle activeDisplay between two states
+  const toggleActiveDisplay = () => {
+    const current = exchangeContext.settings.activeDisplay;
+    const next =
+      current === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL
+        ? SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL
+        : SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
+    console.log('🔄 Toggling activeDisplay →', next);
+    setExchangeContext((prev) => ({
+      ...prev,
+      settings: {
+        ...prev.settings,
+        activeDisplay: next,
+      },
+    }));
+  };
+
   return (
     <div className="space-y-6 p-6">
       {isHydrated && (
@@ -168,6 +185,11 @@ export default function TestPage() {
 
           <button onClick={toggleWallets} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
             {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
+          </button>
+
+          {/* ✅ NEW BUTTON */}
+          <button onClick={toggleActiveDisplay} className="px-4 py-2 text-sm font-medium text-yellow-300 bg-[#382a1f] rounded hover:text-yellow-500">
+            Toggle activeDisplay
           </button>
         </div>
       )}

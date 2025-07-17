@@ -10,7 +10,7 @@ import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
 import DataList from '../Dialogs/Resources/DataList';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { useDisplayControls } from '@/lib/context/hooks';
+import { useActiveDisplay} from '@/lib/context/hooks';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
@@ -32,7 +32,7 @@ export default function AddressSelect() {
 
   const MANUAL_ENTRY = true;
 
-  const { updateActiveDisplay } = useDisplayControls(); // ✅ switched here
+  const { updateActiveDisplay } = useActiveDisplay(); // ✅ switched here
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect():`, MANUAL_ENTRY);
@@ -43,7 +43,7 @@ export default function AddressSelect() {
     debugLog.log(`📜 onDataListSelect():`, item);
     handleHexInputChange(item.address, !MANUAL_ENTRY);
     alert(`onDataListSelect(${item.address})`);
-    updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ fallback to main view
+    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL); // ✅ fallback to main view
   };
 
   return (

@@ -148,10 +148,10 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
       containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER);
 
   const toggleTokenConfig = useCallback(() => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER) {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG);
+    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL) {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL);
     } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_CONTAINER);
+      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL);
     }
     debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
   }, [spCoinDisplay, setSpCoinDisplay]);

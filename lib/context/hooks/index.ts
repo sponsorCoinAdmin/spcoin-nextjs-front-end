@@ -12,4 +12,4 @@ export * from "./nestedHooks/useSlippage";
 export * from "./nestedHooks/useSpCoinDisplay";
 export * from "./nestedHooks/useTokenContracts";
 export * from "./nestedHooks/useTradeDirection";
-export * from "./nestedHooks/useDisplayControls";
+export * from "./nestedHooks/useActiveDisplay";

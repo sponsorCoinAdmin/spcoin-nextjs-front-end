@@ -23,7 +23,7 @@ function setRecipientRatio(newRate: number) {
   if (recipientRatio) recipientRatio.innerHTML = +(newRate * 10) + "%";
 }
 
-const SponsorRateConfig = () => {
+const SponsorRateConfigPanel = () => {
   const [, setSpCoinDisplay] = useSpCoinDisplay(); // only use setter
 
   return (
@@ -47,7 +47,7 @@ const SponsorRateConfig = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG)}
+          onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_PANEL)}
         >
           X
         </div>
@@ -68,4 +68,4 @@ const SponsorRateConfig = () => {
   );
 };
 
-export default SponsorRateConfig;
+export default SponsorRateConfigPanel;

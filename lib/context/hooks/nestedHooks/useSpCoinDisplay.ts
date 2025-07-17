@@ -14,7 +14,7 @@ const debugLog = createDebugLogger('contextHooks', DEBUG_ENABLED, LOG_TIME);
 export const useSpCoinDisplay = (): [SP_COIN_DISPLAY, (display: SP_COIN_DISPLAY) => void] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const currentDisplay = exchangeContext?.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+  const currentDisplay = exchangeContext?.settings?.spCoinDisplay ?? SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL;
 
   const setSpCoinDisplay = (display: SP_COIN_DISPLAY) => {
     if (!exchangeContext?.settings) return;

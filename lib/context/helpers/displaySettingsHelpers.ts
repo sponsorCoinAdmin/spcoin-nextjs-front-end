@@ -9,10 +9,10 @@ const debugLog = createDebugLogger('resolveDisplay', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Resolves a valid display state from an input DisplaySettings object.
- * Ensures activeDisplay is set, defaults to TRADING_STATION_PANEL if undefined.
+ * Ensures activeDisplay is set, defaults to SHOW_TRADING_STATION_PANEL if undefined.
  */
 export function resolveDisplaySettings(settings: DisplaySettings): DisplaySettings {
-  const active = settings.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+  const active = settings.activeDisplay ?? SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL;
 
   debugLog.log(`🎯 Resolved activeDisplay = ${SP_COIN_DISPLAY[active]}`);
 

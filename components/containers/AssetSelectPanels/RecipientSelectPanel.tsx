@@ -9,7 +9,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import RecipientSelectDropDown from '../AssetSelectDropDowns/RecipientSelectDropDown';
-import SponsorRateConfig from '../SponsorRateConfig';
+import SponsorRateConfigPanel from '../SponsorRateConfigPanel';
 import BaseSelectPanel from './BaseSelectPanel';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_PANEL === 'true';
@@ -35,15 +35,15 @@ const RecipientSelectPanel: React.FC = () => {
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const clearRecipientSelect = useCallback(() => {
-    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER);
+    setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL);
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
 
-  const toggleSponsorRateConfig = useCallback(() => {
+  const toggleSponsorRateConfigPanel= useCallback(() => {
     const nextState =
-      spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_CONTAINER
-        ? SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG
-        : SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_DIALOG;
+      spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL
+        ? SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL
+        : SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_PANEL;
 
     setSpCoinDisplay(nextState);
     debugLog.log(`⚙️ Toggled sponsor rate config to → ${nextState}`);
@@ -54,14 +54,14 @@ const RecipientSelectPanel: React.FC = () => {
       displayState={spCoinDisplay}
       selectedAccount={recipientAccount}
       onClearSelect={clearRecipientSelect}
-      onToggleConfig={toggleSponsorRateConfig}
+      onToggleConfig={toggleSponsorRateConfigPanel}
       DropDownComponent={
         <RecipientSelectDropDown
           recipientAccount={recipientAccount}
           callBackAccount={setRecipientAccount}
         />
       }
-      ConfigComponent={<SponsorRateConfig />}
+      ConfigComponent={<SponsorRateConfigPanel/>}
       label="You are sponsoring:"
     />
   );

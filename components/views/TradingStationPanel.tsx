@@ -1,9 +1,9 @@
-// File: components/views/MainSwapView.tsx
+// File: components/views/TradingStationPanel.tsx
 
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import { CONTAINER_TYPE } from '@/lib/structure';
+import { CONTAINER_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
@@ -20,25 +20,29 @@ import {
 } from '@/lib/context/TokenPanelProviders';
 
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
-import { useExchangeContext } from '@/lib/context/hooks';
+import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
-const debugLog = createDebugLogger('MainSwapView', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('TradingStationPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function MainSwapView() {
-  const { exchangeContext } = useExchangeContext();
-  const { activeDisplay } = exchangeContext.settings;
+export default function TradingStationPanel() {
+  const { activeDisplay } = useActiveDisplay();
 
-  debugLog.log(`🔍 MainSwapView render triggered`);
+  debugLog.log(`🔍 TradingStationPanel render triggered`);
   debugLog.log(`🧩 Current activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
+
+  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL;
 
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
 
   return (
-    <div id="MainPage_ID">
+    <div
+      id="MainPage_ID"
+      style={{ display: isActive ? 'block' : 'none' }} // ✅ always mounted, hidden when inactive
+    >
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 

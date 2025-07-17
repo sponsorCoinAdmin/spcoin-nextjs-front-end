@@ -1,7 +1,7 @@
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-export function useDisplayControls() {
+export function useActiveDisplay() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const activeDisplay = exchangeContext.settings.activeDisplay;
