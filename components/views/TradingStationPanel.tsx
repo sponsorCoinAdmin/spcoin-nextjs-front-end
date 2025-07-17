@@ -49,13 +49,12 @@ export default function TradingStationPanel() {
         <TradeContainerHeader />
 
         <SharedPanelProvider>
+          <TokenSelectScrollPanel />
           <SellTokenPanelProvider>
-            <TokenSelectScrollPanel />
             <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
           </SellTokenPanelProvider>
 
           <BuyTokenPanelProvider>
-            <TokenSelectScrollPanel />
             <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
           </BuyTokenPanelProvider>
         </SharedPanelProvider>
