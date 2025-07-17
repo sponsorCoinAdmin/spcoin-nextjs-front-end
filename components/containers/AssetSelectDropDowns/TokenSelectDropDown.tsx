@@ -97,7 +97,7 @@ function InnerDropDown({
 
   return (
     <>
-      <TokenSelectScrollPanel />
+      {/* <TokenSelectScrollPanel /> */}
       <div className={styles.assetSelect}>
         {tokenContract ? (
           <>

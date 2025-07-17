@@ -50,7 +50,7 @@ export default function TokenSelectScrollPanel() {
   return (
     <>
       {isActive && <AssetSelectScrollPanel title={title} />}
-      <AssetSelectScrollPanel title={title} />
+      {/* <AssetSelectScrollPanel title={title} /> */}
     </>
   );
 }

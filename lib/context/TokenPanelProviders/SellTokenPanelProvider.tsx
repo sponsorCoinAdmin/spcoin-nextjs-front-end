@@ -28,16 +28,10 @@ export const SellTokenPanelProvider = ({ children }: { children: ReactNode }) =>
   return (
     <TokenPanelContext.Provider
       value={{
-        inputState,
-        setInputState,
-        validatedAsset,
-        setValidatedAsset,
         localTokenContract,
         setLocalTokenContract,
         localAmount,
         setLocalAmount,
-        containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER,
-        feedType: FEED_TYPE.TOKEN_LIST,
         dumpTokenContext,
       }}
     >

@@ -23,6 +23,8 @@ import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPane
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
+import { TokenSelectDropDown } from '../containers/AssetSelectDropDowns';
+import { TokenSelectScrollPanel } from '../containers/AssetSelectScrollPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -41,17 +43,19 @@ export default function TradingStationPanel() {
   return (
     <div
       id="MainPage_ID"
-      style={{ display: isActive ? 'block' : 'none' }} // ✅ always mounted, hidden when inactive
+      className={isActive ? '' : 'hidden'} // ✅ Tailwind hidden class instead of inline style
     >
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
         <SharedPanelProvider>
           <SellTokenPanelProvider>
+            <TokenSelectScrollPanel />
             <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
           </SellTokenPanelProvider>
 
           <BuyTokenPanelProvider>
+            <TokenSelectScrollPanel />
             <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
           </BuyTokenPanelProvider>
         </SharedPanelProvider>

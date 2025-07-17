@@ -42,7 +42,6 @@ const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, false);
 
 const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
   const [apiProvider] = useApiProvider();
-  const account = useAccount();
   const { exchangeContext } = useExchangeContext();
 
   const [sellAmount, setSellAmount] = useSellAmount();
