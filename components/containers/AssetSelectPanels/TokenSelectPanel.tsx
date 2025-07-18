@@ -34,12 +34,13 @@ import styles from '@/styles/Exchange.module.css';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
-import { useTokenPanelContext } from '@/lib/context/TokenPanelProviders';
+import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/TokenPanelProviders';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, false);
 
-const TokenSelectPanel = () => {
+// 🔒 PRIVATE inner component, not exported
+function TokenSelectPanelInner() {
   const [apiProvider] = useApiProvider();
   const { exchangeContext } = useExchangeContext();
 
@@ -57,7 +58,7 @@ const TokenSelectPanel = () => {
     localAmount,
     setLocalAmount,
     dumpTokenContext,
-    containerType
+    containerType,
   } = useTokenPanelContext();
 
   const tokenContract =
@@ -158,10 +159,7 @@ const TokenSelectPanel = () => {
   return (
     <div className={clsx(styles.inputs, styles.tokenSelectContainer)}>
       <input
-        className={clsx(
-          styles.priceInput,
-          styles.withBottomRadius // you can adjust radius logic here if needed
-        )}
+        className={clsx(styles.priceInput, styles.withBottomRadius)}
         placeholder="0"
         disabled={isInputDisabled}
         value={inputValue}
@@ -183,8 +181,18 @@ const TokenSelectPanel = () => {
         ))}
     </div>
   );
-};
+}
 
+// ✅ EXPORTED component with built-in provider
+export default function TokenSelectPanel({ containerType }: { containerType: CONTAINER_TYPE }) {
+  return (
+    <TokenPanelProvider containerType={containerType}>
+      <TokenSelectPanelInner />
+    </TokenPanelProvider>
+  );
+}
+
+// 🔧 Helper function
 function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
   const decimals = tokenContract?.decimals ?? 18;
 
@@ -202,5 +210,3 @@ function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
     return '0.0';
   }
 }
-
-export default TokenSelectPanel;

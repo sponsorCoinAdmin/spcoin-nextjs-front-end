@@ -13,13 +13,15 @@ import AssetSelectScrollPanel from './AssetSelectScrollPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function TokenSelectScrollPanel() {
+
+function TokenSelectScrollPanelInner() {
   const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
   const { activeDisplay, updateActiveDisplay } = useActiveDisplay();
 
@@ -51,5 +53,15 @@ export default function TokenSelectScrollPanel() {
     <>
       {isActive && <AssetSelectScrollPanel title={title} />}
     </>
+  );
+}
+
+
+// ✅ EXPORTED component with built-in provider
+export default function TokenSelectScrollPanel() {
+  return (
+    <SharedPanelProvider>
+      <TokenSelectScrollPanelInner />
+    </SharedPanelProvider>
   );
 }
