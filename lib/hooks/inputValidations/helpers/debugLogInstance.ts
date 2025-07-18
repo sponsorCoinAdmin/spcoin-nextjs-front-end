@@ -5,4 +5,4 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
 
-export const debugLog = createDebugLogger('useValidateFSMInput', DEBUG_ENABLED, LOG_TIME);
+export const debugLog = createDebugLogger('debugLogInstance', DEBUG_ENABLED, LOG_TIME);

@@ -1,6 +1,8 @@
+// File: components/shared/HexAddressInput.tsx
+
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 type HexAddressInputProps = {
   inputValue: string;
@@ -15,6 +17,15 @@ export default function HexAddressInput({
   placeholder,
   statusEmoji,
 }: HexAddressInputProps) {
+  useEffect(() => {
+    console.log('⚡ HexAddressInput rendered, current value:', inputValue);
+  }, [inputValue]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // console.log('✏️ [HexAddressInput]: HexAddressInput onChange fired with value:', e.target.value);
+    onChange(e.target.value);
+  };
+
   return (
     <div
       className={`
@@ -43,7 +54,7 @@ export default function HexAddressInput({
         autoComplete="off"
         placeholder={placeholder}
         value={inputValue}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
       />
     </div>
   );

@@ -14,17 +14,11 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 
-import {
-  SellTokenPanelProvider,
-  BuyTokenPanelProvider,
-} from '@/lib/context/TokenPanelProviders';
-
-import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
-import { TokenSelectDropDown } from '../containers/AssetSelectDropDowns';
-import { TokenSelectScrollPanel } from '../containers/AssetSelectScrollPanels';
+import { AssetSelectScrollPanel, TokenSelectScrollPanel } from '../containers/AssetSelectScrollPanels';
+import { TokenPanelProvider } from '@/lib/context/TokenPanelProviders/TokenPanelProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -48,16 +42,17 @@ export default function TradingStationPanel() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        <SharedPanelProvider>
+        {/* <SharedPanelProvider>
           <TokenSelectScrollPanel />
-          <SellTokenPanelProvider>
-            <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-          </SellTokenPanelProvider>
+        </SharedPanelProvider> */}
 
-          <BuyTokenPanelProvider>
-            <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
-          </BuyTokenPanelProvider>
-        </SharedPanelProvider>
+        <TokenPanelProvider containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}>
+          <TokenSelectPanel />
+        </TokenPanelProvider>
+
+        {/* <TokenPanelProvider containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}>
+          <TokenSelectPanel  />
+        </TokenPanelProvider> */}
 
         <BuySellSwapArrowButton />
         <PriceButton isLoadingPrice={isLoadingPrice} />

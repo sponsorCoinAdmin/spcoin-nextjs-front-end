@@ -4,7 +4,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { parseUnits, formatUnits } from 'viem';
-import { useAccount } from 'wagmi';
 import { clsx } from 'clsx';
 
 import {
@@ -40,7 +39,7 @@ import { useTokenPanelContext } from '@/lib/context/TokenPanelProviders';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, false);
 
-const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) => {
+const TokenSelectPanel = () => {
   const [apiProvider] = useApiProvider();
   const { exchangeContext } = useExchangeContext();
 
@@ -58,6 +57,7 @@ const TokenSelectPanel = ({ containerType }: { containerType: CONTAINER_TYPE }) 
     localAmount,
     setLocalAmount,
     dumpTokenContext,
+    containerType
   } = useTokenPanelContext();
 
   const tokenContract =

@@ -29,23 +29,30 @@ export function useHexInput(initialValue: string = '', debounceDelay: number = 2
   }, []);
 
   const handleHexInputChange = useCallback(
-    (rawInput: string, _isManual?: boolean) => {
-      const ok = _isValidHexString(rawInput);
-      setIsValid(ok);
+  (rawInput: string, _isManual?: boolean) => {
+    const trimmedInput = rawInput.trim();
+    const ok = _isValidHexString(trimmedInput);
 
-      if (ok) {
-        setValidHexInput(rawInput.trim());
-        setFailedHexInput(undefined);
-        setFailedHexCount(0);
-      } else {
-        setFailedHexInput(rawInput.trim());
-        setFailedHexCount((prev) => prev + 1);
-      }
+    console.log('🖊️ handleHexInputChange called with:', trimmedInput, _isManual, '→ isValid:', ok);
 
-      return ok;
-    },
-    []
-  );
+    setIsValid(ok);
+
+    if (ok) {
+      console.log('✅ Setting validHexInput to:', trimmedInput);
+      setValidHexInput(trimmedInput);
+      setFailedHexInput(undefined);
+      setFailedHexCount(0);
+    } else {
+      console.log('❌ Invalid input, setting failedHexInput to:', trimmedInput);
+      setFailedHexInput(trimmedInput);
+      setFailedHexCount((prev) => prev + 1);
+    }
+
+    return ok;
+  },
+  []
+);
+
 
   const resetHexInput = useCallback(() => {
     setValidHexInput('');

@@ -13,6 +13,8 @@ import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnToken
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
+import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
+import { TokenSelectScrollPanel } from '@/components/containers/AssetSelectScrollPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PRICE_VIEW === 'true';
@@ -34,6 +36,10 @@ export default function PriceView() {
 
   return (
     <div className={styles.pageWrap}>
+      <SharedPanelProvider>
+        <TokenSelectScrollPanel />
+      </SharedPanelProvider>
+
       <TradingStationPanel />
       <ErrorMessagePanel />
       <SponsorRateConfigPanel />

@@ -39,7 +39,7 @@ const RecipientSelectPanel: React.FC = () => {
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
 
-  const toggleSponsorRateConfigPanel= useCallback(() => {
+  const toggleSponsorRateConfigPanel = useCallback(() => {
     const nextState =
       spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL
         ? SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL
@@ -61,7 +61,7 @@ const RecipientSelectPanel: React.FC = () => {
           callBackAccount={setRecipientAccount}
         />
       }
-      ConfigComponent={<SponsorRateConfigPanel/>}
+      ConfigComponent={<SponsorRateConfigPanel />}
       label="You are sponsoring:"
     />
   );

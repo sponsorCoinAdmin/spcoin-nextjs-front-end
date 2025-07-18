@@ -3,7 +3,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { TokenContract } from '@/lib/structure';
+import { CONTAINER_TYPE, TokenContract } from '@/lib/structure';
 
 export interface TokenPanelContextType {
   localTokenContract?: TokenContract;
@@ -13,6 +13,7 @@ export interface TokenPanelContextType {
   setLocalAmount: (amount: bigint) => void;
 
   dumpTokenContext: (headerInfo?: string) => void;
+  containerType: CONTAINER_TYPE;
 }
 
 export const TokenPanelContext = createContext<TokenPanelContextType | undefined>(undefined);
