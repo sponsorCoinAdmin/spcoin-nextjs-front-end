@@ -42,17 +42,10 @@ export default function TradingStationPanel() {
       <div id="MainSwapContainer_ID" className={styles.mainSwapContainer}>
         <TradeContainerHeader />
 
-        {/* <SharedPanelProvider>
-          <TokenSelectScrollPanel />
-        </SharedPanelProvider> */}
+        {/* <TokenSelectScrollPanel /> */}
 
-        <TokenPanelProvider containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER}>
-          <TokenSelectPanel />
-        </TokenPanelProvider>
-
-        {/* <TokenPanelProvider containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER}>
-          <TokenSelectPanel  />
-        </TokenPanelProvider> */}
+        <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
+        <TokenSelectPanel  containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
 
         <BuySellSwapArrowButton />
         <PriceButton isLoadingPrice={isLoadingPrice} />
