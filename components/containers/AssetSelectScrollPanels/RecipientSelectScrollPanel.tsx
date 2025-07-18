@@ -21,34 +21,34 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('RecipientSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function RecipientSelectScrollPanel() {
-  const { inputState, setInputState, containerType } = useSharedPanelContext();
+  const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
   const { activeDisplay, updateActiveDisplay } = useActiveDisplay();
 
   // ✅ Skip render if this panel is not active
   if (activeDisplay !== SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL) {
-    debugLog.log('⏭️ RecipientSelectScrollPanel → not active, skipping render');
+    debugLog.log(`⏭️ RecipientSelectScrollPanel → not active (instanceId=${instanceId}), skipping render`);
     return null;
   }
 
   useEffect(() => {
-    debugLog.log(`🧩 RecipientSelectScrollPanel mounted for containerType=${containerType}`);
-  }, [containerType]);
+    debugLog.log(`🧩 RecipientSelectScrollPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
+  }, [containerType, instanceId]);
 
   useEffect(() => {
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to SHOW_TRADING_STATION_PANEL`);
+      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to SHOW_TRADING_STATION_PANEL (instanceId=${instanceId})`);
       updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL);
       setInputState(InputState.EMPTY_INPUT); // ✅ reset to prevent loop
     }
-  }, [inputState, updateActiveDisplay, setInputState]);
+  }, [inputState, updateActiveDisplay, setInputState, instanceId]);
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
       if (state === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-        debugLog.log('✅ [RecipientSelectScrollPanel] selected wallet', wallet);
+        debugLog.log(`✅ [RecipientSelectScrollPanel] selected wallet`, wallet, `(instanceId=${instanceId})`);
       }
     },
-    []
+    [instanceId]
   );
 
   return <AssetSelectScrollPanel title="Select a Recipient" />;

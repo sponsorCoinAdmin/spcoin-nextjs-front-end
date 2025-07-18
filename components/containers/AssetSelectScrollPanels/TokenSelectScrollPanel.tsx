@@ -20,7 +20,7 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function TokenSelectScrollPanel() {
-  const { inputState, setInputState, containerType } = useSharedPanelContext();
+  const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
   const { activeDisplay, updateActiveDisplay } = useActiveDisplay();
 
   const title =
@@ -31,21 +31,21 @@ export default function TokenSelectScrollPanel() {
   const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
 
   useEffect(() => {
-    debugLog.log(`🧩 TokenSelectScrollPanel mounted for containerType=${containerType}`);
-  }, [containerType]);
+    debugLog.log(`🧩 TokenSelectScrollPanel mounted → containerType=${containerType}, instanceId=${instanceId}`);
+  }, [containerType, instanceId]);
 
   useEffect(() => {
     const stateStr = getInputStateString(inputState);
-    debugLog.log(`🌀 inputState changed → ${stateStr}`);
+    debugLog.log(`🌀 inputState changed → ${stateStr} (instanceId=${instanceId})`);
 
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
       debugLog.log(
-        `✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to SHOW_TRADING_STATION_PANEL`
+        `✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to SHOW_TRADING_STATION_PANEL (instanceId=${instanceId})`
       );
       updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL);
       setInputState(InputState.EMPTY_INPUT); // ✅ prevent loop
     }
-  }, [inputState, updateActiveDisplay, setInputState]);
+  }, [inputState, updateActiveDisplay, setInputState, instanceId]);
 
   return (
     <>

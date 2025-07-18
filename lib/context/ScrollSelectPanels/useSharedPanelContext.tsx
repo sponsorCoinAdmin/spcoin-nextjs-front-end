@@ -1,3 +1,4 @@
+// File: lib/context/ScrollSelectPanels/useSharedPanelContext.tsx
 'use client';
 
 import { createContext, useContext } from 'react';
@@ -15,6 +16,8 @@ export interface FSMContextType {
   containerType: CONTAINER_TYPE;
   feedType: FEED_TYPE;
   dumpFSMContext: (headerInfo?: string) => void;
+  /** 🆔 Unique instance ID for debugging */
+  instanceId?: string;  // ← ADD THIS LINE
 }
 
 /**

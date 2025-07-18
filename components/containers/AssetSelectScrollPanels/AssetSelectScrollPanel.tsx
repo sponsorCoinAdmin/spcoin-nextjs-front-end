@@ -19,9 +19,12 @@ interface Props {
 }
 
 export default function AssetSelectScrollPanel({ title }: Props) {
-  const { containerType, validHexInput } = useSharedPanelContext();
+  const { containerType, validHexInput, instanceId } = useSharedPanelContext();
 
   const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
+
+  // ✅ Log instanceId for tracking
+  debugLog.log(`🆔 AssetSelectScrollPanel using instanceId: ${instanceId}`);
 
   // ✅ Call hooks at top-level
   useValidateFSMInput(safeInput);
