@@ -20,17 +20,14 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
-
 function TokenSelectScrollPanelInner() {
   const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
-  const { activeDisplay, updateActiveDisplay } = useActiveDisplay();
+  const { updateActiveDisplay } = useActiveDisplay();
 
   const title =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? 'Select a Token to Sell'
       : 'Select a Token to Buy';
-
-  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
 
   useEffect(() => {
     debugLog.log(`🧩 TokenSelectScrollPanel mounted → containerType=${containerType}, instanceId=${instanceId}`);
@@ -49,16 +46,16 @@ function TokenSelectScrollPanelInner() {
     }
   }, [inputState, updateActiveDisplay, setInputState, instanceId]);
 
-  return (
-    <>
-      {isActive && <AssetSelectScrollPanel title={title} />}
-    </>
-  );
+  return <AssetSelectScrollPanel title={title} />;
 }
 
-
-// ✅ EXPORTED component with built-in provider
+// ✅ EXPORTED component with built-in provider and top-level isActive check
 export default function TokenSelectScrollPanel() {
+  const { activeDisplay } = useActiveDisplay();
+  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
+
+  if (!isActive) return null; // ✅ skip provider + inner when inactive
+
   return (
     <SharedPanelProvider>
       <TokenSelectScrollPanelInner />

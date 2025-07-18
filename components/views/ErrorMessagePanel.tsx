@@ -13,21 +13,10 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_ERROR_MESSAGE_PANEL === 'true';
 const debugLog = createDebugLogger('ErrorMessagePanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function ErrorMessagePanel() {
+function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
-  const { activeDisplay, updateActiveDisplay } = useActiveDisplay();
+  const { updateActiveDisplay } = useActiveDisplay();
   const { exchangeContext } = useExchangeContext();
-
-  debugLog.log(
-    `🛠️ ErrorMessagePanel → activeDisplay:`,
-    getActiveDisplayString(activeDisplay)
-  );
-
-  // ✅ Skip render if not active
-  if (activeDisplay !== SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE_PANEL) {
-    debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');
-    return null;
-  }
 
   const closeDialog = () => {
     debugLog.log('✅ Closing ErrorMessagePanel → switching to SHOW_TRADING_STATION_PANEL');
@@ -42,4 +31,22 @@ export default function ErrorMessagePanel() {
       message={errorMessage}
     />
   );
+}
+
+export default function ErrorMessagePanel() {
+  const { activeDisplay } = useActiveDisplay();
+
+  debugLog.log(
+    `🛠️ ErrorMessagePanel → activeDisplay:`,
+    getActiveDisplayString(activeDisplay)
+  );
+
+  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE_PANEL;
+
+  if (!isActive) {
+    debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');
+    return null;
+  }
+
+  return <ErrorMessagePanelInner />;
 }

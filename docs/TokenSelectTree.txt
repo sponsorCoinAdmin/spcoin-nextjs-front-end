@@ -5,7 +5,7 @@
         ├── usePriceErrorEffect()
         ├── useResetAmountsOnTokenChange()
         │     └── <TokenSelectContextView>
-        │           └── <mainSwapContainer>
+        │           └── <mainTradingPanel>
         │                 ├── <TradeContainerHeader>
         │                 ├── <TokenSelectSection>
         │                 │     ├── <TradePanelProvider> (SELL)
