@@ -1,11 +1,9 @@
-// File: lib/context/ScrollSelectPanels/SharedPanelProvider.tsx
-
 'use client';
 
-import React, { ReactNode, useState, useCallback, useEffect } from 'react';
+import React, { ReactNode, useState, useCallback, useMemo } from 'react';
 import { SharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { CONTAINER_TYPE, FEED_TYPE, InputState } from '@/lib/structure';
-import { useDebounce } from '@/lib/hooks/useDebounce';
+import { CONTAINER_TYPE, FEED_TYPE, InputState, getInputStateString } from '@/lib/structure';
+import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // Setup debug logger
@@ -15,67 +13,53 @@ const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIM
 
 export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
   // FSM state
-  const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-  const [validatedAsset, setValidatedAsset] = useState<any>(undefined);
+  const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
+  const [validatedAsset, setValidatedAssetRaw] = useState<any>(undefined);
 
-  // Input state
-  const [validHexInput, setValidHexInput] = useState<string>('');
-  const [failedHexInput, setFailedHexInput] = useState<string>('');
-  const [failedHexCount, setFailedHexCount] = useState<number>(0);
-  const [isValid, setIsValid] = useState<boolean>(false);
+  // 🔥 Unique ID (you can replace 'main' with nanoid() if needed)
+  const instanceId = 'main';
 
-  // Debounced value
-  const debouncedHexInput = useDebounce(validHexInput, 300);
+  // Input state from useHexInput hook
+  const {
+    validHexInput,
+    debouncedHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValid,
+    isValidHexString,
+    handleHexInputChange,
+    resetHexInput,
+  } = useHexInput();
 
-  // 🔥 Generate unique instance ID here (static or random if needed)
-  const instanceId = 'main'; // You can swap with uuid() or nanoid() if needed
-
-  // Validation helper
-  const isValidHexString = useCallback((val: string) => {
-    return /^0x[a-fA-F0-9]{40}$/.test(val.trim());
-  }, []);
-
-  // Input change handler
-  const handleHexInputChange = useCallback(
-    (rawInput: string, isManual?: boolean) => {
-      const trimmed = rawInput.trim();
-      const ok = isValidHexString(trimmed);
-
-      debugLog.log(`🖊️ handleHexInputChange → value="${trimmed}" | isManual=${isManual} | isValid=${ok}`);
-
-      setIsValid(ok);
-      if (ok) {
-        setValidHexInput(trimmed);
-        setFailedHexInput('');
-        setFailedHexCount(0);
-      } else {
-        setFailedHexInput(trimmed);
-        setFailedHexCount((prev) => prev + 1);
+  const setInputState = useCallback(
+    (next: InputState) => {
+      if (next === inputState) {
+        debugLog.log(`🚫 Skipping setInputState — already in ${getInputStateString(next)}`);
+        return;
       }
-
-      return ok;
+      debugLog.log(`📝 setInputState → ${getInputStateString(next)}`);
+      setInputStateRaw(next);
     },
-    [isValidHexString]
+    [inputState]
   );
 
-  // Reset handler
-  const resetHexInput = useCallback(() => {
-    debugLog.log('♻️ resetHexInput called');
-    setValidHexInput('');
-    setFailedHexInput('');
-    setFailedHexCount(0);
-    setIsValid(false);
-  }, []);
+  const setValidatedAsset = useCallback(
+    (next: any) => {
+      if (validatedAsset && next && validatedAsset.address === next.address) {
+        debugLog.log(`🚫 Skipping setValidatedAsset — already ${next.symbol || next.address}`);
+        return;
+      }
+      debugLog.log(
+        next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset'
+      );
+      setValidatedAssetRaw(next);
+    },
+    [validatedAsset]
+  );
 
-  // 🔍 Log every debouncedHexInput change (triggers AFTER debounce)
-  useEffect(() => {
-    debugLog.log(`🔄 debouncedHexInput updated → "${debouncedHexInput}"`);
-  }, [debouncedHexInput]);
-
-  // Dump helpers
   const dumpFSMContext = (headerInfo?: string) => {
     console.log(`🛠️ [FSMContext Dump] ${headerInfo || ''}`, {
-      inputState,
+      inputState: getInputStateString(inputState),
       validatedAsset,
       instanceId,
     });
@@ -98,33 +82,53 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
     dumpInputFeedContext();
   };
 
-  debugLog.log(`🚀 SharedPanelProvider mounted with instanceId="${instanceId}"`);
+  debugLog.log(`⏳ debouncedHexInput = "${debouncedHexInput}"`);
+
+  const forceReset = resetHexInput;
+  const forceClose = () => setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
+
+  const contextValue = useMemo(
+    () => ({
+      inputState,
+      setInputState,
+      validatedAsset,
+      setValidatedAsset,
+      validHexInput,
+      debouncedHexInput,
+      failedHexInput,
+      failedHexCount,
+      isValid,
+      isValidHexString,
+      handleHexInputChange,
+      resetHexInput,
+      dumpFSMContext,
+      dumpInputFeedContext,
+      dumpSharedPanelContext,
+      containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER,
+      feedType: FEED_TYPE.TOKEN_LIST,
+      forceReset,
+      forceClose,
+      instanceId,
+    }),
+    [
+      inputState,
+      validatedAsset,
+      validHexInput,
+      debouncedHexInput,
+      failedHexInput,
+      failedHexCount,
+      isValid,
+      isValidHexString,
+      handleHexInputChange,
+      resetHexInput,
+      forceReset,
+      forceClose,
+      instanceId,
+    ]
+  );
 
   return (
-    <SharedPanelContext.Provider
-      value={{
-        inputState,
-        setInputState,
-        validatedAsset,
-        setValidatedAsset,
-        validHexInput,
-        debouncedHexInput,
-        failedHexInput,
-        isValid,
-        handleHexInputChange,
-        resetHexInput,
-        failedHexCount,
-        isValidHexString,
-        dumpFSMContext,
-        dumpInputFeedContext,
-        dumpSharedPanelContext,
-        containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER,
-        feedType: FEED_TYPE.TOKEN_LIST,
-        forceReset: resetHexInput,
-        forceClose: () => setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL),
-        instanceId, // ✅ explicitly provided downstream
-      }}
-    >
+    <SharedPanelContext.Provider value={contextValue}>
       {children}
     </SharedPanelContext.Provider>
   );
