@@ -36,9 +36,7 @@ export default function PriceView() {
 
   return (
     <div className={styles.pageWrap}>
-      <SharedPanelProvider>
-        <TokenSelectScrollPanel />
-      </SharedPanelProvider>
+      <TokenSelectScrollPanel />
 
       <TradingStationPanel />
       <ErrorMessagePanel />
