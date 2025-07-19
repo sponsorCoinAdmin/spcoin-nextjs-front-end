@@ -127,7 +127,7 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
   };
 
   return (
-    <dialog id="manageSponsorshipsDialog" ref={dialogRef} className={styles.modalContainer}>
+    <dialog id="manageSponsorshipsDialog" ref={dialogRef} className={styles.addressSelectPanel}>
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
         <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
         <div
@@ -182,7 +182,7 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
             </div>
           </div>
         </div>
-        <div className={styles.modalScrollBar}>
+        <div className={styles.scrollDataListPanel}>
           <DataList<TokenContract>
             dataFeedType={FEED_TYPE.TOKEN_LIST}
             onSelect={getSelectedListElement}

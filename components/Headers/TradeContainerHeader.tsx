@@ -1,3 +1,5 @@
+// File: components/TradeContainerHeader.tsx
+
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -5,43 +7,49 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useExchangeContext } from '@/lib/context/hooks';
-
+import { useExchangeContext, useSpCoinDisplay } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure'; // ✅ make sure enum is imported
 const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
+
+  //
+  const [ spCoinDisplay ] = useSpCoinDisplay();
+
+  const title =
+    spCoinDisplay === SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL
+      ? 'Sponsor Coin Exchange'
+      : spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_PANEL
+        ? 'Select a Recipient to Follow'
+        : spCoinDisplay === SP_COIN_DISPLAY.SHOW_AGENT_SELECT_CONTAINER
+          ? 'Select a Sponsoring Agent'
+          : spCoinDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL
+            ? 'Select a Token to Sell/Buy'
+            : '';
 
   return (
     <div className={styles.tradeContainerHeader}>
       <ConfigDialog showDialog={false} />
 
-      <div onClick={() => exchangeContextDump(exchangeContext)}>
-        <Image
-          src={spCoin_png}
-          className={styles.logoImg}
-          alt="SponsorCoin Logo"
-          style={{ height: 'auto', width: 'auto' }} // ✅ add this
-        />      </div>
+      <div className={styles.leftH}>
+        <div onClick={() => exchangeContextDump(exchangeContext)} style={{ cursor: 'pointer' }}>
+          <Image
+            src={spCoin_png}
+            className={styles.logoImg}
+            alt="SponsorCoin Logo"
+          />
+        </div>
 
-      <h4 className={styles.center}>Sponsor Coin Exchange</h4>
+        <h4>{title}</h4> {/* ✅ title no longer has center class, stays left-aligned */}
+      </div>
 
-      {/* <div>
-        <Settings size={20} className={styles.cog} />
-      </div> */}
-
-      <div>
+      <div className={styles.rightH}>
         <Image
           src={cog_png}
-          alt="Info Image"
+          alt="Settings"
           onClick={() => openDialog('#ConfigDialog')}
           className={styles.cogImg2}
-          style={{ height: 'au20to', width: 'auto' }} // ✅ required
-        />      
+        />
       </div>
-      {/* 
-      <Popover content={<slippageBps initialSlippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback}/>} title="Settings" trigger="click" placement="bottomLeft">
-        <SettingOutlined className={styles.cog} />
-      </Popover>
-      */}
     </div>
   );
 };

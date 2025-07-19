@@ -16,7 +16,7 @@ const popup = {
     borderRadius: '15px',
   } as React.CSSProperties,
 
-  innerScrollContainer: {
+  inneraddressSelectPanel: {
     backgroundColor: '#243056',
     width: '100%',
     height: '100%',
@@ -62,7 +62,7 @@ export default function Dialog({ showDialog }: Props) {
         </div>
       </div>
       <div>
-        <div style={popup.innerScrollContainer}>
+        <div style={popup.inneraddressSelectPanel}>
           <SlippageBpsRadioButtons />
         </div>
       </div>

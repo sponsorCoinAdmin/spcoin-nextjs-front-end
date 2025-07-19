@@ -32,7 +32,7 @@ export default function BaseModalScrollPanel({
   return (
     <div
       id={id}
-      className={styles.modalContainer}
+      className={styles.addressSelectPanel}
       role="dialog"
       aria-modal="true"
       aria-labelledby={`${id}-title`}

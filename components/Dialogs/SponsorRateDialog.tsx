@@ -34,7 +34,7 @@ export default function SponsorRateDialog({ showDialog, errMsg }: Props) {
     <dialog
       id="sponsorRateDialog"
       ref={dialogRef}
-      className={styles.modalContainer}
+      className={styles.addressSelectPanel}
       aria-modal="true"
     >
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
@@ -48,7 +48,7 @@ export default function SponsorRateDialog({ showDialog, errMsg }: Props) {
       </div>
 
       <div className={styles.modalBox}>
-        <div className={styles.modalScrollBar}>
+        <div className={styles.scrollDataListPanel}>
           <h1>{errMsg.name}</h1>
           <div>{errMsg.message}</div>
         </div>

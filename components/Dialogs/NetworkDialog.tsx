@@ -28,7 +28,7 @@ export default function Dialog({ showDialog, errMsg }: Props) {
     <dialog
       id="errorDialog"
       ref={dialogRef}
-      className={styles.modalContainer}
+      className={styles.addressSelectPanel}
       aria-modal="true"
     >
       <div className="flex justify-between mb-1 pt-0 px-3 text-gray-600">
@@ -42,7 +42,7 @@ export default function Dialog({ showDialog, errMsg }: Props) {
       </div>
 
       <div className={styles.modalBox}>
-        <div className={styles.modalScrollBar}>
+        <div className={styles.scrollDataListPanel}>
           <h1>{errMsg.name}</h1>
           <p>{errMsg.message}</p>
         </div>

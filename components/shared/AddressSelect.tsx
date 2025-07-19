@@ -104,7 +104,7 @@ export default function AddressSelect() {
       />
 
       <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0 gap-[0.2rem]">
-        <div id="DataListDiv" className={`${styles.modalScrollBar} ${styles.modalScrollBarHidden}`}>
+        <div id="DataListDiv" className={`${styles.scrollDataListPanel} ${styles.scrollDataListPanelHidden}`}>
           <DataList
             dataFeedType={feedType}
             onSelect={onDataListSelect}
