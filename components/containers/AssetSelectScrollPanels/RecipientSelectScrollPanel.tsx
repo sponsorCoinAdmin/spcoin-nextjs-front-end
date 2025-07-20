@@ -22,10 +22,10 @@ const debugLog = createDebugLogger('RecipientSelectScrollPanel', DEBUG_ENABLED, 
 
 export default function RecipientSelectScrollPanel() {
   const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
-  const { activeDisplay, updateActiveDisplay } = useActiveDisplay();
+  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
   // ✅ Skip render if this panel is not active
-  if (activeDisplay !== SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL) {
+  if (activeDisplay !== SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL) {
     debugLog.log(`⏭️ RecipientSelectScrollPanel → not active (instanceId=${instanceId}), skipping render`);
     return null;
   }
@@ -36,11 +36,11 @@ export default function RecipientSelectScrollPanel() {
 
   useEffect(() => {
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to SHOW_TRADING_STATION_PANEL (instanceId=${instanceId})`);
-      updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL);
+      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to TRADING_STATION_PANEL (instanceId=${instanceId})`);
+      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
       setInputState(InputState.EMPTY_INPUT); // ✅ reset to prevent loop
     }
-  }, [inputState, updateActiveDisplay, setInputState, instanceId]);
+  }, [inputState, setActiveDisplay, setInputState, instanceId]);
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {

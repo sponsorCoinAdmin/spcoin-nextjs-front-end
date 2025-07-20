@@ -40,10 +40,10 @@ export default function Header() {
   const networkName = exchangeContext?.network?.name ?? '';
   const logo = exchangeContext?.network?.logoURL ?? '';
 
-  const SHOW_TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
-  const SHOW_ADMIN_LINK = process.env.NEXT_PUBLIC_SHOW_ADMIN_PAGE === 'true';
-  const SHOW_EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
-  const SHOW_SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
+  const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
+  const ADMIN_LINK = process.env.NEXT_PUBLIC_ADMIN_PAGE === 'true';
+  const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
+  const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
 
   const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
@@ -72,7 +72,7 @@ export default function Header() {
         <div className="flex items-center gap-4 flex-shrink-0">
           <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
 
-          {SHOW_SPCOIN_LINK && (
+          {SPCOIN_LINK && (
             <Link
               href="/SponsorCoin"
               className={linkClass('/SponsorCoin')}
@@ -83,7 +83,7 @@ export default function Header() {
             </Link>
           )}
 
-          {SHOW_EXCHANGE_LINK && (
+          {EXCHANGE_LINK && (
             <Link
               href="/Exchange"
               className={linkClass('/Exchange')}
@@ -94,7 +94,7 @@ export default function Header() {
             </Link>
           )}
 
-          {SHOW_TEST_LINK && (
+          {TEST_LINK && (
             <Link
               href="/Exchange/Test"
               className={linkClass('/Exchange/Test')}

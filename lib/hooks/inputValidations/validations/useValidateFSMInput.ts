@@ -128,9 +128,9 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
 
         if (result.validatedAsset) {
           setValidatedAsset(result.validatedAsset as unknown as T);
-          if (containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER) {
+          if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
             setSellTokenContract(result.validatedAsset as TokenContract);
-          } else if (containerType === SP_COIN_DISPLAY.BUY_SELECT_CONTAINER) {
+          } else if (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
             setBuyTokenContract(result.validatedAsset as TokenContract);
           }
         }

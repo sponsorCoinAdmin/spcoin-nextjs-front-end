@@ -14,7 +14,6 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import TradingStationPanel from './TradingStationPanel';
 import ErrorMessagePanel from './ErrorMessagePanel';
-import SponsorRateConfigPanel from '../containers/SponsorRateConfigPanel';
 import { TokenSelectScrollPanel } from '../containers/AssetSelectScrollPanels';
 
 const LOG_TIME = false;

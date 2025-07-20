@@ -9,14 +9,14 @@ const AddSponsorshipButton = () => {
   const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
 
   const isContainerVisible =
-    spCoinDisplay === SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_PANEL ||
-    spCoinDisplay === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL;
+    spCoinDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL ||
+    spCoinDisplay === SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL;
 
   return (
     <>
       <div
         className={styles.addSponsorshipDiv}
-        onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_PANEL)}
+        onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
       >
         <div className={styles.centerTop}>Add</div>
         <div className={styles.centerBottom}>Sponsorship</div>

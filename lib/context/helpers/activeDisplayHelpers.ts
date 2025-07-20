@@ -14,8 +14,9 @@ export function getActiveDisplayString(value: SP_COIN_DISPLAY): string {
  */
 export function isAssetScrollDisplay(value: SP_COIN_DISPLAY): boolean {
   return (
-    value === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL ||
-    value === SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL
+    value === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
+    value === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL ||
+    value === SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL
   );
 }
 
@@ -23,14 +24,14 @@ export function isAssetScrollDisplay(value: SP_COIN_DISPLAY): boolean {
  * Returns true if the given display is considered an "error" type.
  */
 export function isErrorDisplay(value: SP_COIN_DISPLAY): boolean {
-  return value === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE_PANEL;
+  return value === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
 }
 
 /**
  * Returns true if the given display is the main trading panel.
  */
 export function isTradingStationPanel(value: SP_COIN_DISPLAY): boolean {
-  return value === SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL;
+  return value === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 }
 
 /**

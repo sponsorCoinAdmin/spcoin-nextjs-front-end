@@ -61,7 +61,7 @@ function TokenSelectPanelInner() {
   } = useTokenPanelContext();
 
   const tokenContract =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER ? sellTokenContract : buyTokenContract;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellTokenContract : buyTokenContract;
 
   const [inputValue, setInputValue] = useState<string>('0');
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -82,7 +82,7 @@ function TokenSelectPanelInner() {
   useEffect(() => {
     if (tokenContract) {
       const currentAmount =
-        containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER ? sellAmount : buyAmount;
+        containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
       const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
       if (inputValue !== formatted) setInputValue(formatted);
     }
@@ -90,12 +90,12 @@ function TokenSelectPanelInner() {
 
   useEffect(() => {
     if (
-      containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER &&
+      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
       tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
     ) {
       setSellAmount(debouncedSellAmount);
     } else if (
-      containerType === SP_COIN_DISPLAY.BUY_SELECT_CONTAINER &&
+      containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
       tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
     ) {
       setBuyAmount(debouncedBuyAmount);
@@ -118,7 +118,7 @@ function TokenSelectPanelInner() {
       debugLog.log(`🔢 Parsed BigInt: ${bigIntValue}`);
       setLocalAmount(bigIntValue);
 
-      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER) {
+      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         setSellAmount(bigIntValue);
       } else {
@@ -131,7 +131,7 @@ function TokenSelectPanelInner() {
   };
 
   const buySellText =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
       ? tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
         ? `You Pay ± ${slippage.percentageString}`
         : `You Exactly Pay:`
@@ -144,13 +144,13 @@ function TokenSelectPanelInner() {
   const isInputDisabled =
     !tokenContract ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
-      containerType === SP_COIN_DISPLAY.BUY_SELECT_CONTAINER);
+      containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
 
   const toggleTokenConfig = useCallback(() => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL) {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL);
+    if (spCoinDisplay === SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL) {
+      setSpCoinDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
     } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL);
+      setSpCoinDisplay(SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL);
     }
     debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
   }, [spCoinDisplay, setSpCoinDisplay]);
@@ -173,7 +173,7 @@ function TokenSelectPanelInner() {
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
 
       {isSpCoin(tokenContract) &&
-        (containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER ? (
+        (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorshipButton />

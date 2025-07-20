@@ -35,9 +35,9 @@ function TokenSelectDropDown({ containerType }: Props) {
   const buyHook = useBuyTokenContract();
 
   const [tokenContract] =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER ? sellHook : buyHook;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellHook : buyHook;
 
-  const { updateActiveDisplay } = useActiveDisplay();
+  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
   // ✅ Compute logoSrc only (pure, no FSM check)
   const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
@@ -56,9 +56,11 @@ function TokenSelectDropDown({ containerType }: Props) {
   );
 
   const showPanel = useCallback(() => {
-    debugLog.log('📂 Opening Token dialog');
-    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL);
-  }, [updateActiveDisplay]);
+    debugLog.log(`📂 Opening ${SP_COIN_DISPLAY[SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL]} dialog`);
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ?
+      setActiveDisplay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) :
+      setActiveDisplay(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
+  }, [setActiveDisplay]);
 
   return (
     <div className={styles.assetSelect}>

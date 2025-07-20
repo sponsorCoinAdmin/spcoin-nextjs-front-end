@@ -24,7 +24,7 @@ export const sanitizeExchangeContext = (
       apiTradingProvider:
         raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
       activeDisplay:
-        raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL, // ✅ only activeDisplay
+        raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ only activeDisplay
     },
     network: {
       ...defaultContext.network,

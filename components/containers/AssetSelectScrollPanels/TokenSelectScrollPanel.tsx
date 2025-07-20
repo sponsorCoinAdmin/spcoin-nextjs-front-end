@@ -15,10 +15,9 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 
-const LOG_TIME:boolean = false;
+const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
-
 
 interface TokenSelectScrollPanelProps {
   containerType: SP_COIN_DISPLAY;
@@ -26,22 +25,23 @@ interface TokenSelectScrollPanelProps {
 
 export default function TokenSelectScrollPanel({ containerType }: TokenSelectScrollPanelProps) {
   const { activeDisplay } = useActiveDisplay();
-  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
+  const isActive =  activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
+                    activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
 
   if (!isActive) return null;
 
   const title =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
       ? 'Select a Token to Sell'
       : 'Select a Token to Buy';
 
-      alert (`containerType(${containerType}) = ${SP_COIN_DISPLAY[containerType]}`)
-      alert (`title = ${title})`)
+  debugLog.log(`🧩 containerType(${containerType}) = ${SP_COIN_DISPLAY[containerType]}`)
+  debugLog.log(`🧩 title = ${title})`)
 
   return (
     <SharedPanelProvider>
       <TradeContainerHeader title={title} />
-      <TokenSelectScrollPanelInner title={title}/>
+      <TokenSelectScrollPanelInner title={title} />
     </SharedPanelProvider>
   );
 }
@@ -52,7 +52,7 @@ interface Props {
 
 function TokenSelectScrollPanelInner({ title }: Props) {
   const { inputState, setInputState, instanceId } = useSharedPanelContext();
-  const { updateActiveDisplay } = useActiveDisplay();
+  const { setActiveDisplay } = useActiveDisplay();
 
   useEffect(() => {
     debugLog.log(`🧩 TokenSelectScrollPanel mounted → instanceId=${instanceId}`);
@@ -64,12 +64,12 @@ function TokenSelectScrollPanelInner({ title }: Props) {
 
     if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
       debugLog.log(
-        `✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to SHOW_TRADING_STATION_PANEL (instanceId=${instanceId})`
+        `✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to TRADING_STATION_PANEL (instanceId=${instanceId})`
       );
-      updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL);
+      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
       setInputState(InputState.EMPTY_INPUT); // ✅ prevent loop
     }
-  }, [inputState, updateActiveDisplay, setInputState, instanceId]);
+  }, [inputState, setActiveDisplay, setInputState, instanceId]);
 
   return <AssetSelectScrollPanel title={title} />;
 }

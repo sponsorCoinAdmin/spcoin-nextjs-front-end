@@ -47,7 +47,7 @@ const SponsorRateConfigPanel = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SELECT_PANEL)}
+          onClick={() => setSpCoinDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
         >
           X
         </div>

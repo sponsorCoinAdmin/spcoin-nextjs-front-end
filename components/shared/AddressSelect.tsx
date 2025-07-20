@@ -34,7 +34,7 @@ export default function AddressSelect() {
     handleHexInputChange,
   } = useSharedPanelContext();
 
-  const { updateActiveDisplay } = useActiveDisplay();
+  const { setActiveDisplay } = useActiveDisplay();
   const MANUAL_ENTRY = true;
 
   // 🚨 Log context values on every render
@@ -69,7 +69,7 @@ export default function AddressSelect() {
       const result = handleHexInputChange(item.address, !MANUAL_ENTRY);
       debugLog.log(`📜 onDataListSelect handleHexInputChange result → ${result}`);
       alert(`onDataListSelect(${item.address})`);
-      updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL);
+      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     } catch (err) {
       console.error('❌ handleHexInputChange onDataListSelect error:', err);
     }

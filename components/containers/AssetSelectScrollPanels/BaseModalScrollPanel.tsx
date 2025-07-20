@@ -13,7 +13,7 @@ export default function BaseModalScrollPanel({
   title,
   children,
   feedType = FEED_TYPE.TOKEN_LIST,
-  containerType = SP_COIN_DISPLAY.SELL_SELECT_CONTAINER,
+  containerType = SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
 }: {
   id: string;
   title: string;
@@ -21,13 +21,13 @@ export default function BaseModalScrollPanel({
   feedType?: FEED_TYPE;
   containerType?: SP_COIN_DISPLAY;
 }) {
-  const { updateActiveDisplay } = useActiveDisplay(); // ✅ only activeDisplay now
+  const { setActiveDisplay } = useActiveDisplay(); // ✅ only activeDisplay now
   const { setInputState } = useSharedPanelContext();
 
   const closeDialog = useCallback(() => {
     setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
-    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL); // ✅ switch back to main panel
-  }, [setInputState, updateActiveDisplay]);
+    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL); // ✅ switch back to main panel
+  }, [setInputState, setActiveDisplay]);
 
   return (
     <div

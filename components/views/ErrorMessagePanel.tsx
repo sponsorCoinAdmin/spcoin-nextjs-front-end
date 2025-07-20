@@ -15,13 +15,13 @@ const debugLog = createDebugLogger('ErrorMessagePanel', DEBUG_ENABLED, LOG_TIME)
 
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
-  const { updateActiveDisplay } = useActiveDisplay();
+  const { setActiveDisplay } = useActiveDisplay();
   const { exchangeContext } = useExchangeContext();
 
   const closeDialog = () => {
-    debugLog.log('✅ Closing ErrorMessagePanel → switching to SHOW_TRADING_STATION_PANEL');
+    debugLog.log('✅ Closing ErrorMessagePanel → switching to TRADING_STATION_PANEL');
     setErrorMessage(undefined);
-    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
 
   return (
@@ -41,7 +41,7 @@ export default function ErrorMessagePanel() {
     getActiveDisplayString(activeDisplay)
   );
 
-  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_ERROR_MESSAGE_PANEL;
+  const isActive = activeDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
 
   if (!isActive) {
     debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');

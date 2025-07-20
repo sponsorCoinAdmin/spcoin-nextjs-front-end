@@ -10,7 +10,7 @@ import { usePanelContextBase } from './usePanelContextBase';
 export function BuyTokenPanelProvider({ children }: { children: React.ReactNode }) {
     const value = usePanelContextBase(
         FEED_TYPE.TOKEN_LIST,
-        SP_COIN_DISPLAY.BUY_SELECT_CONTAINER,
+        SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
         'BuyTokenPanelProvider',
         process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true'
     );

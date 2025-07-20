@@ -104,7 +104,7 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
       dumpFSMContext,
       dumpInputFeedContext,
       dumpSharedPanelContext,
-      containerType: SP_COIN_DISPLAY.SELL_SELECT_CONTAINER,
+      containerType: SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
       feedType: FEED_TYPE.TOKEN_LIST,
       forceReset,
       forceClose,

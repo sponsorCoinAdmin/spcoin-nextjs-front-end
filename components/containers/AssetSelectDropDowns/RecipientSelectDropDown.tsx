@@ -26,7 +26,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
 }) => {
   const [showDialog, setShowDialog] = useState(false);
   const hasErroredRef = useRef(false);
-  const { updateActiveDisplay } = useActiveDisplay();
+  const { setActiveDisplay } = useActiveDisplay();
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
@@ -47,9 +47,9 @@ const RecipientSelectDropDown: React.FC<Props> = ({
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    updateActiveDisplay(SP_COIN_DISPLAY.SHOW_RECIPIENT_SCROLL_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL);
     setShowDialog(true);
-  }, [updateActiveDisplay]);
+  }, [setActiveDisplay]);
 
   return (
     <div className="flex items-center cursor-pointer" onClick={openDialog}>

@@ -68,7 +68,7 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
         className={clsx(
           styles.inputs,
           styles.AccountSelectContainer,
-          displayState === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL
+          displayState === SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
             ? styles.noBottomRadius
             : styles.withBottomRadius
         )}
@@ -110,7 +110,7 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
         </div>
       </div>
 
-      {displayState === SP_COIN_DISPLAY.SHOW_SPONSOR_RATE_CONFIG_PANEL && ConfigComponent && (
+      {displayState === SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL && ConfigComponent && (
         <div>{ConfigComponent}</div>
       )}
     </>

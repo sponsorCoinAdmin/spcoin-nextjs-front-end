@@ -29,7 +29,6 @@ import {
   ExchangeContext,
 } from '@/lib/structure';
 
-// ✅ Helper to map enums to string labels
 function createEnumStringMap<T extends Record<string, string | number>>(
   enumObj: T,
   enumName: string
@@ -57,7 +56,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
 
-  const active:any = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
+  const active: any = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
 
   return {
     ...ctx,
@@ -148,23 +147,6 @@ export default function TestPage() {
     console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
   };
 
-  // ✅ NEW: Toggle activeDisplay between two states
-  const toggleActiveDisplay = () => {
-    const current = exchangeContext.settings.activeDisplay;
-    const next =
-      current === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL
-        ? SP_COIN_DISPLAY.SHOW_TRADING_STATION_PANEL
-        : SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
-    console.log('🔄 Toggling activeDisplay →', next);
-    setExchangeContext((prev) => ({
-      ...prev,
-      settings: {
-        ...prev.settings,
-        activeDisplay: next,
-      },
-    }));
-  };
-
   return (
     <div className="space-y-6 p-6">
       {isHydrated && (
@@ -187,10 +169,39 @@ export default function TestPage() {
             {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
           </button>
 
-          {/* ✅ NEW BUTTON */}
-          <button onClick={toggleActiveDisplay} className="px-4 py-2 text-sm font-medium text-yellow-300 bg-[#382a1f] rounded hover:text-yellow-500">
-            Toggle activeDisplay
-          </button>
+          {/* ✅ NEW: Dropdown radio selection for activeDisplay */}
+          <div className="flex flex-col space-y-2">
+            <label htmlFor="activeDisplaySelect" className="text-sm font-medium text-[#5981F3]">
+              Select activeDisplay
+            </label>
+            <select
+              id="activeDisplaySelect"
+              value={exchangeContext.settings.activeDisplay}
+              onChange={(e) => {
+                const selected = Number(e.target.value);
+                console.log('🔄 Changing activeDisplay →', selected);
+                setExchangeContext((prev) => ({
+                  ...prev,
+                  settings: {
+                    ...prev.settings,
+                    activeDisplay: selected,
+                  },
+                }));
+              }}
+              className="px-4 py-2 text-sm font-medium text-yellow-300 bg-[#382a1f] rounded hover:text-yellow-500"
+            >
+              <option value={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>TRADING_STATION_PANEL</option>
+              <option value={SP_COIN_DISPLAY.MANAGE_SPONSORS_BUTTON}>MANAGE_SPONSORS_BUTTON</option>
+              <option value={SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL}>RECIPIENT_SCROLL_PANEL</option>
+              <option value={SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL}>ERROR_MESSAGE_PANEL</option>
+              <option value={SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL}>SPONSOR_RATE_CONFIG_PANEL</option>
+              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_PANEL</option>
+              <option value={SP_COIN_DISPLAY.AGENT_SELECT_CONTAINER}>AGENT_SELECT_CONTAINER</option>
+              <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
+              <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
+              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_CONTAINER}>RECIPIENT_SELECT_CONTAINER</option>
+            </select>
+          </div>
         </div>
       )}
 

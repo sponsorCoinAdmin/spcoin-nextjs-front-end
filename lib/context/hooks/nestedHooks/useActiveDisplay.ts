@@ -6,7 +6,7 @@ export function useActiveDisplay() {
 
   const activeDisplay = exchangeContext.settings.activeDisplay;
 
-  const updateActiveDisplay = (value: SP_COIN_DISPLAY) => {
+  const setActiveDisplay = (value: SP_COIN_DISPLAY) => {
     setExchangeContext(prev => ({
       ...prev,
       settings: {
@@ -18,6 +18,6 @@ export function useActiveDisplay() {
 
   return {
     activeDisplay,
-    updateActiveDisplay,
+    setActiveDisplay,
   };
 }
