@@ -9,7 +9,6 @@ import { ChevronDown } from 'lucide-react';
 import {
   CONTAINER_TYPE,
   SP_COIN_DISPLAY,
-
 } from '@/lib/structure';
 
 import {

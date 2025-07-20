@@ -47,9 +47,9 @@ export default function BaseModalScrollPanel({
         <button
           aria-label="Close dialog"
           onClick={closeDialog}
-          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
+          className="absolute right-2 -translate-y-1/2 cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
         >
-          ×
+          X
         </button>
       </div>
       <div className={`${styles.modalBox} flex flex-col h-full max-h-[80vh] min-h-0`}>

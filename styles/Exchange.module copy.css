@@ -1,23 +1,3 @@
-.mainTradingPanel {
-  display: flex;
-  flex-direction: column;
-
-  transform: translate(0px, -50px);
-  font-weight: bold;
-  width: 520px;
-  background-color: #1b130e;
-  border: 2px solid #21273a;
-  min-height: 300px;
-  max-height: 400px;
-  border-radius: 15px;
-  padding-left: 30px;
-  padding-right: 30px;
-  padding-bottom: 10px;
-  margin: auto;
-  box-sizing: border-box;
-  overflow: hidden;  /* ensure child stays inside */
-}
-
 .addSponsorshipDiv {
   /* display: none; */
   position: absolute;
@@ -108,7 +88,6 @@
   max-width: 30px;
   max-height: 30px;
   object-fit: contain;
-  cursor: pointer;       /* ✅ cursor change on hover (can be set here instead of inline) */
 }
 
 .buySell {
@@ -211,9 +190,24 @@
   width: 20px;
   aspect-ratio: 1 / 1;
   object-fit: contain;
+  position: absolute;
   color: #51586f;
   transition: 0.3s;
+  top: 12px;
+  right: 12px;
 }
+/* 
+.cogImg2 {
+  height: 20px;
+  width: 20px;
+  position: absolute;
+  object-fit: contain;
+  color: #51586f;
+  transition: 0.3s;
+  top: 12px;
+  right: 12px;
+}
+ */
 
 .cogImg2:hover {
   color: red;
@@ -312,10 +306,14 @@
   cursor: pointer;
 }
 
+.inputs {
+  position: relative;
+}
+
 .leftH {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
 }
 
 .lineDivider {
@@ -479,7 +477,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 20px;
 }
 
 .select {
@@ -550,26 +548,20 @@
   cursor: pointer;
 }
 
-.mainTradingPanel {
-  transform: translate(0px, -40px);
+.mainSwapContainer {
+  transform: translate(0px, -10px);
   font-weight: bold;
   width: 520px;
   background-color: #0E111B;
   border: 2px solid #21273a;
   min-height: 300px;
-  max-height: 650px;
   border-radius: 15px;
   padding-left: 30px;
   padding-right: 30px;
   margin: auto;
 }
 
-.inputs {
-  position: relative;
-}
-
 .tokenSelectContainer {
-  position: relative;
   margin-top: 5px;
   margin-bottom: 5px;
 }
@@ -592,16 +584,6 @@
 }
 
 .tradeContainerHeader {
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;           /* ✅ changed from 98% to 100% for full width */
-  padding: 0 10px;       /* ✅ added horizontal padding for inner spacing */
-  box-sizing: border-box;
-}
-
-.tradeContainerHeader_OLD {
   /* color: #20c974;  
   background-color: #8f591c; */
   height: 60px;
@@ -610,7 +592,6 @@
   align-items: center;
   width: 98%;
 }
-
 
 .sponsorRatio {
   position: absolute;

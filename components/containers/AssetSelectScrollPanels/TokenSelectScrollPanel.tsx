@@ -14,6 +14,7 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useShare
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
+import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -58,6 +59,7 @@ export default function TokenSelectScrollPanel() {
 
   return (
     <SharedPanelProvider>
+      <TradeContainerHeader />
       <TokenSelectScrollPanelInner />
     </SharedPanelProvider>
   );

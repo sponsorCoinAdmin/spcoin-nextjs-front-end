@@ -32,7 +32,7 @@ export default function MainTradingPanel() {
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        <TradeContainerHeader />
+        {/* <TradeContainerHeader /> */}
         <TradingStationPanel />
         <TokenSelectScrollPanel />
         <ErrorMessagePanel />

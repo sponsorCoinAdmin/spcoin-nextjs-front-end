@@ -12,6 +12,7 @@ import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import TradeContainerHeader from '../Headers/TradeContainerHeader';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -31,6 +32,7 @@ export default function TradingStationPanel() {
 
   return (
     <div className={isActive ? '' : 'hidden'}>
+      <TradeContainerHeader />
       <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
       <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
       <BuySellSwapArrowButton />
