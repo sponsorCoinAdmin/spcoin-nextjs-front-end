@@ -2,7 +2,7 @@
 
 'use client';
 
-import { CONTAINER_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
@@ -33,8 +33,8 @@ export default function TradingStationPanel() {
   return (
     <div className={isActive ? '' : 'hidden'}>
       <TradeContainerHeader  title={"Sponsor Coin Exchange"}/>
-      <TokenSelectPanel containerType={CONTAINER_TYPE.SELL_SELECT_CONTAINER} />
-      <TokenSelectPanel containerType={CONTAINER_TYPE.BUY_SELECT_CONTAINER} />
+      <TokenSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_CONTAINER} />
+      <TokenSelectPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_CONTAINER} />
       <BuySellSwapArrowButton />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceData} />

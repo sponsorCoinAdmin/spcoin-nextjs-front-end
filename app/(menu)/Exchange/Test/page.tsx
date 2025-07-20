@@ -57,7 +57,7 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
 
-  const active = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
+  const active:any = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
 
   return {
     ...ctx,

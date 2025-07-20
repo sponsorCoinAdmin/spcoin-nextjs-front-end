@@ -7,7 +7,6 @@ import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 
 import {
-  CONTAINER_TYPE,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
@@ -28,7 +27,7 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
-  containerType: CONTAINER_TYPE;
+  containerType: SP_COIN_DISPLAY;
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
@@ -36,7 +35,7 @@ function TokenSelectDropDown({ containerType }: Props) {
   const buyHook = useBuyTokenContract();
 
   const [tokenContract] =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER ? sellHook : buyHook;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER ? sellHook : buyHook;
 
   const { updateActiveDisplay } = useActiveDisplay();
 

@@ -4,7 +4,6 @@
 
 import { useEffect } from 'react';
 import {
-  CONTAINER_TYPE,
   InputState,
   getInputStateString,
   SP_COIN_DISPLAY,
@@ -22,7 +21,7 @@ const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_
 
 
 interface TokenSelectScrollPanelProps {
-  containerType: CONTAINER_TYPE;
+  containerType: SP_COIN_DISPLAY;
 }
 
 export default function TokenSelectScrollPanel({ containerType }: TokenSelectScrollPanelProps) {
@@ -32,11 +31,11 @@ export default function TokenSelectScrollPanel({ containerType }: TokenSelectScr
   if (!isActive) return null;
 
   const title =
-    containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER
       ? 'Select a Token to Sell'
       : 'Select a Token to Buy';
 
-      alert (`containerType(${containerType}) = ${CONTAINER_TYPE[containerType]}`)
+      alert (`containerType(${containerType}) = ${SP_COIN_DISPLAY[containerType]}`)
       alert (`title = ${title})`)
 
   return (

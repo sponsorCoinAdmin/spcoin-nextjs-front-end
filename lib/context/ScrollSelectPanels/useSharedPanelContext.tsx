@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { InputState, CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
+import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 /**
@@ -13,7 +13,7 @@ export interface FSMContextType {
   setInputState: (state: InputState) => void;
   validatedAsset?: ValidatedAsset;
   setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
-  containerType: CONTAINER_TYPE;
+  containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   dumpFSMContext: (headerInfo?: string) => void;
   /** 🆔 Unique instance ID for debugging */

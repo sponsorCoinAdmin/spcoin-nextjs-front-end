@@ -1,7 +1,7 @@
 import { Address, isAddress } from 'viem';
 import {
   InputState,
-  CONTAINER_TYPE,
+  SP_COIN_DISPLAY,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
@@ -18,7 +18,7 @@ const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED);
 export interface ValidateFSMInput {
   inputState: InputState;
   debouncedHexInput: string;
-  containerType: CONTAINER_TYPE;
+  containerType: SP_COIN_DISPLAY;
   sellAddress?: string;
   buyAddress?: string;
   chainId: number;

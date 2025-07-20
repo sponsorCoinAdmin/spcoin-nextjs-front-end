@@ -4,7 +4,7 @@
 
 import { useState, useMemo } from 'react';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import { InputState, getInputStateString, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
+import { InputState, getInputStateString, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './useSharedPanelContext';
@@ -14,7 +14,7 @@ const LOG_TIME = false;
 
 export function usePanelContextBase(
   feedType: FEED_TYPE,
-  containerType: CONTAINER_TYPE,
+  containerType: SP_COIN_DISPLAY,
   label: string,
   debugEnabled: boolean = false
 ): SharedPanelContextType {

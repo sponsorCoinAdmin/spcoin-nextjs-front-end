@@ -9,7 +9,7 @@ import { useChainId, useAccount, usePublicClient, useBalance } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
   InputState,
-  CONTAINER_TYPE,
+  SP_COIN_DISPLAY,
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
@@ -128,9 +128,9 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
 
         if (result.validatedAsset) {
           setValidatedAsset(result.validatedAsset as unknown as T);
-          if (containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER) {
+          if (containerType === SP_COIN_DISPLAY.SELL_SELECT_CONTAINER) {
             setSellTokenContract(result.validatedAsset as TokenContract);
-          } else if (containerType === CONTAINER_TYPE.BUY_SELECT_CONTAINER) {
+          } else if (containerType === SP_COIN_DISPLAY.BUY_SELECT_CONTAINER) {
             setBuyTokenContract(result.validatedAsset as TokenContract);
           }
         }

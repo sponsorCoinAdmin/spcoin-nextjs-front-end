@@ -3,14 +3,14 @@
 // Date: 2023-07-07
 // Description: Provider for the SellTokenPanelContext
 
-import { CONTAINER_TYPE, FEED_TYPE } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { SharedPanelContext } from './useSharedPanelContext';
 import { usePanelContextBase } from './usePanelContextBase';
 
 export function SellTokenPanelProvider({ children }: { children: React.ReactNode }) {
     const value = usePanelContextBase(
         FEED_TYPE.TOKEN_LIST,
-        CONTAINER_TYPE.SELL_SELECT_CONTAINER,
+        SP_COIN_DISPLAY.SELL_SELECT_CONTAINER,
         'SellTokenPanelProvider',
         process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true'
     );

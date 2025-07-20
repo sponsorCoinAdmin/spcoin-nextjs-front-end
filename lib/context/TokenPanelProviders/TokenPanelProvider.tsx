@@ -3,11 +3,11 @@
 'use client';
 
 import React, { useState, ReactNode } from 'react';
-import { CONTAINER_TYPE, FEED_TYPE, InputState, TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE, InputState, TokenContract } from '@/lib/structure';
 import { TokenPanelContext } from './useTokenPanelContext';
 
 interface Props {
-  containerType: CONTAINER_TYPE;
+  containerType: SP_COIN_DISPLAY;
   children: ReactNode;
 }
 
@@ -19,7 +19,7 @@ export const TokenPanelProvider = ({ containerType, children }: Props) => {
   const [localAmount, setLocalAmount] = useState<bigint>(0n);
 
   const dumpTokenContext = (headerInfo?: string) => {
-    console.log(`🛠️ [${CONTAINER_TYPE[containerType]} Dump] ${headerInfo || ''}`, {
+    console.log(`🛠️ [${SP_COIN_DISPLAY[containerType]} Dump] ${headerInfo || ''}`, {
       inputState,
       validatedAsset,
       localTokenContract,

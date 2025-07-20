@@ -2,7 +2,7 @@
 
 import React, { ReactNode, useState, useCallback, useMemo } from 'react';
 import { SharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { CONTAINER_TYPE, FEED_TYPE, InputState, getInputStateString } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE, InputState, getInputStateString } from '@/lib/structure';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -104,7 +104,7 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
       dumpFSMContext,
       dumpInputFeedContext,
       dumpSharedPanelContext,
-      containerType: CONTAINER_TYPE.SELL_SELECT_CONTAINER,
+      containerType: SP_COIN_DISPLAY.SELL_SELECT_CONTAINER,
       feedType: FEED_TYPE.TOKEN_LIST,
       forceReset,
       forceClose,

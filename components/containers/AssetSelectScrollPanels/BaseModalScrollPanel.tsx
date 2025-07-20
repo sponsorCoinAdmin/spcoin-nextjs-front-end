@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE, CONTAINER_TYPE } from '@/lib/structure';
+import { InputState, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import { useActiveDisplay} from '@/lib/context/hooks';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
@@ -13,13 +13,13 @@ export default function BaseModalScrollPanel({
   title,
   children,
   feedType = FEED_TYPE.TOKEN_LIST,
-  containerType = CONTAINER_TYPE.SELL_SELECT_CONTAINER,
+  containerType = SP_COIN_DISPLAY.SELL_SELECT_CONTAINER,
 }: {
   id: string;
   title: string;
   children: React.ReactNode;
   feedType?: FEED_TYPE;
-  containerType?: CONTAINER_TYPE;
+  containerType?: SP_COIN_DISPLAY;
 }) {
   const { updateActiveDisplay } = useActiveDisplay(); // ✅ only activeDisplay now
   const { setInputState } = useSharedPanelContext();
