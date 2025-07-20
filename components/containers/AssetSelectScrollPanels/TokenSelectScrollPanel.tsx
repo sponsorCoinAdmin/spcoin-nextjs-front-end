@@ -16,23 +16,48 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 
-const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('TokenSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
-function TokenSelectScrollPanelInner() {
-  const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
-  const { updateActiveDisplay } = useActiveDisplay();
+
+interface TokenSelectScrollPanelProps {
+  containerType: CONTAINER_TYPE;
+}
+
+export default function TokenSelectScrollPanel({ containerType }: TokenSelectScrollPanelProps) {
+  const { activeDisplay } = useActiveDisplay();
+  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
+
+  if (!isActive) return null;
 
   const title =
     containerType === CONTAINER_TYPE.SELL_SELECT_CONTAINER
       ? 'Select a Token to Sell'
       : 'Select a Token to Buy';
 
+      alert (`containerType(${containerType}) = ${CONTAINER_TYPE[containerType]}`)
+      alert (`title = ${title})`)
+
+  return (
+    <SharedPanelProvider>
+      <TradeContainerHeader title={title} />
+      <TokenSelectScrollPanelInner title={title}/>
+    </SharedPanelProvider>
+  );
+}
+
+interface Props {
+  title: string;
+}
+
+function TokenSelectScrollPanelInner({ title }: Props) {
+  const { inputState, setInputState, instanceId } = useSharedPanelContext();
+  const { updateActiveDisplay } = useActiveDisplay();
+
   useEffect(() => {
-    debugLog.log(`🧩 TokenSelectScrollPanel mounted → containerType=${containerType}, instanceId=${instanceId}`);
-  }, [containerType, instanceId]);
+    debugLog.log(`🧩 TokenSelectScrollPanel mounted → instanceId=${instanceId}`);
+  }, [instanceId]);
 
   useEffect(() => {
     const stateStr = getInputStateString(inputState);
@@ -48,19 +73,4 @@ function TokenSelectScrollPanelInner() {
   }, [inputState, updateActiveDisplay, setInputState, instanceId]);
 
   return <AssetSelectScrollPanel title={title} />;
-}
-
-// ✅ EXPORTED component with built-in provider and top-level isActive check
-export default function TokenSelectScrollPanel() {
-  const { activeDisplay } = useActiveDisplay();
-  const isActive = activeDisplay === SP_COIN_DISPLAY.SHOW_TOKEN_SCROLL_PANEL;
-
-  if (!isActive) return null; // ✅ skip provider + inner when inactive
-
-  return (
-    <SharedPanelProvider>
-      <TradeContainerHeader />
-      <TokenSelectScrollPanelInner />
-    </SharedPanelProvider>
-  );
 }

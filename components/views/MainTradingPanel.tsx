@@ -32,9 +32,9 @@ export default function MainTradingPanel() {
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        {/* <TradeContainerHeader /> */}
+        {/* <TradeContainerHeader title={"Sponsor Coin Exchange"} /> */}
         <TradingStationPanel />
-        <TokenSelectScrollPanel />
+        <TokenSelectScrollPanel containerType={activeDisplay} />
         <ErrorMessagePanel />
         {/* <SponsorRateConfigPanel /> */}
       </div>
