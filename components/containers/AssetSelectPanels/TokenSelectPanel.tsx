@@ -156,8 +156,9 @@ function TokenSelectPanelInner() {
   }, [spCoinDisplay, setSpCoinDisplay]);
 
   return (
-    <div className={styles.tokenSelectContainer}>
+    <div id="TokenSelectPanelInner" className={styles.tokenSelectContainer}>
       <input
+        id="TokenSelectPanelInput"
         className={clsx(styles.priceInput, styles.withBottomRadius)}
         placeholder="0"
         disabled={isInputDisabled}

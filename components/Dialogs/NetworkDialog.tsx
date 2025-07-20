@@ -28,7 +28,7 @@ export default function Dialog({ showDialog, errMsg }: Props) {
     <dialog
       id="errorDialog"
       ref={dialogRef}
-      className={styles.addressSelectPanel}
+      className={styles.baseSelectPanel}
       aria-modal="true"
     >
       <div className="flex justify-between mb-1 pt-0 px-3 text-gray-600">

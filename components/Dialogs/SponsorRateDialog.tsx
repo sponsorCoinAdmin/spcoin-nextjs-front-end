@@ -34,7 +34,7 @@ export default function SponsorRateDialog({ showDialog, errMsg }: Props) {
     <dialog
       id="sponsorRateDialog"
       ref={dialogRef}
-      className={styles.addressSelectPanel}
+      className={styles.baseSelectPanel}
       aria-modal="true"
     >
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">

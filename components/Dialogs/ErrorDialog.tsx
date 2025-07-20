@@ -19,7 +19,7 @@ export default function ErrorDialog({ showDialog, closeDialog, message }: Props)
   }, [showDialog]);
 
   return (
-    <dialog id="errorDialog" ref={dialogRef} className={styles.addressSelectPanel}>
+    <dialog id="errorDialog" ref={dialogRef} className={styles.baseSelectPanel}>
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
         <h1 className="text-sm indent-9 mt-1">{message?.source}</h1>
         <div

@@ -4,7 +4,7 @@ import { ConnectKitButton } from "connectkit";
 
 const CustomConnectButton = () => {    
   return (
-    <div>
+    <div id="CustomConnectButton" >
       { (
         <ConnectKitButton.Custom>
           {({

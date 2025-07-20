@@ -34,13 +34,6 @@ export default function RecipientSelectScrollPanel() {
     debugLog.log(`🧩 RecipientSelectScrollPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
   }, [containerType, instanceId]);
 
-  useEffect(() => {
-    if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-      debugLog.log(`✅ CLOSE_SELECT_SCROLL_PANEL triggered → setting activeDisplay to TRADING_STATION_PANEL (instanceId=${instanceId})`);
-      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-      setInputState(InputState.EMPTY_INPUT); // ✅ reset to prevent loop
-    }
-  }, [inputState, setActiveDisplay, setInputState, instanceId]);
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {

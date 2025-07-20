@@ -12,7 +12,7 @@ type Props = {
 const AffiliateFee = ({ priceResponse }: Props) => {
     const [buyTokenContract, setBuyTokenContract] = useBuyTokenContract();
     return (
-        <div className="text-slate-400">
+        <div id="AffiliateFee" className="text-slate-400">
             {priceResponse?.grossBuyAmount
                 ? "Affiliate Fee: " +
                 Number(formatUnits(BigInt(priceResponse.grossBuyAmount), buyTokenContract?.decimals)) *

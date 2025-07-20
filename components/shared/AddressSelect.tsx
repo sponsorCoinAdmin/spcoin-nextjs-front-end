@@ -76,7 +76,7 @@ export default function AddressSelect() {
   };
 
   return (
-    <div id="inputSelectDiv" className={`${styles.inputSelectWrapper} flex flex-col h-full min-h-0`}>
+    <div id="AddressSelectDiv" className={`${styles.addressSelectPanel} flex flex-col h-full min-h-0`}>
       <HexAddressInput
         inputValue={validHexInput}
         onChange={(val) => {

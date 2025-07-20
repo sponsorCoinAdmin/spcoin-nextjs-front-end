@@ -22,7 +22,7 @@ const PriceButton = ({ isLoadingPrice }: Props) => {
     }, [ACTIVE_ACCOUNT?.address]);
 
     return (
-        <div>
+        <div id="PriceButton">
             {!walletAccount ? (
                 <CustomConnectButton />
             ) : (

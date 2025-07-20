@@ -63,10 +63,10 @@ function TokenSelectDropDown({ containerType }: Props) {
   }, [setActiveDisplay]);
 
   return (
-    <div className={styles.assetSelect}>
+    <div id="TokenSelectDropDown" className={styles.assetSelect}>
       {tokenContract ? (
         <>
-          <img
+          <img id="TokenSelectDropDownImage.png"
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name} logo`}
             src={logoSrc}
@@ -79,6 +79,7 @@ function TokenSelectDropDown({ containerType }: Props) {
         <>Select Token:</>
       )}
       <ChevronDown
+        id="ChevronDown"
         size={18}
         className="ml-2 cursor-pointer"
         onClick={showPanel}

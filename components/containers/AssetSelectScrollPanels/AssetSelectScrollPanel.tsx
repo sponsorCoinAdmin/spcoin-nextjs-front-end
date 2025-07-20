@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import BaseModalScrollPanel from './BaseModalScrollPanel';
+import BaseScrollPanel from './BaseScrollPanel';
 import AddressSelect from '@/components/shared/AddressSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
@@ -34,8 +34,8 @@ export default function AssetSelectScrollPanel({ title }: Props) {
   }, [containerType]);
 
   return (
-    <BaseModalScrollPanel id="AssetSelectScrollPanel" title={title}>
+    <BaseScrollPanel id="AssetSelectScrollPanel" title={title}>
       <AddressSelect />
-    </BaseModalScrollPanel>
+    </BaseScrollPanel>
   );
 }

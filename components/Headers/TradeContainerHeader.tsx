@@ -16,10 +16,10 @@ const TradeContainerHeader = ({ title }: Props) => {
   const { exchangeContext } = useExchangeContext();
 
   return (
-    <div className={styles.tradeContainerHeader}>
+    <div id="TradeContainerHeader" className={styles.tradeContainerHeader}>
       <ConfigDialog showDialog={false} />
 
-      <div onClick={() => exchangeContextDump(exchangeContext)}>
+      <div id="SponsorCoinLogo.png" onClick={() => exchangeContextDump(exchangeContext)}>
         <Image
           src={spCoin_png}
           className={styles.logoImg}
@@ -27,13 +27,9 @@ const TradeContainerHeader = ({ title }: Props) => {
           style={{ height: 'auto', width: 'auto' }} // ✅ add this
         />      </div>
 
-      <h4 className={styles.center}>{title}</h4>
+      <h4 id="TradeContainerHeaderTitle" className={styles.center}>{title}</h4>
 
-      {/* <div>
-        <Settings size={20} className={styles.cog} />
-      </div> */}
-
-      <div>
+      <div id="cogImg2">
         <Image
           src={cog_png}
           alt="Info Image"
@@ -42,11 +38,6 @@ const TradeContainerHeader = ({ title }: Props) => {
           style={{ height: 'au20to', width: 'auto' }} // ✅ required
         />      
       </div>
-      {/* 
-      <Popover content={<slippageBps initialSlippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback}/>} title="Settings" trigger="click" placement="bottomLeft">
-        <SettingOutlined className={styles.cog} />
-      </Popover>
-      */}
     </div>
   );
 };

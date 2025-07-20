@@ -38,7 +38,7 @@ const BuySellSwapArrowButton = () => {
   };
 
   return (
-    <div className={styles.switchButton}>
+    <div id="BuySellSwapArrowButton" className={styles.switchButton}>
       <ArrowDown
         size={20}
         className={styles.switchArrow}

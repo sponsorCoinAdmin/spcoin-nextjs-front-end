@@ -186,8 +186,9 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
   const buttonType = getButtonType();
 
   return (
-    <div>
+    <div id="ExchangeButtonContext">
       <button
+        id="ExchangeButton"
         onClick={buttonClick}
         type="button"
         className={styles.exchangeButton + ' ' + styles[getButtonColor(buttonType)]}>
