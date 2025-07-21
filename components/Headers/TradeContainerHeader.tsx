@@ -49,9 +49,11 @@ const TradeContainerHeader = ({ containerType }: Props) => {
   }, [setActiveDisplay]);
 
   return (
-    <div id="TradeContainerHeader" className={styles.tradeContainerHeader}>
+    <div
+      id="TradeContainerHeader"
+      className="h-[60px] flex justify-between items-center w-full px-2.5 box-border shrink-0"
+    >
       <ConfigDialog showDialog={false} />
-
       <div
         id="SponsorCoinLogo.png"
         onClick={() => exchangeContextDump(exchangeContext)}
@@ -75,7 +77,7 @@ const TradeContainerHeader = ({ containerType }: Props) => {
             src={cog_png}
             alt="Info Image"
             onClick={() => openDialog('#ConfigDialog')}
-            className={styles.cogImg2}
+            className="absolute top-3 right-3 h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
           />
         ) : (
           <button

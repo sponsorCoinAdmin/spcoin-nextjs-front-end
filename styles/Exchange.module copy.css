@@ -196,18 +196,6 @@
   top: 12px;
   right: 12px;
 }
-/* 
-.cogImg2 {
-  height: 20px;
-  width: 20px;
-  position: absolute;
-  object-fit: contain;
-  color: #51586f;
-  transition: 0.3s;
-  top: 12px;
-  right: 12px;
-}
- */
 
 .cogImg2:hover {
   color: red;

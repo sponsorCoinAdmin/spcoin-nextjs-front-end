@@ -30,9 +30,9 @@
 .baseSelectPanel {
   display: flex;
   flex-direction: column;
-  background-color: #ba4420;
+  /* background-color: #ba4420; */
 
-  padding-top: 20px;
+  /* padding-top: 20px; */
   width: 100%;
   min-height: 100px;
   max-height: 100%;          /* fit inside parent (Panel A) */

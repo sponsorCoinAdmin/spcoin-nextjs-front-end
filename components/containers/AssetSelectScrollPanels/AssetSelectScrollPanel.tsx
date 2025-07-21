@@ -34,8 +34,9 @@ export default function AssetSelectScrollPanel({ title }: Props) {
   }, [containerType]);
 
   return (
-    <BaseScrollPanel id="AssetSelectScrollPanel" title={title}>
+    <BaseScrollPanel id="BaseScrollPanel">
       <AddressSelect />
+      
     </BaseScrollPanel>
   );
 }

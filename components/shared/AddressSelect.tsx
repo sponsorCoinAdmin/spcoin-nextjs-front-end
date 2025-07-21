@@ -103,14 +103,11 @@ export default function AddressSelect() {
         onSelect={onManualSelect}
       />
 
-      <div id="inputSelectFlexDiv" className="flex flex-col flex-grow min-h-0 gap-[0.2rem]">
-        <div id="DataListDiv" className={`${styles.scrollDataListPanel} ${styles.scrollDataListPanelHidden}`}>
-          <DataList
-            dataFeedType={feedType}
-            onSelect={onDataListSelect}
-          />
-        </div>
-      </div>
-    </div>
+      <div
+        id="DataListDiv"
+        className="bg-[#243056] w-full overflow-y-auto flex-grow p-2.5 text-[#5981F3] border-0 mb-0 rounded-[20px] box-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <DataList dataFeedType={feedType} onSelect={onDataListSelect} />
+      </div>    </div>
   );
 }

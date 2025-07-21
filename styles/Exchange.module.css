@@ -216,7 +216,6 @@
 }
 
 .cogImg2:hover {
-  color: red;
   rotate: 360deg;
   cursor: pointer;
 }
@@ -590,27 +589,6 @@
 .priceInput:focus{
   outline: none;
 }
-
-.tradeContainerHeader {
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;           /* ✅ changed from 98% to 100% for full width */
-  padding: 0 10px;       /* ✅ added horizontal padding for inner spacing */
-  box-sizing: border-box;
-}
-
-.tradeContainerHeader_OLD {
-  /* color: #20c974;  
-  background-color: #8f591c; */
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 98%;
-}
-
 
 .sponsorRatio {
   position: absolute;
