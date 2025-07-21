@@ -3,7 +3,6 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import styles from '@/styles/Modal.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { useAccount, useChainId } from 'wagmi';
@@ -74,17 +73,13 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
       loadAccounts(jsonList)
         .then((accounts) => {
           debugLog.log(`✅ Accounts loaded: ${accounts.length}`);
-          const sanitized = accounts.map((account, index) => {
-            const sanitizedAccount: WalletAccount = {
-              ...account,
-              name: account.name || 'N/A',
-              symbol: account.symbol || 'N/A',
-              logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
-              address: account.address || '0x0000000000000000000000000000000000000000',
-            };
-            debugLog.log(`📘 [${index}] ${sanitizedAccount.address} — name: ${sanitizedAccount.name}`);
-            return sanitizedAccount;
-          });
+          const sanitized = accounts.map((account) => ({
+            ...account,
+            name: account.name || 'N/A',
+            symbol: account.symbol || 'N/A',
+            logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
+            address: account.address || '0x0000000000000000000000000000000000000000',
+          }));
           setWallets(sanitized);
         })
         .catch((err) => debugLog.error('❌ Failed to load accounts', err))
@@ -98,22 +93,44 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
   );
 
   const logoTokenList = useMemo(
-    () => dataFeedList.map((token) => ({
-      ...token,
-      logoURL: getLogoURL(chainId, token.address as Address, dataFeedType),
-    })),
+    () =>
+      dataFeedList.map((token) => ({
+        ...token,
+        logoURL: getLogoURL(chainId, token.address as Address, dataFeedType),
+      })),
     [dataFeedList, chainId, dataFeedType]
   );
 
-  if (!isClient) return <p>Loading data...</p>;
+  const wrapperClass =
+    'bg-[#243056] w-full overflow-y-auto flex-grow p-2.5 text-[#5981F3] rounded-[20px] box-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden';
+
+  if (!isClient) {
+    return (
+      <div className={wrapperClass}>
+        <p>Loading data...</p>
+      </div>
+    );
+  }
 
   if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) {
-    if (loadingWallets) return <p>Loading accounts...</p>;
-    if (wallets.length === 0) return <p>No accounts available.</p>;
+    if (loadingWallets) {
+      return (
+        <div className={wrapperClass}>
+          <p>Loading accounts...</p>
+        </div>
+      );
+    }
+    if (wallets.length === 0) {
+      return (
+        <div className={wrapperClass}>
+          <p>No accounts available.</p>
+        </div>
+      );
+    }
 
     return (
-      <>
-        {wallets.map((wallet, index) => (
+      <div className={wrapperClass}>
+        {wallets.map((wallet) => (
           <div
             key={wallet.address}
             className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
@@ -127,21 +144,18 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 } as T);
                 return;
               }
-              debugLog.log(`[DataList] Selected wallet address: ${wallet.address}`);
               onSelect(wallet as T);
             }}
           >
             <div className="flex items-center gap-3">
               <img
-                className={styles.elementLogo}
+                className="h-8 w-8 object-contain rounded-full"
                 src={wallet.logoURL || defaultMissingImage}
                 alt={`${wallet.name} logo`}
-                width={32}
-                height={32}
               />
               <div>
-                <div className={styles.elementName}>{wallet.name}</div>
-                <div className={styles.elementSymbol}>{wallet.symbol}</div>
+                <div className="font-semibold">{wallet.name}</div>
+                <div className="text-sm text-gray-400">{wallet.symbol}</div>
               </div>
             </div>
             <div
@@ -156,37 +170,31 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 alert(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`);
               }}
             >
-              <Image className={styles.infoLogo} src={info_png} alt="Info Image" width={20} height={20} />
+              <Image src={info_png} alt="Info Image" width={20} height={20} />
             </div>
           </div>
         ))}
-      </>
+      </div>
     );
   }
 
   if (logoTokenList.length === 0) {
-    return <p>No tokens available.</p>;
+    return (
+      <div className={wrapperClass}>
+        <p>No tokens available.</p>
+      </div>
+    );
   }
 
   return (
-    <>
+    <div className={wrapperClass}>
       {logoTokenList.map((token) => {
         const handleSelect = () => {
           const selectedAddress = token.address?.trim();
 
           debugLog.log(`[DataList] Clicked token: ${selectedAddress}`);
 
-          if (!selectedAddress) {
-            debugLog.warn(`⚠️ Empty address selected for token: ${token.name}`);
-            onSelect({
-              ...token,
-              address: '',
-            } as T);
-            return;
-          }
-
-          if (!isAddress(selectedAddress)) {
-            debugLog.warn(`🚫 Invalid token address selected: ${selectedAddress}`);
+          if (!selectedAddress || !isAddress(selectedAddress)) {
             onSelect({
               address: '0x0000000000000000000000000000000000000000',
               symbol: 'N/A',
@@ -200,7 +208,6 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
             return;
           }
 
-          debugLog.log(`[DataList] Selected token address: ${selectedAddress}`);
           const tokenContract: TokenContract = {
             address: selectedAddress as `0x${string}`,
             symbol: token.symbol,
@@ -222,19 +229,17 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
           >
             <div className="flex flex-row items-center gap-3">
               <img
-                className={styles.elementLogo}
+                className="h-8 w-8 object-contain rounded-full"
                 src={token.logoURL || defaultMissingImage}
                 alt={`${token.name} logo`}
-                width={32}
-                height={32}
               />
               <div>
-                <div className={styles.elementName}>{token.name}</div>
-                <div className={styles.elementSymbol}>{token.symbol}</div>
+                <div className="font-semibold">{token.name}</div>
+                <div className="text-sm text-gray-400">{token.symbol}</div>
               </div>
             </div>
             <div
-              className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+              className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
               onClick={(e) => {
                 e.stopPropagation();
                 alert(`${token.name} Address: ${stringifyBigInt(token)}`);
@@ -245,11 +250,11 @@ export default function DataList<T>({ dataFeedType, onSelect }: DataListProps<T>
                 alert(`${token.name} Record: ${token.logoURL}`);
               }}
             >
-              <Image className={styles.infoLogo} src={info_png} alt="Info Image" width={20} height={20} />
+              <Image src={info_png} alt="Info Image" width={20} height={20} />
             </div>
           </div>
         );
       })}
-    </>
+    </div>
   );
 }

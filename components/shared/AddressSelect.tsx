@@ -103,11 +103,7 @@ export default function AddressSelect() {
         onSelect={onManualSelect}
       />
 
-      <div
-        id="DataListDiv"
-        className="bg-[#243056] w-full overflow-y-auto flex-grow p-2.5 text-[#5981F3] border-0 mb-0 rounded-[20px] box-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <DataList dataFeedType={feedType} onSelect={onDataListSelect} />
-      </div>    </div>
+      <DataList dataFeedType={feedType} onSelect={onDataListSelect} />
+    </div>
   );
 }
