@@ -1,3 +1,5 @@
+// File: tailwind.config.js
+
 import scrollbarHide from 'tailwind-scrollbar-hide';
 
 export default {

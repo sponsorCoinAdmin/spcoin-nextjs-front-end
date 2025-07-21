@@ -13,6 +13,7 @@ import { useActiveDisplay } from '@/lib/context/hooks';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import TradeContainerHeader from '../Headers/TradeContainerHeader';
+import FeeDisclosure from '../containers/FeeDisclosure';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -32,12 +33,12 @@ export default function TradingStationPanel() {
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      <TradeContainerHeader containerType={activeDisplay} />
       <TokenSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
       <TokenSelectPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
       <BuySellSwapArrowButton />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceData} />
+      <FeeDisclosure />
     </div>
   );
 }

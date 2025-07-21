@@ -1,12 +1,7 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { InputState } from '@/lib/structure';
 import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
-const debugLog = createDebugLogger('ErrorAssetPreview', DEBUG_ENABLED);
+import BasePreviewWrapper from './BasePreviewWrapper';
+import { useEffect, useState } from 'react';
+import { InputState } from '@/lib/structure';
 
 const emojiMap: Partial<Record<InputState, {
   emoji?: string;
@@ -26,27 +21,19 @@ export default function ErrorAssetPreview() {
   const { inputState, isTerminalState, isErrorState } = useTerminalFSMState();
   const [showPanel, setShowPanel] = useState(false);
 
-  const debugShowPanel = (value: boolean, reason?: string) => {
-    debugLog.log(
-      `🧭 debugShowPanel → set to ${value} (inputState=${InputState[inputState]}, isTerminal=${isTerminalState}, isError=${isErrorState}, reason=${reason || 'none'})`
-    );
-    setShowPanel(value);
-  };
-console.log('⚡ ErrorAssetPreview re-rendered');
   useEffect(() => {
-    const shouldShow = isTerminalState && isErrorState;
-    debugShowPanel(shouldShow, 'ErrorAssetPreview visibility check');
+    setShowPanel(isTerminalState && isErrorState);
   }, [isTerminalState, isErrorState, inputState]);
 
-  if (!showPanel) return null;
+  if (!showPanel) return null; // optional, but BasePreviewWrapper handles it
 
   const item = emojiMap[inputState];
   const message = item?.text ?? 'An error occurred.';
 
   return (
-    <div className={`flex items-center h-[170px] bg-[#243056] rounded-[22px] p-2 ${item?.color ?? 'text-[#5981F3]'}`}>
+    <BasePreviewWrapper show={showPanel}>
       {item?.emoji && <span className="ml-[22px] text-[28px] mr-1.5">{item.emoji}</span>}
-      <span className="text-[15px]">{message}</span>
-    </div>
+      <span className={`text-[15px] ${item?.color ?? 'text-[#5981F3]'}`}>{message}</span>
+    </BasePreviewWrapper>
   );
 }

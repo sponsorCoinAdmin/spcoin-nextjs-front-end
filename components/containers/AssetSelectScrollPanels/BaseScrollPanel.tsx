@@ -1,9 +1,3 @@
-// File: components/containers/AssetSelectScrollPanels/BaseScrollPanel.tsx
-
-'use client';
-
-import styles from '@/styles/Modal.module.css';
-
 export default function BaseScrollPanel({
   id,
   children
@@ -14,8 +8,9 @@ export default function BaseScrollPanel({
   return (
     <div
       id={id}
-      className={styles.baseSelectPanel}>
-      <div className={`${styles.modalBox} flex flex-col h-screen min-h-0`}>
+      className="flex flex-col h-full w-full rounded-[15px] overflow-hidden"
+    >
+      <div className="flex flex-col h-full w-full">
         {children}
       </div>
     </div>

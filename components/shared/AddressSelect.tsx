@@ -2,22 +2,16 @@
 
 'use client';
 
-import styles from '@/styles/Modal.module.css';
 import React, { useEffect } from 'react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-
 import HexAddressInput from '@/components/shared/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
-import DataList from '../Dialogs/Resources/DataList';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { useActiveDisplay } from '@/lib/context/hooks';
+import ErrorAssetPreview from './utils/sharedPreviews/ErrorAssetPreview';
 
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
-import ErrorAssetPreview from './utils/sharedPreviews/ErrorAssetPreview';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
-// ✅ DEBUG marker: component loaded
 console.log('✅ AddressSelect component file loaded');
 
 const LOG_TIME = false;
@@ -28,27 +22,22 @@ export default function AddressSelect() {
   const {
     instanceId,
     validatedAsset,
-    feedType,
     validHexInput,
     debouncedHexInput,
     handleHexInputChange,
   } = useSharedPanelContext();
 
-  const { setActiveDisplay } = useActiveDisplay();
   const MANUAL_ENTRY = true;
 
-  // 🚨 Log context values on every render
   console.log('🆔 [AddressSelect] context instanceId:', instanceId);
   console.log('✅ AddressSelect function START');
   console.log('⚡ [AddressSelect] Re-render, validHexInput =', validHexInput);
   console.log('⚡ [AddressSelect] debouncedHexInput =', debouncedHexInput);
 
-  // ✅ Watch debouncedHexInput in a useEffect (triggers when updated)
   useEffect(() => {
     debugLog.log(`🔄 debouncedHexInput updated → "${debouncedHexInput}"`);
   }, [debouncedHexInput]);
 
-  // ✅ Pass debounced input to FSM (guard empty string)
   const safeInput = debouncedHexInput.trim() !== '' ? debouncedHexInput : undefined;
   console.log('💥 [AddressSelect] Passing to useValidateFSMInput →', safeInput);
   useValidateFSMInput(safeInput);
@@ -63,20 +52,8 @@ export default function AddressSelect() {
     }
   };
 
-  const onDataListSelect = (item: ValidatedAsset) => {
-    debugLog.log(`📜 onDataListSelect() → ${item.address}`);
-    try {
-      const result = handleHexInputChange(item.address, !MANUAL_ENTRY);
-      debugLog.log(`📜 onDataListSelect handleHexInputChange result → ${result}`);
-      alert(`onDataListSelect(${item.address})`);
-      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-    } catch (err) {
-      console.error('❌ handleHexInputChange onDataListSelect error:', err);
-    }
-  };
-
   return (
-    <div id="AddressSelectDiv" className={`${styles.addressSelectPanel} flex flex-col h-full min-h-0`}>
+    <div id="AddressSelectDiv" className="flex flex-col gap-[4px] p-0">
       <HexAddressInput
         inputValue={validHexInput}
         onChange={(val) => {
@@ -102,8 +79,6 @@ export default function AddressSelect() {
         validatedAsset={validatedAsset}
         onSelect={onManualSelect}
       />
-
-      <DataList dataFeedType={feedType} onSelect={onDataListSelect} />
     </div>
   );
 }

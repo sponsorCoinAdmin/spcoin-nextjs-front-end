@@ -48,15 +48,6 @@
   background-color: #c65e0a;
 }
 
-.agentRateFee {
-  position: relative;
-  top: -5px;
-  left: 12px;
-  z-index: 1;
-  color: #94a3b8; 
-  font-size: 14px;
-}
-
 .approveButton {
   background-color: #225a14;
   opacity: 0.4;
@@ -280,18 +271,6 @@
 .exchangeButton:hover {
   cursor: pointer;
   color: green
-}
-
-.feeInfoCog {
-  position: absolute;
-  height: 20px;
-  width: 20px;
-  top: 0px;
-  left: 115px;
-  cursor: pointer;
-  color: #51586f;
-  transition: 0.3s;
-  z-index: 1;
 }
 
 .feeInfoCog:hover {

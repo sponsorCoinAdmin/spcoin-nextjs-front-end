@@ -26,18 +26,15 @@ export default function MainTradingPanel() {
   debugLog.log(`🔍 MainTradingPanel render triggered`);
   debugLog.log(`🧩 Current activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
 
-  const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
-
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        {/* <TradeContainerHeader title={"Sponsor Coin Exchange"} /> */}
+        <TradeContainerHeader containerType={activeDisplay} />
         <TradingStationPanel />
         <TokenSelectScrollPanel containerType={activeDisplay} />
         <ErrorMessagePanel />
         {/* <SponsorRateConfigPanel /> */}
       </div>
-      <FeeDisclosure />
     </div>
   );
 }

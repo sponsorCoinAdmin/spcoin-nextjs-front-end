@@ -35,7 +35,6 @@ export default function TokenSelectScrollPanel({ containerType }: TokenSelectScr
 
   return (
     <SharedPanelProvider>
-      <TradeContainerHeader containerType={containerType} />
       <TokenSelectScrollPanelInner />
     </SharedPanelProvider>
   );
