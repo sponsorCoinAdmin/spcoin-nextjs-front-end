@@ -32,7 +32,7 @@ export default function TradingStationPanel() {
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      <TradeContainerHeader  title={"Sponsor Coin Exchange"}/>
+      <TradeContainerHeader containerType={activeDisplay} />
       <TokenSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
       <TokenSelectPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
       <BuySellSwapArrowButton />

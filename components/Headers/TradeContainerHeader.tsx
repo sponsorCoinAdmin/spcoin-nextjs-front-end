@@ -1,3 +1,5 @@
+// File: components/Headers/TradeContainerHeader.tsx
+
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
@@ -5,38 +7,86 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useExchangeContext } from '@/lib/context/hooks';
-import { Settings } from 'lucide-react'; // replaces AntD icon
+import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useCallback } from 'react';
 
 interface Props {
-  title: string;
+  containerType: SP_COIN_DISPLAY;
 }
 
-const TradeContainerHeader = ({ title }: Props) => {
+const TradeContainerHeader = ({ containerType }: Props) => {
   const { exchangeContext } = useExchangeContext();
+
+  let title: string;
+
+  switch (containerType) {
+    case SP_COIN_DISPLAY.AGENT_SELECT_CONTAINER:
+      title = 'Select Sponsors Agent';
+      break;
+    case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:
+      title = 'Select a Token to Buy';
+      break;
+    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
+      title = 'Error Message Panel';
+      break;
+    case SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL:
+      title = 'Select Recipient to Sponsor';
+      break;
+    case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL:
+      title = 'Select a Token to Sell';
+      break;
+    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
+      title = 'Sponsor Coin Exchange';
+      break;
+    default:
+      title = 'Panel';
+  }
+
+  const { setActiveDisplay } = useActiveDisplay();
+  const closeScrollPanel = useCallback(() => {
+    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  }, [setActiveDisplay]);
 
   return (
     <div id="TradeContainerHeader" className={styles.tradeContainerHeader}>
       <ConfigDialog showDialog={false} />
 
-      <div id="SponsorCoinLogo.png" onClick={() => exchangeContextDump(exchangeContext)}>
+      <div
+        id="SponsorCoinLogo.png"
+        onClick={() => exchangeContextDump(exchangeContext)}
+        className={styles.leftLogo}
+      >
         <Image
           src={spCoin_png}
           className={styles.logoImg}
           alt="SponsorCoin Logo"
-          style={{ height: 'auto', width: 'auto' }} // ✅ add this
-        />      </div>
+          style={{ height: 'auto', width: 'auto' }}
+        />
+      </div>
 
-      <h4 id="TradeContainerHeaderTitle" className={styles.center}>{title}</h4>
+      <h4 id="TradeContainerHeaderTitle" className={styles.center}>
+        {title}
+      </h4>
 
-      <div id="cogImg2">
-        <Image
-          src={cog_png}
-          alt="Info Image"
-          onClick={() => openDialog('#ConfigDialog')}
-          className={styles.cogImg2}
-          style={{ height: 'au20to', width: 'auto' }} // ✅ required
-        />      
+      <div className={styles.rightSideControl}>
+        {containerType === SP_COIN_DISPLAY.TRADING_STATION_PANEL ? (
+          <Image
+            src={cog_png}
+            alt="Info Image"
+            onClick={() => openDialog('#ConfigDialog')}
+            className={styles.cogImg2}
+          />
+        ) : (
+          <button
+            id="closeScrollPanelButton"
+            aria-label="Close dialog"
+            onClick={closeScrollPanel}
+            className="cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
+          >
+            X
+          </button>
+        )}
       </div>
     </div>
   );

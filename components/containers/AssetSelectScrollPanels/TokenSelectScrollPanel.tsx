@@ -5,8 +5,8 @@
 import { useEffect } from 'react';
 import {
   InputState,
-  getInputStateString,
   SP_COIN_DISPLAY,
+  getInputStateString,
 } from '@/lib/structure';
 import AssetSelectScrollPanel from './AssetSelectScrollPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
@@ -25,32 +25,23 @@ interface TokenSelectScrollPanelProps {
 
 export default function TokenSelectScrollPanel({ containerType }: TokenSelectScrollPanelProps) {
   const { activeDisplay } = useActiveDisplay();
-  const isActive =  activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
-                    activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+  const isActive =
+    activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
+    activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
 
   if (!isActive) return null;
 
-  const title =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-      ? 'Select a Token to Sell'
-      : 'Select a Token to Buy';
-
-  debugLog.log(`🧩 containerType(${containerType}) = ${SP_COIN_DISPLAY[containerType]}`)
-  debugLog.log(`🧩 title = ${title})`)
+  debugLog.log(`🧩 containerType(${containerType}) = ${SP_COIN_DISPLAY[containerType]}`);
 
   return (
     <SharedPanelProvider>
-      <TradeContainerHeader title={title} />
-      <TokenSelectScrollPanelInner title={title} />
+      <TradeContainerHeader containerType={containerType} />
+      <TokenSelectScrollPanelInner />
     </SharedPanelProvider>
   );
 }
 
-interface Props {
-  title: string;
-}
-
-function TokenSelectScrollPanelInner({ title }: Props) {
+function TokenSelectScrollPanelInner() {
   const { inputState, setInputState, instanceId } = useSharedPanelContext();
   const { setActiveDisplay } = useActiveDisplay();
 
@@ -71,5 +62,5 @@ function TokenSelectScrollPanelInner({ title }: Props) {
     }
   }, [inputState, setActiveDisplay, setInputState, instanceId]);
 
-  return <AssetSelectScrollPanel title={title} />;
+  return <AssetSelectScrollPanel title={"ToDo Implement"}/>;
 }

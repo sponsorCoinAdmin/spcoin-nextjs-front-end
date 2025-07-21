@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 import styles from '@/styles/Modal.module.css';
-import { InputState, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import { useActiveDisplay} from '@/lib/context/hooks';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
