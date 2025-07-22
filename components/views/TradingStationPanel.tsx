@@ -3,7 +3,7 @@
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { TokenSelectPanel } from '../containers/AssetSelectPanels';
+import { TradeAssetPanel } from '../containers/AssetSelectPanels';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
@@ -33,8 +33,8 @@ export default function TradingStationPanel() {
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      <TokenSelectPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
-      <TokenSelectPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
+      <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
+      <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
       <BuySellSwapArrowButton />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceData} />

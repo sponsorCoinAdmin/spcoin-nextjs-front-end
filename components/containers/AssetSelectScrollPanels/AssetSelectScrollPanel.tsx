@@ -18,10 +18,9 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('AssetSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
-  title: string;
 }
 
-export default function AssetSelectScrollPanel({ title }: Props) {
+export default function AssetSelectScrollPanel() {
   const {
     containerType,
     validHexInput,

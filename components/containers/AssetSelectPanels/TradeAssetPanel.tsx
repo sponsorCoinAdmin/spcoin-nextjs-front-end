@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectPanels/TokenSelectPanel.tsx
+// File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 
 'use client';
 
@@ -36,10 +36,10 @@ import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/TokenPanelProviders';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
-const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, false);
+const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);
 
 // 🔒 PRIVATE inner component, not exported
-function TokenSelectPanelInner() {
+function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
   const { exchangeContext } = useExchangeContext();
 
@@ -156,7 +156,7 @@ function TokenSelectPanelInner() {
   }, [spCoinDisplay, setSpCoinDisplay]);
 
   return (
-    <div id="TokenSelectPanelInner" className={styles.tokenSelectContainer}>
+    <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
       <input
         id="TokenSelectPanelInput"
         className={clsx(styles.priceInput, styles.withBottomRadius)}
@@ -184,10 +184,10 @@ function TokenSelectPanelInner() {
 }
 
 // ✅ EXPORTED component with built-in provider
-export default function TokenSelectPanel({ containerType }: { containerType: SP_COIN_DISPLAY }) {
+export default function TradeAssetPanel({ containerType }: { containerType: SP_COIN_DISPLAY }) {
   return (
     <TokenPanelProvider containerType={containerType}>
-      <TokenSelectPanelInner />
+      <TradeAssetPanelInner />
     </TokenPanelProvider>
   );
 }

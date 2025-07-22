@@ -2,26 +2,47 @@
 
 'use client';
 
-import { useErrorMessage, useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
+import {
+  useErrorMessage,
+  useActiveDisplay,
+  useExchangeContext,
+} from '@/lib/context/hooks';
 import { ErrorDialog } from '@/components/Dialogs/Dialogs';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { TokenContract } from '@/lib/structure';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_ERROR_MESSAGE_PANEL === 'true';
-const debugLog = createDebugLogger('ErrorMessagePanel', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger(
+  'ErrorMessagePanel',
+  DEBUG_ENABLED,
+  LOG_TIME
+);
 
-function ErrorMessagePanelInner() {
+interface ErrorMessagePanelProps {
+  isActive: boolean;
+  closeCallback: (fromUser: boolean) => void;
+}
+
+function ErrorMessagePanelInner({
+    closeCallback,
+}: {
+  closeCallback: (fromUser: boolean) => void;
+}) {
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { setActiveDisplay } = useActiveDisplay();
   const { exchangeContext } = useExchangeContext();
 
   const closeDialog = () => {
-    debugLog.log('✅ Closing ErrorMessagePanel → switching to TRADING_STATION_PANEL');
+    debugLog.log(
+      '✅ Closing ErrorMessagePanel → switching to TRADING_STATION_PANEL'
+    );
     setErrorMessage(undefined);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    closeCallback(true);
   };
 
   return (
@@ -33,7 +54,10 @@ function ErrorMessagePanelInner() {
   );
 }
 
-export default function ErrorMessagePanel() {
+export default function ErrorMessagePanel({
+  isActive,
+  closeCallback
+}: ErrorMessagePanelProps) {
   const { activeDisplay } = useActiveDisplay();
 
   debugLog.log(
@@ -41,12 +65,14 @@ export default function ErrorMessagePanel() {
     getActiveDisplayString(activeDisplay)
   );
 
-  const isActive = activeDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
-
   if (!isActive) {
-    debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');
+    debugLog.log('⏭️ ErrorMessagePanel → not active or display hidden, skipping render');
     return null;
   }
 
-  return <ErrorMessagePanelInner />;
+  return (
+    <ErrorMessagePanelInner
+      closeCallback={closeCallback}
+    />
+  );
 }

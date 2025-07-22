@@ -9,12 +9,12 @@
         │                 ├── <TradeContainerHeader>
         │                 ├── <TokenSelectSection>
         │                 │     ├── <TradePanelProvider> (SELL)
-        │                 │     │     └── <TokenSelectPanel> (SELL)
+        │                 │     │     └── <TradeAssetPanel> (SELL)
         │                 │     │           ├── <input /> ← handles user input
         │                 │     │           ├── <TokenSelectDropDown>
         │                 │     │           │     └── onClick → openDialog()
         │                 │     │           │           └── setInputState(VALID_INPUT)
-        │                 │     │           ├── <TokenSelectScrollPanel>
+        │                 │     │           ├── <TokenSelectPanel>
         │                 │     │           │     └── <AssetSelectScrollPanel>
         │                 │     │           │           └── <AddressSelect> (SELL)
         │                 │     │           │                 ├── <HexAddressInput>
@@ -26,12 +26,12 @@
         │                 │     │           └── <ManageSponsorsButton /> ← if isSpCoin
         │                 │     ├── <BuySellSwapArrowButton>
         │                 │     └── <TradePanelProvider> (BUY)
-        │                 │           └── <TokenSelectPanel> (BUY)
+        │                 │           └── <TradeAssetPanel> (BUY)
         │                 │                 ├── <input /> ← handles user input
         │                 │                 ├── <TokenSelectDropDown>
         │                 │                 │     └── onClick → openDialog()
         │                 │                 │           └── setInputState(VALID_INPUT)
-        │                 │                 ├── <TokenSelectScrollPanel>
+        │                 │                 ├── <TokenSelectPanel>
         │                 │                 │     └── <AssetSelectScrollPanel>
         │                 │                 │           └── <AddressSelect> (BUY)
         │                 │                 │                 ├── <HexAddressInput>
