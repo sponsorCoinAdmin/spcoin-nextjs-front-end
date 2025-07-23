@@ -15,12 +15,12 @@
         │                 │     │           │     └── onClick → openDialog()
         │                 │     │           │           └── setInputState(VALID_INPUT)
         │                 │     │           ├── <TokenSelectPanel>
-        │                 │     │           │     └── <AssetSelectScrollPanel>
+        │                 │     │           │     └── <AssetSelectPanel>
         │                 │     │           │           └── <AddressSelect> (SELL)
         │                 │     │           │                 ├── <HexAddressInput>
         │                 │     │           │                 ├── <RenderAssetPreview>
         │                 │     │           │                 ├── <ErrorAssetPreview>
-        │                 │     │           │                 └── <DataList>
+        │                 │     │           │                 └── <DataListScrollPanel>
         │                 │     │           ├── Balance: {formattedBalance}
         │                 │     │           ├── {buySellText}
         │                 │     │           └── <ManageSponsorsButton /> ← if isSpCoin
@@ -32,12 +32,12 @@
         │                 │                 │     └── onClick → openDialog()
         │                 │                 │           └── setInputState(VALID_INPUT)
         │                 │                 ├── <TokenSelectPanel>
-        │                 │                 │     └── <AssetSelectScrollPanel>
+        │                 │                 │     └── <AssetSelectPanel>
         │                 │                 │           └── <AddressSelect> (BUY)
         │                 │                 │                 ├── <HexAddressInput>
         │                 │                 │                 ├── <RenderAssetPreview>
         │                 │                 │                 ├── <ErrorAssetPreview>
-        │                 │                 │                 └── <DataList>
+        │                 │                 │                 └── <DataListScrollPanel>
         │                 │                 ├── Balance: {formattedBalance}
         │                 │                 ├── {buySellText}
         │                 │                 └── <AddSponsorshipButton /> ← if isSpCoin
@@ -48,14 +48,14 @@
         │                 │                             ├── <div>X</div> to clear
         │                 │                             └── <RecipientSelectDropDown />
         │                 │                                   ├── onClick → setShowDialog(true)
-        │                 │                                   ├── showDialog && <RecipientSelectScrollPanel>
+        │                 │                                   ├── showDialog && <RecipientSelectPanel>
         │                 │                                   │     └── <AddressSelect> (Recipient)
         │                 │                                   │           ├── <HexAddressInput>
         │                 │                                   │           ├── <RenderAssetPreview>
         │                 │                                   │           ├── <ErrorAssetPreview>
-        │                 │                                   │           └── <DataList>
+        │                 │                                   │           └── <DataListScrollPanel>
         │                 │                                   └── onSelect(wallet, state)
-        │                 │                                         └── if state === CLOSE_SELECT_SCROLL_PANEL:
+        │                 │                                         └── if state === CLOSE_SELECT_PANEL:
         │                 │                                               ├── callBackAccount(wallet)
         │                 │                                               ├── hasErroredRef = false
         │                 │                                               └── setShowDialog(false)

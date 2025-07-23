@@ -1,4 +1,4 @@
 export { default as BaseScrollPanel } from './BaseScrollPanel';
-export { default as AssetSelectScrollPanel } from './AssetSelectScrollPanel';
+export { default as AssetSelectPanel } from './AssetSelectPanel';
 export { default as TokenSelectPanel } from './TokenSelectPanel';
-export { default as RecipientSelectScrollPanel } from './RecipientSelectScrollPanel';
+export { default as RecipientSelectPanel } from './RecipientSelectPanel';

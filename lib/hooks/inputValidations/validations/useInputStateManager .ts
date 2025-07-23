@@ -36,7 +36,7 @@ export function useInputStateManager({
     InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,   // no contract on-chain → stop
     InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY, // no local metadata → stop
     InputState.VALIDATE_BALANCE_ERROR,             // balance check failed → stop
-    InputState.CLOSE_SELECT_SCROLL_PANEL,          // final close → end
+    InputState.CLOSE_SELECT_PANEL,          // final close → end
   ];
 
   useEffect(() => {
@@ -74,8 +74,9 @@ export function useInputStateManager({
   };
 
   const forceClose = () => {
-    debugLog.log('❌ forceClose called → setting inputState to CLOSE_SELECT_SCROLL_PANEL');
-    setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
+    alert('❌ forceClose called → setting inputState to CLOSE_SELECT_PANEL');
+    debugLog.log('❌ forceClose called → setting inputState to CLOSE_SELECT_PANEL');
+    setInputState(InputState.CLOSE_SELECT_PANEL);
   };
 
   return {

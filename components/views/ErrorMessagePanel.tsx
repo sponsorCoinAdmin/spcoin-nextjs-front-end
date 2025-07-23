@@ -24,13 +24,13 @@ const debugLog = createDebugLogger(
 
 interface ErrorMessagePanelProps {
   isActive: boolean;
-  closeCallback: (fromUser: boolean) => void;
+  closeCallback: () => void;
 }
 
 function ErrorMessagePanelInner({
     closeCallback,
 }: {
-  closeCallback: (fromUser: boolean) => void;
+  closeCallback: () => void;
 }) {
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { setActiveDisplay } = useActiveDisplay();
@@ -42,7 +42,7 @@ function ErrorMessagePanelInner({
     );
     setErrorMessage(undefined);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-    closeCallback(true);
+    closeCallback();
   };
 
   return (

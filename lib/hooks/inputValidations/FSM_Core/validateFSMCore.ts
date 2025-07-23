@@ -1,3 +1,5 @@
+// File: lib/hooks/inputValidations/validateFSMCore.ts
+
 import { Address, isAddress } from 'viem';
 import {
   InputState,
@@ -37,25 +39,10 @@ export interface ValidateFSMOutput {
   errorMessage?: string;
 }
 
-export async function validateFSMCore(
-  input: ValidateFSMInput
-): Promise<ValidateFSMOutput> {
-  const {
-    inputState,
-    debouncedHexInput,
-    containerType,
-    sellAddress,
-    buyAddress,
-    chainId,
-    publicClient,
-    accountAddress,
-    seenBrokenLogos,
-    feedType,
-    balanceData,
-    validatedAsset,
-  } = input;
+export async function validateFSMCore(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
+  const { inputState } = input;
 
-  debugLog.log(`🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${debouncedHexInput}"`);
+  debugLog.log(`🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${input.debouncedHexInput}"`);
 
   let result: ValidateFSMOutput;
 
@@ -68,70 +55,28 @@ export async function validateFSMCore(
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
     case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
     case InputState.VALIDATE_BALANCE_ERROR:
-    case InputState.CLOSE_SELECT_SCROLL_PANEL:
+    case InputState.CLOSE_SELECT_PANEL:
       result = { nextState: inputState };
       break;
 
     case InputState.VALIDATE_ADDRESS:
-      if (isEmptyInput(debouncedHexInput)) {
-        result = { nextState: InputState.EMPTY_INPUT };
-      } else if (!isAddress(debouncedHexInput)) {
-        result = { nextState: InputState.INCOMPLETE_ADDRESS }; // treat all invalid as incomplete
-      } else {
-        result = { nextState: InputState.TEST_DUPLICATE_INPUT };
-      }
+      result = validateAddress(input);
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
-      if (isDuplicateInput(containerType, debouncedHexInput, sellAddress, buyAddress)) {
-        result = {
-          nextState: InputState.DUPLICATE_INPUT_ERROR,
-          errorMessage: 'Duplicate address detected',
-        };
-      } else {
-        result = { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
-      }
+      result = testDuplicateInput(input);
       break;
 
-    case InputState.VALIDATE_EXISTS_ON_CHAIN: {
-      if (!publicClient) {
-        result = {
-          nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-          errorMessage: 'Public client missing',
-        };
-        break;
-      }
-
-      const resolved = await resolveTokenContract(
-        debouncedHexInput as Address,
-        chainId,
-        feedType,
-        publicClient,
-        accountAddress as Address
-      );
-
-      if (!resolved) {
-        result = { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
-        break;
-      }
-
-      result = {
-        nextState: InputState.VALIDATE_PREVIEW,
-        validatedAsset: resolved,
-      };
+    case InputState.VALIDATE_EXISTS_ON_CHAIN:
+      result = await validateExistsOnChain(input);
       break;
-    }
 
     case InputState.VALIDATE_PREVIEW:
       result = { nextState: InputState.PREVIEW_ASSET };
       break;
 
     case InputState.PREVIEW_ASSET:
-      if (seenBrokenLogos.has(debouncedHexInput)) {
-        result = { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
-      } else {
-        result = { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
-      }
+      result = previewAsset(input);
       break;
 
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
@@ -139,30 +84,7 @@ export async function validateFSMCore(
       break;
 
     case InputState.VALIDATE_BALANCE:
-      if (
-        !balanceData ||
-        !validatedAsset ||
-        !('address' in validatedAsset) ||
-        !isAddress(validatedAsset.address)
-      ) {
-        result = { nextState: InputState.VALIDATE_BALANCE_ERROR };
-        break;
-      }
-
-      const safeAddress = validatedAsset.address as `0x${string}`;
-
-      const updatedToken: TokenContract = {
-        ...validatedAsset,
-        balance: balanceData,
-        chainId,
-        logoURL: getLogoURL(chainId, safeAddress, feedType),
-      };
-
-      result = {
-        nextState: InputState.CLOSE_SELECT_SCROLL_PANEL,
-        validatedAsset: updatedToken,
-        updatedBalance: balanceData,
-      };
+      result = validateBalance(input);
       break;
 
     default:
@@ -174,6 +96,101 @@ export async function validateFSMCore(
   }
 
   debugLog.log(`✅ EXIT → nextState: ${InputState[result.nextState]}, validatedAsset: ${result.validatedAsset ? result.validatedAsset.address : 'none'}, error: ${result.errorMessage || 'none'}`);
-
   return result;
+}
+
+function validateAddress({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {
+  if (isEmptyInput(debouncedHexInput)) {
+    return { nextState: InputState.EMPTY_INPUT };
+  } else if (!isAddress(debouncedHexInput)) {
+    return { nextState: InputState.INCOMPLETE_ADDRESS };
+  } else {
+    return { nextState: InputState.TEST_DUPLICATE_INPUT };
+  }
+}
+
+function testDuplicateInput({
+  debouncedHexInput,
+  containerType,
+  sellAddress,
+  buyAddress,
+}: ValidateFSMInput): ValidateFSMOutput {
+  if (isDuplicateInput(containerType, debouncedHexInput, sellAddress, buyAddress)) {
+    return {
+      nextState: InputState.DUPLICATE_INPUT_ERROR,
+      errorMessage: 'Duplicate address detected',
+    };
+  }
+  return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+}
+
+async function validateExistsOnChain({
+  debouncedHexInput,
+  chainId,
+  feedType,
+  publicClient,
+  accountAddress,
+}: ValidateFSMInput): Promise<ValidateFSMOutput> {
+  if (!publicClient) {
+    return {
+      nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+      errorMessage: 'Public client missing',
+    };
+  }
+
+  const resolved = await resolveTokenContract(
+    debouncedHexInput as Address,
+    chainId,
+    feedType,
+    publicClient,
+    accountAddress as Address
+  );
+
+  if (!resolved) {
+    return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
+  }
+
+  return {
+    nextState: InputState.VALIDATE_PREVIEW,
+    validatedAsset: resolved,
+  };
+}
+
+function previewAsset({ debouncedHexInput, seenBrokenLogos }: ValidateFSMInput): ValidateFSMOutput {
+  if (seenBrokenLogos.has(debouncedHexInput)) {
+    return { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
+  } else {
+    return { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
+  }
+}
+
+function validateBalance({
+  balanceData,
+  validatedAsset,
+  chainId,
+  feedType,
+}: ValidateFSMInput): ValidateFSMOutput {
+  if (
+    !balanceData ||
+    !validatedAsset ||
+    !('address' in validatedAsset) ||
+    !isAddress(validatedAsset.address)
+  ) {
+    return { nextState: InputState.VALIDATE_BALANCE_ERROR };
+  }
+
+  const safeAddress = validatedAsset.address as `0x${string}`;
+
+  const updatedToken: TokenContract = {
+    ...validatedAsset,
+    balance: balanceData,
+    chainId,
+    logoURL: getLogoURL(chainId, safeAddress, feedType),
+  };
+
+  return {
+    nextState: InputState.CLOSE_SELECT_PANEL,
+    validatedAsset: updatedToken,
+    updatedBalance: balanceData,
+  };
 }

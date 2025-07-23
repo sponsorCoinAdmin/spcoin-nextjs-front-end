@@ -12,15 +12,16 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useCallback } from 'react';
 
 interface Props {
-  containerType: SP_COIN_DISPLAY;
+  closeCallback: () => void;
 }
 
-const TradeContainerHeader = ({ containerType }: Props) => {
+const TradeContainerHeader = ({ closeCallback }: Props) => {
   const { exchangeContext } = useExchangeContext();
+  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
   let title: string;
 
-  switch (containerType) {
+  switch (activeDisplay) {
     case SP_COIN_DISPLAY.AGENT_SELECT_CONTAINER:
       title = 'Select Sponsors Agent';
       break;
@@ -42,11 +43,6 @@ const TradeContainerHeader = ({ containerType }: Props) => {
     default:
       title = 'Panel';
   }
-
-  const { setActiveDisplay } = useActiveDisplay();
-  const closeScrollPanel = useCallback(() => {
-    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [setActiveDisplay]);
 
   return (
     <div
@@ -72,7 +68,7 @@ const TradeContainerHeader = ({ containerType }: Props) => {
       </h4>
 
       <div className={styles.rightSideControl}>
-        {containerType === SP_COIN_DISPLAY.TRADING_STATION_PANEL ? (
+        {activeDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL ? (
           <Image
             src={cog_png}
             alt="Info Image"
@@ -83,7 +79,7 @@ const TradeContainerHeader = ({ containerType }: Props) => {
           <button
             id="closeScrollPanelButton"
             aria-label="Close dialog"
-            onClick={closeScrollPanel}
+            onClick={closeCallback}
             className="cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
           >
             X

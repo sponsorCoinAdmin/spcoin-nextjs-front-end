@@ -104,7 +104,7 @@ export enum InputState {
   VALIDATE_BALANCE_ERROR,                 // 14
 
   // 6️⃣ Final close
-  CLOSE_SELECT_SCROLL_PANEL,              // 15
+  CLOSE_SELECT_PANEL,              // 15
 }
 
 export const getInputStateString = (state: InputState): string =>

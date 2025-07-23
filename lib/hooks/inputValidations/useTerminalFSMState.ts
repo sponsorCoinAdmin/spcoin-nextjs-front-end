@@ -11,7 +11,7 @@ const terminalStates = [
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
   InputState.VALIDATE_BALANCE_ERROR,
-  InputState.CLOSE_SELECT_SCROLL_PANEL,
+  InputState.CLOSE_SELECT_PANEL,
 ];
 
 const errorStates = [
@@ -31,7 +31,7 @@ export function useTerminalFSMState() {
   const isErrorState = errorStates.includes(inputState);
 
   // ✅ define success as passing balance validation, just before close panel
-  const isSuccess = inputState === InputState.CLOSE_SELECT_SCROLL_PANEL;
+  const isSuccess = inputState === InputState.CLOSE_SELECT_PANEL;
 
   return { inputState, isTerminalState, isErrorState, isSuccess, showRenderPanel };
 }

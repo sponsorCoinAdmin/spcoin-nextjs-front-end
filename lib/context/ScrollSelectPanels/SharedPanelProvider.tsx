@@ -1,25 +1,39 @@
+// File: lib/context/ScrollSelectPanels/SharedPanelProvider.tsx
+
 'use client';
 
-import React, { ReactNode, useState, useCallback, useMemo } from 'react';
-import { SharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { SP_COIN_DISPLAY, FEED_TYPE, InputState, getInputStateString } from '@/lib/structure';
+import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
+import { SharedPanelContext } from './useSharedPanelContext';
+import {
+  SP_COIN_DISPLAY,
+  FEED_TYPE,
+  InputState,
+  getInputStateString,
+  TokenContract,
+} from '@/lib/structure';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// Setup debug logger
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
 const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
 
-export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
-  // FSM state
+interface SharedPanelProviderProps {
+  children: ReactNode;
+  closeCallback: (fromUser: boolean) => void;
+  setTradingTokenCallback: (token: TokenContract) => void;
+}
+
+export const SharedPanelProvider = ({
+  children,
+  closeCallback,
+  setTradingTokenCallback,
+}: SharedPanelProviderProps) => {
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAssetRaw] = useState<any>(undefined);
 
-  // 🔥 Unique ID (you can replace 'main' with nanoid() if needed)
   const instanceId = 'main';
 
-  // Input state from useHexInput hook
   const {
     validHexInput,
     debouncedHexInput,
@@ -49,13 +63,25 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
         debugLog.log(`🚫 Skipping setValidatedAsset — already ${next.symbol || next.address}`);
         return;
       }
-      debugLog.log(
-        next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset'
-      );
+      debugLog.log(next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset');
       setValidatedAssetRaw(next);
     },
     [validatedAsset]
   );
+
+  // ✅ Automatically invoke setTradingTokenCallback only on CLOSE_SELECT_PANEL
+  useEffect(() => {
+    debugLog.log(`📺 useEffect triggered: inputState = ${getInputStateString(inputState)}, validatedAsset =`, validatedAsset);
+
+    if (inputState === InputState.CLOSE_SELECT_PANEL) {
+      if (validatedAsset) {
+        debugLog.log(`🚀 Triggering setTradingTokenCallback with ${validatedAsset.symbol || validatedAsset.address}`);
+        setTradingTokenCallback(validatedAsset as TokenContract);
+      } else {
+        debugLog.warn(`⚠️ inputState is CLOSE_SELECT_PANEL but validatedAsset is missing or undefined`);
+      }
+    }
+  }, [validatedAsset, inputState, setTradingTokenCallback]);
 
   const dumpFSMContext = (headerInfo?: string) => {
     console.log(`🛠️ [FSMContext Dump] ${headerInfo || ''}`, {
@@ -82,10 +108,11 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
     dumpInputFeedContext();
   };
 
-  debugLog.log(`⏳ debouncedHexInput = "${debouncedHexInput}"`);
-
   const forceReset = resetHexInput;
-  const forceClose = () => setInputState(InputState.CLOSE_SELECT_SCROLL_PANEL);
+  const forceClose = () => {
+    debugLog.log(`🧨 forceClose triggered → setting inputState to CLOSE_SELECT_PANEL`);
+    setInputState(InputState.CLOSE_SELECT_PANEL);
+  };
 
   const contextValue = useMemo(
     () => ({
@@ -109,6 +136,8 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
       forceReset,
       forceClose,
       instanceId,
+      closeCallback: () => closeCallback(true),
+      setTradingTokenCallback,
     }),
     [
       inputState,
@@ -124,12 +153,10 @@ export const SharedPanelProvider = ({ children }: { children: ReactNode }) => {
       forceReset,
       forceClose,
       instanceId,
+      closeCallback,
+      setTradingTokenCallback,
     ]
   );
 
-  return (
-    <SharedPanelContext.Provider value={contextValue}>
-      {children}
-    </SharedPanelContext.Provider>
-  );
+  return <SharedPanelContext.Provider value={contextValue}>{children}</SharedPanelContext.Provider>;
 };

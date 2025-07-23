@@ -1,5 +1,3 @@
-// File: lib/hooks/inputValidations/useValidateFSMInput.ts
-
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
@@ -30,6 +28,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   selectAddress: string | undefined,
 ) => {
   const debouncedHexInput = useDebounce(selectAddress || '', 250);
+
   const {
     inputState,
     setInputState,
@@ -38,6 +37,7 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     setValidatedAsset,
     feedType,
     dumpSharedPanelContext,
+    setTradingTokenCallback,
   } = useSharedPanelContext();
 
   const inputStateRef = useRef(inputState);
@@ -64,7 +64,9 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
   const [validationPending, setValidationPending] = useState(false);
 
-  // 🆕 Reset FSM to VALIDATE_ADDRESS on input change
+  // ─────────────────────────────────────────────────────────────
+  // Reset FSM on debouncedHexInput change
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (debouncedHexInput !== prevInputRef.current) {
       debugLog.log('🔄 [RESET] New input detected, resetting FSM to VALIDATE_ADDRESS');
@@ -73,10 +75,12 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     prevInputRef.current = debouncedHexInput;
   }, [debouncedHexInput, setInputState]);
 
+  // ─────────────────────────────────────────────────────────────
+  // Main FSM validation effect
+  // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     debugLog.log(`🔥 [ENTRY] useValidateFSMInput → selectAddress="${selectAddress}", debouncedHexInput="${debouncedHexInput}"`);
 
-    // 🛡️ HARD SKIP IF DEBOUNCE NOT READY
     if (!selectAddress || selectAddress.trim() === '') {
       debugLog.log('⏭️ [SKIP EMPTY] selectAddress is empty → set EMPTY_INPUT');
       if (inputStateRef.current !== InputState.EMPTY_INPUT) {
@@ -163,6 +167,23 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     validationPending,
   ]);
 
+  // ─────────────────────────────────────────────────────────────
+  // Final effect — Call setTradingTokenCallback when FSM ends
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (
+      inputState === InputState.CLOSE_SELECT_PANEL &&
+      validatedAsset &&
+      typeof setTradingTokenCallback === 'function'
+    ) {
+      debugLog.log(`🎯 [CLOSE_SELECT_PANEL] Dispatching setTradingTokenCallback`);
+      setTradingTokenCallback(validatedAsset);
+    }
+  }, [inputState, validatedAsset, setTradingTokenCallback]);
+
+  // ─────────────────────────────────────────────────────────────
+  // Logo fallback handler
+  // ─────────────────────────────────────────────────────────────
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedHexInput) return;
     if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {

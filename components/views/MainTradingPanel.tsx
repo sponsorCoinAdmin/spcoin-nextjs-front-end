@@ -7,7 +7,7 @@ import styles from '@/styles/Exchange.module.css';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import TradingStationPanel from './TradingStationPanel';
 import ErrorMessagePanel from './ErrorMessagePanel';
-import { TokenSelectPanel } from '../containers/AssetSelectScrollPanels';
+import { TokenSelectPanel } from '@/components/containers/AssetSelectScrollPanels';
 
 import {
   useActiveDisplay,
@@ -25,6 +25,7 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -47,21 +48,23 @@ export default function MainTradingPanel() {
   debugLog.log(`💬 isTokenScrollPanel = ${isTokenScrollPanel}, isErrorMessagePanel = ${isErrorMessagePanel}`);
 
   // ✅ closeCallback
-  function closeCallback(fromUser: boolean) {
-    debugLog.log(`🛑 closeCallback called (fromUser=${fromUser}) → switching to TRADING_STATION_PANEL`);
+  function closeCallback() {
+    alert(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
+    debugLog.log(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }
 
-  // ✅ setTradingTokenCallback
-  function setTradingTokenCallback(tokenContract: TokenContract) {
+  // ✅ setAssetTokenCallback
+  function setAssetTokenCallback(tokenContract: TokenContract) {
+    alert(`🔻 setAssetTokenCallback → tokenContract = ${stringifyBigInt(tokenContract)}`)
     if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-      debugLog.log('🔻 setTradingTokenCallback → setSellTokenContract');
+      alert('🔻 setAssetTokenCallback → setSellTokenContract');
       setSellTokenContract(tokenContract);
     } else if (activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
-      debugLog.log('🔺 setTradingTokenCallback → setBuyTokenContract');
+      alert('🔺 setAssetTokenCallback → setBuyTokenContract');
       setBuyTokenContract(tokenContract);
     } else {
-      debugLog.warn('⚠️ setTradingTokenCallback → no matching panel, skipping');
+      debugLog.warn('⚠️ setAssetTokenCallback → no matching panel, skipping');
     }
   }
 
@@ -86,13 +89,12 @@ export default function MainTradingPanel() {
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        <TradeContainerHeader containerType={activeDisplay} />
+        <TradeContainerHeader closeCallback={closeCallback} />
         <TradingStationPanel />
         <TokenSelectPanel
           isActive={isTokenScrollPanel}
           closeCallback={closeCallback}
-          setTradingTokenCallback={setTradingTokenCallback}
-          setErrorCallback={setErrorCallback}
+          setTradingTokenCallback={setAssetTokenCallback}
         />
         <ErrorMessagePanel
           isActive={isErrorMessagePanel}

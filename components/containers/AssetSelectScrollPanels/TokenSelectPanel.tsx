@@ -1,4 +1,4 @@
-// File: components/containers/AssetSelectScrollPanels/TokenSelectPanel.tsx
+// File: components/containers/AssetSelectPanels/TokenSelectPanel.tsx
 
 'use client';
 
@@ -8,7 +8,7 @@ import {
   getInputStateString,
   TokenContract,
 } from '@/lib/structure';
-import AssetSelectScrollPanel from './AssetSelectScrollPanel';
+import AssetSelectPanel from './AssetSelectPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -20,7 +20,7 @@ const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 interface TokenSelectPanelProps {
   isActive: boolean;
-  closeCallback: (fromUser: boolean) => void;
+  closeCallback: () => void;
   setTradingTokenCallback: (token: TokenContract) => void;
 }
 
@@ -36,25 +36,18 @@ export default function TokenSelectPanel({
   debugLog.log(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
 
   return (
-    <SharedPanelProvider>
-      <TokenSelectScrollPanelInner
-        closeCallback={closeCallback}
-        setTradingTokenCallback={setTradingTokenCallback}
-      />
+    <SharedPanelProvider
+      closeCallback={closeCallback}
+      setTradingTokenCallback={setTradingTokenCallback}
+    >
+      <TokenSelectPanelInner />
     </SharedPanelProvider>
   );
 }
 
-interface TokenSelectScrollPanelInnerProps {
-  closeCallback: (fromUser: boolean) => void;
-  setTradingTokenCallback: (token: TokenContract) => void;
-}
-
-function TokenSelectScrollPanelInner({
-  closeCallback,
-  setTradingTokenCallback,
-}: TokenSelectScrollPanelInnerProps) {
-  const { inputState, setInputState, instanceId } = useSharedPanelContext();
+function TokenSelectPanelInner() {
+  const { inputState, setInputState, instanceId, closeCallback, setTradingTokenCallback } =
+    useSharedPanelContext();
 
   useEffect(() => {
     debugLog.log(`🧩 TokenSelectPanel mounted → instanceId=${instanceId}`);
@@ -64,17 +57,18 @@ function TokenSelectScrollPanelInner({
     const stateStr = getInputStateString(inputState);
     debugLog.log(`🌀 inputState changed → ${stateStr} (instanceId=${instanceId})`);
 
-    if (inputState === InputState.CLOSE_SELECT_SCROLL_PANEL) {
+    if (inputState === InputState.CLOSE_SELECT_PANEL) {
       debugLog.log(
-        `✅ CLOSE_SELECT_SCROLL_PANEL triggered → calling closeCallback and resetting input (instanceId=${instanceId})`
+        `✅ CLOSE_SELECT_PANEL triggered → calling closeCallback and resetting input (instanceId=${instanceId})`
       );
-      closeCallback(true);
+      closeCallback?.(); // ✅ call from context, safe with optional chaining
       setInputState(InputState.EMPTY_INPUT); // ✅ prevent loop
     }
   }, [inputState, setInputState, instanceId, closeCallback]);
 
   return (
-    <AssetSelectScrollPanel
+    <AssetSelectPanel
+      // ✅ no props needed; AssetSelectPanel can now pull directly from context if needed
       // closeCallback={closeCallback}
       // setTradingTokenCallback={setTradingTokenCallback}
     />

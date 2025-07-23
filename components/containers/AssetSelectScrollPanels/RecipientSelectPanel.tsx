@@ -1,16 +1,15 @@
-// File: components/containers/RecipientSelectScrollPanel.tsx
+// File: components/containers/RecipientSelectPanel.tsx
 
 'use client';
 
 import { useCallback, useEffect } from 'react';
 import {
-  FEED_TYPE,
   InputState,
   WalletAccount,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
-import AssetSelectScrollPanel from './AssetSelectScrollPanel';
+import AssetSelectPanel from './AssetSelectPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -18,31 +17,31 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
-const debugLog = createDebugLogger('RecipientSelectScrollPanel', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('RecipientSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function RecipientSelectScrollPanel() {
+export default function RecipientSelectPanel() {
   const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
   const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
   // ✅ Skip render if this panel is not active
   if (activeDisplay !== SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL) {
-    debugLog.log(`⏭️ RecipientSelectScrollPanel → not active (instanceId=${instanceId}), skipping render`);
+    debugLog.log(`⏭️ RecipientSelectPanel → not active (instanceId=${instanceId}), skipping render`);
     return null;
   }
 
   useEffect(() => {
-    debugLog.log(`🧩 RecipientSelectScrollPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
+    debugLog.log(`🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
   }, [containerType, instanceId]);
 
 
   const handleSelect = useCallback(
     (wallet: WalletAccount, state: InputState) => {
-      if (state === InputState.CLOSE_SELECT_SCROLL_PANEL) {
-        debugLog.log(`✅ [RecipientSelectScrollPanel] selected wallet`, wallet, `(instanceId=${instanceId})`);
+      if (state === InputState.CLOSE_SELECT_PANEL) {
+        debugLog.log(`✅ [RecipientSelectPanel] selected wallet`, wallet, `(instanceId=${instanceId})`);
       }
     },
     [instanceId]
   );
 
-  return <AssetSelectScrollPanel title="Select a Recipient" />;
+  return <AssetSelectPanel />;
 }

@@ -34,7 +34,7 @@ export function getInputStateEmoji(state: InputState): string {
       return '💰'; // money bag
     case InputState.VALIDATE_BALANCE_ERROR:
       return '❌'; // red cross
-    case InputState.CLOSE_SELECT_SCROLL_PANEL:
+    case InputState.CLOSE_SELECT_PANEL:
       return '✅'; // checkmark
     default:
       return '❓'; // unknown

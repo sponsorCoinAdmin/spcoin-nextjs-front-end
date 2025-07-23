@@ -4,7 +4,13 @@
 
 import { useState, useMemo } from 'react';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import { InputState, getInputStateString, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import {
+  InputState,
+  getInputStateString,
+  FEED_TYPE,
+  SP_COIN_DISPLAY,
+  TokenContract,
+} from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './useSharedPanelContext';
@@ -54,9 +60,6 @@ export function usePanelContextBase(
     resetHexInput,
   } = useHexInput();
 
-console.log(validHexInput)
-
-  // ✅ FIXED: added currentInputState to match InputStateManagerOptions type
   const { forceReset, forceClose } = useInputStateManager({
     currentInputState: inputState,
     validHexInput,
@@ -135,6 +138,14 @@ console.log(validHexInput)
       dumpSharedPanelContext,
       forceReset,
       forceClose,
+
+      /** ✅ Required callbacks, supplied as no-ops for base context use */
+      closeCallback: () => {
+        debugLog.warn('⚠️ closeCallback (noop) was called from panelContextBase');
+      },
+      setTradingTokenCallback: (token: TokenContract) => {
+        debugLog.warn('⚠️ setTradingTokenCallback (noop) was called with token:', token);
+      },
     }),
     [
       inputState,

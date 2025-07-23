@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { InputState, SP_COIN_DISPLAY, FEED_TYPE, TokenContract } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 /**
@@ -17,7 +17,7 @@ export interface FSMContextType {
   feedType: FEED_TYPE;
   dumpFSMContext: (headerInfo?: string) => void;
   /** 🆔 Unique instance ID for debugging */
-  instanceId?: string;  // ← ADD THIS LINE
+  instanceId?: string;
 }
 
 /**
@@ -43,6 +43,10 @@ export type SharedPanelContextType = FSMContextType &
     dumpSharedPanelContext: (headerInfo?: string) => void;
     forceReset?: () => void;
     forceClose?: () => void;
+
+    /** ✅ Required callbacks from MainTradingPanel */
+    closeCallback: () => void;
+    setTradingTokenCallback: (token: TokenContract) => void;
   };
 
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
