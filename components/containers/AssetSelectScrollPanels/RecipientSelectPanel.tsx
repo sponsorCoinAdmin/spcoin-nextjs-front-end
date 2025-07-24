@@ -33,15 +33,5 @@ export default function RecipientSelectPanel() {
     debugLog.log(`🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
   }, [containerType, instanceId]);
 
-
-  const handleSelect = useCallback(
-    (wallet: WalletAccount, state: InputState) => {
-      if (state === InputState.CLOSE_SELECT_PANEL) {
-        debugLog.log(`✅ [RecipientSelectPanel] selected wallet`, wallet, `(instanceId=${instanceId})`);
-      }
-    },
-    [instanceId]
-  );
-
   return <AssetSelectPanel />;
 }

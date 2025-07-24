@@ -53,24 +53,8 @@ function TokenSelectPanelInner() {
     debugLog.log(`🧩 TokenSelectPanel mounted → instanceId=${instanceId}`);
   }, [instanceId]);
 
-  useEffect(() => {
-    const stateStr = getInputStateString(inputState);
-    debugLog.log(`🌀 inputState changed → ${stateStr} (instanceId=${instanceId})`);
-
-    if (inputState === InputState.CLOSE_SELECT_PANEL) {
-      debugLog.log(
-        `✅ CLOSE_SELECT_PANEL triggered → calling closeCallback and resetting input (instanceId=${instanceId})`
-      );
-      closeCallback?.(); // ✅ call from context, safe with optional chaining
-      setInputState(InputState.EMPTY_INPUT); // ✅ prevent loop
-    }
-  }, [inputState, setInputState, instanceId, closeCallback]);
-
   return (
     <AssetSelectPanel
-      // ✅ no props needed; AssetSelectPanel can now pull directly from context if needed
-      // closeCallback={closeCallback}
-      // setTradingTokenCallback={setTradingTokenCallback}
     />
   );
 }

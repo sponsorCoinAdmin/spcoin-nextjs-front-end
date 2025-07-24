@@ -14,9 +14,22 @@ import { isDuplicateInput } from '../validations/isDuplicateInput';
 import { resolveTokenContract } from '../validations/resolveTokenContract';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
+// ✅ Debug logger
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED);
 
+// ✅ Test Flags
+const FSM_TEST_FLAGS = {
+  TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'false',
+  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'false',
+  TEST_EXISTS_ON_CHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'false',
+  TEST_VALIDATE_PREVIEW: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_PREVIEW === 'false',
+  TEST_PREVIEW_ASSET: process.env.NEXT_PUBLIC_FSM_TEST_PREVIEW_ASSET === 'false',
+  TEST_CONTRACT_EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_CONTRACT_EXISTS_LOCALLY === 'false',
+  TEST_VALIDATE_BALANCE: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_BALANCE === 'false',
+};
+
+// ✅ Input + Output interfaces
 export interface ValidateFSMInput {
   inputState: InputState;
   debouncedHexInput: string;
@@ -39,10 +52,18 @@ export interface ValidateFSMOutput {
   errorMessage?: string;
 }
 
-export async function validateFSMCore(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
+// ────────────────────────────────────────────────────────────
+// FSM Processor
+// ────────────────────────────────────────────────────────────
+
+export async function validateFSMCore(
+  input: ValidateFSMInput
+): Promise<ValidateFSMOutput> {
   const { inputState } = input;
 
-  debugLog.log(`🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${input.debouncedHexInput}"`);
+  debugLog.log(
+    `🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${input.debouncedHexInput}"`
+  );
 
   let result: ValidateFSMOutput;
 
@@ -56,35 +77,52 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
     case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
     case InputState.VALIDATE_BALANCE_ERROR:
     case InputState.CLOSE_SELECT_PANEL:
+    case InputState.UPDATE_VALIDATED_ASSET:
       result = { nextState: inputState };
       break;
 
     case InputState.VALIDATE_ADDRESS:
-      result = validateAddress(input);
+      result = FSM_TEST_FLAGS.TEST_VALID_ADDRESS
+        ? validateAddress(input)
+        : { nextState: InputState.TEST_DUPLICATE_INPUT };
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
-      result = testDuplicateInput(input);
+      result = FSM_TEST_FLAGS.TEST_DUPLICATE_INPUT
+        ? validateDuplicate(input)
+        : { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
       break;
 
     case InputState.VALIDATE_EXISTS_ON_CHAIN:
-      result = await validateExistsOnChain(input);
+      if (FSM_TEST_FLAGS.TEST_EXISTS_ON_CHAIN) {
+        result = await validateExistsOnChain(input);
+      } else {
+        result = { nextState: InputState.VALIDATE_PREVIEW };
+      }
       break;
 
     case InputState.VALIDATE_PREVIEW:
-      result = { nextState: InputState.PREVIEW_ASSET };
+      result = FSM_TEST_FLAGS.TEST_VALIDATE_PREVIEW
+        ? { nextState: InputState.PREVIEW_ASSET }
+        : { nextState: InputState.PREVIEW_ASSET };
       break;
 
     case InputState.PREVIEW_ASSET:
-      result = previewAsset(input);
+      result = FSM_TEST_FLAGS.TEST_PREVIEW_ASSET
+        ? previewAsset(input)
+        : { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
       break;
 
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
-      result = { nextState: InputState.VALIDATE_BALANCE };
+      result = FSM_TEST_FLAGS.TEST_CONTRACT_EXISTS_LOCALLY
+        ? { nextState: InputState.VALIDATE_BALANCE }
+        : { nextState: InputState.VALIDATE_BALANCE };
       break;
 
     case InputState.VALIDATE_BALANCE:
-      result = validateBalance(input);
+      result = FSM_TEST_FLAGS.TEST_VALIDATE_BALANCE
+        ? validateBalance(input)
+        : { nextState: InputState.UPDATE_VALIDATED_ASSET };
       break;
 
     default:
@@ -95,23 +133,32 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       break;
   }
 
-  debugLog.log(`✅ EXIT → nextState: ${InputState[result.nextState]}, validatedAsset: ${result.validatedAsset ? result.validatedAsset.address : 'none'}, error: ${result.errorMessage || 'none'}`);
+  debugLog.log(
+    `✅ EXIT → nextState: ${InputState[result.nextState]}, validatedAsset: ${result.validatedAsset ? result.validatedAsset.address : 'none'
+    }, error: ${result.errorMessage || 'none'}`
+  );
+
   return result;
 }
 
-function validateAddress({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {
+// ────────────────────────────────────────────────────────────
+// FSM Helper Functions
+// ────────────────────────────────────────────────────────────
+
+function validateAddress({
+  debouncedHexInput,
+}: ValidateFSMInput): ValidateFSMOutput {
   if (isEmptyInput(debouncedHexInput)) {
     return { nextState: InputState.EMPTY_INPUT };
   } else if (!isAddress(debouncedHexInput)) {
     return { nextState: InputState.INCOMPLETE_ADDRESS };
-  } else {
-    return { nextState: InputState.TEST_DUPLICATE_INPUT };
   }
+  return { nextState: InputState.TEST_DUPLICATE_INPUT };
 }
 
-function testDuplicateInput({
-  debouncedHexInput,
+function validateDuplicate({
   containerType,
+  debouncedHexInput,
   sellAddress,
   buyAddress,
 }: ValidateFSMInput): ValidateFSMOutput {
@@ -126,9 +173,9 @@ function testDuplicateInput({
 
 async function validateExistsOnChain({
   debouncedHexInput,
+  publicClient,
   chainId,
   feedType,
-  publicClient,
   accountAddress,
 }: ValidateFSMInput): Promise<ValidateFSMOutput> {
   if (!publicClient) {
@@ -156,12 +203,15 @@ async function validateExistsOnChain({
   };
 }
 
-function previewAsset({ debouncedHexInput, seenBrokenLogos }: ValidateFSMInput): ValidateFSMOutput {
+function previewAsset({
+  debouncedHexInput,
+  seenBrokenLogos,
+}: ValidateFSMInput): ValidateFSMOutput {
+  // alert('Previewing asset...');
   if (seenBrokenLogos.has(debouncedHexInput)) {
     return { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
-  } else {
-    return { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
   }
+  return { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
 }
 
 function validateBalance({
@@ -189,7 +239,7 @@ function validateBalance({
   };
 
   return {
-    nextState: InputState.CLOSE_SELECT_PANEL,
+    nextState: InputState.UPDATE_VALIDATED_ASSET,
     validatedAsset: updatedToken,
     updatedBalance: balanceData,
   };

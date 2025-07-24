@@ -103,8 +103,11 @@ export enum InputState {
   VALIDATE_BALANCE,                       // 13
   VALIDATE_BALANCE_ERROR,                 // 14
 
-  // 6️⃣ Final close
-  CLOSE_SELECT_PANEL,              // 15
+  // 6️⃣ return the asset to the parent
+  UPDATE_VALIDATED_ASSET,           // 15
+
+  // 7️⃣ Final close
+  CLOSE_SELECT_PANEL,                     // 16
 }
 
 export const getInputStateString = (state: InputState): string =>

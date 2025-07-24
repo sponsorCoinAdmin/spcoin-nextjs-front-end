@@ -1,9 +1,13 @@
-// File: lib/hooks/useHexInput.ts
-
 'use client';
 
 import { useState, useCallback } from 'react';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+// Setup logger
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEX_INPUT === 'true';
+const debugLog = createDebugLogger('useHexInput', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * ✅ Pure utility function to validate a hex string.
@@ -29,32 +33,32 @@ export function useHexInput(initialValue: string = '', debounceDelay: number = 2
   }, []);
 
   const handleHexInputChange = useCallback(
-  (rawInput: string, _isManual?: boolean) => {
-    const trimmedInput = rawInput.trim();
-    const ok = _isValidHexString(trimmedInput);
+    (rawInput: string, _isManual?: boolean) => {
+      const trimmedInput = rawInput.trim();
+      const ok = _isValidHexString(trimmedInput);
 
-    console.log('🖊️ handleHexInputChange called with:', trimmedInput, _isManual, '→ isValid:', ok);
+      debugLog.log('🖊️ handleHexInputChange called with:', trimmedInput, _isManual, '→ isValid:', ok);
 
-    setIsValid(ok);
+      setIsValid(ok);
 
-    if (ok) {
-      console.log('✅ Setting validHexInput to:', trimmedInput);
-      setValidHexInput(trimmedInput);
-      setFailedHexInput(undefined);
-      setFailedHexCount(0);
-    } else {
-      console.log('❌ Invalid input, setting failedHexInput to:', trimmedInput);
-      setFailedHexInput(trimmedInput);
-      setFailedHexCount((prev) => prev + 1);
-    }
+      if (ok) {
+        debugLog.log('✅ Setting validHexInput to:', trimmedInput);
+        setValidHexInput(trimmedInput);
+        setFailedHexInput(undefined);
+        setFailedHexCount(0);
+      } else {
+        debugLog.log('❌ Invalid input, setting failedHexInput to:', trimmedInput);
+        setFailedHexInput(trimmedInput);
+        setFailedHexCount((prev) => prev + 1);
+      }
 
-    return ok;
-  },
-  []
-);
-
+      return ok;
+    },
+    []
+  );
 
   const resetHexInput = useCallback(() => {
+    debugLog.log('🔄 Resetting hex input state');
     setValidHexInput('');
     setFailedHexInput(undefined);
     setFailedHexCount(0);
@@ -65,13 +69,13 @@ export function useHexInput(initialValue: string = '', debounceDelay: number = 2
     debounceDelay === 0 ? validHexInput : useDebounce(validHexInput, debounceDelay);
 
   return {
-    validHexInput,        // ✅ immediate input value
-    debouncedHexInput,    // ✅ debounced input value
-    handleHexInputChange, // ✅ main input change handler
-    isValid,              // ✅ reactive validity state
-    resetHexInput,        // ✅ clears all input + error state
-    failedHexInput,       // ✅ last invalid input string
-    failedHexCount,       // ✅ invalid input count
-    isValidHexString,     // ✅ exported as part of the hook's return for pure validation needs
+    validHexInput,
+    debouncedHexInput,
+    handleHexInputChange,
+    isValid,
+    resetHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValidHexString,
   };
 }

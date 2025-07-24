@@ -56,16 +56,19 @@ export default function MainTradingPanel() {
 
   // ✅ setAssetTokenCallback
   function setAssetTokenCallback(tokenContract: TokenContract) {
-    alert(`🔻 setAssetTokenCallback → tokenContract = ${stringifyBigInt(tokenContract)}`)
+    let msg = `✅ setAssetTokenCallback`;
     if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-      alert('🔻 setAssetTokenCallback → setSellTokenContract');
+      msg += '🔻 → setSellTokenContract';
       setSellTokenContract(tokenContract);
     } else if (activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
-      alert('🔺 setAssetTokenCallback → setBuyTokenContract');
+      msg += '🔺 → setBuyTokenContract';
       setBuyTokenContract(tokenContract);
     } else {
-      debugLog.warn('⚠️ setAssetTokenCallback → no matching panel, skipping');
+      msg += '⚠️ → no matching panel, skipping';
     }
+    msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
+    debugLog.log(msg);
+    alert(msg);
   }
 
   // ✅ setErrorCallback

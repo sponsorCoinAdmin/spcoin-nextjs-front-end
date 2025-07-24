@@ -3,12 +3,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import AddressSelect from '@/components/shared/AddressSelect';
+import AddressSelect from '@/components/views/AddressSelect';
 import DataListScrollPanel from '@/components/Dialogs/Resources/DataListScrollPanel';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
-import { InputState } from '@/lib/structure';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 const LOG_TIME = false;

@@ -70,21 +70,31 @@ export const SharedPanelProvider = ({
   );
 
   // ✅ Automatically invoke setTradingTokenCallback only on CLOSE_SELECT_PANEL
+  // ✅ useEffect: Call setTradingTokenCallback on UPDATE_VALIDATED_ASSET
+  // ✅ Call closeCallback on CLOSE_SELECT_PANEL
   useEffect(() => {
-    debugLog.log(`📺 useEffect triggered: inputState = ${getInputStateString(inputState)}, validatedAsset =`, validatedAsset);
+    debugLog.log(
+      `📺 useEffect triggered: inputState = ${getInputStateString(inputState)}, validatedAsset =`,
+      validatedAsset
+    );
 
-    if (inputState === InputState.CLOSE_SELECT_PANEL) {
+    if (inputState === InputState.UPDATE_VALIDATED_ASSET) {
       if (validatedAsset) {
-        debugLog.log(`🚀 Triggering setTradingTokenCallback with ${validatedAsset.symbol || validatedAsset.address}`);
+        debugLog.log(`💰 UPDATE_VALIDATED_ASSET → setTradingTokenCallback with ${validatedAsset.symbol || validatedAsset.address}`);
         setTradingTokenCallback(validatedAsset as TokenContract);
       } else {
-        debugLog.warn(`⚠️ inputState is CLOSE_SELECT_PANEL but validatedAsset is missing or undefined`);
+        debugLog.warn(`⚠️ UPDATE_VALIDATED_ASSET state but validatedAsset is missing`);
       }
     }
-  }, [validatedAsset, inputState, setTradingTokenCallback]);
+
+    if (inputState === InputState.CLOSE_SELECT_PANEL) {
+      debugLog.log(`❎ CLOSE_SELECT_PANEL → triggering closeCallback`);
+      closeCallback(true);
+    }
+  }, [validatedAsset, inputState, setTradingTokenCallback, closeCallback]);
 
   const dumpFSMContext = (headerInfo?: string) => {
-    console.log(`🛠️ [FSMContext Dump] ${headerInfo || ''}`, {
+    debugLog.log(`🛠️ [FSMContext Dump] ${headerInfo || ''}`, {
       inputState: getInputStateString(inputState),
       validatedAsset,
       instanceId,
@@ -92,7 +102,7 @@ export const SharedPanelProvider = ({
   };
 
   const dumpInputFeedContext = (headerInfo?: string) => {
-    console.log(`🛠️ [InputFeedContext Dump] ${headerInfo || ''}`, {
+    debugLog.log(`🛠️ [InputFeedContext Dump] ${headerInfo || ''}`, {
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -103,16 +113,12 @@ export const SharedPanelProvider = ({
   };
 
   const dumpSharedPanelContext = (headerInfo?: string) => {
-    console.log(`🛠️ [SharedPanelContext Dump] ${headerInfo || ''}`);
+    debugLog.log(`🛠️ [SharedPanelContext Dump] ${headerInfo || ''}`);
     dumpFSMContext();
     dumpInputFeedContext();
   };
 
   const forceReset = resetHexInput;
-  const forceClose = () => {
-    debugLog.log(`🧨 forceClose triggered → setting inputState to CLOSE_SELECT_PANEL`);
-    setInputState(InputState.CLOSE_SELECT_PANEL);
-  };
 
   const contextValue = useMemo(
     () => ({
@@ -134,7 +140,6 @@ export const SharedPanelProvider = ({
       containerType: SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
       feedType: FEED_TYPE.TOKEN_LIST,
       forceReset,
-      forceClose,
       instanceId,
       closeCallback: () => closeCallback(true),
       setTradingTokenCallback,
@@ -151,12 +156,10 @@ export const SharedPanelProvider = ({
       handleHexInputChange,
       resetHexInput,
       forceReset,
-      forceClose,
       instanceId,
       closeCallback,
       setTradingTokenCallback,
     ]
   );
-
   return <SharedPanelContext.Provider value={contextValue}>{children}</SharedPanelContext.Provider>;
 };
