@@ -14,7 +14,7 @@ const emojiMap: Partial<Record<InputState, {
   [InputState.DUPLICATE_INPUT_ERROR]: { emoji: '♻️', text: 'Duplicate input selected.', color: 'text-orange-400' },
   [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Address not found on blockchain.', color: 'text-red-500' },
   [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '📭', text: 'Missing local asset preview.', color: 'text-orange-400' },
-  [InputState.VALIDATE_BALANCE_ERROR]: { emoji: '💥', text: 'Balance check failed.', color: 'text-red-500' },
+  [InputState.VALIDATE_ASSET_ERROR]: { emoji: '💥', text: 'Balance check failed.', color: 'text-red-500' },
 };
 
 export default function ErrorAssetPreview() {

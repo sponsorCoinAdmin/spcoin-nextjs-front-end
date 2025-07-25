@@ -17,11 +17,11 @@
         └── if not found → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN
 → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN → Display <ErrorAssetPreview />
 → VALIDATE_PREVIEW → Check preview step
-→ PREVIEW_ASSET → Check if Asset Exists Locally
+→ PREVIEW_ADDRESS → Check if Asset Exists Locally
         ├── if found → PREVIEW_CONTRACT_EXISTS_LOCALLY
         └── if not found → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY 
-→ VALIDATE_BALANCE → Check balance
-        ├── if error → VALIDATE_BALANCE_ERROR 
+→ VALIDATE_ASSET → Check balance
+        ├── if error → VALIDATE_ASSET_ERROR 
         └── if ok → CLOSE_SELECT_PANEL
 → CLOSE_SELECT_PANEL → Promote and close
         └── set token in context, clear input

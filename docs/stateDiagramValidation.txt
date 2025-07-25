@@ -63,7 +63,7 @@ User types raw hex ──► useHexInput ──► validHexInput ──► useDe
                    │                                │
                    │                                ▼
                    │                       ┌──────────────────┐
-                   │                       │ VALIDATE_BALANCE │
+                   │                       │ VALIDATE_ASSET │
                    │                       └────────┬─────────┘
                    │                                │
                    │                                ▼

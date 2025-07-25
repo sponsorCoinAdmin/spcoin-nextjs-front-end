@@ -12,10 +12,10 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
-
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
+
 debugLog.log('✅ [AddressSelect] component file loaded');
 
 export default function AddressSelect() {
@@ -39,8 +39,18 @@ export default function AddressSelect() {
   }, [debouncedHexInput]);
 
   const safeInput = debouncedHexInput.trim() !== '' ? debouncedHexInput : undefined;
-  debugLog.log('💥 Passing to useValidateFSMInput →', safeInput);
-  useValidateFSMInput(safeInput);
+
+  const {
+    inputState,
+    validatedAsset: fsmValidatedAsset,
+    reportMissingLogoURL,
+    hasBrokenLogoURL,
+  } = useValidateFSMInput(safeInput);
+
+  debugLog.log('🧪 useValidateFSMInput result:', {
+    inputState,
+    validatedAsset: fsmValidatedAsset,
+  });
 
   const onManualSelect = (item: ValidatedAsset) => {
     debugLog.log(`🧝‍♂️ onManualSelect() → ${item.address}`);

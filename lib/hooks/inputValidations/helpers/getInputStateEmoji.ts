@@ -24,15 +24,15 @@ export function getInputStateEmoji(state: InputState): string {
       return '🚫'; // prohibited
     case InputState.VALIDATE_PREVIEW:
       return '🔍'; // magnifying glass
-    case InputState.PREVIEW_ASSET:
+    case InputState.PREVIEW_ADDRESS:
       return '🖼️'; // picture/frame
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
       return '💾'; // save disk
     case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
       return '📭'; // empty mailbox
-    case InputState.VALIDATE_BALANCE:
+    case InputState.VALIDATE_ASSET:
       return '💰'; // money bag
-    case InputState.VALIDATE_BALANCE_ERROR:
+    case InputState.VALIDATE_ASSET_ERROR:
       return '❌'; // red cross
     case InputState.UPDATE_VALIDATED_ASSET:
       return '🔄'; // update

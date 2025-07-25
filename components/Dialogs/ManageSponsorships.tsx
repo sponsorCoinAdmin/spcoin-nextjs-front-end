@@ -13,7 +13,7 @@ import { FEED_TYPE, TokenContract } from '@/lib/structure';
 import { isAddress } from 'ethers';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/guiUtils';
-import DataListScrollPanel from './Resources/DataListScrollPanel';
+import DataListScrollPanel from '../views/DataListScrollPanel';
 import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 

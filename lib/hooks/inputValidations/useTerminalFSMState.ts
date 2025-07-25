@@ -10,7 +10,7 @@ const terminalStates = [
   InputState.DUPLICATE_INPUT_ERROR,
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
-  InputState.VALIDATE_BALANCE_ERROR,
+  InputState.VALIDATE_ASSET_ERROR,
   InputState.CLOSE_SELECT_PANEL,
 ];
 
@@ -21,12 +21,12 @@ const errorStates = [
   InputState.DUPLICATE_INPUT_ERROR,
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
-  InputState.VALIDATE_BALANCE_ERROR,
+  InputState.VALIDATE_ASSET_ERROR,
 ];
 
 export function useTerminalFSMState() {
   const { inputState } = useSharedPanelContext();
-  const showRenderPanel = inputState >= InputState.VALIDATE_BALANCE;
+  const showRenderPanel = inputState >= InputState.VALIDATE_ASSET;
   const isTerminalState = terminalStates.includes(inputState);
   const isErrorState = errorStates.includes(inputState);
 

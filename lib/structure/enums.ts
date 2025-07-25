@@ -75,6 +75,8 @@ export enum API_TRADING_PROVIDER {
 
 // File: lib/structure/enums.ts (or equivalent)
 
+// File: lib/structure/enums.ts
+
 export enum InputState {
   // 0️⃣ Blank input
   EMPTY_INPUT,                            // 0
@@ -89,22 +91,22 @@ export enum InputState {
   TEST_DUPLICATE_INPUT,                   // 5
   DUPLICATE_INPUT_ERROR,                  // 6
 
-  // 3️⃣ Blockchain existence check
-  VALIDATE_EXISTS_ON_CHAIN,               // 7
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,       // 8
+  // 3️⃣ Preview check phase
+  VALIDATE_PREVIEW,                       // 7
+  PREVIEW_ADDRESS,                        // 8
+  PREVIEW_CONTRACT_EXISTS_LOCALLY,        // 9
+  PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,     // 10
 
-  // 4️⃣ Preview check phase
-  VALIDATE_PREVIEW,                       // 9
-  PREVIEW_ASSET,                          // 10
-  PREVIEW_CONTRACT_EXISTS_LOCALLY,        // 11
-  PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,     // 12
+  // 4️⃣ Blockchain existence check
+  VALIDATE_EXISTS_ON_CHAIN,               // 11
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,       // 12
 
-  // 5️⃣ Balance check
-  VALIDATE_BALANCE,                       // 13
-  VALIDATE_BALANCE_ERROR,                 // 14
+  // 5️⃣ Asset check (balance, metadata)
+  VALIDATE_ASSET,                         // 13
+  VALIDATE_ASSET_ERROR,                   // 14
 
-  // 6️⃣ return the asset to the parent
-  UPDATE_VALIDATED_ASSET,           // 15
+  // 6️⃣ Final delivery
+  UPDATE_VALIDATED_ASSET,                 // 15
 
   // 7️⃣ Final close
   CLOSE_SELECT_PANEL,                     // 16

@@ -5,9 +5,13 @@ import { useReadContract } from 'wagmi';
 import { erc20Abi } from 'viem';
 import { Address } from 'viem';
 
-export function useTotalSupply(tokenAddress: Address) {
+export function useTotalSupply(tokenAddress?: Address) {
   return useReadContract({
     address: tokenAddress,
     abi: erc20Abi,
     functionName: 'totalSupply',
+    query: {
+      enabled: Boolean(tokenAddress),
+    },
   });
+}

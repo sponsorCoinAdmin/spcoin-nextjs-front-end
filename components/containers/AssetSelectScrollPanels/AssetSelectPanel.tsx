@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 import AddressSelect from '@/components/views/AddressSelect';
-import DataListScrollPanel from '@/components/Dialogs/Resources/DataListScrollPanel';
+import DataListScrollPanel from '@/components/views/DataListScrollPanel';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';

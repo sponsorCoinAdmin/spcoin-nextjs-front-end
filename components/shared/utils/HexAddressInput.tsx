@@ -2,6 +2,7 @@
 
 'use client';
 
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 import React, { useEffect } from 'react';
 
 type HexAddressInputProps = {
@@ -11,6 +12,10 @@ type HexAddressInputProps = {
   statusEmoji?: string;
 };
 
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
+const debugLog = createDebugLogger('HexAddressInput', DEBUG_ENABLED, LOG_TIME);
+
 export default function HexAddressInput({
   inputValue,
   onChange,
@@ -18,11 +23,11 @@ export default function HexAddressInput({
   statusEmoji,
 }: HexAddressInputProps) {
   useEffect(() => {
-    console.log('⚡ HexAddressInput rendered, current value:', inputValue);
+    debugLog.log('⚡ HexAddressInput rendered, current value:', inputValue);
   }, [inputValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // console.log('✏️ [HexAddressInput]: HexAddressInput onChange fired with value:', e.target.value);
+    // debugLog.log('✏️ [HexAddressInput]: HexAddressInput onChange fired with value:', e.target.value);
     onChange(e.target.value);
   };
 

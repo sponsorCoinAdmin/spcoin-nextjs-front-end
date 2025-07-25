@@ -1,3 +1,8 @@
+// File: lib/hooks/wagmi/useToken.ts
+// Description: A custom hook for fetching token data from the Ethereum blockchain using the Wagmi library.
+// Author: Robin
+// Date: 2023-09-15
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -17,7 +22,9 @@ export function useToken(tokenAddress?: Address): TokenContract | undefined {
   const { data: name } = useName(tokenAddress!);
   const { data: decimals } = useDecimals(tokenAddress!);
   const { data: totalSupply } = useTotalSupply(tokenAddress!);
-  const { data: balanceData } = useBalanceOf({ address: userAddress!, token: tokenAddress });
+  const { data: balanceData } = useBalanceOf({
+    address: userAddress!, 
+    token: tokenAddress });
 
   useEffect(() => {
     if (!tokenAddress || !isAddress(tokenAddress)) {
@@ -27,9 +34,9 @@ export function useToken(tokenAddress?: Address): TokenContract | undefined {
 
     setToken({
       address: tokenAddress,
-      name,
-      decimals,
-      totalSupply,
+      name: name ?? '',
+      decimals: decimals ?? 18,
+      totalSupply: totalSupply ?? 0n,
       balance: balanceData?.value ?? 0n,
       chainId,
     });

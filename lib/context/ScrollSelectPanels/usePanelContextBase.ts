@@ -14,7 +14,6 @@ import {
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './useSharedPanelContext';
-import { useInputStateManager } from '@/lib/hooks/inputValidations';
 
 const LOG_TIME = false;
 
@@ -59,15 +58,6 @@ export function usePanelContextBase(
     handleHexInputChange,
     resetHexInput,
   } = useHexInput();
-
-  const { forceReset, forceClose } = useInputStateManager({
-    currentInputState: inputState,
-    validHexInput,
-    debouncedHexInput,
-    setInputState,
-    setValidatedAsset,
-    resetHexInput,
-  });
 
   const dumpFSMContext = (headerInfo?: string) => {
     try {
@@ -136,8 +126,6 @@ export function usePanelContextBase(
       resetHexInput,
       dumpInputFeedContext,
       dumpSharedPanelContext,
-      forceReset,
-      forceClose,
 
       /** ✅ Required callbacks, supplied as no-ops for base context use */
       closeCallback: () => {
@@ -160,8 +148,6 @@ export function usePanelContextBase(
       isValidHexString,
       handleHexInputChange,
       resetHexInput,
-      forceReset,
-      forceClose,
     ]
   );
 }
