@@ -49,7 +49,7 @@ export default function MainTradingPanel() {
 
   // ✅ closeCallback
   function closeCallback() {
-    alert(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
+    // alert(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
     debugLog.log(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }
