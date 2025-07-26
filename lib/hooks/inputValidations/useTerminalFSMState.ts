@@ -12,6 +12,7 @@ const terminalStates = [
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
   InputState.VALIDATE_ASSET_ERROR,
   InputState.CLOSE_SELECT_PANEL,
+  InputState.MISSING_ACCOUNT_ADDRESS,
 ];
 
 const errorStates = [
@@ -22,6 +23,7 @@ const errorStates = [
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
   InputState.VALIDATE_ASSET_ERROR,
+  InputState.MISSING_ACCOUNT_ADDRESS,
 ];
 
 export function useTerminalFSMState() {

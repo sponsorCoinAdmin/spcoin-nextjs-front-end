@@ -104,12 +104,13 @@ export enum InputState {
   // 5️⃣ Asset check (balance, metadata)
   VALIDATE_ASSET,                         // 13
   VALIDATE_ASSET_ERROR,                   // 14
+  MISSING_ACCOUNT_ADDRESS,                // 15
 
   // 6️⃣ Final delivery
-  UPDATE_VALIDATED_ASSET,                 // 15
+  UPDATE_VALIDATED_ASSET,                 // 16
 
   // 7️⃣ Final close
-  CLOSE_SELECT_PANEL,                     // 16
+  CLOSE_SELECT_PANEL,                     // 17
 }
 
 export const getInputStateString = (state: InputState): string =>

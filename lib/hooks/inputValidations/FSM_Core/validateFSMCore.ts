@@ -128,10 +128,6 @@ export async function validateFSMCore(
   return result;
 }
 
-// ─────────────────────────────────────────────
-// FSM Helper Functions
-// ─────────────────────────────────────────────
-
 function validateAddress({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {
   debugLog.warn('⚠️ validateAddress() was CALLED');
   if (isEmptyInput(debouncedHexInput)) {
@@ -192,7 +188,7 @@ async function validateExistsOnChain({
 
     return { nextState: InputState.VALIDATE_ASSET };
   } catch (err) {
-    debugLog.error(`❌ validateExistsOnChain → Error fetching bytecode:`, err);
+    debugLog.warn(`⚠️ validateExistsOnChain → Error fetching bytecode:`, err);
     return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
   }
 }
@@ -214,7 +210,7 @@ async function validateAsset({
   }
 
   if (!isAddress(debouncedHexInput)) {
-    debugLog.error(`❌ validateAsset → Invalid or missing debouncedHexInput`, {
+    debugLog.warn(`⚠️ validateAsset → Invalid or missing debouncedHexInput`, {
       debouncedHexInput,
     });
     return {
@@ -223,14 +219,25 @@ async function validateAsset({
     };
   }
 
-  if (!accountAddress || !publicClient) {
-    debugLog.error(`❌ validateAsset → Missing accountAddress or publicClient`, {
-      accountAddressExists: !!accountAddress,
+  if (!accountAddress) {
+    debugLog.warn(`⚠️ validateAsset → Missing account address`, {
+      accountAddressExists: false,
       publicClientExists: !!publicClient,
     });
     return {
+      nextState: InputState.MISSING_ACCOUNT_ADDRESS,
+      errorMessage: 'Missing account address.',
+    };
+  }
+
+  if (!publicClient) {
+    debugLog.warn(`⚠️ validateAsset → Missing publicClient`, {
+      accountAddressExists: !!accountAddress,
+      publicClientExists: false,
+    });
+    return {
       nextState: InputState.VALIDATE_ASSET_ERROR,
-      errorMessage: 'Missing account or public client.',
+      errorMessage: 'Missing public client.',
     };
   }
 
@@ -268,7 +275,7 @@ async function validateAsset({
       updatedBalance: balance,
     };
   } catch (err) {
-    debugLog.error(`❌ validateAsset → Failed balanceOf call`, err);
+    debugLog.warn(`⚠️ validateAsset → Failed balanceOf call`, err);
     return {
       nextState: InputState.VALIDATE_ASSET_ERROR,
       errorMessage: 'Contract read failure during balance check.',

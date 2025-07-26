@@ -5,11 +5,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { isAddress, Address } from 'viem';
 import { useChainId, useAccount, usePublicClient } from 'wagmi';
-
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
   InputState,
-  SP_COIN_DISPLAY,
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
