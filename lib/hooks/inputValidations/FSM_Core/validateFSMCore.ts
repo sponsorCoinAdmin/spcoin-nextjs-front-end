@@ -11,18 +11,19 @@ import { validateDuplicate } from './tests/validateDuplicate';
 import { previewAsset } from './tests/previewAsset';
 import { validateExistsOnChain } from './tests/validateExistsOnChain';
 import { validateAsset } from './tests/validateAsset';
+import { validateExistsLocally } from './tests/validateExistsLocally';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED);
 
 const FSM_TEST_FLAGS = {
   TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'false',
-  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
+  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'false',
   TEST_VALIDATE_PREVIEW: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_PREVIEW === 'false',
   TEST_PREVIEW_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_PREVIEW_ADDRESS === 'false',
-  TEST_CONTRACT_EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_CONTRACT_EXISTS_LOCALLY === 'false',
+  TEST_CONTRACT_EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'false',
   TEST_EXISTS_ON_CHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'false',
-  TEST_VALIDATE_ASSET: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_ASSET === 'false',
+  TEST_VALIDATE_ASSET: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_ASSET === 'true',
 };
 
 debugLog.log(JSON.stringify(FSM_TEST_FLAGS));
@@ -59,9 +60,7 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       break;
 
     case InputState.VALIDATE_PREVIEW:
-      result = FSM_TEST_FLAGS.TEST_VALIDATE_PREVIEW
-        ? { nextState: InputState.PREVIEW_ADDRESS }
-        : { nextState: InputState.PREVIEW_ADDRESS };
+      result = { nextState: InputState.PREVIEW_ADDRESS };
       break;
 
     case InputState.PREVIEW_ADDRESS:
@@ -72,7 +71,7 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
 
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
       result = FSM_TEST_FLAGS.TEST_CONTRACT_EXISTS_LOCALLY
-        ? { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN }
+        ? validateExistsLocally(input)
         : { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
       break;
 

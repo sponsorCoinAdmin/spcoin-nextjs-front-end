@@ -9,7 +9,6 @@ import ErrorAssetPreview from '../shared/utils/sharedPreviews/ErrorAssetPreview'
 
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 const LOG_TIME = false;
@@ -21,7 +20,6 @@ debugLog.log('✅ [AddressSelect] component file loaded');
 export default function AddressSelect() {
   const {
     instanceId,
-    validatedAsset,
     validHexInput,
     debouncedHexInput,
     handleHexInputChange,
@@ -42,25 +40,13 @@ export default function AddressSelect() {
 
   const {
     inputState,
-    validatedAsset: fsmValidatedAsset,
-    reportMissingLogoURL,
-    hasBrokenLogoURL,
+    validatedAsset,
   } = useValidateFSMInput(safeInput);
 
   debugLog.log('🧪 useValidateFSMInput result:', {
     inputState,
-    validatedAsset: fsmValidatedAsset,
+    validatedAsset,
   });
-
-  const onManualSelect = (item: ValidatedAsset) => {
-    debugLog.log(`🧝‍♂️ onManualSelect() → ${item.address}`);
-    try {
-      const result = handleHexInputChange(item.address, true);
-      debugLog.log(`🧝‍♂️ onManualSelect handleHexInputChange result → ${result}`);
-    } catch (err) {
-      debugLog.error('❌ handleHexInputChange onManualSelect error:', err);
-    }
-  };
 
   return (
     <div id="AddressSelectDiv" className="flex flex-col gap-[4px] p-0">
@@ -85,10 +71,7 @@ export default function AddressSelect() {
 
       <ErrorAssetPreview />
 
-      <RenderAssetPreview
-        validatedAsset={validatedAsset}
-        onSelect={onManualSelect}
-      />
+      <RenderAssetPreview />
     </div>
   );
 }
