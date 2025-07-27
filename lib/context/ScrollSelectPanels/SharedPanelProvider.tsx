@@ -2,14 +2,7 @@
 
 'use client';
 
-import React, {
-  ReactNode,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
 
 import { SharedPanelContext } from './useSharedPanelContext';
 import {
@@ -22,7 +15,9 @@ import {
 
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { isTerminalFSMState } from '@/lib/hooks/inputValidations/FSM_Core/terminalStates';
+import { useRestartFSMIfNeeded } from '@/lib/hooks/inputValidations/utils/useRestartFSM';
+import { handleFSMTerminalState } from '@/lib/hooks/inputValidations/utils/handleTerminalState';
+import { dumpFSMContext, dumpInputFeedContext } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 
 // ─── Debug Config ─────────────────────────────
 const LOG_TIME = false;
@@ -62,10 +57,6 @@ export const SharedPanelProvider = ({
     resetHexInput,
   } = useHexInput();
 
-  const prevDebouncedRef = useRef('');
-  const inputStateRef = useRef(inputState);
-  inputStateRef.current = inputState;
-
   const setInputState = useCallback((next: InputState) => {
     setInputStateRaw((prev) => {
       if (prev === next) {
@@ -91,84 +82,26 @@ export const SharedPanelProvider = ({
     setValidatedAssetRaw(next);
   }, [validatedAsset]);
 
+  useRestartFSMIfNeeded(inputState, debouncedHexInput, setInputState);
+
   useEffect(() => {
-    const handleFSMTerminalState = () => {
-      switch (inputState) {
-        case InputState.UPDATE_VALIDATED_ASSET:
-          debugFSM.log('📥 FSM: UPDATE_VALIDATED_ASSET reached');
-          if (validatedAsset) {
-            debugFSM.log(`📦 setTradingTokenCallback → ${validatedAsset.symbol || validatedAsset.address}`);
-            setTradingTokenCallback(validatedAsset);
-            setInputState(InputState.CLOSE_SELECT_PANEL);
-          } else {
-            debugFSM.warn('⚠️ Missing validatedAsset in UPDATE_VALIDATED_ASSET');
-          }
-          break;
-
-        case InputState.CLOSE_SELECT_PANEL:
-          debugFSM.log('🚪 FSM: CLOSE_SELECT_PANEL → closeCallback(true)');
-          closeCallback(true);
-          break;
-      }
-    };
-
-    handleFSMTerminalState();
-  }, [inputState, validatedAsset, setTradingTokenCallback, closeCallback, setInputState]);
-
-  // ──────────────────────────────────────────────
-  // 🔁 Restart FSM if input changed from terminal
-  // ──────────────────────────────────────────────
-  useEffect(() => {
-    const inputChanged = debouncedHexInput !== prevDebouncedRef.current;
-    const isTerminal = isTerminalFSMState(inputStateRef.current);
-
-    debugFSM.log('🔎 Debounce Watcher', {
-      prevDebounced: prevDebouncedRef.current,
-      currentDebounced: debouncedHexInput,
-      inputChanged,
-      state: getInputStateString(inputStateRef.current),
-      isTerminal,
-    });
-
-    if (inputChanged && isTerminal) {
-      debugFSM.log('🔁 [RESTART FSM FROM TERMINAL] → VALIDATE_ADDRESS');
-      setInputState(InputState.VALIDATE_ADDRESS);
-      prevDebouncedRef.current = debouncedHexInput;
-    }
-  }, [debouncedHexInput]);
-
-  const dumpFSMContext = (headerInfo?: string) => {
-    debugLog.log(`🧭 FSMContext Dump: ${headerInfo || ''}`, {
-      inputState: getInputStateString(inputState),
-      validatedAsset,
-      instanceId,
-    });
-  };
-
-  const dumpInputFeedContext = (headerInfo?: string) => {
-    debugLog.log(`📡 InputFeedContext Dump: ${headerInfo || ''}`, {
-      validHexInput,
-      debouncedHexInput,
-      failedHexInput,
-      failedHexCount,
-      isValid,
-      instanceId,
-    });
-  };
-
-  const dumpSharedPanelContext = (headerInfo?: string) => {
-    debugLog.log(`📦 SharedPanelContext Dump: ${headerInfo || ''}`);
-    dumpFSMContext();
-    dumpInputFeedContext();
-  };
+    handleFSMTerminalState(inputState, validatedAsset, setInputState, setValidatedAsset, setTradingTokenCallback, closeCallback);
+  }, [inputState, validatedAsset, setInputState, setValidatedAsset, setTradingTokenCallback, closeCallback]);
 
   const fsmContext = useMemo(() => ({
     inputState,
     setInputState,
     validatedAsset,
     setValidatedAsset,
-    dumpFSMContext,
-    dumpSharedPanelContext,
+    dumpFSMContext: (header?: string) =>
+      dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId),
+
+    dumpSharedPanelContext: (header?: string) => {
+      debugLog.log(`📆 SharedPanelContext Dump: ${header ?? ''}`);
+      dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId);
+      dumpInputFeedContext(header ?? '', validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid, instanceId);
+    },
+
     containerType,
     feedType,
     closeCallback: () => closeCallback(true),
@@ -185,25 +118,12 @@ export const SharedPanelProvider = ({
     isValidHexString,
     handleHexInputChange,
     resetHexInput,
-    dumpInputFeedContext,
-  }), [
-    validHexInput,
-    debouncedHexInput,
-    failedHexInput,
-    failedHexCount,
-    isValid,
-    isValidHexString,
-    handleHexInputChange,
-    resetHexInput,
-  ]);
-
-  const contextValue = useMemo(() => ({
-    ...fsmContext,
-    ...inputFeedContext,
-  }), [fsmContext, inputFeedContext]);
+    dumpInputFeedContext: (header?: string) =>
+      dumpInputFeedContext(header ?? '', validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid, instanceId),
+  }), [validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid, isValidHexString, handleHexInputChange, resetHexInput]);
 
   return (
-    <SharedPanelContext.Provider value={contextValue}>
+    <SharedPanelContext.Provider value={{ ...fsmContext, ...inputFeedContext }}>
       {children}
     </SharedPanelContext.Provider>
   );
