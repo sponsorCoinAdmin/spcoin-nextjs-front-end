@@ -2,7 +2,15 @@
 
 'use client';
 
-import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
+import React, {
+  ReactNode,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from 'react';
+
 import { SharedPanelContext } from './useSharedPanelContext';
 import {
   SP_COIN_DISPLAY,
@@ -11,16 +19,23 @@ import {
   getInputStateString,
   TokenContract,
 } from '@/lib/structure';
+
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { isTerminalFSMState } from '@/lib/hooks/inputValidations/FSM_Core/terminalStates';
 
+// ─── Debug Config ─────────────────────────────
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
-const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
-
 const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
+
+const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
 const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
+
+// ─── Constants ─────────────────────────────
+const instanceId = 'main';
+const containerType = SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
+const feedType = FEED_TYPE.TOKEN_LIST;
 
 interface SharedPanelProviderProps {
   children: ReactNode;
@@ -35,7 +50,6 @@ export const SharedPanelProvider = ({
 }: SharedPanelProviderProps) => {
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
-  const instanceId = 'main';
 
   const {
     validHexInput,
@@ -48,49 +62,83 @@ export const SharedPanelProvider = ({
     resetHexInput,
   } = useHexInput();
 
+  const prevDebouncedRef = useRef('');
+  const inputStateRef = useRef(inputState);
+  inputStateRef.current = inputState;
+
   const setInputState = useCallback((next: InputState) => {
     setInputStateRaw((prev) => {
       if (prev === next) {
-        debugFSM.log(`\u274C Skipping setInputState — already in ${getInputStateString(next)}`);
+        debugFSM.log(`⏭️ Skipped setInputState → Already in ${getInputStateString(next)}`);
         return prev;
       }
-      debugFSM.log(`\u270D\ufe0f setInputState → ${getInputStateString(next)}`);
+      debugFSM.log(`✳️ setInputState → ${getInputStateString(next)}`);
       return next;
     });
   }, []);
 
   const setValidatedAsset = useCallback((next: TokenContract | undefined) => {
-    if (validatedAsset && next && validatedAsset.address === next.address) {
-      debugFSM.log(`\u274C Skipping setValidatedAsset — already ${next.symbol || next.address}`);
+    if (
+      validatedAsset?.address === next?.address &&
+      validatedAsset?.symbol === next?.symbol
+    ) {
+      debugFSM.log(`⏭️ Skipped setValidatedAsset → Already ${next?.symbol || next?.address}`);
       return;
     }
-    debugFSM.log(next ? `\u2705 setValidatedAsset → ${next.symbol || next.address}` : '\ud83d\udec9 Clearing validated asset');
+    debugFSM.log(next
+      ? `✅ setValidatedAsset → ${next.symbol || next.address}`
+      : '🧼 Cleared validated asset');
     setValidatedAssetRaw(next);
   }, [validatedAsset]);
 
   useEffect(() => {
-    switch (inputState) {
-      case InputState.UPDATE_VALIDATED_ASSET:
-        debugLog.log(`\ud83d\udcca [FSM Hook] Reached UPDATE_VALIDATED_ASSET`);
-        if (validatedAsset) {
-          debugFSM.log(`\ud83d\udcb0 UPDATE_VALIDATED_ASSET → setTradingTokenCallback with ${validatedAsset.symbol || validatedAsset.address}`);
-          setTradingTokenCallback(validatedAsset);
-          setInputState(InputState.CLOSE_SELECT_PANEL);
-        } else {
-          debugFSM.warn(`\u26a0\ufe0f UPDATE_VALIDATED_ASSET state but validatedAsset is missing`);
-        }
-        break;
+    const handleFSMTerminalState = () => {
+      switch (inputState) {
+        case InputState.UPDATE_VALIDATED_ASSET:
+          debugFSM.log('📥 FSM: UPDATE_VALIDATED_ASSET reached');
+          if (validatedAsset) {
+            debugFSM.log(`📦 setTradingTokenCallback → ${validatedAsset.symbol || validatedAsset.address}`);
+            setTradingTokenCallback(validatedAsset);
+            setInputState(InputState.CLOSE_SELECT_PANEL);
+          } else {
+            debugFSM.warn('⚠️ Missing validatedAsset in UPDATE_VALIDATED_ASSET');
+          }
+          break;
 
-      case InputState.CLOSE_SELECT_PANEL:
-        debugLog.log(`\ud83d\udcca [FSM Hook] Reached CLOSE_SELECT_PANEL`);
-        debugFSM.log(`\ud83d\uded1 CLOSE_SELECT_PANEL → closeCallback(true)`);
-        closeCallback(true);
-        break;
-    }
+        case InputState.CLOSE_SELECT_PANEL:
+          debugFSM.log('🚪 FSM: CLOSE_SELECT_PANEL → closeCallback(true)');
+          closeCallback(true);
+          break;
+      }
+    };
+
+    handleFSMTerminalState();
   }, [inputState, validatedAsset, setTradingTokenCallback, closeCallback, setInputState]);
 
+  // ──────────────────────────────────────────────
+  // 🔁 Restart FSM if input changed from terminal
+  // ──────────────────────────────────────────────
+  useEffect(() => {
+    const inputChanged = debouncedHexInput !== prevDebouncedRef.current;
+    const isTerminal = isTerminalFSMState(inputStateRef.current);
+
+    debugFSM.log('🔎 Debounce Watcher', {
+      prevDebounced: prevDebouncedRef.current,
+      currentDebounced: debouncedHexInput,
+      inputChanged,
+      state: getInputStateString(inputStateRef.current),
+      isTerminal,
+    });
+
+    if (inputChanged && isTerminal) {
+      debugFSM.log('🔁 [RESTART FSM FROM TERMINAL] → VALIDATE_ADDRESS');
+      setInputState(InputState.VALIDATE_ADDRESS);
+      prevDebouncedRef.current = debouncedHexInput;
+    }
+  }, [debouncedHexInput]);
+
   const dumpFSMContext = (headerInfo?: string) => {
-    debugLog.log(`\ud83d\udee0\ufe0f [FSMContext Dump] ${headerInfo || ''}`, {
+    debugLog.log(`🧭 FSMContext Dump: ${headerInfo || ''}`, {
       inputState: getInputStateString(inputState),
       validatedAsset,
       instanceId,
@@ -98,7 +146,7 @@ export const SharedPanelProvider = ({
   };
 
   const dumpInputFeedContext = (headerInfo?: string) => {
-    debugLog.log(`\ud83d\udee0\ufe0f [InputFeedContext Dump] ${headerInfo || ''}`, {
+    debugLog.log(`📡 InputFeedContext Dump: ${headerInfo || ''}`, {
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -109,7 +157,7 @@ export const SharedPanelProvider = ({
   };
 
   const dumpSharedPanelContext = (headerInfo?: string) => {
-    debugLog.log(`\ud83d\udee0\ufe0f [SharedPanelContext Dump] ${headerInfo || ''}`);
+    debugLog.log(`📦 SharedPanelContext Dump: ${headerInfo || ''}`);
     dumpFSMContext();
     dumpInputFeedContext();
   };
@@ -121,8 +169,8 @@ export const SharedPanelProvider = ({
     setValidatedAsset,
     dumpFSMContext,
     dumpSharedPanelContext,
-    containerType: SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
-    feedType: FEED_TYPE.TOKEN_LIST,
+    containerType,
+    feedType,
     closeCallback: () => closeCallback(true),
     setTradingTokenCallback,
     instanceId,
@@ -137,7 +185,6 @@ export const SharedPanelProvider = ({
     isValidHexString,
     handleHexInputChange,
     resetHexInput,
-    forceReset: resetHexInput,
     dumpInputFeedContext,
   }), [
     validHexInput,

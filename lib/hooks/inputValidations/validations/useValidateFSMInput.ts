@@ -63,26 +63,27 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // ──────────────────────────────────────────────
-  // 🔁 Restart FSM if input changed — ALWAYS
-  // ──────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
+  // 🔁 Restart FSM if input changed AND current state is terminal
+  // ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const inputChanged = debouncedHexInput !== prevDebouncedInputRef.current;
+  const inputChanged = debouncedHexInput !== prevDebouncedInputRef.current;
+  const isTerminal = isTerminalFSMState(inputStateRef.current);
 
-    console.log('🔎 Checking for new input', {
-      prevDebounced: prevDebouncedInputRef.current,
-      currentDebounced: debouncedHexInput,
-      equal: prevDebouncedInputRef.current === debouncedHexInput,
-      inputState: InputState[inputStateRef.current],
-      fsmIsRunning: fsmIsRunningRef.current,
-    });
+  console.log('🔎 Debounce Watcher', {
+    prevDebounced: prevDebouncedInputRef.current,
+    currentDebounced: debouncedHexInput,
+    inputChanged,
+    inputState: InputState[inputStateRef.current],
+    isTerminal,
+  });
 
-    if (inputChanged && !fsmIsRunningRef.current) {
-      console.log('🔁 [RESTART FSM] New debounced input detected → VALIDATE_ADDRESS');
-      setInputState(InputState.VALIDATE_ADDRESS);
-      prevDebouncedInputRef.current = debouncedHexInput;
-    }
-  }, [debouncedHexInput]);
+  if (inputChanged && isTerminal && !fsmIsRunningRef.current) {
+    console.log('🔁 [RESTART FSM FROM TERMINAL] → VALIDATE_ADDRESS');
+    setInputState(InputState.VALIDATE_ADDRESS);
+    prevDebouncedInputRef.current = debouncedHexInput;
+  }
+}, [debouncedHexInput]);
 
   // ──────────────────────────────────────────────
   // 🔂 Run FSM logic on input

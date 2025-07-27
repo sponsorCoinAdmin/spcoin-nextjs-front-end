@@ -4,6 +4,7 @@ import { Address } from 'viem';
 import { getLogoURL } from '@/lib/network/utils';
 import { InputState, TokenContract, FEED_TYPE } from '@/lib/structure';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 export async function validateAsset({
   debouncedHexInput,
@@ -11,8 +12,11 @@ export async function validateAsset({
   accountAddress,
   feedType,
   chainId,
+  validatedAsset,
 }: ValidateFSMInput): Promise<ValidateFSMOutput> {
-alert(`Running validateAsset(${debouncedHexInput})`);
+  alert(`Running validateAsset(${debouncedHexInput})`);
+  alert(`===========================================================`);
+  alert(`validatedAsset = ${stringifyBigInt(validatedAsset)}`);
   if (feedType !== FEED_TYPE.TOKEN_LIST) {
     return { nextState: InputState.UPDATE_VALIDATED_ASSET };
   }
