@@ -4,11 +4,11 @@
 
 import { useEffect, useRef } from 'react';
 import { InputState } from '@/lib/structure';
-import { isTerminalFSMState } from '@/lib/hooks/inputValidations/FSM_Core/terminalStates';
+import { isTerminalFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugFSM = createDebugLogger('useRestartFSMIfNeeded', DEBUG_ENABLED, LOG_TIME);
 
 /**

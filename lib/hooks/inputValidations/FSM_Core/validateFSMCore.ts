@@ -1,8 +1,8 @@
 // File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
 
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
+import { InputState, FEED_TYPE } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { isTerminalFSMState } from './terminalStates';
+import { isTerminalFSMState } from './fSMInputStates';
 import { ValidateFSMInput, ValidateFSMOutput } from './types/validateFSMTypes';
 
 // Imported individual test modules
@@ -10,26 +10,32 @@ import { validateAddress } from './tests/validateAddress';
 import { validateDuplicate } from './tests/validateDuplicate';
 import { previewAsset } from './tests/previewAsset';
 import { validateExistsOnChain } from './tests/validateExistsOnChain';
-import { validateAsset } from './tests/validateAsset';
+import { validateTokenAsset } from './tests/validateTokenAsset';
+import { validateWalletAsset } from './tests/validateWalletAsset';
 import { validateExistsLocally } from './tests/validateExistsLocally';
 
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
+import { validateResolvedAsset } from './tests/validateResolvedAsset';
+
+const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
-const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED);
+const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED, LOG_TIME);
 
 const FSM_TEST_FLAGS = {
   TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'false',
-  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
+  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'false',
   TEST_VALIDATE_PREVIEW: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_PREVIEW === 'false',
   TEST_PREVIEW_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_PREVIEW_ADDRESS === 'false',
   TEST_CONTRACT_EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'false',
   TEST_EXISTS_ON_CHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'false',
-  TEST_VALIDATE_ASSET: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_ASSET === 'false',
+  TEST_RESOLVE_ASSET: process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ASSET === 'true',
 };
 
 debugLog.log(JSON.stringify(FSM_TEST_FLAGS));
 
 export async function validateFSMCore(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
-  const { inputState, debouncedHexInput } = input;
+  const { inputState, debouncedHexInput, feedType } = input;
 
   debugLog.log(
     `🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${debouncedHexInput}"`
@@ -78,13 +84,19 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
     case InputState.VALIDATE_EXISTS_ON_CHAIN:
       result = FSM_TEST_FLAGS.TEST_EXISTS_ON_CHAIN
         ? await validateExistsOnChain(input)
-        : { nextState: InputState.VALIDATE_ASSET };
+        : { nextState: InputState.RESOLVE_ASSET };
       break;
 
-    case InputState.VALIDATE_ASSET:
-      result = FSM_TEST_FLAGS.TEST_VALIDATE_ASSET
-        ? await validateAsset(input)
-        : { nextState: InputState.UPDATE_VALIDATED_ASSET };
+    // Inside your FSM switch statement
+    case InputState.RESOLVE_ASSET:
+      if (FSM_TEST_FLAGS.TEST_RESOLVE_ASSET) {
+        result = await validateResolvedAsset(input);
+        const msg:string = `RESOLVE_ASSET: ${stringifyBigInt(result)}`
+        // alert(msg)
+        console.log(msg)
+      } else {
+        result = { nextState: InputState.UPDATE_VALIDATED_ASSET };
+      }
       break;
 
     default:
@@ -96,7 +108,7 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
   }
 
   debugLog.log(
-    `✅ EXIT → nextState: ${InputState[result.nextState]}, validatedAsset: ${result.validatedAsset?.address || 'none'}, error: ${result.errorMessage || 'none'}`
+    `✅ EXIT → nextState: ${InputState[result.nextState]} | validatedToken: ${result.validatedToken?.symbol || 'none'} | error: ${result.errorMessage || 'none'}`
   );
 
   return result;

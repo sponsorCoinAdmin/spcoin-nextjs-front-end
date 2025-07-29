@@ -95,15 +95,16 @@ export enum InputState {
   CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,       // 12
 
   // 5️⃣ Asset check (balance, metadata)
-  VALIDATE_ASSET,                         // 13
-  VALIDATE_ASSET_ERROR,                   // 14
-  MISSING_ACCOUNT_ADDRESS,                // 15
+  RESOLVE_ASSET,                         // 13
+  TOKEN_NOT_RESOLVED_ERROR,               // 14
+  RESOLVE_ASSET_ERROR,                   // 15
+  MISSING_ACCOUNT_ADDRESS,                // 16
 
   // 6️⃣ Final delivery
-  UPDATE_VALIDATED_ASSET,                 // 16
+  UPDATE_VALIDATED_ASSET,                 // 17
 
   // 7️⃣ Final close
-  CLOSE_SELECT_PANEL,                     // 17
+  CLOSE_SELECT_PANEL,                     // 18
 }
 
 export const getInputStateString = (state: InputState): string =>

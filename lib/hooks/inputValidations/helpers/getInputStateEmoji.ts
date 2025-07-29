@@ -30,9 +30,11 @@ export function getInputStateEmoji(state: InputState): string {
       return '💾'; // save disk
     case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
       return '📭'; // empty mailbox
-    case InputState.VALIDATE_ASSET:
+    case InputState.RESOLVE_ASSET:
       return '💰'; // money bag
-    case InputState.VALIDATE_ASSET_ERROR:
+    case InputState.RESOLVE_ASSET_ERROR:
+      return '❌'; // red cross
+    case InputState.TOKEN_NOT_RESOLVED_ERROR:
       return '❌'; // red cross
     case InputState.UPDATE_VALIDATED_ASSET:
       return '🔄'; // update

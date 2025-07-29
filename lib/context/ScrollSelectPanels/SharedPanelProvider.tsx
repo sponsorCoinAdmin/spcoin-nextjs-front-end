@@ -11,6 +11,7 @@ import {
   InputState,
   getInputStateString,
   TokenContract,
+  WalletAccount,
 } from '@/lib/structure';
 
 import { useHexInput } from '@/lib/hooks/useHexInput';
@@ -22,7 +23,7 @@ import { dumpFSMContext, dumpInputFeedContext } from '@/lib/hooks/inputValidatio
 // ─── Debug Config ─────────────────────────────
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
-const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
+const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 
 const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
 const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
@@ -93,6 +94,16 @@ export const SharedPanelProvider = ({
     setInputState,
     validatedAsset,
     setValidatedAsset,
+
+    // ✅ Added these two for FSM support
+    setValidatedToken: (token?: TokenContract) => {
+      debugFSM.log(`🪙 setValidatedToken called`);
+      setValidatedAsset(token);
+    },
+    setValidatedWallet: (_wallet?: WalletAccount) => {
+      debugFSM.warn(`⚠️ setValidatedWallet called in token panel → ignored`);
+    },
+
     dumpFSMContext: (header?: string) =>
       dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId),
 
@@ -107,7 +118,19 @@ export const SharedPanelProvider = ({
     closeCallback: () => closeCallback(true),
     setTradingTokenCallback,
     instanceId,
-  }), [inputState, validatedAsset, setInputState, setValidatedAsset, closeCallback, setTradingTokenCallback]);
+  }), [
+    inputState,
+    validatedAsset,
+    setInputState,
+    setValidatedAsset,
+    closeCallback,
+    setTradingTokenCallback,
+    validHexInput,
+    debouncedHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValid,
+  ]);
 
   const inputFeedContext = useMemo(() => ({
     validHexInput,

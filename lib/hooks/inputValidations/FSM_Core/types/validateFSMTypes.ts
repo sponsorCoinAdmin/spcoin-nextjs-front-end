@@ -23,15 +23,20 @@ export interface ValidateFSMInput {
   accountAddress?: Address;
   seenBrokenLogos: Set<string>;
   feedType: FEED_TYPE;
-  validatedAsset?: TokenContract | WalletAccount;
+
+  // Separated asset types
+  validatedToken?: TokenContract;
+  validatedWallet?: WalletAccount;
 }
+
 
 /**
  * Output returned by the FSM core validation processor.
  */
 export interface ValidateFSMOutput {
   nextState: InputState;
-  validatedAsset?: TokenContract | WalletAccount;
-  updatedBalance?: bigint;
+  // Separated asset types
+  validatedToken?: TokenContract;
+  validatedWallet?: WalletAccount;  updatedBalance?: bigint;
   errorMessage?: string;
 }

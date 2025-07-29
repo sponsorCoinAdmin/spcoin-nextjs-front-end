@@ -1,9 +1,10 @@
 // File: lib/context/ScrollSelectPanels/useSharedPanelContext.tsx
+
 'use client';
 
 import { createContext, useContext } from 'react';
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE, TokenContract } from '@/lib/structure';
-import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+import { InputState, SP_COIN_DISPLAY, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
+// import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 /**
  * FSM state and control context
@@ -11,8 +12,10 @@ import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTyp
 export interface FSMContextType {
   inputState: InputState;
   setInputState: (state: InputState) => void;
-  validatedAsset?: ValidatedAsset;
-  setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
+  validatedToken?: TokenContract;
+  validatedWallet?: WalletAccount;
+  setValidatedToken: (token: TokenContract | undefined) => void;
+  setValidatedWallet: (wallet: WalletAccount | undefined) => void;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   dumpFSMContext: (headerInfo?: string) => void;

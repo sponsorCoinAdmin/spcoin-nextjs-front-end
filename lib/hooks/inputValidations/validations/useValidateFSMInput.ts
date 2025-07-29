@@ -1,32 +1,24 @@
-// File: lib/hooks/inputValidations/validations/useValidateFSMInput.ts
+// File: lib/hooks/inputValidations/helpers/useValidateFSMInput.ts
 
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
-import { isAddress, Address } from 'viem';
+import { useRef, useEffect, useCallback } from 'react';
+import { Address } from 'viem';
 import { useChainId, useAccount, usePublicClient } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import {
-  InputState,
-  TokenContract,
-  WalletAccount,
-} from '@/lib/structure';
+import { InputState } from '@/lib/structure';
 
 import {
   useBuyTokenAddress,
   useSellTokenAddress,
-  useBuyTokenContract,
-  useSellTokenContract,
 } from '@/lib/context/hooks';
 
-import { debugLog } from '../helpers/debugLogInstance';
 import { debugSetInputState } from '../helpers/debugSetInputState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { validateFSMCore } from '../FSM_Core/validateFSMCore';
-import { isTerminalFSMState } from '../FSM_Core/terminalStates';
-import { useToken } from '@/lib/hooks/wagmi/useToken';
+import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';
+import { useFSMExecutor } from '../helpers/useFSMExecutor';
 
-export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
+export const useValidateFSMInput = (
   selectAddress: string | undefined,
 ) => {
   const debouncedHexInput = useDebounce(selectAddress || '', 250);
@@ -35,145 +27,66 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     inputState,
     setInputState,
     containerType,
-    validatedAsset,
-    setValidatedAsset,
+    validatedToken,
+    validatedWallet,
+    setValidatedToken,
+    setValidatedWallet,
     feedType,
     dumpSharedPanelContext,
     setTradingTokenCallback,
   } = useSharedPanelContext();
 
+  if (!setValidatedToken) {
+    throw new Error('SharedPanelProvider missing setValidatedToken');
+  }
+
   const inputStateRef = useRef(inputState);
   inputStateRef.current = inputState;
 
-  const prevDebouncedInputRef = useRef('');
-  const queuedInputRef = useRef<string | null>(null);
-  const fsmIsRunningRef = useRef(false);
-
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
-  const [, setSellTokenContract] = useSellTokenContract();
-  const [, setBuyTokenContract] = useBuyTokenContract();
 
   const chainId = useChainId();
   const publicClient = usePublicClient();
   const { address: accountAddress } = useAccount();
 
-  const isValidHex = isAddress(debouncedHexInput);
-  const resolvedToken = useToken(isValidHex ? (debouncedHexInput as Address) : undefined);
-
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // ──────────────────────────────────────────────────────────────────
-  // 🔁 Restart FSM if input changed AND current state is terminal
-  // ──────────────────────────────────────────────────────────────────
-  useEffect(() => {
-  const inputChanged = debouncedHexInput !== prevDebouncedInputRef.current;
-  const isTerminal = isTerminalFSMState(inputStateRef.current);
-
-  console.log('🔎 Debounce Watcher', {
-    prevDebounced: prevDebouncedInputRef.current,
-    currentDebounced: debouncedHexInput,
-    inputChanged,
-    inputState: InputState[inputStateRef.current],
-    isTerminal,
+  // Restart FSM from terminal state if new input is detected
+  useDebouncedFSMTrigger({
+    debouncedHexInput,
+    inputState,
+    setInputState,
   });
 
-  if (inputChanged && isTerminal && !fsmIsRunningRef.current) {
-    console.log('🔁 [RESTART FSM FROM TERMINAL] → VALIDATE_ADDRESS');
-    setInputState(InputState.VALIDATE_ADDRESS);
-    prevDebouncedInputRef.current = debouncedHexInput;
-  }
-}, [debouncedHexInput]);
+  const { runFSM } = useFSMExecutor({
+    debouncedHexInput,
+    inputState,
+    setInputState,
+    seenBrokenLogosRef,
+    context: {
+      containerType,
+      sellAddress,
+      buyAddress,
+      chainId,
+      publicClient,
+      accountAddress: accountAddress as Address,
+      feedType,
+      setValidatedToken,
+      setValidatedWallet,
+      dumpSharedPanelContext,
+    },
+  });
 
-  // ──────────────────────────────────────────────
-  // 🔂 Run FSM logic on input
-  // ──────────────────────────────────────────────
   useEffect(() => {
-    console.log(`🔥 [ENTRY] useValidateFSMInput → selectAddress="${selectAddress}", debouncedHexInput="${debouncedHexInput}"`);
-
     if (!selectAddress?.trim()) {
-      console.log('⏭️ [SKIP EMPTY] selectAddress is empty → set EMPTY_INPUT');
       if (inputStateRef.current !== InputState.EMPTY_INPUT) {
         setInputState(InputState.EMPTY_INPUT);
-      } else {
-        console.log('🔁 [NOOP] Already in EMPTY_INPUT — skipping setState');
       }
       return;
     }
 
-    if (debouncedHexInput !== selectAddress) {
-      console.log(`⏭️ [WAIT DEBOUNCE] debounce not caught up → skip FSM`);
-      return;
-    }
-
-    const inputChanged = debouncedHexInput !== prevDebouncedInputRef.current;
-
-    if (fsmIsRunningRef.current) {
-      console.log('⏳ [FSM BUSY] → queueing new input');
-      queuedInputRef.current = debouncedHexInput;
-      return;
-    }
-
-    if (!inputChanged && isTerminalFSMState(inputStateRef.current)) {
-      console.log(`⏹️ [SKIP TERMINAL] Already in terminal state with no input change`);
-      return;
-    }
-
-    if (inputChanged) {
-      console.log(`🆕 [NEW INPUT] debouncedHexInput changed → FSM will re-enter`);
-    }
-
-    dumpSharedPanelContext?.(`[BEFORE FSM] debouncedHexInput="${debouncedHexInput}" state=${InputState[inputStateRef.current]}`);
-
-    const runFSM = async () => {
-      fsmIsRunningRef.current = true;
-      console.log(`🧵 [FSM START] state=${InputState[inputStateRef.current]} input="${debouncedHexInput}"`);
-
-      try {
-        const result = await validateFSMCore({
-          inputState: inputStateRef.current,
-          debouncedHexInput,
-          containerType: containerType!,
-          sellAddress,
-          buyAddress,
-          chainId: chainId!,
-          publicClient,
-          accountAddress: accountAddress as Address,
-          seenBrokenLogos: seenBrokenLogosRef.current,
-          feedType,
-          validatedAsset,
-        });
-
-        console.log(`✅ [FSM RESULT] nextState=${InputState[result.nextState]}`);
-        dumpSharedPanelContext?.(`[AFTER FSM] nextState=${InputState[result.nextState]}`);
-
-        if (result.nextState !== inputStateRef.current) {
-          console.log(`🛤️ [FSM TRANSITION] ${InputState[inputStateRef.current]} → ${InputState[result.nextState]}`);
-          setInputState(result.nextState);
-        } else {
-          console.log(`⚠️ [NO STATE CHANGE] remains in ${InputState[inputStateRef.current]}`);
-        }
-
-        if (result.nextState === InputState.UPDATE_VALIDATED_ASSET && result.validatedAsset) {
-          console.log(`🎯 Setting validatedAsset → ${result.validatedAsset.symbol || result.validatedAsset.address}`);
-          setValidatedAsset(result.validatedAsset as unknown as T);
-        }
-
-        prevDebouncedInputRef.current = debouncedHexInput;
-      } catch (err) {
-        console.error('❌ [FSM ERROR]', err);
-      } finally {
-        fsmIsRunningRef.current = false;
-        dumpSharedPanelContext?.(`[AFTER FSM UPDATE]`);
-
-        if (queuedInputRef.current && queuedInputRef.current !== prevDebouncedInputRef.current) {
-          console.log(`🔁 [FSM QUEUED INPUT] Restarting FSM for queued input="${queuedInputRef.current}"`);
-          setInputState(InputState.VALIDATE_ADDRESS);
-          prevDebouncedInputRef.current = queuedInputRef.current;
-          queuedInputRef.current = null;
-        }
-      }
-    };
+    if (debouncedHexInput !== selectAddress) return;
 
     runFSM();
   }, [
@@ -184,13 +97,15 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
     accountAddress,
     containerType,
     feedType,
-    resolvedToken,
-    validatedAsset,
+    validatedToken,
+    validatedWallet,
     sellAddress,
     buyAddress,
     setInputState,
-    setValidatedAsset,
+    setValidatedToken,
+    setValidatedWallet,
     dumpSharedPanelContext,
+    runFSM,
   ]);
 
   const reportMissingLogoURL = useCallback(() => {
@@ -213,7 +128,8 @@ export const useValidateFSMInput = <T extends TokenContract | WalletAccount>(
   return {
     inputState,
     setInputState,
-    validatedAsset,
+    validatedToken,
+    validatedWallet,
     chainId,
     reportMissingLogoURL,
     hasBrokenLogoURL,

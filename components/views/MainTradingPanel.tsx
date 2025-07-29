@@ -68,7 +68,7 @@ export default function MainTradingPanel() {
     }
     msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
     debugLog.log(msg);
-    alert(msg);
+    // alert(msg);
   }
 
   // ✅ setErrorCallback

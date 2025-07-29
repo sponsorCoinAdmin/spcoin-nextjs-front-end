@@ -3,7 +3,7 @@
 import { InputState, TokenContract, getInputStateString } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const LOG_TIME = false;
 const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED, LOG_TIME);
 
@@ -19,6 +19,8 @@ export function handleFSMTerminalState(
     case InputState.UPDATE_VALIDATED_ASSET:
       debugFSM.log('📥 FSM: UPDATE_VALIDATED_ASSET reached');
       if (validatedAsset) {
+        debugFSM.log(`📦 setValidatedAsset → ${validatedAsset.symbol || validatedAsset.address}`);
+        setValidatedAsset(validatedAsset); // ✅ Now storing the validated asset in context
         debugFSM.log(`📦 setTradingTokenCallback → ${validatedAsset.symbol || validatedAsset.address}`);
         setTradingTokenCallback(validatedAsset);
         setInputState(InputState.CLOSE_SELECT_PANEL);
