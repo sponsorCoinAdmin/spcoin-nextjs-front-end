@@ -3,8 +3,14 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
-// import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+import {
+  InputState,
+  SP_COIN_DISPLAY,
+  FEED_TYPE,
+  TokenContract,
+  WalletAccount,
+} from '@/lib/structure';
+import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 /**
  * FSM state and control context
@@ -12,10 +18,8 @@ import { InputState, SP_COIN_DISPLAY, FEED_TYPE, TokenContract, WalletAccount } 
 export interface FSMContextType {
   inputState: InputState;
   setInputState: (state: InputState) => void;
-  validatedToken?: TokenContract;
-  validatedWallet?: WalletAccount;
-  setValidatedToken: (token: TokenContract | undefined) => void;
-  setValidatedWallet: (wallet: WalletAccount | undefined) => void;
+  validatedAsset?: ValidatedAsset;
+  setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   dumpFSMContext: (headerInfo?: string) => void;
@@ -31,7 +35,7 @@ export interface FeedContextType {
   debouncedHexInput: string;
   failedHexInput?: string;
   isValid: boolean;
-  handleHexInputChange: (raw: string, isManual?: boolean) => boolean;
+  handleHexInputChange: (raw: string) => boolean;
   resetHexInput: () => void;
   failedHexCount: number;
   isValidHexString: (raw: string) => boolean;
@@ -47,9 +51,19 @@ export type SharedPanelContextType = FSMContextType &
     forceReset?: () => void;
     forceClose?: () => void;
 
-    /** ✅ Required callbacks from MainTradingPanel */
-    closeCallback: () => void;
-    setTradingTokenCallback: (token: TokenContract) => void;
+    /** ✅ Added callbacks from MainTradingPanel */
+    closeCallback?: () => void;
+    setTradingTokenCallback?: (token: TokenContract) => void;
+
+    /** ✅ Split validated asset fields */
+    validatedToken?: TokenContract;
+    validatedWallet?: WalletAccount;
+    setValidatedToken?: (token: TokenContract | undefined) => void;
+    setValidatedWallet?: (wallet: WalletAccount | undefined) => void;
+
+    /** ✅ Manual entry tracking */
+    manualEntry: boolean;
+    setManualEntry: (val: boolean) => void;
   };
 
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);

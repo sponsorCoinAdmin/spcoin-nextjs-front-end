@@ -4,7 +4,6 @@
 
 import { useEffect, useRef } from 'react';
 import { InputState } from '@/lib/structure';
-import { isTerminalFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -12,8 +11,9 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugFSM = createDebugLogger('useRestartFSMIfNeeded', DEBUG_ENABLED, LOG_TIME);
 
 /**
- * Restarts the FSM by setting it to VALIDATE_ADDRESS
- * when a new debounced input is received after reaching a terminal state.
+ * Restarts the FSM whenever the debounced input changes:
+ * - Goes to VALIDATE_ADDRESS if input is non-empty
+ * - Goes to EMPTY_INPUT if input is empty
  */
 export function useRestartFSMIfNeeded(
   inputState: InputState,
@@ -25,17 +25,22 @@ export function useRestartFSMIfNeeded(
   useEffect(() => {
     const prev = prevDebouncedRef.current;
     const changed = prev !== debouncedInput;
-    const shouldRestart = isTerminalFSMState(inputState) && changed && debouncedInput;
+    const trimmed = debouncedInput.trim();
 
     debugFSM.log(
-      `🔁 useRestartFSMIfNeeded → changed=${changed} terminal=${isTerminalFSMState(inputState)} input="${debouncedInput}"`
+      `🔁 useRestartFSMIfNeeded → changed=${changed}, prev="${prev}", current="${debouncedInput}"`
     );
 
-    if (shouldRestart) {
-      debugFSM.log(`🔄 Restarting FSM → VALIDATE_ADDRESS`);
-      setInputState(InputState.VALIDATE_ADDRESS);
+    if (changed) {
+      if (trimmed === '') {
+        debugFSM.log(`🔄 FSM reset → EMPTY_INPUT`);
+        setInputState(InputState.EMPTY_INPUT);
+      } else {
+        debugFSM.log(`🔄 FSM reset → VALIDATE_ADDRESS`);
+        setInputState(InputState.VALIDATE_ADDRESS);
+      }
     }
 
     prevDebouncedRef.current = debouncedInput;
-  }, [debouncedInput, inputState, setInputState]);
+  }, [debouncedInput, setInputState]);
 }

@@ -4,4 +4,3 @@
 export * from './validations/isEmptyInput';
 export * from './validations/isValidAddress';
 export * from './validations/isDuplicateInput';
-export * from './validations/useInputStateManager ';

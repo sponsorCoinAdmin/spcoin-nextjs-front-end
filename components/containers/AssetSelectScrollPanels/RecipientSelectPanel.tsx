@@ -24,7 +24,7 @@ export default function RecipientSelectPanel() {
   const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
   // ✅ Skip render if this panel is not active
-  if (activeDisplay !== SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL) {
+  if (activeDisplay !== SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL) {
     debugLog.log(`⏭️ RecipientSelectPanel → not active (instanceId=${instanceId}), skipping render`);
     return null;
   }

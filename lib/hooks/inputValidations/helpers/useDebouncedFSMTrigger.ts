@@ -13,7 +13,7 @@ interface Props {
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
-const debugLog = createDebugLogger('useFSMExecutor', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('useDebouncedFSMTrigger', DEBUG_ENABLED, LOG_TIME);
 
 export function useDebouncedFSMTrigger({
   debouncedHexInput,

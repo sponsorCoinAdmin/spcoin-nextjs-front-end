@@ -2,13 +2,11 @@
 
 'use client';
 
-import { useEffect } from 'react';
 import AddressSelect from '@/components/views/AddressSelect';
 import DataListScrollPanel from '@/components/views/DataListScrollPanel';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
-import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -17,31 +15,15 @@ const debugLog = createDebugLogger('AssetSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function AssetSelectPanel() {
   const {
-    containerType,
-    validHexInput,
     instanceId,
     feedType,
-    handleHexInputChange,
-    closeCallback,
+    debouncedHexInput,
   } = useSharedPanelContext();
 
-  const safeInput = validHexInput.trim() !== '' ? validHexInput : undefined;
+  // 🧠 Trigger FSM validation now that we're within SharedPanelProvider
+  useValidateFSMInput(debouncedHexInput);
 
   debugLog.log(`🆔 AssetSelectPanel using instanceId: ${instanceId}`);
-  useValidateFSMInput(safeInput);
-
-  useEffect(() => {
-    debugLog.log(`📥 AssetSelectPanel mounted (containerType=${containerType})`);
-  }, [containerType]);
-
-  const onDataListSelect = (item: ValidatedAsset) => {
-    debugLog.log(`📜 onDataListSelect() → ${item.address}`);
-    try {
-      handleHexInputChange(item.address, false);
-    } catch (err) {
-      console.error('❌ handleHexInputChange onDataListSelect error:', err);
-    }
-  };
 
   return (
     <div
@@ -49,7 +31,7 @@ export default function AssetSelectPanel() {
       className="flex flex-col h-full w-full rounded-[15px] overflow-hidden min-h-0 gap-[4px]"
     >
       <AddressSelect />
-      <DataListScrollPanel dataFeedType={feedType} onSelect={onDataListSelect} />
+      <DataListScrollPanel dataFeedType={feedType} />
     </div>
   );
 }

@@ -1,11 +1,11 @@
-// File: components/Dialogs/Resources/DataListScrollPanel.tsx
+// File: components/views/DataListScrollPanel.tsx
 
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { useAccount, useChainId } from 'wagmi';
+import { useChainId } from 'wagmi';
 import {
   BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
@@ -15,12 +15,13 @@ import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
-import { Address, isAddress } from 'viem';
+import { Address } from 'viem';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -39,15 +40,16 @@ const getDataFeedList = (chainId: number) => {
 
 interface DataListProps<T> {
   dataFeedType: FEED_TYPE.TOKEN_LIST | FEED_TYPE.RECIPIENT_ACCOUNTS | FEED_TYPE.AGENT_ACCOUNTS;
-  onSelect: (entry: T) => void;
 }
 
-export default function DataListScrollPanel<T>({ dataFeedType, onSelect }: DataListProps<T>) {
+export default function DataListScrollPanel<T>({ dataFeedType }: DataListProps<T>) {
   const [isClient, setIsClient] = useState(false);
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
 
+  const { handleHexInputChange, setManualEntry } = useSharedPanelContext();
   const chainId = useChainId();
+
   useEffect(() => setIsClient(true), []);
 
   useEffect(() => {
@@ -96,13 +98,12 @@ export default function DataListScrollPanel<T>({ dataFeedType, onSelect }: DataL
   return (
     <>
       <style jsx>{`
-        /* Hide scrollbars on DataListScrollPanel wrapper */
         #DataListWrapper {
-          scrollbar-width: none;         /* Firefox */
-          -ms-overflow-style: none;      /* IE 10+ */
+          scrollbar-width: none;
+          -ms-overflow-style: none;
         }
         #DataListWrapper::-webkit-scrollbar {
-          display: none;                 /* Chrome, Safari, Edge */
+          display: none;
         }
       `}</style>
 
@@ -119,7 +120,10 @@ export default function DataListScrollPanel<T>({ dataFeedType, onSelect }: DataL
                       <div
                         key={wallet.address}
                         className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                        onClick={() => onSelect(wallet as T)}
+                        onClick={() => {
+                          setManualEntry(false);
+                          handleHexInputChange(wallet.address);
+                        }}
                       >
                         <div className="flex items-center gap-3">
                           <img className="h-8 w-8 object-contain rounded-full" src={wallet.logoURL || defaultMissingImage} alt={`${wallet.name} logo`} />
@@ -152,18 +156,10 @@ export default function DataListScrollPanel<T>({ dataFeedType, onSelect }: DataL
                     <div
                       key={token.address}
                       className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                      onClick={() =>
-                        onSelect({
-                          address: token.address as `0x${string}`,
-                          symbol: token.symbol,
-                          name: token.name,
-                          logoURL: token.logoURL || defaultMissingImage,
-                          decimals: token.decimals || 18,
-                          balance: 0n,
-                          amount: 0n,
-                          totalSupply: BigInt(0),
-                        } as T)
-                      }
+                      onClick={() => {
+                        setManualEntry(false);
+                        handleHexInputChange(token.address);
+                      }}
                     >
                       <div className="flex items-center gap-3">
                         <img className="h-8 w-8 object-contain rounded-full" src={token.logoURL || defaultMissingImage} alt={`${token.name} logo`} />

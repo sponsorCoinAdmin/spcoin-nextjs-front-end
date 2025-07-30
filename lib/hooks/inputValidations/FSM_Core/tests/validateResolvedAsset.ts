@@ -2,7 +2,6 @@
 
 import { FEED_TYPE, InputState } from '@/lib/structure';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
-import { validateWalletAsset } from './validateWalletAsset';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
@@ -35,16 +34,12 @@ export async function validateResolvedAsset(input: ValidateFSMInput): Promise<Va
       debugLog.error('❌ Exception during resolveContract', err);
       return { nextState: InputState.RESOLVE_ASSET_ERROR };
     }
-
-  } else {
-    const result = await validateWalletAsset(input);
-
-    if (result.validatedWallet) {
-      debugLog.log(`🎯 VALIDATED WALLET → ${JSON.stringify(result.validatedWallet, null, 2)}`);
-      return result;
-    } else {
-      debugLog.warn('❌ Failed to validate wallet — resolving to RESOLVE_ASSET_ERROR');
-      return { nextState: InputState.RESOLVE_ASSET_ERROR };
-    }
   }
+
+  // Wallet validation path is no longer supported
+  debugLog.warn('❌ Wallet validation not supported — resolving to RESOLVE_ASSET_ERROR');
+  return {
+    nextState: InputState.RESOLVE_ASSET_ERROR,
+    errorMessage: 'Wallet validation not supported',
+  };
 }

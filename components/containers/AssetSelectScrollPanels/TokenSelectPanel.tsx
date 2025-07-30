@@ -1,5 +1,3 @@
-// File: components/containers/AssetSelectPanels/TokenSelectPanel.tsx
-
 'use client';
 
 import { useEffect } from 'react';
@@ -7,7 +5,9 @@ import {
   InputState,
   getInputStateString,
   TokenContract,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
+
 import AssetSelectPanel from './AssetSelectPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
@@ -39,6 +39,7 @@ export default function TokenSelectPanel({
     <SharedPanelProvider
       closeCallback={closeCallback}
       setTradingTokenCallback={setTradingTokenCallback}
+      containerType={activeDisplay} // ✅ Pass the actual active container type
     >
       <TokenSelectPanelInner />
     </SharedPanelProvider>
@@ -54,7 +55,6 @@ function TokenSelectPanelInner() {
   }, [instanceId]);
 
   return (
-    <AssetSelectPanel
-    />
+    <AssetSelectPanel />
   );
 }

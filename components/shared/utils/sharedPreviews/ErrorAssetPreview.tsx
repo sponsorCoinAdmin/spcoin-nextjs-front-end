@@ -1,22 +1,61 @@
-import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
-import BasePreviewWrapper from './BasePreviewWrapper';
+// File: components/containers/ErrorAssetPreview.tsx
+'use client';
+
 import { useEffect, useState } from 'react';
 import { InputState } from '@/lib/structure';
+import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
+import BasePreviewWrapper from './BasePreviewWrapper';
 
 const emojiMap: Partial<Record<InputState, {
   emoji?: string;
   text: string;
-  color?: string;
+  colorHex?: string;
 }>> = {
-  [InputState.INVALID_HEX_INPUT]: { emoji: '⚠️', text: 'Invalid address format.', color: 'text-red-500' },
-  [InputState.INCOMPLETE_ADDRESS]: { emoji: '✏️', text: 'Incomplete address.', color: 'text-orange-400' },
-  [InputState.INVALID_ADDRESS_INPUT]: { emoji: '❓', text: 'Valid address required.', color: 'text-red-500' },
-  [InputState.DUPLICATE_INPUT_ERROR]: { emoji: '♻️', text: 'Duplicate input selected.', color: 'text-orange-400' },
-  [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: { emoji: '❌', text: 'Address not found on blockchain.', color: 'text-red-500' },
-  [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: { emoji: '📭', text: 'Missing local asset preview.', color: 'text-orange-400' },
-  [InputState.RESOLVE_ASSET_ERROR]: { emoji: '💥', text: 'Validate asset error.', color: 'text-red-500' },
-  [InputState.TOKEN_NOT_RESOLVED_ERROR]: { emoji: '💥', text: 'Token Not Resolved.', color: 'text-red-500' },
-  [InputState.MISSING_ACCOUNT_ADDRESS]: { emoji: '🚫', text: 'Missing account address.', color: 'text-red-500' },
+  [InputState.INVALID_HEX_INPUT]: {
+    emoji: '⛔',
+    text: 'Hex input invalid.',
+    colorHex: '#ef4444',
+  },
+  [InputState.INCOMPLETE_ADDRESS]: {
+    emoji: '✏️',
+    text: 'Incomplete address.',
+    colorHex: '#10a310ff',
+  },
+  [InputState.INVALID_ADDRESS_INPUT]: {
+    emoji: '❓',
+    text: 'Valid address required.',
+    colorHex: '#ef4444',
+  },
+  [InputState.DUPLICATE_INPUT_ERROR]: {
+    emoji: '♻️',
+    text: 'Duplicate input selected.',
+    colorHex: '#f97316',
+  },
+  [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: {
+    emoji: '❌',
+    text: 'Address not found on blockchain.',
+    colorHex: '#ef4444',
+  },
+  [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: {
+    emoji: '📭',
+    text: 'Missing local asset preview.',
+    colorHex: '#f97316',
+  },
+  [InputState.RESOLVE_ASSET_ERROR]: {
+    emoji: '💥',
+    text: 'Validate asset error.',
+    colorHex: '#ef4444',
+  },
+  [InputState.TOKEN_NOT_RESOLVED_ERROR]: {
+    emoji: '💥',
+    text: 'Token Not Resolved.',
+    colorHex: '#ef4444',
+  },
+  [InputState.MISSING_ACCOUNT_ADDRESS]: {
+    emoji: '🚫',
+    text: 'Missing account address.',
+    colorHex: '#ef4444',
+  },
 };
 
 export default function ErrorAssetPreview() {
@@ -27,16 +66,25 @@ export default function ErrorAssetPreview() {
     setShowPanel(isTerminalState && isErrorState);
   }, [isTerminalState, isErrorState, inputState]);
 
-  if (!showPanel) return null; // optional, but BasePreviewWrapper handles it
+  if (!showPanel) return null;
 
   const item = emojiMap[inputState];
   const message = item?.text ?? 'An error occurred.';
+  const color = item?.colorHex ?? '#5981F3';
 
   return (
     <div id="ErrorAssetPreview">
       <BasePreviewWrapper show={showPanel}>
-        {item?.emoji && <span className="ml-[22px] text-[28px] mr-1.5">{item.emoji}</span>}
-        <span className={`text-[15px] ${item?.color ?? 'text-[#5981F3]'}`}>{message}</span>
+        <div className="wrapper">
+          {item?.emoji && <span className="emoji">{item.emoji}</span>}
+          <span className="message">{message}</span>
+        </div>
+
+        <style jsx>{`
+          .wrapper { display: flex; align-items: center; margin-left: 22px; gap: 8px; color: ${color}; }
+          .emoji { font-size: 28px;  }
+          .message { font-size: 15px;  }
+        `}</style>
       </BasePreviewWrapper>
     </div>
   );

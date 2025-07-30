@@ -6,7 +6,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import { Address } from 'viem';
 import { useChainId, useAccount, usePublicClient } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { InputState } from '@/lib/structure';
+import { InputState, getInputStateString, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import {
   useBuyTokenAddress,
@@ -17,6 +17,11 @@ import { debugSetInputState } from '../helpers/debugSetInputState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';
 import { useFSMExecutor } from '../helpers/useFSMExecutor';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
+const debugLog = createDebugLogger('useValidateFSMInput', DEBUG_ENABLED, LOG_TIME);
 
 export const useValidateFSMInput = (
   selectAddress: string | undefined,
@@ -29,30 +34,37 @@ export const useValidateFSMInput = (
     containerType,
     validatedToken,
     validatedWallet,
-    setValidatedToken,
-    setValidatedWallet,
+    setValidatedToken: ctxSetValidatedToken,
+    setValidatedWallet: ctxSetValidatedWallet,
     feedType,
     dumpSharedPanelContext,
     setTradingTokenCallback,
   } = useSharedPanelContext();
 
-  if (!setValidatedToken) {
-    throw new Error('SharedPanelProvider missing setValidatedToken');
-  }
+  // 🔍 Log containerType if valid
+  useEffect(() => {
+    if (typeof containerType === 'number' && SP_COIN_DISPLAY[containerType]) {
+      debugLog.log(`🎯 containerType from context: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
+    } else {
+      debugLog.warn(`⚠️ containerType is invalid or undefined: ${containerType}`);
+    }
+  }, [containerType]);
+
+  const setValidatedToken = ctxSetValidatedToken ?? (() => {});
+  const setValidatedWallet = ctxSetValidatedWallet ?? (() => {});
 
   const inputStateRef = useRef(inputState);
   inputStateRef.current = inputState;
 
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
-
   const chainId = useChainId();
   const publicClient = usePublicClient();
   const { address: accountAddress } = useAccount();
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // Restart FSM from terminal state if new input is detected
+  // Debounce FSM restart if terminal and new input arrives
   useDebouncedFSMTrigger({
     debouncedHexInput,
     inputState,
@@ -89,24 +101,7 @@ export const useValidateFSMInput = (
     if (debouncedHexInput !== selectAddress) return;
 
     runFSM();
-  }, [
-    debouncedHexInput,
-    selectAddress,
-    chainId,
-    publicClient,
-    accountAddress,
-    containerType,
-    feedType,
-    validatedToken,
-    validatedWallet,
-    sellAddress,
-    buyAddress,
-    setInputState,
-    setValidatedToken,
-    setValidatedWallet,
-    dumpSharedPanelContext,
-    runFSM,
-  ]);
+  }, [debouncedHexInput, selectAddress]);
 
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedHexInput) return;

@@ -37,9 +37,9 @@ export default function RenderAssetPreview() {
   }
 
   const handleClick = () => {
-    debugLog.log(`🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address, true)`, validatedAsset);
+    debugLog.log(`🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address)`, validatedAsset);
     try {
-      handleHexInputChange(validatedAsset.address, true);
+      handleHexInputChange(validatedAsset.address);
     } catch (err) {
       debugLog.error('❌ handleHexInputChange in RenderAssetPreview failed:', err);
     }

@@ -32,30 +32,30 @@ export function useHexInput(initialValue: string = '', debounceDelay: number = 2
     return _isValidHexString(rawInput);
   }, []);
 
-  const handleHexInputChange = useCallback(
-    (rawInput: string, _isManual?: boolean) => {
-      const trimmedInput = rawInput.trim();
-      const ok = _isValidHexString(trimmedInput);
+const handleHexInputChange = useCallback(
+  (rawInput: string) => {
+    const trimmedInput = rawInput.trim();
+    const ok = _isValidHexString(trimmedInput);
 
-      debugLog.log('🖊️ handleHexInputChange called with:', trimmedInput, _isManual, '→ isValid:', ok);
+    debugLog.log('🖊️ handleHexInputChange called with:', trimmedInput, '→ isValid:', ok);
 
-      setIsValid(ok);
+    setIsValid(ok);
 
-      if (ok) {
-        debugLog.log('✅ Setting validHexInput to:', trimmedInput);
-        setValidHexInput(trimmedInput);
-        setFailedHexInput(undefined);
-        setFailedHexCount(0);
-      } else {
-        debugLog.log('❌ Invalid input, setting failedHexInput to:', trimmedInput);
-        setFailedHexInput(trimmedInput);
-        setFailedHexCount((prev) => prev + 1);
-      }
+    if (ok) {
+      debugLog.log('✅ Setting validHexInput to:', trimmedInput);
+      setValidHexInput(trimmedInput);
+      setFailedHexInput(undefined);
+      setFailedHexCount(0);
+    } else {
+      debugLog.log('❌ Invalid input, setting failedHexInput to:', trimmedInput);
+      setFailedHexInput(trimmedInput);
+      setFailedHexCount((prev) => prev + 1);
+    }
 
-      return ok;
-    },
-    []
-  );
+    return ok;
+  },
+  []
+);
 
   const resetHexInput = useCallback(() => {
     debugLog.log('🔄 Resetting hex input state');

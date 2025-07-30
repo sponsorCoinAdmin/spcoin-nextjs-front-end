@@ -23,9 +23,8 @@ export default function AddressSelect() {
     validHexInput,
     debouncedHexInput,
     handleHexInputChange,
+    setManualEntry,
   } = useSharedPanelContext();
-
-  const MANUAL_ENTRY = true;
 
   debugLog.log('🆔 context instanceId:', instanceId);
   debugLog.log('✅ AddressSelect function START');
@@ -40,12 +39,14 @@ export default function AddressSelect() {
 
   const {
     inputState,
-    validatedAsset,
+    validatedToken,
+    validatedWallet,
   } = useValidateFSMInput(safeInput);
 
   debugLog.log('🧪 useValidateFSMInput result:', {
     inputState,
-    validatedAsset,
+    validatedToken,
+    validatedWallet,
   });
 
   return (
@@ -55,12 +56,9 @@ export default function AddressSelect() {
         onChange={(val) => {
           debugLog.log('✏️ [HexAddressInput] onChange →', val);
           try {
-            if (typeof handleHexInputChange === 'function') {
-              const result = handleHexInputChange(val, MANUAL_ENTRY);
-              debugLog.log('⚙️ handleHexInputChange returned:', result);
-            } else {
-              debugLog.warn('⚠️ handleHexInputChange is not a function!');
-            }
+            setManualEntry(true); // ✅ Set manualEntry before input is passed
+            const result = handleHexInputChange(val);
+            debugLog.log('⚙️ handleHexInputChange returned:', result);
           } catch (err) {
             debugLog.error('❌ handleHexInputChange onChange error:', err);
           }
@@ -68,9 +66,7 @@ export default function AddressSelect() {
         placeholder="Enter address"
         statusEmoji=""
       />
-
       <ErrorAssetPreview />
-
       <RenderAssetPreview />
     </div>
   );
