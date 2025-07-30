@@ -3,7 +3,7 @@
 'use client';
 
 import AddressSelect from '@/components/views/AddressSelect';
-import DataListScrollPanel from '@/components/views/DataListScrollPanel';
+import DataListSelect from '@/components/views/DataListSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
@@ -31,7 +31,7 @@ export default function AssetSelectPanel() {
       className="flex flex-col h-full w-full rounded-[15px] overflow-hidden min-h-0 gap-[4px]"
     >
       <AddressSelect />
-      <DataListScrollPanel dataFeedType={feedType} />
+      <DataListSelect dataFeedType={feedType} />
     </div>
   );
 }

@@ -41,15 +41,6 @@ export const useValidateFSMInput = (
     setTradingTokenCallback,
   } = useSharedPanelContext();
 
-  // 🔍 Log containerType if valid
-  useEffect(() => {
-    if (typeof containerType === 'number' && SP_COIN_DISPLAY[containerType]) {
-      debugLog.log(`🎯 containerType from context: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
-    } else {
-      debugLog.warn(`⚠️ containerType is invalid or undefined: ${containerType}`);
-    }
-  }, [containerType]);
-
   const setValidatedToken = ctxSetValidatedToken ?? (() => {});
   const setValidatedWallet = ctxSetValidatedWallet ?? (() => {});
 
@@ -64,7 +55,18 @@ export const useValidateFSMInput = (
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // Debounce FSM restart if terminal and new input arrives
+  // 🔍 Log context container
+  useEffect(() => {
+    debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
+  }, [containerType]);
+
+  // 🧪 FSM debounced trigger debug
+  debugLog.log('🔁 useValidateFSMInput INIT', {
+    selectAddress,
+    debouncedHexInput,
+    initialInputState: getInputStateString(inputState),
+  });
+
   useDebouncedFSMTrigger({
     debouncedHexInput,
     inputState,
@@ -91,15 +93,30 @@ export const useValidateFSMInput = (
   });
 
   useEffect(() => {
+    debugLog.log('🧪 useEffect triggered', {
+      selectAddress,
+      debouncedHexInput,
+      inputState: getInputStateString(inputStateRef.current),
+    });
+
     if (!selectAddress?.trim()) {
+      debugLog.log('🚫 Empty selectAddress');
       if (inputStateRef.current !== InputState.EMPTY_INPUT) {
+        debugLog.log('🧹 Resetting to EMPTY_INPUT');
         setInputState(InputState.EMPTY_INPUT);
       }
       return;
     }
 
-    if (debouncedHexInput !== selectAddress) return;
+    if (debouncedHexInput !== selectAddress) {
+      debugLog.log('⏸️ Debounced input still stabilizing', {
+        debouncedHexInput,
+        selectAddress,
+      });
+      return;
+    }
 
+    debugLog.log('🚀 Debounced input stabilized. Running FSM...');
     runFSM();
   }, [debouncedHexInput, selectAddress]);
 

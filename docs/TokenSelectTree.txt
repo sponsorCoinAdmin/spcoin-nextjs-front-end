@@ -20,7 +20,7 @@
         │                 │     │           │                 ├── <HexAddressInput>
         │                 │     │           │                 ├── <RenderAssetPreview>
         │                 │     │           │                 ├── <ErrorAssetPreview>
-        │                 │     │           │                 └── <DataListScrollPanel>
+        │                 │     │           │                 └── <DataListSelect>
         │                 │     │           ├── Balance: {formattedBalance}
         │                 │     │           ├── {buySellText}
         │                 │     │           └── <ManageSponsorsButton /> ← if isSpCoin
@@ -37,7 +37,7 @@
         │                 │                 │                 ├── <HexAddressInput>
         │                 │                 │                 ├── <RenderAssetPreview>
         │                 │                 │                 ├── <ErrorAssetPreview>
-        │                 │                 │                 └── <DataListScrollPanel>
+        │                 │                 │                 └── <DataListSelect>
         │                 │                 ├── Balance: {formattedBalance}
         │                 │                 ├── {buySellText}
         │                 │                 └── <AddSponsorshipButton /> ← if isSpCoin
@@ -53,7 +53,7 @@
         │                 │                                   │           ├── <HexAddressInput>
         │                 │                                   │           ├── <RenderAssetPreview>
         │                 │                                   │           ├── <ErrorAssetPreview>
-        │                 │                                   │           └── <DataListScrollPanel>
+        │                 │                                   │           └── <DataListSelect>
         │                 │                                   └── onSelect(wallet, state)
         │                 │                                         └── if state === CLOSE_SELECT_PANEL:
         │                 │                                               ├── callBackAccount(wallet)

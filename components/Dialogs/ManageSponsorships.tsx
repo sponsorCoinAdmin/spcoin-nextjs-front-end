@@ -13,7 +13,7 @@ import { FEED_TYPE, TokenContract } from '@/lib/structure';
 import { isAddress } from 'ethers';
 import { hideElement, showElement } from '@/lib/spCoin/guiControl';
 import { getTokenDetails } from '@/lib/spCoin/guiUtils';
-import DataListScrollPanel from '../views/DataListScrollPanel';
+import DataListSelect from '../views/DataListSelect';
 import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 
@@ -183,7 +183,7 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
           </div>
         </div>
         <div className={styles.scrollDataListPanel}>
-          <DataListScrollPanel<TokenContract>
+          <DataListSelect<TokenContract>
             dataFeedType={FEED_TYPE.TOKEN_LIST}
             onSelect={getSelectedListElement}
           />

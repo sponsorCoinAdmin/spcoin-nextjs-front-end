@@ -25,7 +25,7 @@ useValidateFSMInput(debouncedHexInput)
 [inputState + validatedAsset]
       └── flow back to:
       ├── AddressSelect (renders ErrorAssetPreview, RenderAssetPreview)
-      ├── DataListScrollPanel (with feedType)
+      ├── DataListSelect (with feedType)
       └── TokenSelectPanel (closes if needed)
 
 [Debug points]:

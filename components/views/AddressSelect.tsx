@@ -28,7 +28,7 @@ export default function AddressSelect() {
 
   debugLog.log('🆔 context instanceId:', instanceId);
   debugLog.log('✅ AddressSelect function START');
-  debugLog.log('⚡ Re-render, validHexInput =', validHexInput);
+  debugLog.log('⚡ validHexInput =', validHexInput);
   debugLog.log('⚡ debouncedHexInput =', debouncedHexInput);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function AddressSelect() {
     validatedWallet,
   } = useValidateFSMInput(safeInput);
 
-  debugLog.log('🧪 useValidateFSMInput result:', {
+  debugLog.log('🧪 useValidateFSMInput returned:', {
     inputState,
     validatedToken,
     validatedWallet,
@@ -54,13 +54,13 @@ export default function AddressSelect() {
       <HexAddressInput
         inputValue={validHexInput}
         onChange={(val) => {
-          debugLog.log('✏️ [HexAddressInput] onChange →', val);
+          debugLog.log('✏️ [HexAddressInput] onChange triggered with:', val);
           try {
-            setManualEntry(true); // ✅ Set manualEntry before input is passed
+            setManualEntry(true); // ✅ Mark this as user-typed
             const result = handleHexInputChange(val);
             debugLog.log('⚙️ handleHexInputChange returned:', result);
           } catch (err) {
-            debugLog.error('❌ handleHexInputChange onChange error:', err);
+            debugLog.error('❌ handleHexInputChange threw error:', err);
           }
         }}
         placeholder="Enter address"

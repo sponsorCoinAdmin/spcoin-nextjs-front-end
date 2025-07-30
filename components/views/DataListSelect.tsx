@@ -1,4 +1,4 @@
-// File: components/views/DataListScrollPanel.tsx
+// File: components/views/DataListSelect.tsx
 
 'use client';
 
@@ -25,7 +25,7 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useShare
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
-const debugLog = createDebugLogger('DataListScrollPanel', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('DataListSelect', DEBUG_ENABLED, LOG_TIME);
 
 const getDataFeedList = (chainId: number) => {
   switch (chainId) {
@@ -42,7 +42,7 @@ interface DataListProps<T> {
   dataFeedType: FEED_TYPE.TOKEN_LIST | FEED_TYPE.RECIPIENT_ACCOUNTS | FEED_TYPE.AGENT_ACCOUNTS;
 }
 
-export default function DataListScrollPanel<T>({ dataFeedType }: DataListProps<T>) {
+export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const [isClient, setIsClient] = useState(false);
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
@@ -121,8 +121,10 @@ export default function DataListScrollPanel<T>({ dataFeedType }: DataListProps<T
                         key={wallet.address}
                         className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
                         onClick={() => {
+                          debugLog.log(`🟢 Account clicked: ${wallet.name} → ${wallet.address}`);
                           setManualEntry(false);
-                          handleHexInputChange(wallet.address);
+                          const result = handleHexInputChange(wallet.address);
+                          debugLog.log(`🛠️ handleHexInputChange returned:`, result);
                         }}
                       >
                         <div className="flex items-center gap-3">
@@ -157,8 +159,10 @@ export default function DataListScrollPanel<T>({ dataFeedType }: DataListProps<T
                       key={token.address}
                       className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
                       onClick={() => {
+                        debugLog.log(`🟢 Token clicked: ${token.name} → ${token.address}`);
                         setManualEntry(false);
-                        handleHexInputChange(token.address);
+                        const result = handleHexInputChange(token.address);
+                        debugLog.log(`🛠️ handleHexInputChange returned:`, result);
                       }}
                     >
                       <div className="flex items-center gap-3">
