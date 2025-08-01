@@ -20,6 +20,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { defaultMissingImage } from '@/lib/network/utils';
+import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel'; // 🆕 Import
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -39,7 +40,6 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
-  // ✅ Compute logoSrc only (pure, no FSM check)
   const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
 
   const handleMissingLogoURL = useCallback(
@@ -56,17 +56,22 @@ function TokenSelectDropDown({ containerType }: Props) {
   );
 
   const showPanel = useCallback(() => {
-    debugLog.log(`📂 Opening ${SP_COIN_DISPLAY[SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL]} dialog`);
+    debugLog.log(`📂 Opening ${SP_COIN_DISPLAY[containerType]} dialog`);
+
+    // 🧹 Clear FSM trace before opening
+    clearFSMTraceFromMemory();
+
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ?
       setActiveDisplay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) :
       setActiveDisplay(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
-  }, [setActiveDisplay]);
+  }, [containerType, setActiveDisplay]);
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>
       {tokenContract ? (
         <>
-          <img id="TokenSelectDropDownImage.png"
+          <img
+            id="TokenSelectDropDownImage.png"
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name} logo`}
             src={logoSrc}

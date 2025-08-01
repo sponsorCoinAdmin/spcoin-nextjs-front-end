@@ -5,9 +5,41 @@
 import { useEffect, useState } from 'react';
 import { InputState, getInputStateString } from '@/lib/structure';
 
+// ────── Global state accessors ──────
+let clearTrace: (() => void) | null = null;
+let clearHeader: (() => void) | null = null;
+
+/**
+ * Clears FSM trace and header data from localStorage and in-memory state.
+ */
+export function clearFSMTraceFromMemory(): void {
+  try {
+    localStorage.removeItem('latestFSMTrace');
+    localStorage.removeItem('latestFSMHeader');
+    console.log('[FSMTracePanel] 🧹 Cleared latestFSMTrace and latestFSMHeader from localStorage');
+
+    // Clear in-memory state if component is mounted
+    if (clearTrace) clearTrace();
+    if (clearHeader) clearHeader();
+  } catch (err) {
+    console.error('[FSMTracePanel] ❌ Failed to clear FSM trace:', err);
+  }
+}
+
 export default function FSMTracePanel({ visible }: { visible: boolean }) {
   const [trace, setTrace] = useState<InputState[] | null>(null);
   const [header, setHeader] = useState<string | null>(null);
+
+  // Register clear callbacks for in-memory state
+  useEffect(() => {
+    clearTrace = () => setTrace(null);
+    clearHeader = () => setHeader(null);
+
+    return () => {
+      clearTrace = null;
+      clearHeader = null;
+    };
+  }, []);
 
   useEffect(() => {
     console.log('[FSMTracePanel] 🧪 useEffect triggered — visible =', visible);
