@@ -58,7 +58,7 @@ export function useFSMExecutor({
 
   const runFSM = async () => {
     if (!isTriggerFSMState(inputState)) {
-      debugLog.log(`⚠️ Not a trigger state: ${getInputStateString(inputState)}`);
+      debugLog.warn(`⚠️ [DEV WARNING] runFSM() called with non-trigger state: ${getInputStateString(inputState)}`);
       return;
     }
 

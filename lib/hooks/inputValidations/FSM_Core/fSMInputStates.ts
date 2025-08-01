@@ -28,6 +28,7 @@ export const ERROR_FSM_STATES = new Set<InputState>([
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
   InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
   InputState.RESOLVE_ASSET_ERROR,
+  InputState.UPDATE_VALIDATED_ASSET
 ]);
 
 export function isErrorFSMState(state: InputState): boolean {

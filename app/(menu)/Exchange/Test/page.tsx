@@ -95,17 +95,6 @@ export default function TestPage() {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
   }, [state]);
 
-  useEffect(() => {
-    const trace = (globalThis as any).__FSM_TRACE__;
-    if (trace?.length) {
-      try {
-        localStorage.setItem('latestFSMTrace', JSON.stringify(trace));
-      } catch (err) {
-        console.warn('⚠️ Could not store FSM trace in localStorage', err);
-      }
-    }
-  }, [(globalThis as any).__FSM_TRACE__]);
-
   const updateExchangePage = (updates: Partial<typeof page>) => {
     setState((prev) => {
       const newState = {

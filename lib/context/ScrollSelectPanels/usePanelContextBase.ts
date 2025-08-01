@@ -2,11 +2,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useHexInput } from '@/lib/hooks/useHexInput';
-import { InputState, getInputStateString, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 import type { SharedPanelContextType } from './useSharedPanelContext';
 
 const LOG_TIME = false;
@@ -19,29 +18,6 @@ export function usePanelContextBase(
 ): SharedPanelContextType {
   const debugLog = createDebugLogger(label, debugEnabled, LOG_TIME);
 
-  const [validatedAsset, setValidatedAssetRaw] = useState<ValidatedAsset | undefined>();
-  const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
-
-  const setInputState = (next: InputState) => {
-    if (next === inputState) {
-      debugLog.log(`🚫 Skipping setInputState — already in ${getInputStateString(next)}`);
-      return;
-    }
-    debugLog.log(`📝 setInputState → ${getInputStateString(next)}`);
-    setInputStateRaw(next);
-  };
-
-  const setValidatedAsset = (next: ValidatedAsset | undefined) => {
-    if (validatedAsset && next && validatedAsset.address === next.address) {
-      debugLog.log(`🚫 Skipping setValidatedAsset — already ${next.symbol || next.address}`);
-      return;
-    }
-    debugLog.log(
-      next ? `✅ setValidatedAsset → ${next.symbol || next.address}` : '🧹 Clearing validated asset'
-    );
-    setValidatedAssetRaw(next);
-  };
-
   const {
     validHexInput,
     debouncedHexInput,
@@ -52,25 +28,6 @@ export function usePanelContextBase(
     handleHexInputChange,
     resetHexInput,
   } = useHexInput();
-
-console.log(validHexInput)
-
-   const dumpFSMContext = (headerInfo?: string) => {
-    try {
-      debugLog.log(`🧩 dumpFSMContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
-      console.group(`[FSM Context Dump] (${label})`);
-      if (headerInfo) console.log(`📝 ${headerInfo}`);
-      console.log({
-        inputState: getInputStateString(inputState),
-        validatedAsset,
-        containerType,
-        feedType,
-      });
-      console.groupEnd();
-    } catch (err) {
-      console.warn('⚠️ dumpFSMContext failed:', err);
-    }
-  };
 
   const dumpInputFeedContext = (headerInfo?: string) => {
     try {
@@ -95,7 +52,6 @@ console.log(validHexInput)
       debugLog.log(`🛠 dumpSharedPanelContext called${headerInfo ? ` → ${headerInfo}` : ''}`);
       console.group(`[Panel Context Dump] (${label})`);
       if (headerInfo) console.log(`📝 ${headerInfo}`);
-      dumpFSMContext();
       dumpInputFeedContext();
       console.groupEnd();
     } catch (err) {
@@ -103,15 +59,8 @@ console.log(validHexInput)
     }
   };
 
-  return useMemo<SharedPanelContextType>(
+  return useMemo<Partial<SharedPanelContextType>>(
     () => ({
-      inputState,
-      setInputState,
-      validatedAsset,
-      setValidatedAsset,
-      containerType,
-      feedType,
-      dumpFSMContext,
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -122,12 +71,10 @@ console.log(validHexInput)
       resetHexInput,
       dumpInputFeedContext,
       dumpSharedPanelContext,
-    }),
-    [
-      inputState,
-      validatedAsset,
       containerType,
       feedType,
+    }),
+    [
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -136,6 +83,8 @@ console.log(validHexInput)
       isValidHexString,
       handleHexInputChange,
       resetHexInput,
+      containerType,
+      feedType,
     ]
   );
 }
