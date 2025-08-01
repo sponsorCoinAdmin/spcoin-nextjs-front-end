@@ -9,7 +9,6 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('previewAsset', DEBUG_ENABLED, LOG_TIME);
 
 export function previewAsset({ debouncedHexInput, seenBrokenLogos }: ValidateFSMInput): ValidateFSMOutput {
-alert(`Running previewAsset(${debouncedHexInput})`)
   debugLog.log(`Running previewAsset(${debouncedHexInput})`)
   if (seenBrokenLogos.has(debouncedHexInput)) {
     return { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };

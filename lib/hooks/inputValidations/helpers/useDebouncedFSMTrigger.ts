@@ -1,29 +1,28 @@
-// File: lib/hooks/inputValidations/helpers/useDebouncedFSMTrigger.ts
+'use client';
 
 import { useEffect, useRef } from 'react';
 import { InputState, getInputStateString } from '@/lib/structure';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-
-interface Props {
-  debouncedHexInput: string;
-  inputState: InputState;
-  setInputState: (state: InputState) => void;
-}
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('useDebouncedFSMTrigger', DEBUG_ENABLED, LOG_TIME);
 
-export function useDebouncedFSMTrigger({
-  debouncedHexInput,
-  inputState,
-  setInputState,
-}: Props) {
-  const inputStateRef = useRef(inputState);
-  inputStateRef.current = inputState;
+interface Props {
+  debouncedHexInput: string;
+  manualEntry: boolean;
+}
 
+export function useDebouncedFSMTrigger({ debouncedHexInput, manualEntry }: Props) {
+  const { inputState, setInputState } = useSharedPanelContext();
+  const inputStateRef = useRef(inputState);
   const prevDebouncedInputRef = useRef('');
+
+  useEffect(() => {
+    inputStateRef.current = inputState;
+  }, [inputState]);
 
   useEffect(() => {
     const inputChanged = debouncedHexInput !== prevDebouncedInputRef.current;
@@ -37,31 +36,27 @@ export function useDebouncedFSMTrigger({
     debugLog.log('   🧯 Current FSM State:', getInputStateString(inputStateRef.current));
     debugLog.log('   ☠️ Is Terminal:', isTerminal);
     debugLog.log('   💭 Is EMPTY_INPUT:', isEmpty);
+    debugLog.log('   👤 Manual Entry Flag:', manualEntry);
 
     if (!inputChanged) {
-      // alert('[FSM Trigger Blocked] 🔕 Input has not changed.');
       debugLog.log('[FSM Trigger Blocked] 🔕 Input has not changed.');
       return;
     }
 
     if (isEmpty) {
-      // debugLog.log('🔁 [FSM Triggered] EMPTY_INPUT + input changed → VALIDATE_ADDRESS');
+      debugLog.log('🔁 [FSM Triggered] EMPTY_INPUT + input changed → VALIDATE_ADDRESS');
       setInputState(InputState.VALIDATE_ADDRESS);
       prevDebouncedInputRef.current = debouncedHexInput;
       return;
     }
 
     if (!isTerminal) {
-      // alert(`[FSM Trigger Blocked] 🚫 FSM state is not terminal. Current: ${getInputStateString(inputStateRef.current)}`);
       debugLog.log(`[FSM Trigger Blocked] 🚫 FSM state is not terminal. Current: ${getInputStateString(inputStateRef.current)}`);
       return;
     }
 
-    // Default case: input changed AND terminal
     debugLog.log('🔁 [FSM RESTART TRIGGERED] → VALIDATE_ADDRESS');
-    // alert('🔁 [FSM Triggered] Debounced input changed from terminal state → VALIDATE_ADDRESS');
-    debugLog.log('🔁 [FSM Triggered] Debounced input changed from terminal state → VALIDATE_ADDRESS');
     setInputState(InputState.VALIDATE_ADDRESS);
     prevDebouncedInputRef.current = debouncedHexInput;
-  }, [debouncedHexInput, inputState, setInputState]);
+  }, [debouncedHexInput, manualEntry]);
 }

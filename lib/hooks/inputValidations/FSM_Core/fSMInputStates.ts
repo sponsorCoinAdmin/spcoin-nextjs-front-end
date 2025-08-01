@@ -33,3 +33,18 @@ export const ERROR_FSM_STATES = new Set<InputState>([
 export function isErrorFSMState(state: InputState): boolean {
   return ERROR_FSM_STATES.has(state);
 }
+
+// ────────────── FSM Trigger States ──────────────
+export const TRIGGER_FSM_STATES = new Set<InputState>([
+  InputState.VALIDATE_ADDRESS,
+  InputState.TEST_DUPLICATE_INPUT,
+  InputState.VALIDATE_PREVIEW,
+  InputState.PREVIEW_ADDRESS,
+  InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY,
+  InputState.VALIDATE_EXISTS_ON_CHAIN,
+  InputState.RESOLVE_ASSET,
+]);
+
+export function isTriggerFSMState(state: InputState): boolean {
+  return TRIGGER_FSM_STATES.has(state);
+}

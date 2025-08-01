@@ -18,6 +18,7 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useShare
 import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';
 import { useFSMExecutor } from '../helpers/useFSMExecutor';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { isTriggerFSMState } from '../FSM_Core/fSMInputStates';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
@@ -39,13 +40,11 @@ export const useValidateFSMInput = (
     feedType,
     dumpSharedPanelContext,
     setTradingTokenCallback,
+    manualEntry, // ✅ required and sourced from context
   } = useSharedPanelContext();
 
-  const setValidatedToken = ctxSetValidatedToken ?? (() => {});
-  const setValidatedWallet = ctxSetValidatedWallet ?? (() => {});
-
-  const inputStateRef = useRef(inputState);
-  inputStateRef.current = inputState;
+  const setValidatedToken = ctxSetValidatedToken ?? (() => { });
+  const setValidatedWallet = ctxSetValidatedWallet ?? (() => { });
 
   const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
@@ -55,70 +54,56 @@ export const useValidateFSMInput = (
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // 🔍 Log context container
+  // 🔍 Log container context
   useEffect(() => {
     debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
   }, [containerType]);
 
-  // 🧪 FSM debounced trigger debug
   debugLog.log('🔁 useValidateFSMInput INIT', {
     selectAddress,
     debouncedHexInput,
     initialInputState: getInputStateString(inputState),
+    manualEntry,
   });
 
-  useDebouncedFSMTrigger({
-    debouncedHexInput,
-    inputState,
-    setInputState,
-  });
+  // Debounce input change and conditionally trigger FSM
+  useDebouncedFSMTrigger({ debouncedHexInput, manualEntry });
 
+  // ✅ FSM Executor with full args including manualEntry
   const { runFSM } = useFSMExecutor({
-    debouncedHexInput,
-    inputState,
-    setInputState,
+    sellAddress,
+    buyAddress,
+    chainId,
+    publicClient,
+    accountAddress: accountAddress as Address,
     seenBrokenLogosRef,
-    context: {
-      containerType,
-      sellAddress,
-      buyAddress,
-      chainId,
-      publicClient,
-      accountAddress: accountAddress as Address,
-      feedType,
-      setValidatedToken,
-      setValidatedWallet,
-      dumpSharedPanelContext,
-    },
+    token: validatedToken,
+    selectAddress,
+    manualEntry, // ✅ pass to FSM input
   });
 
+  // ✅ Trigger FSM only when inputState is a trigger state and input is stable
   useEffect(() => {
-    debugLog.log('🧪 useEffect triggered', {
-      selectAddress,
-      debouncedHexInput,
-      inputState: getInputStateString(inputStateRef.current),
-    });
+    const ready =
+      isTriggerFSMState(inputState) && debouncedHexInput.trim() !== '';
 
-    if (!selectAddress?.trim()) {
-      debugLog.log('🚫 Empty selectAddress');
-      if (inputStateRef.current !== InputState.EMPTY_INPUT) {
-        debugLog.log('🧹 Resetting to EMPTY_INPUT');
-        setInputState(InputState.EMPTY_INPUT);
-      }
+    if (!ready) {
+      debugLog.log(`⏸️ Skipping FSM. State: ${getInputStateString(inputState)}`);
       return;
     }
 
-    if (debouncedHexInput !== selectAddress) {
-      debugLog.log('⏸️ Debounced input still stabilizing', {
-        debouncedHexInput,
-        selectAddress,
-      });
-      return;
-    }
-
-    debugLog.log('🚀 Debounced input stabilized. Running FSM...');
+    debugLog.log(`🚀 Triggering FSM: ${getInputStateString(inputState)} + debouncedHexInput stable`);
     runFSM();
-  }, [debouncedHexInput, selectAddress]);
+  }, [inputState, debouncedHexInput, runFSM]);
+
+
+  // 🧹 Reset FSM to EMPTY_INPUT if the input is cleared
+  useEffect(() => {
+    if (!selectAddress?.trim() && inputState !== InputState.EMPTY_INPUT) {
+      debugLog.log('🧹 Resetting to EMPTY_INPUT (selectAddress is empty)');
+      setInputState(InputState.EMPTY_INPUT);
+    }
+  }, [selectAddress, inputState, setInputState]);
 
   const reportMissingLogoURL = useCallback(() => {
     if (!debouncedHexInput) return;
@@ -127,11 +112,11 @@ export const useValidateFSMInput = (
       debugSetInputState(
         `reportMissingLogoURL(${debouncedHexInput})`,
         InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
-        inputStateRef.current,
+        inputState,
         setInputState
       );
     }
-  }, [debouncedHexInput, setInputState]);
+  }, [debouncedHexInput, inputState, setInputState]);
 
   const hasBrokenLogoURL = useCallback(() => {
     return seenBrokenLogosRef.current.has(debouncedHexInput);

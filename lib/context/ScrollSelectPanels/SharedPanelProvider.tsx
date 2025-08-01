@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { ReactNode, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 
 import { SharedPanelContext } from './useSharedPanelContext';
 import {
@@ -22,7 +22,6 @@ import {
   dumpInputFeedContext,
 } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 
-// ─── Debug Config ───
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
 const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
@@ -30,7 +29,6 @@ const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
 const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
 
-// ─── Constants ───
 const instanceId = 'main';
 const feedType = FEED_TYPE.TOKEN_LIST;
 
@@ -50,6 +48,7 @@ export const SharedPanelProvider = ({
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
   const [manualEntry, setManualEntry] = useState<boolean>(true);
+  const prevInputState = useRef<InputState>(InputState.EMPTY_INPUT);
 
   const {
     validHexInput,
@@ -104,7 +103,27 @@ export const SharedPanelProvider = ({
       setTradingTokenCallback,
       closeCallback
     );
-  }, [inputState, validatedAsset, setInputState, setValidatedAsset, setTradingTokenCallback, closeCallback]);
+
+    // ❌ No longer clearing FSM trace here
+    // prevInputState is still useful for logging
+    prevInputState.current = inputState;
+  }, [
+    inputState,
+    validatedAsset,
+    setInputState,
+    setValidatedAsset,
+    setTradingTokenCallback,
+    closeCallback,
+  ]);
+
+  const setValidatedToken = useCallback((token?: TokenContract) => {
+    debugFSM.log(`🪙 setValidatedToken called`);
+    setValidatedAsset(token);
+  }, [setValidatedAsset]);
+
+  const setValidatedWallet = useCallback((_wallet?: WalletAccount) => {
+    debugFSM.warn(`⚠️ setValidatedWallet called in token panel → ignored`);
+  }, []);
 
   const fsmContext = useMemo(() => ({
     inputState,
@@ -113,18 +132,10 @@ export const SharedPanelProvider = ({
     setValidatedAsset,
     manualEntry,
     setManualEntry,
-
-    setValidatedToken: (token?: TokenContract) => {
-      debugFSM.log(`🪙 setValidatedToken called`);
-      setValidatedAsset(token);
-    },
-    setValidatedWallet: (_wallet?: WalletAccount) => {
-      debugFSM.warn(`⚠️ setValidatedWallet called in token panel → ignored`);
-    },
-
+    setValidatedToken,
+    setValidatedWallet,
     dumpFSMContext: (header?: string) =>
       dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId),
-
     dumpSharedPanelContext: (header?: string) => {
       debugLog.log(`📆 SharedPanelContext Dump: ${header ?? ''}`);
       dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId);
@@ -138,7 +149,6 @@ export const SharedPanelProvider = ({
         instanceId
       );
     },
-
     containerType,
     feedType,
     closeCallback: () => closeCallback(true),
@@ -150,6 +160,8 @@ export const SharedPanelProvider = ({
     manualEntry,
     setInputState,
     setValidatedAsset,
+    setValidatedToken,
+    setValidatedWallet,
     closeCallback,
     setTradingTokenCallback,
     validHexInput,

@@ -51,15 +51,15 @@ export type SharedPanelContextType = FSMContextType &
     forceReset?: () => void;
     forceClose?: () => void;
 
-    /** ✅ Added callbacks from MainTradingPanel */
-    closeCallback?: () => void;
-    setTradingTokenCallback?: (token: TokenContract) => void;
+    /** ✅ Required callbacks from MainTradingPanel */
+    closeCallback: () => void;
+    setTradingTokenCallback: (token: TokenContract) => void;
 
     /** ✅ Split validated asset fields */
     validatedToken?: TokenContract;
     validatedWallet?: WalletAccount;
-    setValidatedToken?: (token: TokenContract | undefined) => void;
-    setValidatedWallet?: (wallet: WalletAccount | undefined) => void;
+    setValidatedToken: (token: TokenContract | undefined) => void;
+    setValidatedWallet: (wallet: WalletAccount | undefined) => void;
 
     /** ✅ Manual entry tracking */
     manualEntry: boolean;

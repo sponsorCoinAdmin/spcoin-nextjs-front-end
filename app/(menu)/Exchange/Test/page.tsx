@@ -17,6 +17,7 @@ import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20
 
 import WalletsPage from '@/components/Pages/WalletsPage';
 import JsonInspector from '@/components/shared/JsonInspector';
+import FSMTracePanel from '@/components/debug/FSMTracePanel';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePageState } from '@/lib/context/PageStateContext';
@@ -86,11 +87,24 @@ export default function TestPage() {
     expandContext = false,
   } = page;
 
+  const [showFSMTracePanel, setShowFSMTracePanel] = useState(false);
+
   const tokenAddress = exchangeContext?.tradeData?.sellTokenContract?.address;
 
   useEffect(() => {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
   }, [state]);
+
+  useEffect(() => {
+    const trace = (globalThis as any).__FSM_TRACE__;
+    if (trace?.length) {
+      try {
+        localStorage.setItem('latestFSMTrace', JSON.stringify(trace));
+      } catch (err) {
+        console.warn('⚠️ Could not store FSM trace in localStorage', err);
+      }
+    }
+  }, [(globalThis as any).__FSM_TRACE__]);
 
   const updateExchangePage = (updates: Partial<typeof page>) => {
     setState((prev) => {
@@ -169,7 +183,10 @@ export default function TestPage() {
             {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
           </button>
 
-          {/* ✅ NEW: Dropdown radio selection for activeDisplay */}
+          <button onClick={() => setShowFSMTracePanel((prev) => !prev)} className="px-4 py-2 text-sm font-medium text-orange-300 bg-[#382a1f] rounded hover:text-orange-500">
+            {showFSMTracePanel ? 'Close FSM Trace' : 'Open FSM Trace'}
+          </button>
+
           <div className="flex flex-col space-y-2">
             <label htmlFor="activeDisplaySelect" className="text-sm font-medium text-[#5981F3]">
               Select activeDisplay
@@ -196,10 +213,10 @@ export default function TestPage() {
               <option value={SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL}>ERROR_MESSAGE_PANEL</option>
               <option value={SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL}>SPONSOR_RATE_CONFIG_PANEL</option>
               <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_PANEL</option>
-              <option value={SP_COIN_DISPLAY.AGENT_SELECT_CONTAINER}>AGENT_SELECT_CONTAINER</option>
+              <option value={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}>AGENT_SELECT_CONTAINER</option>
               <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
               <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
-              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_CONTAINER}>RECIPIENT_SELECT_CONTAINER</option>
+              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_CONTAINER</option>
             </select>
           </div>
         </div>
@@ -218,6 +235,8 @@ export default function TestPage() {
           <WalletsPage />
         </div>
       )}
+
+      {isHydrated && <FSMTracePanel visible={showFSMTracePanel} />}
 
       {isHydrated && tokenAddress && (
         <div className="grid gap-6">

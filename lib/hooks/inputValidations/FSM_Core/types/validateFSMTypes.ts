@@ -12,31 +12,40 @@ import {
 /**
  * Input parameters passed into the FSM validation core function.
  */
+
 export interface ValidateFSMInput {
   inputState: InputState;
   debouncedHexInput: string;
+  seenBrokenLogos: Set<string>;
   containerType: SP_COIN_DISPLAY;
+  feedType: FEED_TYPE;
   sellAddress?: string;
   buyAddress?: string;
   chainId: number;
   publicClient: any;
-  accountAddress?: Address;
-  seenBrokenLogos: Set<string>;
-  feedType: FEED_TYPE;
-
-  // Separated asset types
+  accountAddress: Address;
   validatedToken?: TokenContract;
   validatedWallet?: WalletAccount;
-}
 
+  /** 👣 Optional trace of previous FSM states */
+  stateTrace?: InputState[];
+
+  /** 🧑‍💻 True if the user typed the input manually */
+  manualEntry: boolean;
+}
 
 /**
  * Output returned by the FSM core validation processor.
  */
 export interface ValidateFSMOutput {
   nextState: InputState;
-  // Separated asset types
   validatedToken?: TokenContract;
-  validatedWallet?: WalletAccount;  updatedBalance?: bigint;
+  validatedWallet?: WalletAccount;
   errorMessage?: string;
+
+  /** 👣 Debug trace of visited states */
+  stateTrace?: InputState[];
+
+  /** 🧭 Human-readable summary of states */
+  humanTraceSummary?: string;
 }

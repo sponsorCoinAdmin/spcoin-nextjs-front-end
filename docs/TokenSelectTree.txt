@@ -5,60 +5,59 @@
         ├── usePriceErrorEffect()
         ├── useResetAmountsOnTokenChange()
         │     └── <TokenSelectContextView>
-        │           └── <mainTradingPanel>
+        │           └── <MainTradingPanel>
         │                 ├── <TradeContainerHeader>
         │                 ├── <TokenSelectSection>
-        │                 │     ├── <TradePanelProvider> (SELL)
+        │                 │     ├── <SharedPanelProvider> (SELL)
         │                 │     │     └── <TradeAssetPanel> (SELL)
-        │                 │     │           ├── <input /> ← handles user input
+        │                 │     │           ├── <input /> ← user edits amount
         │                 │     │           ├── <TokenSelectDropDown>
-        │                 │     │           │     └── onClick → openDialog()
-        │                 │     │           │           └── setInputState(VALID_INPUT)
-        │                 │     │           ├── <TokenSelectPanel>
-        │                 │     │           │     └── <AssetSelectPanel>
-        │                 │     │           │           └── <AddressSelect> (SELL)
-        │                 │     │           │                 ├── <HexAddressInput>
-        │                 │     │           │                 ├── <RenderAssetPreview>
-        │                 │     │           │                 ├── <ErrorAssetPreview>
-        │                 │     │           │                 └── <DataListSelect>
+        │                 │     │           │     └── onClick → setSpCoinDisplay(SELL_SELECT_SCROLL_PANEL)
+        │                 │     │           ├── isContainerVisible → <TokenSelectScrollPanel>
+        │                 │     │           │     └── <TokenSelectPanel>
+        │                 │     │           │           └── <AssetSelectPanel>
+        │                 │     │           │                 └── <AddressSelect> (SELL)
+        │                 │     │           │                       ├── <HexAddressInput>
+        │                 │     │           │                       ├── <RenderAssetPreview>
+        │                 │     │           │                       ├── <ErrorAssetPreview>
+        │                 │     │           │                       └── <DataListSelect>
+        │                 │     │           │                             └── onSelect → setInputState(CLOSE_SELECT_PANEL)
+        │                 │     │           │                                   └── callback → setSellTokenContract()
         │                 │     │           ├── Balance: {formattedBalance}
         │                 │     │           ├── {buySellText}
         │                 │     │           └── <ManageSponsorsButton /> ← if isSpCoin
         │                 │     ├── <BuySellSwapArrowButton>
-        │                 │     └── <TradePanelProvider> (BUY)
+        │                 │     └── <SharedPanelProvider> (BUY)
         │                 │           └── <TradeAssetPanel> (BUY)
-        │                 │                 ├── <input /> ← handles user input
+        │                 │                 ├── <input /> ← user edits amount
         │                 │                 ├── <TokenSelectDropDown>
-        │                 │                 │     └── onClick → openDialog()
-        │                 │                 │           └── setInputState(VALID_INPUT)
-        │                 │                 ├── <TokenSelectPanel>
-        │                 │                 │     └── <AssetSelectPanel>
-        │                 │                 │           └── <AddressSelect> (BUY)
-        │                 │                 │                 ├── <HexAddressInput>
-        │                 │                 │                 ├── <RenderAssetPreview>
-        │                 │                 │                 ├── <ErrorAssetPreview>
-        │                 │                 │                 └── <DataListSelect>
+        │                 │                 │     └── onClick → setSpCoinDisplay(BUY_SELECT_SCROLL_PANEL)
+        │                 │                 ├── isContainerVisible → <TokenSelectScrollPanel>
+        │                 │                 │     └── <TokenSelectPanel>
+        │                 │                 │           └── <AssetSelectPanel>
+        │                 │                 │                 └── <AddressSelect> (BUY)
+        │                 │                 │                       ├── <HexAddressInput>
+        │                 │                 │                       ├── <RenderAssetPreview>
+        │                 │                 │                       ├── <ErrorAssetPreview>
+        │                 │                 │                       └── <DataListSelect>
+        │                 │                 │                             └── onSelect → setInputState(CLOSE_SELECT_PANEL)
+        │                 │                 │                                   └── callback → setBuyTokenContract()
         │                 │                 ├── Balance: {formattedBalance}
         │                 │                 ├── {buySellText}
         │                 │                 └── <AddSponsorshipButton /> ← if isSpCoin
         │                 │                       ├── onClick → setSpCoinDisplay(RECIPIENT_SELECT_PANEL)
-        │                 │                       └── if isContainerVisible → <RecipientSelectPanel>
-        │                 │                             ├── <Image src={cog} onClick={toggleSponsorRateConfig} />
-        │                 │                             │     └── SPONSOR_RATE_CONFIG_PANEL && <SponsorRateConfigPanel/>
-        │                 │                             ├── <div>X</div> to clear
-        │                 │                             └── <RecipientSelectDropDown />
-        │                 │                                   ├── onClick → setShowDialog(true)
-        │                 │                                   ├── showDialog && <RecipientSelectPanel>
-        │                 │                                   │     └── <AddressSelect> (Recipient)
-        │                 │                                   │           ├── <HexAddressInput>
-        │                 │                                   │           ├── <RenderAssetPreview>
-        │                 │                                   │           ├── <ErrorAssetPreview>
-        │                 │                                   │           └── <DataListSelect>
-        │                 │                                   └── onSelect(wallet, state)
-        │                 │                                         └── if state === CLOSE_SELECT_PANEL:
-        │                 │                                               ├── callBackAccount(wallet)
-        │                 │                                               ├── hasErroredRef = false
-        │                 │                                               └── setShowDialog(false)
+        │                 │                       └── isContainerVisible → <RecipientSelectScrollPanel>
+        │                 │                             └── <RecipientSelectPanel>
+        │                 │                                   └── <AddressSelect> (Recipient)
+        │                 │                                         ├── <HexAddressInput>
+        │                 │                                         ├── <RenderAssetPreview>
+        │                 │                                         ├── <ErrorAssetPreview>
+        │                 │                                         └── <DataListSelect>
+        │                 │                                               └── onSelect(wallet, state)
+        │                 │                                                     └── if state === CLOSE_SELECT_PANEL:
+        │                 │                                                           ├── callbackAccount(wallet)
+        │                 │                                                           ├── hasErroredRef = false
+        │                 │                                                           └── setSpCoinDisplay(SHOW_RECIPIENT_CONTAINER)
         ├── <PriceButton>
         ├── <AffiliateFee>
         └── <FeeDisclosure>

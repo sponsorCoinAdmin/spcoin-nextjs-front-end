@@ -1,65 +1,64 @@
 // File: lib/hooks/inputValidations/helpers/useFSMExecutor.ts
 
 import { useRef, useEffect } from 'react';
-import { InputState, TokenContract, WalletAccount } from '@/lib/structure';
-import { validateFSMCore } from '../FSM_Core/validateFSMCore';
 import { Address } from 'viem';
+import {
+  InputState,
+  TokenContract,
+  WalletAccount,
+  getInputStateString,
+} from '@/lib/structure';
+
+import { validateFSMCore } from '../FSM_Core/validateFSMCore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { isTriggerFSMState } from '../FSM_Core/fSMInputStates'; // ✅ imported helper
 
 const debugLog = createDebugLogger('useFSMExecutor', true, false);
 
-interface FSMContext {
-  containerType: any;
+interface FSMContextOverrides {
   sellAddress: string | undefined;
   buyAddress: string | undefined;
   chainId: number;
   publicClient: any;
   accountAddress: Address;
-  feedType: any;
-  validatedWallet?: WalletAccount;
-  setValidatedToken: (t: TokenContract) => void;
-  setValidatedWallet: (w: WalletAccount) => void;
-  dumpSharedPanelContext?: (headerInfo?: string) => void;
-}
-
-interface Props {
-  debouncedHexInput: string;
-  inputState: InputState;
-  setInputState: (state: InputState) => void;
   seenBrokenLogosRef: React.MutableRefObject<Set<string>>;
-  context: FSMContext;
   token?: TokenContract;
   selectAddress?: string;
+  manualEntry: boolean;
 }
 
-const fsmTriggerStates: InputState[] = [
-  InputState.VALIDATE_ADDRESS,
-  InputState.TEST_DUPLICATE_INPUT,
-  InputState.VALIDATE_PREVIEW,
-  InputState.PREVIEW_ADDRESS,
-  InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY,
-  InputState.VALIDATE_EXISTS_ON_CHAIN,
-  InputState.RESOLVE_ASSET,
-];
-
 export function useFSMExecutor({
-  debouncedHexInput,
-  inputState,
-  setInputState,
+  sellAddress,
+  buyAddress,
+  chainId,
+  publicClient,
+  accountAddress,
   seenBrokenLogosRef,
-  context,
   token,
   selectAddress,
-}: Props) {
+  manualEntry,
+}: FSMContextOverrides) {
+  const {
+    inputState,
+    debouncedHexInput,
+    setInputState,
+    feedType,
+    containerType,
+    setValidatedToken,
+    setValidatedWallet,
+    dumpSharedPanelContext,
+  } = useSharedPanelContext();
+
   const prevDebouncedInputRef = useRef('');
   const queuedInputRef = useRef<string | null>(null);
   const fsmIsRunningRef = useRef(false);
   const lastFSMInputRef = useRef('');
 
   const runFSM = async () => {
-    if (!fsmTriggerStates.includes(inputState)) {
-      debugLog.log(`⚠️ Not a trigger state: ${InputState[inputState]}`);
+    if (!isTriggerFSMState(inputState)) {
+      debugLog.log(`⚠️ Not a trigger state: ${getInputStateString(inputState)}`);
       return;
     }
 
@@ -70,18 +69,35 @@ export function useFSMExecutor({
     }
 
     fsmIsRunningRef.current = true;
-    debugLog.log(`🧵 [FSM START] state=${InputState[inputState]} input="${debouncedHexInput}"`);
+    debugLog.log(`🧵 [FSM START] state=${getInputStateString(inputState)} input="${debouncedHexInput}"`);
 
     try {
       const result = await validateFSMCore({
         inputState,
         debouncedHexInput,
         seenBrokenLogos: seenBrokenLogosRef.current,
-        ...context,
+        containerType,
+        sellAddress,
+        buyAddress,
+        chainId,
+        publicClient,
+        accountAddress,
+        feedType,
         validatedToken: token,
+        stateTrace: [inputState],
+        manualEntry,
       });
 
-      context.dumpSharedPanelContext?.(`[AFTER FSM] nextState=${InputState[result.nextState]}`);
+      dumpSharedPanelContext?.(`[AFTER FSM] nextState=${getInputStateString(result.nextState)}`);
+
+      if (result.stateTrace?.length) {
+        debugLog.log(`📜 FSM State Trace:`);
+        result.stateTrace.forEach((s, idx) =>
+          debugLog.log(`  ${idx + 1}. ${getInputStateString(s)} (${s})`)
+        );
+        const summary = result.stateTrace.map((s) => getInputStateString(s)).join(' → ');
+        debugLog.log(`🧭 FSM Path: ${summary}`);
+      }
 
       if (result.nextState !== inputState) {
         setInputState(result.nextState);
@@ -89,9 +105,9 @@ export function useFSMExecutor({
 
       if (result.nextState === InputState.UPDATE_VALIDATED_ASSET) {
         if (result.validatedToken) {
-          context.setValidatedToken(result.validatedToken);
+          setValidatedToken(result.validatedToken);
         } else if (result.validatedWallet) {
-          context.setValidatedWallet(result.validatedWallet);
+          setValidatedWallet(result.validatedWallet);
         }
       }
 
@@ -103,17 +119,21 @@ export function useFSMExecutor({
         name: err?.name,
         stack: err?.stack,
       });
-      debugLog.log('🚨 [FSM ERROR CONTEXT]', stringifyBigInt({
-        inputState: InputState[inputState],
-        debouncedHexInput,
-        chainId: context.chainId,
-        accountAddress: context.accountAddress,
-        feedType: context.feedType,
-        tokenProvided: !!token,
-      }));
+      debugLog.log(
+        '🚨 [FSM ERROR CONTEXT]',
+        stringifyBigInt({
+          inputState: getInputStateString(inputState),
+          debouncedHexInput,
+          chainId,
+          accountAddress,
+          feedType,
+          tokenProvided: !!token,
+          manualEntry,
+        })
+      );
     } finally {
       fsmIsRunningRef.current = false;
-      context.dumpSharedPanelContext?.(`[AFTER FSM UPDATE]`);
+      dumpSharedPanelContext?.(`[AFTER FSM UPDATE]`);
 
       debugLog.log(`[FSM QUEUE CHECK] queued="${queuedInputRef.current}" prev="${prevDebouncedInputRef.current}"`);
 
@@ -127,25 +147,10 @@ export function useFSMExecutor({
   };
 
   useEffect(() => {
-    if (!selectAddress?.trim()) {
-      if (inputState !== InputState.EMPTY_INPUT) {
-        setInputState(InputState.EMPTY_INPUT);
-      }
-      return;
+    if (!selectAddress?.trim() && inputState !== InputState.EMPTY_INPUT) {
+      setInputState(InputState.EMPTY_INPUT);
     }
-
-    if (debouncedHexInput !== selectAddress) return;
-
-    if (
-      lastFSMInputRef.current === debouncedHexInput &&
-      !fsmTriggerStates.includes(inputState)
-    ) {
-      debugLog.log(`⏭️ Skipping runFSM — already handled "${debouncedHexInput}" and not a trigger state`);
-      return;
-    }
-
-    runFSM();
-  }, [debouncedHexInput, selectAddress, inputState]);
+  }, [selectAddress]);
 
   return { runFSM };
 }
