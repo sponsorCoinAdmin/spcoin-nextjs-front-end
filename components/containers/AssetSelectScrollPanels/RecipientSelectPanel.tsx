@@ -2,32 +2,57 @@
 
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
-  InputState,
   WalletAccount,
   SP_COIN_DISPLAY,
+  TokenContract,
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('RecipientSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function RecipientSelectPanel() {
-  const { inputState, setInputState, containerType, instanceId } = useSharedPanelContext();
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+interface RecipientSelectPanelProps {
+  isActive: boolean;
+  closeCallback: () => void;
+  setTradingTokenCallback: (wallet: WalletAccount) => void;
+}
 
-  // ✅ Skip render if this panel is not active
-  if (activeDisplay !== SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL) {
-    debugLog.log(`⏭️ RecipientSelectPanel → not active (instanceId=${instanceId}), skipping render`);
+export default function RecipientSelectPanel({
+  isActive,
+  closeCallback,
+  setTradingTokenCallback,
+}: RecipientSelectPanelProps) {
+  const { activeDisplay } = useActiveDisplay();
+
+  if (!isActive) {
+    debugLog.log(`⏭️ RecipientSelectPanel → not active, skipping render`);
     return null;
   }
+
+  debugLog.log(`🧩 RecipientSelectPanel → showPanelDisplay=RecipientSelectPanel`);
+
+  return (
+    <SharedPanelProvider
+      closeCallback={closeCallback}
+      setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Cast needed until WalletAccount is handled generically
+      containerType={activeDisplay as SP_COIN_DISPLAY}
+    >
+      <RecipientSelectPanelInner />
+    </SharedPanelProvider>
+  );
+}
+
+function RecipientSelectPanelInner() {
+  const { instanceId, containerType } = useSharedPanelContext();
 
   useEffect(() => {
     debugLog.log(`🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);

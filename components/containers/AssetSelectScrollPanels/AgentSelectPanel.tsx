@@ -5,27 +5,53 @@
 import { useEffect } from 'react';
 import {
   SP_COIN_DISPLAY,
+  WalletAccount,
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
 const debugLog = createDebugLogger('AgentSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-export default function AgentSelectPanel() {
-  const { containerType, instanceId } = useSharedPanelContext();
+interface AgentSelectPanelProps {
+  isActive: boolean;
+  closeCallback: () => void;
+  setTradingTokenCallback: (wallet: WalletAccount) => void;
+}
+
+export default function AgentSelectPanel({
+  isActive,
+  closeCallback,
+  setTradingTokenCallback,
+}: AgentSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
 
-  // ✅ Skip render if this panel is not active
-  if (activeDisplay !== SP_COIN_DISPLAY.AGENT_SELECT_PANEL) {
-    debugLog.log(`⏭️ AgentSelectPanel → not active (instanceId=${instanceId}), skipping render`);
+  if (!isActive) {
+    debugLog.log(`⏭️ AgentSelectPanel → not active, skipping render`);
     return null;
   }
+
+  debugLog.log(`🧩 AgentSelectPanel → showPanelDisplay=AgentSelectPanel`);
+
+  return (
+    <SharedPanelProvider
+      closeCallback={closeCallback}
+      setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Temporary cast until generics are introduced
+      containerType={activeDisplay}
+    >
+      <AgentSelectPanelInner />
+    </SharedPanelProvider>
+  );
+}
+
+function AgentSelectPanelInner() {
+  const { containerType, instanceId } = useSharedPanelContext();
 
   useEffect(() => {
     debugLog.log(`🧩 AgentSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);

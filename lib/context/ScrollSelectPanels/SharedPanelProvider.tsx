@@ -2,7 +2,14 @@
 
 'use client';
 
-import React, { ReactNode, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, {
+  ReactNode,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from 'react';
 
 import { SharedPanelContext } from './useSharedPanelContext';
 import {
@@ -29,6 +36,7 @@ const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
 const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
 
+// Default context-wide constants (can become props later)
 const instanceId = 'main';
 const feedType = FEED_TYPE.TOKEN_LIST;
 
@@ -45,11 +53,13 @@ export const SharedPanelProvider = ({
   setTradingTokenCallback,
   containerType,
 }: SharedPanelProviderProps) => {
+  // FSM state
   const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
   const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
   const [manualEntry, setManualEntry] = useState<boolean>(true);
   const prevInputState = useRef<InputState>(InputState.EMPTY_INPUT);
 
+  // Input feed state
   const {
     validHexInput,
     debouncedHexInput,
@@ -61,12 +71,14 @@ export const SharedPanelProvider = ({
     resetHexInput,
   } = useHexInput();
 
+  // FSM effect: auto-mark invalid input
   useEffect(() => {
     if (failedHexCount > 0) {
       setInputState(InputState.INVALID_HEX_INPUT);
     }
   }, [failedHexCount]);
 
+  // FSM: set state with logging and guard
   const setInputState = useCallback((next: InputState) => {
     setInputStateRaw((prev) => {
       if (prev === next) {
@@ -78,6 +90,7 @@ export const SharedPanelProvider = ({
     });
   }, []);
 
+  // FSM: set validated asset
   const setValidatedAsset = useCallback((next: TokenContract | undefined) => {
     if (
       validatedAsset?.address === next?.address &&
@@ -94,6 +107,7 @@ export const SharedPanelProvider = ({
     setValidatedAssetRaw(next);
   }, [validatedAsset]);
 
+  // FSM: handle terminal states like close or update
   useEffect(() => {
     handleFSMTerminalState(
       inputState,
@@ -103,9 +117,6 @@ export const SharedPanelProvider = ({
       setTradingTokenCallback,
       closeCallback
     );
-
-    // ❌ No longer clearing FSM trace here
-    // prevInputState is still useful for logging
     prevInputState.current = inputState;
   }, [
     inputState,
@@ -116,6 +127,7 @@ export const SharedPanelProvider = ({
     closeCallback,
   ]);
 
+  // Callbacks for token and wallet
   const setValidatedToken = useCallback((token?: TokenContract) => {
     debugFSM.log(`🪙 setValidatedToken called`);
     setValidatedAsset(token);
@@ -125,7 +137,28 @@ export const SharedPanelProvider = ({
     debugFSM.warn(`⚠️ setValidatedWallet called in token panel → ignored`);
   }, []);
 
-  const fsmContext = useMemo(() => ({
+  // Dump utilities
+  const dumpInputFeed = useCallback((header?: string) => {
+    dumpInputFeedContext(
+      header ?? '',
+      validHexInput,
+      debouncedHexInput,
+      failedHexInput,
+      failedHexCount,
+      isValid,
+      instanceId
+    );
+  }, [validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid]);
+
+  const dumpSharedPanel = useCallback((header?: string) => {
+    debugLog.log(`📆 SharedPanelContext Dump: ${header ?? ''}`);
+    dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId);
+    dumpInputFeed(header ?? '');
+  }, [inputState, validatedAsset, dumpInputFeed]);
+
+  // Final context object
+  const contextValue = useMemo(() => ({
+    // FSM State
     inputState,
     setInputState,
     validatedAsset,
@@ -134,21 +167,23 @@ export const SharedPanelProvider = ({
     setManualEntry,
     setValidatedToken,
     setValidatedWallet,
+
+    // Dump
     dumpFSMContext: (header?: string) =>
-      dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId),
-    dumpSharedPanelContext: (header?: string) => {
-      debugLog.log(`📆 SharedPanelContext Dump: ${header ?? ''}`);
-      dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId);
-      dumpInputFeedContext(
-        header ?? '',
-        validHexInput,
-        debouncedHexInput,
-        failedHexInput,
-        failedHexCount,
-        isValid,
-        instanceId
-      );
-    },
+      dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId), dumpSharedPanelContext: dumpSharedPanel,
+
+    // Input feed
+    validHexInput,
+    debouncedHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValid,
+    isValidHexString,
+    handleHexInputChange,
+    resetHexInput,
+    dumpInputFeedContext: dumpInputFeed,
+
+    // Identity
     containerType,
     feedType,
     closeCallback: () => closeCallback(true),
@@ -158,52 +193,24 @@ export const SharedPanelProvider = ({
     inputState,
     validatedAsset,
     manualEntry,
-    setInputState,
-    setValidatedAsset,
-    setValidatedToken,
-    setValidatedWallet,
+    validHexInput,
+    debouncedHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValid,
+    isValidHexString,
+    handleHexInputChange,
+    resetHexInput,
+    containerType,
+    feedType,
     closeCallback,
     setTradingTokenCallback,
-    validHexInput,
-    debouncedHexInput,
-    failedHexInput,
-    failedHexCount,
-    isValid,
-    containerType,
-  ]);
-
-  const inputFeedContext = useMemo(() => ({
-    validHexInput,
-    debouncedHexInput,
-    failedHexInput,
-    failedHexCount,
-    isValid,
-    isValidHexString,
-    handleHexInputChange,
-    resetHexInput,
-    dumpInputFeedContext: (header?: string) =>
-      dumpInputFeedContext(
-        header ?? '',
-        validHexInput,
-        debouncedHexInput,
-        failedHexInput,
-        failedHexCount,
-        isValid,
-        instanceId
-      ),
-  }), [
-    validHexInput,
-    debouncedHexInput,
-    failedHexInput,
-    failedHexCount,
-    isValid,
-    isValidHexString,
-    handleHexInputChange,
-    resetHexInput,
+    dumpInputFeed,
+    dumpSharedPanel,
   ]);
 
   return (
-    <SharedPanelContext.Provider value={{ ...fsmContext, ...inputFeedContext }}>
+    <SharedPanelContext.Provider value={contextValue}>
       {children}
     </SharedPanelContext.Provider>
   );

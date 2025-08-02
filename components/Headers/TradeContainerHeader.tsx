@@ -22,7 +22,7 @@ const TradeContainerHeader = ({ closeCallback }: Props) => {
   let title: string;
 
   switch (activeDisplay) {
-    case SP_COIN_DISPLAY.AGENT_SELECT_CONTAINER:
+    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL:
       title = 'Select Sponsors Agent';
       break;
     case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:
