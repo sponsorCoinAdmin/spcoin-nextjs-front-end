@@ -1,5 +1,7 @@
 // File: lib/hooks/inputValidations/helpers/useFSMExecutor.ts
 
+'use client';
+
 import { useRef, useEffect } from 'react';
 import { Address } from 'viem';
 import {
@@ -13,7 +15,7 @@ import { validateFSMCore } from '../FSM_Core/validateFSMCore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { isTriggerFSMState } from '../FSM_Core/fSMInputStates'; // ✅ imported helper
+import { isTriggerFSMState } from '../FSM_Core/fSMInputStates';
 
 const debugLog = createDebugLogger('useFSMExecutor', true, false);
 
@@ -25,8 +27,6 @@ interface FSMContextOverrides {
   accountAddress: Address;
   seenBrokenLogosRef: React.MutableRefObject<Set<string>>;
   token?: TokenContract;
-  selectAddress?: string;
-  manualEntry: boolean;
 }
 
 export function useFSMExecutor({
@@ -37,8 +37,6 @@ export function useFSMExecutor({
   accountAddress,
   seenBrokenLogosRef,
   token,
-  selectAddress,
-  manualEntry,
 }: FSMContextOverrides) {
   const {
     inputState,
@@ -49,6 +47,8 @@ export function useFSMExecutor({
     setValidatedToken,
     setValidatedWallet,
     dumpSharedPanelContext,
+    manualEntry,
+    validHexInput: selectAddress,
   } = useSharedPanelContext();
 
   const prevDebouncedInputRef = useRef('');
