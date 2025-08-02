@@ -78,8 +78,6 @@ export const useValidateFSMInput = (
     accountAddress: accountAddress as Address,
     seenBrokenLogosRef,
     token: validatedToken,
-    selectAddress,
-    manualEntry, // ✅ pass to FSM input
   });
 
   // ✅ Trigger FSM only when inputState is a trigger state and input is stable
