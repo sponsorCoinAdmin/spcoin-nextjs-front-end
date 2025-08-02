@@ -8,10 +8,7 @@ import { useChainId, useAccount, usePublicClient } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { InputState, getInputStateString, SP_COIN_DISPLAY } from '@/lib/structure';
 
-import {
-  useBuyTokenAddress,
-  useSellTokenAddress,
-} from '@/lib/context/hooks';
+import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
 
 import { debugSetInputState } from '../helpers/debugSetInputState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
@@ -24,9 +21,7 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
 const debugLog = createDebugLogger('useValidateFSMInput', DEBUG_ENABLED, LOG_TIME);
 
-export const useValidateFSMInput = (
-  selectAddress: string | undefined,
-) => {
+export const useValidateFSMInput = (selectAddress: string | undefined) => {
   const debouncedHexInput = useDebounce(selectAddress || '', 250);
 
   const {
@@ -35,26 +30,20 @@ export const useValidateFSMInput = (
     containerType,
     validatedToken,
     validatedWallet,
-    setValidatedToken: ctxSetValidatedToken,
-    setValidatedWallet: ctxSetValidatedWallet,
-    feedType,
-    dumpSharedPanelContext,
-    setTradingTokenCallback,
-    manualEntry, // ✅ required and sourced from context
+    setValidatedToken = () => {},
+    setValidatedWallet = () => {},
+    manualEntry,
   } = useSharedPanelContext();
 
-  const setValidatedToken = ctxSetValidatedToken ?? (() => { });
-  const setValidatedWallet = ctxSetValidatedWallet ?? (() => { });
-
-  const buyAddress = useBuyTokenAddress();
   const sellAddress = useSellTokenAddress();
+  const buyAddress = useBuyTokenAddress();
   const chainId = useChainId();
   const publicClient = usePublicClient();
   const { address: accountAddress } = useAccount();
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // 🔍 Log container context
+  // 🔍 Context logging
   useEffect(() => {
     debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
   }, [containerType]);
@@ -66,10 +55,10 @@ export const useValidateFSMInput = (
     manualEntry,
   });
 
-  // Debounce input change and conditionally trigger FSM
+  // Debounce FSM trigger (state read from context)
   useDebouncedFSMTrigger({ debouncedHexInput, manualEntry });
 
-  // ✅ FSM Executor with full args including manualEntry
+  // FSM Executor
   const { runFSM } = useFSMExecutor({
     sellAddress,
     buyAddress,
@@ -80,7 +69,7 @@ export const useValidateFSMInput = (
     token: validatedToken,
   });
 
-  // ✅ Trigger FSM only when inputState is a trigger state and input is stable
+  // Trigger FSM only when inputState is in trigger list and input is ready
   useEffect(() => {
     const ready =
       isTriggerFSMState(inputState) && debouncedHexInput.trim() !== '';
@@ -94,8 +83,7 @@ export const useValidateFSMInput = (
     runFSM();
   }, [inputState, debouncedHexInput, runFSM]);
 
-
-  // 🧹 Reset FSM to EMPTY_INPUT if the input is cleared
+  // Reset FSM if input is cleared
   useEffect(() => {
     if (!selectAddress?.trim() && inputState !== InputState.EMPTY_INPUT) {
       debugLog.log('🧹 Resetting to EMPTY_INPUT (selectAddress is empty)');

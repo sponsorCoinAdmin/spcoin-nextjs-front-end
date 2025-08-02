@@ -1,3 +1,5 @@
+// File: lib/hooks/inputValidations/helpers/useDebouncedFSMTrigger.ts
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -17,23 +19,25 @@ interface Props {
 
 export function useDebouncedFSMTrigger({ debouncedHexInput, manualEntry }: Props) {
   const { inputState, setInputState } = useSharedPanelContext();
-  const inputStateRef = useRef(inputState);
-  const prevDebouncedInputRef = useRef('');
+  const inputStateRef = useRef<InputState>(inputState);
+  const prevDebouncedInputRef = useRef<string>('');
 
+  // 🔄 Keep FSM state ref in sync
   useEffect(() => {
     inputStateRef.current = inputState;
   }, [inputState]);
 
   useEffect(() => {
+    const currentFSM = inputStateRef.current;
     const inputChanged = debouncedHexInput !== prevDebouncedInputRef.current;
-    const isTerminal = isTerminalFSMState(inputStateRef.current);
-    const isEmpty = inputStateRef.current === InputState.EMPTY_INPUT;
+    const isTerminal = isTerminalFSMState(currentFSM);
+    const isEmpty = currentFSM === InputState.EMPTY_INPUT;
 
     debugLog.log('🧪 [useDebouncedFSMTrigger] Debounce Watcher');
     debugLog.log('   ↪️ Previous:', prevDebouncedInputRef.current);
     debugLog.log('   ↪️ Current:', debouncedHexInput);
     debugLog.log('   🔄 Input Changed:', inputChanged);
-    debugLog.log('   🧯 Current FSM State:', getInputStateString(inputStateRef.current));
+    debugLog.log('   🧯 Current FSM State:', getInputStateString(currentFSM));
     debugLog.log('   ☠️ Is Terminal:', isTerminal);
     debugLog.log('   💭 Is EMPTY_INPUT:', isEmpty);
     debugLog.log('   👤 Manual Entry Flag:', manualEntry);
@@ -51,12 +55,12 @@ export function useDebouncedFSMTrigger({ debouncedHexInput, manualEntry }: Props
     }
 
     if (!isTerminal) {
-      debugLog.log(`[FSM Trigger Blocked] 🚫 FSM state is not terminal. Current: ${getInputStateString(inputStateRef.current)}`);
+      debugLog.log(`[FSM Trigger Blocked] 🚫 FSM state is not terminal. Current: ${getInputStateString(currentFSM)}`);
       return;
     }
 
     debugLog.log('🔁 [FSM RESTART TRIGGERED] → VALIDATE_ADDRESS');
     setInputState(InputState.VALIDATE_ADDRESS);
     prevDebouncedInputRef.current = debouncedHexInput;
-  }, [debouncedHexInput, manualEntry]);
+  }, [debouncedHexInput]); // ✅ manualEntry removed from deps
 }

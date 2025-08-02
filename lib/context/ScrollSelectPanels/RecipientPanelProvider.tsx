@@ -10,7 +10,7 @@ import { usePanelContextBase } from './usePanelContextBase';
 export function RecipientPanelProvider({ children }: { children: React.ReactNode }) {
   const value = usePanelContextBase(
     FEED_TYPE.RECIPIENT_ACCOUNTS,
-    SP_COIN_DISPLAY.RECIPIENT_SELECT_CONTAINER,
+    SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
     'RecipientPanelProvider',
     process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true'
   );
