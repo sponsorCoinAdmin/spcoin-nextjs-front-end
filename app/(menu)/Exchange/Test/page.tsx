@@ -146,6 +146,19 @@ export default function TestPage() {
     return keys;
   };
 
+  const clearFSMTrace = () => {
+    console.log('🧹 Clear FSM Trace clicked');
+    const KEYS_TO_REMOVE = ['FSM_TRACE_LOG', 'latestFSMTrace'];
+    try {
+      KEYS_TO_REMOVE.forEach((key) => {
+        localStorage.removeItem(key);
+        console.log(`✅ Cleared localStorage key: "${key}"`);
+      });
+    } catch (err) {
+      console.error('❌ Error clearing FSM trace log keys:', err);
+    }
+  };
+
   const logContext = () => {
     console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
   };
@@ -172,8 +185,12 @@ export default function TestPage() {
             {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
           </button>
 
-          <button onClick={() => setShowFSMTracePanel((prev) => !prev)} className="px-4 py-2 text-sm font-medium text-orange-300 bg-[#382a1f] rounded hover:text-orange-500">
+          <button onClick={() => setShowFSMTracePanel((prev) => !prev)} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
             {showFSMTracePanel ? 'Close FSM Trace' : 'Open FSM Trace'}
+          </button>
+
+          <button onClick={() => clearFSMTrace()} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
+            Clear FSM Trace
           </button>
 
           <div className="flex flex-col space-y-2">

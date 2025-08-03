@@ -1,5 +1,3 @@
-// File: lib/hooks/inputValidations/helpers/useFSMExecutor.ts
-
 'use client';
 
 import { useRef, useEffect } from 'react';
@@ -15,7 +13,7 @@ import { validateFSMCore } from '../FSM_Core/validateFSMCore';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { isTriggerFSMState } from '../FSM_Core/fSMInputStates';
+import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 
 const debugLog = createDebugLogger('useFSMExecutor', true, false);
 
@@ -57,69 +55,78 @@ export function useFSMExecutor({
   const lastFSMInputRef = useRef('');
 
   const runFSM = async () => {
-    if (!isTriggerFSMState(inputState)) {
-      debugLog.warn(`⚠️ [DEV WARNING] runFSM() called with non-trigger state: ${getInputStateString(inputState)}`);
-      return;
-    }
-
     if (fsmIsRunningRef.current) {
-      debugLog.log('⏳ [FSM BUSY] → queueing new input');
+      debugLog.warn(
+        `🚫 [FSM TRIGGER BLOCKED] Already running. input="${debouncedHexInput}" state=${getInputStateString(inputState)}`
+      );
+      debugLog.log('⏳ [FSM BUSY] → queueing new input for retry after completion');
       queuedInputRef.current = debouncedHexInput;
       return;
     }
 
     fsmIsRunningRef.current = true;
-    debugLog.log(`🧵 [FSM START] state=${getInputStateString(inputState)} input="${debouncedHexInput}"`);
+    debugLog.log(`🧵 [FSM START] input="${debouncedHexInput}" starting at state=${getInputStateString(inputState)}`);
 
     try {
-      const result = await validateFSMCore({
-        inputState,
-        debouncedHexInput,
-        seenBrokenLogos: seenBrokenLogosRef.current,
-        containerType,
-        sellAddress,
-        buyAddress,
-        chainId,
-        publicClient,
-        accountAddress,
-        feedType,
-        validatedToken: token,
-        stateTrace: [inputState],
-        manualEntry,
-      });
+      let currentState = inputState;
 
-      dumpSharedPanelContext?.(`[AFTER FSM] nextState=${getInputStateString(result.nextState)}`);
+      while (!isTerminalFSMState(currentState)) {
+        const result = await validateFSMCore({
+          inputState: currentState,
+          debouncedHexInput,
+          seenBrokenLogos: seenBrokenLogosRef.current,
+          containerType,
+          sellAddress,
+          buyAddress,
+          chainId,
+          publicClient,
+          accountAddress,
+          feedType,
+          validatedToken: token,
+          stateTrace: [currentState],
+          manualEntry,
+        });
 
-      if (result.stateTrace?.length) {
-        debugLog.log(`📜 FSM State Trace:`);
-        result.stateTrace.forEach((s, idx) =>
-          debugLog.log(`  ${idx + 1}. ${getInputStateString(s)} (${s})`)
-        );
-        const summary = result.stateTrace.map((s) => getInputStateString(s)).join(' → ');
-        debugLog.log(`🧭 FSM Path: ${summary}`);
-      }
+        dumpSharedPanelContext?.(`[FSM STEP] ${getInputStateString(currentState)} → ${getInputStateString(result.nextState)}`);
 
-      if (result.nextState !== inputState) {
-        setInputState(result.nextState);
-      }
-
-      if (result.nextState === InputState.UPDATE_VALIDATED_ASSET) {
-        if (result.validatedToken) {
-          setValidatedToken(result.validatedToken);
-        } else if (result.validatedWallet) {
-          setValidatedWallet(result.validatedWallet);
+        if (!result || result.nextState === currentState) {
+          debugLog.warn(`🛑 FSM halted at ${getInputStateString(currentState)} → no transition or loop detected`);
+          break;
         }
+
+        if (result.stateTrace?.length) {
+          debugLog.log(`📜 FSM State Trace:`);
+          result.stateTrace.forEach((s, idx) =>
+            debugLog.log(`  ${idx + 1}. ${getInputStateString(s)} (${s})`)
+          );
+          const summary = result.stateTrace.map(getInputStateString).join(' → ');
+          debugLog.log(`🧭 FSM Path: ${summary}`);
+        }
+
+        // Apply intermediate state update for debug or UI
+        setInputState(result.nextState, 'useFSMExecutor loop');
+
+        // Save validated asset (only done at UPDATE_VALIDATED_ASSET)
+        if (result.nextState === InputState.UPDATE_VALIDATED_ASSET) {
+          if (result.validatedToken) {
+            setValidatedToken(result.validatedToken);
+          } else if (result.validatedWallet) {
+            setValidatedWallet(result.validatedWallet);
+          }
+        }
+
+        currentState = result.nextState;
       }
 
       prevDebouncedInputRef.current = debouncedHexInput;
       lastFSMInputRef.current = debouncedHexInput;
     } catch (err: any) {
-      debugLog.log('❌ [FSM ERROR]', {
+      debugLog.error('❌ [FSM ERROR]', {
         message: err?.message || 'Unknown error',
         name: err?.name,
         stack: err?.stack,
       });
-      debugLog.log(
+      debugLog.error(
         '🚨 [FSM ERROR CONTEXT]',
         stringifyBigInt({
           inputState: getInputStateString(inputState),
@@ -133,13 +140,13 @@ export function useFSMExecutor({
       );
     } finally {
       fsmIsRunningRef.current = false;
-      dumpSharedPanelContext?.(`[AFTER FSM UPDATE]`);
+      dumpSharedPanelContext?.(`[AFTER FSM COMPLETE]`);
 
       debugLog.log(`[FSM QUEUE CHECK] queued="${queuedInputRef.current}" prev="${prevDebouncedInputRef.current}"`);
 
       if (queuedInputRef.current && queuedInputRef.current !== prevDebouncedInputRef.current) {
         debugLog.log('🔁 Re-running FSM with queued input');
-        setInputState(InputState.VALIDATE_ADDRESS);
+        setInputState(InputState.VALIDATE_ADDRESS, 'useFSMExecutor queue');
         prevDebouncedInputRef.current = queuedInputRef.current;
         queuedInputRef.current = null;
       }
@@ -148,7 +155,7 @@ export function useFSMExecutor({
 
   useEffect(() => {
     if (!selectAddress?.trim() && inputState !== InputState.EMPTY_INPUT) {
-      setInputState(InputState.EMPTY_INPUT);
+      setInputState(InputState.EMPTY_INPUT, 'useFSMExecutor clear');
     }
   }, [selectAddress]);
 

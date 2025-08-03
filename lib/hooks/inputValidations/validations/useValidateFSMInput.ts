@@ -28,12 +28,13 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     inputState,
     setInputState,
     containerType,
-    validatedToken,
-    validatedWallet,
-    setValidatedToken = () => {},
-    setValidatedWallet = () => {},
+    validatedAsset,
+    setValidatedToken,
+    setValidatedWallet,
     manualEntry,
   } = useSharedPanelContext();
+
+  const validatedToken = validatedAsset; // Explicit alias for clarity
 
   const sellAddress = useSellTokenAddress();
   const buyAddress = useBuyTokenAddress();
@@ -48,15 +49,17 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
   }, [containerType]);
 
-  debugLog.log('🔁 useValidateFSMInput INIT', {
-    selectAddress,
-    debouncedHexInput,
-    initialInputState: getInputStateString(inputState),
-    manualEntry,
-  });
+  useEffect(() => {
+    debugLog.log('🔁 useValidateFSMInput INIT', {
+      selectAddress,
+      debouncedHexInput,
+      initialInputState: getInputStateString(inputState),
+      manualEntry,
+    });
+  }, []); // One-time log on mount
 
-  // Debounce FSM trigger (state read from context)
-  useDebouncedFSMTrigger({ debouncedHexInput, manualEntry });
+  // Debounce FSM trigger
+  useDebouncedFSMTrigger();
 
   // FSM Executor
   const { runFSM } = useFSMExecutor({
@@ -87,22 +90,28 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
   useEffect(() => {
     if (!selectAddress?.trim() && inputState !== InputState.EMPTY_INPUT) {
       debugLog.log('🧹 Resetting to EMPTY_INPUT (selectAddress is empty)');
-      setInputState(InputState.EMPTY_INPUT);
+      setInputState(InputState.EMPTY_INPUT, 'useValidateFSMInput');
     }
   }, [selectAddress, inputState, setInputState]);
 
-  const reportMissingLogoURL = useCallback(() => {
-    if (!debouncedHexInput) return;
-    if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
-      seenBrokenLogosRef.current.add(debouncedHexInput);
-      debugSetInputState(
-        `reportMissingLogoURL(${debouncedHexInput})`,
-        InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
-        inputState,
-        setInputState
-      );
-    }
-  }, [debouncedHexInput, inputState, setInputState]);
+const reportMissingLogoURL = useCallback(() => {
+  if (!debouncedHexInput) return;
+  if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
+    seenBrokenLogosRef.current.add(debouncedHexInput);
+
+    // 🛠️ Wrap your 2-arg setter into a single-arg adapter
+    const setInputStateSingleArg = (state: InputState) =>
+      setInputState(state, `reportMissingLogoURL(${debouncedHexInput})`);
+
+    debugSetInputState(
+      `reportMissingLogoURL(${debouncedHexInput})`,
+      InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
+      inputState,
+      setInputStateSingleArg // ✅ compatible with expected type
+    );
+  }
+}, [debouncedHexInput, inputState, setInputState]);
+
 
   const hasBrokenLogoURL = useCallback(() => {
     return seenBrokenLogosRef.current.has(debouncedHexInput);
@@ -112,7 +121,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     inputState,
     setInputState,
     validatedToken,
-    validatedWallet,
+    validatedWallet: undefined, // useSharedPanelContext may not expose this directly
     chainId,
     reportMissingLogoURL,
     hasBrokenLogoURL,

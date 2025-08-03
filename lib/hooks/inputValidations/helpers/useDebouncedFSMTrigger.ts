@@ -12,17 +12,18 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('useDebouncedFSMTrigger', DEBUG_ENABLED, LOG_TIME);
 
-interface Props {
-  debouncedHexInput: string;
-  manualEntry: boolean;
-}
+export function useDebouncedFSMTrigger() {
+  const {
+    inputState,
+    setInputState,
+    debouncedHexInput,
+    manualEntry,
+  } = useSharedPanelContext();
 
-export function useDebouncedFSMTrigger({ debouncedHexInput, manualEntry }: Props) {
-  const { inputState, setInputState } = useSharedPanelContext();
   const inputStateRef = useRef<InputState>(inputState);
   const prevDebouncedInputRef = useRef<string>('');
 
-  // 🔄 Keep FSM state ref in sync
+  // Keep FSM state ref in sync
   useEffect(() => {
     inputStateRef.current = inputState;
   }, [inputState]);
@@ -47,20 +48,13 @@ export function useDebouncedFSMTrigger({ debouncedHexInput, manualEntry }: Props
       return;
     }
 
-    if (isEmpty) {
-      debugLog.log('🔁 [FSM Triggered] EMPTY_INPUT + input changed → VALIDATE_ADDRESS');
-      setInputState(InputState.VALIDATE_ADDRESS);
-      prevDebouncedInputRef.current = debouncedHexInput;
-      return;
-    }
-
-    if (!isTerminal) {
-      debugLog.log(`[FSM Trigger Blocked] 🚫 FSM state is not terminal. Current: ${getInputStateString(currentFSM)}`);
+    if (!isTerminal && !isEmpty) {
+      debugLog.warn(`[FSM Trigger Blocked] 🚫 FSM is busy or mid-validation. State: ${getInputStateString(currentFSM)}`);
       return;
     }
 
     debugLog.log('🔁 [FSM RESTART TRIGGERED] → VALIDATE_ADDRESS');
-    setInputState(InputState.VALIDATE_ADDRESS);
+    setInputState(InputState.VALIDATE_ADDRESS, 'useDebouncedFSMTrigger');
     prevDebouncedInputRef.current = debouncedHexInput;
-  }, [debouncedHexInput]); // ✅ manualEntry removed from deps
+  }, [debouncedHexInput]); // manualEntry intentionally omitted
 }

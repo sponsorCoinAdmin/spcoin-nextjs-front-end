@@ -10,71 +10,53 @@ import {
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
+
 import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-/**
- * FSM state and control context
- */
-export interface FSMContextType {
+export interface SharedPanelContextType {
+  // FSM state and setters
   inputState: InputState;
-  setInputState: (state: InputState) => void;
+  setInputState: (state: InputState, source: string) => void;
   validatedAsset?: ValidatedAsset;
   setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
-  containerType: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE;
-  dumpFSMContext: (headerInfo?: string) => void;
-  /** 🆔 Unique instance ID for debugging */
-  instanceId?: string;
-}
 
-/**
- * Input feed state and control context
- */
-export interface FeedContextType {
+  // Manual entry toggle
+  manualEntry: boolean;
+  setManualEntry: (manual: boolean) => void;
+
+  // Final validated token or wallet
+  setValidatedToken: (token?: TokenContract) => void;
+  setValidatedWallet: (wallet?: WalletAccount) => void;
+
+  // Dump tools
+  dumpFSMContext: (header?: string) => void;
+  dumpSharedPanelContext: (header?: string) => void;
+
+  // Hex input + state
   validHexInput: string;
   debouncedHexInput: string;
   failedHexInput?: string;
-  isValid: boolean;
-  handleHexInputChange: (raw: string) => boolean;
-  resetHexInput: () => void;
   failedHexCount: number;
-  isValidHexString: (raw: string) => boolean;
-  dumpInputFeedContext: (headerInfo?: string) => void;
+  isValid: boolean;
+  isValidHexString: (input: string) => boolean; // ✅ fixed: now correctly typed as a function
+  handleHexInputChange: (raw: string, isManual?: boolean) => boolean;
+  resetHexInput: () => void;
+  dumpInputFeedContext: (header?: string) => void;
+
+  // Identity and callbacks
+  containerType: SP_COIN_DISPLAY;
+  feedType: FEED_TYPE;
+  closeCallback: () => void;
+  setTradingTokenCallback: (token: TokenContract) => void;
+  instanceId?: string;
 }
-
-/**
- * Combined shared panel context
- */
-export type SharedPanelContextType = FSMContextType &
-  FeedContextType & {
-    dumpSharedPanelContext: (headerInfo?: string) => void;
-    forceReset?: () => void;
-    forceClose?: () => void;
-
-    /** ✅ Required callbacks from MainTradingPanel */
-    closeCallback: () => void;
-    setTradingTokenCallback: (token: TokenContract) => void;
-
-    /** ✅ Split validated asset fields */
-    validatedToken?: TokenContract;
-    validatedWallet?: WalletAccount;
-    setValidatedToken: (token: TokenContract | undefined) => void;
-    setValidatedWallet: (wallet: WalletAccount | undefined) => void;
-
-    /** ✅ Manual entry tracking */
-    manualEntry: boolean;
-    setManualEntry: (val: boolean) => void;
-  };
 
 export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
 
-/**
- * Hook to safely consume SharedPanelContext
- */
-export const useSharedPanelContext = (): SharedPanelContextType => {
-  const ctx = useContext(SharedPanelContext);
-  if (!ctx) {
-    throw new Error('❌ useSharedPanelContext must be used within a SharedPanelProvider');
+export function useSharedPanelContext(): SharedPanelContextType {
+  const context = useContext(SharedPanelContext);
+  if (!context) {
+    throw new Error('useSharedPanelContext must be used within a SharedPanelProvider');
   }
-  return ctx;
-};
+  return context;
+}
