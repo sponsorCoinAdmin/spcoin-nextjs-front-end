@@ -14,6 +14,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
+import { ValidateFSMOutput } from '../FSM_Core/types/validateFSMTypes';
 
 const debugLog = createDebugLogger('useFSMExecutor', true, false);
 
@@ -69,9 +70,10 @@ export function useFSMExecutor({
 
     try {
       let currentState = inputState;
+      let result: ValidateFSMOutput|undefined;
 
       while (!isTerminalFSMState(currentState)) {
-        const result = await validateFSMCore({
+        result = await validateFSMCore({
           inputState: currentState,
           debouncedHexInput,
           seenBrokenLogos: seenBrokenLogosRef.current,
@@ -103,9 +105,13 @@ export function useFSMExecutor({
           debugLog.log(`🧭 FSM Path: ${summary}`);
         }
 
-        // Apply intermediate state update for debug or UI
+         currentState = result.nextState;
+      }
+      
+      // alert(`currentState=${getInputStateString(currentState)} result=${JSON.stringify(result)}`)
+      if (result) {
+               // Apply intermediate state update for debug or UI
         setInputState(result.nextState, 'useFSMExecutor loop');
-
         // Save validated asset (only done at UPDATE_VALIDATED_ASSET)
         if (result.nextState === InputState.UPDATE_VALIDATED_ASSET) {
           if (result.validatedToken) {
@@ -114,8 +120,6 @@ export function useFSMExecutor({
             setValidatedWallet(result.validatedWallet);
           }
         }
-
-        currentState = result.nextState;
       }
 
       prevDebouncedInputRef.current = debouncedHexInput;

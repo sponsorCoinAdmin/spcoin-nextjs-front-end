@@ -12,12 +12,10 @@ import { validateExistsLocally } from './tests/validateExistsLocally';
 import { validateResolvedAsset } from './tests/validateResolvedAsset';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { isValidFSMTransition } from './utils/transitionGuards';
-import { isTerminalFSMState } from './fSMInputStates'; // ✅ Import terminal state guard
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
-const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('validateFSMCore', true, LOG_TIME);
 
 const FSM_TEST_FLAGS = {
   TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'false',
@@ -55,29 +53,14 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
 
   debugLog.log(`🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${debouncedHexInput}"`);
 
-  // ✅ Exit early if FSM is in a terminal state
-  if (isTerminalFSMState(inputState)) {
-    debugLog.warn(`⛔ Terminal state reached: ${InputState[inputState]} — FSM halting until new user input`);
-    return {
-      nextState: inputState,
-      humanTraceSummary: InputState[inputState],
-      stateTrace: [inputState],
-      errorMessage: undefined,
-      validatedToken: input.validatedToken,
-      validatedWallet: input.validatedWallet,
-    };
-  }
-
   let result: ValidateFSMOutput;
 
-  alert(`✅ ENTERING STATE: ${InputState[inputState]}`);
   switch (inputState) {
     case InputState.VALIDATE_ADDRESS:
       debugLog.log(`🔍 VALIDATE_ADDRESS → running ${FSM_TEST_FLAGS.TEST_VALID_ADDRESS ? 'validateAddress' : '→ TEST_DUPLICATE_INPUT'}`);
       result = FSM_TEST_FLAGS.TEST_VALID_ADDRESS
         ? validateAddress(input)
         : { nextState: InputState.TEST_DUPLICATE_INPUT };
-      alert(`✅ VALIDATE_ADDRESS: ${InputState[inputState]} → ${InputState[result.nextState]}`);
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
@@ -85,13 +68,19 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       result = FSM_TEST_FLAGS.TEST_DUPLICATE_INPUT
         ? validateDuplicate(input)
         : { nextState: InputState.VALIDATE_PREVIEW };
-      alert(`✅ TEST_DUPLICATE_INPUT: ${InputState[inputState]} → ${InputState[result.nextState]}`);
+
+      if (!result?.nextState) {
+        console.warn('❌ [FSM ERROR] validateDuplicate() did not return a valid FSM result object');
+        result = {
+          nextState: InputState.VALIDATE_ADDRESS,
+          errorMessage: 'Internal error: Missing nextState in TEST_DUPLICATE_INPUT',
+        };
+      }
       break;
 
     case InputState.VALIDATE_PREVIEW:
       console.log('🧪 VALIDATE_PREVIEW → → PREVIEW_ADDRESS');
       result = { nextState: InputState.PREVIEW_ADDRESS };
-      alert(`✅ VALIDATE_PREVIEW: ${InputState[inputState]} → ${InputState[result.nextState]}`);
       break;
 
     case InputState.PREVIEW_ADDRESS:
@@ -99,7 +88,6 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       result = FSM_TEST_FLAGS.TEST_PREVIEW_ADDRESS
         ? previewAsset(input)
         : { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
-      alert(`✅ PREVIEW_ADDRESS: ${InputState[inputState]} → ${InputState[result.nextState]}`);
       break;
 
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
@@ -107,7 +95,6 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       result = FSM_TEST_FLAGS.TEST_CONTRACT_EXISTS_LOCALLY
         ? validateExistsLocally(input)
         : { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
-      alert(`✅ PREVIEW_CONTRACT_EXISTS_LOCALLY: ${InputState[inputState]} → ${InputState[result.nextState]}`);
       break;
 
     case InputState.VALIDATE_EXISTS_ON_CHAIN:
@@ -115,7 +102,6 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       result = FSM_TEST_FLAGS.TEST_EXISTS_ON_CHAIN
         ? await validateExistsOnChain(input)
         : { nextState: InputState.RESOLVE_ASSET };
-      alert(`✅ VALIDATE_EXISTS_ON_CHAIN: ${InputState[inputState]} → ${InputState[result.nextState]}`);
       break;
 
     case InputState.RESOLVE_ASSET:
@@ -131,17 +117,12 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       break;
 
     default:
-      debugLog.error(`🚨 Unhandled FSM state: ${InputState[inputState]}`);
+      debugLog.warn(`🚨 Unhandled FSM state: ${InputState[inputState]}`);
       result = {
         nextState: inputState,
         errorMessage: 'Unhandled input state',
       };
       break;
-  }
-
-  if (!isValidFSMTransition(inputState, result.nextState)) {
-    console.warn(`🚫 Invalid FSM Transition: ${InputState[inputState]} → ${InputState[result.nextState]}`);
-    result.errorMessage = `[FSM ERROR] Invalid transition from ${InputState[inputState]} to ${InputState[result.nextState]}`;
   }
 
   if (typeof window !== 'undefined') {

@@ -117,77 +117,79 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                 : (wallets.length === 0
                   ? renderEmptyState('No accounts available.')
                   : wallets.map((wallet) => (
-                      <div
-                        key={wallet.address}
-                        className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                        onClick={() => {
-                          debugLog.log(`🟢 Account clicked: ${wallet.name} → ${wallet.address}`);
-                          setManualEntry(false);
-                          const result = handleHexInputChange(wallet.address);
-                          debugLog.log(`🛠️ handleHexInputChange returned:`, result);
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <img className="h-8 w-8 object-contain rounded-full" src={wallet.logoURL || defaultMissingImage} alt={`${wallet.name} logo`} />
-                          <div>
-                            <div className="font-semibold">{wallet.name}</div>
-                            <div className="text-sm text-gray-400">{wallet.symbol}</div>
-                          </div>
-                        </div>
-                        <div
-                          className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
-                          }}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            alert(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`);
-                          }}
-                        >
-                          <Image src={info_png} alt="Info" width={20} height={20} />
-                        </div>
-                      </div>
-                    ))
-                )
-              )
-              : (logoTokenList.length === 0
-                ? renderEmptyState('No tokens available.')
-                : logoTokenList.map((token) => (
                     <div
-                      key={token.address}
+                      key={wallet.address}
                       className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
                       onClick={() => {
-                        debugLog.log(`🟢 Token clicked: ${token.name} → ${token.address}`);
+                        debugLog.log(`🟢 Account clicked: ${wallet.name} → ${wallet.address}`);
+                        alert(`DataListSelest Wallet.address:${wallet.address} → Setting manualEntry to false`)
                         setManualEntry(false);
-                        const result = handleHexInputChange(token.address);
+                        const result = handleHexInputChange(wallet.address);
                         debugLog.log(`🛠️ handleHexInputChange returned:`, result);
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <img className="h-8 w-8 object-contain rounded-full" src={token.logoURL || defaultMissingImage} alt={`${token.name} logo`} />
+                        <img className="h-8 w-8 object-contain rounded-full" src={wallet.logoURL || defaultMissingImage} alt={`${wallet.name} logo`} />
                         <div>
-                          <div className="font-semibold">{token.name}</div>
-                          <div className="text-sm text-gray-400">{token.symbol}</div>
+                          <div className="font-semibold">{wallet.name}</div>
+                          <div className="text-sm text-gray-400">{wallet.symbol}</div>
                         </div>
                       </div>
                       <div
                         className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
                         onClick={(e) => {
                           e.stopPropagation();
-                          alert(`${token.name} Address: ${stringifyBigInt(token)}`);
+                          alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          alert(`${token.name} Record: ${token.logoURL}`);
+                          alert(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`);
                         }}
                       >
                         <Image src={info_png} alt="Info" width={20} height={20} />
                       </div>
                     </div>
                   ))
+                )
+              )
+              : (logoTokenList.length === 0
+                ? renderEmptyState('No tokens available.')
+                : logoTokenList.map((token) => (
+                  <div
+                    key={token.address}
+                    className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
+                    onClick={() => {
+                      debugLog.log(`🟢 Token clicked: ${token.name} → ${token.address}`);
+                      // alert(`DataListSelest Token.address:${token.address} → Setting manualEntry to false`)
+                      setManualEntry(false);
+                      const result = handleHexInputChange(token.address);
+                      debugLog.log(`🛠️ handleHexInputChange returned:`, result);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img className="h-8 w-8 object-contain rounded-full" src={token.logoURL || defaultMissingImage} alt={`${token.name} logo`} />
+                      <div>
+                        <div className="font-semibold">{token.name}</div>
+                        <div className="text-sm text-gray-400">{token.symbol}</div>
+                      </div>
+                    </div>
+                    <div
+                      className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`${token.name} Address: ${stringifyBigInt(token)}`);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert(`${token.name} Record: ${token.logoURL}`);
+                      }}
+                    >
+                      <Image src={info_png} alt="Info" width={20} height={20} />
+                    </div>
+                  </div>
+                ))
               )
             }
           </div>

@@ -29,10 +29,10 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     setInputState,
     containerType,
     validatedAsset,
-    setValidatedToken,
-    setValidatedWallet,
     manualEntry,
   } = useSharedPanelContext();
+
+  alert(`useValidateFSMInput(selectAddress: ${selectAddress}) containerType: ${containerType} validatedAsset: ${validatedAsset} manualEntry: ${manualEntry}`);
 
   const validatedToken = validatedAsset; // Explicit alias for clarity
 

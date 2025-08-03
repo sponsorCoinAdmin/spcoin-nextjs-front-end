@@ -6,7 +6,6 @@ import AddressSelect from '@/components/views/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -21,7 +20,6 @@ export default function AssetSelectPanel() {
   } = useSharedPanelContext();
 
   // 🧠 Trigger FSM validation now that we're within SharedPanelProvider
-  useValidateFSMInput(debouncedHexInput);
 
   debugLog.log(`🆔 AssetSelectPanel using instanceId: ${instanceId}`);
 
