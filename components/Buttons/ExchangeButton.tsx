@@ -1,5 +1,4 @@
 'use client'
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import styles from '@/styles/Exchange.module.css';
 import {
@@ -144,37 +143,37 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
 
     switch (currentType) {
       case BUTTON_TYPE.TOKENS_REQUIRED:
-        JUNK_ALERTS('Select Buy/Sell Tokens\nFrom The Drop Down Token List');
+        alert('Select Buy/Sell Tokens\nFrom The Drop Down Token List');
         break;
       case BUTTON_TYPE.API_TRANSACTION_ERROR:
-        JUNK_ALERTS(errorMessage?.msg);
+        alert(errorMessage?.msg);
         break;
       case BUTTON_TYPE.ZERO_AMOUNT:
-        JUNK_ALERTS('Enter An Amount');
+        alert('Enter An Amount');
         break;
       case BUTTON_TYPE.INSUFFICIENT_BALANCE:
-        JUNK_ALERTS('Insufficient Sell Balance');
+        alert('Insufficient Sell Balance');
         break;
       case BUTTON_TYPE.NO_HARDHAT_API:
-        JUNK_ALERTS('No HardHat API Provisioning');
+        alert('No HardHat API Provisioning');
         break;
       case BUTTON_TYPE.SWAP:
         await validateAndSwap();
         break;
       case BUTTON_TYPE.SELL_TOKEN_REQUIRED:
-        JUNK_ALERTS('Please select Token to Sell (Required)');
+        alert('Please select Token to Sell (Required)');
         break;
       case BUTTON_TYPE.BUY_TOKEN_REQUIRED:
-        JUNK_ALERTS('Please select Token to Buy (Required)');
+        alert('Please select Token to Buy (Required)');
         break;
       case BUTTON_TYPE.SELL_ERROR_REQUIRED:
-        JUNK_ALERTS('Select Sell Tokens\nFrom The Drop Down Token List');
+        alert('Select Sell Tokens\nFrom The Drop Down Token List');
         break;
       case BUTTON_TYPE.BUY_ERROR_REQUIRED:
-        JUNK_ALERTS('Select Buy Tokens\nFrom The Drop Down Token List');
+        alert('Select Buy Tokens\nFrom The Drop Down Token List');
         break;
       default:
-        JUNK_ALERTS('Button Type Undefined');
+        alert('Button Type Undefined');
         break;
     }
   };
