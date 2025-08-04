@@ -1,6 +1,6 @@
 'use client';
-
 import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
+
 import React, { useState, useEffect } from 'react';
 
 export default function ManageAccountsPage() {

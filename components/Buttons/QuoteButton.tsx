@@ -1,6 +1,7 @@
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
+
 import React from 'react';
 import styles from '@/styles/Exchange.module.css'
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 type Props = {
     sendTransaction:any;

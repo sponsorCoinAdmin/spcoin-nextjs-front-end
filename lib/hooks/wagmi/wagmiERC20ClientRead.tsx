@@ -1,5 +1,4 @@
 'use client'
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
@@ -97,7 +96,7 @@ const useWagmiERC20TokenBalanceOf = (connectedAccountAddr: Address | undefined, 
 }
 
 const useWagmiERC20TokenBalanceOfStr = (connectedAccountAddr: Address | undefined, contractAddress: Address |  undefined) => {
-  // JUNK_ALERTS("useWagmiERC20TokenBalanceOfStr: connectedAccountAddr = "+connectedAccountAddr+", contractAddress = "+contractAddress)
+  // alert("useWagmiERC20TokenBalanceOfStr: connectedAccountAddr = "+connectedAccountAddr+", contractAddress = "+contractAddress)
   const bigIntBalanceOf:bigint | undefined = useWagmiERC20TokenBalanceOf(connectedAccountAddr, contractAddress);
   return bigIntBalanceOf ? bigIntBalanceOf.toString() : "0";
 }
@@ -177,7 +176,7 @@ const useFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
 
 //   useEffect(() => {
 //     if(balanceOf && decimals) {
-//       // JUNK_ALERTS(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
+//       // alert(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
 //       setFormattedDecimals(formatDecimals(balanceOf, decimals));
 //     }
 //   }, [balanceOf, decimals])

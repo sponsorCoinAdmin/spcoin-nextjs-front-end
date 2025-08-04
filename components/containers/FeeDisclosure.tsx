@@ -1,5 +1,5 @@
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 // File components/containers/FeeDisclosure.tsx
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
  
 import React from 'react';
 import Image from 'next/image';

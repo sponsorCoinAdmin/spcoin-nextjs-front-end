@@ -1,5 +1,4 @@
 // File: lib/hooks/inputValidations/tests/validateDuplicate.ts
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
 import { isDuplicateInput } from '../../validations/isDuplicateInput';
@@ -8,7 +7,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
-const debugLog = createDebugLogger('validateDuplicate', true, LOG_TIME);
+const debugLog = createDebugLogger('validateDuplicate', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * FSM Test: Detects if the user is selecting a duplicate token (same as sell or buy).

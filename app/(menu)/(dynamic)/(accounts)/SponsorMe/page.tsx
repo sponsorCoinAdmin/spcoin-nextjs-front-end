@@ -1,8 +1,8 @@
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 interface RecipientFormData {
   email: string;

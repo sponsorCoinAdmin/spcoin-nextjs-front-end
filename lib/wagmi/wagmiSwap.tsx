@@ -1,5 +1,4 @@
 'use client'
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useBalance, useChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
@@ -176,7 +175,7 @@ const useFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
 
 //   useEffect(() => {
 //     if(balanceOf && decimals) {
-//       // JUNK_ALERTS(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
+//       // alert(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
 //       setFormattedDecimals(formatDecimals(balanceOf, decimals));
 //     }
 //   }, [balanceOf, decimals])

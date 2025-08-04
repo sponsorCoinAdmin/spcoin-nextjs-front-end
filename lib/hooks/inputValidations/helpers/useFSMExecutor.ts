@@ -1,5 +1,4 @@
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useRef, useEffect } from 'react';
 import { Address } from 'viem';
@@ -109,7 +108,7 @@ export function useFSMExecutor({
          currentState = result.nextState;
       }
       
-      // JUNK_ALERTS(`currentState=${getInputStateString(currentState)} result=${JSON.stringify(result)}`)
+      // alert(`currentState=${getInputStateString(currentState)} result=${JSON.stringify(result)}`)
       if (result) {
                // Apply intermediate state update for debug or UI
         setInputState(result.nextState, 'useFSMExecutor loop');

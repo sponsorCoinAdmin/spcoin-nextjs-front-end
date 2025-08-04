@@ -1,5 +1,5 @@
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 // File: lib/hooks/inputValidations/helpers/debugSetInputState.ts
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { InputState, getInputStateString } from '@/lib/structure';
 import { debugLog } from './debugLogInstance';
