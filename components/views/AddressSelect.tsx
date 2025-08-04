@@ -1,6 +1,5 @@
 // File: components/shared/AddressSelect.tsx
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, { useEffect } from 'react';
 import HexAddressInput from '@/components/shared/utils/HexAddressInput';
@@ -16,7 +15,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true
 const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
 
 debugLog.log('✅ [AddressSelect] component file loaded');
-JUNK_ALERTS('✅ [AddressSelect] component file loaded');
+// NOTE: this alert will not compile in production mode, not sure why.
+// alert('✅ [AddressSelect] component file loaded');
 
 export default function AddressSelect() {
   const {
