@@ -17,8 +17,8 @@ export default function AssetSelectPanel() {
     feedType,
     debouncedHexInput,
   } = useSharedPanelContext();
-debugLog.log('✅ [AssetSelectPanel] component file loaded');
-alert('✅ [AssetSelectPanel] component file loaded');
+  debugLog.log('✅ [AssetSelectPanel] component file loaded');
+  // alert('✅ [AssetSelectPanel] component file loaded');
   // 🧠 Trigger FSM validation now that we're within SharedPanelProvider
 
   debugLog.log(`🆔 AssetSelectPanel using instanceId: ${instanceId}`);

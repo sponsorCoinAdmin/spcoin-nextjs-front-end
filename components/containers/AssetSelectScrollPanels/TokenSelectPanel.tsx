@@ -40,7 +40,7 @@ export default function TokenSelectPanel({
   if (!isActive) return null;
 
   debugLog.log(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
-  alert(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
+  // alert(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
 
   return (
     <SharedPanelProvider

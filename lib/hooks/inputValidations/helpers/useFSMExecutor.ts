@@ -1,3 +1,5 @@
+// File: lib/hooks/inputValidations/helpers/useFSMExecutor.ts
+
 'use client';
 
 import { useRef, useEffect } from 'react';
@@ -15,6 +17,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { ValidateFSMOutput } from '../FSM_Core/types/validateFSMTypes';
+import { displayStateTransitions } from '@/components/debug/FSMTracePanel';
 
 const debugLog = createDebugLogger('useFSMExecutor', true, false);
 
@@ -27,6 +30,8 @@ interface FSMContextOverrides {
   seenBrokenLogosRef: React.MutableRefObject<Set<string>>;
   token?: TokenContract;
 }
+
+let fsmInstanceCounter = 0;
 
 export function useFSMExecutor({
   sellAddress,
@@ -66,11 +71,38 @@ export function useFSMExecutor({
     }
 
     fsmIsRunningRef.current = true;
-    debugLog.log(`🧵 [FSM START] input="${debouncedHexInput}" starting at state=${getInputStateString(inputState)}`);
+    const fsmInstanceId = ++fsmInstanceCounter;
+
+    debugLog.log(`🧵 [FSM START] instance=${fsmInstanceId} input="${debouncedHexInput}" starting at state=${getInputStateString(inputState)}`);
+
+    const stateTrace: number[] = [];
+
+    const summary = `
+⚙️ FSM Input Debug:
+───────────────────────────────
+inputState:    ${getInputStateString(inputState)} (${inputState})
+feedType:      ${feedType}
+containerType: ${containerType}
+debouncedHex:  ${debouncedHexInput}
+sellAddress:   ${sellAddress || 'none'}
+buyAddress:    ${buyAddress || 'none'}
+chainId:       ${chainId}
+accountAddr:   ${accountAddress || 'none'}
+validatedTok:  ${token?.symbol || 'none'}
+manualEntry:   ${manualEntry === true ? 'true' : 'false'}
+───────────────────────────────
+`.trim();
+
+    console.log(summary);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('latestFSMHeader', summary);
+      (window as any).__FSM_HEADER__ = summary;
+    }
 
     try {
       let currentState = inputState;
-      let result: ValidateFSMOutput|undefined;
+      let result: ValidateFSMOutput | undefined;
 
       while (!isTerminalFSMState(currentState)) {
         result = await validateFSMCore({
@@ -85,34 +117,49 @@ export function useFSMExecutor({
           accountAddress,
           feedType,
           validatedToken: token,
-          stateTrace: [currentState],
+          stateTrace: [...stateTrace],
           manualEntry,
         });
 
-        dumpSharedPanelContext?.(`[FSM STEP] ${getInputStateString(currentState)} → ${getInputStateString(result.nextState)}`);
+        stateTrace.push(currentState, result.nextState);
+
+        const prevStateStr = getInputStateString(currentState);
+        const nextStateStr = getInputStateString(result.nextState);
+
+        const transitionMsg = `[FSM instance: ${fsmInstanceId}] ${prevStateStr}(${currentState}) → ${nextStateStr}[${result.nextState}]`;
+
+        console.log(transitionMsg);
+
+        if (dumpSharedPanelContext && result.nextState !== currentState) {
+          dumpSharedPanelContext(`[FSM STEP] ${prevStateStr} → ${nextStateStr}`);
+        }
 
         if (!result || result.nextState === currentState) {
-          debugLog.warn(`🛑 FSM halted at ${getInputStateString(currentState)} → no transition or loop detected`);
+          debugLog.warn(`🚸 FSM halted at ${prevStateStr} → no transition or loop detected`);
           break;
         }
 
-        if (result.stateTrace?.length) {
-          debugLog.log(`📜 FSM State Trace:`);
-          result.stateTrace.forEach((s, idx) =>
-            debugLog.log(`  ${idx + 1}. ${getInputStateString(s)} (${s})`)
-          );
-          const summary = result.stateTrace.map(getInputStateString).join(' → ');
-          debugLog.log(`🧭 FSM Path: ${summary}`);
-        }
-
-         currentState = result.nextState;
+        setInputState(result.nextState, `runFSM [instance: ${fsmInstanceId}]`);
+        currentState = result.nextState;
       }
-      
-      // alert(`currentState=${getInputStateString(currentState)} result=${JSON.stringify(result)}`)
+
+      const traceSummary = stateTrace.map(getInputStateString).join(' → ');
+      debugLog.log(`📊 FSM Trace Summary: ${traceSummary}`);
+
+      const fsmTraceOutput = displayStateTransitions(stateTrace);
+      console.log(fsmTraceOutput);
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('latestFSMTraceLines', fsmTraceOutput);
+        (window as any).__FSM_TRACE_LINES__ = fsmTraceOutput;
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('latestFSMTrace', JSON.stringify(stateTrace));
+        (window as any).__FSM_TRACE__ = stateTrace;
+      }
+
       if (result) {
-               // Apply intermediate state update for debug or UI
-        setInputState(result.nextState, 'useFSMExecutor loop');
-        // Save validated asset (only done at UPDATE_VALIDATED_ASSET)
         if (result.nextState === InputState.UPDATE_VALIDATED_ASSET) {
           if (result.validatedToken) {
             setValidatedToken(result.validatedToken);
@@ -148,7 +195,10 @@ export function useFSMExecutor({
 
       debugLog.log(`[FSM QUEUE CHECK] queued="${queuedInputRef.current}" prev="${prevDebouncedInputRef.current}"`);
 
-      if (queuedInputRef.current && queuedInputRef.current !== prevDebouncedInputRef.current) {
+      if (
+        queuedInputRef.current &&
+        queuedInputRef.current !== prevDebouncedInputRef.current
+      ) {
         debugLog.log('🔁 Re-running FSM with queued input');
         setInputState(InputState.VALIDATE_ADDRESS, 'useFSMExecutor queue');
         prevDebouncedInputRef.current = queuedInputRef.current;

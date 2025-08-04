@@ -1,5 +1,4 @@
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -43,7 +42,7 @@ export default function CreateRecipientAccountPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    JUNK_ALERTS('Recipient account created successfully');
+    alert('Recipient account created successfully');
     router.push('/');
   };
 

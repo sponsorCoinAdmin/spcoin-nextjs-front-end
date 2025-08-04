@@ -1,6 +1,6 @@
 // File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
 
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { InputState } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from './types/validateFSMTypes';
 
@@ -15,7 +15,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
-const debugLog = createDebugLogger('validateFSMCore', true, LOG_TIME);
+const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED, LOG_TIME);
 
 const FSM_TEST_FLAGS = {
   TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'false',
@@ -30,26 +30,7 @@ const FSM_TEST_FLAGS = {
 debugLog.log(JSON.stringify(FSM_TEST_FLAGS));
 
 export async function validateFSMCore(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
-  const { inputState, debouncedHexInput, manualEntry } = input;
-
-  const summary = `
-⚙️ FSM Input Debug:
-─────────────────────────────
-inputState:    ${InputState[input.inputState]} (${input.inputState})
-feedType:      ${FEED_TYPE[input.feedType]} (${input.feedType})
-containerType: ${SP_COIN_DISPLAY[input.containerType]} (${input.containerType})
-debouncedHex:  ${input.debouncedHexInput}
-sellAddress:   ${input.sellAddress || 'none'}
-buyAddress:    ${input.buyAddress || 'none'}
-chainId:       ${input.chainId}
-accountAddr:   ${input.accountAddress || 'none'}
-validatedTok:  ${input.validatedToken?.symbol || 'none'}
-validatedWal:  ${input.validatedWallet?.name || 'none'}
-manualEntry:   ${manualEntry === true ? 'true' : 'false'}
-─────────────────────────────
-`.trim();
-
-  console.log(summary);
+  const { inputState, debouncedHexInput } = input;
 
   debugLog.log(`🛠 ENTRY → inputState: ${InputState[inputState]}, debouncedHexInput: "${debouncedHexInput}"`);
 
@@ -79,7 +60,6 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       break;
 
     case InputState.VALIDATE_PREVIEW:
-      console.log('🧪 VALIDATE_PREVIEW → → PREVIEW_ADDRESS');
       result = { nextState: InputState.PREVIEW_ADDRESS };
       break;
 
@@ -125,22 +105,8 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       break;
   }
 
-  if (typeof window !== 'undefined') {
-    const prevTrace: number[] = JSON.parse(localStorage.getItem('latestFSMTrace') || '[]');
-    const newTrace = [...prevTrace, inputState, result.nextState];
-
-    localStorage.setItem('latestFSMTrace', JSON.stringify(newTrace));
-    localStorage.setItem('latestFSMHeader', summary);
-
-    (window as any).__FSM_TRACE__ = newTrace;
-    (window as any).__FSM_HEADER__ = summary;
-
-    result.stateTrace = newTrace;
-    result.humanTraceSummary = newTrace.map((s) => InputState[s]).join(' → ');
-  } else {
-    result.stateTrace = [...(input.stateTrace ?? []), inputState, result.nextState];
-    result.humanTraceSummary = result.stateTrace.map((s) => InputState[s]).join(' → ');
-  }
+  result.stateTrace = [...(input.stateTrace ?? []), inputState, result.nextState];
+  result.humanTraceSummary = result.stateTrace.map((s) => InputState[s]).join(' → ');
 
   debugLog.log(`📊 FSM Trace: ${result.humanTraceSummary}`);
   debugLog.log(

@@ -1,8 +1,7 @@
 // File: components/containers/TokenSelectDropDown.tsx
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 
@@ -32,6 +31,17 @@ interface Props {
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
+  const instanceId = useMemo(() => crypto.randomUUID(), []);
+
+  useEffect(() => {
+    console.log(`🆕 Mounted TokenSelectDropDown → instanceId=${instanceId} containerType=${SP_COIN_DISPLAY[containerType]}`);
+    // alert(`🆕 Mounted TokenSelectDropDown → instanceId=${instanceId} containerType=${SP_COIN_DISPLAY[containerType]}`);
+    return () => {
+      console.log(`🧹 Unmounted TokenSelectDropDown → instanceId=${instanceId} containerType=${SP_COIN_DISPLAY[containerType]}`);
+      // alert(`🧹 Unmounted TokenSelectDropDown → instanceId=${instanceId} containerType=${SP_COIN_DISPLAY[containerType]}`);
+    };
+  }, [instanceId, containerType]);
+
   const sellHook = useSellTokenContract();
   const buyHook = useBuyTokenContract();
 
@@ -75,7 +85,7 @@ function TokenSelectDropDown({ containerType }: Props) {
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name} logo`}
             src={logoSrc}
-            onClick={() => JUNK_ALERTS(stringifyBigInt(tokenContract))}
+            onClick={() => alert(stringifyBigInt(tokenContract))}
             onError={handleMissingLogoURL}
           />
           {tokenContract.symbol}

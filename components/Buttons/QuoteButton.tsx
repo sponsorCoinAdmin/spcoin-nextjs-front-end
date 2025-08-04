@@ -1,5 +1,3 @@
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
-
 import React from 'react';
 import styles from '@/styles/Exchange.module.css'
 
@@ -17,7 +15,7 @@ const PlaceOrder = ({
         console.log(`placing order transaction sendTransaction = ${sendTransaction}`);
         if (sendTransaction) {
             let receipt = await sendTransaction();
-            JUNK_ALERTS("Transaction receipt : " + receipt)
+            alert("Transaction receipt : " + receipt)
         }
     }
 
