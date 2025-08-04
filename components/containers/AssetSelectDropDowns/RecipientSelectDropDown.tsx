@@ -1,6 +1,5 @@
 // File: components/containers/RecipientSelectDropDown.tsx
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, { useState, useCallback, useRef } from 'react';
 import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
@@ -61,7 +60,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
             src={logoSrc}
             onClick={(e) => {
               e.stopPropagation();
-              JUNK_ALERTS(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`);
+              alert(`Recipient Data: ${JSON.stringify(recipientAccount, null, 2)}`);
             }}
             onError={handleLogoError}
           />

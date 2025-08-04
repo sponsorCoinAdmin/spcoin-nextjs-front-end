@@ -1,6 +1,5 @@
 // File: components/containers/AssetSelectPanels/TokenSelectPanel.tsx
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useEffect } from 'react';
 import {
@@ -41,7 +40,7 @@ export default function TokenSelectPanel({
   if (!isActive) return null;
 
   debugLog.log(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
-  JUNK_ALERTS(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
+  alert(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
 
   return (
     <SharedPanelProvider

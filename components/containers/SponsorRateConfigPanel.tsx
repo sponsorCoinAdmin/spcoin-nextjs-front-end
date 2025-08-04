@@ -1,5 +1,4 @@
 'use client';
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React from 'react';
 import styles from '@/styles/Exchange.module.css';
@@ -39,7 +38,7 @@ const SponsorRateConfigPanel = () => {
           width={18}
           height={18}
           alt="Info Image"
-          onClick={() => JUNK_ALERTS("rateInfo")}
+          onClick={() => alert("rateInfo")}
         />
         <div className={`${styles.assetSelect} ${styles.sponsorRatio}`}>
           Sponsor:
