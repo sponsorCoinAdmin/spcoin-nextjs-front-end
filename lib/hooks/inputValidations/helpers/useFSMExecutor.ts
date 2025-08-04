@@ -105,6 +105,9 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       let result: ValidateFSMOutput | undefined;
 
       while (!isTerminalFSMState(currentState)) {
+        // 👇 Push only the current state
+        stateTrace.push(currentState);
+
         result = await validateFSMCore({
           inputState: currentState,
           debouncedHexInput,
@@ -121,13 +124,10 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
           manualEntry,
         });
 
-        stateTrace.push(currentState, result.nextState);
-
         const prevStateStr = getInputStateString(currentState);
         const nextStateStr = getInputStateString(result.nextState);
 
         const transitionMsg = `[FSM instance: ${fsmInstanceId}] ${prevStateStr}(${currentState}) → ${nextStateStr}[${result.nextState}]`;
-
         console.log(transitionMsg);
 
         if (dumpSharedPanelContext && result.nextState !== currentState) {
@@ -152,20 +152,16 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       if (typeof window !== 'undefined') {
         localStorage.setItem('latestFSMTraceLines', fsmTraceOutput);
         (window as any).__FSM_TRACE_LINES__ = fsmTraceOutput;
-      }
 
-      if (typeof window !== 'undefined') {
         localStorage.setItem('latestFSMTrace', JSON.stringify(stateTrace));
         (window as any).__FSM_TRACE__ = stateTrace;
       }
 
-      if (result) {
-        if (result.nextState === InputState.UPDATE_VALIDATED_ASSET) {
-          if (result.validatedToken) {
-            setValidatedToken(result.validatedToken);
-          } else if (result.validatedWallet) {
-            setValidatedWallet(result.validatedWallet);
-          }
+      if (result?.nextState === InputState.UPDATE_VALIDATED_ASSET) {
+        if (result.validatedToken) {
+          setValidatedToken(result.validatedToken);
+        } else if (result.validatedWallet) {
+          setValidatedWallet(result.validatedWallet);
         }
       }
 

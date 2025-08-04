@@ -214,20 +214,13 @@ export function displayStateTransitions(trace: InputState[]): string {
   if (!trace?.length) return 'No FSM trace found.';
 
   const lines: string[] = [];
-  let i = 0;
-
-  while (i < trace.length - 1) {
+  for (let i = 0; i < trace.length - 1; i++) {
     const from = trace[i];
-    let j = i + 1;
-
-    // skip over repeated transitions like A → A → A
-    while (j < trace.length && trace[j] === from) j++;
-
-    const to = trace[j] ?? from;
+    const to = trace[i + 1];
     const icon = i === 0 ? '🟢' : '🟡';
+
     const line = `${icon} ${getStateIcon(from)} ${getInputStateString(from)} → ${getStateIcon(to)} ${getInputStateString(to)}`;
     lines.push(line);
-    i = j;
   }
 
   if (trace.length === 1) {
