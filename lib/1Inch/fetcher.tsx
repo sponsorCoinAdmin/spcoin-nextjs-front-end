@@ -1,5 +1,4 @@
 // File: lib/hooks/usePriceAPI.ts
-
 'use client';
 
 import { useEffect, useRef } from 'react';

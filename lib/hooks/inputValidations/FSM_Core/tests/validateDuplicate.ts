@@ -1,4 +1,5 @@
 // File: lib/hooks/inputValidations/tests/validateDuplicate.ts
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
 import { isDuplicateInput } from '../../validations/isDuplicateInput';
@@ -39,7 +40,7 @@ export function validateDuplicate({
     + `\nmanualEntry = ${manualEntry}`;
 
   debugLog.log(`🧪 ${msg}`);
-  // alert(`🧪 ${msg}`);
+  // JUNK_ALERTS(`🧪 ${msg}`);
 
   if (isDuplicate) {
     const errorResult: ValidateFSMOutput = {

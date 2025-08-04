@@ -1,3 +1,4 @@
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 // File: lib/hooks/inputValidations/validations/isDuplicateInput.ts
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -23,7 +24,7 @@ export function isDuplicateInput(
 
   if (isDuplicate) {
     const msg = getDuplicateMessage(containerType);
-    // alert(msg);
+    // JUNK_ALERTS(msg);
   }
 
   return isDuplicate;

@@ -1,3 +1,4 @@
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 import { ExchangeContext, TokenContract } from '@/lib/structure'
 import { toggleElement } from './guiControl'
@@ -11,7 +12,7 @@ import { Address } from 'viem'
 const exchangeContextDump = (exchangeContext: ExchangeContext) => {
   const exchangeData = stringifyBigInt(exchangeContext)
   if (typeof window !== 'undefined') {
-    alert(exchangeData)
+    JUNK_ALERTS(exchangeData)
   }
   toggleElement('AddSponsorshipButton_ID')
   console.log(exchangeData)
@@ -23,7 +24,7 @@ const exchangeContextDump = (exchangeContext: ExchangeContext) => {
 const logAlert = (obj: any, name = '', showAlert = false, showConsole = true): string => {
   const objStr = name ? `${name}: ${stringifyBigInt(obj)}` : stringifyBigInt(obj)
   if (showConsole) console.debug(objStr)
-  if (showAlert && typeof window !== 'undefined') alert(objStr)
+  if (showAlert && typeof window !== 'undefined') JUNK_ALERTS(objStr)
   return objStr
 }
 
@@ -77,7 +78,7 @@ const getTokenDetails = async (
  */
 const dumpSwapState = (swapType: any) => {
   if (typeof window !== 'undefined') {
-    alert(`Swap Type: ${swapType}`)
+    JUNK_ALERTS(`Swap Type: ${swapType}`)
   }
 }
 

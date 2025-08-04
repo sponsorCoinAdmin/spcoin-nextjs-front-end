@@ -4,26 +4,25 @@ import PriceView from "./Price/index";
 import { EXCHANGE_STATE } from "@/lib/structure";
 import React from 'react';
 
-let setExchangeState: (value:EXCHANGE_STATE) => void;
-let exchangeState:EXCHANGE_STATE;
+let setExchangeState: (value: EXCHANGE_STATE) => void;
 
 export function Home() {
   return (
-    <main className={`flex min-h-screen flex-col items-center justify-between p-24`} >
+    <main className={`flex min-h-screen flex-col items-center justify-between p-24`}>
       <PriceView />
     </main>
   );
 }
 
-const index = () => {
+const Index = () => {
   return (
     <div>
-      {Home()}
+      <Home /> {/* ✅ Render as JSX, not as a direct function call */}
     </div>
   );
 }
 
-export default index;
+export default Index;
 
 export {
   setExchangeState,

@@ -1,6 +1,6 @@
 // File: lib/hooks/inputValidations/helpers/useValidateFSMInput.ts
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useRef, useEffect, useCallback } from 'react';
 import { Address } from 'viem';
@@ -32,7 +32,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     manualEntry,
   } = useSharedPanelContext();
 
-  // alert(`useValidateFSMInput(selectAddress: ${selectAddress}) containerType: ${containerType} validatedAsset: ${validatedAsset} manualEntry: ${manualEntry}`);
+  // JUNK_ALERTS(`useValidateFSMInput(selectAddress: ${selectAddress}) containerType: ${containerType} validatedAsset: ${validatedAsset} manualEntry: ${manualEntry}`);
 
   const validatedToken = validatedAsset; // Explicit alias for clarity
 

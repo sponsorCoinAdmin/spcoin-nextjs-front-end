@@ -1,6 +1,6 @@
 // File: components/containers/AssetSelectPanels/AssetSelectPanel.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import AddressSelect from '@/components/views/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
@@ -19,7 +19,7 @@ export default function AssetSelectPanel() {
     debouncedHexInput,
   } = useSharedPanelContext();
 debugLog.log('✅ [AssetSelectPanel] component file loaded');
-alert('✅ [AssetSelectPanel] component file loaded');
+JUNK_ALERTS('✅ [AssetSelectPanel] component file loaded');
   // 🧠 Trigger FSM validation now that we're within SharedPanelProvider
 
   debugLog.log(`🆔 AssetSelectPanel using instanceId: ${instanceId}`);

@@ -1,4 +1,5 @@
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useBuyAmount, useExchangeContext, useSellAmount } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -14,7 +15,7 @@ const useSwapFunctions = () => {
 
   const doSwap = useCallback(async () => {
     console.log(`SWAP:` + stringifyBigInt(tradeData));
-    alert(`SWAP`);
+    JUNK_ALERTS(`SWAP`);
   }, [tradeData]);
 
   const swap = useCallback(async () => {

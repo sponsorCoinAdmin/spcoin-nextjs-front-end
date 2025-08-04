@@ -1,5 +1,4 @@
 // File: components/containers/RecipientSelectPanel.tsx
-
 'use client';
 
 import { useEffect } from 'react';

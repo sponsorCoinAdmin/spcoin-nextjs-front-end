@@ -1,6 +1,6 @@
 // File: components/containers/RecipientSelectHeader.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import styles from '@/styles/Exchange.module.css';
 import { Settings } from 'lucide-react'; // ✅ Lucide replacement
@@ -20,10 +20,10 @@ const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
 
   const toggleSponsorRateConfigPanel= () => {
     if (spCoinDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL) {
-      alert("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL");
+      JUNK_ALERTS("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL");
       setSpCoinDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
     } else {
-      alert("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL");
+      JUNK_ALERTS("Sponsor Rate Config spCoinDisplay is set to SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL");
       setSpCoinDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     }
   };

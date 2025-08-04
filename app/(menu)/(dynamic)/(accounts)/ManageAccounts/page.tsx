@@ -1,5 +1,6 @@
 'use client';
 
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 import React, { useState, useEffect } from 'react';
 
 export default function ManageAccountsPage() {
@@ -11,11 +12,11 @@ export default function ManageAccountsPage() {
 
   useEffect(() => {
     if (selectedRole === 'recipient') {
-      alert('This is a Recipient Mock Demo and is yet to be implemented and is currently a Work In Progress.');
+      JUNK_ALERTS('This is a Recipient Mock Demo and is yet to be implemented and is currently a Work In Progress.');
     } else if (selectedRole === 'agent') {
-      alert('This is an Agent Mock Demo and is yet to be implemented and is currently a Work In Progress.');
+      JUNK_ALERTS('This is an Agent Mock Demo and is yet to be implemented and is currently a Work In Progress.');
     } else if (selectedRole === 'sponsor') {
-      alert('This is a Sponsor Mock Demo and is yet to be implemented and is currently a Work In Progress.');
+      JUNK_ALERTS('This is a Sponsor Mock Demo and is yet to be implemented and is currently a Work In Progress.');
     }
   }, [selectedRole]);
 

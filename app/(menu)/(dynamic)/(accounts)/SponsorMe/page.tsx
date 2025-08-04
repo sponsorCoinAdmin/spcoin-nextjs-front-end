@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 interface RecipientFormData {
   email: string;
@@ -42,7 +43,7 @@ export default function CreateRecipientAccountPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    alert('Recipient account created successfully');
+    JUNK_ALERTS('Recipient account created successfully');
     router.push('/');
   };
 

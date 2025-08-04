@@ -1,6 +1,6 @@
 // File: lib/context/ScrollSelectPanels/SharedPanelProvider.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, {
   ReactNode,
@@ -73,16 +73,16 @@ export const SharedPanelProvider = ({
   const setInputState = useCallback(
     (next: InputState, source = 'SharedPanelProvider') => {
       setInputStateRaw((prev) => {
-        // alert(`📣 Source [${source}]: Attempting transition from ${getInputStateString(prev)} → ${getInputStateString(next)}`);
+        // JUNK_ALERTS(`📣 Source [${source}]: Attempting transition from ${getInputStateString(prev)} → ${getInputStateString(next)}`);
 
         if (prev === next) {
-          // alert(`⏭️ Source [${source}]: Skipped setInputState → Already in ${getInputStateString(next)}`);
+          // JUNK_ALERTS(`⏭️ Source [${source}]: Skipped setInputState → Already in ${getInputStateString(next)}`);
           debugFSM.log(`⏭️ Source [${source}]: Skipped setInputState → Already in ${getInputStateString(next)}`);
           return prev;
         }
 
         if (!isValidFSMTransition(prev, next)) {
-          // alert(`🚫 Source [${source}]: Invalid FSM transition: ${getInputStateString(prev)} → ${getInputStateString(next)} (source: ${source})`);
+          // JUNK_ALERTS(`🚫 Source [${source}]: Invalid FSM transition: ${getInputStateString(prev)} → ${getInputStateString(next)} (source: ${source})`);
           debugFSM.warn(`🚫 Source [${source}]: Invalid FSM transition: ${getInputStateString(prev)} → ${getInputStateString(next)} (source: ${source})`);
           return prev;
         }

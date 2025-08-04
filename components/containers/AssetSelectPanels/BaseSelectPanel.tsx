@@ -1,5 +1,4 @@
 // File: components/containers/AssetSelectPanels/BaseSelectPanel.tsx
-
 'use client';
 
 import React, { useEffect, useState } from 'react';

@@ -1,5 +1,4 @@
 // File: components/Dialogs/SponsorRateDialog.tsx
-
 'use client';
 
 import styles from '@/styles/Modal.module.css';

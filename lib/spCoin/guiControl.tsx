@@ -1,5 +1,4 @@
 // File: lib/utils/guiControl.ts
-
 'use client';
 
 import { useSpCoinDisplay } from '@/lib/context/hooks';

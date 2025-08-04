@@ -1,5 +1,4 @@
 // File: lib/context/ScrollSelectPanels/useSharedPanelContext.tsx
-
 'use client';
 
 import { createContext, useContext } from 'react';

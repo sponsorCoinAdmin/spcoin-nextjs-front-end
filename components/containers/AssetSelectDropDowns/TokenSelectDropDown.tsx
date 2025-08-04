@@ -1,6 +1,6 @@
 // File: components/containers/TokenSelectDropDown.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
@@ -75,7 +75,7 @@ function TokenSelectDropDown({ containerType }: Props) {
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name} logo`}
             src={logoSrc}
-            onClick={() => alert(stringifyBigInt(tokenContract))}
+            onClick={() => JUNK_ALERTS(stringifyBigInt(tokenContract))}
             onError={handleMissingLogoURL}
           />
           {tokenContract.symbol}

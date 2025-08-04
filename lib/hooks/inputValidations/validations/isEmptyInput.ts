@@ -1,4 +1,5 @@
 // File: lib/hooks/inputValidations/validation/isEmptyInput.ts
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -7,7 +8,7 @@ const debugLog = createDebugLogger('isEmptyInput', DEBUG_ENABLED);
 
 export function isEmptyInput(input: string | undefined): boolean {
   debugLog.log(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
-  // alert(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
+  // JUNK_ALERTS(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
 
   const trimmed = input?.trim() ?? '';
   const isEmpty = trimmed === '';

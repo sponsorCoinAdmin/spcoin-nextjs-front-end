@@ -1,6 +1,6 @@
 // File: components/views/DataListSelect.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
@@ -122,7 +122,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                       className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
                       onClick={() => {
                         debugLog.log(`🟢 Account clicked: ${wallet.name} → ${wallet.address}`);
-                        alert(`DataListSelest Wallet.address:${wallet.address} → Setting manualEntry to false`)
+                        JUNK_ALERTS(`DataListSelest Wallet.address:${wallet.address} → Setting manualEntry to false`)
                         setManualEntry(false);
                         const result = handleHexInputChange(wallet.address);
                         debugLog.log(`🛠️ handleHexInputChange returned:`, result);
@@ -139,12 +139,12 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                         className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
                         onClick={(e) => {
                           e.stopPropagation();
-                          alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
+                          JUNK_ALERTS(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          alert(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`);
+                          JUNK_ALERTS(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`);
                         }}
                       >
                         <Image src={info_png} alt="Info" width={20} height={20} />
@@ -161,7 +161,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                     className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
                     onClick={() => {
                       debugLog.log(`🟢 Token clicked: ${token.name} → ${token.address}`);
-                      // alert(`DataListSelest Token.address:${token.address} → Setting manualEntry to false`)
+                      // JUNK_ALERTS(`DataListSelest Token.address:${token.address} → Setting manualEntry to false`)
                       setManualEntry(false);
                       const result = handleHexInputChange(token.address);
                       debugLog.log(`🛠️ handleHexInputChange returned:`, result);
@@ -178,12 +178,12 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                       className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
                       onClick={(e) => {
                         e.stopPropagation();
-                        alert(`${token.name} Address: ${stringifyBigInt(token)}`);
+                        JUNK_ALERTS(`${token.name} Address: ${stringifyBigInt(token)}`);
                       }}
                       onContextMenu={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        alert(`${token.name} Record: ${token.logoURL}`);
+                        JUNK_ALERTS(`${token.name} Record: ${token.logoURL}`);
                       }}
                     >
                       <Image src={info_png} alt="Info" width={20} height={20} />

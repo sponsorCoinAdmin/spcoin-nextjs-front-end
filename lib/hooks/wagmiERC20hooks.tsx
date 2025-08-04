@@ -1,4 +1,5 @@
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useReadContracts, useChainId } from 'wagmi';
@@ -82,17 +83,17 @@ export function TokenFetchGuiExamples() {
 
   const handleFetch = () => {
     if (!tokenAddressInput) {
-      alert('Missing Token Contract Address');
+      JUNK_ALERTS('Missing Token Contract Address');
       return;
     }
 
     if (!isAddress(tokenAddressInput)) {
-      alert('BAD CONTRACT ADDRESS');
+      JUNK_ALERTS('BAD CONTRACT ADDRESS');
       return;
     }
 
     if (accountAddressInput && !isAddress(accountAddressInput)) {
-      alert('BAD ACCOUNT ADDRESS');
+      JUNK_ALERTS('BAD ACCOUNT ADDRESS');
       return;
     }
 

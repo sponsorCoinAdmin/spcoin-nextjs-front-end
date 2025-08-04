@@ -1,5 +1,4 @@
 // File: lib/context/TradePanelProviders/TokenPanelProvider.tsx
-
 'use client';
 
 import React, { useState, ReactNode } from 'react';

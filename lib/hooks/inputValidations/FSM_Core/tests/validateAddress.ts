@@ -1,4 +1,5 @@
 // File: lib/hooks/inputValidations/tests/validateAddress.ts
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure';
@@ -11,7 +12,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('validateAddress', DEBUG_ENABLED, LOG_TIME);
 
 export function validateAddress({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {
-// alert(`Running validateAddress(${debouncedHexInput})`);
+// JUNK_ALERTS(`Running validateAddress(${debouncedHexInput})`);
   debugLog.log(`Running validateAddress(${debouncedHexInput})`);
   if (isEmptyInput(debouncedHexInput)) {
     return { nextState: InputState.EMPTY_INPUT };

@@ -1,5 +1,4 @@
 // File: app/(menu)/WhitePaper.tsx
-
 'use client';
 
 import React from 'react';

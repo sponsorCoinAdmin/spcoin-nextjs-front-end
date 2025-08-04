@@ -1,5 +1,4 @@
 // File: lib/context/ExchangeInitialContext.ts
-
 'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';

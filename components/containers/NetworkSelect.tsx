@@ -1,6 +1,6 @@
 // File: components/containers/NetworkSelect.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import React, { useEffect, useMemo } from 'react';
 import styles from '@/styles/Header.module.css';
@@ -28,7 +28,7 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
         <div key={network.chainId} className="mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900">
           <div
             className={styles.networkSelect}
-            onClick={() => alert(JSON.stringify(network, null, 2))}
+            onClick={() => JUNK_ALERTS(JSON.stringify(network, null, 2))}
           >
             <img
               src={network.img}
@@ -50,7 +50,7 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
             alt={networkElement.name}
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             src={networkElement.logoURL}
-            onClick={() => alert(`networkElement ${JSON.stringify(networkElement, null, 2)}`)}
+            onClick={() => JUNK_ALERTS(`networkElement ${JSON.stringify(networkElement, null, 2)}`)}
           />
           {networkElement.name}
           <ChevronDown

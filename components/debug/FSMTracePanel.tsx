@@ -1,5 +1,4 @@
 // File: components/debug/FSMTracePanel.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';

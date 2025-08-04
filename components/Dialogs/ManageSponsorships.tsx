@@ -1,6 +1,6 @@
 // File: components/containers/ManageSponsorships.tsx
-
 'use client';
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef, useState } from 'react';
@@ -80,7 +80,7 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
   const displayElementDetail = async (tokenAddr: any) => {
     try {
       if (!(await setTokenDetails(tokenAddr, setTokenContractState))) {
-        alert(
+        JUNK_ALERTS(
           '*** ERROR *** Invalid Buy Token Address: ' +
             tokenInput +
             '\n\n' +
@@ -88,7 +88,7 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
         );
         return;
       }
-      alert(
+      JUNK_ALERTS(
         'displayElementDetail\n' +
           JSON.stringify(tokenContractState, null, 2) +
           '\n\n' +
@@ -96,21 +96,21 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
       );
       await getWagmiBalanceOfRec(tokenAddr);
     } catch (e: any) {
-      alert('BUY_ERROR:displayElementDetail e.message' + e.message);
+      JUNK_ALERTS('BUY_ERROR:displayElementDetail e.message' + e.message);
     }
   };
 
   const getSelectedListElement = (listElement: TokenContract | undefined) => {
     if (!listElement) {
-      alert('Undefined Token address');
+      JUNK_ALERTS('Undefined Token address');
       return;
     }
     if (!isAddress(listElement.address)) {
-      alert(`${listElement.name} has invalid token address: ${listElement.address}`);
+      JUNK_ALERTS(`${listElement.name} has invalid token address: ${listElement.address}`);
       return;
     }
     if (listElement.address === tokenContract?.address) {
-      alert(`Buy Token cannot be the same as Sell Token (${tokenContract.symbol})`);
+      JUNK_ALERTS(`Buy Token cannot be the same as Sell Token (${tokenContract.symbol})`);
       console.log(`Buy Token cannot be the same as Sell Token (${tokenContract.symbol})`);
       return;
     }

@@ -1,4 +1,5 @@
 import { useExchangeContext } from '@/lib/context/hooks'
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import chainIdList from '@/resources/data/networks/chainIds.json';
 import { defaultNetworkSettings as defaultBaseSettings } from '@/resources/data/networks/base/initialize/defaultNetworkSettings';
@@ -141,7 +142,7 @@ const createNetworkJsonList = () => {
   };
   const networkSettings = JSON.stringify(defaultNetworkSettings, null, 2);
   debugLog.log(`Default JSON Network Settings:\n${networkSettings}`);
-  alert(`Network Settings: ${networkSettings}`);
+  JUNK_ALERTS(`Network Settings: ${networkSettings}`);
 };
 
 const isLowerCase = (input: string): boolean =>

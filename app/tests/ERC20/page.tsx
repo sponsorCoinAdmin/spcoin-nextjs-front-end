@@ -1,5 +1,6 @@
 'use client'
 
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 import { useEffect, useState } from 'react'
 import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
 import { Config, useAccount, UseAccountReturnType } from 'wagmi'
@@ -38,7 +39,7 @@ function App() {
   }, [ACTIVE_ACCOUNT.chainId]);
   
   useEffect(() => {
-    // alert(`SETTING ACTIVE_ACCOUNT_ADDRESS = ${ACTIVE_ACCOUNT.address}`)
+    // JUNK_ALERTS(`SETTING ACTIVE_ACCOUNT_ADDRESS = ${ACTIVE_ACCOUNT.address}`)
     if (ACTIVE_ACCOUNT.address != undefined && ACTIVE_ACCOUNT_ADDRESS !== ACTIVE_ACCOUNT.address)
       setActiveAccountAddress(ACTIVE_ACCOUNT.address)
   }, [ACTIVE_ACCOUNT.address]);

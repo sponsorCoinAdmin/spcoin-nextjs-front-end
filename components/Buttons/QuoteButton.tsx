@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from '@/styles/Exchange.module.css'
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 type Props = {
     sendTransaction:any;
@@ -15,7 +16,7 @@ const PlaceOrder = ({
         console.log(`placing order transaction sendTransaction = ${sendTransaction}`);
         if (sendTransaction) {
             let receipt = await sendTransaction();
-            alert("Transaction receipt : " + receipt)
+            JUNK_ALERTS("Transaction receipt : " + receipt)
         }
     }
 

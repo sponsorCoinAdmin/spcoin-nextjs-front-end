@@ -1,4 +1,5 @@
 'use client'
+import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import ConfigDialog from './Popup/ConfigDialog'
 import ErrorDialog from './ErrorDialog'
@@ -18,7 +19,7 @@ type DialogSelector =
  * Logs a warning if the dialog is not found.
  */
 const openDialog = (dialogType: DialogSelector) => {
-  alert('Opening Slippage Dialog')
+  JUNK_ALERTS('Opening Slippage Dialog')
   const dialog = document.querySelector(dialogType) as HTMLDialogElement | null
   if (dialog) {
     dialog.showModal()
