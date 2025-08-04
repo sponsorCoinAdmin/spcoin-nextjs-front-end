@@ -1,4 +1,4 @@
 import styles from '@/styles/Exchange.module.css'
 export default function Loading() {
-    return <div className={styles["center-screen"]}><h1>Loading White <Paper></Paper> Page</h1></div>;
+    return <div className={styles["center-screen"]}><h1>Loading White Paper Page</h1></div>;
 }

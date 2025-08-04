@@ -1,5 +1,5 @@
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   productionBrowserSourceMaps: true,
   webpack: (config, { dev }) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };

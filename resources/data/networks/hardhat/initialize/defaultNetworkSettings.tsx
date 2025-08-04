@@ -7,7 +7,7 @@ import {  HARDHAT, TokenContract } from '@/lib/structure'
    symbol: "TON",
    decimals: 9,
    balance: 0n,
-   totalSupply: null,
+   totalSupply: 0n,
    logoURL: "assets/blockchains/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png",
    amount: 0n
  };
@@ -19,7 +19,7 @@ import {  HARDHAT, TokenContract } from '@/lib/structure'
    symbol: "USDT",
    decimals: 6,
    balance: 0n,
-   totalSupply: null,
+   totalSupply: 0n,
    logoURL: "assets/blockchains/0xdac17f958d2ee523a2206206994597c13d831ec7.png",
    amount: 0n
  };

@@ -31,9 +31,17 @@ export default function TokenSelectPanel({
 }: TokenSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
 
+  useEffect(() => {
+    debugLog.log(`🟢 TokenSelectPanel mounted`);
+    return () => {
+      debugLog.log(`🔴 TokenSelectPanel unmounted`);
+    };
+  }, []);
+
   if (!isActive) return null;
 
   debugLog.log(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
+  alert(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
 
   return (
     <SharedPanelProvider
@@ -53,7 +61,10 @@ function TokenSelectPanelInner() {
   } = useSharedPanelContext();
 
   useEffect(() => {
-    debugLog.log(`🧩 TokenSelectPanel mounted → instanceId=${instanceId}`);
+    debugLog.log(`🟢 TokenSelectPanelInner mounted → instanceId=${instanceId}`);
+    return () => {
+      debugLog.log(`🔴 TokenSelectPanelInner unmounted → instanceId=${instanceId}`);
+    };
   }, [instanceId]);
 
   return <AssetSelectPanel />;

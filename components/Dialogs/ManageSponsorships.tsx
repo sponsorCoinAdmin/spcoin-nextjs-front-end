@@ -1,4 +1,4 @@
-// File: components\Dialogs\ManageSponsorships.tsx, not Dialogs
+// File: components/containers/ManageSponsorships.tsx
 
 'use client';
 
@@ -182,12 +182,13 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
             </div>
           </div>
         </div>
-        <div className={styles.scrollDataListPanel}>
+
+        {/* <div className={styles.scrollDataListPanel}>
           <DataListSelect<TokenContract>
             dataFeedType={FEED_TYPE.TOKEN_LIST}
-            onSelect={getSelectedListElement}
+            onClickItem={getSelectedListElement} 
           />
-        </div>
+        </div> */}
       </div>
     </dialog>
   );

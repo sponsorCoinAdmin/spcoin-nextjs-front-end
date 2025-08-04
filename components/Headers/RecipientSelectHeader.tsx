@@ -46,7 +46,7 @@ const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
           width={20}
           height={20}
           alt="Info Image"
-          onClick={toggleSponsorRateConfig}
+          onClick={toggleSponsorRateConfigPanel}
         />
       </div>
     </div>

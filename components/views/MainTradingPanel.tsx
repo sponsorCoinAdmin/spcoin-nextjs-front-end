@@ -2,6 +2,7 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -43,18 +44,28 @@ export default function MainTradingPanel() {
 
   const isErrorMessagePanel = activeDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
 
+  // 🔍 Detect Strict Mode mount/unmount
+  useEffect(() => {
+    console.log('🟢 MainTradingPanel mounted');
+    return () => {
+      console.log('🔴 MainTradingPanel unmounted');
+    };
+  }, []);
+
+  // 📌 TRACE when TokenSelectPanel will render
+  if (isTokenScrollPanel) {
+    console.trace('🔁 [TRACE] TokenSelectPanel render triggered');
+  }
+
   debugLog.log(`🔍 MainTradingPanel render triggered`);
   debugLog.log(`🧩 Current activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
   debugLog.log(`💬 isTokenScrollPanel = ${isTokenScrollPanel}, isErrorMessagePanel = ${isErrorMessagePanel}`);
 
-  // ✅ closeCallback
   function closeCallback() {
-    // alert(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
     debugLog.log(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }
 
-  // ✅ setAssetTokenCallback
   function setAssetTokenCallback(tokenContract: TokenContract) {
     let msg = `✅ setAssetTokenCallback`;
     if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
@@ -68,10 +79,8 @@ export default function MainTradingPanel() {
     }
     msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
     debugLog.log(msg);
-    // alert(msg);
   }
 
-  // ✅ setErrorCallback
   function setErrorCallback(
     errorMsg: string,
     source: string = 'MainTradingPanel',
@@ -103,7 +112,6 @@ export default function MainTradingPanel() {
           isActive={isErrorMessagePanel}
           closeCallback={closeCallback}
         />
-        {/* <SponsorRateConfigPanel /> */}
       </div>
     </div>
   );

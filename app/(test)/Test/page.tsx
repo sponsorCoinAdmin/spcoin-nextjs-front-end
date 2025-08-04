@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Address, ChainFees, ChainSerializers, HttpTransport } from 'viem'
-import { Config, useAccount, UseAccountReturnType, useDisconnect } from 'wagmi'
+import { Config, useAccount, UseAccountReturnType } from 'wagmi'
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields'
 import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields'
 import ProviderConfigurationStatus from '@/components/ERC20/ProviderConfigurationStatus'
