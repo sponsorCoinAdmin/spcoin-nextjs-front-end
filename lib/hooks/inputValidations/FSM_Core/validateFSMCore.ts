@@ -1,5 +1,4 @@
 // File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -110,7 +109,7 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
       if (FSM_TEST_FLAGS.TEST_RESOLVE_ASSET) {
         result = await validateResolvedAsset(input);
         const msg = `RESOLVE_ASSET: ${stringifyBigInt(result)}`;
-        if (process.env.NEXT_PUBLIC_SHOW_RESOLVE_ALERT === 'true') JUNK_ALERTS(msg);
+        if (process.env.NEXT_PUBLIC_SHOW_RESOLVE_ALERT === 'true') alert(msg);
         console.log(msg);
       } else {
         result = { nextState: InputState.UPDATE_VALIDATED_ASSET };

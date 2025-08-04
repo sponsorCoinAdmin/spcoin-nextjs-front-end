@@ -1,5 +1,4 @@
 // File: lib/hooks/inputValidations/helpers/debugSetInputState.ts
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { InputState, getInputStateString } from '@/lib/structure';
 import { debugLog } from './debugLogInstance';
@@ -16,7 +15,7 @@ export function debugSetInputState(
   const nextStateStr = getInputStateString(nextState);
   const stateSymbol = '⏩'.repeat(nextState);
   const debugMsg = `${source}{STATE CHANGE): ${prevStateStr}(${currentState}) → ${nextStateStr}(${nextState})`;
-  JUNK_ALERTS(`${debugMsg}`);
+  alert(`${debugMsg}`);
   debugLog.log(`${debugMsg}`);
   setState(nextState);
 }
