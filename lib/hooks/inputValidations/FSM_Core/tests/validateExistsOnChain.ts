@@ -1,5 +1,4 @@
 // File: lib/hooks/inputValidations/tests/validateExistsOnChain.ts
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import { Address } from 'viem';
 import { InputState } from '@/lib/structure';
@@ -14,7 +13,7 @@ export async function validateExistsOnChain({
   debouncedHexInput,
   publicClient,
 }: ValidateFSMInput): Promise<ValidateFSMOutput> {
-JUNK_ALERTS(`Running validateExistsOnChain(${debouncedHexInput})`);
+alert(`Running validateExistsOnChain(${debouncedHexInput})`);
   debugLog.log(`Running validateExistsOnChain(${debouncedHexInput})`);
   if (!publicClient) {
     return {

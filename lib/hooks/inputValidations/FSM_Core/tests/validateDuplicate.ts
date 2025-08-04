@@ -39,7 +39,7 @@ export function validateDuplicate({
     + `\nmanualEntry = ${manualEntry}`;
 
   debugLog.log(`🧪 ${msg}`);
-  // JUNK_ALERTS(`🧪 ${msg}`);
+  // alert(`🧪 ${msg}`);
 
   if (isDuplicate) {
     const errorResult: ValidateFSMOutput = {

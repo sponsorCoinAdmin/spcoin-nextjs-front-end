@@ -1,5 +1,4 @@
 // File components/containers/FeeDisclosure.tsx
-import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
  
 import React from 'react';
 import Image from 'next/image';
@@ -12,7 +11,7 @@ const FeeDisclosure = () => {
             <Image
                 src={cog_png}
                 alt="Info Image"
-                onClick={() => JUNK_ALERTS("Fees Explained")}
+                onClick={() => alert("Fees Explained")}
                 className="absolute top-[0px] left-[115px] h-5 w-5 cursor-pointer transition duration-300 hover:rotate-180"
                 priority
             />
