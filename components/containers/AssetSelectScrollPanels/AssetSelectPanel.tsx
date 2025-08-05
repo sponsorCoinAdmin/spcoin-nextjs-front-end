@@ -15,7 +15,6 @@ export default function AssetSelectPanel() {
   const {
     instanceId,
     feedType,
-    debouncedHexInput,
   } = useSharedPanelContext();
   debugLog.log('✅ [AssetSelectPanel] component file loaded');
   // alert('✅ [AssetSelectPanel] component file loaded');

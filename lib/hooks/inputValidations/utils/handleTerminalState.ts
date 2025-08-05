@@ -5,7 +5,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const LOG_TIME = false;
-const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED, LOG_TIME);
+const debugFSM = createDebugLogger('handleFSMTerminalState', DEBUG_ENABLED, LOG_TIME);
 
 export function handleFSMTerminalState(
   inputState: InputState,

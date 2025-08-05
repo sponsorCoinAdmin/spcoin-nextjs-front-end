@@ -26,11 +26,13 @@ import {
   dumpInputFeedContext,
 } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 
-import { useInputState } from '@/lib/hooks/inputValidations/helpers/useInputState'; // ✅ ADDED
+import { useInputState } from '@/lib/hooks/inputValidations/helpers/useInputState';
+
+import { useChainId, usePublicClient, useAccount } from 'wagmi';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
-const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_FSM === 'true';
 
 const debugLog = createDebugLogger('SharedPanelProvider', DEBUG_ENABLED, LOG_TIME);
 const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
@@ -51,17 +53,6 @@ export const SharedPanelProvider = ({
   setTradingTokenCallback,
   containerType,
 }: SharedPanelProviderProps) => {
-  const {
-    inputState,
-    setInputState,
-    appendState,
-    resetTrace,
-    getTrace,
-    getHeader,
-    setHeader,
-    displayTraceWithIcons,
-  } = useInputState(); // ✅ inputState now comes from hook
-
   const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
   const [manualEntry, setManualEntry] = useState<boolean>(true);
 
@@ -75,6 +66,10 @@ export const SharedPanelProvider = ({
     handleHexInputChange,
     resetHexInput,
   } = useHexInput();
+
+  const chainId = useChainId();
+  const publicClient = usePublicClient();
+  const { address: accountAddress } = useAccount();
 
   const setValidatedAsset = useCallback(
     (next: TokenContract | undefined) => {
@@ -94,6 +89,20 @@ export const SharedPanelProvider = ({
     },
     [validatedAsset]
   );
+
+  const {
+    inputState,
+    setInputState,
+  } = useInputState({
+    validHexInput,
+    debouncedHexInput,
+    containerType,
+    feedType,
+    instanceId,
+    setValidatedAsset,
+    closeCallback,
+    setTradingTokenCallback,
+  });
 
   useEffect(() => {
     handleFSMTerminalState(
