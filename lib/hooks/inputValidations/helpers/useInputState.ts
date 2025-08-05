@@ -11,8 +11,8 @@ import type {
   ValidateFSMOutput,
 } from '../FSM_Core/types/validateFSMTypes';
 
-const LOG_TIME:boolean = false;
-const DEBUG_ENABLED_FSM:boolean = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const LOG_TIME: boolean = false;
+const DEBUG_ENABLED_FSM: boolean = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('useInputState', true, LOG_TIME);
 
 const LOCAL_TRACE_KEY = 'latestFSMTrace';
@@ -64,6 +64,7 @@ function formatTrace(trace: InputState[]): string {
 export function useInputState() {
   const traceRef = useRef<InputState[]>([]);
   const headerRef = useRef<string>('');
+  const prevFSMStateRef = useRef<InputState | null>(null); // NEW
 
   const [inputState, _setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [pendingTrace, setPendingTrace] = useState<InputState[]>([]);
@@ -100,6 +101,13 @@ export function useInputState() {
     let cancelled = false;
 
     async function runFSM() {
+      if (prevFSMStateRef.current === inputState) {
+        debugLog.log(`⏭️ Skipping FSM: already processed state ${getInputStateString(inputState)}`);
+        return;
+      }
+
+      prevFSMStateRef.current = inputState;
+
       const fsmInput: ValidateFSMInput = {
         inputState,
         debouncedHexInput: '', // TODO: replace with actual hex input
@@ -166,6 +174,7 @@ export function useInputState() {
   const resetTrace = useCallback(() => {
     traceRef.current = [];
     headerRef.current = '';
+    prevFSMStateRef.current = null;
     setPendingTrace([]);
     _setInputState(InputState.EMPTY_INPUT);
 
