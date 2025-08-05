@@ -54,7 +54,7 @@ export default function MainTradingPanel() {
 
   // 📌 TRACE when TokenSelectPanel will render
   if (isTokenScrollPanel) {
-    console.trace('🔁 [TRACE] TokenSelectPanel render triggered');
+    debugLog.log('🔁 [TRACE] TokenSelectPanel render triggered');
   }
 
   debugLog.log(`🔍 MainTradingPanel render triggered`);

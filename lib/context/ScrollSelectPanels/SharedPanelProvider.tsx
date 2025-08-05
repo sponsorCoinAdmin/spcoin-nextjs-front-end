@@ -7,17 +7,15 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  useRef,
 } from 'react';
 
 import { SharedPanelContext } from './useSharedPanelContext';
 import {
   SP_COIN_DISPLAY,
   FEED_TYPE,
-  InputState,
-  getInputStateString,
   TokenContract,
   WalletAccount,
+  InputState,
 } from '@/lib/structure';
 
 import { useHexInput } from '@/lib/hooks/useHexInput';
@@ -27,7 +25,8 @@ import {
   dumpFSMContext,
   dumpInputFeedContext,
 } from '@/lib/hooks/inputValidations/utils/debugContextDump';
-import { isValidFSMTransition } from '@/lib/hooks/inputValidations/FSM_Core/utils/transitionGuards'; // ✅ NEW
+
+import { useInputState } from '@/lib/hooks/inputValidations/helpers/useInputState'; // ✅ ADDED
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
@@ -52,10 +51,19 @@ export const SharedPanelProvider = ({
   setTradingTokenCallback,
   containerType,
 }: SharedPanelProviderProps) => {
-  const [inputState, setInputStateRaw] = useState<InputState>(InputState.EMPTY_INPUT);
+  const {
+    inputState,
+    setInputState,
+    appendState,
+    resetTrace,
+    getTrace,
+    getHeader,
+    setHeader,
+    displayTraceWithIcons,
+  } = useInputState(); // ✅ inputState now comes from hook
+
   const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
   const [manualEntry, setManualEntry] = useState<boolean>(true);
-  const prevInputState = useRef<InputState>(InputState.EMPTY_INPUT);
 
   const {
     validHexInput,
@@ -67,37 +75,6 @@ export const SharedPanelProvider = ({
     handleHexInputChange,
     resetHexInput,
   } = useHexInput();
-
-  // ✅ Guarded transition logic
-  const setInputState = useCallback(
-    (next: InputState, source = 'SharedPanelProvider') => {
-      setInputStateRaw((prev) => {
-        // ALERTS(`📣 Source [${source}]: Attempting transition from ${getInputStateString(prev)} → ${getInputStateString(next)}`);
-
-        if (prev === next) {
-          // ALERTS(`⏭️ Source [${source}]: Skipped setInputState → Already in ${getInputStateString(next)}`);
-          debugFSM.log(`⏭️ Source [${source}]: Skipped setInputState → Already in ${getInputStateString(next)}`);
-          return prev;
-        }
-
-        if (!isValidFSMTransition(prev, next)) {
-          // ALERTS(`🚫 Source [${source}]: Invalid FSM transition: ${getInputStateString(prev)} → ${getInputStateString(next)} (source: ${source})`);
-          debugFSM.warn(`🚫 Source [${source}]: Invalid FSM transition: ${getInputStateString(prev)} → ${getInputStateString(next)} (source: ${source})`);
-          return prev;
-        }
-
-        debugFSM.log(`✳️ Source [${source}]: setInputState → ${getInputStateString(next)}`);
-        return next;
-      });
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (failedHexCount > 0) {
-      setInputState(InputState.INVALID_HEX_INPUT, 'FSM effect: failedHexCount');
-    }
-  }, [failedHexCount, setInputState]);
 
   const setValidatedAsset = useCallback(
     (next: TokenContract | undefined) => {
@@ -127,7 +104,6 @@ export const SharedPanelProvider = ({
       setTradingTokenCallback,
       closeCallback
     );
-    prevInputState.current = inputState;
   }, [
     inputState,
     validatedAsset,
@@ -206,6 +182,7 @@ export const SharedPanelProvider = ({
     }),
     [
       inputState,
+      setInputState,
       validatedAsset,
       manualEntry,
       validHexInput,

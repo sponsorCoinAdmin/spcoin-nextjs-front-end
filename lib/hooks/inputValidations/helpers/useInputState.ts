@@ -1,8 +1,19 @@
+// File: lib/hooks/inputValidations/helpers/useInputState.ts
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { InputState, getInputStateString } from '@/lib/structure';
+import { FEED_TYPE, InputState, SP_COIN_DISPLAY, getInputStateString } from '@/lib/structure';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { validateFSMCore } from '../FSM_Core/validateFSMCore';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+import type {
+  ValidateFSMInput,
+  ValidateFSMOutput,
+} from '../FSM_Core/types/validateFSMTypes';
+
+const LOG_TIME:boolean = false;
+const DEBUG_ENABLED_FSM:boolean = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const debugLog = createDebugLogger('useInputState', true, LOG_TIME);
 
 const LOCAL_TRACE_KEY = 'latestFSMTrace';
 const LOCAL_HEADER_KEY = 'latestFSMHeader';
@@ -54,77 +65,148 @@ export function useInputState() {
   const traceRef = useRef<InputState[]>([]);
   const headerRef = useRef<string>('');
 
-  // 1️⃣ Initial load from localStorage
-  useEffect(() => {
-    try {
-      const rawTrace = localStorage.getItem(LOCAL_TRACE_KEY);
-      const parsed = rawTrace ? JSON.parse(rawTrace) : [];
-      traceRef.current = parsed;
-
-      const rawHeader = localStorage.getItem(LOCAL_HEADER_KEY);
-      headerRef.current = rawHeader || '';
-    } catch (err) {
-      console.warn('[useInputState] Failed to load from localStorage:', err);
-    }
-  }, []);
-
-  // 2️⃣ Internal state for debounce trigger
+  const [inputState, _setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [pendingTrace, setPendingTrace] = useState<InputState[]>([]);
   const debouncedTrace = useDebounce(pendingTrace, 200);
 
-  // 3️⃣ Debounced save to localStorage
+  // ⏪ Load trace from localStorage
+  useEffect(() => {
+    try {
+      const rawTrace = localStorage.getItem(LOCAL_TRACE_KEY);
+      traceRef.current = rawTrace ? JSON.parse(rawTrace) : [];
+
+      const rawHeader = localStorage.getItem(LOCAL_HEADER_KEY);
+      headerRef.current = rawHeader || '';
+
+      debugLog.log('⏪ Loaded trace from localStorage:', traceRef.current);
+      debugLog.log('⏪ Loaded header from localStorage:', headerRef.current);
+    } catch (err) {
+      debugLog.error('[useInputState] Failed to load from localStorage:', err);
+    }
+  }, []);
+
+  // 💾 Save debounced trace to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_TRACE_KEY, JSON.stringify(debouncedTrace));
+      debugLog.log('💾 Saved trace to localStorage:', debouncedTrace);
     } catch (err) {
-      console.warn('[useInputState] Failed to persist debounced trace:', err);
+      debugLog.error('[useInputState] Failed to persist debounced trace:', err);
     }
   }, [debouncedTrace]);
 
-  // 4️⃣ Append a new state
+  // 🚦 FSM AUTO-EXECUTION LOOP
+  useEffect(() => {
+    let cancelled = false;
+
+    async function runFSM() {
+      const fsmInput: ValidateFSMInput = {
+        inputState,
+        debouncedHexInput: '', // TODO: replace with actual hex input
+        seenBrokenLogos: new Set(),
+        containerType: SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL,
+        feedType: FEED_TYPE.TOKEN_LIST,
+        chainId: 1,
+        publicClient: undefined,
+        accountAddress: '0x0000000000000000000000000000000000000000',
+        manualEntry: false,
+      };
+
+      debugLog.log(`🔥 [FSM ENTRY] Starting FSM at: ${getInputStateString(fsmInput.inputState)}`);
+
+      let current = fsmInput;
+
+      while (!cancelled) {
+        const result: ValidateFSMOutput = await validateFSMCore(current);
+        if (cancelled) break;
+
+        const nextState = result.nextState;
+
+        if (nextState === current.inputState) {
+          debugLog.log(`🟡 FSM halted at stable/terminal state: ${getInputStateString(current.inputState)}`);
+          break;
+        }
+
+        debugLog.log(`➡️ FSM transition: ${getInputStateString(current.inputState)} → ${getInputStateString(nextState)}`);
+
+        current = { ...current, inputState: nextState };
+        _setInputState(nextState);
+        traceRef.current.push(nextState);
+        setPendingTrace([...traceRef.current]);
+      }
+    }
+
+    runFSM();
+    return () => {
+      cancelled = true;
+    };
+  }, [inputState]);
+
+  const setInputState = useCallback((next: InputState, source = 'useInputState') => {
+    _setInputState((prev) => {
+      if (prev === next) {
+        debugLog.log(`🟡 Ignored redundant state: ${getInputStateString(next)} (from ${source})`);
+        return prev;
+      }
+
+      traceRef.current.push(next);
+      setPendingTrace([...traceRef.current]);
+
+      debugLog.log(`🟢 ${getStateIcon(prev)} ${getInputStateString(prev)} → ${getStateIcon(next)} ${getInputStateString(next)} (from ${source})`);
+      return next;
+    });
+  }, []);
+
   const appendState = useCallback((state: InputState) => {
     traceRef.current.push(state);
     setPendingTrace([...traceRef.current]);
+    debugLog.log(`📌 Appended state manually: ${getInputStateString(state)}`);
   }, []);
 
-  // 5️⃣ Clear everything
   const resetTrace = useCallback(() => {
     traceRef.current = [];
     headerRef.current = '';
     setPendingTrace([]);
+    _setInputState(InputState.EMPTY_INPUT);
 
     try {
       localStorage.removeItem(LOCAL_TRACE_KEY);
       localStorage.removeItem(LOCAL_HEADER_KEY);
+      debugLog.log('🧹 Cleared trace and header from localStorage');
     } catch (err) {
-      console.warn('[useInputState] Failed to clear trace:', err);
+      debugLog.error('[useInputState] Failed to clear trace:', err);
     }
   }, []);
 
-  // 6️⃣ Header helpers
   const setHeader = useCallback((header: string) => {
     headerRef.current = header;
     try {
       localStorage.setItem(LOCAL_HEADER_KEY, header);
+      debugLog.log(`🏷️ Set FSM header: ${header}`);
     } catch (err) {
-      console.warn('[useInputState] Failed to save header:', err);
+      debugLog.error('[useInputState] Failed to save header:', err);
     }
   }, []);
 
   const getHeader = useCallback(() => {
+    debugLog.log('📤 Retrieved FSM header');
     return headerRef.current;
   }, []);
 
-  // 7️⃣ Retrieve current trace
   const getTrace = useCallback(() => {
+    debugLog.log('📤 Retrieved FSM trace');
     return [...traceRef.current];
   }, []);
 
   const displayTraceWithIcons = useCallback(() => {
-    return formatTrace(traceRef.current);
+    const traceStr = formatTrace(traceRef.current);
+    debugLog.log('📊 Display trace:\n' + traceStr);
+    return traceStr;
   }, []);
 
   return {
+    inputState,
+    setInputState,
     appendState,
     resetTrace,
     getTrace,

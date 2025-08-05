@@ -43,7 +43,11 @@ export function createDebugLogger(
 ): DebugLogger {
   const prefix = `[🛠️ ${moduleName}]`;
   const logBuffer: string[] = [];
-  const shouldLog = enabled && process.env.NODE_ENV !== 'production';
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const forceLogging = process.env.NEXT_PUBLIC_PRODUCTION_LOGGING === 'true';
+
+  const shouldLog = enabled && (!isProduction || forceLogging);
   const minLevel = LEVEL_PRIORITY[logLevel];
 
   if (shouldLog) {
