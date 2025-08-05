@@ -18,6 +18,7 @@ import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useShare
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { ValidateFSMOutput } from '../FSM_Core/types/validateFSMTypes';
 import { displayStateTransitions } from '@/components/debug/FSMTracePanel';
+import { useInputState } from './useInputState';
 
 const debugLog = createDebugLogger('useFSMExecutor', true, false);
 
@@ -54,6 +55,8 @@ export function useFSMExecutor({
     manualEntry,
     validHexInput: selectAddress,
   } = useSharedPanelContext();
+
+  const { appendState, setHeader } = useInputState();
 
   const prevDebouncedInputRef = useRef('');
   const queuedInputRef = useRef<string | null>(null);
@@ -93,20 +96,16 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
 ───────────────────────────────
 `.trim();
 
-    console.log(summary);
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('latestFSMHeader', summary);
-      (window as any).__FSM_HEADER__ = summary;
-    }
+    setHeader(summary);
+    (window as any).__FSM_HEADER__ = summary;
 
     try {
       let currentState = inputState;
       let result: ValidateFSMOutput | undefined;
 
       while (!isTerminalFSMState(currentState)) {
-        // 👇 Push only the current state
         stateTrace.push(currentState);
+        appendState(currentState);
 
         result = await validateFSMCore({
           inputState: currentState,
@@ -148,14 +147,8 @@ manualEntry:   ${manualEntry === true ? 'true' : 'false'}
 
       const fsmTraceOutput = displayStateTransitions(stateTrace);
       console.log(fsmTraceOutput);
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('latestFSMTraceLines', fsmTraceOutput);
-        (window as any).__FSM_TRACE_LINES__ = fsmTraceOutput;
-
-        localStorage.setItem('latestFSMTrace', JSON.stringify(stateTrace));
-        (window as any).__FSM_TRACE__ = stateTrace;
-      }
+      (window as any).__FSM_TRACE_LINES__ = fsmTraceOutput;
+      (window as any).__FSM_TRACE__ = stateTrace;
 
       if (result?.nextState === InputState.UPDATE_VALIDATED_ASSET) {
         if (result.validatedToken) {
