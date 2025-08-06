@@ -26,7 +26,7 @@ import {
   dumpInputFeedContext,
 } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 
-import { useInputState } from '@/lib/hooks/inputValidations/helpers/useInputState';
+import { useFSMStateManager  } from '@/lib/hooks/inputValidations/helpers/useFSMStateManager';
 
 import { useChainId, usePublicClient, useAccount } from 'wagmi';
 
@@ -93,7 +93,7 @@ export const SharedPanelProvider = ({
   const {
     inputState,
     setInputState,
-  } = useInputState({
+  } = useFSMStateManager ({
     validHexInput,
     debouncedHexInput,
     containerType,

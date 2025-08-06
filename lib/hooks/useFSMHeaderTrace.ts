@@ -2,6 +2,7 @@
 
 'use client';
 
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const LOCAL_HEADER_KEY = 'latestFSMHeader';
@@ -23,7 +24,7 @@ export function useFSMHeaderTrace() {
         dataRef.current = parsed;
       } else {
         console.log('[useFSMHeaderTrace] 🆕 No existing localStorage. Initializing...');
-        localStorage.setItem(LOCAL_HEADER_KEY, JSON.stringify({}));
+        localStorage.setItem(LOCAL_HEADER_KEY, stringifyBigInt({}));
         setFSMHeaderData({});
         dataRef.current = {};
       }
@@ -34,7 +35,7 @@ export function useFSMHeaderTrace() {
 
   const syncLocalStorage = useCallback((data: FSMHeaderData) => {
     try {
-      localStorage.setItem(LOCAL_HEADER_KEY, JSON.stringify(data));
+      localStorage.setItem(LOCAL_HEADER_KEY, stringifyBigInt(data));
       console.log('[useFSMHeaderTrace] 💾 Synced localStorage:', data);
     } catch (err) {
       console.error('[useFSMHeaderTrace] ❌ Failed to sync localStorage:', err);
@@ -44,7 +45,11 @@ export function useFSMHeaderTrace() {
   const addFSMKeyValue = useCallback((field: string, value: string) => {
     console.log(`[useFSMHeaderTrace] ➕ Adding key: "${field}" with value: "${value}"`);
     setFSMHeaderData(prev => {
-      const updated = { ...prev, [field]: value };
+      const updated = {
+        ...prev,
+        [field]: value,
+        timestamp: new Date().toLocaleString(), // ✅ Add timestamp
+      };
       dataRef.current = updated;
       syncLocalStorage(updated);
       return updated;
@@ -67,7 +72,6 @@ export function useFSMHeaderTrace() {
     setFSMHeaderData({});
     dataRef.current = {};
     try {
-      localStorage.removeItem(LOCAL_HEADER_KEY);
       console.log('[useFSMHeaderTrace] 🧹 Cleared localStorage key:', LOCAL_HEADER_KEY);
     } catch (err) {
       console.error('[useFSMHeaderTrace] ❌ Failed to clear localStorage:', err);

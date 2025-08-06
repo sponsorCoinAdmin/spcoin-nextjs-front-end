@@ -55,7 +55,6 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
 
   const settings = ctx.settings ?? {};
   const tradeData = ctx.tradeData ?? {};
-
   const active: any = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
 
   return {
@@ -89,6 +88,7 @@ export default function TestPage() {
   const [showFSMTracePanel, setShowFSMTracePanel] = useState(false);
 
   const tokenAddress = exchangeContext?.tradeData?.sellTokenContract?.address;
+  console.log('🪙 tokenAddress:', tokenAddress);
 
   useEffect(() => {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
@@ -150,6 +150,7 @@ export default function TestPage() {
     const KEYS_TO_REMOVE = ['FSM_TRACE_LOG', 'latestFSMTrace'];
     try {
       KEYS_TO_REMOVE.forEach((key) => {
+      alert('clearFSMTraceFromMemory: Trace cleared! ${key}');
         localStorage.removeItem(key);
         console.log(`✅ Cleared localStorage key: "${key}"`);
       });
@@ -159,7 +160,8 @@ export default function TestPage() {
   };
 
   const logContext = () => {
-    console.log('📦 Log Context:', stringifyBigInt(exchangeContext));
+    const ctx = stringifyBigInt(exchangeContext);
+    console.log('📦 Log Context:', ctx);
   };
 
   return (
@@ -221,7 +223,6 @@ export default function TestPage() {
               <option value={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}>AGENT_SELECT_PANEL</option>
               <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
               <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
-              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_PANEL</option>
             </select>
           </div>
         </div>
@@ -242,6 +243,7 @@ export default function TestPage() {
       )}
 
       {isHydrated && <FSMTracePanel visible={showFSMTracePanel} />}
+
 
       {isHydrated && tokenAddress && (
         <div className="grid gap-6">
