@@ -13,13 +13,13 @@ let clearHeader: (() => void) | null = null;
  */
 export function clearFSMTraceFromMemory(): void {
   try {
-    alert('clearFSMTraceFromMemory:LOCAL_TRACE_KEY Trace cleared! latestFSMHeader');
+    // localStorage.removeItem('latestFSMHeader');
     localStorage.removeItem('latestFSMTrace');
-    localStorage.removeItem('latestFSMHeader');
+    localStorage.removeItem('latestFSMTraceLines');
     console.log('[FSMTracePanel] 🧹 Cleared latestFSMTrace and latestFSMHeader from localStorage');
 
+    // if (clearHeader) clearHeader();
     if (clearTrace) clearTrace();
-    if (clearHeader) clearHeader();
   } catch (err) {
     console.error('[FSMTracePanel] ❌ Failed to clear FSM trace:', err);
   }
@@ -92,6 +92,15 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
           {headerString}
         </pre>
       )}
+
+      {/* XXXXXX → Clear FSM Trace Button */}
+      <div className="mb-4">
+        <button
+          onClick={clearFSMTraceFromMemory}
+          className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
+          🧹 Clear FSM Trace
+        </button>
+      </div>
 
       <pre className="bg-gray-900 text-green-300 text-lg p-1 rounded whitespace-pre-wrap mt-2">
         {typeof window !== 'undefined'

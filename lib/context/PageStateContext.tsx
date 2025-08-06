@@ -9,12 +9,14 @@ import React, {
 } from 'react';
 
 // ✅ Updated type definition
-export type ExchangePageState = {
-  showContext: boolean;
-  showWallets: boolean;
-  collapsedKeys: string[];
-  expandContext: boolean; // ✅ added
-};
+export interface ExchangePageState {
+  showContext?: boolean;
+  showWallets?: boolean;
+  collapsedKeys?: string[];
+  expandContext?: boolean;
+  showActiveDisplayPanel?: boolean; // ✅ Add this
+}
+
 
 export type PageStateTree = {
   page: {

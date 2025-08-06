@@ -71,6 +71,9 @@ function normalizeContextDisplay(ctx: ExchangeContext): any {
   };
 }
 
+const buttonClasses =
+  'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
+
 export default function TestPage() {
   const isHydrated = useDidHydrate();
   const { address } = useAccount();
@@ -83,12 +86,12 @@ export default function TestPage() {
     showWallets = false,
     collapsedKeys = [],
     expandContext = false,
+    showActiveDisplayPanel = false,
   } = page;
 
   const [showFSMTracePanel, setShowFSMTracePanel] = useState(false);
 
   const tokenAddress = exchangeContext?.tradeData?.sellTokenContract?.address;
-  console.log('🪙 tokenAddress:', tokenAddress);
 
   useEffect(() => {
     localStorage.setItem('PageStateContext', JSON.stringify(state));
@@ -112,15 +115,14 @@ export default function TestPage() {
   };
 
   const toggleContext = () => {
-    if (!showContext) updateExchangePage({ showWallets: false });
-    updateExchangePage({ showContext: !showContext });
-  };
-
-  const toggleWallets = () => {
+    const nextShow = !showContext;
     updateExchangePage({
-      showWallets: !showWallets,
-      showContext: showWallets ? showContext : false,
+      showContext: nextShow,
+      showActiveDisplayPanel: nextShow,
+      expandContext: false,
+      showWallets: false,
     });
+    setShowFSMTracePanel(false);
   };
 
   const toggleExpandCollapse = () => {
@@ -129,6 +131,28 @@ export default function TestPage() {
     updateExchangePage({
       expandContext: nextExpand,
       collapsedKeys: nextKeys,
+    });
+  };
+
+  const toggleWallets = () => {
+    const nextShowWallets = !showWallets;
+    updateExchangePage({
+      showWallets: nextShowWallets,
+      showContext: false,
+      showActiveDisplayPanel: false,
+      expandContext: false,
+    });
+    setShowFSMTracePanel(false);
+  };
+
+  const toggleFSMTrace = () => {
+    const nextShow = !showFSMTracePanel;
+    setShowFSMTracePanel(nextShow);
+    updateExchangePage({
+      showContext: false,
+      showActiveDisplayPanel: false,
+      expandContext: false,
+      showWallets: false,
     });
   };
 
@@ -145,20 +169,6 @@ export default function TestPage() {
     return keys;
   };
 
-  const clearFSMTrace = () => {
-    console.log('🧹 Clear FSM Trace clicked');
-    const KEYS_TO_REMOVE = ['FSM_TRACE_LOG', 'latestFSMTrace'];
-    try {
-      KEYS_TO_REMOVE.forEach((key) => {
-        // alert('clearFSMTraceFromMemory: Trace cleared! ${key}');
-        localStorage.removeItem(key);
-        console.log(`✅ Cleared localStorage key: "${key}"`);
-      });
-    } catch (err) {
-      console.error('❌ Error clearing FSM trace log keys:', err);
-    }
-  };
-
   const logContext = () => {
     const ctx = stringifyBigInt(exchangeContext);
     console.log('📦 Log Context:', ctx);
@@ -168,38 +178,28 @@ export default function TestPage() {
     <div className="space-y-6 p-6">
       {isHydrated && (
         <div className="flex flex-wrap gap-4">
-          <button onClick={toggleContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-            {showContext ? 'Hide Context' : 'Show Context'}
-          </button>
-
-          {showContext && (
-            <button onClick={toggleExpandCollapse} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-              {expandContext ? 'Collapse Context' : 'Expand Context'}
+          {!showFSMTracePanel && !showWallets && (
+            <button onClick={toggleContext} className={buttonClasses}>
+              {showContext ? 'Hide Context' : 'Show Context'}
             </button>
           )}
 
-          <button onClick={logContext} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-            Log Context
-          </button>
+          {showContext && (
+            <>
+              <button onClick={toggleExpandCollapse} className={buttonClasses}>
+                {expandContext ? 'Collapse Context' : 'Expand Context'}
+              </button>
+              <button onClick={logContext} className={buttonClasses}>
+                Log Context
+              </button>
+            </>
+          )}
 
-          <button onClick={toggleWallets} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-            {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
-          </button>
-
-          <button onClick={() => setShowFSMTracePanel((prev) => !prev)} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-            {showFSMTracePanel ? 'Close FSM Trace' : 'Open FSM Trace'}
-          </button>
-
-          <button onClick={() => clearFSMTrace()} className="px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded hover:text-green-500">
-            Clear FSM Trace
-          </button>
-
-          <div className="flex flex-col space-y-2">
-            <label htmlFor="activeDisplaySelect" className="text-sm font-medium text-[#5981F3]">
-              Select activeDisplay
-            </label>
+          {showContext && showActiveDisplayPanel && (
             <select
               id="activeDisplaySelect"
+              title="Select activeDisplay"
+              aria-label="Select activeDisplay"
               value={exchangeContext.settings.activeDisplay}
               onChange={(e) => {
                 const selected = Number(e.target.value);
@@ -212,7 +212,7 @@ export default function TestPage() {
                   },
                 }));
               }}
-              className="px-4 py-2 text-sm font-medium text-yellow-300 bg-[#382a1f] rounded hover:text-yellow-500"
+              className={buttonClasses}
             >
               <option value={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>TRADING_STATION_PANEL</option>
               <option value={SP_COIN_DISPLAY.MANAGE_SPONSORS_BUTTON}>MANAGE_SPONSORS_BUTTON</option>
@@ -224,7 +224,19 @@ export default function TestPage() {
               <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
               <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
             </select>
-          </div>
+          )}
+
+          {!showContext && !showWallets && (
+            <button onClick={toggleFSMTrace} className={buttonClasses}>
+              {showFSMTracePanel ? 'Hide FSM Trace' : 'Show FSM Trace'}
+            </button>
+          )}
+
+          {!showContext && !showFSMTracePanel && (
+            <button onClick={toggleWallets} className={buttonClasses}>
+              {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
+            </button>
+          )}
         </div>
       )}
 
@@ -243,7 +255,6 @@ export default function TestPage() {
       )}
 
       {isHydrated && <FSMTracePanel visible={showFSMTracePanel} />}
-
 
       {isHydrated && tokenAddress && (
         <div className="grid gap-6">

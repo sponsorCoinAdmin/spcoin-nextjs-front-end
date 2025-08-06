@@ -96,9 +96,9 @@ export default function Header() {
 
           {TEST_LINK && (
             <Link
-              href="/Exchange/Test"
-              className={linkClass('/Exchange/Test')}
-              onMouseEnter={onMouseEnter('/Exchange/Test')}
+              href="/Test"
+              className={linkClass('/Test')}
+              onMouseEnter={onMouseEnter('/Test')}
               onMouseLeave={onMouseLeave}
             >
               Test
