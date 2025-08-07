@@ -19,11 +19,8 @@ type FSMRunnerParams = {
   cancelled: boolean;
   traceRef: React.MutableRefObject<InputState[]>;
   setPendingTrace: (trace: InputState[]) => void;
-  _setInputState: (state: InputState) => void;
   debugLog: ReturnType<typeof import('@/lib/utils/debugLogger').createDebugLogger>;
 
-  inputState: InputState;
-  validHexInput: string;
   debouncedHexInput: string;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
@@ -37,15 +34,13 @@ type FSMRunnerParams = {
 };
 
 export async function runFSM(params: FSMRunnerParams) {
+  // alert(`🚀 runFSM called with:\n\n${JSON.stringify(params, null, 2)}`);
+
   const {
     cancelled,
     traceRef,
     setPendingTrace,
-    _setInputState,
     debugLog,
-
-    inputState,
-    validHexInput,
     debouncedHexInput,
     containerType,
     feedType,
@@ -58,10 +53,14 @@ export async function runFSM(params: FSMRunnerParams) {
     setTradingTokenCallback,
   } = params;
 
-  debugLog.log('🔥 [FSM LOOP STARTED]', { inputState });
+  let fSMState: InputState = InputState.VALIDATE_ADDRESS;
+
+  // const msg = `🔥 [FSM LOOP STARTED] ${InputState[fSMState]}(${fSMState})`;
+  // alert(msg);
+  // debugLog.log(msg);
 
   const current: ValidateFSMInput = {
-    inputState,
+    inputState: fSMState,
     debouncedHexInput,
     seenBrokenLogos: new Set(),
     containerType,
@@ -70,39 +69,40 @@ export async function runFSM(params: FSMRunnerParams) {
     publicClient,
     accountAddress: accountAddress as Address,
     manualEntry: true,
-    sellAddress: feedType === FEED_TYPE.TOKEN_LIST ? validHexInput : undefined,
+    sellAddress: feedType === FEED_TYPE.TOKEN_LIST ? debouncedHexInput : undefined,
     buyAddress: undefined,
     validatedToken: undefined,
     validatedWallet: undefined,
   };
 
   while (!cancelled) {
+    current.inputState = fSMState;
+
     const result: ValidateFSMOutput = await validateFSMCore(current);
     if (cancelled) break;
 
-    const nextState = result.nextState;
-    if (nextState === current.inputState) {
-      debugLog.log(`🟡 FSM halted at stable/terminal state: ${getInputStateString(current.inputState)}`);
+    const newState = result.nextState;
+
+    if (newState === fSMState) {
+      debugLog.log(`🟡 FSM halted at stable/terminal state: ${getInputStateString(fSMState)}`);
       break;
     }
 
-    debugLog.log(`➡️ FSM transition: ${getInputStateString(current.inputState)} → ${getInputStateString(nextState)}`);
-
-    current.inputState = nextState;
-    _setInputState(nextState);
+    debugLog.log(`➡️ FSM transition: ${getInputStateString(fSMState)} → ${getInputStateString(newState)}`);
+    fSMState = newState;
 
     const last = traceRef.current[traceRef.current.length - 1];
-    if (last !== nextState) {
-      traceRef.current.push(nextState);
+    if (last !== fSMState) {
+      traceRef.current.push(fSMState);
       setPendingTrace([...traceRef.current]);
     }
   }
 
   const header = {
-    inputState: `${InputState[current.inputState]} (${current.inputState})`,
-    feedType: `${FEED_TYPE[current.feedType]} (${current.feedType})`,
-    containerType: `${SP_COIN_DISPLAY[current.containerType]} (${current.containerType})`,
-    debouncedHex: current.debouncedHexInput,
+    inputState: `${InputState[fSMState]} (${fSMState})`,
+    feedType: `${FEED_TYPE[feedType]} (${feedType})`,
+    containerType: `${SP_COIN_DISPLAY[containerType]} (${containerType})`,
+    debouncedHex: debouncedHexInput,
     sellAddress: current.sellAddress,
     buyAddress: current.buyAddress,
     chainId: String(current.chainId),

@@ -28,6 +28,7 @@ export const ERROR_FSM_STATES = new Set<InputState>([
 
 // ────────────── Finalize FSM States ──────────────
 export const FINALIZE_FSM_STATES = new Set<InputState>([
+  InputState.EMPTY_INPUT,
   InputState.UPDATE_VALIDATED_ASSET,
   InputState.CLOSE_SELECT_PANEL,
 ]);

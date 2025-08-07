@@ -17,7 +17,6 @@ import { useFSMHeaderTrace } from '@/lib/hooks/useFSMHeaderTrace';
 
 import {
   formatTrace,
-  getStateIcon,
   LOCAL_TRACE_KEY,
   LOCAL_TRACE_LINES_KEY,
 } from './fsmTraceUtils';
@@ -52,7 +51,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   } = params;
 
   const traceRef = useRef<InputState[]>([]);
-  const [inputState, _setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
   const [pendingTrace, setPendingTrace] = useState<InputState[]>([]);
   const debouncedTrace = useDebounce(pendingTrace, 200);
   const { reset: resetHeader } = useFSMHeaderTrace();
@@ -86,17 +84,24 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     }
   }, [debouncedTrace]);
 
-  // 🚀 Run FSM loop when inputState changes
+  // 🚀 Run FSM on debouncedHexInput only
   useEffect(() => {
     if (!publicClient) {
       debugLog.warn('⚠️ publicClient is undefined, aborting FSM execution.');
       return;
     }
 
-    let cancelled = false;
+    if (!debouncedHexInput || debouncedHexInput.length === 0) {
+      debugLog.log('⏭️ Skipping FSM — debouncedHexInput is empty.');
+      return;
+    }
+
+    const initialState = InputState.VALIDATE_ADDRESS;
+    const cancelled = false;
 
     runFSM({
-      inputState,
+      inputState: initialState,
+      validHexInput,
       debouncedHexInput,
       containerType,
       feedType,
@@ -111,36 +116,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       accountAddress,
       debugLog,
     });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    inputState,
-    debouncedHexInput,
-    validHexInput,
-    containerType,
-    feedType,
-    publicClient,
-    chainId,
-    accountAddress,
-  ]);
-
-  const setInputState = useCallback((next: InputState, source = 'useFSMStateManager') => {
-    _setInputState((prev) => {
-      if (prev === next) {
-        debugLog.log(`🟡 Ignored redundant state: ${next} (from ${source})`);
-        return prev;
-      }
-      const last = traceRef.current.at(-1);
-      if (last !== next) {
-        traceRef.current.push(next);
-        setPendingTrace([...traceRef.current]);
-      }
-      debugLog.log(`🟢 ${getStateIcon(prev)} ${prev} → ${getStateIcon(next)} ${next} (from ${source})`);
-      return next;
-    });
-  }, []);
+  }, [debouncedHexInput]);
 
   const appendState = useCallback((state: InputState) => {
     const last = traceRef.current.at(-1);
@@ -154,7 +130,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   const resetTrace = useCallback(() => {
     traceRef.current = [];
     setPendingTrace([]);
-    _setInputState(InputState.EMPTY_INPUT);
     try {
       localStorage.removeItem(LOCAL_TRACE_KEY);
       resetHeader();
@@ -176,8 +151,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   }, []);
 
   return {
-    inputState,
-    setInputState,
     appendState,
     resetTrace,
     getTrace,

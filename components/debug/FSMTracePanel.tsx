@@ -1,4 +1,3 @@
-// File: components/debug/FSMTracePanel.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -16,7 +15,10 @@ export function clearFSMHeaderFromMemory(): void {
     localStorage.removeItem('latestFSMHeader');
     console.log('[FSMTracePanel] 🧹 Cleared latestFSMHeader from localStorage');
 
-    if (clearHeader) clearHeader(); // This sets headerString to null
+    if (clearHeader) {
+      console.log('[FSMTracePanel] 🔁 Triggering clearHeader');
+      clearHeader(); // This sets headerString to null
+    }
   } catch (err) {
     console.error('[FSMTracePanel] ❌ Failed to clear FSM Header:', err);
   }
@@ -28,8 +30,10 @@ export function clearFSMTraceFromMemory(): void {
     localStorage.removeItem('latestFSMTraceLines');
     console.log('[FSMTracePanel] 🧹 Cleared latestFSMTrace and latestFSMTraceLines from localStorage');
 
-    if (clearTrace) clearTrace(); // This sets trace to null
-    // Force rerender of <pre> block below by triggering state change (e.g., setTrace(null))
+    if (clearTrace) {
+      console.log('[FSMTracePanel] 🔁 Triggering clearTrace');
+      clearTrace(); // This sets trace to null
+    }
   } catch (err) {
     console.error('[FSMTracePanel] ❌ Failed to clear FSM trace:', err);
   }
@@ -42,8 +46,15 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
 
   // Register clear callbacks
   useEffect(() => {
-    clearTrace = () => setTrace(null);
-    clearHeader = () => setHeaderString(null);
+    clearTrace = () => {
+      console.log('[FSMTracePanel] 🔁 clearTrace called');
+      setTrace(null);
+    };
+
+    clearHeader = () => {
+      console.log('[FSMTracePanel] 🔁 clearHeader called');
+      setHeaderString(null);
+    };
 
     return () => {
       clearTrace = null;
@@ -52,16 +63,14 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (!visible) {
-      return;
-    }
+    if (!visible) return;
 
     try {
       const rawTrace = localStorage.getItem('latestFSMTrace');
       const rawHeader = localStorage.getItem('latestFSMHeader');
 
       if (rawTrace) {
-        const parsed = JSON.parse(rawTrace);
+        const parsed: InputState[] = JSON.parse(rawTrace);
         setTrace(parsed);
       } else {
         setTrace(null);
@@ -91,9 +100,10 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
   }, [visible]);
 
   if (!visible) return null;
+
   return (
     <div className="p-2 text-white text-base bg-gray-800 rounded border border-gray-600 max-w-full overflow-auto">
-      {/* XXXXXX → Clear FSM Trace Button */}
+      {/* Clear Buttons */}
       <div className="flex flex-wrap gap-4 mb-[6px]">
         <button
           onClick={clearFSMHeaderFromMemory}
@@ -119,9 +129,9 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
       )}
 
       <pre className="bg-gray-900 text-green-300 text-lg p-1 rounded whitespace-pre-wrap mt-2">
-        {typeof window !== 'undefined'
-          ? localStorage.getItem('latestFSMTraceLines') ?? '[No FSM trace found]'
-          : '[Window undefined]'}
+        {trace
+          ? trace.map((state) => `🟢 ${getInputStateString(state)}`).join('\n')
+          : '[No FSM trace found]'}
       </pre>
     </div>
   );

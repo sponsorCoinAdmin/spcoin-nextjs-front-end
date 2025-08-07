@@ -94,9 +94,9 @@ export enum InputState {
   CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,       // 12
 
   // 5️⃣ Asset check (balance, metadata)
-  RESOLVE_ASSET,                         // 13
+  RESOLVE_ASSET,                          // 13
   TOKEN_NOT_RESOLVED_ERROR,               // 14
-  RESOLVE_ASSET_ERROR,                   // 15
+  RESOLVE_ASSET_ERROR,                    // 15
   MISSING_ACCOUNT_ADDRESS,                // 16
 
   // 6️⃣ Final delivery

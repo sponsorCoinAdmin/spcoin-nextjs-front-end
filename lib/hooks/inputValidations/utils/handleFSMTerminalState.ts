@@ -1,4 +1,4 @@
-// File: lib/hooks/inputValidations/utils/handleTerminalState.ts
+// File: lib/hooks/inputValidations/utils/handleFSMTerminalState.ts
 
 import { InputState, TokenContract, getInputStateString } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -17,7 +17,7 @@ export function handleFSMTerminalState(
 ): void {
   switch (inputState) {
     case InputState.UPDATE_VALIDATED_ASSET:
-      debugFSM.log('📥 FSM: UPDATE_VALIDATED_ASSET reached');
+      debugFSM.log('📥 FSM: UPDATE_VALIDATED_ASSET reached: validatedAsset: ${validatedAsset?.symbol || validatedAsset?.address}');
       if (validatedAsset) {
         debugFSM.log(`📦 setValidatedAsset → ${validatedAsset.symbol || validatedAsset.address}`);
         setValidatedAsset(validatedAsset); // ✅ Now storing the validated asset in context

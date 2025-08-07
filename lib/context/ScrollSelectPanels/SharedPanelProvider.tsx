@@ -20,7 +20,7 @@ import {
 
 import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { handleFSMTerminalState } from '@/lib/hooks/inputValidations/utils/handleTerminalState';
+import { handleFSMTerminalState } from '@/lib/hooks/inputValidations/utils/handleFSMTerminalState';
 import {
   dumpFSMContext,
   dumpInputFeedContext,
