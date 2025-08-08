@@ -21,13 +21,13 @@ const debugLog = createDebugLogger('RecipientSelectPanel', DEBUG_ENABLED, LOG_TI
 
 interface RecipientSelectPanelProps {
   isActive: boolean;
-  closeCallback: () => void;
+  closePanelCallback: () => void;
   setTradingTokenCallback: (wallet: WalletAccount) => void;
 }
 
 export default function RecipientSelectPanel({
   isActive,
-  closeCallback,
+  closePanelCallback,
   setTradingTokenCallback,
 }: RecipientSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
@@ -41,7 +41,7 @@ export default function RecipientSelectPanel({
 
   return (
     <SharedPanelProvider
-      closeCallback={closeCallback}
+      closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Cast needed until WalletAccount is handled generically
       containerType={activeDisplay as SP_COIN_DISPLAY}
     >

@@ -1,5 +1,7 @@
 // File: lib/hooks/inputValidations/helpers/fsmRunner.ts
 
+'use client';
+
 import {
   InputState,
   SP_COIN_DISPLAY,
@@ -13,14 +15,14 @@ import type {
   ValidateFSMInput,
   ValidateFSMOutput,
 } from '../FSM_Core/types/validateFSMTypes';
+
 import { Address } from 'viem';
+import { formatTrace, getStateIcon } from './fsmTraceUtils';
 
-type FSMRunnerParams = {
-  cancelled: boolean;
-  traceRef: React.MutableRefObject<InputState[]>;
-  setPendingTrace: (trace: InputState[]) => void;
-  debugLog: ReturnType<typeof import('@/lib/utils/debugLogger').createDebugLogger>;
+export const LOCAL_TRACE_KEY = 'latestFSMTrace';
+export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 
+export type FSMRunnerParams = {
   debouncedHexInput: string;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
@@ -29,35 +31,40 @@ type FSMRunnerParams = {
   accountAddress?: string;
 
   setValidatedAsset: (asset: WalletAccount | undefined) => void;
-  closeCallback: (fromUser: boolean) => void;
+  closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
 };
 
-export async function runFSM(params: FSMRunnerParams) {
-  // alert(`🚀 runFSM called with:\n\n${JSON.stringify(params, null, 2)}`);
+function getInitialTraceFromLocalStorage(): InputState[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_TRACE_KEY);
+    const parsed = JSON.parse(raw || '[]');
+    if (Array.isArray(parsed) && parsed.every(n => typeof n === 'number')) {
+      return parsed as InputState[];
+    }
+  } catch (err) {
+    console.warn('⚠️ Failed to parse previous FSM trace from localStorage:', err);
+  }
+  return [];
+}
 
+export async function runFSM(params: FSMRunnerParams) {
   const {
-    cancelled,
-    traceRef,
-    setPendingTrace,
-    debugLog,
     debouncedHexInput,
     containerType,
     feedType,
     publicClient,
     chainId,
     accountAddress,
-
     setValidatedAsset,
-    closeCallback,
+    closePanelCallback,
     setTradingTokenCallback,
   } = params;
 
-  let fSMState: InputState = InputState.VALIDATE_ADDRESS;
+  const trace: InputState[] = getInitialTraceFromLocalStorage();
 
-  // const msg = `🔥 [FSM LOOP STARTED] ${InputState[fSMState]}(${fSMState})`;
-  // alert(msg);
-  // debugLog.log(msg);
+  let fSMState: InputState = InputState.VALIDATE_ADDRESS;
+  trace.push(fSMState);
 
   const current: ValidateFSMInput = {
     inputState: fSMState,
@@ -75,29 +82,41 @@ export async function runFSM(params: FSMRunnerParams) {
     validatedWallet: undefined,
   };
 
-  while (!cancelled) {
+  while (true) {
     current.inputState = fSMState;
 
     const result: ValidateFSMOutput = await validateFSMCore(current);
-    if (cancelled) break;
-
     const newState = result.nextState;
 
-    if (newState === fSMState) {
-      debugLog.log(`🟡 FSM halted at stable/terminal state: ${getInputStateString(fSMState)}`);
-      break;
-    }
+    if (newState === fSMState) break;
 
-    debugLog.log(`➡️ FSM transition: ${getInputStateString(fSMState)} → ${getInputStateString(newState)}`);
-    fSMState = newState;
+    const prev: InputState = fSMState;
+    const next: InputState = newState;
+    console.log(`🟢 ${getStateIcon(prev)} ${prev} → ${getStateIcon(next)} ${next} (FSM Runner)`);
 
-    const last = traceRef.current[traceRef.current.length - 1];
-    if (last !== fSMState) {
-      traceRef.current.push(fSMState);
-      setPendingTrace([...traceRef.current]);
-    }
+    fSMState = next;
+    trace.push(fSMState);
   }
 
+  // ✅ Save trace log to localStorage (with custom header prepended to trace lines)
+  // ✅ Save formatted trace block with header, append to history
+  try {
+    const headerLine = `🧮 ${SP_COIN_DISPLAY[containerType]}  for Address ${debouncedHexInput}`;
+    const formattedLines = trace.map((state, i) => {
+      const icon = i === 0 ? '🟢' : '🟡';
+      return `${icon} ${getStateIcon(state)} ${getInputStateString(state)}`;
+    });
+
+    const block = [headerLine, ...formattedLines].join('\n');
+
+    const previous = localStorage.getItem(LOCAL_TRACE_LINES_KEY) || '';
+    const combined = [previous, block].filter(Boolean).join('\n');
+    localStorage.setItem(LOCAL_TRACE_LINES_KEY, combined);
+  } catch (err) {
+    console.error('❌ Failed to save FSM trace block:', err);
+  }
+  
+  // ✅ Save FSM header
   const header = {
     inputState: `${InputState[fSMState]} (${fSMState})`,
     feedType: `${FEED_TYPE[feedType]} (${feedType})`,
@@ -113,12 +132,14 @@ export async function runFSM(params: FSMRunnerParams) {
     timestamp: new Date().toLocaleString(),
   };
 
-  localStorage.setItem('latestFSMHeader', JSON.stringify(header, null, 2));
+  try {
+    localStorage.setItem('latestFSMHeader', JSON.stringify(header, null, 2));
 
-  const historyKey = 'fsmHeaderHistory';
-  const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
-  history.push(header);
-  localStorage.setItem(historyKey, JSON.stringify(history, null, 2));
-
-  debugLog.log('🗂️ FSM header saved to history:', header);
+    const historyKey = 'fsmHeaderHistory';
+    const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+    history.push(header);
+    localStorage.setItem(historyKey, JSON.stringify(history, null, 2));
+  } catch (err) {
+    console.error('❌ Failed to save FSM header to history:', err);
+  }
 }

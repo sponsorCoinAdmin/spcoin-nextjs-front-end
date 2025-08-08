@@ -23,13 +23,13 @@ const debugLog = createDebugLogger(
 
 interface ErrorMessagePanelProps {
   isActive: boolean;
-  closeCallback: () => void;
+  closePanelCallback: () => void;
 }
 
 function ErrorMessagePanelInner({
-    closeCallback,
+    closePanelCallback,
 }: {
-  closeCallback: () => void;
+  closePanelCallback: () => void;
 }) {
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { setActiveDisplay } = useActiveDisplay();
@@ -41,7 +41,7 @@ function ErrorMessagePanelInner({
     );
     setErrorMessage(undefined);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-    closeCallback();
+    closePanelCallback();
   };
 
   return (
@@ -55,7 +55,7 @@ function ErrorMessagePanelInner({
 
 export default function ErrorMessagePanel({
   isActive,
-  closeCallback
+  closePanelCallback
 }: ErrorMessagePanelProps) {
   const { activeDisplay } = useActiveDisplay();
 
@@ -71,7 +71,7 @@ export default function ErrorMessagePanel({
 
   return (
     <ErrorMessagePanelInner
-      closeCallback={closeCallback}
+      closePanelCallback={closePanelCallback}
     />
   );
 }

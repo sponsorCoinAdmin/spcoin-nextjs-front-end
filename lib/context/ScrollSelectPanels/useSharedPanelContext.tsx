@@ -45,7 +45,7 @@ export interface SharedPanelContextType {
   // Identity and callbacks
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
-  closeCallback: () => void;
+  closePanelCallback: () => void;
   setTradingTokenCallback: (token: TokenContract) => void;
   instanceId?: string;
 }

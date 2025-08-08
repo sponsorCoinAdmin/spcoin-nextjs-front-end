@@ -42,14 +42,14 @@ const feedType = FEED_TYPE.TOKEN_LIST;
 
 interface SharedPanelProviderProps {
   children: ReactNode;
-  closeCallback: (fromUser: boolean) => void;
+  closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: TokenContract) => void;
   containerType: SP_COIN_DISPLAY;
 }
 
 export const SharedPanelProvider = ({
   children,
-  closeCallback,
+  closePanelCallback,
   setTradingTokenCallback,
   containerType,
 }: SharedPanelProviderProps) => {
@@ -94,13 +94,12 @@ export const SharedPanelProvider = ({
     inputState,
     setInputState,
   } = useFSMStateManager ({
-    validHexInput,
     debouncedHexInput,
     containerType,
     feedType,
     instanceId,
     setValidatedAsset,
-    closeCallback,
+    closePanelCallback,
     setTradingTokenCallback,
   });
 
@@ -111,7 +110,7 @@ export const SharedPanelProvider = ({
       setInputState,
       setValidatedAsset,
       setTradingTokenCallback,
-      closeCallback
+      closePanelCallback
     );
   }, [
     inputState,
@@ -119,7 +118,7 @@ export const SharedPanelProvider = ({
     setInputState,
     setValidatedAsset,
     setTradingTokenCallback,
-    closeCallback,
+    closePanelCallback,
   ]);
 
   const setValidatedToken = useCallback(
@@ -185,7 +184,7 @@ export const SharedPanelProvider = ({
 
       containerType,
       feedType,
-      closeCallback: () => closeCallback(true),
+      closePanelCallback: () => closePanelCallback(true),
       setTradingTokenCallback,
       instanceId,
     }),
@@ -204,7 +203,7 @@ export const SharedPanelProvider = ({
       resetHexInput,
       containerType,
       feedType,
-      closeCallback,
+      closePanelCallback,
       setTradingTokenCallback,
       dumpInputFeed,
       dumpSharedPanel,

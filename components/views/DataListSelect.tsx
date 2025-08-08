@@ -6,7 +6,7 @@ import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { useChainId } from 'wagmi';
 import {
-  BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, WalletAccount,
+  BASE, ETHEREUM, FEED_TYPE, HARDHAT, InputState, POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
 import { defaultMissingImage, getLogoURL } from '@/lib/network/utils';
 import baseTokenList from '@/resources/data/networks/base/tokenList.json';
@@ -46,7 +46,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
 
-  const { handleHexInputChange, setManualEntry } = useSharedPanelContext();
+  const { handleHexInputChange, setManualEntry, setInputState } = useSharedPanelContext();
   const chainId = useChainId();
 
   useEffect(() => setIsClient(true), []);
@@ -123,6 +123,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                         debugLog.log(`🟢 Account clicked: ${wallet.name} → ${wallet.address}`);
                         alert(`DataListSelest Wallet.address:${wallet.address} → Setting manualEntry to false`)
                         setManualEntry(false);
+                        setInputState(InputState.FSM_READY, "AddressSelect (Programmatic Entry)"); // ✅ Mark FSM as ready
                         const result = handleHexInputChange(wallet.address);
                         debugLog.log(`🛠️ handleHexInputChange returned:`, result);
                       }}
@@ -162,6 +163,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                       debugLog.log(`🟢 Token clicked: ${token.name} → ${token.address}`);
                       // alert(`DataListSelest Token.address:${token.address} → Setting manualEntry to false`)
                       setManualEntry(false);
+                      setInputState(InputState.FSM_READY, "AddressSelect (Programmatic Entry)"); // ✅ Mark FSM as ready
                       const result = handleHexInputChange(token.address);
                       debugLog.log(`🛠️ handleHexInputChange returned:`, result);
                     }}

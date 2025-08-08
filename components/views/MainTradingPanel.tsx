@@ -61,8 +61,8 @@ export default function MainTradingPanel() {
   debugLog.log(`🧩 Current activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
   debugLog.log(`💬 isTokenScrollPanel = ${isTokenScrollPanel}, isErrorMessagePanel = ${isErrorMessagePanel}`);
 
-  function closeCallback() {
-    debugLog.log(`🛑 closeCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
+  function closePanelCallback() {
+    debugLog.log(`🛑 closePanelCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }
 
@@ -101,16 +101,16 @@ export default function MainTradingPanel() {
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        <TradeContainerHeader closeCallback={closeCallback} />
+        <TradeContainerHeader closePanelCallback={closePanelCallback} />
         <TradingStationPanel />
         <TokenSelectPanel
           isActive={isTokenScrollPanel}
-          closeCallback={closeCallback}
+          closePanelCallback={closePanelCallback}
           setTradingTokenCallback={setAssetTokenCallback}
         />
         <ErrorMessagePanel
           isActive={isErrorMessagePanel}
-          closeCallback={closeCallback}
+          closePanelCallback={closePanelCallback}
         />
       </div>
     </div>

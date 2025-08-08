@@ -9,6 +9,7 @@ import ErrorAssetPreview from '../shared/utils/sharedPreviews/ErrorAssetPreview'
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
+import { InputState } from '@/lib/structure'; // ✅ import InputState enum
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -25,6 +26,7 @@ export default function AddressSelect() {
     debouncedHexInput,
     handleHexInputChange,
     setManualEntry,
+    setInputState, // ✅ added from context
   } = useSharedPanelContext();
 
   debugLog.log('🆔 context instanceId:', instanceId);
@@ -58,6 +60,7 @@ export default function AddressSelect() {
           debugLog.log('✏️ [HexAddressInput] onChange triggered with:', val);
           try {
             setManualEntry(true); // ✅ Mark this as user-typed
+            setInputState(InputState.FSM_READY, "AddressSelect (Manual Entry)"); // ✅ Mark FSM as ready
             const result = handleHexInputChange(val);
             debugLog.log('⚙️ handleHexInputChange returned:', result);
           } catch (err) {

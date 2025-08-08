@@ -12,10 +12,10 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useCallback } from 'react';
 
 interface Props {
-  closeCallback: () => void;
+  closePanelCallback: () => void;
 }
 
-const TradeContainerHeader = ({ closeCallback }: Props) => {
+const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const { exchangeContext } = useExchangeContext();
   const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
@@ -79,7 +79,7 @@ const TradeContainerHeader = ({ closeCallback }: Props) => {
           <button
             id="closeScrollPanelButton"
             aria-label="Close dialog"
-            onClick={closeCallback}
+            onClick={closePanelCallback}
             className="cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
           >
             X

@@ -8,7 +8,7 @@
 │  │ │ │ TokenSelectPanelInner                         │  │ │  │
 │  │ │ │ - watches inputState                          │  │ │  │
 │  │ │ │ - if inputState === CLOSE_SELECT_PANEL →   │  │  │ │  │
-│  │ │ │     calls closeCallback(true)              │  │  │ │  │
+│  │ │ │     calls closePanelCallback(true)              │  │  │ │  │
 │  │ │ └────────────────────────────────────────────┘  │  │ │  │
 │  │ └─────────────────────────────────────────────────┘  │ │  │
 │  └──────────────────────────────────────────────────────┘ │  │

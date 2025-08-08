@@ -1,8 +1,7 @@
 // File: lib/hooks/inputValidations/helpers/useFSMStateManager.ts
-
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   FEED_TYPE,
   InputState,
@@ -11,176 +10,107 @@ import {
 } from '@/lib/structure';
 
 import { useAccount, useChainId, usePublicClient } from 'wagmi';
-import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useFSMHeaderTrace } from '@/lib/hooks/useFSMHeaderTrace';
-
-import {
-  formatTrace,
-  getStateIcon,
-  LOCAL_TRACE_KEY,
-  LOCAL_TRACE_LINES_KEY,
-} from './fsmTraceUtils';
-
 import { runFSM } from './fsmRunner';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
-const debugLog = createDebugLogger('useFSMStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const debugLog = createDebugLogger('useFSMStateManager', DEBUG_ENABLED, LOG_TIME);
 
 interface UseFSMStateManagerParams {
-  validHexInput: string;
   debouncedHexInput: string;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   instanceId: string;
   setValidatedAsset: (asset: WalletAccount | undefined) => void;
-  closeCallback: (fromUser: boolean) => void;
+  closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
 }
 
 export function useFSMStateManager(params: UseFSMStateManagerParams) {
   const {
-    validHexInput,
     debouncedHexInput,
     containerType,
     feedType,
     instanceId,
     setValidatedAsset,
-    closeCallback,
+    closePanelCallback,
     setTradingTokenCallback,
   } = params;
 
-  const traceRef = useRef<InputState[]>([]);
-  const [inputState, _setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
-  const [pendingTrace, setPendingTrace] = useState<InputState[]>([]);
-  const debouncedTrace = useDebounce(pendingTrace, 200);
-  const { reset: resetHeader } = useFSMHeaderTrace();
+  const inputStateRef = useRef<InputState>(InputState.EMPTY_INPUT);
+  const prevDebouncedInputRef = useRef<string | undefined>(undefined);
 
+  const { address: accountAddress } = useAccount();
   const publicClient = usePublicClient();
   const chainId = useChainId();
-  const { address: accountAddress } = useAccount();
 
-  // Load trace from localStorage on mount
+  const prevParamsRef = useRef<UseFSMStateManagerParams | null>(null);
+
+  // Optional: warn if critical params change
   useEffect(() => {
-    try {
-      const rawTrace = localStorage.getItem(LOCAL_TRACE_KEY);
-      traceRef.current = rawTrace ? JSON.parse(rawTrace) : [];
-      debugLog.log('⏪ Loaded trace from localStorage:', traceRef.current);
-    } catch (err) {
-      debugLog.error('[useFSMStateManager] Failed to load from localStorage:', err);
+    const prev = prevParamsRef.current;
+    if (prev) {
+      const changes: string[] = [];
+      if (prev.debouncedHexInput !== debouncedHexInput) changes.push(`debouncedHexInput\n  ${prev.debouncedHexInput} → ${debouncedHexInput}`);
+      if (prev.containerType !== containerType) changes.push(`containerType\n  ${prev.containerType} → ${containerType}`);
+      if (prev.feedType !== feedType) changes.push(`feedType\n  ${prev.feedType} → ${feedType}`);
+      if (prev.instanceId !== instanceId) changes.push(`instanceId\n  ${prev.instanceId} → ${instanceId}`);
+      if (prev.setValidatedAsset !== setValidatedAsset) changes.push('setValidatedAsset function changed');
+      if (prev.closePanelCallback !== closePanelCallback) changes.push('closePanelCallback function changed');
+      if (prev.setTradingTokenCallback !== setTradingTokenCallback) changes.push('setTradingTokenCallback function changed');
+      if (changes.length > 0) {
+        // alert(`⚠️ useFSMStateManager param changes:\n\n${changes.join('\n\n')}`);
+      }
     }
-  }, []);
+    prevParamsRef.current = params;
+  }, [debouncedHexInput, containerType, feedType, instanceId, setValidatedAsset, closePanelCallback, setTradingTokenCallback]);
 
-  // Save trace to localStorage when debounced
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_TRACE_KEY, JSON.stringify(debouncedTrace));
-      debugLog.log('💾 Saved trace to localStorage:', debouncedTrace);
-
-      const lines = formatTrace(debouncedTrace);
-      localStorage.setItem(LOCAL_TRACE_LINES_KEY, lines);
-      debugLog.log('🧾 Saved FSM trace lines to localStorage:', lines);
-    } catch (err) {
-      debugLog.error('[useFSMStateManager] Failed to persist debounced trace:', err);
-    }
-  }, [debouncedTrace]);
-
-  // 🚀 Run FSM loop when inputState changes
+  // FSM RUN LOOP
   useEffect(() => {
     if (!publicClient) {
       debugLog.warn('⚠️ publicClient is undefined, aborting FSM execution.');
       return;
     }
 
-    let cancelled = false;
+    // ✅ Prevent duplicate execution
+    if (debouncedHexInput === prevDebouncedInputRef.current) {
+      debugLog.log(`⏭️ Skipping FSM: debouncedHexInput unchanged → "${debouncedHexInput}"`);
+      return;
+    }
+
+    if (!debouncedHexInput || debouncedHexInput.trim() === '') {
+      debugLog.log('⏭️ Skipping FSM: debouncedHexInput is empty');
+      return;
+    }
+
+    prevDebouncedInputRef.current = debouncedHexInput;
+
+    debugLog.log(`🚀 Running FSM for input → "${debouncedHexInput}"`);
 
     runFSM({
-      inputState,
       debouncedHexInput,
       containerType,
       feedType,
-      traceRef,
-      setPendingTrace,
-      setValidatedAsset,
-      closeCallback,
-      setTradingTokenCallback,
-      cancelled,
       publicClient,
       chainId,
-      accountAddress,
-      debugLog,
+      accountAddress: accountAddress ?? undefined,
+      setValidatedAsset,
+      closePanelCallback,
+      setTradingTokenCallback,
     });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    inputState,
-    debouncedHexInput,
-    validHexInput,
-    containerType,
-    feedType,
-    publicClient,
-    chainId,
-    accountAddress,
-  ]);
+  }, [debouncedHexInput]);
 
   const setInputState = useCallback((next: InputState, source = 'useFSMStateManager') => {
-    _setInputState((prev) => {
-      if (prev === next) {
-        debugLog.log(`🟡 Ignored redundant state: ${next} (from ${source})`);
-        return prev;
-      }
-      const last = traceRef.current.at(-1);
-      if (last !== next) {
-        traceRef.current.push(next);
-        setPendingTrace([...traceRef.current]);
-      }
-      debugLog.log(`🟢 ${getStateIcon(prev)} ${prev} → ${getStateIcon(next)} ${next} (from ${source})`);
-      return next;
-    });
-  }, []);
+    const prev = inputStateRef.current;
+    if (prev === next) return;
+    inputStateRef.current = next;
 
-  const appendState = useCallback((state: InputState) => {
-    const last = traceRef.current.at(-1);
-    if (last !== state) {
-      traceRef.current.push(state);
-      setPendingTrace([...traceRef.current]);
-      debugLog.log(`📌 Appended state manually: ${state}`);
-    }
-  }, []);
-
-  const resetTrace = useCallback(() => {
-    traceRef.current = [];
-    setPendingTrace([]);
-    _setInputState(InputState.EMPTY_INPUT);
-    try {
-      localStorage.removeItem(LOCAL_TRACE_KEY);
-      resetHeader();
-      debugLog.log('🧹 Cleared trace and header from localStorage');
-    } catch (err) {
-      debugLog.error('[useFSMStateManager] Failed to clear trace:', err);
-    }
-  }, [resetHeader]);
-
-  const getTrace = useCallback(() => {
-    debugLog.log('📤 Retrieved FSM trace');
-    return [...traceRef.current];
-  }, []);
-
-  const displayTraceWithIcons = useCallback(() => {
-    const traceStr = formatTrace(traceRef.current);
-    debugLog.log('📊 Display trace:\n' + traceStr);
-    return traceStr;
+    debugLog.log(`🟢 setInputState: ${prev} → ${next} (from ${source})`);
   }, []);
 
   return {
-    inputState,
+    inputState: inputStateRef.current,
     setInputState,
-    appendState,
-    resetTrace,
-    getTrace,
-    displayTraceWithIcons,
   };
 }

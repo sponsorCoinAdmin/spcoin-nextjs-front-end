@@ -69,41 +69,45 @@ export enum API_TRADING_PROVIDER {
 
 // File: lib/structure/enums.ts
 
+// File: lib/structure.ts (or wherever InputState is defined)
 export enum InputState {
-  // 0️⃣ Blank input
-  EMPTY_INPUT,                            // 0
+  // 0️⃣ FSM Entry Point
+  FSM_READY = 0,                           // 0
 
-  // 1️⃣ Hex input validation
-  INVALID_HEX_INPUT,                      // 1
-  VALIDATE_ADDRESS,                       // 2
-  INCOMPLETE_ADDRESS,                     // 3
-  INVALID_ADDRESS_INPUT,                  // 4
+  // 1️⃣ Blank input
+  EMPTY_INPUT = 1,                         // 1
 
-  // 2️⃣ Duplication check
-  TEST_DUPLICATE_INPUT,                   // 5
-  DUPLICATE_INPUT_ERROR,                  // 6
+  // 2️⃣ Hex input validation
+  INVALID_HEX_INPUT = 2,                   // 2
+  VALIDATE_ADDRESS = 3,                    // 3
+  INCOMPLETE_ADDRESS = 4,                  // 4
+  INVALID_ADDRESS_INPUT = 5,               // 5
 
-  // 3️⃣ Preview check phase
-  VALIDATE_PREVIEW,                       // 7
-  PREVIEW_ADDRESS,                        // 8
-  PREVIEW_CONTRACT_EXISTS_LOCALLY,        // 9
-  PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,     // 10
+  // 3️⃣ Duplication check
+  TEST_DUPLICATE_INPUT = 6,                // 6
+  DUPLICATE_INPUT_ERROR = 7,               // 7
 
-  // 4️⃣ Blockchain existence check
-  VALIDATE_EXISTS_ON_CHAIN,               // 11
-  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,       // 12
+  // 4️⃣ Preview check phase
+  VALIDATE_PREVIEW = 8,                    // 8
+  PREVIEW_ADDRESS = 9,                     // 9
+  PREVIEW_CONTRACT_EXISTS_LOCALLY = 10,   // 10
+  PREVIEW_CONTRACT_NOT_FOUND_LOCALLY = 11,// 11
 
-  // 5️⃣ Asset check (balance, metadata)
-  RESOLVE_ASSET,                          // 13
-  TOKEN_NOT_RESOLVED_ERROR,               // 14
-  RESOLVE_ASSET_ERROR,                    // 15
-  MISSING_ACCOUNT_ADDRESS,                // 16
+  // 5️⃣ Blockchain existence check
+  VALIDATE_EXISTS_ON_CHAIN = 12,          // 12
+  CONTRACT_NOT_FOUND_ON_BLOCKCHAIN = 13,  // 13
 
-  // 6️⃣ Final delivery
-  UPDATE_VALIDATED_ASSET,                 // 17
+  // 6️⃣ Asset check (balance, metadata)
+  RESOLVE_ASSET = 14,                      // 14
+  TOKEN_NOT_RESOLVED_ERROR = 15,           // 15
+  RESOLVE_ASSET_ERROR = 16,                // 16
+  MISSING_ACCOUNT_ADDRESS = 17,            // 17
 
-  // 7️⃣ Final close
-  CLOSE_SELECT_PANEL,                     // 18
+  // 7️⃣ Final delivery
+  UPDATE_VALIDATED_ASSET = 18,             // 18
+
+  // 8️⃣ Final close
+  CLOSE_SELECT_PANEL = 19,                 // 19
 }
 
 export const getInputStateString = (state: InputState): string =>

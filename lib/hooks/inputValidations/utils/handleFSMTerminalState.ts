@@ -13,7 +13,7 @@ export function handleFSMTerminalState(
   setInputState: (state: InputState) => void,
   setValidatedAsset: (token: TokenContract | undefined) => void,
   setTradingTokenCallback: (token: TokenContract) => void,
-  closeCallback: (fromUser: boolean) => void
+  closePanelCallback: (fromUser: boolean) => void
 ): void {
   switch (inputState) {
     case InputState.UPDATE_VALIDATED_ASSET:
@@ -30,8 +30,8 @@ export function handleFSMTerminalState(
       break;
 
     case InputState.CLOSE_SELECT_PANEL:
-      debugFSM.log('🚪 FSM: CLOSE_SELECT_PANEL → closeCallback(true)');
-      closeCallback(true);
+      debugFSM.log('🚪 FSM: CLOSE_SELECT_PANEL → closePanelCallback(true)');
+      closePanelCallback(true);
       break;
 
     default:

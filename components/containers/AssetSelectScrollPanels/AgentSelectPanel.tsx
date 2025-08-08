@@ -20,13 +20,13 @@ const debugLog = createDebugLogger('AgentSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 interface AgentSelectPanelProps {
   isActive: boolean;
-  closeCallback: () => void;
+  closePanelCallback: () => void;
   setTradingTokenCallback: (wallet: WalletAccount) => void;
 }
 
 export default function AgentSelectPanel({
   isActive,
-  closeCallback,
+  closePanelCallback,
   setTradingTokenCallback,
 }: AgentSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
@@ -40,7 +40,7 @@ export default function AgentSelectPanel({
 
   return (
     <SharedPanelProvider
-      closeCallback={closeCallback}
+      closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Temporary cast until generics are introduced
       containerType={activeDisplay}
     >

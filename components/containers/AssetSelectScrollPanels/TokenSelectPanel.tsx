@@ -19,13 +19,13 @@ const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
 interface TokenSelectPanelProps {
   isActive: boolean;
-  closeCallback: () => void;
+  closePanelCallback: () => void;
   setTradingTokenCallback: (token: TokenContract) => void;
 }
 
 export default function TokenSelectPanel({
   isActive,
-  closeCallback,
+  closePanelCallback,
   setTradingTokenCallback,
 }: TokenSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
@@ -44,7 +44,7 @@ export default function TokenSelectPanel({
 
   return (
     <SharedPanelProvider
-      closeCallback={closeCallback}
+      closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback}
       containerType={activeDisplay as SP_COIN_DISPLAY} // Ensure valid enum
     >
