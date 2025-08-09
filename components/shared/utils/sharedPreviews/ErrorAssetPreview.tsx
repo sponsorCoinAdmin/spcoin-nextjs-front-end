@@ -3,14 +3,23 @@
 
 import { useEffect, useState } from 'react';
 import { InputState } from '@/lib/structure';
-import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
+import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import {
+  isErrorFSMState,
+  isTerminalFSMState,
+} from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import BasePreviewWrapper from './BasePreviewWrapper';
 
-const emojiMap: Partial<Record<InputState, {
-  emoji?: string;
-  text: string;
-  colorHex?: string;
-}>> = {
+const emojiMap: Partial<
+  Record<
+    InputState,
+    {
+      emoji?: string;
+      text: string;
+      colorHex?: string;
+    }
+  >
+> = {
   [InputState.INVALID_HEX_INPUT]: {
     emoji: '⛔',
     text: 'Hex input invalid.',
@@ -59,7 +68,13 @@ const emojiMap: Partial<Record<InputState, {
 };
 
 export default function ErrorAssetPreview() {
-  const { inputState, isTerminalState, isErrorState } = useTerminalFSMState();
+  // Read current FSM state directly from context
+  const { inputState } = useSharedPanelContext();
+
+  // Derive terminal/error flags locally (replacing useTerminalFSMState)
+  const isTerminalState = isTerminalFSMState(inputState);
+  const isErrorState = isErrorFSMState(inputState);
+
   const [showPanel, setShowPanel] = useState(false);
 
   useEffect(() => {
@@ -81,9 +96,19 @@ export default function ErrorAssetPreview() {
         </div>
 
         <style jsx>{`
-          .wrapper { display: flex; align-items: center; margin-left: 22px; gap: 8px; color: ${color}; }
-          .emoji { font-size: 28px;  }
-          .message { font-size: 15px;  }
+          .wrapper {
+            display: flex;
+            align-items: center;
+            margin-left: 22px;
+            gap: 8px;
+            color: ${color};
+          }
+          .emoji {
+            font-size: 28px;
+          }
+          .message {
+            font-size: 15px;
+          }
         `}</style>
       </BasePreviewWrapper>
     </div>

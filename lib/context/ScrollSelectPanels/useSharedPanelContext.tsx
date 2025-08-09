@@ -10,14 +10,17 @@ import {
   WalletAccount,
 } from '@/lib/structure';
 
-import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
+// If you still use this elsewhere, keep it imported. Not needed for types below now.
+// import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
 export interface SharedPanelContextType {
   // FSM state and setters
   inputState: InputState;
-  setInputState: (state: InputState, source: string) => void;
-  validatedAsset?: ValidatedAsset;
-  setValidatedAsset: (asset: ValidatedAsset | undefined) => void;
+  setInputState: (state: InputState, source?: string) => void; // ✅ source optional
+
+  // Validated asset (token panel)
+  validatedAsset?: TokenContract; // ✅ narrowed to match provider
+  setValidatedAsset: (asset: TokenContract | undefined) => void; // ✅ narrowed to match provider
 
   // Manual entry toggle
   manualEntry: boolean;
@@ -37,7 +40,7 @@ export interface SharedPanelContextType {
   failedHexInput?: string;
   failedHexCount: number;
   isValid: boolean;
-  isValidHexString: (input: string) => boolean; // ✅ fixed: now correctly typed as a function
+  isValidHexString: (input: string) => boolean;
   handleHexInputChange: (raw: string, isManual?: boolean) => boolean;
   resetHexInput: () => void;
   dumpInputFeedContext: (header?: string) => void;

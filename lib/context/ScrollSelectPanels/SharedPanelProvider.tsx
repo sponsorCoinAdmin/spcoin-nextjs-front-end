@@ -6,7 +6,6 @@ import React, {
   useState,
   useCallback,
   useMemo,
-  useEffect,
 } from 'react';
 
 import { SharedPanelContext } from './useSharedPanelContext';
@@ -15,20 +14,16 @@ import {
   FEED_TYPE,
   TokenContract,
   WalletAccount,
-  InputState,
 } from '@/lib/structure';
 
-import { useHexInput } from '@/lib/hooks/useHexInput';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { handleFSMTerminalState } from '@/lib/hooks/inputValidations/utils/handleFSMTerminalState';
 import {
   dumpFSMContext,
   dumpInputFeedContext,
 } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 
-import { useFSMStateManager  } from '@/lib/hooks/inputValidations/helpers/useFSMStateManager';
-
-import { useChainId, usePublicClient, useAccount } from 'wagmi';
+// ✅ FIX: import from helpers barrel (make sure you have helpers/index.ts exporting the hook)
+import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
@@ -56,21 +51,6 @@ export const SharedPanelProvider = ({
   const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
   const [manualEntry, setManualEntry] = useState<boolean>(true);
 
-  const {
-    validHexInput,
-    debouncedHexInput,
-    failedHexInput,
-    failedHexCount,
-    isValid,
-    isValidHexString,
-    handleHexInputChange,
-    resetHexInput,
-  } = useHexInput();
-
-  const chainId = useChainId();
-  const publicClient = usePublicClient();
-  const { address: accountAddress } = useAccount();
-
   const setValidatedAsset = useCallback(
     (next: TokenContract | undefined) => {
       if (
@@ -90,36 +70,29 @@ export const SharedPanelProvider = ({
     [validatedAsset]
   );
 
+  // 🔹 useFSMStateManager now owns useHexInput + runs FSM + handles terminal states
   const {
     inputState,
     setInputState,
-  } = useFSMStateManager ({
+
+    // input feed (sourced from the hook, not from the provider anymore)
+    validHexInput,
     debouncedHexInput,
+    failedHexInput,
+    failedHexCount,
+    isValid,
+    isValidHexString,
+    handleHexInputChange,
+    resetHexInput,
+  } = useFSMStateManager({
     containerType,
     feedType,
     instanceId,
+    validatedAsset,          // ✅ pass current asset so hook can handle terminal states
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
   });
-
-  useEffect(() => {
-    handleFSMTerminalState(
-      inputState,
-      validatedAsset,
-      setInputState,
-      setValidatedAsset,
-      setTradingTokenCallback,
-      closePanelCallback
-    );
-  }, [
-    inputState,
-    validatedAsset,
-    setInputState,
-    setValidatedAsset,
-    setTradingTokenCallback,
-    closePanelCallback,
-  ]);
 
   const setValidatedToken = useCallback(
     (token?: TokenContract) => {
@@ -172,6 +145,7 @@ export const SharedPanelProvider = ({
         dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId),
       dumpSharedPanelContext: dumpSharedPanel,
 
+      // input feed (exposed from the FSM hook)
       validHexInput,
       debouncedHexInput,
       failedHexInput,

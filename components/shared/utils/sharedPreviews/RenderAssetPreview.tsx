@@ -4,7 +4,6 @@
 import React, { useEffect, useState } from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
 import { InputState } from '@/lib/structure';
-import { useTerminalFSMState } from '@/lib/hooks/inputValidations/useTerminalFSMState';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import BasePreviewWrapper from './BasePreviewWrapper';
@@ -14,31 +13,38 @@ const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 export default function RenderAssetPreview() {
   const { inputState, validatedAsset, handleHexInputChange } = useSharedPanelContext();
-  const { showRenderPanel } = useTerminalFSMState();
+
+  // Derive "render panel should show" locally (replaces useTerminalFSMState)
+  // Matches previous behavior: show when we've reached/ passed RESOLVE_ASSET.
+  const derivedShowRenderPanel = inputState >= InputState.RESOLVE_ASSET;
+
   const [showPanel, setShowPanel] = useState(false);
 
   useEffect(() => {
-    const shouldShow = showRenderPanel && !!validatedAsset;
+    const shouldShow = derivedShowRenderPanel && !!validatedAsset;
     debugLog.log(
       `🧭 debugShowPanel → set to ${shouldShow} (inputState=${InputState[inputState]}, validatedAsset=${!!validatedAsset})`
     );
     setShowPanel(shouldShow);
-  }, [showRenderPanel, validatedAsset, inputState]);
+  }, [derivedShowRenderPanel, validatedAsset, inputState]);
 
   if (!showPanel || !validatedAsset) return null;
 
-  const name = 'name' in validatedAsset ? validatedAsset.name ?? '' : '';
-  const symbol = 'symbol' in validatedAsset ? validatedAsset.symbol ?? '' : '';
+  const name = (validatedAsset as any).name ?? '';
+  const symbol = (validatedAsset as any).symbol ?? '';
   let logoURL = '/assets/miscellaneous/badTokenAddressImage.png';
-
-  if ('logoURL' in validatedAsset && 'address' in validatedAsset) {
-    logoURL = validatedAsset.logoURL || logoURL;
+  if ((validatedAsset as any).logoURL) {
+    logoURL = (validatedAsset as any).logoURL;
   }
 
   const handleClick = () => {
-    debugLog.log(`🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address)`, validatedAsset);
+    debugLog.log(
+      `🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address)`,
+      validatedAsset
+    );
     try {
-      handleHexInputChange(validatedAsset.address);
+      // cast to any to be safe; TokenContract should have address
+      handleHexInputChange((validatedAsset as any).address);
     } catch (err) {
       debugLog.error('❌ handleHexInputChange in RenderAssetPreview failed:', err);
     }

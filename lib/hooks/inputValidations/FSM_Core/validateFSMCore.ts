@@ -4,12 +4,12 @@ import { InputState } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from './types/validateFSMTypes';
 
-import { validateAddress } from './tests/validateAddress';
-import { validateDuplicate } from './tests/validateDuplicate';
-import { previewAsset } from './tests/previewAsset';
-import { validateExistsOnChain } from './tests/validateExistsOnChain';
-import { validateExistsLocally } from './tests/validateExistsLocally';
-import { validateResolvedAsset } from './tests/validateResolvedAsset';
+import { validateAddress } from './validationTests/validateAddress';
+import { validateDuplicate } from './validationTests/validateDuplicate';
+import { previewAsset } from './validationTests/previewAsset';
+import { validateExistsOnChain } from './validationTests/validateExistsOnChain';
+import { validateExistsLocally } from './validationTests/validateExistsLocally';
+import { validateResolvedAsset } from './validationTests/validateResolvedAsset';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
@@ -18,8 +18,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED, LOG_TIME);
 
 const FSM_TEST_FLAGS = {
-  TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'false',
-  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
+  TEST_VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'true',
+  TEST_DUPLICATE_INPUT: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'false',
   TEST_VALIDATE_PREVIEW: process.env.NEXT_PUBLIC_FSM_TEST_VALIDATE_PREVIEW === 'false',
   TEST_PREVIEW_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_PREVIEW_ADDRESS === 'false',
   TEST_CONTRACT_EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'false',

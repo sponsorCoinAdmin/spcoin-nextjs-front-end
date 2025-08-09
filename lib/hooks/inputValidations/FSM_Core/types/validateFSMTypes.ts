@@ -12,10 +12,16 @@ import {
 /**
  * Input parameters passed into the FSM validation core function.
  */
-
 export interface ValidateFSMInput {
   inputState: InputState;
   debouncedHexInput: string;
+
+  /** From useHexInput: whether the current input is hex-valid */
+  isValid: boolean;
+
+  /** From useHexInput: most recent invalid input fragment (if any) */
+  failedHexInput?: string;
+
   seenBrokenLogos: Set<string>;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
