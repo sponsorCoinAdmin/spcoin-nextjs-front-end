@@ -14,10 +14,8 @@ import { useAccount, useChainId, usePublicClient } from 'wagmi';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 
-// Helpers live one level up
 import { startFSMExecution } from '../helpers/startFSMExecution';
 import { logStateChanges } from '../helpers/logStateChanges';
-import { handleTerminalState } from '../helpers/handleTerminalState';
 
 const debugLog = createDebugLogger(
   'useFSMStateManager',
@@ -28,7 +26,14 @@ interface UseFSMStateManagerParams {
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   instanceId: string;
-  validatedAsset?: TokenContract | undefined;
+
+  /** Opposite side’s committed address (BUY panel gets SELL’s, SELL panel gets BUY’s) */
+  peerAddress?: string;
+
+  /** Whether current input was typed manually (true) vs chosen from list (false) */
+  manualEntry?: boolean;
+
+  // Side-effect callbacks are forwarded to the FSM core via the runner
   setValidatedAsset: (asset: WalletAccount | TokenContract | undefined) => void;
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
@@ -39,7 +44,8 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     containerType,
     feedType,
     instanceId,
-    validatedAsset,
+    peerAddress,
+    manualEntry,
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
@@ -69,6 +75,15 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   );
 
   const prevDebouncedInputRef = useRef<string | undefined>(undefined);
+  const manualEntryRef = useRef<boolean>(manualEntry ?? false); // ref-backed to avoid races
+
+  // keep the ref synced with latest provider state
+  useEffect(() => {
+    manualEntryRef.current = manualEntry ?? false;
+    // 🔔 TRACE: show when the snapshot value changes
+    // alert(`[useFSMStateManager] sync manualEntry -> ${String(manualEntryRef.current)}`);
+  }, [manualEntry]);
+
   const { address: accountAddress } = useAccount();
   const publicClient = usePublicClient();
   const chainId = useChainId();
@@ -83,6 +98,8 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
         'containerType',
         'feedType',
         'instanceId',
+        'peerAddress',
+        'manualEntry',
         'setValidatedAsset',
         'closePanelCallback',
         'setTradingTokenCallback',
@@ -90,13 +107,31 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       'useFSMStateManager param changes'
     );
     prevParamsRef.current = params;
-  }, [containerType, feedType, instanceId, setValidatedAsset, closePanelCallback, setTradingTokenCallback, params]);
+  }, [
+    containerType,
+    feedType,
+    instanceId,
+    peerAddress,
+    manualEntry,
+    setValidatedAsset,
+    closePanelCallback,
+    setTradingTokenCallback,
+    params,
+  ]);
 
   // FSM runner
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
+      // 🔔 TRACE: show the exact snapshot we’re about to pass
+      // alert(
+      //   `[useFSMStateManager] calling startFSMExecution with ` +
+      //   `manualEntry=${String(manualEntryRef.current)}, ` +
+      //   `peerAddress=${peerAddress ?? 'none'}, ` +
+      //   `debouncedHexInput=${debouncedHexInput || '(empty)'}`
+      // );
+
       const result = await startFSMExecution({
         debouncedHexInput,
         prevDebouncedInputRef,
@@ -105,10 +140,12 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
         accountAddress,
         containerType,
         feedType,
+        peerAddress,                       // → runner
+        manualEntry: manualEntryRef.current, // → freshest value
         setValidatedAsset,
         closePanelCallback,
         setTradingTokenCallback,
-        // ✅ include precheck details expected by startFSMExecution
+        // precheck details from input hook
         isValid,
         failedHexInput,
       });
@@ -116,15 +153,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       if (cancelled || result === null) return;
 
       setInputStateWrapped(result, 'post-run');
-
-      handleTerminalState({
-        state: result,
-        validatedAsset,
-        setValidatedAsset,
-        setTradingTokenCallback,
-        setInputState: setInputStateWrapped,
-        closePanelCallback,
-      });
     })();
 
     return () => {
@@ -140,10 +168,11 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
-    validatedAsset,
     setInputStateWrapped,
     isValid,
     failedHexInput,
+    peerAddress, // rerun when opposite-side selection changes
+    // NOTE: do not depend on `manualEntry`; we read from ref to avoid races
   ]);
 
   return {
@@ -162,5 +191,4 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   };
 }
 
-// ✅ Also export default to be extra tolerant to import styles
 export default useFSMStateManager;

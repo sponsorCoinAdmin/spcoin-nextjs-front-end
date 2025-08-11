@@ -6,10 +6,14 @@ import {
   SP_COIN_DISPLAY,
   FEED_TYPE,
   WalletAccount,
+  TokenContract,
 } from '@/lib/structure';
 import { validateFSMCore } from '../FSM_Core/validateFSMCore';
-import type { ValidateFSMInput, ValidateFSMOutput } from '../FSM_Core/types/validateFSMTypes';
-import { Address } from 'viem';
+import type {
+  ValidateFSMInput,
+  ValidateFSMOutput,
+} from '../FSM_Core/types/validateFSMTypes';
+import { Address, zeroAddress } from 'viem';
 
 import { formatTrace, headerLine, SEP_LINE } from './fsmFormat';
 import { getPrevTrace, setTrace, appendLines } from './fsmStorage';
@@ -23,7 +27,14 @@ export type FSMRunnerParams = {
   chainId: number;
   accountAddress?: string;
 
-  setValidatedAsset: (asset: WalletAccount | undefined) => void;
+  /** Opposite side’s committed address (BUY panel gets SELL’s, SELL panel gets BUY’s) */
+  peerAddress?: string;
+
+  /** Whether current input was typed manually (true) vs chosen from list (false) */
+  manualEntry?: boolean;
+
+  // Side-effect callbacks (executed inside FSM core tests)
+  setValidatedAsset: (asset: WalletAccount | TokenContract | undefined) => void;
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
 
@@ -42,6 +53,15 @@ export async function runFSM(params: FSMRunnerParams) {
     accountAddress,
     isValid,
     failedHexInput,
+
+    // pass-through side-effect handlers for core to call
+    setValidatedAsset,
+    setTradingTokenCallback,
+    closePanelCallback,
+
+    // duplicate detection + entry mode
+    peerAddress,
+    manualEntry,
   } = params;
 
   const prevTrace = getPrevTrace();
@@ -52,31 +72,105 @@ export async function runFSM(params: FSMRunnerParams) {
   let fSMState: InputState = InputState.VALIDATE_ADDRESS;
   runTrace.push(fSMState);
 
+  // 🔔 STOP-POINT (1): show what arrived to the runner
+  // alert(
+  //   `[fsmRunner] ENTER\n` +
+  //   `params.manualEntry=${String(manualEntry)}\n` +
+  //   `params.peerAddress=${peerAddress ?? '(none)'}\n` +
+  //   `debouncedHexInput=${debouncedHexInput || '(empty)'}`
+  // );
+
+  // Single mutable input object passed through all steps.
+  // validateFSMCore() and its nested tests may enrich this object between steps.
   const current: ValidateFSMInput = {
     inputState: fSMState,
     debouncedHexInput,
-    isValid,                // 👈 forwarded from hook
-    failedHexInput,         // 👈 forwarded from hook
-    seenBrokenLogos: new Set(),
+
+    // forwarded from hook
+    isValid,
+    failedHexInput,
+
+    // environment / routing
     containerType,
     feedType,
     chainId,
     publicClient,
-    accountAddress: accountAddress as Address,
-    manualEntry: true,
-    sellAddress: feedType === FEED_TYPE.TOKEN_LIST ? debouncedHexInput : undefined,
-    buyAddress: undefined,
+    accountAddress: (accountAddress ?? zeroAddress) as Address,
+
+    // selection semantics & duplicate detection
+    manualEntry: manualEntry ?? true, // default to true if absent
+    peerAddress,
+
+    // side-effect callbacks (executed by FSM validation tests)
+    setValidatedAsset,
+    setTradingTokenCallback,
+    closePanelCallback,
+
+    // placeholders that tests may populate during progression
     validatedToken: undefined,
     validatedWallet: undefined,
+
+    // utilities/tests may use this
+    seenBrokenLogos: new Set<string>(),
   };
 
-  while (true) {
-    current.inputState = fSMState;
-    const result: ValidateFSMOutput = await validateFSMCore(current);
-    const next = result.nextState;
-    if (next === fSMState) break;
+  // 🔔 STOP-POINT (2): confirm what will be given to validateFSMCore on first call
+  // alert(
+  //   `[fsmRunner] INITIAL INPUT OBJECT\n` +
+  //   `current.manualEntry=${String((current as any).manualEntry)}\n` +
+  //   `current.peerAddress=${(current as any).peerAddress ?? '(none)'}\n` +
+  //   `state=${InputState[current.inputState]}`
+  // );
 
-    console.log(`🟢 ${getStateIcon(fSMState)} ${fSMState} → ${getStateIcon(next)} ${next} (FSM Runner)`);
+  // Safety guard to avoid infinite loops in case of a bug
+  const MAX_STEPS = 50;
+  let steps = 0;
+
+  while (true) {
+    if (steps++ > MAX_STEPS) {
+      console.warn('⚠️ FSM runner aborted due to step limit. Possible loop.');
+      break;
+    }
+
+    current.inputState = fSMState;
+
+    // 🔔 STOP-POINT (3): pre-call per-step snapshot
+    // alert(
+    //   `[fsmRunner] STEP ${steps} PRE-CALL\n` +
+    //   `state=${InputState[fSMState]}\n` +
+    //   `manualEntry=${String((current as any).manualEntry)}\n` +
+    //   `peerAddress=${(current as any).peerAddress ?? '(none)'}`
+    // );
+
+    const result: ValidateFSMOutput = await validateFSMCore(current);
+
+    // 🔔 STOP-POINT (4): after-call result snapshot
+    // alert(
+    //   `[fsmRunner] STEP ${steps} POST-CALL\n` +
+    //   `from=${InputState[fSMState]} → to=${InputState[result.nextState]}\n` +
+    //   `manualEntry(still)=${String((current as any).manualEntry)}`
+    // );
+
+    const next = result.nextState;
+
+    // 🔁 Merge outputs → inputs so the next state can see them
+    if (result.validatedToken !== undefined) {
+      (current as any).validatedToken = result.validatedToken;
+    }
+    if (result.validatedAsset !== undefined) {
+      (current as any).validatedAsset = result.validatedAsset;
+    }
+
+    if (next === fSMState) {
+      // Terminal or no-op; stop the loop
+      break;
+    }
+
+    // Pretty console transition: ICON + NAME
+    console.log(
+      `🟢 ${getStateIcon(fSMState)} ${InputState[fSMState]} → ${getStateIcon(next)} ${InputState[next]} (FSM Runner)`
+    );
+
     fSMState = next;
     runTrace.push(fSMState);
   }
@@ -94,6 +188,4 @@ export async function runFSM(params: FSMRunnerParams) {
 
   // Persist raw trace: prev + this run
   setTrace([...prevTrace, ...runTrace]);
-
-  // (Header/history JSON writing stays wherever you already handle it, if applicable.)
 }

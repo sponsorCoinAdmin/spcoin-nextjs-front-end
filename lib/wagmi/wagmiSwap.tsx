@@ -164,25 +164,6 @@ const useFormattedClientTotalSupply = (contractAddress:Address | undefined) => {
   return formatDecimals(totalSupply, decimals);
 }
 
-// const useFormattedClientBalanceOf = (connectedAccountAddr: Address | string | undefined, contractAddress: Address | string | undefined ) => {
-
-//   const [formattedDecimals, setFormattedDecimals] = useState<string>("0");
-
-//   // if (connectedAccountAddr && contractAddress) {
-//     const balanceOf = useWagmiERC20TokenBalanceOfStr(connectedAccountAddr, contractAddress)
-//     const decimals  = useWagmiERC20TokenDecimals(contractAddress)
-//   // }
-
-//   useEffect(() => {
-//     if(balanceOf && decimals) {
-//       // alert(` setFormattedDecimals(formatDecimals(${balanceOf}, ${decimals}));`)
-//       setFormattedDecimals(formatDecimals(balanceOf, decimals));
-//     }
-//   }, [balanceOf, decimals])
-
-//   return formattedDecimals;
-// }
-
 const useFormattedClientBalanceOf = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined ) => {
   // const [formattedBalanceOf , setFormattedBalanceOf ] = useState<string>("0");
   const balanceOf = useWagmiERC20TokenBalanceOfStr(connectedAccountAddr, contractAddress)

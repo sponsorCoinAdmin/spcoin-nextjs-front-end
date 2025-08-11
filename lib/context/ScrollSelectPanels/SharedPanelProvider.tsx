@@ -6,6 +6,8 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  useRef,
+  useEffect,
 } from 'react';
 
 import { SharedPanelContext } from './useSharedPanelContext';
@@ -22,8 +24,11 @@ import {
   dumpInputFeedContext,
 } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 
-// ✅ FIX: import from helpers barrel (make sure you have helpers/index.ts exporting the hook)
 import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
+import {
+  SharedPanelBag,
+  isTokenSelectBag,
+} from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
@@ -40,6 +45,9 @@ interface SharedPanelProviderProps {
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: TokenContract) => void;
   containerType: SP_COIN_DISPLAY;
+
+  /** Optional, typed payload for the active panel */
+  initialPanelBag?: SharedPanelBag;
 }
 
 export const SharedPanelProvider = ({
@@ -47,22 +55,57 @@ export const SharedPanelProvider = ({
   closePanelCallback,
   setTradingTokenCallback,
   containerType,
+  initialPanelBag,
 }: SharedPanelProviderProps) => {
-  const [validatedAsset, setValidatedAssetRaw] = useState<TokenContract | undefined>(undefined);
-  const [manualEntry, setManualEntry] = useState<boolean>(true);
+  // Widen so FSM tests can receive either account or token without casting.
+  const [validatedAsset, setValidatedAssetRaw] =
+    useState<WalletAccount | TokenContract | undefined>(undefined);
+
+  // --- manualEntry with ref to avoid batching/race issues ---
+  const [manualEntryState, setManualEntryState] = useState<boolean>(false);
+  const manualEntryRef = useRef<boolean>(manualEntryState);
+  useEffect(() => {
+    manualEntryRef.current = manualEntryState;
+    // 🔔 TRACE: alert whenever the STATE actually changes
+    // alert(`[SharedPanelProvider] manualEntry STATE → ${String(manualEntryState)}`);
+  }, [manualEntryState]);
+
+  // Expose a traced setter (alerts/logs when toggled)
+  const setManualEntry = useCallback((next: boolean) => {
+    // alert(`[SharedPanelProvider] setManualEntry(${String(next)})`);
+    debugLog.log(`✍️ setManualEntry(${String(next)})`);
+    setManualEntryState(next);
+  }, []);
+
+  // Dynamic, typed panel bag (defaults to current containerType with no payload)
+  const [panelBag, setPanelBag] = useState<SharedPanelBag>(
+    initialPanelBag ?? ({ type: containerType } as SharedPanelBag)
+  );
 
   const setValidatedAsset = useCallback(
-    (next: TokenContract | undefined) => {
-      if (
-        validatedAsset?.address === next?.address &&
-        validatedAsset?.symbol === next?.symbol
-      ) {
-        debugFSM.log(`⏭️ Skipped setValidatedAsset → Already ${next?.symbol || next?.address}`);
+    (next: WalletAccount | TokenContract | undefined) => {
+      // If both are TokenContract-like, compare address/symbol; otherwise just set
+      const sameToken =
+        (validatedAsset as TokenContract | undefined)?.address ===
+          (next as TokenContract | undefined)?.address &&
+        (validatedAsset as TokenContract | undefined)?.symbol ===
+          (next as TokenContract | undefined)?.symbol;
+
+      if (sameToken) {
+        debugFSM.log(
+          `⏭️ Skipped setValidatedAsset → Already ${
+            (next as TokenContract | undefined)?.symbol ||
+            (next as TokenContract | undefined)?.address
+          }`
+        );
         return;
       }
+
       debugFSM.log(
         next
-          ? `✅ setValidatedAsset → ${next.symbol || next.address}`
+          ? `✅ setValidatedAsset → ${
+              (next as any)?.symbol || (next as any)?.address || 'asset'
+            }`
           : '🧼 Cleared validated asset'
       );
       setValidatedAssetRaw(next);
@@ -70,12 +113,25 @@ export const SharedPanelProvider = ({
     [validatedAsset]
   );
 
-  // 🔹 useFSMStateManager now owns useHexInput + runs FSM + handles terminal states
+  // If this is a token-select panel, extract the peer address from the bag
+  const peerAddress = isTokenSelectBag(panelBag) ? panelBag.peerAddress : undefined;
+
+  // 🔔 TRACE: show what we are about to pass into the FSM hook whenever snapshot/peer changes
+  useEffect(() => {
+    // alert(
+    //   `[SharedPanelProvider] (pre-FSM hook) snapshot → manualEntry=${String(
+    //     manualEntryRef.current
+    //   )}, peerAddress=${peerAddress ?? 'none'}`
+    // );
+  }, [manualEntryState, peerAddress]);
+
+  // useFSMStateManager owns the input feed + runs FSM (terminal side-effects inside FSM tests)
+  // IMPORTANT: pass the fresh snapshot from manualEntryRef to avoid races
   const {
     inputState,
     setInputState,
 
-    // input feed (sourced from the hook, not from the provider anymore)
+    // input feed (sourced from the hook)
     validHexInput,
     debouncedHexInput,
     failedHexInput,
@@ -88,10 +144,14 @@ export const SharedPanelProvider = ({
     containerType,
     feedType,
     instanceId,
-    validatedAsset,          // ✅ pass current asset so hook can handle terminal states
+    // side-effects
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
+    // used by validateDuplicate
+    peerAddress,
+    // manual vs datalist select (fresh snapshot)
+    manualEntry: manualEntryRef.current,
   });
 
   const setValidatedToken = useCallback(
@@ -124,8 +184,14 @@ export const SharedPanelProvider = ({
   const dumpSharedPanel = useCallback(
     (header?: string) => {
       debugLog.log(`📆 SharedPanelContext Dump: ${header ?? ''}`);
-      dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId);
+      dumpFSMContext(
+        header ?? '',
+        inputState,
+        validatedAsset as TokenContract | undefined,
+        instanceId
+      );
       dumpInputFeed(header ?? '');
+      debugLog.log(`ℹ️ manualEntry (snapshot) = ${String(manualEntryRef.current)}`);
     },
     [inputState, validatedAsset, dumpInputFeed]
   );
@@ -136,13 +202,21 @@ export const SharedPanelProvider = ({
       setInputState,
       validatedAsset,
       setValidatedAsset,
-      manualEntry,
+
+      // expose state + setter for UI components
+      manualEntry: manualEntryState,
       setManualEntry,
+
       setValidatedToken,
       setValidatedWallet,
 
       dumpFSMContext: (header?: string) =>
-        dumpFSMContext(header ?? '', inputState, validatedAsset, instanceId),
+        dumpFSMContext(
+          header ?? '',
+          inputState,
+          validatedAsset as TokenContract | undefined,
+          instanceId
+        ),
       dumpSharedPanelContext: dumpSharedPanel,
 
       // input feed (exposed from the FSM hook)
@@ -161,12 +235,16 @@ export const SharedPanelProvider = ({
       closePanelCallback: () => closePanelCallback(true),
       setTradingTokenCallback,
       instanceId,
+
+      // expose dynamic, typed panel bag
+      panelBag,
+      setPanelBag,
     }),
     [
       inputState,
       setInputState,
       validatedAsset,
-      manualEntry,
+      manualEntryState,
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -181,6 +259,8 @@ export const SharedPanelProvider = ({
       setTradingTokenCallback,
       dumpInputFeed,
       dumpSharedPanel,
+      panelBag,
+      setPanelBag,
     ]
   );
 

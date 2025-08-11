@@ -31,7 +31,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
     case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
       title = 'Error Message Panel';
       break;
-    case SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL:
       title = 'Select Recipient to Sponsor';
       break;
     case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL:

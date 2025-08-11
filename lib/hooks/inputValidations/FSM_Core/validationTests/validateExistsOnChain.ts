@@ -13,7 +13,7 @@ export async function validateExistsOnChain({
   debouncedHexInput,
   publicClient,
 }: ValidateFSMInput): Promise<ValidateFSMOutput> {
-alert(`Running validateExistsOnChain(${debouncedHexInput})`);
+// alert(`Running validateExistsOnChain(${debouncedHexInput})`);
   debugLog.log(`Running validateExistsOnChain(${debouncedHexInput})`);
   if (!publicClient) {
     return {

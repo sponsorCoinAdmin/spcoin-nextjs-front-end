@@ -1,83 +1,83 @@
 // File: lib/hooks/inputValidations/helpers/startFSMExecution.ts
-import { InputState, FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+'use client';
+
+import { MutableRefObject } from 'react';
+import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { runFSM } from './fsmRunner';
-import { LOCAL_TRACE_KEY } from './fsmConstants';
+import { getPrevTrace } from './fsmStorage';
 
-const debugLog = createDebugLogger('startFSMExecution', process.env.NEXT_PUBLIC_DEBUG_FSM === 'true');
-
-export async function startFSMExecution({
-  debouncedHexInput,
-  prevDebouncedInputRef,
-  publicClient,
-  chainId,
-  accountAddress,
-  containerType,
-  feedType,
-  setValidatedAsset,
-  closePanelCallback,
-  setTradingTokenCallback,
-  // NEW
-  isValid,
-  failedHexInput,
-}: {
+type Args = {
   debouncedHexInput: string;
-  prevDebouncedInputRef: React.MutableRefObject<string | undefined>;
+  prevDebouncedInputRef: MutableRefObject<string | undefined>;
   publicClient: any;
   chainId: number;
   accountAddress?: string;
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
-  setValidatedAsset: (asset: WalletAccount | TokenContract | undefined) => void;
-  closePanelCallback: (fromUser: boolean) => void;
-  setTradingTokenCallback: (token: any) => void;
-  // NEW
+
+  /** Whether the input was typed manually (true) vs chosen from list (false) */
+  manualEntry?: boolean;
+
+  /** Opposite side’s committed address for duplicate detection */
+  peerAddress?: string;
+
+  // side-effect callbacks (forwarded to FSM core tests)
+  setValidatedAsset: (a: any) => void;
+  closePanelCallback: (b: boolean) => void;
+  setTradingTokenCallback: (t: any) => void;
+
+  // precheck info from input hook
   isValid: boolean;
   failedHexInput?: string;
-}): Promise<InputState | null> {
-  if (!publicClient) {
-    debugLog.warn('⚠️ publicClient is undefined, aborting FSM execution.');
+};
+
+/**
+ * Kick off the FSM for the current input and return the final state.
+ * Returns null if the debounced input hasn't changed (no-op).
+ */
+export async function startFSMExecution(args: Args): Promise<InputState | null> {
+  const {
+    debouncedHexInput,
+    prevDebouncedInputRef,
+    publicClient,
+    chainId,
+    accountAddress,
+    containerType,
+    feedType,
+    peerAddress,
+    manualEntry,              // ✅ include in destructuring
+    setValidatedAsset,
+    closePanelCallback,
+    setTradingTokenCallback,
+    isValid,
+    failedHexInput,
+  } = args;
+
+  // No-op if the debounced input hasn't changed
+  if (prevDebouncedInputRef.current === debouncedHexInput) {
     return null;
   }
-
-  if (debouncedHexInput === prevDebouncedInputRef.current) {
-    debugLog.log(`⏭️ Skipping FSM: debouncedHexInput unchanged → "${debouncedHexInput}"`);
-    return null;
-  }
-
-  // record latest
   prevDebouncedInputRef.current = debouncedHexInput;
 
-  if (!debouncedHexInput || debouncedHexInput.trim() === '') {
-    debugLog.log('⏭️ Skipping FSM: debouncedHexInput is empty');
-    return InputState.EMPTY_INPUT;
-  }
-
-  debugLog.log(`🏃 Running FSM for input → "${debouncedHexInput}"`);
-
+  // Run the FSM (this writes the trace internally)
   await runFSM({
     debouncedHexInput,
     containerType,
     feedType,
     publicClient,
     chainId,
-    accountAddress: accountAddress ?? undefined,
+    accountAddress,
+    peerAddress,      // → runner
+    manualEntry,      // → runner
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
-    // NEW
     isValid,
     failedHexInput,
   });
 
-  try {
-    const raw = localStorage.getItem(LOCAL_TRACE_KEY);
-    const arr = JSON.parse(raw || '[]') as number[];
-    const last = Array.isArray(arr) && arr.length > 0
-      ? (arr[arr.length - 1] as InputState)
-      : InputState.EMPTY_INPUT;
-    return last;
-  } catch {
-    return InputState.EMPTY_INPUT;
-  }
+  // Read final state from the accumulated trace
+  const trace = getPrevTrace();
+  const finalState = trace.at(-1) ?? InputState.VALIDATE_ADDRESS;
+  return finalState;
 }

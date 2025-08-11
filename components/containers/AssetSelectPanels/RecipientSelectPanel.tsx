@@ -34,13 +34,13 @@ const RecipientSelectPanel: React.FC = () => {
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const clearRecipientSelect = useCallback(() => {
-    setSpCoinDisplay(SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL);
+    setSpCoinDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     setRecipientAccount(undefined);
   }, [setSpCoinDisplay]);
 
   const toggleSponsorRateConfigPanel = useCallback(() => {
     const nextState =
-      spCoinDisplay === SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL
+      spCoinDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
         ? SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
         : SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
 

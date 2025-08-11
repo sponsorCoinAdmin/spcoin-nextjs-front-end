@@ -46,7 +46,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     setShowDialog(true);
   }, [setActiveDisplay]);
 

@@ -1,6 +1,5 @@
-// File: lib/hooks/inputValidations/FSM_Core/validateFSMTypes.ts
+// File: lib/hooks/inputValidations/FSM_Core/types/validateFSMTypes.ts
 
-import { Address } from 'viem';
 import {
   InputState,
   SP_COIN_DISPLAY,
@@ -8,50 +7,60 @@ import {
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
+import type { Address, PublicClient } from 'viem';
 
-/**
- * Input parameters passed into the FSM validation core function.
- */
-export interface ValidateFSMInput {
+export type ValidateFSMInput = {
+  /** Current FSM state being processed */
   inputState: InputState;
+
+  /** Debounced user input (hex address, etc.) */
   debouncedHexInput: string;
 
-  /** From useHexInput: whether the current input is hex-valid */
+  /** From input hook */
   isValid: boolean;
-
-  /** From useHexInput: most recent invalid input fragment (if any) */
   failedHexInput?: string;
 
-  seenBrokenLogos: Set<string>;
+  /** Environment / routing */
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
-  sellAddress?: string;
-  buyAddress?: string;
   chainId: number;
-  publicClient: any;
-  accountAddress: Address;
-  validatedToken?: TokenContract;
-  validatedWallet?: WalletAccount;
+  publicClient: PublicClient | any;
+  accountAddress: Address; // runner supplies zeroAddress if absent
 
-  /** 👣 Optional trace of previous FSM states */
+  /** Opposite side’s committed address (BUY panel gets SELL’s, SELL panel gets BUY’s) */
+  peerAddress?: string;
+  manualEntry?: boolean;   // 👈 ensure this exists
+  /** Side-effect callbacks (executed by FSM tests) */
+  setValidatedAsset?: (asset: WalletAccount | TokenContract | undefined) => void;
+  setTradingTokenCallback?: (token: TokenContract | any) => void;
+  closePanelCallback?: (fromUser: boolean) => void;
+
+  /** Data that tests may read or populate */
+  validatedToken?: TokenContract | any;
+  validatedWallet?: WalletAccount | any;
+  validatedAsset?: WalletAccount | TokenContract | any;
+  resolvedAsset?: any;
+  resolvedToken?: any;
+
+  /** Utilities */
+  seenBrokenLogos?: Set<string>;
+
+  /** Optional incoming trace (if caller threads it) */
   stateTrace?: InputState[];
+};
 
-  /** 🧑‍💻 True if the user typed the input manually */
-  manualEntry: boolean;
-}
-
-/**
- * Output returned by the FSM core validation processor.
- */
-export interface ValidateFSMOutput {
+export type ValidateFSMOutput = {
+  /** Next state to enter */
   nextState: InputState;
-  validatedToken?: TokenContract;
-  validatedWallet?: WalletAccount;
+
+  /** Optional error message for logging/UI */
   errorMessage?: string;
 
-  /** 👣 Debug trace of visited states */
-  stateTrace?: InputState[];
+  /** Optional data produced by tests */
+  validatedToken?: TokenContract | any;
+  validatedAsset?: WalletAccount | TokenContract | any;
 
-  /** 🧭 Human-readable summary of states */
+  /** Optional outgoing trace/human summary (if core chooses to supply) */
+  stateTrace?: InputState[];
   humanTraceSummary?: string;
-}
+};

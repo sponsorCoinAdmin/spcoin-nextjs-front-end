@@ -2,7 +2,6 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
-import { Address } from 'viem';
 import { useChainId, useAccount, usePublicClient } from 'wagmi';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';

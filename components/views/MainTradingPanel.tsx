@@ -34,8 +34,11 @@ const debugLog = createDebugLogger('MainTradingPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function MainTradingPanel() {
   const { activeDisplay, setActiveDisplay } = useActiveDisplay();
-  const [_, setSellTokenContract] = useSellTokenContract();
-  const [__, setBuyTokenContract] = useBuyTokenContract();
+
+  // Grab current selections (needed to derive peerAddress)
+  const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
+  const [buyTokenContract,  setBuyTokenContract]  = useBuyTokenContract();
+
   const [___, setErrorMessage] = useErrorMessage();
 
   const isTokenScrollPanel =
@@ -43,6 +46,14 @@ export default function MainTradingPanel() {
     activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
 
   const isErrorMessagePanel = activeDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
+
+  // Derive the opposing address for the open panel
+  const peerAddress =
+    activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL
+      ? sellTokenContract?.address
+      : activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+      ? buyTokenContract?.address
+      : undefined;
 
   // 🔍 Detect Strict Mode mount/unmount
   useEffect(() => {
@@ -59,23 +70,27 @@ export default function MainTradingPanel() {
 
   debugLog.log(`🔍 MainTradingPanel render triggered`);
   debugLog.log(`🧩 Current activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
-  debugLog.log(`💬 isTokenScrollPanel = ${isTokenScrollPanel}, isErrorMessagePanel = ${isErrorMessagePanel}`);
+  debugLog.log(
+    `💬 isTokenScrollPanel = ${isTokenScrollPanel}, isErrorMessagePanel = ${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
+  );
 
   function closePanelCallback() {
-    debugLog.log(`🛑 closePanelCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`);
+    debugLog.log(
+      `🛑 closePanelCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`
+    );
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }
 
   function setAssetTokenCallback(tokenContract: TokenContract) {
     let msg = `✅ setAssetTokenCallback`;
     if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-      msg += '🔻 → setSellTokenContract';
+      msg += ' 🔻 → setSellTokenContract';
       setSellTokenContract(tokenContract);
     } else if (activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
-      msg += '🔺 → setBuyTokenContract';
+      msg += ' 🔺 → setBuyTokenContract';
       setBuyTokenContract(tokenContract);
     } else {
-      msg += '⚠️ → no matching panel, skipping';
+      msg += ' ⚠️ → no matching panel, skipping';
     }
     msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
     debugLog.log(msg);
@@ -107,6 +122,8 @@ export default function MainTradingPanel() {
           isActive={isTokenScrollPanel}
           closePanelCallback={closePanelCallback}
           setTradingTokenCallback={setAssetTokenCallback}
+          /** 👇 provide the opposing address so duplicate check works */
+          peerAddress={peerAddress}
         />
         <ErrorMessagePanel
           isActive={isErrorMessagePanel}

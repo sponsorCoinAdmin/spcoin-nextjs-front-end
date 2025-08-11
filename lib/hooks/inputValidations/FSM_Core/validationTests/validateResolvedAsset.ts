@@ -2,7 +2,6 @@
 
 import { FEED_TYPE, InputState } from '@/lib/structure';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 
@@ -11,6 +10,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('validateResolvedAsset', DEBUG_ENABLED, LOG_TIME);
 
 export async function validateResolvedAsset(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
+  // debugLog.log(`Running validateResolvedAsset(${stringifyBigInt(input)})`);
+  // alert(`Running validateResolvedAsset(${stringifyBigInt(input)})`);
   if (input.feedType === FEED_TYPE.TOKEN_LIST) {
     try {
       const validatedToken = await resolveContract(
@@ -21,7 +22,8 @@ export async function validateResolvedAsset(input: ValidateFSMInput): Promise<Va
       );
 
       if (validatedToken) {
-        debugLog.log(`🎯 VALIDATED TOKEN → ${stringifyBigInt(validatedToken)}`);
+        // debugLog.log(`🎯 VALIDATED TOKEN → ${stringifyBigInt(validatedToken)}`);
+        // alert(`🎯 VALIDATED TOKEN → ${stringifyBigInt(validatedToken)}`);
         return {
           nextState: InputState.UPDATE_VALIDATED_ASSET,
           validatedToken,

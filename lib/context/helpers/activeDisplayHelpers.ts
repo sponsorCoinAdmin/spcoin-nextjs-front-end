@@ -16,7 +16,7 @@ export function isAssetScrollDisplay(value: SP_COIN_DISPLAY): boolean {
   return (
     value === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
     value === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL ||
-    value === SP_COIN_DISPLAY.RECIPIENT_SCROLL_PANEL
+    value === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
   );
 }
 
