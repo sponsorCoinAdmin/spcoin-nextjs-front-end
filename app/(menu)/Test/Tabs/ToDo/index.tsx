@@ -1,7 +1,9 @@
+// File: app/(menu)/Test/Tabs/ToDo/index.tsx
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { usePageState } from '@/lib/context/PageStateContext';
 
 import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
 import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields';
@@ -13,15 +15,43 @@ import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20Contr
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals';
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply';
 
+const buttonClasses =
+  'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
+
 export default function ToDoTab() {
   const { exchangeContext } = useExchangeContext();
+  const { setState } = usePageState();
+
   const tokenAddress = useMemo(
     () => exchangeContext?.tradeData?.sellTokenContract?.address,
     [exchangeContext]
   );
 
+  const updateExchangePage = useCallback((updates: any) => {
+    setState((prev: any) => ({
+      ...prev,
+      page: {
+        ...prev?.page,
+        exchangePage: {
+          ...(prev?.page?.exchangePage ?? {}),
+          ...updates,
+        },
+      },
+    }));
+  }, [setState]);
+
+  const hideToDo = useCallback(() => {
+    updateExchangePage({ showToDo: false });
+  }, [updateExchangePage]);
+
   return (
     <div className="space-y-6">
+      <div className="w-full flex justify-center">
+        <button onClick={hideToDo} className={buttonClasses}>
+          Hide ToDo
+        </button>
+      </div>
+
       {!tokenAddress ? (
         <div className="text-sm text-gray-400">
           Select a token to view ERC-20 details here.

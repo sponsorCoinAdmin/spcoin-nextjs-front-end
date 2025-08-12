@@ -1,11 +1,44 @@
-//File: app/(menu)/Test/Tabs/FSMTracePanel/index.tsx
-
+// File: app/(menu)/Test/Tabs/FSMTrace/index.tsx
 'use client';
 
+import React, { useCallback } from 'react';
+import { usePageState } from '@/lib/context/PageStateContext';
 import FSMTracePanel from '@/components/debug/FSMTracePanel';
 
+const buttonClasses =
+  'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
+
 export default function FSMTraceTab() {
-  // In this tab, we always show the trace panel body.
-  // Visibility toggling is controlled by the parent page (which chooses to render this tab or not).
-  return <FSMTracePanel visible />;
+  const { setState } = usePageState();
+
+  const updateExchangePage = useCallback((updates: any) => {
+    setState((prev: any) => ({
+      ...prev,
+      page: {
+        ...prev?.page,
+        exchangePage: {
+          ...(prev?.page?.exchangePage ?? {}),
+          ...updates,
+        },
+      },
+    }));
+  }, [setState]);
+
+  const hideFSMTrace = useCallback(() => {
+    updateExchangePage({ showFSMTracePanel: false });
+  }, [updateExchangePage]);
+
+  return (
+    <div className="space-y-4">
+      <div className="w-full flex justify-center">
+        <button onClick={hideFSMTrace} className={buttonClasses}>
+          Hide FSM Trace
+        </button>
+      </div>
+
+      <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
+        <FSMTracePanel visible />
+      </div>
+    </div>
+  );
 }
