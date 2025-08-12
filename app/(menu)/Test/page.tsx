@@ -30,7 +30,6 @@ export default function TestPage() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
-  // Loosen local typing so we can use new fields before the global type is updated
   const pageAny: any = state.page?.exchangePage ?? {};
   const {
     showContext = false,
@@ -38,14 +37,13 @@ export default function TestPage() {
     collapsedKeys = [],
     expandContext = false,
     showActiveDisplayPanel = false,
-    // New flags (safe defaults)
     showPanels = false,
     showToDo = false,
   } = pageAny;
 
   const [showFSMTracePanel, setShowFSMTracePanel] = useState(false);
-  const [quickSwitch, setQuickSwitch] = useState<string>(''); // quick switch select value
-  const [showQuickSwitch, setShowQuickSwitch] = useState<boolean>(true); // NEW: controls dropdown visibility
+  const [quickSwitch, setQuickSwitch] = useState<string>(''); // select value
+  const [showQuickSwitch, setShowQuickSwitch] = useState<boolean>(true); // controls dropdown visibility
 
   useEffect(() => {
     try {
@@ -134,7 +132,7 @@ export default function TestPage() {
     setShowQuickSwitch(false);
   }, [updateExchangePage]);
 
-  // HIDE handlers (also re-show the Quick Switch)
+  // HIDE handlers (also re-show the Run Test dropdown)
   const hideContext = useCallback(() => {
     updateExchangePage({ showContext: false, showActiveDisplayPanel: false });
     setShowQuickSwitch(true);
@@ -191,19 +189,19 @@ export default function TestPage() {
     <div className="space-y-6 p-6">
       {isHydrated && (
         <>
-          {/* Centered quick-switch dropdown (hidden after a selection until a Hide button is clicked) */}
+          {/* Centered "Run Test" dropdown (hidden after a selection until a Hide button is clicked) */}
           {showQuickSwitch && (
             <div className="w-full flex justify-center mb-4">
-              <label htmlFor="quickSwitchSelect" className="sr-only">Quick view switch</label>
+              <label htmlFor="quickSwitchSelect" className="sr-only">Run Test</label>
               <select
                 id="quickSwitchSelect"
                 className={buttonClasses}
                 value={quickSwitch}
                 onChange={(e) => handleQuickSwitch(e.target.value)}
-                aria-label="Quick view switch"
-                title="Quick view switch"
+                aria-label="Run Test"
+                title="Run Test"
               >
-                <option value="">Quick Switch…</option>
+                <option value="">Run Test</option>
                 <option value="context">Show Context</option>
                 <option value="fsm">Show FSM Trace</option>
                 <option value="wallets">Show Test Wallets</option>
