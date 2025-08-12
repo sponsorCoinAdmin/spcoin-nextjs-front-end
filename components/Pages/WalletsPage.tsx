@@ -1,3 +1,4 @@
+// File: components/Pages/WalletsPage.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,12 +17,16 @@ export default function WalletsPage() {
         Agents: [],
     });
 
-    const [typeOfWallets, setTypeOfWallets] = useState<typeof walletOptions[number]>('All');
+    const [typeOfWallets, setTypeOfWallets] =
+        useState<(typeof walletOptions)[number]>('All');
     const [wallets, setWallets] = useState<WalletAccount[]>([]);
     const [loading, setLoading] = useState(false);
+    const [err, setErr] = useState<string | null>(null);
 
     const fetchWallets = async (forceReload = false) => {
-        if (!forceReload && walletCache[typeOfWallets].length > 0) {
+        setErr(null);
+
+        if (!forceReload && walletCache[typeOfWallets]?.length > 0) {
             setWallets(walletCache[typeOfWallets]);
             return;
         }
@@ -33,70 +38,53 @@ export default function WalletsPage() {
                 ? recipientJsonList
                 : typeOfWallets === 'Agents'
                     ? agentJsonList
-                    : undefined;
+                    : [...recipientJsonList, ...agentJsonList];
 
-        const downloadedWallets = await loadAccounts(walletList);
-        setLoading(false);
+        let cancelled = false;
+        try {
+            const downloadedWallets = await loadAccounts(walletList);
+            if (cancelled) return;
 
-        setWallets(downloadedWallets);
-        setWalletCache((prev) => ({
-            ...prev,
-            [typeOfWallets]: downloadedWallets,
-        }));
+            setWallets(downloadedWallets);
+            setWalletCache(prev => ({
+                ...prev,
+                [typeOfWallets]: downloadedWallets,
+            }));
+        } catch (e: any) {
+            if (!cancelled) setErr(e?.message ?? 'Failed to fetch wallets');
+        } finally {
+            if (!cancelled) setLoading(false);
+        }
+
+        return () => {
+            cancelled = true;
+        };
     };
 
     useEffect(() => {
         fetchWallets();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [typeOfWallets]);
 
     return (
         <div>
             {/* Full-width Header Panel */}
-            <header
-                style={{
-                    position: 'relative',
-                    width: '100vw',                          // ⬅️ Full screen width
-                    marginLeft: 'calc(-50vw + 50%)',         // ⬅️ Center header in any parent
-                    backgroundColor: '#1f2639',
-                }}
-            >
-                <div
-                    style={{
-                        width: '100%',
-                        backgroundColor: '#333',
-                        borderBottom: '1px solid #444',
-                        color: '#fff',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                    }}
-                >
-                    <h1 style={{ margin: 0, marginTop: '10px', fontSize: '22px', fontWeight: 'bold' }}>            {typeOfWallets} Wallets
+            <header className="relative w-screen ml-[calc(-50vw+50%)] bg-[#1f2639]">
+                <div className="w-full bg-[#333] border-b border-[#444] text-white flex flex-col items-center">
+                    <h1 className="m-0 mt-2 text-[22px] font-bold">
+                        {typeOfWallets} Wallets
                     </h1>
 
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            fontSize: '16px',
-                            marginBottom: '30px',
-                            flexWrap: 'wrap',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        {walletOptions.map((option) => (
-                            <label
-                                key={option}
-                                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                            >
+                    <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-center">
+                        {walletOptions.map(option => (
+                            <label key={option} className="flex items-center cursor-pointer">
                                 <input
                                     type="radio"
                                     name="walletFilter"
                                     value={option}
                                     checked={typeOfWallets === option}
                                     onChange={() => setTypeOfWallets(option)}
-                                    style={{ marginRight: '5px' }}
+                                    className="mr-2"
                                 />
                                 {option}
                             </label>
@@ -104,15 +92,7 @@ export default function WalletsPage() {
 
                         <button
                             onClick={() => fetchWallets(true)}
-                            style={{
-                                padding: '6px 12px',
-                                fontSize: '14px',
-                                cursor: 'pointer',
-                                border: 'none',
-                                backgroundColor: '#ff4d4d',
-                                color: 'white',
-                                borderRadius: '5px',
-                            }}
+                            className="px-3 py-1.5 text-sm cursor-pointer border-0 bg-red-500 text-white rounded"
                         >
                             RELOAD
                         </button>
@@ -121,63 +101,34 @@ export default function WalletsPage() {
             </header>
 
             {/* Wallet List Section with Scrollable Pane */}
-            <main style={{ padding: '0 20px', marginTop: '20px' }}>
-                <div
-                    style={{
-                        position: 'relative',
-                        maxHeight: '500px',
-                        overflowY: 'auto',
-                        paddingRight: '8px',
-                    }}
-                >
+            <main className="px-5 mt-5">
+                <div className="relative max-h-[500px] overflow-y-auto pr-2">
                     {loading ? (
-                        <p style={{ textAlign: 'center', fontSize: '18px', color: '#555' }}>
-                            Loading...
-                        </p>
+                        <p className="text-center text-lg text-gray-400">Loading...</p>
+                    ) : err ? (
+                        <p className="text-center text-base text-red-400">Error: {err}</p>
                     ) : (
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        <ul className="list-none p-0 m-0">
                             {wallets.map((wallet: WalletAccount, index) => (
                                 <li
                                     key={`${typeOfWallets}-${wallet.address}-${index}`}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        padding: '12px',
-                                        backgroundColor: index % 2 === 0 ? '#d6d6d6' : '#f5f5f5',
-                                        marginBottom: '10px',
-                                        borderRadius: '8px',
-                                    }}
+                                    className={`flex items-center p-3 mb-2 rounded ${index % 2 === 0
+                                            ? 'bg-[#d6d6d6] text-[#000000]'   // light gray bg, black text
+                                            : 'bg-[#000000] text-[#d6d6d6]'   // black bg, light gray text
+                                        }`}
                                 >
                                     <img
                                         src={getAccountLogo(wallet) || defaultMissingImage}
                                         alt="Logo"
-                                        width="100"
-                                        height="100"
-                                        style={{
-                                            borderRadius: '50%',
-                                            border: '2px solid #ccc',
-                                            marginRight: '12px',
-                                        }}
+                                        width={100}
+                                        height={100}
+                                        className="rounded-full border-2 border-gray-300 mr-3"
                                     />
-                                    <div>
-                                        <div
-                                            style={{
-                                                fontSize: '18px',
-                                                fontWeight: 'bold',
-                                                marginBottom: '8px',
-                                            }}
-                                        >
+                                    <div className="text-inherit">
+                                        <div className="text-lg font-bold mb-2">
                                             {wallet.name || 'Unknown Wallet'}
                                         </div>
-                                        <pre
-                                            style={{
-                                                whiteSpace: 'pre-wrap',
-                                                wordWrap: 'break-word',
-                                                margin: '4px 0 0 12px',
-                                                fontSize: '14px',
-                                                color: '#333',
-                                            }}
-                                        >
+                                        <pre className="whitespace-pre-wrap break-words ml-3 text-sm m-0 text-inherit">
                                             {JSON.stringify(wallet, null, 2)}
                                         </pre>
                                     </div>

@@ -1,7 +1,7 @@
 // File: components/views/DataListSelect.tsx
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { useChainId } from 'wagmi';
@@ -15,13 +15,13 @@ import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
 import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
 import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
 import { Address } from 'viem';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -50,12 +50,12 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useSharedPanelContext();
   const chainId = useChainId();
 
-  // queue for picks clicked while manualEntry is still flipping to false
+  // queue & enforcement for programmatic picks
   const pendingPickRef = useRef<string | null>(null);
-  const enforceEnabled = pendingPickRef.current !== null;
+  const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
 
-  // ✅ only enforce manualEntry=false when we have a pending pick to commit
-  const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceEnabled);
+  // only force manualEntry=false while we have a pending pick
+  const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
 
   useEffect(() => setIsClient(true), []);
 
@@ -63,31 +63,33 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) {
       setLoadingWallets(true);
       const jsonList = dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ? recipientJsonList : agentJsonList;
-
       loadAccounts(jsonList)
         .then((accounts) => {
-          debugLog.log(`✅ Accounts loaded: ${accounts.length}`);
-          setWallets(accounts.map((account) => ({
-            ...account,
-            name: account.name || 'N/A',
-            symbol: account.symbol || 'N/A',
-            logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
-            address: account.address || '0x0000000000000000000000000000000000000000',
-          })));
+          setWallets(
+            accounts.map((account) => ({
+              ...account,
+              name: account.name || 'N/A',
+              symbol: account.symbol || 'N/A',
+              logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
+              address: account.address || '0x0000000000000000000000000000000000000000',
+            }))
+          );
         })
-        .catch((err) => debugLog.error('❌ Failed to load accounts', err))
+        .catch((err) => debugLog.error('Failed to load accounts', err))
         .finally(() => setLoadingWallets(false));
     }
-  }, [dataFeedType]);
+  }, [dataFeedType, debugLog]);
 
-  // When manualEntry settles to false and we have a pending pick, commit it
+  // commit queued pick once manualEntry is false
   useEffect(() => {
     if (programmaticReady && pendingPickRef.current) {
       const addr = pendingPickRef.current;
       pendingPickRef.current = null;
-      debugLog.log(`✅ manualEntry settled=false → applying pending pick: ${addr}`);
-      setInputState(InputState.FSM_READY, 'DataListSelect (Programmatic committed)');
-      handleHexInputChange(addr, false );
+      setEnforceProgrammatic(false);
+
+      alert(`✅ Programmatic commit\nmanualEntry=false\naddress=${addr}`);
+      setInputState(InputState.FSM_READY, 'DataListSelect (Programmatic commit)');
+      handleHexInputChange(addr, false);
     }
   }, [programmaticReady, handleHexInputChange, setInputState]);
 
@@ -97,10 +99,11 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   );
 
   const logoTokenList = useMemo(
-    () => dataFeedList.map((token) => ({
-      ...token,
-      logoURL: getLogoURL(chainId, token.address as Address, dataFeedType),
-    })),
+    () =>
+      dataFeedList.map((token) => ({
+        ...token,
+        logoURL: getLogoURL(chainId, token.address as Address, dataFeedType),
+      })),
     [dataFeedList, chainId, dataFeedType]
   );
 
@@ -113,19 +116,16 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     </div>
   );
 
-  const handlePickAddress = (address: string, source: 'wallet' | 'token', name?: string) => {
-    debugLog.log(`🟢 ${source === 'wallet' ? 'Account' : 'Token'} clicked: ${name ?? ''} → ${address}`);
-
+  const handlePickAddress = (address: string) => {
     if (!programmaticReady) {
-      // Enable enforcement and queue the pick; hook will flip to false & commit in effect
       pendingPickRef.current = address;
-      debugLog.log('⏳ Queued pick until manualEntry settles to false');
+      setEnforceProgrammatic(true);
+      // alert(`⏳ Queued pick until manualEntry=false\naddress=${address}`);
       return;
     }
-
-    // Already false → proceed immediately
-    setInputState(InputState.FSM_READY, 'DataListSelect (Programmatic immediate)');
-    handleHexInputChange(address, false );
+    // alert(`⚡ Programmatic immediate manualEntry=false\naddress=${address}`);
+    setInputState(InputState.FSM_READY, 'DataListSelect (Programmatic RECIPIENT_SELECT_PANELe)');
+    handleHexInputChange(address, false);
   };
 
   return (
@@ -148,7 +148,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                     <div
                       key={wallet.address}
                       className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                      onClick={() => handlePickAddress(wallet.address, 'wallet', wallet.name)}
+                      onClick={() => handlePickAddress(wallet.address)}
                     >
                       <div className="flex items-center gap-3">
                         <img className="h-8 w-8 object-contain rounded-full" src={wallet.logoURL || defaultMissingImage} alt={`${wallet.name} logo`} />
@@ -159,8 +159,15 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                       </div>
                       <div
                         className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-                        onClick={(e) => { e.stopPropagation(); alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`); }}
-                        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); alert(`${wallet.name} Record: ${stringifyBigInt(wallet.logoURL || '')}`); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          alert(`${wallet.name} Record:\n${stringifyBigInt(wallet.logoURL || '')}`);
+                        }}
                       >
                         <Image src={info_png} alt="Info" width={20} height={20} />
                       </div>
@@ -174,7 +181,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                   <div
                     key={token.address}
                     className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                    onClick={() => handlePickAddress(token.address, 'token', token.name)}
+                    onClick={() => handlePickAddress(token.address)}
                   >
                     <div className="flex items-center gap-3">
                       <img className="h-8 w-8 object-contain rounded-full" src={token.logoURL || defaultMissingImage} alt={`${token.name} logo`} />
@@ -185,8 +192,15 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
                     </div>
                     <div
                       className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-                      onClick={(e) => { e.stopPropagation(); alert(`${token.name} Address: ${stringifyBigInt(token)}`); }}
-                      onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); alert(`${token.name} Record: ${token.logoURL}`); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`${token.name} Object:\n${stringifyBigInt(token)}`);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert(`${token.name} Logo URL: ${token.logoURL}`);
+                      }}
                     >
                       <Image src={info_png} alt="Info" width={20} height={20} />
                     </div>

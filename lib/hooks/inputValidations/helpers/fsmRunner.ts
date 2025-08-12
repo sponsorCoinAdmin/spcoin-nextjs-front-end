@@ -72,14 +72,6 @@ export async function runFSM(params: FSMRunnerParams) {
   let fSMState: InputState = InputState.VALIDATE_ADDRESS;
   runTrace.push(fSMState);
 
-  // 🔔 STOP-POINT (1): show what arrived to the runner
-  // alert(
-  //   `[fsmRunner] ENTER\n` +
-  //   `params.manualEntry=${String(manualEntry)}\n` +
-  //   `params.peerAddress=${peerAddress ?? '(none)'}\n` +
-  //   `debouncedHexInput=${debouncedHexInput || '(empty)'}`
-  // );
-
   // Single mutable input object passed through all steps.
   // validateFSMCore() and its nested tests may enrich this object between steps.
   const current: ValidateFSMInput = {
@@ -98,7 +90,7 @@ export async function runFSM(params: FSMRunnerParams) {
     accountAddress: (accountAddress ?? zeroAddress) as Address,
 
     // selection semantics & duplicate detection
-    manualEntry: manualEntry ?? true, // default to true if absent
+    manualEntry: manualEntry ?? true,
     peerAddress,
 
     // side-effect callbacks (executed by FSM validation tests)
@@ -114,14 +106,6 @@ export async function runFSM(params: FSMRunnerParams) {
     seenBrokenLogos: new Set<string>(),
   };
 
-  // 🔔 STOP-POINT (2): confirm what will be given to validateFSMCore on first call
-  // alert(
-  //   `[fsmRunner] INITIAL INPUT OBJECT\n` +
-  //   `current.manualEntry=${String((current as any).manualEntry)}\n` +
-  //   `current.peerAddress=${(current as any).peerAddress ?? '(none)'}\n` +
-  //   `state=${InputState[current.inputState]}`
-  // );
-
   // Safety guard to avoid infinite loops in case of a bug
   const MAX_STEPS = 50;
   let steps = 0;
@@ -134,23 +118,7 @@ export async function runFSM(params: FSMRunnerParams) {
 
     current.inputState = fSMState;
 
-    // 🔔 STOP-POINT (3): pre-call per-step snapshot
-    // alert(
-    //   `[fsmRunner] STEP ${steps} PRE-CALL\n` +
-    //   `state=${InputState[fSMState]}\n` +
-    //   `manualEntry=${String((current as any).manualEntry)}\n` +
-    //   `peerAddress=${(current as any).peerAddress ?? '(none)'}`
-    // );
-
     const result: ValidateFSMOutput = await validateFSMCore(current);
-
-    // 🔔 STOP-POINT (4): after-call result snapshot
-    // alert(
-    //   `[fsmRunner] STEP ${steps} POST-CALL\n` +
-    //   `from=${InputState[fSMState]} → to=${InputState[result.nextState]}\n` +
-    //   `manualEntry(still)=${String((current as any).manualEntry)}`
-    // );
-
     const next = result.nextState;
 
     // 🔁 Merge outputs → inputs so the next state can see them

@@ -1,74 +1,24 @@
-// File: app/(menu)/Exchange/Test/page.tsx
+// File: app/(menu)/Test/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-
-import ReadWagmiERC20Fields from '@/components/ERC20/ReadWagmiERC20Fields';
-import ReadWagmiERC20RecordFields from '@/components/ERC20/ReadWagmiERC20RecordFields';
-import ReadWagmiERC20Records from '@/components/ERC20/ReadWagmiERC20Records';
-import ReadWagmiERC20ContractFields from '@/components/ERC20/ReadWagmiERC20ContractFields';
-import ReadWagmiERC20BalanceOf from '@/components/ERC20/ReadWagmiERC20BalanceOf';
-import ReadWagmiERC20ContractName from '@/components/ERC20/ReadWagmiERC20ContractName';
-import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20ContractSymbol';
-import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals';
-import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply';
-
-import WalletsPage from '@/components/Pages/WalletsPage';
-import JsonInspector from '@/components/shared/JsonInspector';
-import FSMTracePanel from '@/components/debug/FSMTracePanel';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-import {
-  SP_COIN_DISPLAY,
-  TRADE_DIRECTION,
-  API_TRADING_PROVIDER,
-  ExchangeContext,
-} from '@/lib/structure';
-
-function createEnumStringMap<T extends Record<string, string | number>>(
-  enumObj: T,
-  enumName: string
-): Record<number, string> {
-  const map: Record<number, string> = {};
-  for (const [key, value] of Object.entries(enumObj)) {
-    if (typeof value === 'number') {
-      map[value] = `${enumName}.${key}`;
-    }
-  }
-  return map;
-}
+import ExchangeContextTab from './Tabs/ExchangeContext';
+import FSMTraceTab from './Tabs/FSMTrace';
+import TestWalletsTab from './Tabs/TestWallets';
+import PanelsTab from './Tabs/Panels';
+import ToDoTab from './Tabs/ToDo';
 
 function useDidHydrate(): boolean {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
   return hydrated;
-}
-
-function normalizeContextDisplay(ctx: ExchangeContext): any {
-  const spCoinDisplayMap = createEnumStringMap(SP_COIN_DISPLAY, 'SP_COIN_DISPLAY');
-  const tradeDirectionMap = createEnumStringMap(TRADE_DIRECTION, 'TRADE_DIRECTION');
-  const apiProviderMap = createEnumStringMap(API_TRADING_PROVIDER, 'API_TRADING_PROVIDER');
-
-  const settings = ctx.settings ?? {};
-  const tradeData = ctx.tradeData ?? {};
-  const active: any = settings.activeDisplay ?? SP_COIN_DISPLAY.DISPLAY_OFF;
-
-  return {
-    ...ctx,
-    settings: {
-      ...settings,
-      activeDisplay: spCoinDisplayMap[active],
-      apiTradingProvider: apiProviderMap[settings.apiTradingProvider ?? API_TRADING_PROVIDER.API_0X],
-    },
-    tradeData: {
-      ...tradeData,
-      tradeDirection: tradeDirectionMap[tradeData.tradeDirection ?? TRADE_DIRECTION.SELL_EXACT_OUT],
-    },
-  };
 }
 
 const buttonClasses =
@@ -80,83 +30,137 @@ export default function TestPage() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
-  const page = state.page?.exchangePage ?? {};
+  // Loosen local typing so we can use new fields before the global type is updated
+  const pageAny: any = state.page?.exchangePage ?? {};
   const {
     showContext = false,
     showWallets = false,
     collapsedKeys = [],
     expandContext = false,
     showActiveDisplayPanel = false,
-  } = page;
+    // New flags (safe defaults)
+    showPanels = false,
+    showToDo = false,
+  } = pageAny;
 
   const [showFSMTracePanel, setShowFSMTracePanel] = useState(false);
-
-  const tokenAddress = exchangeContext?.tradeData?.sellTokenContract?.address;
+  const [quickSwitch, setQuickSwitch] = useState<string>(''); // quick switch select value
+  const [showQuickSwitch, setShowQuickSwitch] = useState<boolean>(true); // NEW: controls dropdown visibility
 
   useEffect(() => {
-    localStorage.setItem('PageStateContext', JSON.stringify(state));
+    try {
+      localStorage.setItem('PageStateContext', JSON.stringify(state));
+    } catch {}
   }, [state]);
 
-  const updateExchangePage = (updates: Partial<typeof page>) => {
-    setState((prev) => {
-      const newState = {
-        ...prev,
-        page: {
-          ...prev.page,
-          exchangePage: {
-            ...prev.page.exchangePage,
-            ...updates,
-          },
+  const updateExchangePage = useCallback((updates: any) => {
+    setState((prev: any) => ({
+      ...prev,
+      page: {
+        ...prev?.page,
+        exchangePage: {
+          ...(prev?.page?.exchangePage ?? {}),
+          ...updates,
         },
-      };
-      localStorage.setItem('PageStateContext', JSON.stringify(newState));
-      return newState;
-    });
-  };
+      },
+    }));
+  }, [setState]);
 
-  const toggleContext = () => {
-    const nextShow = !showContext;
-    updateExchangePage({
-      showContext: nextShow,
-      showActiveDisplayPanel: nextShow,
-      expandContext: false,
-      showWallets: false,
-    });
+  // Central quick-switch handler (used to SHOW a section)
+  const handleQuickSwitch = useCallback((value: string) => {
+    if (!value) return;
+
+    switch (value) {
+      case 'context':
+        updateExchangePage({
+          showContext: true,
+          showActiveDisplayPanel: true,
+          expandContext: false,
+          showWallets: false,
+          showPanels: false,
+          showToDo: false,
+        });
+        setShowFSMTracePanel(false);
+        break;
+      case 'fsm':
+        setShowFSMTracePanel(true);
+        updateExchangePage({
+          showContext: false,
+          showActiveDisplayPanel: false,
+          expandContext: false,
+          showWallets: false,
+          showPanels: false,
+          showToDo: false,
+        });
+        break;
+      case 'wallets':
+        updateExchangePage({
+          showWallets: true,
+          showContext: false,
+          showActiveDisplayPanel: false,
+          expandContext: false,
+          showPanels: false,
+          showToDo: false,
+        });
+        setShowFSMTracePanel(false);
+        break;
+      case 'panels':
+        updateExchangePage({
+          showPanels: true,
+          showContext: false,
+          showActiveDisplayPanel: false,
+          expandContext: false,
+          showWallets: false,
+          showToDo: false,
+        });
+        setShowFSMTracePanel(false);
+        break;
+      case 'todo':
+        updateExchangePage({
+          showToDo: true,
+          showContext: false,
+          showActiveDisplayPanel: false,
+          expandContext: false,
+          showWallets: false,
+          showPanels: false,
+        });
+        setShowFSMTracePanel(false);
+        break;
+      default:
+        break;
+    }
+    // Clear selection and hide the quick switch until user hides a panel
+    setQuickSwitch('');
+    setShowQuickSwitch(false);
+  }, [updateExchangePage]);
+
+  // HIDE handlers (also re-show the Quick Switch)
+  const hideContext = useCallback(() => {
+    updateExchangePage({ showContext: false, showActiveDisplayPanel: false });
+    setShowQuickSwitch(true);
+  }, [updateExchangePage]);
+
+  const hideWallets = useCallback(() => {
+    updateExchangePage({ showWallets: false });
+    setShowQuickSwitch(true);
+  }, [updateExchangePage]);
+
+  const hideFSMTrace = useCallback(() => {
     setShowFSMTracePanel(false);
-  };
+    setShowQuickSwitch(true);
+  }, []);
 
-  const toggleExpandCollapse = () => {
-    const nextExpand = !expandContext;
-    const nextKeys = nextExpand ? [] : getAllNestedKeys(exchangeContext);
-    updateExchangePage({
-      expandContext: nextExpand,
-      collapsedKeys: nextKeys,
-    });
-  };
+  const hidePanels = useCallback(() => {
+    updateExchangePage({ showPanels: false });
+    setShowQuickSwitch(true);
+  }, [updateExchangePage]);
 
-  const toggleWallets = () => {
-    const nextShowWallets = !showWallets;
-    updateExchangePage({
-      showWallets: nextShowWallets,
-      showContext: false,
-      showActiveDisplayPanel: false,
-      expandContext: false,
-    });
-    setShowFSMTracePanel(false);
-  };
+  const hideToDo = useCallback(() => {
+    updateExchangePage({ showToDo: false });
+    setShowQuickSwitch(true);
+  }, [updateExchangePage]);
 
-  const toggleFSMTrace = () => {
-    const nextShow = !showFSMTracePanel;
-    setShowFSMTracePanel(nextShow);
-    updateExchangePage({
-      showContext: false,
-      showActiveDisplayPanel: false,
-      expandContext: false,
-      showWallets: false,
-    });
-  };
-
-  const getAllNestedKeys = (obj: any): string[] => {
+  const getAllNestedKeys = useCallback((obj: any): string[] => {
     let keys: string[] = [];
     if (typeof obj === 'object' && obj !== null) {
       Object.entries(obj).forEach(([k, v]) => {
@@ -167,108 +171,133 @@ export default function TestPage() {
       });
     }
     return keys;
-  };
+  }, []);
 
-  const logContext = () => {
+  const toggleExpandCollapse = useCallback(() => {
+    const nextExpand = !expandContext;
+    const nextKeys = nextExpand ? [] : getAllNestedKeys(exchangeContext);
+    updateExchangePage({
+      expandContext: nextExpand,
+      collapsedKeys: nextKeys,
+    });
+  }, [expandContext, getAllNestedKeys, exchangeContext, updateExchangePage]);
+
+  const logContext = useCallback(() => {
     const ctx = stringifyBigInt(exchangeContext);
     console.log('📦 Log Context:', ctx);
-  };
+  }, [exchangeContext]);
 
   return (
     <div className="space-y-6 p-6">
       {isHydrated && (
-        <div className="flex flex-wrap gap-4">
-          {!showFSMTracePanel && !showWallets && (
-            <button onClick={toggleContext} className={buttonClasses}>
-              {showContext ? 'Hide Context' : 'Show Context'}
-            </button>
+        <>
+          {/* Centered quick-switch dropdown (hidden after a selection until a Hide button is clicked) */}
+          {showQuickSwitch && (
+            <div className="w-full flex justify-center mb-4">
+              <label htmlFor="quickSwitchSelect" className="sr-only">Quick view switch</label>
+              <select
+                id="quickSwitchSelect"
+                className={buttonClasses}
+                value={quickSwitch}
+                onChange={(e) => handleQuickSwitch(e.target.value)}
+                aria-label="Quick view switch"
+                title="Quick view switch"
+              >
+                <option value="">Quick Switch…</option>
+                <option value="context">Show Context</option>
+                <option value="fsm">Show FSM Trace</option>
+                <option value="wallets">Show Test Wallets</option>
+                <option value="panels">Show Panels</option>
+                <option value="todo">Show ToDo</option>
+              </select>
+            </div>
           )}
 
-          {showContext && (
-            <>
-              <button onClick={toggleExpandCollapse} className={buttonClasses}>
-                {expandContext ? 'Collapse Context' : 'Expand Context'}
+          {/* Button row: centered; only "Hide ..." buttons for visible sections */}
+          <div className="w-full flex flex-wrap justify-center gap-4">
+            {showContext && (
+              <>
+                <button onClick={hideContext} className={buttonClasses}>
+                  Hide Context
+                </button>
+                <button onClick={toggleExpandCollapse} className={buttonClasses}>
+                  {expandContext ? 'Collapse Context' : 'Expand Context'}
+                </button>
+                <button onClick={logContext} className={buttonClasses}>
+                  Log Context
+                </button>
+              </>
+            )}
+
+            {showActiveDisplayPanel && showContext && (
+              <select
+                id="activeDisplaySelect"
+                title="Select activeDisplay"
+                aria-label="Select activeDisplay"
+                value={exchangeContext.settings.activeDisplay}
+                onChange={(e) => {
+                  const selected = Number(e.target.value);
+                  setExchangeContext((prev: any) => ({
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      activeDisplay: selected,
+                    },
+                  }));
+                }}
+                className={buttonClasses}
+              >
+                <option value={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>TRADING_STATION_PANEL</option>
+                <option value={SP_COIN_DISPLAY.MANAGE_SPONSORS_BUTTON}>MANAGE_SPONSORS_BUTTON</option>
+                <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_PANEL</option>
+                <option value={SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL}>ERROR_MESSAGE_PANEL</option>
+                <option value={SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL}>SPONSOR_RATE_CONFIG_PANEL</option>
+                <option value={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}>AGENT_SELECT_PANEL</option>
+                <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
+                <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
+              </select>
+            )}
+
+            {showFSMTracePanel && (
+              <button onClick={hideFSMTrace} className={buttonClasses}>
+                Hide FSM Trace
               </button>
-              <button onClick={logContext} className={buttonClasses}>
-                Log Context
+            )}
+
+            {showWallets && (
+              <button onClick={hideWallets} className={buttonClasses}>
+                Hide Test Wallets
               </button>
-            </>
-          )}
+            )}
 
-          {showContext && showActiveDisplayPanel && (
-            <select
-              id="activeDisplaySelect"
-              title="Select activeDisplay"
-              aria-label="Select activeDisplay"
-              value={exchangeContext.settings.activeDisplay}
-              onChange={(e) => {
-                const selected = Number(e.target.value);
-                console.log('🔄 Changing activeDisplay →', selected);
-                setExchangeContext((prev) => ({
-                  ...prev,
-                  settings: {
-                    ...prev.settings,
-                    activeDisplay: selected,
-                  },
-                }));
-              }}
-              className={buttonClasses}
-            >
-              <option value={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>TRADING_STATION_PANEL</option>
-              <option value={SP_COIN_DISPLAY.MANAGE_SPONSORS_BUTTON}>MANAGE_SPONSORS_BUTTON</option>
-              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_PANEL</option>
-              <option value={SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL}>ERROR_MESSAGE_PANEL</option>
-              <option value={SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL}>SPONSOR_RATE_CONFIG_PANEL</option>
-              <option value={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}>RECIPIENT_SELECT_PANEL</option>
-              <option value={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}>AGENT_SELECT_PANEL</option>
-              <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
-              <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
-            </select>
-          )}
+            {showPanels && (
+              <button onClick={hidePanels} className={buttonClasses}>
+                Hide Panels
+              </button>
+            )}
 
-          {!showContext && !showWallets && (
-            <button onClick={toggleFSMTrace} className={buttonClasses}>
-              {showFSMTracePanel ? 'Hide FSM Trace' : 'Show FSM Trace'}
-            </button>
-          )}
-
-          {!showContext && !showFSMTracePanel && (
-            <button onClick={toggleWallets} className={buttonClasses}>
-              {showWallets ? 'Hide Test Wallets' : 'Show Test Wallets'}
-            </button>
-          )}
-        </div>
+            {showToDo && (
+              <button onClick={hideToDo} className={buttonClasses}>
+                Hide ToDo
+              </button>
+            )}
+          </div>
+        </>
       )}
 
+      {/* Body tabs */}
       {isHydrated && showContext && (
-        <JsonInspector
-          data={normalizeContextDisplay(exchangeContext)}
+        <ExchangeContextTab
+          exchangeContext={exchangeContext}
           collapsedKeys={collapsedKeys}
-          updateCollapsedKeys={(next: string[]) => updateExchangePage({ collapsedKeys: next })}
+          updateCollapsedKeys={(next) => updateExchangePage({ collapsedKeys: next })}
         />
       )}
 
-      {isHydrated && showWallets && (
-        <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
-          <WalletsPage />
-        </div>
-      )}
-
-      {isHydrated && <FSMTracePanel visible={showFSMTracePanel} />}
-
-      {isHydrated && tokenAddress && (
-        <div className="grid gap-6">
-          <ReadWagmiERC20Fields TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20RecordFields TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20Records TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20ContractFields TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20BalanceOf TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20ContractName TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20ContractSymbol TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20ContractDecimals TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-          <ReadWagmiERC20ContractTotalSupply TOKEN_CONTRACT_ADDRESS={tokenAddress} />
-        </div>
-      )}
+      {isHydrated && showWallets && <TestWalletsTab />}
+      {isHydrated && showFSMTracePanel && <FSMTraceTab />}
+      {isHydrated && showPanels && <PanelsTab />}
+      {isHydrated && showToDo && <ToDoTab />}
     </div>
   );
 }

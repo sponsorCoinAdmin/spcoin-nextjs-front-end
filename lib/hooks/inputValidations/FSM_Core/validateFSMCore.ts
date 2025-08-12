@@ -65,9 +65,6 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       debugLog.log(
         `🔁 TEST_DUPLICATE_INPUT → running ${FSM_TEST_FLAGS.TEST_DUPLICATE_INPUT ? 'validateDuplicate' : '→ VALIDATE_PREVIEW'}`
       );
-      alert(
-        `🔁 TEST_DUPLICATE_INPUT → running ${FSM_TEST_FLAGS.TEST_DUPLICATE_INPUT ? 'validateDuplicate' : '→ VALIDATE_PREVIEW'}`
-      );
       result = FSM_TEST_FLAGS.TEST_DUPLICATE_INPUT
         ? validateDuplicate(input)
         : { nextState: InputState.VALIDATE_PREVIEW };
@@ -79,16 +76,16 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
           errorMessage: 'Internal error: Missing nextState in TEST_DUPLICATE_INPUT',
         };
       }
-      debugAlert(InputState.TEST_DUPLICATE_INPUT, result, true);
+      debugAlert(InputState.TEST_DUPLICATE_INPUT, result, true, true);
       break;
     }
 
-    case InputState.VALIDATE_PREVIEW: {
-      // (Optional: wire TEST_VALIDATE_PREVIEW if/when needed)
-      result = { nextState: InputState.PREVIEW_ADDRESS };
-      debugAlert(InputState.VALIDATE_PREVIEW, result, true);
-      break;
-    }
+    // case InputState.VALIDATE_PREVIEW: {
+    //   // (Optional: wire TEST_VALIDATE_PREVIEW if/when needed)
+    //   result = { nextState: InputState.PREVIEW_ADDRESS };
+    //   debugAlert(InputState.VALIDATE_PREVIEW, result, true);
+    //   break;
+    // }
 
     case InputState.PREVIEW_ADDRESS: {
       debugLog.log(
