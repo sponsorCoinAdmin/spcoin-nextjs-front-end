@@ -103,7 +103,7 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
   if (!visible) return null;
 
   return (
-    <div className="p-2 text-white text-base bg-gray-800 rounded border border-gray-600 max-w-full overflow-auto">
+    <div>
       {/* Clear Buttons */}
       <div className="flex flex-wrap gap-4 mb-[6px]">
         <button

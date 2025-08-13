@@ -1,4 +1,4 @@
-// File: lib/context/ExchangeWrapper.tsx
+// File: lib/context/ExchangeProvider.tsx
 
 'use client';
 
@@ -16,11 +16,12 @@ import {
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useActiveAccount } from '@/lib/context/hooks/nestedHooks/useActiveAccount'; // ⬅️ moved here
 
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
-const debugLog = createDebugLogger('ExchangeWrapper', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
+const debugLog = createDebugLogger('ExchangeProvider', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
 
 export type ExchangeContextType = {
   exchangeContext: ExchangeContextTypeOnly;
@@ -43,7 +44,14 @@ export type ExchangeContextType = {
 
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
-export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
+/** Runs side-effect hooks that require ExchangeContext to be available. */
+function ExchangeRuntime({ children }: { children: React.ReactNode }) {
+  // ✅ This runs inside the Provider, so useExchangeContext() inside the hook is safe.
+  useActiveAccount();
+  return <>{children}</>;
+}
+
+export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
 
@@ -172,7 +180,8 @@ export function ExchangeWrapper({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      {contextState && children}
+      {/* Only render runtime + children after context is ready */}
+      {contextState && <ExchangeRuntime>{children}</ExchangeRuntime>}
     </ExchangeContextState.Provider>
   );
 }

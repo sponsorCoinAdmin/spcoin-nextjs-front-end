@@ -36,7 +36,7 @@ export default function FSMTraceTab() {
         </button>
       </div>
 
-      <div className="w-screen bg-[#1f2639] border border-gray-700 rounded-none shadow-inner p-4 m-0">
+      <div className="w-screen bg-[#1f2639]  rounded-none shadow-inner p-4">
         <FSMTracePanel visible />
       </div>
     </div>

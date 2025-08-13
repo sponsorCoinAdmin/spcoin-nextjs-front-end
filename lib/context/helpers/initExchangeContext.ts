@@ -2,8 +2,7 @@
 
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import { WalletAccount } from '@/lib/structure';
-import { ExchangeContext } from '@/lib/structure';
+import { WalletAccount, ExchangeContext, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -34,6 +33,17 @@ export async function initExchangeContext(
   const sanitized = sanitizeExchangeContext(stored, effectiveChainId);
   debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
   debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
+
+  // ✅ Ensure NEW panel settings bag exists with a sane default
+  // We don't alter existing `settings`; we add/patch `settings_NEW`.
+  const ctxAny = sanitized as any;
+  if (!ctxAny.settings_NEW) {
+    ctxAny.settings_NEW = {
+      spCoinDisplay: SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL,
+    };
+  } else if (ctxAny.settings_NEW.spCoinDisplay === undefined) {
+    ctxAny.settings_NEW.spCoinDisplay = SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+  }
 
   if (isConnected && address) {
     try {

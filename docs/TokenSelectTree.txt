@@ -1,4 +1,4 @@
-<ExchangeWrapper>
+<ExchangeProvider>
   └── <PriceView>
         ├── useDisplayStateCorrection()
         ├── useSwapDirectionEffect()

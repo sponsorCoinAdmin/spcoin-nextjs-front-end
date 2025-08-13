@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/panes/header';
-import { ExchangeWrapper } from '@/lib/context/ExchangeWrapper';
+import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
 
 export default function ClientLayoutWrapper({
   children,
@@ -14,7 +14,7 @@ export default function ClientLayoutWrapper({
   const isSponsorCoin = pathname === '/SponsorCoin';
 
   return (
-    <ExchangeWrapper>
+    <ExchangeProvider>
       <Header />
       {isSponsorCoin ? (
         children
@@ -23,6 +23,6 @@ export default function ClientLayoutWrapper({
           {children}
         </Suspense>
       )}
-    </ExchangeWrapper>
+    </ExchangeProvider>
   );
 }

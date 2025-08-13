@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import '@/app/globals.css'
 import Footer from '@/components/panes/footer'
 import Header from '@/components/panes/header'
-import SpCoinWrapper from '@/components/Wrappers/SpCoinWrapper'
+import SpCoinProviders from '@/components/Wrappers/SpCoinProviders'
 
 export const metadata: Metadata = {
   title: 'spCoin',
@@ -18,12 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <>
-      {/* <ExchangeWrapper> previously used, currently replaced by SpCoinWrapper */}
-      <SpCoinWrapper>
+      {/* <ExchangeProvider> previously used, currently replaced by SpCoinProviders */}
+      <SpCoinProviders>
         <Header />
         {children}
         {/* <Footer /> temporarily disabled for redesign */}
-      </SpCoinWrapper>
+      </SpCoinProviders>
     </>
   )
 }

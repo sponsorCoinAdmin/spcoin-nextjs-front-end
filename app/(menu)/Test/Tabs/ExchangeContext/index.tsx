@@ -8,12 +8,6 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-type Props = {
-  exchangeContext: any;
-  collapsedKeys: string[];
-  updateCollapsedKeys: (next: string[]) => void;
-};
-
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
 
@@ -30,17 +24,14 @@ function getAllNestedKeys(obj: any): string[] {
   return keys;
 }
 
-export default function ExchangeContextTab({
-  exchangeContext,
-  collapsedKeys,
-  updateCollapsedKeys,
-}: Props) {
-  const { setExchangeContext } = useExchangeContext();
+export default function ExchangeContextTab() {
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
+  // Pull page UI state (loose typing to avoid churn with global types)
   const pageAny: any = state.page?.exchangePage ?? {};
+  const collapsedKeys: string[] = pageAny.collapsedKeys ?? [];
   const expandContext: boolean = pageAny.expandContext ?? false;
-  const showActiveDisplayPanel: boolean = pageAny.showActiveDisplayPanel ?? false;
 
   const updateExchangePage = useCallback((updates: any) => {
     setState((prev: any) => ({
@@ -69,13 +60,17 @@ export default function ExchangeContextTab({
   }, [expandContext, exchangeContext, updateExchangePage]);
 
   const logContext = useCallback(() => {
-    const ctx = stringifyBigInt(exchangeContext);
-    console.log('📦 Log Context (tab):', ctx);
+    console.log('📦 Log Context (tab):', stringifyBigInt(exchangeContext));
   }, [exchangeContext]);
+
+  const handleUpdateCollapsedKeys = useCallback(
+    (next: string[]) => updateExchangePage({ collapsedKeys: next }),
+    [updateExchangePage]
+  );
 
   return (
     <div className="space-y-4">
-      {/* Copied controls */}
+      {/* Controls for this tab */}
       <div className="w-full flex flex-wrap justify-center gap-4">
         <button onClick={hideContext} className={buttonClasses}>
           Hide Context
@@ -89,18 +84,17 @@ export default function ExchangeContextTab({
           Log Context
         </button>
 
-        {showActiveDisplayPanel && (
           <select
             id="activeDisplaySelect_tab"
             title="Select activeDisplay"
             aria-label="Select activeDisplay"
-            value={exchangeContext.settings.activeDisplay}
+            value={exchangeContext?.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL}
             onChange={(e) => {
               const selected = Number(e.target.value);
               setExchangeContext((prev: any) => ({
                 ...prev,
                 settings: {
-                  ...prev.settings,
+                  ...prev?.settings,
                   activeDisplay: selected,
                 },
               }));
@@ -116,14 +110,13 @@ export default function ExchangeContextTab({
             <option value={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL}>SELL_SELECT_SCROLL_PANEL</option>
             <option value={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL}>BUY_SELECT_SCROLL_PANEL</option>
           </select>
-        )}
       </div>
 
-      {/* Existing content */}
+      {/* Context viewer */}
       <JsonInspector
         data={exchangeContext}
         collapsedKeys={collapsedKeys}
-        updateCollapsedKeys={updateCollapsedKeys}
+        updateCollapsedKeys={handleUpdateCollapsedKeys}
       />
     </div>
   );

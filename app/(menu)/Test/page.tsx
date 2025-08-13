@@ -1,9 +1,7 @@
 // File: app/(menu)/Test/page.tsx
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-
-import { useExchangeContext } from '@/lib/context/hooks';
+import { useCallback, useState } from 'react';
 import { usePageState } from '@/lib/context/PageStateContext';
 
 import ExchangeContextTab from './Tabs/ExchangeContext';
@@ -12,38 +10,23 @@ import TestWalletsTab from './Tabs/TestWallets';
 import PanelsTab from './Tabs/Panels';
 import ToDoTab from './Tabs/ToDo';
 
-function useDidHydrate(): boolean {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
-  return hydrated;
-}
-
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
 
 export default function TestPage() {
-  const isHydrated = useDidHydrate();
-  const { exchangeContext } = useExchangeContext();
   const { state, setState } = usePageState();
 
-  // Loosen local typing so we can use new fields before the global type is updated
+  // Use a loose shape so we can evolve flags without fighting types here
   const pageAny: any = state.page?.exchangePage ?? {};
   const {
     showContext = false,
     showWallets = false,
-    collapsedKeys = [],
     showPanels = false,
     showToDo = false,
-    showFSMTracePanel = false, // ← read from PageState
+    showFSMTracePanel = false,
   } = pageAny;
 
-  const [quickSwitch, setQuickSwitch] = useState<string>(''); // select value
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('PageStateContext', JSON.stringify(state));
-    } catch {}
-  }, [state]);
+  const [quickSwitch, setQuickSwitch] = useState<string>('');
 
   const updateExchangePage = useCallback((updates: any) => {
     setState((prev: any) => ({
@@ -58,113 +41,91 @@ export default function TestPage() {
     }));
   }, [setState]);
 
-  // Central quick-switch handler (used to SHOW a section)
+  // Dropdown is visible only when no tab is open
+  const showRunTest = !(showContext || showWallets || showPanels || showToDo || showFSMTracePanel);
+
+  // Open exactly one tab at a time
+  const resetFlags = {
+    showContext: false,
+    showWallets: false,
+    showPanels: false,
+    showToDo: false,
+    showFSMTracePanel: false,
+  } as const;
+
   const handleQuickSwitch = useCallback((value: string) => {
     if (!value) return;
 
     switch (value) {
       case 'context':
         updateExchangePage({
+          ...resetFlags,
           showContext: true,
-          showActiveDisplayPanel: true,
-          expandContext: false,
-          showWallets: false,
-          showPanels: false,
-          showToDo: false,
-          showFSMTracePanel: false,
+          // Context tab can manage its own internal options (expand, active display) if needed.
         });
         break;
       case 'fsm':
         updateExchangePage({
+          ...resetFlags,
           showFSMTracePanel: true,
-          showContext: false,
-          showActiveDisplayPanel: false,
-          expandContext: false,
-          showWallets: false,
-          showPanels: false,
-          showToDo: false,
         });
         break;
       case 'wallets':
         updateExchangePage({
+          ...resetFlags,
           showWallets: true,
-          showContext: false,
-          showActiveDisplayPanel: false,
-          expandContext: false,
-          showPanels: false,
-          showToDo: false,
-          showFSMTracePanel: false,
         });
         break;
       case 'panels':
         updateExchangePage({
+          ...resetFlags,
           showPanels: true,
-          showContext: false,
-          showActiveDisplayPanel: false,
-          expandContext: false,
-          showWallets: false,
-          showToDo: false,
-          showFSMTracePanel: false,
         });
         break;
       case 'todo':
         updateExchangePage({
+          ...resetFlags,
           showToDo: true,
-          showContext: false,
-          showActiveDisplayPanel: false,
-          expandContext: false,
-          showWallets: false,
-          showPanels: false,
-          showFSMTracePanel: false,
         });
         break;
       default:
         break;
     }
 
-    // reset selection so the same choice can be picked again later
+    // Reset so the same option can be selected again later
     setQuickSwitch('');
   }, [updateExchangePage]);
 
   return (
     <div className="space-y-6 p-6">
-      {isHydrated && (
-        <>
-          {/* Centered "Run Test" dropdown */}
-          <div className="w-full flex justify-center mb-4">
-            <label htmlFor="quickSwitchSelect" className="sr-only">Run Test</label>
-            <select
-              id="quickSwitchSelect"
-              className={buttonClasses}
-              value={quickSwitch}
-              onChange={(e) => handleQuickSwitch(e.target.value)}
-              aria-label="Run Test"
-              title="Run Test"
-            >
-              <option value="">Run Test</option>
-              <option value="context">Show Context</option>
-              <option value="fsm">Show FSM Trace</option>
-              <option value="wallets">Show Test Wallets</option>
-              <option value="panels">Show Panels</option>
-              <option value="todo">Show ToDo</option>
-            </select>
-          </div>
-        </>
+      {showRunTest && (
+        <div className="w-full flex justify-center mb-4">
+          <label htmlFor="quickSwitchSelect" className="sr-only">Run Test</label>
+          <select
+            id="quickSwitchSelect"
+            className={buttonClasses}
+            value={quickSwitch}
+            onChange={(e) => handleQuickSwitch(e.target.value)}
+            aria-label="Run Test"
+            title="Run Test"
+          >
+            <option value="">Run Test</option>
+            <option value="context">Show Context</option>
+            <option value="fsm">Show FSM Trace</option>
+            <option value="wallets">Show Test Wallets</option>
+            <option value="panels">Show Panels</option>
+            <option value="todo">Show ToDo</option>
+          </select>
+        </div>
       )}
 
-      {/* Body tabs */}
-      {isHydrated && showContext && (
-        <ExchangeContextTab
-          exchangeContext={exchangeContext}
-          collapsedKeys={collapsedKeys}
-          updateCollapsedKeys={(next) => updateExchangePage({ collapsedKeys: next })}
-        />
-      )}
-
-      {isHydrated && showWallets && <TestWalletsTab />}
-      {isHydrated && showFSMTracePanel && <FSMTraceTab />}
-      {isHydrated && showPanels && <PanelsTab />}
-      {isHydrated && showToDo && <ToDoTab />}
+      {/* Tabs: each owns its own Close/Hide button and updates PageState.
+          When a tab closes itself, all flags become false → the dropdown reappears. */}
+      {showContext && <ExchangeContextTab />}
+      {showWallets && <TestWalletsTab />}
+      {showFSMTracePanel && <FSMTraceTab />}
+      {showPanels && <PanelsTab />}
+      {showToDo && <ToDoTab />}
     </div>
   );
 }

@@ -6,10 +6,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { config } from '@/lib/wagmi/wagmiConfig';
 import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext'; // ✅ new import
-import { ExchangeWrapper } from '@/lib/context/ExchangeWrapper';
+import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
 import { PageStateProvider } from '@/lib/context/PageStateContext';
-import ExchangeMethods from '@/lib/context/ExchangeMethods'; // ❌ This will be undefined
-export default function SpCoinWrapper({ children }: { children: React.ReactNode }) {
+export default function SpCoinProviders({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient();
 
   return (
@@ -18,11 +17,9 @@ export default function SpCoinWrapper({ children }: { children: React.ReactNode 
         <ConnectKitProvider>
           <PageStateProvider>
             <ConnectedAccountProvider> {/* ✅ inserted */}
-              <ExchangeWrapper>
-                <ExchangeMethods>
-                  {children}
-                </ExchangeMethods>
-              </ExchangeWrapper>
+              <ExchangeProvider>
+                {children}
+              </ExchangeProvider>
             </ConnectedAccountProvider>
           </PageStateProvider>
         </ConnectKitProvider>

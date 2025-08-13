@@ -1,6 +1,6 @@
 // File: lib/context/ExchangeSanitizeHelpers.ts
 
-import { TradeData, ExchangeContext, SP_COIN_DISPLAY } from '@/lib/structure';
+import { TradeData, ExchangeContext, SP_COIN_DISPLAY, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 
 /**
@@ -17,9 +17,17 @@ export const sanitizeExchangeContext = (
 ): ExchangeContext => {
   const defaultContext = getInitialContext(chainId);
 
-  if (!raw) return defaultContext;
+  if (!raw) {
+    // When no raw context exists, also seed settings_NEW with a sane default
+    const ctx = { ...defaultContext } as any;
+    ctx.settings_NEW = {
+      spCoinDisplay: SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL,
+    };
+    return ctx as ExchangeContext;
+  }
 
-  return {
+  // Build the sanitized base (existing fields)
+  const sanitized: ExchangeContext = {
     settings: {
       apiTradingProvider:
         raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
@@ -80,11 +88,9 @@ export const sanitizeExchangeContext = (
             balance: raw.tradeData.buyTokenContract.balance ?? 0n,
           }
         : defaultContext.tradeData.buyTokenContract,
-      rateRatio:
-        raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
+      rateRatio: raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
       slippage: {
-        bps:
-          raw.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
+        bps: raw.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
         percentage:
           raw.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
         percentageString:
@@ -95,4 +101,23 @@ export const sanitizeExchangeContext = (
     errorMessage: raw.errorMessage ?? defaultContext.errorMessage,
     apiErrorMessage: raw.apiErrorMessage ?? defaultContext.apiErrorMessage,
   };
+
+  // ✅ NEW: Seed/validate the app-level panel visibility in the parallel settings_NEW bag.
+  // We intentionally avoid touching your existing `settings`/`Settings` type.
+  const validNewValues = new Set<number>(
+    (Object.values(SP_COIN_DISPLAY_NEW).filter(v => typeof v === 'number') as number[])
+  );
+
+  const storedNewDisplay =
+    (raw as any)?.settings_NEW?.spCoinDisplay as number | undefined;
+
+  const sanitizedNewDisplay = validNewValues.has(storedNewDisplay ?? -1)
+    ? (storedNewDisplay as SP_COIN_DISPLAY_NEW)
+    : SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+
+  (sanitized as any).settings_NEW = {
+    spCoinDisplay: sanitizedNewDisplay,
+  };
+
+  return sanitized;
 };
