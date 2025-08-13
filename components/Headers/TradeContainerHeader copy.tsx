@@ -6,7 +6,6 @@ import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { Settings } from 'lucide-react'; // replaces AntD icon
 
 const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
@@ -25,10 +24,6 @@ const TradeContainerHeader = () => {
 
       <h4 className={styles.center}>Sponsor Coin Exchange</h4>
 
-      {/* <div>
-        <Settings size={20} className={styles.cog} />
-      </div> */}
-
       <div>
         <Image
           src={cog_png}
@@ -38,11 +33,6 @@ const TradeContainerHeader = () => {
           style={{ height: 'au20to', width: 'auto' }} // ✅ required
         />      
       </div>
-      {/* 
-      <Popover content={<slippageBps initialSlippageBps={slippageBps} setSlippageBpsCallback={setSlippageBpsCallback}/>} title="Settings" trigger="click" placement="bottomLeft">
-        <SettingOutlined className={styles.cog} />
-      </Popover>
-      */}
     </div>
   );
 };

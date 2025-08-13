@@ -54,11 +54,11 @@ export type DisplaySettings = {
   activeDisplay: SP_COIN_DISPLAY;
 };
 
-export type Settings = {
-  apiTradingProvider: API_TRADING_PROVIDER;
-  /** ⬇️ Migrated to the new enum */
-  activeDisplay: SP_COIN_DISPLAY;
-};
+// export type Settings = {
+//   apiTradingProvider: API_TRADING_PROVIDER;
+//   /** ⬇️ Migrated to the new enum */
+//   activeDisplay: SP_COIN_DISPLAY;
+// };
 
 export type NetworkElement = {
   connected: boolean;
