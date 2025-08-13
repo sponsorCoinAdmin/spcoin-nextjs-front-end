@@ -2,7 +2,7 @@
 'use client';
 
 import { useSpCoinDisplay } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useEffect } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
@@ -35,16 +35,16 @@ const toggleElement = (element: string) => {
 /**
  * Human-readable label for the NEW display enum.
  */
-const spCoinDisplayString = (display: SP_COIN_DISPLAY_NEW | undefined): string => {
+const spCoinDisplayString = (display: SP_COIN_DISPLAY | undefined): string => {
   if (display === undefined) return 'activeDisplay(undefined) = ❓ UNKNOWN';
   return `activeDisplay(${display}) = ${getActiveDisplayString(display)}`;
 };
 
 /**
  * Keep the global display state in sync with a caller-provided desired value.
- * Backward-compatible name; now works with SP_COIN_DISPLAY_NEW and writes to settings.activeDisplay.
+ * Backward-compatible name; now works with SP_COIN_DISPLAY and writes to settings.activeDisplay.
  */
-const useDisplaySpCoinContainers = (desiredDisplay: SP_COIN_DISPLAY_NEW) => {
+const useDisplaySpCoinContainers = (desiredDisplay: SP_COIN_DISPLAY) => {
   const [currentDisplay, setDisplay] = useSpCoinDisplay();
 
   useEffect(() => {

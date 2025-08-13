@@ -1,14 +1,14 @@
 // File: lib/hooks/inputValidations/helpers/fsmFormat.ts
 'use client';
 
-import { InputState, FEED_TYPE, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { InputState, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import { formatTrace as _formatTrace } from './fsmTraceUtils';
 
 export const SEP_LINE =
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
 
-export function headerLine(containerType: SP_COIN_DISPLAY_NEW, hex: string, feed: FEED_TYPE) {
-  return `🧮 ${SP_COIN_DISPLAY_NEW[containerType]} for Address ${hex} ${FEED_TYPE[feed]}`;
+export function headerLine(containerType: SP_COIN_DISPLAY, hex: string, feed: FEED_TYPE) {
+  return `🧮 ${SP_COIN_DISPLAY[containerType]} for Address ${hex} ${FEED_TYPE[feed]}`;
 }
 
 export function warningLine(state: InputState, input: string) {

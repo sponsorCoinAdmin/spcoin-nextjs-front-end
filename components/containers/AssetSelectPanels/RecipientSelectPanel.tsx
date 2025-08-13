@@ -5,7 +5,7 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
 import { useDisplaySpCoinContainers } from '@/lib/spCoin/guiControl';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import RecipientSelectDropDown from '../AssetSelectDropDowns/RecipientSelectDropDown';
@@ -36,18 +36,18 @@ const RecipientSelectPanel: React.FC = () => {
   }, [recipientAccount, exchangeContext, setExchangeContext]);
 
   const clearRecipientSelect = useCallback(() => {
-    setActiveDisplay(SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     setRecipientAccount(undefined);
   }, [setActiveDisplay]);
 
   const toggleSponsorRateConfigPanel = useCallback(() => {
     const nextState =
-      activeDisplay === SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL
-        ? SP_COIN_DISPLAY_NEW.SPONSOR_RATE_CONFIG_PANEL
-        : SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL;
+      activeDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
+        ? SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
+        : SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
 
     setActiveDisplay(nextState);
-    debugLog.log(`⚙️ Toggled sponsor rate config to → ${SP_COIN_DISPLAY_NEW[nextState]}`);
+    debugLog.log(`⚙️ Toggled sponsor rate config to → ${SP_COIN_DISPLAY[nextState]}`);
   }, [activeDisplay, setActiveDisplay]);
 
   return (

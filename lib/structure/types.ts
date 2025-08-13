@@ -6,7 +6,7 @@ import {
   STATUS,
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
 export interface WalletAccount {
@@ -51,13 +51,13 @@ export type Accounts = {
 
 /** ⬇️ Migrated to the new enum */
 export type DisplaySettings = {
-  activeDisplay: SP_COIN_DISPLAY_NEW;
+  activeDisplay: SP_COIN_DISPLAY;
 };
 
 export type Settings = {
   apiTradingProvider: API_TRADING_PROVIDER;
   /** ⬇️ Migrated to the new enum */
-  activeDisplay: SP_COIN_DISPLAY_NEW;
+  activeDisplay: SP_COIN_DISPLAY;
 };
 
 export type NetworkElement = {

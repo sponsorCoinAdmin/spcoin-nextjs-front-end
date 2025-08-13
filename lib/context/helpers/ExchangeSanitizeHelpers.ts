@@ -1,6 +1,6 @@
 // File: lib/context/ExchangeSanitizeHelpers.ts
 
-import { TradeData, ExchangeContext, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { TradeData, ExchangeContext, SP_COIN_DISPLAY } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 
 /**
@@ -19,18 +19,18 @@ export const sanitizeExchangeContext = (
 
   // Build a set of valid enum numeric values for quick validation
   const validDisplayValues = new Set<number>(
-    (Object.values(SP_COIN_DISPLAY_NEW).filter((v) => typeof v === 'number') as number[])
+    (Object.values(SP_COIN_DISPLAY).filter((v) => typeof v === 'number') as number[])
   );
 
-  // Helper to coerce any incoming value to a valid SP_COIN_DISPLAY_NEW or fallback
-  const coerceDisplay = (value: unknown): SP_COIN_DISPLAY_NEW => {
+  // Helper to coerce any incoming value to a valid SP_COIN_DISPLAY or fallback
+  const coerceDisplay = (value: unknown): SP_COIN_DISPLAY => {
     const asNum = typeof value === 'number' ? value : undefined;
     if (asNum !== undefined && validDisplayValues.has(asNum)) {
-      return asNum as SP_COIN_DISPLAY_NEW;
+      return asNum as SP_COIN_DISPLAY;
     }
     // Prefer defaultContext if it already has a valid value, otherwise use TRADING_STATION_PANEL
     const def = (defaultContext as any)?.settings?.activeDisplay;
-    return validDisplayValues.has(def) ? (def as SP_COIN_DISPLAY_NEW) : SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+    return validDisplayValues.has(def) ? (def as SP_COIN_DISPLAY) : SP_COIN_DISPLAY.TRADING_STATION_PANEL;
   };
 
   if (!raw) {

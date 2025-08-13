@@ -2,7 +2,7 @@
 
 'use client';
 
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { TradeAssetPanel } from '../containers/AssetSelectPanels';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
@@ -21,7 +21,7 @@ const debugLog = createDebugLogger('TradingStationPanel', DEBUG_ENABLED, LOG_TIM
 
 export default function TradingStationPanel() {
   const { activeDisplay } = useActiveDisplay();
-  const isActive = activeDisplay === SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+  const isActive = activeDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
   debugLog.log(
     `🛠️ TradingStationPanel → activeDisplay:`,
@@ -32,8 +32,8 @@ export default function TradingStationPanel() {
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      <TradeAssetPanel containerType={SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL} />
-      <TradeAssetPanel containerType={SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL} />
+      <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
+      <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
       <BuySellSwapArrowButton />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceData} />

@@ -1,6 +1,6 @@
 // File: lib/structure/constants/enums/spCoinDisplay.ts
 
-export enum SP_COIN_DISPLAY_NEW {
+export enum SP_COIN_DISPLAY {
   AGENT_SELECT_PANEL,
   BUY_SELECT_SCROLL_PANEL,
   ERROR_MESSAGE_PANEL,

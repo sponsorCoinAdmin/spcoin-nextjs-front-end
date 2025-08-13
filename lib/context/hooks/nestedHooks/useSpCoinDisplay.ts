@@ -1,7 +1,7 @@
 // File: lib/context/hooks/useSpCoinDisplay.ts
 
 import { useExchangeContext } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
@@ -12,21 +12,21 @@ const debugLog = createDebugLogger('contextHooks(useSpCoinDisplay)', DEBUG_ENABL
 
 /**
  * ✅ MIGRATED
- * Backwards-compatible hook name that now **uses SP_COIN_DISPLAY_NEW** and writes to
+ * Backwards-compatible hook name that now **uses SP_COIN_DISPLAY** and writes to
  * `settings.activeDisplay` (single source of truth). Existing call sites can keep
  * using `useSpCoinDisplay()` without code changes.
  */
 export const useSpCoinDisplay = (): [
-  SP_COIN_DISPLAY_NEW,
-  (display: SP_COIN_DISPLAY_NEW) => void
+  SP_COIN_DISPLAY,
+  (display: SP_COIN_DISPLAY) => void
 ] => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const currentDisplay =
-    (exchangeContext?.settings?.activeDisplay as SP_COIN_DISPLAY_NEW) ??
-    SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+    (exchangeContext?.settings?.activeDisplay as SP_COIN_DISPLAY) ??
+    SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
-  const setSpCoinDisplay = (display: SP_COIN_DISPLAY_NEW) => {
+  const setSpCoinDisplay = (display: SP_COIN_DISPLAY) => {
     if (!exchangeContext?.settings) return;
     debugSetSpCoinDisplay(currentDisplay, display, setExchangeContext);
   };
@@ -39,8 +39,8 @@ export const useSpCoinDisplay = (): [
  * Replaces legacy `spCoinDisplay` updates.
  */
 export const debugSetSpCoinDisplay = (
-  oldDisplay: SP_COIN_DISPLAY_NEW,
-  newDisplay: SP_COIN_DISPLAY_NEW,
+  oldDisplay: SP_COIN_DISPLAY,
+  newDisplay: SP_COIN_DISPLAY,
   setExchangeContext: (updater: (prev: any) => any) => void
 ): void => {
   const displayChange = `${getActiveDisplayString(oldDisplay)} → ${getActiveDisplayString(newDisplay)}`;

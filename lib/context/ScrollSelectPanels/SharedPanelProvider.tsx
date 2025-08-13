@@ -12,7 +12,7 @@ import React, {
 
 import { SharedPanelContext } from './useSharedPanelContext';
 import {
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
@@ -44,7 +44,7 @@ interface SharedPanelProviderProps {
   children: ReactNode;
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: TokenContract) => void;
-  containerType: SP_COIN_DISPLAY_NEW;
+  containerType: SP_COIN_DISPLAY;
 
   /** Optional, typed payload for the active panel */
   initialPanelBag?: SharedPanelBag;

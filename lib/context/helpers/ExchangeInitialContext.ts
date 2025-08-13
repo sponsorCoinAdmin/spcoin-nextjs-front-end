@@ -2,7 +2,7 @@
 
 import {
   API_TRADING_PROVIDER,
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
   TRADE_DIRECTION,
   WalletAccount,
   NetworkElement,
@@ -21,7 +21,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      activeDisplay: SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL, // ✅ only activeDisplay kept
+      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ only activeDisplay kept
     },
     accounts: {
       connectedAccount: undefined,

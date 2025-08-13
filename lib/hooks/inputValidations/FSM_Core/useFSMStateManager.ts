@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FEED_TYPE,
   InputState,
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
   WalletAccount,
   TokenContract,
 } from '@/lib/structure';
@@ -23,7 +23,7 @@ const debugLog = createDebugLogger(
 );
 
 interface UseFSMStateManagerParams {
-  containerType: SP_COIN_DISPLAY_NEW;
+  containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   instanceId: string;
 

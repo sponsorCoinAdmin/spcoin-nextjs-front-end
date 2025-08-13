@@ -7,7 +7,7 @@ import JsonInspector from '@/components/shared/JsonInspector';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 // Utility to build dropdown options from enum values
 function getNumericEnumEntries<E extends Record<string, string | number>>(
@@ -81,12 +81,12 @@ export default function ExchangeContextTab() {
   );
 
   const displayOptions = useMemo(
-    () => getNumericEnumEntries(SP_COIN_DISPLAY_NEW, 'SP_COIN_DISPLAY_NEW'),
+    () => getNumericEnumEntries(SP_COIN_DISPLAY, 'SP_COIN_DISPLAY'),
     []
   );
 
   const activeValue =
-    exchangeContext?.settings?.activeDisplay ?? SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+    exchangeContext?.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
   return (
     <div className="space-y-4">

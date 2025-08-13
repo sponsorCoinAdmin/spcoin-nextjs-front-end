@@ -9,13 +9,13 @@ import { clsx } from 'clsx';
 import styles from '@/styles/Exchange.module.css';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-import { SP_COIN_DISPLAY_NEW, WalletAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 
 type BaseSelectPanelProps = {
-  displayState: SP_COIN_DISPLAY_NEW;
+  displayState: SP_COIN_DISPLAY;
   selectedAccount?: WalletAccount;
   onClearSelect: () => void;
   onToggleConfig: () => void;
@@ -67,7 +67,7 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
         className={clsx(
           styles.inputs,
           styles.AccountSelectContainer,
-          displayState === SP_COIN_DISPLAY_NEW.SPONSOR_RATE_CONFIG_PANEL
+          displayState === SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
             ? styles.noBottomRadius
             : styles.withBottomRadius
         )}
@@ -109,7 +109,7 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
         </div>
       </div>
 
-      {displayState === SP_COIN_DISPLAY_NEW.SPONSOR_RATE_CONFIG_PANEL && ConfigComponent && (
+      {displayState === SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL && ConfigComponent && (
         <div>{ConfigComponent}</div>
       )}
     </>

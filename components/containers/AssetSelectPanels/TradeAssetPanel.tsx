@@ -23,7 +23,7 @@ import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpe
 import { tokenContractsEqual } from '@/lib/network/utils';
 
 import {
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
   TRADE_DIRECTION,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
@@ -59,7 +59,7 @@ function TradeAssetPanelInner() {
   } = useTokenPanelContext();
 
   const tokenContract =
-    containerType === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL ? sellTokenContract : buyTokenContract;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellTokenContract : buyTokenContract;
 
   const [inputValue, setInputValue] = useState<string>('0');
   const debouncedSellAmount = useDebounce(sellAmount, 600);
@@ -80,7 +80,7 @@ function TradeAssetPanelInner() {
       return;
     }
 
-    debugLog.log(`📦 Sync localTokenContract for ${SP_COIN_DISPLAY_NEW[containerType]}:`, tokenContract);
+    debugLog.log(`📦 Sync localTokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenContract);
     setLocalTokenContract(tokenContract);
     lastTokenKeyRef.current = key;
   }, [tokenContract, setLocalTokenContract, containerType, localTokenContract]);
@@ -95,17 +95,17 @@ function TradeAssetPanelInner() {
   useEffect(() => {
     if (!tokenContract) return;
     const currentAmount =
-      containerType === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
     const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
     if (inputValue !== formatted) setInputValue(formatted);
   }, [sellAmount, buyAmount, tokenContract, containerType]);
 
   // Push debounced amounts back to global state, but only when they differ
   useEffect(() => {
-    if (containerType === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL &&
+    if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
         tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) {
       if (sellAmount !== debouncedSellAmount) setSellAmount(debouncedSellAmount);
-    } else if (containerType === SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL &&
+    } else if (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
                tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN) {
       if (buyAmount !== debouncedBuyAmount) setBuyAmount(debouncedBuyAmount);
     }
@@ -126,7 +126,7 @@ function TradeAssetPanelInner() {
       const bigIntValue = parseUnits(formatted, decimals);
       if (localAmount !== bigIntValue) setLocalAmount(bigIntValue);
 
-      if (containerType === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL) {
+      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         if (sellAmount !== bigIntValue) setSellAmount(bigIntValue);
       } else {
@@ -139,7 +139,7 @@ function TradeAssetPanelInner() {
   };
 
   const buySellText =
-    containerType === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
       ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
           ? `You Pay ± ${slippage.percentageString}`
           : `You Exactly Pay:`)
@@ -152,7 +152,7 @@ function TradeAssetPanelInner() {
   const isInputDisabled =
     !tokenContract ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
-      containerType === SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL);
+      containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
 
   return (
     <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
@@ -173,7 +173,7 @@ function TradeAssetPanelInner() {
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
 
       {isSpCoin(tokenContract) &&
-        (containerType === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL ? (
+        (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorshipButton />
@@ -183,7 +183,7 @@ function TradeAssetPanelInner() {
 }
 
 // ✅ EXPORTED component with built-in provider
-export default function TradeAssetPanel({ containerType }: { containerType: SP_COIN_DISPLAY_NEW }) {
+export default function TradeAssetPanel({ containerType }: { containerType: SP_COIN_DISPLAY }) {
   return (
     <TokenPanelProvider containerType={containerType}>
       <TradeAssetPanelInner />

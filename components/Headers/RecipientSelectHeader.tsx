@@ -9,11 +9,11 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
  * Header for the Recipient selection flow.
- * Migrated to SP_COIN_DISPLAY_NEW + useActiveDisplay.
+ * Migrated to SP_COIN_DISPLAY + useActiveDisplay.
  */
 const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
   const { exchangeContext } = useExchangeContext();
@@ -21,9 +21,9 @@ const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
 
   const toggleSponsorRateConfigPanel = () => {
     const next =
-      activeDisplay === SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL
-        ? SP_COIN_DISPLAY_NEW.SPONSOR_RATE_CONFIG_PANEL
-        : SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL;
+      activeDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
+        ? SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
+        : SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
 
     setActiveDisplay(next);
   };

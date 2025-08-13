@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import {
   WalletAccount,
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
@@ -42,7 +42,7 @@ export default function RecipientSelectPanel({
     <SharedPanelProvider
       closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Cast needed until WalletAccount is handled generically
-      containerType={activeDisplay as SP_COIN_DISPLAY_NEW}
+      containerType={activeDisplay as SP_COIN_DISPLAY}
     >
       <RecipientSelectPanelInner />
     </SharedPanelProvider>

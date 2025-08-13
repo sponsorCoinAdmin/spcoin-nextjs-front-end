@@ -1,22 +1,22 @@
 // File: lib/context/hooks/useActiveDisplayNew.ts
 
 import { useExchangeContext } from '@/lib/context/hooks/useExchangeContext';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ACTIVE_DISPLAY === 'true';
 const debugLog = createDebugLogger('useActiveDisplayNew', DEBUG_ENABLED, LOG_TIME);
 
-/** Coerce any incoming value to a valid SP_COIN_DISPLAY_NEW, or default. */
-function coerceDisplay(value: unknown): SP_COIN_DISPLAY_NEW {
+/** Coerce any incoming value to a valid SP_COIN_DISPLAY, or default. */
+function coerceDisplay(value: unknown): SP_COIN_DISPLAY {
   const valid = new Set<number>(
-    (Object.values(SP_COIN_DISPLAY_NEW).filter((v) => typeof v === 'number') as number[])
+    (Object.values(SP_COIN_DISPLAY).filter((v) => typeof v === 'number') as number[])
   );
   const asNum = typeof value === 'number' ? value : undefined;
   return asNum !== undefined && valid.has(asNum)
-    ? (asNum as SP_COIN_DISPLAY_NEW)
-    : SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+    ? (asNum as SP_COIN_DISPLAY)
+    : SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 }
 
 /** Read-only accessor for the NEW panel display (single source: settings.activeDisplay). */
@@ -30,7 +30,7 @@ export function useActiveDisplayNew() {
 export function useDisplayControlsNew() {
   const { setExchangeContext } = useExchangeContext();
 
-  const updateActiveDisplay = (next: SP_COIN_DISPLAY_NEW) => {
+  const updateActiveDisplay = (next: SP_COIN_DISPLAY) => {
     setExchangeContext((prev) => {
       const from = coerceDisplay(prev?.settings?.activeDisplay);
       const to = coerceDisplay(next);
@@ -40,14 +40,14 @@ export function useDisplayControlsNew() {
         activeDisplay: to,
       };
       debugLog.log('→ set display (NEW)', {
-        from: `${SP_COIN_DISPLAY_NEW[from]} (${from})`,
-        to: `${SP_COIN_DISPLAY_NEW[to]} (${to})`,
+        from: `${SP_COIN_DISPLAY[from]} (${from})`,
+        to: `${SP_COIN_DISPLAY[to]} (${to})`,
       });
       return cloned;
     });
   };
 
-  const resetToMain = () => updateActiveDisplay(SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL);
+  const resetToMain = () => updateActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
   return { updateActiveDisplay, resetToMain };
 }

@@ -2,7 +2,7 @@
 
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import { WalletAccount, ExchangeContext, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { WalletAccount, ExchangeContext, SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -16,7 +16,7 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  *
  * NOTE:
  *  - We normalize panel state through `sanitizeExchangeContext` which already
- *    coerces `settings.activeDisplay` to a valid `SP_COIN_DISPLAY_NEW` value.
+ *    coerces `settings.activeDisplay` to a valid `SP_COIN_DISPLAY` value.
  *  - We also keep a parallel `settings_NEW` bag for transitional code paths
  *    (tests & legacy panels) and seed it if missing.
  *
@@ -44,10 +44,10 @@ export async function initExchangeContext(
   const ctxAny = sanitized as any;
   if (!ctxAny.settings_NEW) {
     ctxAny.settings_NEW = {
-      spCoinDisplay: SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL,
+      spCoinDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     };
   } else if (ctxAny.settings_NEW.spCoinDisplay === undefined) {
-    ctxAny.settings_NEW.spCoinDisplay = SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+    ctxAny.settings_NEW.spCoinDisplay = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
   }
 
   if (isConnected && address) {

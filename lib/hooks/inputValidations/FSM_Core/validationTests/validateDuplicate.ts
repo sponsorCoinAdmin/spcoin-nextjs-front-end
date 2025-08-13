@@ -1,6 +1,6 @@
 // File: lib/hooks/inputValidations/tests/validateDuplicate.ts
 
-import { InputState, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { InputState, SP_COIN_DISPLAY } from '@/lib/structure';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
@@ -27,7 +27,7 @@ export function validateDuplicate(input: ValidateFSMInput): ValidateFSMOutput {
   const isDuplicate = !!cand && !!peer && cand === peer;
 
   debugLog.log('📥 validateDuplicate()', {
-    containerType: SP_COIN_DISPLAY_NEW[containerType],
+    containerType: SP_COIN_DISPLAY[containerType],
     debouncedHexInput,
     peerAddress,
     manualEntry,
@@ -38,7 +38,7 @@ export function validateDuplicate(input: ValidateFSMInput): ValidateFSMOutput {
     `📥 validateDuplicate(): ` +
     stringifyBigInt(
       {
-        containerType: SP_COIN_DISPLAY_NEW[containerType],
+        containerType: SP_COIN_DISPLAY[containerType],
         debouncedHexInput,
         peerAddress,
         manualEntry,

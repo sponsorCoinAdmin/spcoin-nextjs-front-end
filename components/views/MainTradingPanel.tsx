@@ -18,7 +18,7 @@ import {
 } from '@/lib/context/hooks';
 
 import {
-  SP_COIN_DISPLAY_NEW,
+  SP_COIN_DISPLAY,
   STATUS,
   TokenContract,
   ErrorMessage,
@@ -42,16 +42,16 @@ export default function MainTradingPanel() {
   const [___, setErrorMessage] = useErrorMessage();
 
   const isTokenScrollPanel =
-    activeDisplay === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL ||
-    activeDisplay === SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL;
+    activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
+    activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
 
-  const isErrorMessagePanel = activeDisplay === SP_COIN_DISPLAY_NEW.ERROR_MESSAGE_PANEL;
+  const isErrorMessagePanel = activeDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
 
   // Derive the opposing address for the open panel
   const peerAddress =
-    activeDisplay === SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL
+    activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL
       ? sellTokenContract?.address
-      : activeDisplay === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL
+      : activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
       ? buyTokenContract?.address
       : undefined;
 
@@ -76,17 +76,17 @@ export default function MainTradingPanel() {
 
   function closePanelCallback() {
     debugLog.log(
-      `🛑 closePanelCallback called source=${SP_COIN_DISPLAY_NEW[activeDisplay]} → switching to TRADING_STATION_PANEL`
+      `🛑 closePanelCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`
     );
-    setActiveDisplay(SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }
 
   function setAssetTokenCallback(tokenContract: TokenContract) {
     let msg = `✅ setAssetTokenCallback`;
-    if (activeDisplay === SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL) {
+    if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
       msg += ' 🔻 → setSellTokenContract';
       setSellTokenContract(tokenContract);
-    } else if (activeDisplay === SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL) {
+    } else if (activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
       msg += ' 🔺 → setBuyTokenContract';
       setBuyTokenContract(tokenContract);
     } else {
@@ -109,7 +109,7 @@ export default function MainTradingPanel() {
     };
     debugLog.error(`🚨 setErrorCallback → ${JSON.stringify(errorObj)}`);
     setErrorMessage(errorObj);
-    setActiveDisplay(SP_COIN_DISPLAY_NEW.ERROR_MESSAGE_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
     return errorObj;
   }
 

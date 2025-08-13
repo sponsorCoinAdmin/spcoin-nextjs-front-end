@@ -6,7 +6,7 @@ import React, { useState, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useActiveDisplay } from '@/lib/context/hooks';
 
 const MIN_STEP = 2; // matches prior code
@@ -45,7 +45,7 @@ const SponsorRateConfigPanel: React.FC = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => setActiveDisplay(SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL)}
+          onClick={() => setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
         >
           X
         </div>
