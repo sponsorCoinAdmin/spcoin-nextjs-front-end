@@ -5,6 +5,6 @@
 export * from "./enums/enums";
 export * from "./types";
 export * from "./constants/network";
-export * from "./enums/spCoinDisplayNew"
+export * from "./enums/spCoinDisplay"
 export * from "./types/settings_NEW"
 
