@@ -7,7 +7,7 @@ import {
   useExchangeContext,
 } from '@/lib/context/hooks';
 import { ErrorDialog } from '@/components/Dialogs/Dialogs';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { TokenContract } from '@/lib/structure';
@@ -40,7 +40,7 @@ function ErrorMessagePanelInner({
       '✅ Closing ErrorMessagePanel → switching to TRADING_STATION_PANEL'
     );
     setErrorMessage(undefined);
-    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL);
     closePanelCallback();
   };
 

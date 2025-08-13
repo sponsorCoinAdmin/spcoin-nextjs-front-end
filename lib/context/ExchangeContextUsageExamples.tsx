@@ -1,3 +1,5 @@
+// File: lib/context/ExchangeContextUsageExamples.tsx
+
 'use client';
 
 import React from 'react';
@@ -10,7 +12,7 @@ import {
   useSlippage,
   useErrorMessage,
   useApiErrorMessage,
-  useSpCoinDisplay,
+  useActiveDisplay,
   useTradeData,
   useSellTokenAddress,
   useBuyTokenAddress,
@@ -27,13 +29,13 @@ export default function ExchangeContextUsageExamples() {
   const { data: slippage, setSlippage, setBps } = useSlippage();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
-  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
   const tradeData = useTradeData();
   const sellTokenAddress = useSellTokenAddress();
   const buyTokenAddress = useBuyTokenAddress();
 
   return (
-      <div className="font-mono p-4">
+    <div className="font-mono p-4">
       <h2>🧪 Exchange Context Hook Tester</h2>
       <pre>Sell Amount: {sellAmount.toString()}</pre>
       <pre>Buy Amount: {buyAmount.toString()}</pre>
@@ -45,7 +47,7 @@ export default function ExchangeContextUsageExamples() {
       <pre>Slippage Bps: {slippage.bps}</pre>
       <pre>Slippage Percentage: {slippage.percentage}</pre>
       <pre>Slippage Percentage String: {slippage.percentageString}</pre>
-      <pre>spCoinDisplay: {spCoinDisplay}</pre>
+      <pre>activeDisplay: {activeDisplay}</pre>
       <pre>Trade Data: {JSON.stringify(tradeData, null, 2)}</pre>
       <pre>Error Message: {JSON.stringify(errorMessage)}</pre>
       <pre>API Error Message: {JSON.stringify(apiErrorMessage)}</pre>
@@ -58,7 +60,7 @@ export default function ExchangeContextUsageExamples() {
       <button
         onClick={() =>
           setSellTokenContract({
-            address: '0x111',
+            address: '0x111' as any,
             symbol: 'ETH',
             name: 'Ethereum',
             decimals: 18,
@@ -75,7 +77,7 @@ export default function ExchangeContextUsageExamples() {
       <button
         onClick={() =>
           setBuyTokenContract({
-            address: '0x222',
+            address: '0x222' as any,
             symbol: 'DAI',
             name: 'Dai Stablecoin',
             decimals: 18,

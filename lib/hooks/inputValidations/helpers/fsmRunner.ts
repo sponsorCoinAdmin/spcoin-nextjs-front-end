@@ -3,7 +3,7 @@
 
 import {
   InputState,
-  SP_COIN_DISPLAY,
+  SP_COIN_DISPLAY_NEW,
   FEED_TYPE,
   WalletAccount,
   TokenContract,
@@ -21,7 +21,7 @@ import { getStateIcon } from './fsmTraceUtils';
 
 export type FSMRunnerParams = {
   debouncedHexInput: string;
-  containerType: SP_COIN_DISPLAY;
+  containerType: SP_COIN_DISPLAY_NEW;
   feedType: FEED_TYPE;
   publicClient: any;
   chainId: number;

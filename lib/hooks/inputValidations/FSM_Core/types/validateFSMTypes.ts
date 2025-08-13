@@ -2,7 +2,7 @@
 
 import {
   InputState,
-  SP_COIN_DISPLAY,
+  SP_COIN_DISPLAY_NEW,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
@@ -21,7 +21,7 @@ export type ValidateFSMInput = {
   failedHexInput?: string;
 
   /** Environment / routing */
-  containerType: SP_COIN_DISPLAY;
+  containerType: SP_COIN_DISPLAY_NEW;
   feedType: FEED_TYPE;
   chainId: number;
   publicClient: PublicClient | any;

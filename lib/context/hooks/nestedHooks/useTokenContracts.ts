@@ -1,8 +1,10 @@
-import { TokenContract, SP_COIN_DISPLAY, ExchangeContext } from '@/lib/structure';
+// File: lib/context/hooks/useTokenContracts.ts
+
+import { TokenContract, SP_COIN_DISPLAY_NEW, ExchangeContext } from '@/lib/structure';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { tokenContractsEqual } from '@/lib/network/utils';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
-import { spCoinDisplayString } from '@/lib/spCoin/guiControl';
+import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 
@@ -40,7 +42,7 @@ export const useSellTokenContract = (): [
 
 /**
  * Hook for managing buyTokenContract from context.
- * Also manages spCoinDisplay based on whether buy token is an spCoin.
+ * Also manages activeDisplay based on whether the buy token is an spCoin.
  */
 export const useBuyTokenContract = (): [
   TokenContract | undefined,
@@ -51,13 +53,15 @@ export const useBuyTokenContract = (): [
 
   const setToken = (contract: TokenContract | undefined) => {
     const oldContract = exchangeContext?.tradeData?.buyTokenContract;
-    const oldDisplay = exchangeContext?.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+    const oldDisplay =
+      (exchangeContext?.settings?.activeDisplay as SP_COIN_DISPLAY_NEW) ??
+      SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
 
     const isSame = tokenContractsEqual(oldContract, contract);
     const isSp = contract && isSpCoin(contract);
-    const newDisplay = isSp
-      ? SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
-      : SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+    const newDisplay: SP_COIN_DISPLAY_NEW = isSp
+      ? SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL
+      : SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
 
     if (isSame && oldDisplay === newDisplay) return;
 
@@ -71,38 +75,42 @@ export const useBuyTokenContract = (): [
       },
     }));
 
-    debugSetSpCoinDisplay(oldDisplay, newDisplay, setExchangeContext);
+    debugSetActiveDisplay(oldDisplay, newDisplay, setExchangeContext);
   };
 
   return [token, setToken];
 };
 
 /**
- * Debug-aware setter for spCoinDisplay with call trace.
+ * Debug-aware setter for activeDisplay with call trace.
  */
-const debugSetSpCoinDisplay = (
-  oldDisplay: SP_COIN_DISPLAY,
-  newDisplay: SP_COIN_DISPLAY,
+const debugSetActiveDisplay = (
+  oldDisplay: SP_COIN_DISPLAY_NEW,
+  newDisplay: SP_COIN_DISPLAY_NEW,
   setExchangeContext: (updater: (prev: ExchangeContext) => ExchangeContext) => void
 ): void => {
   if (oldDisplay === newDisplay) {
     if (DEBUG_ENABLED) {
       const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No trace';
-      debugLog.log(`⚠️ spCoinDisplay unchanged: ${spCoinDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`);
+      debugLog.log(
+        `⚠️ activeDisplay unchanged: ${getActiveDisplayString(oldDisplay)}\n📍 Call site:\n${trace}`
+      );
     }
     return;
   }
 
   if (DEBUG_ENABLED) {
     const trace = new Error().stack?.split('\n')?.slice(2, 5).join('\n') ?? 'No trace';
-    debugLog.log(`🔁 spCoinDisplay change: ${spCoinDisplayString(oldDisplay)} → ${spCoinDisplayString(newDisplay)}\n📍 Call site:\n${trace}`);
+    debugLog.log(
+      `🔁 activeDisplay change: ${getActiveDisplayString(oldDisplay)} → ${getActiveDisplayString(newDisplay)}\n📍 Call site:\n${trace}`
+    );
   }
 
   setExchangeContext((prev) => ({
     ...prev,
     settings: {
       ...prev.settings,
-      spCoinDisplay: newDisplay,
+      activeDisplay: newDisplay,
     },
   }));
 };
@@ -112,7 +120,7 @@ const debugSetSpCoinDisplay = (
  */
 export const useSellTokenAddress = (): string | undefined => {
   const [sellTokenContract] = useSellTokenContract();
-  return sellTokenContract?.address;
+  return sellTokenContract?.address as unknown as string | undefined;
 };
 
 /**
@@ -120,5 +128,5 @@ export const useSellTokenAddress = (): string | undefined => {
  */
 export const useBuyTokenAddress = (): string | undefined => {
   const [buyTokenContract] = useBuyTokenContract();
-  return buyTokenContract?.address;
+  return buyTokenContract?.address as unknown as string | undefined;
 };

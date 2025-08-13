@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
+import { WalletAccount, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
@@ -46,7 +46,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+    setActiveDisplay(SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL);
     setShowDialog(true);
   }, [setActiveDisplay]);
 

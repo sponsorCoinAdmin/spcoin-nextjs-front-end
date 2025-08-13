@@ -2,7 +2,12 @@
 
 import { Address } from 'viem';
 import { UseReadContractReturnType } from 'wagmi';
-import { STATUS, TRADE_DIRECTION, API_TRADING_PROVIDER, SP_COIN_DISPLAY } from '@/lib/structure';
+import {
+  STATUS,
+  TRADE_DIRECTION,
+  API_TRADING_PROVIDER,
+  SP_COIN_DISPLAY_NEW,
+} from '@/lib/structure';
 
 export interface WalletAccount {
   name: string;
@@ -44,13 +49,15 @@ export type Accounts = {
   agentAccounts?: WalletAccount[];
 };
 
+/** ⬇️ Migrated to the new enum */
 export type DisplaySettings = {
-  activeDisplay: SP_COIN_DISPLAY;
+  activeDisplay: SP_COIN_DISPLAY_NEW;
 };
 
 export type Settings = {
   apiTradingProvider: API_TRADING_PROVIDER;
-  activeDisplay: SP_COIN_DISPLAY;
+  /** ⬇️ Migrated to the new enum */
+  activeDisplay: SP_COIN_DISPLAY_NEW;
 };
 
 export type NetworkElement = {

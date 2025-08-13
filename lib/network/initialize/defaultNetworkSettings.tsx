@@ -12,7 +12,7 @@ import {
   ExchangeContext,
   NetworkElement,
   WalletAccount,
-  SP_COIN_DISPLAY,
+  SP_COIN_DISPLAY_NEW,
   ETHEREUM,
   HARDHAT,
   POLYGON,
@@ -64,7 +64,7 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ ONLY activeDisplay kept
+      activeDisplay: SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL, // ✅ ONLY activeDisplay kept
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,

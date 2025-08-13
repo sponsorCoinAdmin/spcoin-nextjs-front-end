@@ -1,22 +1,25 @@
+// File: components/Buttons/ManageSponsorsButton.tsx
+
+'use client';
+
 import styles from '@/styles/Exchange.module.css';
-import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure';
+import { TokenContract } from '@/lib/structure';
 import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 type Props = {
-  tokenContract: TokenContract | undefined,
+  tokenContract: TokenContract | undefined;
 };
 
 const ManageSponsorsButton = ({ tokenContract }: Props) => {
-  const [showDialog, setShowDialog] = useState<boolean>(false);
+  const [showDialog, setShowDialog] = useState(false);
 
-  const openDialog2 = () => {
-    setShowDialog(true);
-  };
+  const openDialog = useCallback(() => setShowDialog(true), []);
 
-  const junkManageSponsorshipCallback = (tokenContract: TokenContract) => {
+  // Placeholder until upstream logic consumes this callback
+  const junkManageSponsorshipCallback = useCallback((tc: TokenContract) => {
     return null;
-  };
+  }, []);
 
   return (
     <>
@@ -24,11 +27,14 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
         showDialog={showDialog}
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}
+        // If your dialog supports onClose, wire it here to allow closing
+        // onClose={() => setShowDialog(false)}
       />
+
       <div
         id="manageSponsorshipsDiv"
         className={styles.manageSponsorshipsDiv}
-        onClick={openDialog2}
+        onClick={openDialog}
       >
         <div className={styles.centerTop}>Manage</div>
         <div className={styles.centerBottom}>Sponsorships</div>

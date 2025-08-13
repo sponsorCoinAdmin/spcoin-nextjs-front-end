@@ -2,9 +2,10 @@
 'use client';
 
 import { useSpCoinDisplay } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 import { useEffect } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_GUI_CONTROLLER === 'true';
@@ -24,38 +25,37 @@ const showElement = (element: string) => {
   }
 };
 
-const toggleElement = (element: any) => {
+const toggleElement = (element: string) => {
   const el = document.getElementById(element);
   if (el != null) {
     el.style.display = el.style.display === 'block' ? 'none' : 'block';
   }
 };
 
-const spCoinDisplayString = (spCoinDisplay: SP_COIN_DISPLAY | undefined): string => {
-  switch (spCoinDisplay) {
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
-      return `spCoinDisplay(${SP_COIN_DISPLAY.TRADING_STATION_PANEL}) = UNDEFINED`;
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL :
-      return `spCoinDisplay(${SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL }) = RECIPIENT_SELECT_PANEL `;
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL:
-      return `spCoinDisplay(${SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL}) = RECIPIENT_SELECT_PANEL`;
-    case SP_COIN_DISPLAY.MANAGE_SPONSORS_BUTTON:
-      return `spCoinDisplay(${SP_COIN_DISPLAY.MANAGE_SPONSORS_BUTTON}) = MANAGE_SPONSORS_BUTTON`;
-    case SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL:
-      return `spCoinDisplay(${SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL}) = SPONSOR_RATE_CONFIG_PANEL`;
-    default:
-      return `spCoinDisplay(${String(spCoinDisplay)}) = ❓ UNKNOWN`;
-  }
+/**
+ * Human-readable label for the NEW display enum.
+ */
+const spCoinDisplayString = (display: SP_COIN_DISPLAY_NEW | undefined): string => {
+  if (display === undefined) return 'activeDisplay(undefined) = ❓ UNKNOWN';
+  return `activeDisplay(${display}) = ${getActiveDisplayString(display)}`;
 };
 
-const useDisplaySpCoinContainers = (spCoinDisplay: SP_COIN_DISPLAY) => {
-  const [currentDisplay, debugSetSpCoinDisplay] = useSpCoinDisplay();
+/**
+ * Keep the global display state in sync with a caller-provided desired value.
+ * Backward-compatible name; now works with SP_COIN_DISPLAY_NEW and writes to settings.activeDisplay.
+ */
+const useDisplaySpCoinContainers = (desiredDisplay: SP_COIN_DISPLAY_NEW) => {
+  const [currentDisplay, setDisplay] = useSpCoinDisplay();
 
   useEffect(() => {
-    if (currentDisplay === spCoinDisplay) return;
-    debugLog.log(`🧩 [useDisplaySpCoinContainers] Sync to → ${spCoinDisplayString(spCoinDisplay)}`);
-    debugSetSpCoinDisplay(spCoinDisplay);
-  }, [spCoinDisplay, currentDisplay]);
+    if (currentDisplay === desiredDisplay) return;
+    if (DEBUG_ENABLED) {
+      debugLog.log(
+        `🧩 [useDisplaySpCoinContainers] Sync to → ${spCoinDisplayString(desiredDisplay)}`
+      );
+    }
+    setDisplay(desiredDisplay);
+  }, [desiredDisplay, currentDisplay, setDisplay]);
 };
 
 export {

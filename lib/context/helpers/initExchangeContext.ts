@@ -6,13 +6,19 @@ import { WalletAccount, ExchangeContext, SP_COIN_DISPLAY_NEW } from '@/lib/struc
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const LOG_LEVEL = 'info';
+const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
 const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
 
 /**
  * Initializes the ExchangeContext by hydrating from localStorage and optionally
  * augmenting it with connected wallet metadata if `address` is provided.
+ *
+ * NOTE:
+ *  - We normalize panel state through `sanitizeExchangeContext` which already
+ *    coerces `settings.activeDisplay` to a valid `SP_COIN_DISPLAY_NEW` value.
+ *  - We also keep a parallel `settings_NEW` bag for transitional code paths
+ *    (tests & legacy panels) and seed it if missing.
  *
  * @param chainId - The current chain ID from Wagmi.
  * @param isConnected - Whether a wallet is connected.
@@ -34,8 +40,7 @@ export async function initExchangeContext(
   debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
   debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
 
-  // ✅ Ensure NEW panel settings bag exists with a sane default
-  // We don't alter existing `settings`; we add/patch `settings_NEW`.
+  // ✅ Ensure the transitional settings_NEW bag exists with a sane default
   const ctxAny = sanitized as any;
   if (!ctxAny.settings_NEW) {
     ctxAny.settings_NEW = {
@@ -52,7 +57,7 @@ export async function initExchangeContext(
 
       sanitized.accounts.connectedAccount = metadata
         ? { ...metadata, address }
-        : {
+        : ({
             address,
             type: 'ERC20_WALLET',
             name: '',
@@ -62,7 +67,7 @@ export async function initExchangeContext(
             description: `Account ${address} not registered on this site`,
             logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
             balance: 0n,
-          } satisfies WalletAccount;
+          } as WalletAccount);
     } catch (err) {
       debugLog.error('⛔ Failed to load wallet.json:', err);
     }

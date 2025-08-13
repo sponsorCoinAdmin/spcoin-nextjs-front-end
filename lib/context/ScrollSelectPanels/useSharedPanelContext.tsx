@@ -4,7 +4,7 @@
 import { createContext, useContext } from 'react';
 import {
   InputState,
-  SP_COIN_DISPLAY,
+  SP_COIN_DISPLAY_NEW,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
@@ -46,7 +46,7 @@ export interface SharedPanelContextType {
   dumpInputFeedContext: (header?: string) => void;
 
   // Identity and callbacks
-  containerType: SP_COIN_DISPLAY;
+  containerType: SP_COIN_DISPLAY_NEW;
   feedType: FEED_TYPE;
   closePanelCallback: () => void;
   setTradingTokenCallback: (token: TokenContract) => void;

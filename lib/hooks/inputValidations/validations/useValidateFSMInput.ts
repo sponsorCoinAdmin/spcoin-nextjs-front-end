@@ -5,7 +5,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import { useChainId, useAccount, usePublicClient } from 'wagmi';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { InputState, getInputStateString, SP_COIN_DISPLAY } from '@/lib/structure';
+import { InputState, getInputStateString, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
@@ -41,7 +41,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
 
   // Debug logs on mount
   useEffect(() => {
-    debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
+    debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY_NEW[containerType]} (${containerType})`);
   }, [containerType]);
 
   useEffect(() => {

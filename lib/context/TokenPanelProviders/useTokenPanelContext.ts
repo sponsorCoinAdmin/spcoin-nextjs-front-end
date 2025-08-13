@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY_NEW, TokenContract } from '@/lib/structure';
 
 export interface TokenPanelContextType {
   localTokenContract?: TokenContract;
@@ -12,7 +12,7 @@ export interface TokenPanelContextType {
   setLocalAmount: (amount: bigint) => void;
 
   dumpTokenContext: (headerInfo?: string) => void;
-  containerType: SP_COIN_DISPLAY;
+  containerType: SP_COIN_DISPLAY_NEW;
 }
 
 export const TokenPanelContext = createContext<TokenPanelContextType | undefined>(undefined);

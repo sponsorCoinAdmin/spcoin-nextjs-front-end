@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 import {
-  SP_COIN_DISPLAY,
+  SP_COIN_DISPLAY_NEW,
   WalletAccount,
 } from '@/lib/structure';
 

@@ -1,6 +1,6 @@
 // File: lib/context/ExchangeSanitizeHelpers.ts
 
-import { TradeData, ExchangeContext, SP_COIN_DISPLAY, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
+import { TradeData, ExchangeContext, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 
 /**
@@ -17,13 +17,30 @@ export const sanitizeExchangeContext = (
 ): ExchangeContext => {
   const defaultContext = getInitialContext(chainId);
 
+  // Build a set of valid enum numeric values for quick validation
+  const validDisplayValues = new Set<number>(
+    (Object.values(SP_COIN_DISPLAY_NEW).filter((v) => typeof v === 'number') as number[])
+  );
+
+  // Helper to coerce any incoming value to a valid SP_COIN_DISPLAY_NEW or fallback
+  const coerceDisplay = (value: unknown): SP_COIN_DISPLAY_NEW => {
+    const asNum = typeof value === 'number' ? value : undefined;
+    if (asNum !== undefined && validDisplayValues.has(asNum)) {
+      return asNum as SP_COIN_DISPLAY_NEW;
+    }
+    // Prefer defaultContext if it already has a valid value, otherwise use TRADING_STATION_PANEL
+    const def = (defaultContext as any)?.settings?.activeDisplay;
+    return validDisplayValues.has(def) ? (def as SP_COIN_DISPLAY_NEW) : SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
+  };
+
   if (!raw) {
-    // When no raw context exists, also seed settings_NEW with a sane default
-    const ctx = { ...defaultContext } as any;
-    ctx.settings_NEW = {
-      spCoinDisplay: SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL,
+    // No raw context — return defaults with a guaranteed valid activeDisplay
+    const ctx = { ...defaultContext } as ExchangeContext;
+    (ctx as any).settings = {
+      ...defaultContext.settings,
+      activeDisplay: coerceDisplay((defaultContext as any)?.settings?.activeDisplay),
     };
-    return ctx as ExchangeContext;
+    return ctx;
   }
 
   // Build the sanitized base (existing fields)
@@ -31,8 +48,7 @@ export const sanitizeExchangeContext = (
     settings: {
       apiTradingProvider:
         raw.settings?.apiTradingProvider ?? defaultContext.settings.apiTradingProvider,
-      activeDisplay:
-        raw.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ only activeDisplay
+      activeDisplay: coerceDisplay(raw.settings?.activeDisplay), // ✅ new enum throughout
     },
     network: {
       ...defaultContext.network,
@@ -64,16 +80,12 @@ export const sanitizeExchangeContext = (
             balance: raw.accounts.agentAccount.balance ?? 0n,
           }
         : defaultContext.accounts.agentAccount,
-      sponsorAccounts:
-        raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
-      recipientAccounts:
-        raw.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
-      agentAccounts:
-        raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
+      sponsorAccounts: raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
+      recipientAccounts: raw.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
+      agentAccounts: raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
     },
     tradeData: {
-      tradeDirection:
-        raw.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
+      tradeDirection: raw.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
       sellTokenContract: raw.tradeData?.sellTokenContract
         ? {
             ...defaultContext.tradeData.sellTokenContract,
@@ -91,32 +103,13 @@ export const sanitizeExchangeContext = (
       rateRatio: raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
       slippage: {
         bps: raw.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
-        percentage:
-          raw.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
+        percentage: raw.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
         percentageString:
-          raw.tradeData?.slippage?.percentageString ??
-          defaultContext.tradeData.slippage.percentageString,
+          raw.tradeData?.slippage?.percentageString ?? defaultContext.tradeData.slippage.percentageString,
       },
     },
     errorMessage: raw.errorMessage ?? defaultContext.errorMessage,
     apiErrorMessage: raw.apiErrorMessage ?? defaultContext.apiErrorMessage,
-  };
-
-  // ✅ NEW: Seed/validate the app-level panel visibility in the parallel settings_NEW bag.
-  // We intentionally avoid touching your existing `settings`/`Settings` type.
-  const validNewValues = new Set<number>(
-    (Object.values(SP_COIN_DISPLAY_NEW).filter(v => typeof v === 'number') as number[])
-  );
-
-  const storedNewDisplay =
-    (raw as any)?.settings_NEW?.spCoinDisplay as number | undefined;
-
-  const sanitizedNewDisplay = validNewValues.has(storedNewDisplay ?? -1)
-    ? (storedNewDisplay as SP_COIN_DISPLAY_NEW)
-    : SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL;
-
-  (sanitized as any).settings_NEW = {
-    spCoinDisplay: sanitizedNewDisplay,
   };
 
   return sanitized;

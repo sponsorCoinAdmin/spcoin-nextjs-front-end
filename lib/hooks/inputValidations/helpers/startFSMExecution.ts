@@ -2,7 +2,7 @@
 'use client';
 
 import { MutableRefObject } from 'react';
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { InputState, SP_COIN_DISPLAY_NEW, FEED_TYPE } from '@/lib/structure';
 import { runFSM } from './fsmRunner';
 import { getPrevTrace } from './fsmStorage';
 
@@ -12,7 +12,7 @@ type Args = {
   publicClient: any;
   chainId: number;
   accountAddress?: string;
-  containerType: SP_COIN_DISPLAY;
+  containerType: SP_COIN_DISPLAY_NEW;
   feedType: FEED_TYPE;
 
   /** Whether the input was typed manually (true) vs chosen from list (false) */

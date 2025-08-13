@@ -1,4 +1,5 @@
 // File: components/Headers/TradeContainerHeader.tsx
+'use client';
 
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
@@ -8,41 +9,38 @@ import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
 import { openDialog } from '@/components/Dialogs/Dialogs';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useCallback } from 'react';
+import { SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 
 interface Props {
   closePanelCallback: () => void;
 }
 
+function getTitleFromDisplay(d: SP_COIN_DISPLAY_NEW): string {
+  switch (d) {
+    case SP_COIN_DISPLAY_NEW.AGENT_SELECT_PANEL:
+      return 'Select Sponsors Agent';
+    case SP_COIN_DISPLAY_NEW.BUY_SELECT_SCROLL_PANEL:
+      return 'Select a Token to Buy';
+    case SP_COIN_DISPLAY_NEW.ERROR_MESSAGE_PANEL:
+      return 'Error Message Panel';
+    case SP_COIN_DISPLAY_NEW.RECIPIENT_SELECT_PANEL:
+      return 'Select Recipient to Sponsor';
+    case SP_COIN_DISPLAY_NEW.SELL_SELECT_SCROLL_PANEL:
+      return 'Select a Token to Sell';
+    case SP_COIN_DISPLAY_NEW.SPONSOR_RATE_CONFIG_PANEL:
+      return 'Sponsor Rate Configuration';
+    case SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL:
+      return 'Sponsor Coin Exchange';
+    default:
+      return 'Panel';
+  }
+}
+
 const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const { exchangeContext } = useExchangeContext();
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+  const { activeDisplay } = useActiveDisplay();
 
-  let title: string;
-
-  switch (activeDisplay) {
-    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL:
-      title = 'Select Sponsors Agent';
-      break;
-    case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:
-      title = 'Select a Token to Buy';
-      break;
-    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
-      title = 'Error Message Panel';
-      break;
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL:
-      title = 'Select Recipient to Sponsor';
-      break;
-    case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL:
-      title = 'Select a Token to Sell';
-      break;
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
-      title = 'Sponsor Coin Exchange';
-      break;
-    default:
-      title = 'Panel';
-  }
+  const title = getTitleFromDisplay(activeDisplay);
 
   return (
     <div
@@ -68,7 +66,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
       </h4>
 
       <div className={styles.rightSideControl}>
-        {activeDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL ? (
+        {activeDisplay === SP_COIN_DISPLAY_NEW.TRADING_STATION_PANEL ? (
           <Image
             src={cog_png}
             alt="Info Image"

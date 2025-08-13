@@ -1,3 +1,5 @@
+// File: app/(menu)/Exchange/Price/index.tsx
+
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
@@ -5,7 +7,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 
 import { MainTradingPanel } from '@/components/views';
 
-import { useDisplayStateCorrection } from '@/lib/hooks/useDisplayStateCorrection';
+// Removed: useDisplayStateCorrection (redundant after sanitize + enum coercion)
 import { useSwapDirectionEffect } from '@/lib/hooks/useSwapDirectionEffect';
 import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
@@ -21,7 +23,7 @@ export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
   const { activeDisplay } = exchangeContext.settings;
 
-  useDisplayStateCorrection();
+  // keep side-effects that matter for UX
   useSwapDirectionEffect();
   usePriceErrorEffect();
   useResetAmountsOnTokenChange();

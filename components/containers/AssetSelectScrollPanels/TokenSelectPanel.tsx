@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 import { Address } from 'viem';
-import { TokenContract, SP_COIN_DISPLAY } from '@/lib/structure';
+import { TokenContract, SP_COIN_DISPLAY_NEW } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
@@ -46,7 +46,7 @@ export default function TokenSelectPanel({
 
   // Build a typed initial panel bag for token select panels
   const initialPanelBag: SharedPanelBag = {
-    type: activeDisplay as SP_COIN_DISPLAY,
+    type: activeDisplay as SP_COIN_DISPLAY_NEW,
     ...(peerAddress ? { peerAddress } : {}),
   } as SharedPanelBag;
 
@@ -54,7 +54,7 @@ export default function TokenSelectPanel({
     <SharedPanelProvider
       closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback}
-      containerType={activeDisplay as SP_COIN_DISPLAY}
+      containerType={activeDisplay as SP_COIN_DISPLAY_NEW}
       /** 👇 namespaced, typed payload used by token select flow */
       initialPanelBag={initialPanelBag}
     >
