@@ -3,7 +3,7 @@
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │ TokenSelectPanel                                       │  │
 │  │ ┌────────────────────────────────────────────────────┐ │  │
-│  │ │ SharedPanelProvider                                │ │  │
+│  │ │ AssetSelectionProvider                                │ │  │
 │  │ │ ┌───────────────────────────────────────────────┐  │ │  │
 │  │ │ │ TokenSelectPanelInner                         │  │ │  │
 │  │ │ │ - watches inputState                          │  │ │  │

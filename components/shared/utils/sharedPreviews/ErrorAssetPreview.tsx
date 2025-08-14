@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { InputState } from '@/lib/structure';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 import {
   isErrorFSMState,
   isTerminalFSMState,
@@ -69,7 +69,7 @@ const emojiMap: Partial<
 
 export default function ErrorAssetPreview() {
   // Read current FSM state directly from context
-  const { inputState } = useSharedPanelContext();
+  const { inputState } = useAssetSelectionContext();
 
   // Derive terminal/error flags locally (replacing useTerminalFSMState)
   const isTerminalState = isTerminalFSMState(inputState);

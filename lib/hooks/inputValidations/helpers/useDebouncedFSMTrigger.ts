@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 import { InputState, getInputStateString } from '@/lib/structure';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
@@ -18,7 +18,7 @@ export function useDebouncedFSMTrigger() {
     setInputState,
     debouncedHexInput,
     manualEntry,
-  } = useSharedPanelContext();
+  } = useAssetSelectionContext();
 
   const inputStateRef = useRef<InputState>(inputState);
   const prevDebouncedInputRef = useRef<string>('');

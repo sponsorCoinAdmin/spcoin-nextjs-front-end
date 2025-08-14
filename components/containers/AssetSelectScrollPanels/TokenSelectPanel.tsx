@@ -6,11 +6,11 @@ import { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
-import type { SharedPanelBag } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
+import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
+import type { AssetSelectionBag } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
@@ -45,13 +45,13 @@ export default function TokenSelectPanel({
   debugLog.log(`🧩 TokenSelectPanel → showPanelDisplay=TokenSelectPanel`);
 
   // Build a typed initial panel bag for token select panels
-  const initialPanelBag: SharedPanelBag = {
+  const initialPanelBag: AssetSelectionBag = {
     type: activeDisplay as SP_COIN_DISPLAY,
     ...(peerAddress ? { peerAddress } : {}),
-  } as SharedPanelBag;
+  } as AssetSelectionBag;
 
   return (
-    <SharedPanelProvider
+    <AssetSelectionProvider
       closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback}
       containerType={activeDisplay as SP_COIN_DISPLAY}
@@ -59,12 +59,12 @@ export default function TokenSelectPanel({
       initialPanelBag={initialPanelBag}
     >
       <TokenSelectPanelInner />
-    </SharedPanelProvider>
+    </AssetSelectionProvider>
   );
 }
 
 function TokenSelectPanelInner() {
-  const { instanceId } = useSharedPanelContext();
+  const { instanceId } = useAssetSelectionContext();
 
   useEffect(() => {
     debugLog.log(`🟢 TokenSelectPanelInner mounted → instanceId=${instanceId}`);

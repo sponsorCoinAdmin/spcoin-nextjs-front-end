@@ -1,4 +1,4 @@
-// File: lib/context/ScrollSelectPanels/useSharedPanelContext.tsx
+// File: lib/context/ScrollSelectPanels/useAssetSelectionContext.tsx
 'use client';
 
 import { createContext, useContext } from 'react';
@@ -13,7 +13,7 @@ import {
 // If you still use this elsewhere, keep it imported. Not needed for types below now.
 // import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';
 
-export interface SharedPanelContextType {
+export interface AssetSelectionContextType {
   // FSM state and setters
   inputState: InputState;
   setInputState: (state: InputState, source?: string) => void; // ✅ source optional
@@ -32,7 +32,7 @@ export interface SharedPanelContextType {
 
   // Dump tools
   dumpFSMContext: (header?: string) => void;
-  dumpSharedPanelContext: (header?: string) => void;
+  dumpAssetSelectionContext: (header?: string) => void;
 
   // Hex input + state
   validHexInput: string;
@@ -53,12 +53,12 @@ export interface SharedPanelContextType {
   instanceId?: string;
 }
 
-export const SharedPanelContext = createContext<SharedPanelContextType | undefined>(undefined);
+export const AssetSelectionContext = createContext<AssetSelectionContextType | undefined>(undefined);
 
-export function useSharedPanelContext(): SharedPanelContextType {
-  const context = useContext(SharedPanelContext);
+export function useAssetSelectionContext(): AssetSelectionContextType {
+  const context = useContext(AssetSelectionContext);
   if (!context) {
-    throw new Error('useSharedPanelContext must be used within a SharedPanelProvider');
+    throw new Error('useAssetSelectionContext must be used within a AssetSelectionProvider');
   }
   return context;
 }

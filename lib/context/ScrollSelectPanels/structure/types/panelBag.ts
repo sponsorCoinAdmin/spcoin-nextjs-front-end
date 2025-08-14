@@ -37,7 +37,7 @@ export type SimplePanelBag = {
 };
 
 // ---- Master discriminated union ----
-export type SharedPanelBag =
+export type AssetSelectionBag =
   | TokenSelectBag
   | RecipientSelectBag
   | AgentSelectBag
@@ -45,7 +45,7 @@ export type SharedPanelBag =
   | SimplePanelBag;
 
 // ---- Type guard helpers ----
-export const isTokenSelectBag = (b?: SharedPanelBag): b is TokenSelectBag =>
+export const isTokenSelectBag = (b?: AssetSelectionBag): b is TokenSelectBag =>
   !!b &&
   (b.type === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL ||
     b.type === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL);

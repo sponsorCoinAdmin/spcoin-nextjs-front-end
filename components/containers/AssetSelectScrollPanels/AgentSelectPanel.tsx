@@ -8,10 +8,10 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { SharedPanelProvider } from '@/lib/context/ScrollSelectPanels/SharedPanelProvider';
+import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -39,18 +39,18 @@ export default function AgentSelectPanel({
   debugLog.log(`🧩 AgentSelectPanel → showPanelDisplay=AgentSelectPanel`);
 
   return (
-    <SharedPanelProvider
+    <AssetSelectionProvider
       closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Temporary cast until generics are introduced
       containerType={activeDisplay}
     >
       <AgentSelectPanelInner />
-    </SharedPanelProvider>
+    </AssetSelectionProvider>
   );
 }
 
 function AgentSelectPanelInner() {
-  const { containerType, instanceId } = useSharedPanelContext();
+  const { containerType, instanceId } = useAssetSelectionContext();
 
   useEffect(() => {
     debugLog.log(`🧩 AgentSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);

@@ -8,7 +8,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { InputState, getInputStateString, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';
@@ -27,7 +27,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     containerType,
     validatedAsset,
     manualEntry,
-  } = useSharedPanelContext();
+  } = useAssetSelectionContext();
 
   const validatedToken = validatedAsset; // Explicit alias
 

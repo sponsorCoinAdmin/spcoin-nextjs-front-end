@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
 import { InputState } from '@/lib/structure';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import BasePreviewWrapper from './BasePreviewWrapper';
 
@@ -12,7 +12,7 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 export default function RenderAssetPreview() {
-  const { inputState, validatedAsset, handleHexInputChange } = useSharedPanelContext();
+  const { inputState, validatedAsset, handleHexInputChange } = useAssetSelectionContext();
 
   // Derive "render panel should show" locally (replaces useTerminalFSMState)
   // Matches previous behavior: show when we've reached/ passed RESOLVE_ASSET.

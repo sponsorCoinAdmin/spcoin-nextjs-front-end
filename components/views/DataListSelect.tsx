@@ -19,7 +19,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import { useSharedPanelContext } from '@/lib/context/ScrollSelectPanels/useSharedPanelContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
@@ -47,7 +47,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
 
-  const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useSharedPanelContext();
+  const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectionContext();
   const chainId = useChainId();
 
   // queue & enforcement for programmatic picks
