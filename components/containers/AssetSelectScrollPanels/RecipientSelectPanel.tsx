@@ -8,7 +8,7 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';

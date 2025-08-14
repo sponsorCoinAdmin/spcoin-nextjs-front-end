@@ -1,71 +1,109 @@
-// File: components/containers/AssetSelectPanels/RecipientSelectPanel.tsx
+// File: components/containers/AgentSelectPanel.tsx
 
 'use client';
 
-import React, { useCallback, useState, useEffect } from 'react';
-import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
-import { useDisplaySpCoinContainers } from '@/lib/spCoin/guiControl';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { SP_COIN_DISPLAY, WalletAccount, TokenContract } from '@/lib/structure';
+
+import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import RecipientSelectDropDown from '../AssetSelectDropDowns/RecipientSelectDropDown';
-import SponsorRateConfigPanel from '../SponsorRateConfigPanel';
-import BaseSelectPanel from './BaseSelectPanel';
+// ✅ Local sub-visibility controller (new panel display system)
+import {
+  AssetSelectionDisplayProvider,
+  useAssetSelectionDisplay,
+} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
+import { useExchangeContext } from '@/lib/context/hooks';
+import { AssetSelectPanel } from '../AssetSelectScrollPanels';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_PANEL === 'true';
-const debugLog = createDebugLogger('RecipientSelectPanel', DEBUG_ENABLED, false);
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
+const debugLog = createDebugLogger('AgentSelectPanel', DEBUG_ENABLED, LOG_TIME);
 
-const RecipientSelectPanel: React.FC = () => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+interface AgentSelectPanelProps {
+  isActive: boolean;
+  closePanelCallback: () => void;
+  // 🔧 Widened to match AssetSelectionProvider’s expected type
+  setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
+}
 
-  const [recipientAccount, setRecipientAccount] = useState(
-    exchangeContext.accounts.recipientAccount
-  );
-
-  useDisplaySpCoinContainers(activeDisplay);
+export default function AgentSelectPanel({
+  isActive,
+  closePanelCallback,
+  setTradingTokenCallback,
+}: AgentSelectPanelProps) {
+  // 🚫 Hooks must run before any early return
+  const instanceId = useMemo(() => 'AGENT_SELECT', []);
 
   useEffect(() => {
-    if (exchangeContext.accounts.recipientAccount !== recipientAccount) {
-      setExchangeContext(prev => {
+    if (!isActive) return;
+    debugLog.log(`🧩 AgentSelectPanel → rendering with local sub-display control`);
+  }, [isActive]);
+
+  if (!isActive) return null;
+
+  return (
+    <AssetSelectionDisplayProvider
+      instanceId={instanceId}
+      initial={ASSET_SELECTION_DISPLAY.IDLE}
+    >
+      <AgentSelectPanelInner
+        closePanelCallback={closePanelCallback}
+        setTradingTokenCallback={setTradingTokenCallback}
+      />
+    </AssetSelectionDisplayProvider>
+  );
+}
+
+function AgentSelectPanelInner({
+  closePanelCallback,
+  setTradingTokenCallback,
+}: {
+  closePanelCallback: () => void;
+  setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
+}) {
+  const { resetPreview } = useAssetSelectionDisplay();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+
+  const [agentAccount, setAgentAccount] = useState(
+    exchangeContext.accounts.agentAccount
+  );
+
+  // ✅ Prevent stale sub-display when panel mounts
+  useEffect(() => {
+    resetPreview();
+  }, [resetPreview]);
+
+  // Keep ExchangeContext in sync with local selection
+  useEffect(() => {
+    if (exchangeContext.accounts.agentAccount !== agentAccount) {
+      setExchangeContext((prev) => {
         const cloned = structuredClone(prev);
-        cloned.accounts.recipientAccount = recipientAccount;
+        cloned.accounts.agentAccount = agentAccount;
         return cloned;
       });
     }
-  }, [recipientAccount, exchangeContext, setExchangeContext]);
+  }, [agentAccount, exchangeContext, setExchangeContext]);
 
-  const clearRecipientSelect = useCallback(() => {
-    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
-    setRecipientAccount(undefined);
-  }, [setActiveDisplay]);
-
-  const toggleSponsorRateConfigPanel = useCallback(() => {
-    const nextState =
-      activeDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
-        ? SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
-        : SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
-
-    setActiveDisplay(nextState);
-    debugLog.log(`⚙️ Toggled sponsor rate config to → ${SP_COIN_DISPLAY[nextState]}`);
-  }, [activeDisplay, setActiveDisplay]);
+  // Local handler to clear selection
+  const clearAgentSelect = useCallback(() => {
+    resetPreview();
+    setAgentAccount(undefined);
+    debugLog.log('🧼 Cleared agent selection & reset sub-display to IDLE');
+  }, [resetPreview]);
 
   return (
-    <BaseSelectPanel
-      displayState={activeDisplay}
-      selectedAccount={recipientAccount}
-      onClearSelect={clearRecipientSelect}
-      onToggleConfig={toggleSponsorRateConfigPanel}
-      DropDownComponent={
-        <RecipientSelectDropDown
-          recipientAccount={recipientAccount}
-          callBackAccount={setRecipientAccount}
-        />
-      }
-      ConfigComponent={<SponsorRateConfigPanel />}
-      label="You are sponsoring:"
-    />
+    <AssetSelectionProvider
+      closePanelCallback={closePanelCallback}
+      setTradingTokenCallback={setTradingTokenCallback}
+      // 🔒 Identity only — do NOT toggle this for sub-visibility anymore
+      containerType={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}
+    >
+      {/* Reads everything from context; no props needed */}
+      <AssetSelectPanel />
+      {/* If you need a clear button in the UI, wire `clearAgentSelect` via context-driven UI. */}
+    </AssetSelectionProvider>
   );
-};
-
-export default RecipientSelectPanel;
+}

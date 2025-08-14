@@ -19,7 +19,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 

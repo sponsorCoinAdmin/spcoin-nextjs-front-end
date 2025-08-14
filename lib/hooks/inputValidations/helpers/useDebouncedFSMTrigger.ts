@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 import { InputState, getInputStateString } from '@/lib/structure';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';

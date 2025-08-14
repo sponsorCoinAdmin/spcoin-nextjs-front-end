@@ -4,7 +4,7 @@
 import AddressSelect from '@/components/views/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =

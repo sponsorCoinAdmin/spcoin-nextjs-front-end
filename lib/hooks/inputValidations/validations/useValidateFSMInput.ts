@@ -8,7 +8,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { InputState, getInputStateString, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';

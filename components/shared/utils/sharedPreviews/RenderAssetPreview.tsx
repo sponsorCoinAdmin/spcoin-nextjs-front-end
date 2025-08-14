@@ -1,50 +1,50 @@
 // File: components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
-import { InputState } from '@/lib/structure';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import BasePreviewWrapper from './BasePreviewWrapper';
+
+// ✅ New local (nested) display system
+import {
+  useAssetSelectionDisplay,
+} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 export default function RenderAssetPreview() {
-  const { inputState, validatedAsset, handleHexInputChange } = useAssetSelectionContext();
+  // Visibility is owned by the local sub-display provider
+  const { activeSubDisplay } = useAssetSelectionDisplay();
+  const showPanel = activeSubDisplay === ASSET_SELECTION_DISPLAY.ASSET_PREVIEW;
 
-  // Derive "render panel should show" locally (replaces useTerminalFSMState)
-  // Matches previous behavior: show when we've reached/ passed RESOLVE_ASSET.
-  const derivedShowRenderPanel = inputState >= InputState.RESOLVE_ASSET;
+  // We still read context for content (but not for visibility)
+  const { validatedAsset, handleHexInputChange } = useAssetSelectionContext();
 
-  const [showPanel, setShowPanel] = useState(false);
-
-  useEffect(() => {
-    const shouldShow = derivedShowRenderPanel && !!validatedAsset;
-    debugLog.log(
-      `🧭 debugShowPanel → set to ${shouldShow} (inputState=${InputState[inputState]}, validatedAsset=${!!validatedAsset})`
-    );
-    setShowPanel(shouldShow);
-  }, [derivedShowRenderPanel, validatedAsset, inputState]);
-
+  // If not visible or no asset to render, render nothing
   if (!showPanel || !validatedAsset) return null;
 
-  const name = (validatedAsset as any).name ?? '';
-  const symbol = (validatedAsset as any).symbol ?? '';
-  let logoURL = '/assets/miscellaneous/badTokenAddressImage.png';
-  if ((validatedAsset as any).logoURL) {
-    logoURL = (validatedAsset as any).logoURL;
-  }
+  const { name, symbol, logoURL, address } = useMemo(() => {
+    const anyAsset = validatedAsset as any;
+    return {
+      name: anyAsset?.name ?? '',
+      symbol: anyAsset?.symbol ?? '',
+      logoURL:
+        anyAsset?.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png',
+      address: anyAsset?.address,
+    };
+  }, [validatedAsset]);
 
   const handleClick = () => {
     debugLog.log(
-      `🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address)`,
-      validatedAsset
+      '🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address)',
+      { address }
     );
     try {
-      // cast to any to be safe; TokenContract should have address
-      handleHexInputChange((validatedAsset as any).address);
+      if (address) handleHexInputChange(address);
     } catch (err) {
       debugLog.error('❌ handleHexInputChange in RenderAssetPreview failed:', err);
     }

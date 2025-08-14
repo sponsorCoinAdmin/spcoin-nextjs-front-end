@@ -1,14 +1,16 @@
 // File: components/containers/ErrorAssetPreview.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { InputState } from '@/lib/structure';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
-import {
-  isErrorFSMState,
-  isTerminalFSMState,
-} from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
+import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import BasePreviewWrapper from './BasePreviewWrapper';
+
+// ✅ New local (nested) display system
+import {
+  useAssetSelectionDisplay,
+} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 
 const emojiMap: Partial<
   Record<
@@ -68,31 +70,32 @@ const emojiMap: Partial<
 };
 
 export default function ErrorAssetPreview() {
-  // Read current FSM state directly from context
+  // 🔁 Visibility is now controlled by the sub-display provider
+  const { activeSubDisplay } = useAssetSelectionDisplay();
+  const showPanel =
+    activeSubDisplay === ASSET_SELECTION_DISPLAY.ERROR_PREVIEW;
+
+  // We still read the FSM inputState to pick a friendly message,
+  // but we no longer use FSM to decide visibility.
   const { inputState } = useAssetSelectionContext();
 
-  // Derive terminal/error flags locally (replacing useTerminalFSMState)
-  const isTerminalState = isTerminalFSMState(inputState);
-  const isErrorState = isErrorFSMState(inputState);
-
-  const [showPanel, setShowPanel] = useState(false);
-
-  useEffect(() => {
-    setShowPanel(isTerminalState && isErrorState);
-  }, [isTerminalState, isErrorState, inputState]);
+  const { emoji, text, colorHex } = useMemo(() => {
+    const item = emojiMap[inputState];
+    return {
+      emoji: item?.emoji,
+      text: item?.text ?? 'An error occurred.',
+      colorHex: item?.colorHex ?? '#5981F3',
+    };
+  }, [inputState]);
 
   if (!showPanel) return null;
-
-  const item = emojiMap[inputState];
-  const message = item?.text ?? 'An error occurred.';
-  const color = item?.colorHex ?? '#5981F3';
 
   return (
     <div id="ErrorAssetPreview">
       <BasePreviewWrapper show={showPanel}>
         <div className="wrapper">
-          {item?.emoji && <span className="emoji">{item.emoji}</span>}
-          <span className="message">{message}</span>
+          {emoji && <span className="emoji">{emoji}</span>}
+          <span className="message">{text}</span>
         </div>
 
         <style jsx>{`
@@ -101,7 +104,7 @@ export default function ErrorAssetPreview() {
             align-items: center;
             margin-left: 22px;
             gap: 8px;
-            color: ${color};
+            color: ${colorHex};
           }
           .emoji {
             font-size: 28px;

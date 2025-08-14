@@ -10,7 +10,7 @@ import React, {
   useEffect,
 } from 'react';
 
-import { AssetSelectionContext } from './useAssetSelectionlContext';
+import { AssetSelectionContext } from './useAssetSelectionContext';
 import {
   SP_COIN_DISPLAY,
   FEED_TYPE,
@@ -30,12 +30,17 @@ import {
   isTokenSelectBag,
 } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
 
+// ⬇️ NEW: pull sub-display actions so consumers can access them via this context, too
+import {
+  useAssetSelectionDisplay,
+} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true';
 const DEBUG_ENABLED_FSM = process.env.NEXT_PUBLIC_FSM === 'true';
 
 const debugLog = createDebugLogger('AssetSelectionProvider', DEBUG_ENABLED, LOG_TIME);
-const debugFSM = createDebugLogger('useInputStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
+const debugFSM = createDebugLogger('useFSMStateManager', DEBUG_ENABLED_FSM, LOG_TIME);
 
 const instanceId = 'main';
 const feedType = FEED_TYPE.TOKEN_LIST;
@@ -43,7 +48,8 @@ const feedType = FEED_TYPE.TOKEN_LIST;
 interface AssetSelectionProviderProps {
   children: ReactNode;
   closePanelCallback: (fromUser: boolean) => void;
-  setTradingTokenCallback: (token: TokenContract) => void;
+  /** Widen to allow either token or wallet if a future panel uses wallets */
+  setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
   containerType: SP_COIN_DISPLAY;
 
   /** Optional, typed payload for the active panel */
@@ -66,13 +72,10 @@ export const AssetSelectionProvider = ({
   const manualEntryRef = useRef<boolean>(manualEntryState);
   useEffect(() => {
     manualEntryRef.current = manualEntryState;
-    // 🔔 TRACE: alert whenever the STATE actually changes
-    // alert(`[AssetSelectionProvider] manualEntry STATE → ${String(manualEntryState)}`);
   }, [manualEntryState]);
 
-  // Expose a traced setter (alerts/logs when toggled)
+  // Expose a traced setter
   const setManualEntry = useCallback((next: boolean) => {
-    // alert(`[AssetSelectionProvider] setManualEntry(${String(next)})`);
     debugLog.log(`✍️ setManualEntry(${String(next)})`);
     setManualEntryState(next);
   }, []);
@@ -115,15 +118,6 @@ export const AssetSelectionProvider = ({
 
   // If this is a token-select panel, extract the peer address from the bag
   const peerAddress = isTokenSelectBag(panelBag) ? panelBag.peerAddress : undefined;
-
-  // 🔔 TRACE: show what we are about to pass into the FSM hook whenever snapshot/peer changes
-  useEffect(() => {
-    // alert(
-    //   `[AssetSelectionProvider] (pre-FSM hook) snapshot → manualEntry=${String(
-    //     manualEntryRef.current
-    //   )}, peerAddress=${peerAddress ?? 'none'}`
-    // );
-  }, [manualEntryState, peerAddress]);
 
   // useFSMStateManager owns the input feed + runs FSM (terminal side-effects inside FSM tests)
   // IMPORTANT: pass the fresh snapshot from manualEntryRef to avoid races
@@ -196,6 +190,13 @@ export const AssetSelectionProvider = ({
     [inputState, validatedAsset, dumpInputFeed]
   );
 
+  // ⬇️ NEW: convenience actions to manage nested preview visibility
+  const {
+    showErrorPreview,
+    showAssetPreview,
+    resetPreview,
+  } = useAssetSelectionDisplay();
+
   const contextValue = useMemo(
     () => ({
       inputState,
@@ -239,6 +240,11 @@ export const AssetSelectionProvider = ({
       // expose dynamic, typed panel bag
       panelBag,
       setPanelBag,
+
+      // ⬇️ NEW: pass-through preview controls (wrapping setActiveSubDisplay)
+      showErrorPreview,
+      showAssetPreview,
+      resetPreview,
     }),
     [
       inputState,
@@ -261,6 +267,9 @@ export const AssetSelectionProvider = ({
       dumpAssetSelection,
       panelBag,
       setPanelBag,
+      showErrorPreview,
+      showAssetPreview,
+      resetPreview,
     ]
   );
 
@@ -270,3 +279,5 @@ export const AssetSelectionProvider = ({
     </AssetSelectionContext.Provider>
   );
 };
+
+export default AssetSelectionProvider;

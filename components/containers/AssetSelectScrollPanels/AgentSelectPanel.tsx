@@ -1,17 +1,21 @@
 // File: components/containers/AgentSelectPanel.tsx
+
 'use client';
 
-import { useEffect } from 'react';
-import {
-  SP_COIN_DISPLAY,
-  WalletAccount,
-} from '@/lib/structure';
+import { useEffect, useMemo, useState } from 'react';
+import { SP_COIN_DISPLAY, WalletAccount, TokenContract } from '@/lib/structure';
 
-import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionlContext';
-import { useActiveDisplay } from '@/lib/context/hooks';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+// ✅ Local sub-visibility controller (new panel display system)
+import {
+  AssetSelectionDisplayProvider,
+  useAssetSelectionDisplay,
+} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
+import { useExchangeContext } from '@/lib/context/hooks';
+import AssetSelectPanel from './AssetSelectPanel';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -21,7 +25,8 @@ const debugLog = createDebugLogger('AgentSelectPanel', DEBUG_ENABLED, LOG_TIME);
 interface AgentSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  setTradingTokenCallback: (wallet: WalletAccount) => void;
+  // Widen to match AssetSelectionProvider’s expected type
+  setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
 }
 
 export default function AgentSelectPanel({
@@ -29,32 +34,68 @@ export default function AgentSelectPanel({
   closePanelCallback,
   setTradingTokenCallback,
 }: AgentSelectPanelProps) {
-  const { activeDisplay } = useActiveDisplay();
+  // 🚫 Hooks must run before any early return
+  const instanceId = useMemo(() => 'AGENT_SELECT', []);
 
-  if (!isActive) {
-    debugLog.log(`⏭️ AgentSelectPanel → not active, skipping render`);
-    return null;
-  }
+  useEffect(() => {
+    if (!isActive) return;
+    debugLog.log(`🧩 AgentSelectPanel → rendering with local sub-display control`);
+  }, [isActive]);
 
-  debugLog.log(`🧩 AgentSelectPanel → showPanelDisplay=AgentSelectPanel`);
+  if (!isActive) return null;
+
+  return (
+    <AssetSelectionDisplayProvider
+      instanceId={instanceId}
+      initial={ASSET_SELECTION_DISPLAY.IDLE}
+    >
+      <AgentSelectPanelInner
+        closePanelCallback={closePanelCallback}
+        setTradingTokenCallback={setTradingTokenCallback}
+      />
+    </AssetSelectionDisplayProvider>
+  );
+}
+
+function AgentSelectPanelInner({
+  closePanelCallback,
+  setTradingTokenCallback,
+}: {
+  closePanelCallback: () => void;
+  setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
+}) {
+  const { resetPreview } = useAssetSelectionDisplay();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+
+  const [agentAccount, setAgentAccount] = useState(
+    exchangeContext.accounts.agentAccount
+  );
+
+  // ✅ Prevent stale sub-display when panel mounts
+  useEffect(() => {
+    resetPreview();
+  }, [resetPreview]);
+
+  // Keep ExchangeContext in sync with local selection
+  useEffect(() => {
+    if (exchangeContext.accounts.agentAccount !== agentAccount) {
+      setExchangeContext((prev) => {
+        const cloned = structuredClone(prev);
+        cloned.accounts.agentAccount = agentAccount;
+        return cloned;
+      });
+    }
+  }, [agentAccount, exchangeContext, setExchangeContext]);
 
   return (
     <AssetSelectionProvider
       closePanelCallback={closePanelCallback}
-      setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Temporary cast until generics are introduced
-      containerType={activeDisplay}
+      setTradingTokenCallback={setTradingTokenCallback}
+      // 🔒 Identity only — do NOT toggle this for sub-visibility anymore
+      containerType={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}
     >
-      <AgentSelectPanelInner />
+      {/* Reads everything from context; no props needed */}
+      <AssetSelectPanel />
     </AssetSelectionProvider>
   );
-}
-
-function AgentSelectPanelInner() {
-  const { containerType, instanceId } = useAssetSelectionContext();
-
-  useEffect(() => {
-    debugLog.log(`🧩 AgentSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
-  }, [containerType, instanceId]);
-
-  return <AssetSelectPanel />;
 }
