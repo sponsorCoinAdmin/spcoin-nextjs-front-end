@@ -1,7 +1,7 @@
 // File: lib/utils/guiControl.ts
 'use client';
 
-import { useSpCoinDisplay } from '@/lib/context/hooks';
+import { useActiveDisplay } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useEffect } from 'react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -11,51 +11,55 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_GUI_CONTROLLER === 'true';
 const debugLog = createDebugLogger('GuiController', DEBUG_ENABLED, LOG_TIME);
 
-const hideElement = (element: string) => {
-  const el = document.getElementById(element);
-  if (el != null) {
-    el.style.display = 'none';
-  }
+/** ── DOM helpers ────────────────────────────────────────────────────────── */
+const getEl = (id: string): HTMLElement | null =>
+  typeof document !== 'undefined' ? document.getElementById(id) : null;
+
+const hideElement = (id: string): boolean => {
+  const el = getEl(id);
+  if (!el) return false;
+  el.style.display = 'none';
+  return true;
 };
 
-const showElement = (element: string) => {
-  const el = document.getElementById(element);
-  if (el != null) {
-    el.style.display = 'block';
-  }
+const showElement = (id: string): boolean => {
+  const el = getEl(id);
+  if (!el) return false;
+  el.style.display = 'block';
+  return true;
 };
 
-const toggleElement = (element: string) => {
-  const el = document.getElementById(element);
-  if (el != null) {
-    el.style.display = el.style.display === 'block' ? 'none' : 'block';
-  }
+const toggleElement = (id: string): boolean => {
+  const el = getEl(id);
+  if (!el) return false;
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  return true;
 };
 
-/**
- * Human-readable label for the NEW display enum.
- */
-const spCoinDisplayString = (display: SP_COIN_DISPLAY | undefined): string => {
-  if (display === undefined) return 'activeDisplay(undefined) = ❓ UNKNOWN';
-  return `activeDisplay(${display}) = ${getActiveDisplayString(display)}`;
+/** ── Display string / logging helpers ───────────────────────────────────── */
+/** Fast, allocation-light label (only builds when called). */
+const spCoinDisplayString = (display?: SP_COIN_DISPLAY): string =>
+  display == null
+    ? 'activeDisplay(undefined) = ❓ UNKNOWN'
+    : `activeDisplay(${display}) = ${getActiveDisplayString(display)}`;
+
+/** Avoids building strings when debug is off. */
+const logActiveDisplay = (prefix: string, display?: SP_COIN_DISPLAY) => {
+  if (!DEBUG_ENABLED) return;
+  debugLog.log(`${prefix} ${spCoinDisplayString(display)}`);
 };
 
-/**
- * Keep the global display state in sync with a caller-provided desired value.
- * Backward-compatible name; now works with SP_COIN_DISPLAY and writes to settings.activeDisplay.
+/** ── Hook: keep global display in sync with desired value ──────────────────
+ * Back-compat name, now standardized on useActiveDisplay()
  */
 const useDisplaySpCoinContainers = (desiredDisplay: SP_COIN_DISPLAY) => {
-  const [currentDisplay, setDisplay] = useSpCoinDisplay();
+  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
   useEffect(() => {
-    if (currentDisplay === desiredDisplay) return;
-    if (DEBUG_ENABLED) {
-      debugLog.log(
-        `🧩 [useDisplaySpCoinContainers] Sync to → ${spCoinDisplayString(desiredDisplay)}`
-      );
-    }
-    setDisplay(desiredDisplay);
-  }, [desiredDisplay, currentDisplay, setDisplay]);
+    if (activeDisplay === desiredDisplay) return;
+    logActiveDisplay('🧩 [useDisplaySpCoinContainers] Sync to →', desiredDisplay);
+    setActiveDisplay(desiredDisplay);
+  }, [desiredDisplay, activeDisplay, setActiveDisplay]);
 };
 
 export {

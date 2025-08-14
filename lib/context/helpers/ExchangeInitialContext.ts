@@ -21,7 +21,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ only activeDisplay kept
+      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     },
     accounts: {
       connectedAccount: undefined,
@@ -39,8 +39,8 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       rateRatio: 1,
       slippage: {
         bps: 200,
-        percentage: 0,
-        percentageString: '0.00%',
+        percentage: 2,           // keep in sync with bps
+        percentageString: '2.00%', // keep in sync with bps
       },
     },
     errorMessage: undefined,

@@ -2,7 +2,13 @@
 
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import { WalletAccount, ExchangeContext, SP_COIN_DISPLAY } from '@/lib/structure';
+import {
+  WalletAccount,
+  ExchangeContext,
+  SP_COIN_DISPLAY,
+  STATUS, // ✅ use enum, not raw string
+} from '@/lib/structure';
+import { Address } from 'viem'; // ✅ ensure Address type for casting
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -14,16 +20,8 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  * Initializes the ExchangeContext by hydrating from localStorage and optionally
  * augmenting it with connected wallet metadata if `address` is provided.
  *
- * NOTE:
- *  - We normalize panel state through `sanitizeExchangeContext` which already
- *    coerces `settings.activeDisplay` to a valid `SP_COIN_DISPLAY` value.
- *  - We also keep a parallel `settings_NEW` bag for transitional code paths
- *    (tests & legacy panels) and seed it if missing.
- *
- * @param chainId - The current chain ID from Wagmi.
- * @param isConnected - Whether a wallet is connected.
- * @param address - The connected wallet address (optional).
- * @returns Promise resolving to a sanitized ExchangeContext.
+ * - Normalizes panel state via `sanitizeExchangeContext` (coerces settings.activeDisplay).
+ * - Seeds transitional `settings_NEW.spCoinDisplay` for legacy paths if missing.
  */
 export async function initExchangeContext(
   chainId: number,
@@ -53,23 +51,52 @@ export async function initExchangeContext(
   if (isConnected && address) {
     try {
       const res = await fetch(`/assets/accounts/${address}/wallet.json`);
-      const metadata = res.ok ? await res.json() : null;
+      const metadata = res.ok ? (await res.json()) : null;
 
-      sanitized.accounts.connectedAccount = metadata
-        ? { ...metadata, address }
-        : ({
-            address,
-            type: 'ERC20_WALLET',
-            name: '',
-            symbol: '',
-            website: '',
-            status: 'Missing',
-            description: `Account ${address} not registered on this site`,
-            logoURL: '/public/assets/miscellaneous/SkullAndBones.png',
-            balance: 0n,
-          } as WalletAccount);
+      if (metadata) {
+        // ✅ Merge metadata safely, ensuring required WalletAccount fields exist
+        const merged: WalletAccount = {
+          name: metadata.name ?? '',
+          symbol: metadata.symbol ?? '',
+          type: metadata.type ?? 'ERC20_WALLET',
+          website: metadata.website ?? '',
+          description: metadata.description ?? '',
+          status: STATUS.INFO, // choose a sensible default status for loaded metadata
+          address: address as Address,
+          logoURL: metadata.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
+          balance: BigInt(metadata.balance ?? 0),
+        };
+        sanitized.accounts.connectedAccount = merged;
+      } else {
+        // ✅ Fallback WalletAccount using proper enum and types
+        const fallback: WalletAccount = {
+          address: address as Address,
+          type: 'ERC20_WALLET',
+          name: '',
+          symbol: '',
+          website: '',
+          status: STATUS.MESSAGE_ERROR, // ← enum, not string
+          description: `Account ${address} not registered on this site`,
+          logoURL: '/assets/miscellaneous/SkullAndBones.png', // no '/public' prefix
+          balance: 0n,
+        };
+        sanitized.accounts.connectedAccount = fallback;
+      }
     } catch (err) {
       debugLog.error('⛔ Failed to load wallet.json:', err);
+      // On fetch error, still ensure we set a sensible fallback
+      const fallback: WalletAccount = {
+        address: address as Address,
+        type: 'ERC20_WALLET',
+        name: '',
+        symbol: '',
+        website: '',
+        status: STATUS.MESSAGE_ERROR,
+        description: `Account ${address} metadata could not be loaded`,
+        logoURL: '/assets/miscellaneous/SkullAndBones.png',
+        balance: 0n,
+      };
+      sanitized.accounts.connectedAccount = fallback;
     }
   }
 

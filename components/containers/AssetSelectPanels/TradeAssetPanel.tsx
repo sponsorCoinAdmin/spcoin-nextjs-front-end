@@ -13,7 +13,7 @@ import {
   useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract,
-  useExchangeContext,
+  useActiveDisplay, // ✅ use the hook for activeDisplay
 } from '@/lib/context/hooks';
 
 import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
@@ -40,7 +40,6 @@ const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);
 // 🔒 PRIVATE inner component, not exported
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
-  const { exchangeContext } = useExchangeContext();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -48,6 +47,9 @@ function TradeAssetPanelInner() {
   const { data: slippage } = useSlippage();
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
+
+  // ✅ Access activeDisplay via the hook (no direct context poking)
+  const { activeDisplay } = useActiveDisplay();
 
   const {
     localTokenContract,
@@ -87,7 +89,7 @@ function TradeAssetPanelInner() {
 
   useEffect(() => {
     debugLog.log('✅ Connected to TokenPanelContext', { localTokenContract, localAmount });
-    debugLog.log('🔎 activeDisplay:', getActiveDisplayString(exchangeContext.settings.activeDisplay));
+    debugLog.log('🔎 activeDisplay:', getActiveDisplayString(activeDisplay));
     // dumpTokenContext?.(); // keep off unless debugging
   }, []); // run once
 

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 import JsonInspector from '@/components/shared/JsonInspector';
 import { usePageState } from '@/lib/context/PageStateContext';
-import { useExchangeContext } from '@/lib/context/hooks';
+import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -35,7 +35,8 @@ function getAllNestedKeys(obj: any): string[] {
 }
 
 export default function ExchangeContextTab() {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext } = useExchangeContext();
+  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
   const { state, setState } = usePageState();
 
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -85,9 +86,6 @@ export default function ExchangeContextTab() {
     []
   );
 
-  const activeValue =
-    exchangeContext?.settings?.activeDisplay ?? SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-
   return (
     <div className="space-y-4">
       {/* Controls */}
@@ -106,16 +104,10 @@ export default function ExchangeContextTab() {
           id="activeDisplaySelect_tab"
           title="Select activeDisplay"
           aria-label="Select activeDisplay"
-          value={activeValue}
+          value={activeDisplay}
           onChange={(e) => {
-            const selected = Number(e.target.value);
-            setExchangeContext((prev: any) => ({
-              ...prev,
-              settings: {
-                ...prev?.settings,
-                activeDisplay: selected,
-              },
-            }));
+            const selected = Number(e.target.value) as SP_COIN_DISPLAY;
+            setActiveDisplay(selected);
           }}
           className={buttonClasses}
         >

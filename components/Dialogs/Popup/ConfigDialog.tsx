@@ -1,35 +1,8 @@
+// File: components/Dialogs/Popup/ConfigDialog.tsx
 'use client';
 
 import { useEffect, useRef } from 'react';
 import SlippageBpsRadioButtons from './SlippageBpsRadioButtons';
-
-// ✅ All styles defined in `popup`
-const popup = {
-  popupContainer: {
-    position: 'absolute',
-    top: '-210px',
-    right: '-740px',
-    color: 'white',
-    backgroundColor: '#0E111B',
-    border: 'solid #21273a',
-    minHeight: '10px',
-    borderRadius: '15px',
-  } as React.CSSProperties,
-
-  inneraddressSelectPanel: {
-    backgroundColor: '#243056',
-    width: '100%',
-    height: '100%',
-    overflowY: 'auto',
-    flexGrow: 1,
-    scrollbarWidth: 'thin', // Firefox
-    padding: '10px',
-    color: '#5981F3',
-    borderWidth: '0px',
-    marginBottom: '5px',
-    borderRadius: '22px',
-  } as React.CSSProperties,
-};
 
 type Props = {
   showDialog: boolean;
@@ -51,18 +24,44 @@ export default function Dialog({ showDialog }: Props) {
   };
 
   return (
-    <dialog id="ConfigDialog" ref={dialogRef} style={popup.popupContainer}>
+    <dialog
+      id="ConfigDialog"
+      ref={dialogRef}
+      // ⬇️ Replaced inline styles with Tailwind (arbitrary values allowed)
+      className="
+        absolute top-[-210px] right-[-740px]
+        text-white bg-[#0E111B]
+        border border-[#21273a]
+        min-h-[10px]
+        rounded-[15px]
+      "
+    >
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-white">
         <h1 className="text-md indent-39 mt-1 text-bg-txt-ltgry">Settings</h1>
-        <div
-          className="cursor-pointer rounded border-none w-5 text-xl text-bg-txt-ltgry"
+        <button
+          type="button"
+          aria-label="Close"
           onClick={closeDialog}
+          className="cursor-pointer rounded border-none w-5 text-xl text-bg-txt-ltgry"
         >
           X
-        </div>
+        </button>
       </div>
+
       <div>
-        <div style={popup.inneraddressSelectPanel}>
+        <div
+          className="
+            bg-[#243056]
+            w-full h-full
+            overflow-y-auto
+            flex-grow
+            p-[10px]
+            text-[#5981F3]
+            border-0
+            mb-[5px]
+            rounded-[22px]
+          "
+        >
           <SlippageBpsRadioButtons />
         </div>
       </div>

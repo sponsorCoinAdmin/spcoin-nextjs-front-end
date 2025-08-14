@@ -5,5 +5,4 @@
 export * from "./enums/enums";
 export * from "./types";
 export * from "./constants/network";
-export * from "./enums/spCoinDisplay"
-
+export * from "./enums/spCoinDisplay";

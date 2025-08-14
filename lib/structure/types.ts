@@ -5,26 +5,35 @@ import { UseReadContractReturnType } from 'wagmi';
 import {
   STATUS,
   TRADE_DIRECTION,
-  API_TRADING_PROVIDER,
   SP_COIN_DISPLAY,
+  API_TRADING_PROVIDER, // ✅ include provider enum
 } from '@/lib/structure';
 
+/**
+ * Represents a generic wallet/account entity that can appear in selectors/panels.
+ */
 export interface WalletAccount {
   name: string;
   symbol: string;
   type: string;
   website: string;
   description: string;
-  status: string;
+  status: STATUS;
   address: Address;
   logoURL?: string;
   balance: bigint;
 }
 
+/**
+ * Useful for inputs where the raw string may still be in flight before validation.
+ */
 export interface AccountAddress {
   address: string | Address;
 }
 
+/**
+ * Uniform error shape for UI & API errors.
+ */
 export type ErrorMessage = {
   errCode: number;
   msg: string;
@@ -39,6 +48,9 @@ export type ContractRecs = {
   totalSupplyRec: UseReadContractReturnType;
 };
 
+/**
+ * All known accounts tracked by the app.
+ */
 export type Accounts = {
   connectedAccount?: WalletAccount;
   sponsorAccount?: WalletAccount;
@@ -49,16 +61,18 @@ export type Accounts = {
   agentAccounts?: WalletAccount[];
 };
 
-/** ⬇️ Migrated to the new enum */
-export type DisplaySettings = {
+/**
+ * ✅ Settings for view/panel management and API provider choice.
+ * - `activeDisplay` drives which primary panel is visible.
+ * - `apiTradingProvider` selects the quote/route provider (e.g., 0x, 1inch).
+ */
+export type Settings = {
   activeDisplay: SP_COIN_DISPLAY;
+  apiTradingProvider: API_TRADING_PROVIDER; // ✅ added
 };
 
-// export type Settings = {
-//   apiTradingProvider: API_TRADING_PROVIDER;
-//   /** ⬇️ Migrated to the new enum */
-//   activeDisplay: SP_COIN_DISPLAY;
-// };
+/** (Legacy alias – kept only if you still import it elsewhere) */
+export type DisplaySettings = Settings;
 
 export type NetworkElement = {
   connected: boolean;
@@ -118,4 +132,4 @@ export const ERROR_CODES = {
   CHAIN_SWITCH: 1001,
   PRICE_FETCH_ERROR: 2001,
   INVALID_TOKENS: 3001,
-};
+} as const;
