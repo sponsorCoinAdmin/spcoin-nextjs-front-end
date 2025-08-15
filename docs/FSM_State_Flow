@@ -17,9 +17,6 @@
         └── if not found → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN
 → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN → Display <ErrorAssetPreview />
 → VALIDATE_PREVIEW → Check preview step
-→ PREVIEW_ADDRESS → Check if Asset Exists Locally
-        ├── if found → PREVIEW_CONTRACT_EXISTS_LOCALLY
-        └── if not found → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY 
 → RESOLVE_ASSET → Check balance
         ├── if error → TOKEN_NOT_RESOLVED_ERROR 
         ├── if error → RESOLVE_ASSET_ERROR 

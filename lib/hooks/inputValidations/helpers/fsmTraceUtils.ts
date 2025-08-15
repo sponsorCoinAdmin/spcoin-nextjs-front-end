@@ -15,7 +15,6 @@ export function getStateIcon(state: InputState): string {
     case InputState.TEST_DUPLICATE_INPUT: return '🧪';
     case InputState.DUPLICATE_INPUT_ERROR: return '❌';
     case InputState.VALIDATE_PREVIEW: return '🖼️';
-    case InputState.PREVIEW_ADDRESS: return '🔎';
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY: return '📁';
     case InputState.VALIDATE_EXISTS_ON_CHAIN: return '🛰️';
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN: return '📵';

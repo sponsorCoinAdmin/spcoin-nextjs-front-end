@@ -13,7 +13,6 @@ import type {
   ValidateFSMOutput,
 } from '../FSM_Core/types/validateFSMTypes';
 import { Address, zeroAddress } from 'viem';
-
 import { formatTrace, headerLine, SEP_LINE } from './fsmFormat';
 import { getPrevTrace, setTrace, appendLines } from './fsmStorage';
 import { getStateIcon } from './fsmTraceUtils';

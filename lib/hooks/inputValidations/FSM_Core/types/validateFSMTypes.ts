@@ -39,7 +39,6 @@ export type ValidateFSMInput = {
   validatedToken?: TokenContract | any;
   validatedWallet?: WalletAccount | any;
   validatedAsset?: WalletAccount | TokenContract | any;
-  resolvedAsset?: any;
   resolvedToken?: any;
 
   /** Utilities */

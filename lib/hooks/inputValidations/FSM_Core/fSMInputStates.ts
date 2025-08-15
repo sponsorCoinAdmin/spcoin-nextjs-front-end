@@ -7,10 +7,10 @@ export const TRIGGER_FSM_STATES = new Set<InputState>([
   InputState.VALIDATE_ADDRESS,
   InputState.TEST_DUPLICATE_INPUT,
   InputState.VALIDATE_PREVIEW,
-  InputState.PREVIEW_ADDRESS,
   InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY,
   InputState.VALIDATE_EXISTS_ON_CHAIN,
   InputState.RESOLVE_ASSET,
+  InputState.UPDATE_VALIDATED_ASSET,
 ]);
 
 // ────────────── FSM Error States ──────────────
@@ -28,7 +28,6 @@ export const ERROR_FSM_STATES = new Set<InputState>([
 export const FINALIZE_FSM_STATES = new Set<InputState>([
   InputState.EMPTY_INPUT,
   InputState.VALIDATE_PREVIEW,
-  InputState.UPDATE_VALIDATED_ASSET,
   InputState.CLOSE_SELECT_PANEL,
 ]);
 
@@ -39,7 +38,6 @@ export const TERMINAL_FSM_STATES = new Set<InputState>([
 
 // ────────────── Render FSM States (for RenderAssetPreview) ──────────────
 export const RENDER_FSM_STATES = new Set<InputState>([
-  InputState.PREVIEW_ADDRESS,
   InputState.VALIDATE_PREVIEW,
   InputState.INVALID_ADDRESS_INPUT,
 ]);

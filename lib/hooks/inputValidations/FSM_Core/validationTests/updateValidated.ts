@@ -2,6 +2,7 @@
 
 import { InputState } from '@/lib/structure/assetSelection';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 /**
  * UPDATE_VALIDATED_ASSET
@@ -18,20 +19,19 @@ export function updateValidated(input: ValidateFSMInput): ValidateFSMOutput {
   try {
     // Pull the asset/token from the most likely places without being rigid to caller shape.
     const candidateAsset =
-      (input as any)?.validatedAsset ??
-      (input as any)?.resolvedAsset ??
-      (input as any)?.previewAsset ??
+      input?.validatedAsset ??
       undefined;
 
     const candidateToken =
-      (input as any)?.validatedToken ??
+      input?.validatedToken ??
       candidateAsset?.token ??
-      (input as any)?.resolvedToken ??
+      input?.resolvedToken ??
       undefined;
 
     // Side-effects moved from context:
-    (input as any)?.setValidatedAsset?.(candidateAsset);
-    (input as any)?.setTradingTokenCallback?.(candidateToken);
+    alert(`updateValidated(candidateAsset:${stringifyBigInt(candidateAsset)}\ncandidateToken: updateValidated(${stringifyBigInt(candidateToken)})`);
+    input?.setValidatedAsset?.(candidateAsset);
+    input?.setTradingTokenCallback?.(candidateToken);
 
     const out: ValidateFSMOutput = {
       nextState: InputState.CLOSE_SELECT_PANEL,

@@ -17,7 +17,7 @@ export default function RenderAssetPreview() {
   const visible = isRenderFSMState(inputState);
 
   if (!visible) return null;
-  alert(`InputState: ${InputState[inputState]} visible: ${visible} validatedAsset: ${validatedAsset}`);
+  alert(`RenderAssetPreview.InputState: ${InputState[inputState]} visible: ${visible} validatedAsset: ${validatedAsset}`);
 
   if (!validatedAsset) return null;
 

@@ -1,6 +1,7 @@
 // File: lib/hooks/inputValidations/helpers/getInputStateEmoji.ts
 
-import { InputState } from '@/lib/structure';
+import { InputState } from "@/lib/structure/assetSelection";
+
 
 export function getInputStateEmoji(state: InputState): string {
   switch (state) {
@@ -24,9 +25,7 @@ export function getInputStateEmoji(state: InputState): string {
       return '🚫'; // prohibited
     case InputState.VALIDATE_PREVIEW:
       return '🔍'; // magnifying glass
-    case InputState.PREVIEW_ADDRESS:
-      return '🖼️'; // picture/frame
-    case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
+   case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
       return '💾'; // save disk
     case InputState.RESOLVE_ASSET:
       return '💰'; // money bag

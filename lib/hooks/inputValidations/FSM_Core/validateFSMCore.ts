@@ -5,7 +5,6 @@ import { ValidateFSMInput, ValidateFSMOutput } from './types/validateFSMTypes';
 
 import { validateAddress } from './validationTests/validateAddress';
 import { validateDuplicate } from './validationTests/validateDuplicate';
-import { previewAsset } from './validationTests/previewAsset';
 import { validateExistsOnChain } from './validationTests/validateExistsOnChain';
 import { validateExistsLocally } from './validationTests/validateExistsLocally';
 import { validateResolvedAsset } from './validationTests/validateResolvedAsset';
@@ -21,7 +20,6 @@ const log = createDebugLogger('validateFSMCore', DEBUG_ENABLED, false).log;
 const F = {
   VALID_ADDRESS:  process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'true',
   DUPLICATE:      process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
-  PREVIEW_ADDR:   process.env.NEXT_PUBLIC_FSM_TEST_PREVIEW_ADDRESS === 'false',
   EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'false',
   EXISTS_ONCHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'false',
   RESOLVE:        process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ASSET === 'true',
@@ -89,14 +87,6 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
     case InputState.RESOLVE_ASSET:
       await step(out, F.RESOLVE, () => validateResolvedAsset(input), InputState.UPDATE_VALIDATED_ASSET);
       break;
-
-    // case InputState.VALIDATE_PREVIEW:
-    //   out.nextState = InputState.PREVIEW_ADDRESS;
-    //   break;
-
-    // case InputState.PREVIEW_ADDRESS:
-    //   await step(out, F.PREVIEW_ADDR, () => previewAsset(input), InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY);
-    //   break;
 
     case InputState.UPDATE_VALIDATED_ASSET:
       await step(out, F.UPDATE, () => updateValidated(input), InputState.CLOSE_SELECT_PANEL);
