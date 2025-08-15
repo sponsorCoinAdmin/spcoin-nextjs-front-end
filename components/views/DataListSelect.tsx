@@ -6,7 +6,7 @@ import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { useChainId } from 'wagmi';
 import {
-  BASE, ETHEREUM, FEED_TYPE, HARDHAT, InputState, POLYGON, SEPOLIA, WalletAccount,
+  BASE, ETHEREUM, FEED_TYPE, HARDHAT,POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
 import { defaultMissingImage, getLogoURL } from '@/lib/network/utils';
 import baseTokenList from '@/resources/data/networks/base/tokenList.json';
@@ -22,6 +22,7 @@ import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { InputState } from '@/lib/structure/assetSelection';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -88,7 +89,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
       setEnforceProgrammatic(false);
 
       alert(`✅ Programmatic commit\nmanualEntry=false\naddress=${addr}`);
-      setInputState(InputState.FSM_READY, 'DataListSelect (Programmatic commit)');
+      setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
       handleHexInputChange(addr, false);
     }
   }, [programmaticReady, handleHexInputChange, setInputState]);
@@ -124,7 +125,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
       return;
     }
     // alert(`⚡ Programmatic immediate manualEntry=false\naddress=${address}`);
-    setInputState(InputState.FSM_READY, 'DataListSelect (Programmatic RECIPIENT_SELECT_PANELe)');
+    setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic RECIPIENT_SELECT_PANELe)');
     handleHexInputChange(address, false);
   };
 

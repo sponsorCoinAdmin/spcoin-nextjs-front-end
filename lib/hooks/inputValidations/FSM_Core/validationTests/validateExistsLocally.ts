@@ -1,7 +1,7 @@
 // File: lib/hooks/inputValidations/tests/validateExistsLocally.ts
 
 import { isAddress } from 'viem';
-import { InputState } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 import { isEmptyInput } from '../../validations/isEmptyInput';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -13,6 +13,5 @@ const debugLog = createDebugLogger('validateExistsLocally', DEBUG_ENABLED, LOG_T
 export function validateExistsLocally({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {
 alert(`ToDo: validateExistsLocally(${debouncedHexInput})`);
   debugLog.log(`ToDo: validateExistsLocally(${debouncedHexInput})`);
-  return { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
+  return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
 }
-

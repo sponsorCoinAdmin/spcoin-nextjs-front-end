@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { Address } from 'viem';
-import { TokenContract, SP_COIN_DISPLAY, InputState, WalletAccount } from '@/lib/structure';
+import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
@@ -17,7 +17,7 @@ import {
   AssetSelectionDisplayProvider,
   useAssetSelectionDisplay,
 } from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
-import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
+import { ASSET_SELECTION_DISPLAY, InputState } from '@/lib/structure/assetSelection';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =

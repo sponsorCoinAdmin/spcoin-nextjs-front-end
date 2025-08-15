@@ -2,7 +2,8 @@
 'use client';
 
 import { MutableRefObject } from 'react';
-import { InputState, SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 import { runFSM } from './fsmRunner';
 import { getPrevTrace } from './fsmStorage';
 

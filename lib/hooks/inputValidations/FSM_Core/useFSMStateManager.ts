@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FEED_TYPE,
-  InputState,
   SP_COIN_DISPLAY,
   WalletAccount,
   TokenContract,
@@ -16,6 +15,7 @@ import { useHexInput } from '@/lib/hooks/useHexInput';
 
 import { startFSMExecution } from '../helpers/startFSMExecution';
 import { logStateChanges } from '../helpers/logStateChanges';
+import { InputState } from '@/lib/structure/assetSelection';
 
 const debugLog = createDebugLogger(
   'useFSMStateManager',

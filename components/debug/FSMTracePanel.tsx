@@ -2,8 +2,8 @@
 
 'use client';
 
+import { InputState } from '@/lib/structure/assetSelection';
 import { useEffect, useState } from 'react';
-import { InputState, getInputStateString } from '@/lib/structure';
 
 const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 

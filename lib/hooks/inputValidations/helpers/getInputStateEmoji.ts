@@ -28,8 +28,6 @@ export function getInputStateEmoji(state: InputState): string {
       return '🖼️'; // picture/frame
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
       return '💾'; // save disk
-    case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
-      return '📭'; // empty mailbox
     case InputState.RESOLVE_ASSET:
       return '💰'; // money bag
     case InputState.RESOLVE_ASSET_ERROR:

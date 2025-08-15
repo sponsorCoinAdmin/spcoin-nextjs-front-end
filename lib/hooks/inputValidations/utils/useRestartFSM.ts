@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { InputState } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

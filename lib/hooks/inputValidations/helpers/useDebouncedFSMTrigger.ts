@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { InputState, getInputStateString } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
@@ -38,7 +38,7 @@ export function useDebouncedFSMTrigger() {
     debugLog.log('   ↪️ Previous:', prevDebouncedInputRef.current);
     debugLog.log('   ↪️ Current:', debouncedHexInput);
     debugLog.log('   🔄 Input Changed:', inputChanged);
-    debugLog.log('   🧯 Current FSM State:', getInputStateString(currentFSM));
+    debugLog.log('   🧯 Current FSM State:', InputState[currentFSM]);
     debugLog.log('   ☠️ Is Terminal:', isTerminal);
     debugLog.log('   💭 Is EMPTY_INPUT:', isEmpty);
     debugLog.log('   👤 Manual Entry Flag:', manualEntry);
@@ -49,7 +49,7 @@ export function useDebouncedFSMTrigger() {
     }
 
     if (!isTerminal && !isEmpty) {
-      debugLog.warn(`[FSM Trigger Blocked] 🚫 FSM is busy or mid-validation. State: ${getInputStateString(currentFSM)}`);
+      debugLog.warn(`[FSM Trigger Blocked] 🚫 FSM is busy or mid-validation. State: ${InputState[currentFSM]}`);
       return;
     }
 

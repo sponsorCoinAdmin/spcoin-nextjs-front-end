@@ -2,8 +2,9 @@
 'use client';
 
 import React, { useState, ReactNode } from 'react';
-import { SP_COIN_DISPLAY, FEED_TYPE, InputState, TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE, TokenContract } from '@/lib/structure';
 import { TokenPanelContext } from './useTokenPanelContext';
+import { InputState } from '@/lib/structure/assetSelection';
 
 interface Props {
   containerType: SP_COIN_DISPLAY;

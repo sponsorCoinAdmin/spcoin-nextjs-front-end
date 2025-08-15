@@ -1,7 +1,7 @@
 // File: lib/hooks/inputValidations/tests/validateExistsOnChain.ts
 
 import { Address } from 'viem';
-import { InputState } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

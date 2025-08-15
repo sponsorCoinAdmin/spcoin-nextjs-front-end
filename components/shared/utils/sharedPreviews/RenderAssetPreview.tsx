@@ -1,48 +1,34 @@
 // File: components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import BasePreviewCard from '../../BasePreviewCard';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import BasePreviewWrapper from './BasePreviewWrapper';
-
-// ✅ New local (nested) display system
-import {
-  useAssetSelectionDisplay,
-} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
-import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
+import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
+import { InputState } from '@/lib/structure/assetSelection';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 export default function RenderAssetPreview() {
-  // Visibility is owned by the local sub-display provider
-  const { activeSubDisplay } = useAssetSelectionDisplay();
-  const showPanel = activeSubDisplay === ASSET_SELECTION_DISPLAY.ASSET_PREVIEW;
+  const { inputState, validatedAsset, handleHexInputChange } = useAssetSelectionContext();
+  const visible = isRenderFSMState(inputState);
 
-  // We still read context for content (but not for visibility)
-  const { validatedAsset, handleHexInputChange } = useAssetSelectionContext();
+  if (!visible) return null;
+  alert(`InputState: ${InputState[inputState]} visible: ${visible} validatedAsset: ${validatedAsset}`);
 
-  // If not visible or no asset to render, render nothing
-  if (!showPanel || !validatedAsset) return null;
+  if (!validatedAsset) return null;
 
-  const { name, symbol, logoURL, address } = useMemo(() => {
-    const anyAsset = validatedAsset as any;
-    return {
-      name: anyAsset?.name ?? '',
-      symbol: anyAsset?.symbol ?? '',
-      logoURL:
-        anyAsset?.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png',
-      address: anyAsset?.address,
-    };
-  }, [validatedAsset]);
+  const name = validatedAsset.name ?? '';
+  const symbol = validatedAsset.symbol ?? '';
+  const logoURL =
+    validatedAsset.logoURL ?? '/assets/miscellaneous/badTokenAddressImage.png';
+  const address = validatedAsset.address;
 
   const handleClick = () => {
-    debugLog.log(
-      '🖱️ Clicked preview card — calling handleHexInputChange(validatedAsset.address)',
-      { address }
-    );
+    debugLog.log('🖱️ Clicked preview card — calling handleHexInputChange', { address });
     try {
       if (address) handleHexInputChange(address);
     } catch (err) {
@@ -52,7 +38,7 @@ export default function RenderAssetPreview() {
 
   return (
     <div id="RenderAssetPreview">
-      <BasePreviewWrapper show={showPanel}>
+      <BasePreviewWrapper show={true}>
         <div
           id="pendingDiv"
           onClick={handleClick}

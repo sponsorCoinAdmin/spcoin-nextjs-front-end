@@ -1,7 +1,8 @@
 // File: lib/hooks/inputValidations/helpers/fsmFormat.ts
 'use client';
 
-import { InputState, FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import {  FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 import { formatTrace as _formatTrace } from './fsmTraceUtils';
 
 export const SEP_LINE =

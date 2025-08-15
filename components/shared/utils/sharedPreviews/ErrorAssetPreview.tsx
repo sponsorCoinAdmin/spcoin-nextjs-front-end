@@ -2,15 +2,10 @@
 'use client';
 
 import { useMemo } from 'react';
-import { InputState } from '@/lib/structure';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import BasePreviewWrapper from './BasePreviewWrapper';
-
-// ✅ New local (nested) display system
-import {
-  useAssetSelectionDisplay,
-} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
-import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
+import { InputState } from '@/lib/structure/assetSelection';
+import { isErrorFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 
 const emojiMap: Partial<
   Record<
@@ -70,14 +65,8 @@ const emojiMap: Partial<
 };
 
 export default function ErrorAssetPreview() {
-  // 🔁 Visibility is now controlled by the sub-display provider
-  const { activeSubDisplay } = useAssetSelectionDisplay();
-  const showPanel =
-    activeSubDisplay === ASSET_SELECTION_DISPLAY.ERROR_PREVIEW;
-
-  // We still read the FSM inputState to pick a friendly message,
-  // but we no longer use FSM to decide visibility.
   const { inputState } = useAssetSelectionContext();
+  const visible = isErrorFSMState(inputState);
 
   const { emoji, text, colorHex } = useMemo(() => {
     const item = emojiMap[inputState];
@@ -88,11 +77,11 @@ export default function ErrorAssetPreview() {
     };
   }, [inputState]);
 
-  if (!showPanel) return null;
+  if (!visible) return null;
 
   return (
     <div id="ErrorAssetPreview">
-      <BasePreviewWrapper show={showPanel}>
+      <BasePreviewWrapper show={true}>
         <div className="wrapper">
           {emoji && <span className="emoji">{emoji}</span>}
           <span className="message">{text}</span>

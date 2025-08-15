@@ -4,13 +4,13 @@
 import React, { useEffect, useState } from 'react';
 import HexAddressInput from '@/components/shared/utils/HexAddressInput';
 import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
-import ErrorAssetPreview from '../shared/utils/sharedPreviews/ErrorAssetPreview';
+import ErrorAssetPreview from '@/components/shared/utils/sharedPreviews/ErrorAssetPreview';
 
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
-import { InputState } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -25,7 +25,7 @@ export default function AddressSelect() {
     setManualEntry,
     validHexInput,
     debouncedHexInput,
-    handleHexInputChange, // (value: string, manual?: boolean)
+    handleHexInputChange,
     setInputState,
   } = useAssetSelectionContext();
 
@@ -33,13 +33,19 @@ export default function AddressSelect() {
   debugLog.log('✅ AddressSelect function START');
 
   useEffect(() => {
-    debugLog.log(`🔄 debouncedHexInput → "${debouncedHexInput}" (manualEntry=${String(manualEntry)})`);
+    debugLog.log(
+      `🔄 debouncedHexInput → "${debouncedHexInput}" (manualEntry=${String(manualEntry)})`
+    );
   }, [debouncedHexInput, manualEntry]);
 
   const safeInput = debouncedHexInput.trim() !== '' ? debouncedHexInput : undefined;
   const { inputState, validatedToken, validatedWallet } = useValidateFSMInput(safeInput);
 
-  debugLog.log('🧪 useValidateFSMInput returned:', { inputState, validatedToken, validatedWallet });
+  debugLog.log('🧪 useValidateFSMInput returned:', {
+    inputState,
+    validatedToken,
+    validatedWallet,
+  });
 
   // Only enforce manualEntry=true while this keystroke/paste is being processed.
   const [enforceManualTrue, setEnforceManualTrue] = useState(false);
@@ -57,15 +63,13 @@ export default function AddressSelect() {
         inputValue={validHexInput}
         onChange={(val) => {
           debugLog.log('✏️ [HexAddressInput] onChange:', val);
-
-          // Popups to make the flow obvious during debugging
-          // alert(`✍️ Manual edit detected Enforcing manualEntry=true\nvalue=${val}`);
-
-          // Ensure manual mode for this event, then commit
           armEnforcementForThisTick();
           setManualEntry(true);
 
-          setInputState(InputState.FSM_READY, 'AddressSelect (Manual Entry)');
+          // EMPTY_INPUT and VALIDATE_ADDRESS have been removed.
+          // Use EMPTY_INPUT as a neutral kick; the FSM hook will advance based on the new input value.
+          setInputState(InputState.EMPTY_INPUT, 'AddressSelect (Manual Entry)');
+
           handleHexInputChange(val, true);
         }}
         placeholder="Enter address"

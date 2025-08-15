@@ -1,7 +1,6 @@
 // File: lib/hooks/inputValidation/FSM_Core/fSMInputStates.ts
 
-import { InputState } from '@/lib/structure';
-
+import { InputState } from "@/lib/structure/assetSelection";
 
 // ────────────── FSM Trigger States ──────────────
 export const TRIGGER_FSM_STATES = new Set<InputState>([
@@ -21,7 +20,6 @@ export const ERROR_FSM_STATES = new Set<InputState>([
   InputState.INVALID_ADDRESS_INPUT,
   InputState.DUPLICATE_INPUT_ERROR,
   InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-  InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
   InputState.RESOLVE_ASSET_ERROR,
   InputState.TOKEN_NOT_RESOLVED_ERROR, // optional if used in your state enum
 ]);
@@ -29,6 +27,7 @@ export const ERROR_FSM_STATES = new Set<InputState>([
 // ────────────── Finalize FSM States ──────────────
 export const FINALIZE_FSM_STATES = new Set<InputState>([
   InputState.EMPTY_INPUT,
+  InputState.VALIDATE_PREVIEW,
   InputState.UPDATE_VALIDATED_ASSET,
   InputState.CLOSE_SELECT_PANEL,
 ]);
@@ -36,6 +35,13 @@ export const FINALIZE_FSM_STATES = new Set<InputState>([
 export const TERMINAL_FSM_STATES = new Set<InputState>([
   ...ERROR_FSM_STATES,
   ...FINALIZE_FSM_STATES,
+]);
+
+// ────────────── Render FSM States (for RenderAssetPreview) ──────────────
+export const RENDER_FSM_STATES = new Set<InputState>([
+  InputState.PREVIEW_ADDRESS,
+  InputState.VALIDATE_PREVIEW,
+  InputState.INVALID_ADDRESS_INPUT,
 ]);
 
 export function isTriggerFSMState(state: InputState): boolean {
@@ -54,3 +60,6 @@ export function isTerminalFSMState(state: InputState): boolean {
   return TERMINAL_FSM_STATES.has(state);
 }
 
+export function isRenderFSMState(state: InputState): boolean {
+  return RENDER_FSM_STATES.has(state);
+}

@@ -5,14 +5,15 @@ import { useRef, useEffect, useCallback } from 'react';
 import { useChainId, useAccount, usePublicClient } from 'wagmi';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { InputState, getInputStateString, SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
+
 
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';
-import { debugSetInputState } from '../helpers/debugSetInputState';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
@@ -48,7 +49,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     debugLog.log('🔁 useValidateFSMInput INIT', {
       selectAddress,
       debouncedHexInput,
-      initialInputState: getInputStateString(inputState),
+      initialInputState: InputState[inputState],
       manualEntry,
     });
   }, []);
@@ -64,23 +65,6 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     }
   }, [selectAddress, inputState, setInputState]);
 
-  const reportMissingLogoURL = useCallback(() => {
-    if (!debouncedHexInput) return;
-    if (!seenBrokenLogosRef.current.has(debouncedHexInput)) {
-      seenBrokenLogosRef.current.add(debouncedHexInput);
-
-      const setInputStateSingleArg = (state: InputState) =>
-        setInputState(state, `reportMissingLogoURL(${debouncedHexInput})`);
-
-      debugSetInputState(
-        `reportMissingLogoURL(${debouncedHexInput})`,
-        InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
-        inputState,
-        setInputStateSingleArg
-      );
-    }
-  }, [debouncedHexInput, inputState, setInputState]);
-
   const hasBrokenLogoURL = useCallback(() => {
     return seenBrokenLogosRef.current.has(debouncedHexInput);
   }, [debouncedHexInput]);
@@ -91,7 +75,6 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     validatedToken,
     validatedWallet: undefined,
     chainId,
-    reportMissingLogoURL,
     hasBrokenLogoURL,
   };
 };

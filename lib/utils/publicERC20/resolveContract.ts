@@ -3,7 +3,6 @@
 import { Address, isAddress } from 'viem';
 import { TokenContract } from '@/lib/structure/types';
 import { createPublicClient, http } from 'viem';
-import { mainnet } from 'viem/chains';
 
 const erc20Abi = [
   { name: 'name', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'string' }] },

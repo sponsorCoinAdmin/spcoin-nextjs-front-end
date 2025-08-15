@@ -1,13 +1,13 @@
 // File: lib/hooks/inputValidations/FSM_Core/types/validateFSMTypes.ts
 
 import {
-  InputState,
   SP_COIN_DISPLAY,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
 import type { Address, PublicClient } from 'viem';
+import { InputState } from '@/lib/structure/assetSelection';
 
 export type ValidateFSMInput = {
   /** Current FSM state being processed */

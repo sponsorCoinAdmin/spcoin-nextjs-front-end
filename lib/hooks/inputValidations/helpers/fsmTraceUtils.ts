@@ -1,6 +1,6 @@
 // File: lib/hooks/inputValidations/helpers/fsmTraceUtils.ts
 
-import { InputState, getInputStateString } from '@/lib/structure';
+import { InputState } from '@/lib/structure/assetSelection';
 
 export const LOCAL_TRACE_KEY = 'latestFSMTrace';
 export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
@@ -17,7 +17,6 @@ export function getStateIcon(state: InputState): string {
     case InputState.VALIDATE_PREVIEW: return '🖼️';
     case InputState.PREVIEW_ADDRESS: return '🔎';
     case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY: return '📁';
-    case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY: return '📂';
     case InputState.VALIDATE_EXISTS_ON_CHAIN: return '🛰️';
     case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN: return '📵';
     case InputState.RESOLVE_ASSET: return '📊';
@@ -38,10 +37,10 @@ export function formatTrace(trace: InputState[]): string {
     const to = trace[i + 1];
     if (from === to) continue;
     const icon = i === 0 ? '🟢' : '🟡';
-    lines.push(`${icon} ${getStateIcon(from)} ${getInputStateString(from)} → ${getStateIcon(to)} ${getInputStateString(to)}`);
+    lines.push(`${icon} ${getStateIcon(from)} ${InputState[from]} → ${getStateIcon(to)} ${InputState[to]}`);
   }
   if (trace.length === 1) {
-    lines.push(`🟢 ${getStateIcon(trace[0])} ${getInputStateString(trace[0])}`);
+    lines.push(`🟢 ${getStateIcon(trace[0])} ${InputState[trace[0]]}`);
   }
   return lines.join('\n');
 }
