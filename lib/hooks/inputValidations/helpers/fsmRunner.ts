@@ -7,8 +7,7 @@ import {
   WalletAccount,
   TokenContract,
 } from '@/lib/structure';
-import { validateFSMCore } from '../FSM_Core/validateFSMCore';
-import type {
+import { validateFSMCore } from '../FSM_Core/validateFSMCore';import type {
   ValidateFSMInput,
   ValidateFSMOutput,
 } from '../FSM_Core/types/validateFSMTypes';
@@ -22,7 +21,6 @@ import { isTriggerFSMState } from '../FSM_Core/fSMInputStates';
 export type FSMRunnerParams = {
   debouncedHexInput: string;
   containerType: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE;
   publicClient: any;
   chainId: number;
   accountAddress?: string;
@@ -33,7 +31,7 @@ export type FSMRunnerParams = {
   /** Whether current input was typed manually (true) vs chosen from list (false) */
   manualEntry?: boolean;
 
-  // Side-effect callbacks (executed inside FSM core tests)
+  // Side-effect callbacks (executed inside FSM validators)
   setValidatedAsset: (asset: WalletAccount | TokenContract | undefined) => void;
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
@@ -47,7 +45,6 @@ export async function runFSM(params: FSMRunnerParams) {
   const {
     debouncedHexInput,
     containerType,
-    feedType,
     publicClient,
     chainId,
     accountAddress,
@@ -64,6 +61,9 @@ export async function runFSM(params: FSMRunnerParams) {
     manualEntry,
   } = params;
 
+  // 🔒 Token-only runner: feed type is the literal FEED_TYPE.TOKEN_LIST
+  const FEED: FEED_TYPE.TOKEN_LIST = FEED_TYPE.TOKEN_LIST;
+
   const prevTrace = getPrevTrace();
   const prevLast: InputState | undefined = prevTrace.at(-1);
 
@@ -73,7 +73,7 @@ export async function runFSM(params: FSMRunnerParams) {
   runTrace.push(fSMState);
 
   // Single mutable input object passed through all steps.
-  // validateFSMCore() and its nested tests may enrich this object between steps.
+  // validateFSMCore() and its validators may enrich this object between steps.
   const current: ValidateFSMInput = {
     inputState: fSMState,
     debouncedHexInput,
@@ -84,7 +84,7 @@ export async function runFSM(params: FSMRunnerParams) {
 
     // environment / routing
     containerType,
-    feedType,
+    feedType: FEED,
     chainId,
     publicClient,
     accountAddress: (accountAddress ?? zeroAddress) as Address,
@@ -98,31 +98,27 @@ export async function runFSM(params: FSMRunnerParams) {
     setTradingTokenCallback,
     closePanelCallback,
 
-    // placeholders that tests may populate during progression
-    validatedToken: undefined,
-    validatedWallet: undefined,
-
     // utilities/tests may use this
     seenBrokenLogos: new Set<string>(),
 
     // NEW: let validators see what we’ve accumulated so far
-    resolvedToken: undefined,
+    resolvedAsset: undefined,
   };
 
   // NEW: single accumulator for the entire run
-  const tokenAcc: Partial<TokenContract> = {};
+  const assetAcc: Partial<TokenContract> = {};
   let seeded = false;
 
   // Merge policy: same-address only; “fill gaps” only (don’t overwrite defined fields)
-  const mergeTokenPatch = (patch?: Partial<TokenContract>) => {
+  const mergeAssetPatch = (patch?: Partial<TokenContract>) => {
     if (!patch) return;
 
     const incAddr = (patch.address as any)?.toLowerCase?.();
-    const curAddr = (tokenAcc.address as any)?.toLowerCase?.();
+    const curAddr = (assetAcc.address as any)?.toLowerCase?.();
 
     // First write wins: set address if we don’t have one yet
     if (!curAddr && patch.address) {
-      tokenAcc.address = patch.address;
+      assetAcc.address = patch.address;
     }
 
     // Only merge if address matches (or no incoming address)
@@ -131,9 +127,9 @@ export async function runFSM(params: FSMRunnerParams) {
 
     for (const [k, v] of Object.entries(patch)) {
       const key = k as keyof TokenContract;
-      const curr = tokenAcc[key];
+      const curr = assetAcc[key];
       if (curr === undefined || curr === null) {
-        (tokenAcc as any)[key] = v;
+        (assetAcc as any)[key] = v;
       }
     }
   };
@@ -149,31 +145,25 @@ export async function runFSM(params: FSMRunnerParams) {
     }
 
     current.inputState = fSMState;
-    if (!isTriggerFSMState(fSMState)) break; // only core calls on FSM trigger states
-    current.resolvedToken = tokenAcc; // always pass the latest snapshot
+
+    // Only core-process trigger states; preview/terminal states are handled by UI
+    if (!isTriggerFSMState(fSMState)) break;
+
+    // Always pass the latest snapshot to validators
+    current.resolvedAsset = assetAcc;
 
     const result: ValidateFSMOutput = await validateFSMCore(current);
     const next = result.nextState;
 
     // Seed the accumulator right AFTER we leave VALIDATE_ADDRESS (address considered valid)
     if (!seeded && fSMState === InputState.VALIDATE_ADDRESS && next !== InputState.VALIDATE_ADDRESS) {
-      tokenAcc.address = (debouncedHexInput as any) as Address;
-      tokenAcc.chainId = chainId as any;
+      assetAcc.address = (debouncedHexInput as any) as Address;
+      (assetAcc as any).chainId = chainId;
       seeded = true;
     }
 
-    // Merge outputs from this step
-    const tokenPatch = (result as any).tokenPatch as Partial<TokenContract> | undefined;
-    if (tokenPatch) mergeTokenPatch(tokenPatch);
-    if (result.validatedToken) mergeTokenPatch(result.validatedToken as Partial<TokenContract>);
-
-    // Also surface legacy fields if any validator still sets them
-    if (result.validatedToken !== undefined) {
-      (current as any).validatedToken = result.validatedToken;
-    }
-    if (result.validatedAsset !== undefined) {
-      (current as any).validatedAsset = result.validatedAsset;
-    }
+    // Merge output patch from this step
+    if (result.assetPatch) mergeAssetPatch(result.assetPatch as Partial<TokenContract>);
 
     if (next === fSMState) {
       // Terminal or no-op; stop the loop
@@ -191,14 +181,14 @@ export async function runFSM(params: FSMRunnerParams) {
 
   const finalState: InputState = runTrace.at(-1) ?? InputState.VALIDATE_ADDRESS;
 
-  // Commit once at the end if we have an address (stable token snapshot)
+  // Commit once at the end if we have an address (stable asset snapshot)
   if (
-    tokenAcc.address &&
+    assetAcc.address &&
     (finalState === InputState.UPDATE_VALIDATED_ASSET ||
       finalState === InputState.CLOSE_SELECT_PANEL)
   ) {
     try {
-      params.setValidatedAsset(tokenAcc as TokenContract);
+      params.setValidatedAsset(assetAcc as TokenContract);
     } catch (e) {
       console.warn('⚠️ setValidatedAsset failed in runner:', e);
     }
@@ -210,7 +200,7 @@ export async function runFSM(params: FSMRunnerParams) {
   }
 
   // Header + transitions for this run
-  appendLines(headerLine(containerType, debouncedHexInput, feedType));
+  appendLines(headerLine(containerType, debouncedHexInput, FEED));
   appendLines(formatTrace(runTrace));
 
   // Persist raw trace: prev + this run

@@ -1,15 +1,26 @@
 // File: lib/hooks/inputValidations/FSM_Core/types/validateFSMTypes.ts
 
+import { Address, PublicClient } from 'viem';
 import {
-  SP_COIN_DISPLAY,
   FEED_TYPE,
+  SP_COIN_DISPLAY,
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
-import type { Address, PublicClient } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 
-export type ValidateFSMInput = {
+/** Map each FEED_TYPE to its asset shape */
+export type AssetForFeed<F extends FEED_TYPE> =
+  F extends FEED_TYPE.TOKEN_LIST
+    ? TokenContract
+    : F extends FEED_TYPE.AGENT_ACCOUNTS | FEED_TYPE.RECIPIENT_ACCOUNTS
+      ? WalletAccount
+      : never;
+
+export type AnyAsset = TokenContract | WalletAccount;
+
+/** Core FSM input (feed-aware via the generic F) */
+export type ValidateFSMInput<F extends FEED_TYPE = FEED_TYPE.TOKEN_LIST> = {
   /** Current FSM state being processed */
   inputState: InputState;
 
@@ -22,24 +33,29 @@ export type ValidateFSMInput = {
 
   /** Environment / routing */
   containerType: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE;
+  feedType: F;
   chainId: number;
   publicClient: PublicClient | any;
   accountAddress: Address; // runner supplies zeroAddress if absent
 
   /** Opposite side’s committed address (BUY panel gets SELL’s, SELL panel gets BUY’s) */
   peerAddress?: string;
-  manualEntry?: boolean;   // 👈 ensure this exists
-  /** Side-effect callbacks (executed by FSM tests) */
-  setValidatedAsset?: (asset: WalletAccount | TokenContract | undefined) => void;
+  manualEntry?: boolean;
+
+  /** Side-effect callbacks (executed by FSM validators) */
+  setValidatedAsset?: (asset: AnyAsset | undefined) => void;
   setTradingTokenCallback?: (token: TokenContract | any) => void;
   closePanelCallback?: (fromUser: boolean) => void;
 
-  /** Data that tests may read or populate */
-  validatedToken?: TokenContract | any;
-  validatedWallet?: WalletAccount | any;
-  validatedAsset?: WalletAccount | TokenContract | any;
-  resolvedToken?: any;
+  /** Data validators may read or populate (feed-shaped) */
+  validatedAsset?: Partial<AssetForFeed<F>>;
+  resolvedAsset?: Partial<AssetForFeed<F>>;
+
+  /**
+   * Patches returned by validators (runner merges into an accumulator
+   * and commits once at the end).
+   */
+  assetPatch?: Partial<AssetForFeed<F>>;
 
   /** Utilities */
   seenBrokenLogos?: Set<string>;
@@ -48,18 +64,15 @@ export type ValidateFSMInput = {
   stateTrace?: InputState[];
 };
 
-export type ValidateFSMOutput = {
-  /** Next state to enter */
+/** Core FSM output (feed-aware via the generic F) */
+export type ValidateFSMOutput<F extends FEED_TYPE = FEED_TYPE.TOKEN_LIST> = {
   nextState: InputState;
-
-  /** Optional error message for logging/UI */
   errorMessage?: string;
 
-  /** Optional data produced by tests */
-  validatedToken?: TokenContract | any;
-  validatedAsset?: WalletAccount | TokenContract | any;
+  /** The minimal changes from this step; runner merges into an accumulator */
+  assetPatch?: Partial<AssetForFeed<F>>;
 
-  /** Optional outgoing trace/human summary (if core chooses to supply) */
+  /** Trace helpers (optional) */
   stateTrace?: InputState[];
   humanTraceSummary?: string;
 };

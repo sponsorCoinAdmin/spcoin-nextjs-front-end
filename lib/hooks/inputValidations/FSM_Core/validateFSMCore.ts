@@ -1,5 +1,3 @@
-// File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
-
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from './types/validateFSMTypes';
 
@@ -34,8 +32,7 @@ function merge(dst: ValidateFSMOutput, src?: Partial<ValidateFSMOutput>) {
   if (!src) return;
   if (src.nextState !== undefined) dst.nextState = src.nextState;
   if (src.errorMessage !== undefined) dst.errorMessage = src.errorMessage;
-  // Kept for backward-compat; runner will handle accumulation/patching.
-  if (src.validatedToken !== undefined) dst.validatedToken = src.validatedToken;
+  if (src.assetPatch !== undefined) dst.assetPatch = src.assetPatch; // unified asset patch
 }
 
 /** Conditionally run a validator or jump to a fallback next state. */
@@ -55,9 +52,8 @@ async function step(
 export async function validateFSMCore(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
   const out: ValidateFSMOutput = {
     nextState: input.inputState,
-    // Fields below are optional; the runner owns trace/accumulation.
-    validatedToken: undefined,
     errorMessage: undefined,
+    assetPatch: undefined,
   };
 
   switch (input.inputState) {

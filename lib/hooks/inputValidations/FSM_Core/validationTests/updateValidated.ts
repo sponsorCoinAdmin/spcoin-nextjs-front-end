@@ -6,40 +6,30 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 /**
  * UPDATE_VALIDATED_ASSET
- * - Commit the validated asset/token to the app (moved from context side-effects).
+ * - Commit the validated asset to the app (via optional callback).
  * - Then advance to CLOSE_SELECT_PANEL.
  *
  * Notes:
- * - This reads optional callbacks from `ValidateFSMInput`:
- *   - setValidatedAsset?: (asset: any) => void
- *   - setTradingTokenCallback?: (token: any) => void
- * - The exact token/asset shape differs across callers, so we defensively probe common fields.
+ * - Expects the runner/validators to populate `validatedAsset` (or `resolvedAsset` as a fallback).
+ * - Intentionally asset-only: no references to “token” here.
+ * - Debug `alert` is intentionally kept.
  */
 export function updateValidated(input: ValidateFSMInput): ValidateFSMOutput {
   try {
-    // Pull the asset/token from the most likely places without being rigid to caller shape.
-    const candidateAsset =
-      input?.validatedAsset ??
+    const finalAsset =
+      input.validatedAsset ??
+      input.resolvedAsset ??
       undefined;
 
-    const candidateToken =
-      input?.validatedToken ??
-      candidateAsset?.token ??
-      input?.resolvedToken ??
-      undefined;
+    // 🔔 Debug alert (kept intentionally)
+    alert(
+      `updateValidated(finalAsset: ${stringifyBigInt(finalAsset)})`
+    );
 
-    // Side-effects moved from context:
-    alert(`updateValidated(candidateAsset:${stringifyBigInt(candidateAsset)}\ncandidateToken: updateValidated(${stringifyBigInt(candidateToken)})`);
-    input?.setValidatedAsset?.(candidateAsset);
-    input?.setTradingTokenCallback?.(candidateToken);
+    // Optional side-effect
+    input.setValidatedAsset?.(finalAsset as any);
 
-    const out: ValidateFSMOutput = {
-      nextState: InputState.CLOSE_SELECT_PANEL,
-      // Preserve visibility in logs/trace where supported by the output type.
-      validatedToken: candidateToken,
-    };
-
-    return out;
+    return { nextState: InputState.CLOSE_SELECT_PANEL };
   } catch (err: any) {
     return {
       nextState: InputState.VALIDATE_ADDRESS,
