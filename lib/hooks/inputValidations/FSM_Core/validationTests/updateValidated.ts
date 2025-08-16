@@ -22,9 +22,9 @@ export function updateValidated(input: ValidateFSMInput): ValidateFSMOutput {
       undefined;
 
     // 🔔 Debug alert (kept intentionally)
-    alert(
-      `updateValidated(finalAsset: ${stringifyBigInt(finalAsset)})`
-    );
+    // alert(
+    //   `updateValidated(finalAsset: ${stringifyBigInt(finalAsset)})`
+    // );
 
     // Optional side-effect
     input.setValidatedAsset?.(finalAsset as any);

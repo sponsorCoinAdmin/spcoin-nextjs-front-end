@@ -19,7 +19,7 @@ const F = {
   VALID_ADDRESS:  process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'true',
   DUPLICATE:      process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
   EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'false',
-  EXISTS_ONCHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'false',
+  EXISTS_ONCHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'true',
   RESOLVE:        process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ASSET === 'true',
   UPDATE:         process.env.NEXT_PUBLIC_FSM_TEST_UPDATE_ASSET === 'true',
   CLOSE:          process.env.NEXT_PUBLIC_FSM_TEST_CLOSE_SELECT_PANEL === 'true',
