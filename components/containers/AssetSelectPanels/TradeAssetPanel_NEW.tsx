@@ -1,26 +1,26 @@
 // File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { parseUnits, formatUnits } from 'viem';
 import { clsx } from 'clsx';
 
 import {
   useApiProvider,
-  useSpCoinDisplay,
   useBuyAmount,
   useSellAmount,
   useSlippage,
   useTradeDirection,
   useSellTokenContract,
   useBuyTokenContract,
-  useExchangeContext,
+  useActiveDisplay, // ✅ use the hook for activeDisplay
 } from '@/lib/context/hooks';
 
 import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
+import { tokenContractsEqual } from '@/lib/network/utils';
 
 import {
   SP_COIN_DISPLAY,
@@ -40,7 +40,6 @@ const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);
 // 🔒 PRIVATE inner component, not exported
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
-  const { exchangeContext } = useExchangeContext();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -48,7 +47,9 @@ function TradeAssetPanelInner() {
   const { data: slippage } = useSlippage();
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
-  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+
+  // ✅ Access activeDisplay via the hook (no direct context poking)
+  const { activeDisplay } = useActiveDisplay();
 
   const {
     localTokenContract,
@@ -66,43 +67,54 @@ function TradeAssetPanelInner() {
   const debouncedSellAmount = useDebounce(sellAmount, 600);
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
+  // 🛡️ Break potential update loop: only sync localTokenContract when meaningfully changed
+  const lastTokenKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!tokenContract) return;
+    const key = `${tokenContract.address}:${tokenContract.decimals ?? 18}:${tokenContract.symbol ?? ''}`;
+
+    // If nothing meaningfully changed, bail out
+    if (lastTokenKeyRef.current === key) return;
+
+    // Also guard by deep-equality helper when available
+    if (localTokenContract && tokenContractsEqual(localTokenContract as any, tokenContract as any)) {
+      lastTokenKeyRef.current = key; // cache so we don't keep checking
+      return;
+    }
+
+    debugLog.log(`📦 Sync localTokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenContract);
+    setLocalTokenContract(tokenContract);
+    lastTokenKeyRef.current = key;
+  }, [tokenContract, setLocalTokenContract, containerType, localTokenContract]);
+
   useEffect(() => {
     debugLog.log('✅ Connected to TokenPanelContext', { localTokenContract, localAmount });
-    debugLog.log('🔎 activeDisplay:', getActiveDisplayString(exchangeContext.settings.activeDisplay));
-  }, []);
+    debugLog.log('🔎 activeDisplay:', getActiveDisplayString(activeDisplay));
+    // dumpTokenContext?.(); // keep off unless debugging
+  }, []); // run once
 
+  // Keep text input in sync with selected token + global amount
   useEffect(() => {
-    if (tokenContract) {
-      debugLog.log(`📦 Loaded tokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenContract);
-      setLocalTokenContract(tokenContract);
-    }
-  }, [tokenContract, setLocalTokenContract]);
+    if (!tokenContract) return;
+    const currentAmount =
+      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+    const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
+    if (inputValue !== formatted) setInputValue(formatted);
+  }, [sellAmount, buyAmount, tokenContract, containerType]);
 
+  // Push debounced amounts back to global state, but only when they differ
   useEffect(() => {
-    if (tokenContract) {
-      const currentAmount =
-        containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
-      const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
-      if (inputValue !== formatted) setInputValue(formatted);
+    if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
+        tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) {
+      if (sellAmount !== debouncedSellAmount) setSellAmount(debouncedSellAmount);
+    } else if (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
+               tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN) {
+      if (buyAmount !== debouncedBuyAmount) setBuyAmount(debouncedBuyAmount);
     }
-  }, [sellAmount, buyAmount, tokenContract]);
-
-  useEffect(() => {
-    if (
-      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
-      tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-    ) {
-      setSellAmount(debouncedSellAmount);
-    } else if (
-      containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
-      tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-    ) {
-      setBuyAmount(debouncedBuyAmount);
-    }
-  }, [debouncedSellAmount, debouncedBuyAmount, containerType, tradeDirection]);
+  }, [debouncedSellAmount, debouncedBuyAmount, containerType, tradeDirection, sellAmount, buyAmount, setSellAmount, setBuyAmount]);
 
   const handleInputChange = (value: string) => {
-    if (!/^\d*\.?\d*$/.test(value)) return;
+    if (!/^[\d.]*$/.test(value)) return;
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
     debugLog.log(`⌨️ Input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
@@ -114,15 +126,14 @@ function TradeAssetPanelInner() {
 
     try {
       const bigIntValue = parseUnits(formatted, decimals);
-      debugLog.log(`🔢 Parsed BigInt: ${bigIntValue}`);
-      setLocalAmount(bigIntValue);
+      if (localAmount !== bigIntValue) setLocalAmount(bigIntValue);
 
       if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
         setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
-        setSellAmount(bigIntValue);
+        if (sellAmount !== bigIntValue) setSellAmount(bigIntValue);
       } else {
         setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN);
-        setBuyAmount(bigIntValue);
+        if (buyAmount !== bigIntValue) setBuyAmount(bigIntValue);
       }
     } catch (err) {
       debugLog.warn('⚠️ Failed to parse input:', err);
@@ -131,12 +142,12 @@ function TradeAssetPanelInner() {
 
   const buySellText =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-      ? tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-        ? `You Pay ± ${slippage.percentageString}`
-        : `You Exactly Pay:`
-      : tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-      ? `You Receive ± ${slippage.percentageString}`
-      : `You Exactly Receive:`;
+      ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
+          ? `You Pay ± ${slippage.percentageString}`
+          : `You Exactly Pay:`)
+      : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
+          ? `You Receive ± ${slippage.percentageString}`
+          : `You Exactly Receive:`);
 
   const formattedBalance = useFormattedTokenAmount(tokenContract, tokenContract?.balance ?? 0n);
 
@@ -144,15 +155,6 @@ function TradeAssetPanelInner() {
     !tokenContract ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
       containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
-
-  const toggleTokenConfig = useCallback(() => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL) {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-    } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL);
-    }
-    debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
-  }, [spCoinDisplay, setSpCoinDisplay]);
 
   return (
     <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
@@ -165,7 +167,7 @@ function TradeAssetPanelInner() {
         onChange={(e) => handleInputChange(e.target.value)}
         onBlur={() => {
           const parsed = parseFloat(inputValue);
-          setInputValue(isNaN(parsed) ? '0' : parsed.toString());
+          setInputValue(Number.isNaN(parsed) ? '0' : parsed.toString());
         }}
       />
       <TokenSelectDropDown containerType={containerType} />
