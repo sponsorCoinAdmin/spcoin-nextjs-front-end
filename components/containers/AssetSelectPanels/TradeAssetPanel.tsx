@@ -1,7 +1,7 @@
 // File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { parseUnits, formatUnits } from 'viem';
 import { clsx } from 'clsx';
 
@@ -76,30 +76,69 @@ function TradeAssetPanelInner() {
       debugLog.log(`📦 Loaded tokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenContract);
       setLocalTokenContract(tokenContract);
     }
-  }, [tokenContract, setLocalTokenContract]);
+  }, [tokenContract, setLocalTokenContract, containerType]);
 
+  // Keep text input in sync with selected token + global amount
   useEffect(() => {
-    if (tokenContract) {
-      const currentAmount =
-        containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
-      const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
-      if (inputValue !== formatted) setInputValue(formatted);
-    }
+    if (!tokenContract) return;
+    const currentAmount =
+      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+    const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
+    if (inputValue !== formatted) setInputValue(formatted);
   }, [sellAmount, buyAmount, tokenContract]);
 
+  // --- ⛔️ Stop writing debounced value back into global amounts.
+  // --- ✅ Use debounced value ONLY to trigger side-effects (quotes, validations, etc.)
+  const lastDebouncedRef = useRef<bigint | null>(null);
   useEffect(() => {
-    if (
-      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
-      tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-    ) {
-      setSellAmount(debouncedSellAmount);
-    } else if (
-      containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
-      tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-    ) {
-      setBuyAmount(debouncedBuyAmount);
+    const debouncedForPanel =
+      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+        ? debouncedSellAmount
+        : debouncedBuyAmount;
+
+    const directionOk =
+      (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
+        tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
+      (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
+        tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN);
+
+    if (!directionOk) return;
+
+    if (lastDebouncedRef.current === debouncedForPanel) return;
+    lastDebouncedRef.current = debouncedForPanel;
+
+    debugLog.log('🔔 Debounced amount ready (side-effects only)', {
+      panel: SP_COIN_DISPLAY[containerType],
+      tradeDirection,
+      amount: debouncedForPanel?.toString?.(),
+      token: tokenContract?.address,
+    });
+
+    // If you have a debounced channel in context or an event bus, update/emit here.
+    // Example: setDebouncedHexInput?.(debouncedForPanel);
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(
+          new CustomEvent('spcoin:debouncedAmount', {
+            detail: {
+              amount: debouncedForPanel,
+              containerType,
+              tradeDirection,
+              token: tokenContract?.address,
+            },
+          }),
+        );
+      } catch {
+        // ignore if CustomEvent isn't available
+      }
     }
-  }, [debouncedSellAmount, debouncedBuyAmount, containerType, tradeDirection]);
+  }, [
+    debouncedSellAmount,
+    debouncedBuyAmount,
+    containerType,
+    tradeDirection,
+    tokenContract,
+  ]);
 
   const handleInputChange = (value: string) => {
     if (!/^\d*\.?\d*$/.test(value)) return;
