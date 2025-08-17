@@ -175,6 +175,10 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     // NOTE: do not depend on `manualEntry`; we read from ref to avoid races
   ]);
 
+  useEffect(() => {
+    alert(`useFSMStateManager.isValid(${isValid})`)
+  }, [isValid]);
+
   return {
     inputState,
     setInputState: setInputStateWrapped,

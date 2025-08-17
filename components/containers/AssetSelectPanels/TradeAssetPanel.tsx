@@ -174,8 +174,8 @@ function TradeAssetPanelInner() {
         ? `You Pay ± ${slippage.percentageString}`
         : `You Exactly Pay:`
       : tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-      ? `You Receive ± ${slippage.percentageString}`
-      : `You Exactly Receive:`;
+        ? `You Receive ± ${slippage.percentageString}`
+        : `You Exactly Receive:`;
 
   const formattedBalance = useFormattedTokenAmount(tokenContract, tokenContract?.balance ?? 0n);
 
@@ -185,10 +185,10 @@ function TradeAssetPanelInner() {
       containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
 
   const toggleTokenConfig = useCallback(() => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL) {
+    if (spCoinDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
       setSpCoinDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
     } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.TOKEN_SCROLL_PANEL);
+      setSpCoinDisplay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL);
     }
     debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
   }, [spCoinDisplay, setSpCoinDisplay]);

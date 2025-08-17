@@ -42,7 +42,7 @@ const emojiMap: Partial<
     text: 'Address not found on blockchain.',
     colorHex: '#ef4444',
   },
-  [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: {
+  [InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY]: {
     emoji: '📭',
     text: 'Missing local asset preview.',
     colorHex: '#f97316',

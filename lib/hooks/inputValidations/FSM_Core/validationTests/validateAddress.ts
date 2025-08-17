@@ -20,8 +20,9 @@ export function validateAddress({
   isValid, // <-- from useHexInput
 }: ValidateFSMInput): ValidateFSMOutput {
   const raw = (debouncedHexInput ?? '').trim();
-
-  debugLog.log(`Running validateAddress(${raw})`);
+ 
+  alert(`Running validateAddress(Address = ${raw}\n isValid = ${isValid})`);
+  debugLog.log(`Running validateAddress(Address = ${raw}\n isValid = ${isValid})`);
 
   // 1) Empty → EMPTY_INPUT
   if (isEmptyInput(raw)) {
