@@ -1,3 +1,4 @@
+// File: components/shared/utils/sharedPreviews/BasePreviewCard.tsx
 'use client';
 
 import React from 'react';
@@ -11,7 +12,7 @@ type Props = {
   logoSrc: string;
   onSelect: () => void;
   onInfoClick?: () => void;
-  onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void; // ✅ Added this
+  onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
   width?: number;
   height?: number;
@@ -25,15 +26,17 @@ const BasePreviewCard: React.FC<Props> = ({
   onInfoClick,
   onContextMenu,
   onError,
-  width = 40,
-  height = 40,
+  // Match DataListSelect avatar size (8 * 4 = 32px)
+  width = 32,
+  height = 32,
 }) => {
   return (
     <div
-      className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
-      onContextMenu={onContextMenu} // ✅ Use it here
+      className="w-full flex items-center justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900"
+      onContextMenu={onContextMenu}
     >
-      <div className="cursor-pointer flex flex-row" onClick={onSelect}>
+      {/* Left block: token logo + name/symbol */}
+      <div className="cursor-pointer flex items-center gap-3 min-w-0" onClick={onSelect}>
         <Image
           src={logoSrc}
           alt={`${name} logo`}
@@ -42,14 +45,15 @@ const BasePreviewCard: React.FC<Props> = ({
           className={styles.elementLogo}
           onError={onError}
         />
-        <div>
-          <div className={styles.elementName}>{name || 'Unknown'}</div>
-          <div className={styles.elementSymbol}>{symbol || 'N/A'}</div>
+        <div className="min-w-0">
+          <div className={`${styles.elementName} truncate`}>{name || 'Unknown'}</div>
+          <div className={`${styles.elementSymbol} truncate`}>{symbol || 'N/A'}</div>
         </div>
       </div>
 
+      {/* Right block: info icon aligned with DataListSelect */}
       <div
-        className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+        className="ml-auto flex items-center justify-center cursor-pointer rounded w-8 h-8 text-lg font-bold text-white flex-none"
         onClick={(e) => {
           e.stopPropagation();
           if (onInfoClick) onInfoClick();

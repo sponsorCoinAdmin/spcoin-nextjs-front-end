@@ -8,12 +8,10 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
-
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useDebouncedFSMTrigger } from '../helpers/useDebouncedFSMTrigger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_INPUT_STATE_MANAGER === 'true';
@@ -40,7 +38,6 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
-  // Debug logs on mount
   useEffect(() => {
     debugLog.log(`🎯 containerType: ${SP_COIN_DISPLAY[containerType]} (${containerType})`);
   }, [containerType]);
@@ -52,18 +49,11 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
       initialInputState: InputState[inputState],
       manualEntry,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Triggers FSM rerun when debounce completes (noop if not terminal)
-  useDebouncedFSMTrigger();
-
-  // Reset FSM if input is cleared
-  useEffect(() => {
-    if (!selectAddress?.trim() && inputState !== InputState.EMPTY_INPUT) {
-      debugLog.log('🧹 Resetting to EMPTY_INPUT (selectAddress is empty)');
-      setInputState(InputState.EMPTY_INPUT, 'useValidateFSMInput');
-    }
-  }, [selectAddress, inputState, setInputState]);
+  // ⛔️ Removed: useDebouncedFSMTrigger() — the new FSM state manager should be
+  // the ONLY driver of inputState. Keeping this avoids double "kicks" and races.
 
   const hasBrokenLogoURL = useCallback(() => {
     return seenBrokenLogosRef.current.has(debouncedHexInput);

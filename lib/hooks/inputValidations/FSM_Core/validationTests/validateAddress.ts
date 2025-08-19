@@ -21,7 +21,7 @@ export function validateAddress({
 }: ValidateFSMInput): ValidateFSMOutput {
   const raw = (debouncedHexInput ?? '').trim();
  
-  alert(`Running validateAddress(Address = ${raw}\n isValid = ${isValid})`);
+  // alert(`Running validateAddress(Address = ${raw}\n isValid = ${isValid})`);
   debugLog.log(`Running validateAddress(Address = ${raw}\n isValid = ${isValid})`);
 
   // 1) Empty → EMPTY_INPUT
@@ -31,6 +31,7 @@ export function validateAddress({
 
   // 2) If hook says hex content is invalid → INVALID_HEX_INPUT
   if (!isValid) {
+    // alert(`validateAddress(RETURNING nextState: InputState.INVALID_HEX_INPUT)`);
     return { nextState: InputState.INVALID_HEX_INPUT };
   }
 

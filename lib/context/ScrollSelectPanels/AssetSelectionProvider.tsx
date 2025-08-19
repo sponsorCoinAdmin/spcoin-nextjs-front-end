@@ -83,6 +83,17 @@ export const AssetSelectionProvider = ({
     manualEntry: manualEntryRef.current,
   });
 
+  React.useEffect(() => {
+  // eslint-disable-next-line no-console
+  console.log('[AssetSelectionProvider]', {
+    instanceId,
+    containerType,
+    feedType,
+    inputState,
+    stateName: InputState[inputState] ?? String(inputState),
+  });
+}, [inputState, containerType, feedType]);
+
   // SELL/terminal fallbacks (reusable hook)
   useFSMTerminals({
     inputState,

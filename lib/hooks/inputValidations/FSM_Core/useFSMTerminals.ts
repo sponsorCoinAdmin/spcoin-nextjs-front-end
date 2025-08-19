@@ -13,11 +13,13 @@ type UseFSMTerminalsArgs = {
 };
 
 /**
- * Ensures that when the FSM reaches terminal states:
- *  - UPDATE_VALIDATED_ASSET: the asset is forwarded to the parent at least once
- *  - CLOSE_SELECT_PANEL: the panel closes at least once and cleanup runs
+ * Terminal-state safety net:
+ *  - UPDATE_VALIDATED_ASSET → forward asset once (if caller missed it)
+ *  - CLOSE_SELECT_PANEL     → close once, then run cleanup
  *
- * Guards dedupe both actions across BUY/SELL paths.
+ * NOTE:
+ *  - Does NOT close on VALIDATE_PREVIEW (manual entry preview should stay open)
+ *  - Does NOT close on error states (error preview should stay open)
  */
 export function useFSMTerminals({
   inputState,
@@ -31,27 +33,31 @@ export function useFSMTerminals({
   const closedRef = useRef(false);
 
   useEffect(() => {
-    // forward asset if hook-side missed it
-    if (inputState === InputState.UPDATE_VALIDATED_ASSET && validatedAsset && !sentRef.current) {
+    // Fallback: ensure selected asset is forwarded on commit state
+    if (
+      inputState === InputState.UPDATE_VALIDATED_ASSET &&
+      validatedAsset &&
+      !sentRef.current
+    ) {
       if (debug) console.warn('[useFSMTerminals] fallback: forward asset');
       sentRef.current = true;
       onForwardAsset(validatedAsset);
     }
 
-    // close panel if hook-side missed it
+    // Only close on explicit CLOSE_SELECT_PANEL
     if (inputState === InputState.CLOSE_SELECT_PANEL) {
       if (!closedRef.current) {
         if (debug) console.warn('[useFSMTerminals] fallback: close panel');
         closedRef.current = true;
-        onClose(false);
+        onClose(false); // programmatic close
       } else if (debug) {
         console.log('[useFSMTerminals] close already handled');
       }
 
-      // do caller-provided cleanup (clear asset, reset input + FSM, etc.)
+      // Caller-provided cleanup (clear asset, reset input/FSM, etc.)
       onCleanup();
 
-      // allow next cycle
+      // Ready for next cycle
       closedRef.current = false;
       sentRef.current = false;
     }

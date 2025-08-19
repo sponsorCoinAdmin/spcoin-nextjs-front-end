@@ -59,6 +59,7 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
   switch (input.inputState) {
     case InputState.VALIDATE_ADDRESS:
       await step(out, F.VALID_ADDRESS, () => validateAddress(input), InputState.TEST_DUPLICATE_INPUT);
+      // alert(`validateFSMCore.nextState: ${InputState[out.nextState]} - ${out.errorMessage}`)
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:

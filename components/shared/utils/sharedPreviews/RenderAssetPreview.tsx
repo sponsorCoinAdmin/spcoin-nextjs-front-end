@@ -7,7 +7,6 @@ import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAs
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
-import { InputState } from '@/lib/structure/assetSelection';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
@@ -17,9 +16,13 @@ export default function RenderAssetPreview() {
   const visible = isRenderFSMState(inputState);
 
   if (!visible) return null;
-  alert(`RenderAssetPreview.InputState: ${InputState[inputState]} visible: ${visible} validatedAsset: ${validatedAsset}`);
+  // alert(`RenderAssetPreview.InputState: ${InputState[inputState]} visible: ${visible} validatedAsset: ${validatedAsset}`);
 
-  if (!validatedAsset) return null;
+  if (!validatedAsset) {
+    debugLog.log('validatedAsset is null or undefined');
+    alert('validatedAsset is null or undefined');
+    return null;
+  }
 
   const name = validatedAsset.name ?? '';
   const symbol = validatedAsset.symbol ?? '';
@@ -49,6 +52,8 @@ export default function RenderAssetPreview() {
             symbol={symbol}
             logoSrc={logoURL}
             onSelect={handleClick}
+            width={24}          // ↓ shrink here
+            height={24}
           />
         </div>
       </BasePreviewWrapper>
