@@ -5,21 +5,21 @@ import { useEffect, useRef } from 'react';
 import SlippageBpsRadioButtons from './SlippageBpsRadioButtons';
 
 type Props = {
-  showDialog: boolean;
+  showPanel: boolean;
 };
 
-export default function Dialog({ showDialog }: Props) {
+export default function Dialog({ showPanel }: Props) {
   const dialogRef = useRef<null | HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (showDialog) {
+    if (showPanel) {
       dialogRef.current?.showModal();
     } else {
       dialogRef.current?.close();
     }
-  }, [showDialog]);
+  }, [showPanel]);
 
-  const closeDialog = () => {
+  const closePanel = () => {
     dialogRef.current?.close();
   };
 
@@ -41,7 +41,7 @@ export default function Dialog({ showDialog }: Props) {
         <button
           type="button"
           aria-label="Close"
-          onClick={closeDialog}
+          onClick={closePanel}
           className="cursor-pointer rounded border-none w-5 text-xl text-bg-txt-ltgry"
         >
           X

@@ -1,4 +1,4 @@
-// File: components/Dialogs/ErrorDialog.tsx
+// File: components/Dialogs/ErrorPanel.tsx
 'use client';
 
 import { ErrorMessage } from '@/lib/structure';
@@ -6,17 +6,17 @@ import styles from '@/styles/Modal.module.css';
 import { useEffect, useRef } from 'react';
 
 type Props = {
-  showDialog: boolean;
-  closeDialog: () => void;
+  showPanel: boolean;
+  closePanel: () => void;
   message?: ErrorMessage;
 };
 
-export default function ErrorDialog({ showDialog, closeDialog, message }: Props) {
+export default function ErrorPanel({ showPanel, closePanel, message }: Props) {
   const dialogRef = useRef<null | HTMLDialogElement>(null);
 
   useEffect(() => {
-    showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close();
-  }, [showDialog]);
+    showPanel ? dialogRef.current?.showModal() : dialogRef.current?.close();
+  }, [showPanel]);
 
   return (
     <dialog id="errorDialog" ref={dialogRef} className={styles.baseSelectPanel}>
@@ -24,7 +24,7 @@ export default function ErrorDialog({ showDialog, closeDialog, message }: Props)
         <h1 className="text-sm indent-9 mt-1">{message?.source}</h1>
         <div
           className="cursor-pointer rounded border-none w-5 text-xl text-white"
-          onClick={closeDialog}
+          onClick={closePanel}
         >
           X
         </div>

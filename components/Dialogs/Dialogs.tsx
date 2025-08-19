@@ -2,7 +2,7 @@
 import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
 import ConfigDialog from './Popup/ConfigDialog'
-import ErrorDialog from './ErrorDialog'
+import ErrorPanel from './ErrorPanel';
 
 /** 
  * List of allowed dialog CSS ID selectors.
@@ -11,7 +11,7 @@ import ErrorDialog from './ErrorDialog'
 type DialogSelector =
   | '#TokenSelectDialog'
   | '#AccountSelectDialog'
-  | '#ErrorDialog'
+  | '#ErrorPanel'
   | '#ConfigDialog'
 
 /**
@@ -32,7 +32,7 @@ const openDialog = (dialogType: DialogSelector) => {
  * Close a dialog by CSS selector.
  * Logs a warning if the dialog is not found.
  */
-const closeDialog = (dialogType: DialogSelector) => {
+const closePanel = (dialogType: DialogSelector) => {
   const dialog = document.querySelector(dialogType) as HTMLDialogElement | null
   if (dialog) {
     dialog.close()
@@ -43,7 +43,7 @@ const closeDialog = (dialogType: DialogSelector) => {
 
 export {
   openDialog,
-  closeDialog,
+  closePanel,
   ConfigDialog,
-  ErrorDialog
+  ErrorPanel
 }

@@ -2,7 +2,7 @@
 'use client';
 
 import { useErrorMessage, useActiveDisplay } from '@/lib/context/hooks';
-import { ErrorDialog } from '@/components/Dialogs/Dialogs';
+import { ErrorPanel } from '@/components/Dialogs/Dialogs';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -25,7 +25,7 @@ function ErrorMessagePanelInner({
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { setActiveDisplay } = useActiveDisplay();
 
-  const closeDialog = () => {
+  const closePanel = () => {
     debugLog.log('✅ Closing ErrorMessagePanel → switching to TRADING_STATION_PANEL');
     setErrorMessage(undefined);
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
@@ -33,9 +33,9 @@ function ErrorMessagePanelInner({
   };
 
   return (
-    <ErrorDialog
-      showDialog={true}
-      closeDialog={closeDialog}
+    <ErrorPanel
+      showPanel={true}
+      closePanel={closePanel}
       message={errorMessage}
     />
   );

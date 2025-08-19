@@ -47,7 +47,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
       id="TradeContainerHeader"
       className="h-[60px] flex justify-between items-center w-full px-2.5 box-border shrink-0"
     >
-      <ConfigDialog showDialog={false} />
+      <ConfigDialog showPanel={false} />
       <div
         id="SponsorCoinLogo.png"
         onClick={() => exchangeContextDump(exchangeContext)}
@@ -75,7 +75,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
           />
         ) : (
           <button
-            id="closeScrollPanelButton"
+            id="closeSelectionPanelButton"
             aria-label="Close dialog"
             onClick={closePanelCallback}
             className="cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"

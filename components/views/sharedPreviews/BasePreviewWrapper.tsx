@@ -12,7 +12,10 @@ export default function BasePreviewWrapper({ show, children }: BasePreviewWrappe
   if (!show) return null;
 
   return (
-    <div id = "BasePreviewWrapper" className="flex items-center h-[50px] bg-[#243056] rounded-[22px] p-2">
+    <div
+      id="BasePreviewWrapper"
+      className="flex items-center h-[50px] bg-[#243056] rounded-[22px] p-2 text-[#5981F3]" // ← added color
+    >
       {children}
     </div>
   );

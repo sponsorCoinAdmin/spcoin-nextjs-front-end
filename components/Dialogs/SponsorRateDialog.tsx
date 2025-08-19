@@ -13,19 +13,19 @@ type ErrorType = {
 
 type Props = {
   errMsg: ErrorType;
-  showDialog: boolean;
+  showPanel: boolean;
 };
 
-export default function SponsorRateDialog({ showDialog, errMsg }: Props) {
+export default function SponsorRateDialog({ showPanel, errMsg }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
     if (dialogRef.current) {
-      showDialog ? dialogRef.current.showModal() : dialogRef.current.close();
+      showPanel ? dialogRef.current.showModal() : dialogRef.current.close();
     }
-  }, [showDialog]);
+  }, [showPanel]);
 
-  const closeDialog = () => {
+  const closePanel = () => {
     dialogRef.current?.close();
   };
 
@@ -40,7 +40,7 @@ export default function SponsorRateDialog({ showDialog, errMsg }: Props) {
         <h1 className="text-sm indent-9 mt-1">{errMsg.name}</h1>
         <div
           className="cursor-pointer rounded border-none w-5 text-xl text-white"
-          onClick={closeDialog}
+          onClick={closePanel}
         >
           X
         </div>

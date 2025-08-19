@@ -12,7 +12,7 @@ type Props = {
 };
 
 const ManageSponsorsButton = ({ tokenContract }: Props) => {
-  const [showDialog, setShowDialog] = useState(false);
+  const [showPanel, setShowDialog] = useState(false);
 
   const openDialog = useCallback(() => setShowDialog(true), []);
 
@@ -24,7 +24,7 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
   return (
     <>
       <ManageSponsorships
-        showDialog={showDialog}
+        showPanel={showPanel}
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}
         // If your dialog supports onClose, wire it here to allow closing

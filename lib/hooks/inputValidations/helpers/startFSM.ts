@@ -93,13 +93,32 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     return null;
   }
 
-  // Signature gate — rerun only when (debouncedHexInput, isValid) changes
-  const signature = `${debouncedHexInput}|${isValid ? 1 : 0}`;
-  if (prevDebouncedInputRef.current === signature) {
-    debug.log(`⏸️ Unchanged signature "${signature}" — skipping FSM run.`);
+  // Signature gate — rerun when (debouncedHexInput OR isValid) changes
+  const newSignature = `${debouncedHexInput}|${isValid ? 1 : 0}`;
+  const prevSignature = prevDebouncedInputRef.current;
+
+  if (prevSignature === newSignature) {
+    debug.log(`⏸️ Unchanged signature "${newSignature}" — skipping FSM run.`);
     return null;
   }
-  prevDebouncedInputRef.current = signature;
+
+  // Explain WHY we are running (which component changed)
+  if (prevSignature !== undefined) {
+    const [prevInputPart, prevValidPart = '0'] = String(prevSignature).split('|');
+    const [nextInputPart, nextValidPart = '0'] = String(newSignature).split('|');
+    const inputChanged = prevInputPart !== nextInputPart;
+    const validChanged = prevValidPart !== nextValidPart;
+    debug.log(
+      `▶️ Triggering FSM: ` +
+      `${inputChanged ? `debouncedHexInput changed "${prevInputPart}" → "${nextInputPart}"` : ''}` +
+      `${inputChanged && validChanged ? ' & ' : ''}` +
+      `${validChanged ? `isValid changed ${prevValidPart === '1'} → ${nextValidPart === '1'}` : ''}`
+    );
+  } else {
+    debug.log(`▶️ First run for signature "${newSignature}"`);
+  }
+
+  prevDebouncedInputRef.current = newSignature;
 
   // ───────── FSM Loop ─────────
   const prevTrace = getPrevTrace();
@@ -149,7 +168,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   const mergeAssetPatch = (patch?: Partial<TokenContract | WalletAccount>) => {
     if (!patch) return;
     const incAddr = (patch as any)?.address?.toString?.().toLowerCase?.();
-       const curAddr = (assetAcc as any)?.address?.toString?.().toLowerCase?.();
+    const curAddr = (assetAcc as any)?.address?.toString?.().toLowerCase?.();
 
     if (!curAddr && (patch as any)?.address) {
       (assetAcc as any).address = (patch as any).address;
@@ -216,7 +235,11 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   appendLines(formatTrace(runTrace));
   setTrace([...prevTrace, ...runTrace]);
 
-  debug.log(`🏁 finalState → ${InputState[finalState]}`);
+  // Brief asset summary for debugging
+  const addr = (assetAcc as any)?.address ?? '—';
+  const sym = (assetAcc as any)?.symbol ?? '—';
+  const nm  = (assetAcc as any)?.name ?? '—';
+  debug.log(`🏁 finalState → ${InputState[finalState]} | asset: { address: ${addr}, symbol: ${sym}, name: ${nm} }`);
 
   // Return asset for preview and commit states (centralized commit in hook)
   const isCommit =

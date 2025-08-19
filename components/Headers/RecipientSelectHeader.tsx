@@ -15,7 +15,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
  * Header for the Recipient selection flow.
  * Migrated to SP_COIN_DISPLAY + useActiveDisplay.
  */
-const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
+const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
   const { exchangeContext } = useExchangeContext();
   const { activeDisplay, setActiveDisplay } = useActiveDisplay();
 
@@ -30,7 +30,7 @@ const RecipientSelectHeader = ({ slippageBps, closeDialog }: any) => {
 
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog showDialog={false} />
+      <ConfigDialog showPanel={false} />
 
       <div onClick={() => exchangeContextDump(exchangeContext)}>
         <Image

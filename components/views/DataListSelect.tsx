@@ -1,14 +1,12 @@
 // File: components/views/DataListSelect.tsx
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Image from 'next/image';
-import info_png from '@/public/assets/miscellaneous/info1.png';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useChainId } from 'wagmi';
 import {
-  BASE, ETHEREUM, FEED_TYPE, HARDHAT,POLYGON, SEPOLIA, WalletAccount,
+  BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
-import { defaultMissingImage, getLogoURL } from '@/lib/network/utils';
+import { getLogoURL } from '@/lib/network/utils';
 import baseTokenList from '@/resources/data/networks/base/tokenList.json';
 import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
@@ -21,8 +19,9 @@ import recipientJsonList from '@/resources/data/recipients/recipientJsonList.jso
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { InputState } from '@/lib/structure/assetSelection';
+import TokenListItem from './ListItems/TokenListItem';
+import AccountListItem from './ListItems/AccountListItem';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -87,8 +86,6 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
       const addr = pendingPickRef.current;
       pendingPickRef.current = null;
       setEnforceProgrammatic(false);
-
-      alert(`✅ Programmatic commit\nmanualEntry=false\naddress=${addr}`);
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
       handleHexInputChange(addr, false);
     }
@@ -108,6 +105,16 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     [dataFeedList, chainId, dataFeedType]
   );
 
+  const handlePickAddress = useCallback((address: string) => {
+    if (!programmaticReady) {
+      pendingPickRef.current = address;
+      setEnforceProgrammatic(true);
+      return;
+    }
+    setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
+    handleHexInputChange(address, false);
+  }, [programmaticReady, setInputState, handleHexInputChange]);
+
   const wrapperClass =
     'flex flex-col flex-1 min-h-0 overflow-y-auto bg-[#243056] text-[#5981F3] rounded-[20px] p-2.5 box-border';
 
@@ -117,17 +124,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     </div>
   );
 
-  const handlePickAddress = (address: string) => {
-    if (!programmaticReady) {
-      pendingPickRef.current = address;
-      setEnforceProgrammatic(true);
-      // alert(`⏳ Queued pick until manualEntry=false\naddress=${address}`);
-      return;
-    }
-    // alert(`⚡ Programmatic immediate manualEntry=false\naddress=${address}`);
-    setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic RECIPIENT_SELECT_PANELe)');
-    handleHexInputChange(address, false);
-  };
+  if (!isClient) return renderEmptyState('Loading data...');
 
   return (
     <>
@@ -136,82 +133,30 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
         #DataListWrapper::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {!isClient
-        ? renderEmptyState('Loading data...')
-        : (
-          <div id="DataListWrapper" className={wrapperClass}>
-            {(dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS)
-              ? (loadingWallets
-                ? renderEmptyState('Loading accounts...')
-                : (wallets.length === 0
-                  ? renderEmptyState('No accounts available.')
-                  : wallets.map((wallet) => (
-                    <div
-                      key={wallet.address}
-                      className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                      onClick={() => handlePickAddress(wallet.address)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <img className="h-8 w-8 object-contain rounded-full" src={wallet.logoURL || defaultMissingImage} alt={`${wallet.name} logo`} />
-                        <div>
-                          <div className="font-semibold">{wallet.name}</div>
-                          <div className="text-sm text-gray-400">{wallet.symbol}</div>
-                        </div>
-                      </div>
-                      <div
-                        className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          alert(`Wallet JSON:\n${JSON.stringify(wallet, null, 2)}`);
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          alert(`${wallet.name} Record:\n${stringifyBigInt(wallet.logoURL || '')}`);
-                        }}
-                      >
-                        <Image src={info_png} alt="Info" width={20} height={20} />
-                      </div>
-                    </div>
-                  ))
-                )
-              )
-              : (logoTokenList.length === 0
-                ? renderEmptyState('No tokens available.')
-                : logoTokenList.map((token) => (
-                  <div
-                    key={token.address}
-                    className="flex justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900 cursor-pointer"
-                    onClick={() => handlePickAddress(token.address)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img className="h-8 w-8 object-contain rounded-full" src={token.logoURL || defaultMissingImage} alt={`${token.name} logo`} />
-                      <div>
-                        <div className="font-semibold">{token.name}</div>
-                        <div className="text-sm text-gray-400">{token.symbol}</div>
-                      </div>
-                    </div>
-                    <div
-                      className="py-3 cursor-pointer rounded w-8 h-8 text-lg font-bold text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        alert(`${token.name} Object:\n${stringifyBigInt(token)}`);
-                      }}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        alert(`${token.name} Logo URL: ${token.logoURL}`);
-                      }}
-                    >
-                      <Image src={info_png} alt="Info" width={20} height={20} />
-                    </div>
-                  </div>
-                ))
-              )
-            }
-          </div>
-        )
-      }
+      <div id="DataListWrapper" className={wrapperClass}>
+        {(dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) ? (
+          loadingWallets
+            ? renderEmptyState('Loading accounts...')
+            : (wallets.length === 0
+              ? renderEmptyState('No accounts available.')
+              : wallets.map((wallet) => (
+                  <AccountListItem key={wallet.address} account={wallet} onPick={handlePickAddress} />
+                )))
+        ) : (
+          logoTokenList.length === 0
+            ? renderEmptyState('No tokens available.')
+            : logoTokenList.map((token) => (
+                <TokenListItem
+                  key={token.address}
+                  name={token.name}
+                  symbol={token.symbol}
+                  address={token.address}
+                  logoURL={token.logoURL}
+                  onPick={handlePickAddress}
+                />
+              ))
+        )}
+      </div>
     </>
   );
 }

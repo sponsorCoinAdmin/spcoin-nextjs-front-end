@@ -23,7 +23,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
   recipientAccount,
   callBackAccount,
 }) => {
-  const [showDialog, setShowDialog] = useState(false);
+  const [showPanel, setShowDialog] = useState(false);
   const hasErroredRef = useRef(false);
   const { setActiveDisplay } = useActiveDisplay();
 

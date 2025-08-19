@@ -27,10 +27,10 @@ const ELEMENT_DETAILS =
 type Props = {
   tokenContract: TokenContract | undefined;
   callBackSetter: (listElement: TokenContract) => null;
-  showDialog: boolean;
+  showPanel: boolean;
 };
 
-export default function Dialog({ showDialog, tokenContract, callBackSetter }: Props) {
+export default function Dialog({ showPanel, tokenContract, callBackSetter }: Props) {
   const { chainId } = useAccount();
   const dialogRef = useRef<null | HTMLDialogElement>(null);
 
@@ -39,12 +39,12 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
   const [tokenContractState, setTokenContractState] = useState<TokenContract | undefined>();
 
   useEffect(() => {
-    closeDialog();
+    closePanel();
   }, []);
 
   useEffect(() => {
-    showDialog ? dialogRef.current?.showModal() : dialogRef.current?.close();
-  }, [showDialog]);
+    showPanel ? dialogRef.current?.showModal() : dialogRef.current?.close();
+  }, [showPanel]);
 
   useEffect(() => {
     tokenInput === ''
@@ -115,10 +115,10 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
     }
 
     callBackSetter(listElement);
-    closeDialog();
+    closePanel();
   };
 
-  const closeDialog = () => {
+  const closePanel = () => {
     setTokenInput('');
     setTokenSelect('');
     hideElement('buySelectGroup_ID');
@@ -131,7 +131,7 @@ export default function Dialog({ showDialog, tokenContract, callBackSetter }: Pr
         <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
         <div
           className="cursor-pointer rounded border-none w-5 text-xl text-white"
-          onClick={closeDialog}
+          onClick={closePanel}
         >
           X
         </div>

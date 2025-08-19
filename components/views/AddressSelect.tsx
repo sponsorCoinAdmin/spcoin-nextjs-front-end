@@ -3,8 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import HexAddressInput from '@/components/shared/utils/HexAddressInput';
-import RenderAssetPreview from '@/components/shared/utils/sharedPreviews/RenderAssetPreview';
-import ErrorAssetPreview from '@/components/shared/utils/sharedPreviews/ErrorAssetPreview';
+import RenderAssetPreview from '@/components/views/sharedPreviews/RenderAssetPreview';
+import ErrorAssetPreview from '@/components/views/sharedPreviews/ErrorAssetPreview';
 
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
