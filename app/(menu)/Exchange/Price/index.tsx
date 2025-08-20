@@ -8,7 +8,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { MainTradingPanel } from '@/components/views';
 
 // Removed: useDisplayStateCorrection (redundant after sanitize + enum coercion)
-import { useSwapDirectionEffect } from '@/lib/hooks/useSwapDirectionEffect';
+import { useSwapTokensEffect } from '@/lib/hooks/useSwapTokensEffect';
 import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
 
@@ -24,7 +24,7 @@ export default function PriceView() {
   const { activeDisplay } = exchangeContext.settings;
 
   // keep side-effects that matter for UX
-  useSwapDirectionEffect();
+  useSwapTokensEffect();
   usePriceErrorEffect();
   useResetAmountsOnTokenChange();
 

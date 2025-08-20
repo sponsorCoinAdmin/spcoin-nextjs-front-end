@@ -18,6 +18,6 @@ export * from "./wagmiERC20hooks";
 // ⬇️ Newly added manually below
 
 export * from "./useDidHydrate";
-export * from "./useSwapDirectionEffect";
+export * from "./useSwapTokensEffect";
 export * from "./usePriceErrorEffect";
 export * from "./useResetAmountsOnTokenChange";

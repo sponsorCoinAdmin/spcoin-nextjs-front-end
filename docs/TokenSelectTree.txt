@@ -1,7 +1,7 @@
 <ExchangeProvider>
   └── <PriceView>
         ├── useDisplayStateCorrection()
-        ├── useSwapDirectionEffect()
+        ├── useSwapTokensEffect()
         ├── usePriceErrorEffect()
         ├── useResetAmountsOnTokenChange()
         │     └── <TokenSelectContextView>

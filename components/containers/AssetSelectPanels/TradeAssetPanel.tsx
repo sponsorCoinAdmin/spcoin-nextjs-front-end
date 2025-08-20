@@ -78,14 +78,28 @@ function TradeAssetPanelInner() {
     }
   }, [tokenContract, setLocalTokenContract, containerType]);
 
+  // Helper: treat ".", "123.", "123.0/00..." as mid-typing states
+  const isIntermediateDecimal = (s: string): boolean =>
+    s === '.' || /^\d+\.$/.test(s) || /^\d+\.\d*0$/.test(s);
+
+  // ⌨️ Typing grace window to prevent racey mirror-overwrites while user edits quickly
+  const TYPING_GRACE_MS = 550;
+  const typingUntilRef = useRef<number>(0);
+
   // Keep text input in sync with selected token + global amount
+  // but do NOT clobber while the user is typing or is in an intermediate decimal state.
   useEffect(() => {
     if (!tokenContract) return;
+    if (isIntermediateDecimal(inputValue)) return;
+
+    // still within the recent typing window? don't mirror
+    if (Date.now() < typingUntilRef.current) return;
+
     const currentAmount =
       containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
     const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
     if (inputValue !== formatted) setInputValue(formatted);
-  }, [sellAmount, buyAmount, tokenContract]);
+  }, [sellAmount, buyAmount, tokenContract, containerType, inputValue]);
 
   // --- ⛔️ Stop writing debounced value back into global amounts.
   // --- ✅ Use debounced value ONLY to trigger side-effects (quotes, validations, etc.)
@@ -115,7 +129,7 @@ function TradeAssetPanelInner() {
     });
 
     // If you have a debounced channel in context or an event bus, update/emit here.
-    // Example: setDebouncedHexInput?.(debouncedForPanel);
+    // This event powers the API quote fetcher — unchanged on purpose.
     if (typeof window !== 'undefined') {
       try {
         window.dispatchEvent(
@@ -140,11 +154,25 @@ function TradeAssetPanelInner() {
     tokenContract,
   ]);
 
+  // put this near the top of TradeAssetPanelInner(), before handleInputChange
+  // (already above)
+
   const handleInputChange = (value: string) => {
+    // each keystroke opens a "do-not-mirror" window
+    typingUntilRef.current = Date.now() + TYPING_GRACE_MS;
+
+    // allow digits with at most one dot
     if (!/^\d*\.?\d*$/.test(value)) return;
+
+    // keep leading zero before a dot (e.g., "0.") but trim other leading zeros
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
+
     debugLog.log(`⌨️ Input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
+
+    // ⛔ don't parse/push while user is mid-decimal:
+    // ".", "0.", "123.", "0.0", "123.0", "123.00", etc.
+    if (isIntermediateDecimal(normalized)) return;
 
     if (!tokenContract) return;
 
