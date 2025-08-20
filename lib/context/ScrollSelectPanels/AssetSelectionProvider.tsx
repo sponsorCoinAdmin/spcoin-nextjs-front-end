@@ -1,7 +1,7 @@
 // File: lib/context/ScrollSelectPanels/AssetSelectionProvider.tsx
 'use client';
 
-import React, { ReactNode, useState, useCallback, useMemo } from 'react';
+import React, { ReactNode, useState, useCallback, useMemo, useEffect } from 'react';
 
 import { AssetSelectionContext } from './useAssetSelectionContext';
 import { SP_COIN_DISPLAY, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
@@ -11,12 +11,12 @@ import { dumpFSMContext, dumpInputFeedContext } from '@/lib/hooks/inputValidatio
 import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
 import { AssetSelectionBag, isTokenSelectBag } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
 import { useAssetSelectionDisplay } from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
-import { useFSMTerminals } from '@/lib/hooks/inputValidations/FSM_Core/useFSMTerminals';
-import { useLatestRef } from '@/lib/hooks/useLatestRef'; // ⬅️ NEW
+import { useLatestRef } from '@/lib/hooks/useLatestRef';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const instanceId = 'main';
 const feedType = FEED_TYPE.TOKEN_LIST;
 const DBG = (process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true') || (process.env.NEXT_PUBLIC_FSM === 'true');
+const debug = createDebugLogger('AssetSelectionProvider', DBG);
 
 type Props = {
   children: ReactNode;
@@ -33,10 +33,21 @@ export const AssetSelectionProvider = ({
   containerType,
   initialPanelBag,
 }: Props) => {
+  // Per-instance id for logs/debug (BUY/SELL/main)
+  const instanceId = useMemo(() => {
+    switch (containerType) {
+      case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL: return 'buy';
+      case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL: return 'sell';
+      default: return 'main';
+    }
+  }, [containerType]);
+
   // state
   const [validatedAsset, setValidatedAssetRaw] = useState<WalletAccount | TokenContract>();
   const [manualEntry, setManualEntry] = useState(false);
-  const [panelBag, setPanelBag] = useState<AssetSelectionBag>(initialPanelBag ?? ({ type: containerType } as AssetSelectionBag));
+  const [panelBag, setPanelBag] = useState<AssetSelectionBag>(
+    initialPanelBag ?? ({ type: containerType } as AssetSelectionBag)
+  );
 
   const manualEntryRef = useLatestRef(manualEntry);
   const parentRef = useLatestRef({ closePanelCallback, setTradingTokenCallback });
@@ -83,31 +94,58 @@ export const AssetSelectionProvider = ({
     manualEntry: manualEntryRef.current,
   });
 
-  React.useEffect(() => {
-  // eslint-disable-next-line no-console
-  console.log('[AssetSelectionProvider]', {
-    instanceId,
-    containerType,
-    feedType,
-    inputState,
-    stateName: InputState[inputState] ?? String(inputState),
-  });
-}, [inputState, containerType, feedType]);
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('[AssetSelectionProvider]', {
+      instanceId,
+      containerType,
+      feedType,
+      inputState,
+      stateName: InputState[inputState] ?? String(inputState),
+    });
+  }, [inputState, containerType, feedType, instanceId]);
 
-  // SELL/terminal fallbacks (reusable hook)
-  useFSMTerminals({
+  /**
+   * Terminal handling (explicit, symmetric for BUY/SELL):
+   * - UPDATE_VALIDATED_ASSET: commit to parent, then advance to CLOSE_SELECT_PANEL
+   * - CLOSE_SELECT_PANEL: call close callbacks and cleanup, then reset to EMPTY_INPUT
+   */
+  useEffect(() => {
+    if (inputState === InputState.UPDATE_VALIDATED_ASSET) {
+      if (validatedAsset) {
+        debug.log(`[${instanceId}] commit → parent.setTradingTokenCallback`, {
+          address: (validatedAsset as any)?.address,
+          symbol: (validatedAsset as any)?.symbol,
+        });
+        fireSetTradingToken(validatedAsset);
+      } else {
+        debug.warn(`[${instanceId}] UPDATE_VALIDATED_ASSET without validatedAsset`);
+      }
+      setInputState(InputState.CLOSE_SELECT_PANEL, `Provider(${instanceId}) commit → close`);
+      return;
+    }
+
+    if (inputState === InputState.CLOSE_SELECT_PANEL) {
+      debug.log(`[${instanceId}] closing panel (calling closePanelCallback)`);
+      try {
+        fireClosePanel(true);
+      } finally {
+        // Cleanup after signaling close so unmount happens cleanly
+        setValidatedAssetRaw(undefined);
+        resetHexInput();
+        setManualEntry(false);
+        setInputState(InputState.EMPTY_INPUT, `Provider(${instanceId}) closed`);
+      }
+    }
+  }, [
     inputState,
     validatedAsset,
-    onForwardAsset: fireSetTradingToken,
-    onClose: (fromUser) => fireClosePanel(fromUser),
-    onCleanup: () => {
-      setValidatedAssetRaw(undefined);
-      resetHexInput();
-      setManualEntry(false);
-      setInputState(InputState.EMPTY_INPUT);
-    },
-    debug: DBG,
-  });
+    fireSetTradingToken,
+    fireClosePanel,
+    setInputState,
+    resetHexInput,
+    instanceId,
+  ]);
 
   // optional dumps (tied to env flags)
   const dumpInputFeed = useCallback(
@@ -115,7 +153,7 @@ export const AssetSelectionProvider = ({
       if (!DBG) return;
       dumpInputFeedContext(header ?? '', validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid, instanceId);
     },
-    [validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid]
+    [validHexInput, debouncedHexInput, failedHexInput, failedHexCount, isValid, instanceId]
   );
 
   const dumpAssetSelection = useCallback(
@@ -124,7 +162,7 @@ export const AssetSelectionProvider = ({
       dumpFSMContext(header ?? '', inputState, validatedAsset as TokenContract | undefined, instanceId);
       dumpInputFeed(header ?? '');
     },
-    [inputState, validatedAsset, dumpInputFeed]
+    [inputState, validatedAsset, dumpInputFeed, instanceId]
   );
 
   const { showErrorPreview, showAssetPreview, resetPreview } = useAssetSelectionDisplay();
@@ -188,12 +226,12 @@ export const AssetSelectionProvider = ({
       dumpInputFeed,
       dumpAssetSelection,
       panelBag,
-      setPanelBag,
       showErrorPreview,
       showAssetPreview,
       resetPreview,
       parentRef,
       setValidatedAsset,
+      instanceId,
     ]
   );
 

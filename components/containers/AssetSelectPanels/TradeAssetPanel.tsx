@@ -1,7 +1,7 @@
 // File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { parseUnits, formatUnits } from 'viem';
 import { clsx } from 'clsx';
 
@@ -193,6 +193,12 @@ function TradeAssetPanelInner() {
     debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
   }, [spCoinDisplay, setSpCoinDisplay]);
 
+  // 🔕 Stop browser autofill/suggestions without changing structure
+  const noAutofillName = useMemo(
+    () => `no-autofill-${Math.random().toString(36).slice(2)}`,
+    []
+  );
+
   return (
     <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
       <input
@@ -206,7 +212,27 @@ function TradeAssetPanelInner() {
           const parsed = parseFloat(inputValue);
           setInputValue(isNaN(parsed) ? '0' : parsed.toString());
         }}
+        // --- Anti-autofill flags (minimal; keep div + onBlur) ---
+        name={noAutofillName}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        inputMode="decimal"
+        aria-autocomplete="none"
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-form-type="other"
       />
+      {/* Optional decoy to appease aggressive managers (invisible, harmless) */}
+      <input
+        type="text"
+        autoComplete="new-password"
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
+      />
+
       <TokenSelectDropDown containerType={containerType} />
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
