@@ -3,7 +3,7 @@
 
 import {  FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
-import { formatTrace as _formatTrace } from './fsmTraceUtils';
+import { formatTrace as _formatTrace } from '../../debugFSM';
 
 export const SEP_LINE =
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';

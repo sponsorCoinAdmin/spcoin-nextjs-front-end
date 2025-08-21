@@ -1,23 +1,20 @@
 // File: lib/hooks/inputValidations/validation/isEmptyInput.ts
 
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getValidationDebugLogger } from '../helpers/debugLogInstance';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
-const debugLog = createDebugLogger('isEmptyInput', DEBUG_ENABLED);
+const log = getValidationDebugLogger('isEmptyInput');
 
 export function isEmptyInput(input: string | undefined): boolean {
-  debugLog.log(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
-  // alert(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
+  log.log(`🔍 ENTRY → isEmptyInput called with input: "${input}"`);
 
   const trimmed = input?.trim() ?? '';
   const isEmpty = trimmed === '';
 
   if (isEmpty) {
-    debugLog.log('⛔ Detected empty input (undefined or blank)');
+    log.log('⛔ Detected empty input (undefined or blank)');
   }
 
-  debugLog.log(`✅ EXIT → isEmptyInput result: ${isEmpty}`);
+  log.log(`✅ EXIT → isEmptyInput result: ${isEmpty}`);
 
   return isEmpty;
 }
-

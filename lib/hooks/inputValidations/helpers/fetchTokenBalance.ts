@@ -1,10 +1,9 @@
 // File: lib/hooks/inputValidations/helpers/fetchTokenBalance.ts
 
 import { PublicClient, erc20Abi, Address } from 'viem';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getValidationDebugLogger } from './debugLogInstance';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_VALIDATION_STATE === 'true';
-const debugLog = createDebugLogger('fetchTokenBalance', DEBUG_ENABLED);
+const log = getValidationDebugLogger('fetchTokenBalance');
 
 /**
  * Fetch the on-chain token balance for a given account.
@@ -19,10 +18,10 @@ export async function fetchTokenBalance(
   callerName?: string
 ): Promise<bigint> {
   try {
-    debugLog.log(`🔍 Fetching balance for: ${tokenAddress} (native=${isNative})`);
-    debugLog.log(`👤 Account: ${accountAddress}`);
-    if (chainId) debugLog.log(`🌐 Chain ID: ${chainId}`);
-    if (callerName) debugLog.log(`📛 Caller: ${callerName}`);
+    log.log(`🔍 Fetching balance for: ${tokenAddress} (native=${isNative})`);
+    log.log(`👤 Account: ${accountAddress}`);
+    if (chainId) log.log(`🌐 Chain ID: ${chainId}`);
+    if (callerName) log.log(`📛 Caller: ${callerName}`);
 
     if (isNative) {
       return await publicClient.getBalance({ address: accountAddress });
@@ -35,7 +34,7 @@ export async function fetchTokenBalance(
       args: [accountAddress],
     });
   } catch (err) {
-    console.warn(`⚠️ Failed to fetch balance for ${tokenAddress}`, err);
+    log.warn(`⚠️ Failed to fetch balance for ${tokenAddress}`, err);
     return 0n;
   }
 }

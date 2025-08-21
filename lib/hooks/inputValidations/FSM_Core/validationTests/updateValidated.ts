@@ -1,7 +1,6 @@
 // File: lib/hooks/inputValidations/FSM_Core/validationTests/updateValidated.ts
 import { InputState } from '@/lib/structure/assetSelection';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const debug = createDebugLogger('updateValidated', process.env.NEXT_PUBLIC_DEBUG_FSM === 'true');

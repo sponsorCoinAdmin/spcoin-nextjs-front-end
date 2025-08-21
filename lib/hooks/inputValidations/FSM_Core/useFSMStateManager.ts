@@ -14,7 +14,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 
 // ⬇️ unified runner (return-only; no side-effects for asset)
-import { startFSM } from '../helpers/startFSM';
+import { startFSM } from '../helpers/fsm/startFSM';
 import { logStateChanges } from '../helpers/logStateChanges';
 import { InputState } from '@/lib/structure/assetSelection';
 

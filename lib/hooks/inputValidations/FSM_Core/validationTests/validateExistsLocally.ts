@@ -1,8 +1,6 @@
 // File: lib/hooks/inputValidations/tests/validateExistsLocally.ts
 
-import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
-import { isEmptyInput } from '../../validations/isEmptyInput';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
