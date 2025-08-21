@@ -22,5 +22,6 @@
         "viem",
         "wagmi",
         "Wiskers"
-    ]
+    ],
+    "CodeGPT.apiKey": "Anthropic"
 }
