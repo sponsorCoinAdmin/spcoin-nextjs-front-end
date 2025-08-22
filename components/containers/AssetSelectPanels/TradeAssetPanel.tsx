@@ -37,6 +37,51 @@ import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/TokenPan
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);
 
+const maxInputSz = 28;
+
+// Limit a numeric string to `max` display characters by trimming fractional digits first.
+// If the integer part alone exceeds `max`, hard-truncate to `max`.
+// Replace the old clampDisplay with this version
+function clampDisplay(numStr: string, max = maxInputSz): string {
+  if (!numStr) return '0';
+
+  // No scientific notation expected from formatUnits; if present, hard cap.
+  if (/[eE][+-]?\d+/.test(numStr)) return numStr.slice(0, max);
+
+  let s = numStr;
+  const neg = s.startsWith('-');
+  const sign = neg ? '-' : '';
+  if (neg) s = s.slice(1);
+
+  let [intPart, fracPart = ''] = s.split('.');
+
+  // If the sign + integer already fills/exceeds the limit, return the leftmost integer slice.
+  const intLenWithSign = sign.length + intPart.length;
+  if (intLenWithSign >= max) {
+    // Keep as many leading integer digits as the cap allows (never include '.')
+    const keep = max - sign.length;
+    return sign + intPart.slice(0, Math.max(0, keep));
+  }
+
+  // Otherwise, we can try to include a '.' and some fractional digits.
+  // Remaining space after placing sign + integer:
+  let remaining = max - intLenWithSign;
+
+  // We need at least 2 chars to show a fractional part: '.' + one digit
+  if (fracPart && remaining > 1) {
+    // space for fractional digits after the '.'
+    const allowFrac = remaining - 1;
+    const fracTrimmed = fracPart.slice(0, allowFrac);
+    if (fracTrimmed.length > 0) {
+      return sign + intPart + '.' + fracTrimmed;
+    }
+  }
+
+  // Not enough room (or no fraction) → just the integer part.
+  return sign + intPart;
+}
+
+
 // 🔒 PRIVATE inner component, not exported
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
@@ -97,7 +142,8 @@ function TradeAssetPanelInner() {
 
     const currentAmount =
       containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
-    const formatted = formatUnits(currentAmount, tokenContract.decimals || 18);
+    const formattedRaw = formatUnits(currentAmount, tokenContract.decimals || 18);
+    const formatted = clampDisplay(formattedRaw, maxInputSz);
     if (inputValue !== formatted) setInputValue(formatted);
   }, [sellAmount, buyAmount, tokenContract, containerType, inputValue]);
 
@@ -128,8 +174,6 @@ function TradeAssetPanelInner() {
       token: tokenContract?.address,
     });
 
-    // If you have a debounced channel in context or an event bus, update/emit here.
-    // This event powers the API quote fetcher — unchanged on purpose.
     if (typeof window !== 'undefined') {
       try {
         window.dispatchEvent(
@@ -154,9 +198,6 @@ function TradeAssetPanelInner() {
     tokenContract,
   ]);
 
-  // put this near the top of TradeAssetPanelInner(), before handleInputChange
-  // (already above)
-
   const handleInputChange = (value: string) => {
     // each keystroke opens a "do-not-mirror" window
     typingUntilRef.current = Date.now() + TYPING_GRACE_MS;
@@ -170,8 +211,7 @@ function TradeAssetPanelInner() {
     debugLog.log(`⌨️ Input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
 
-    // ⛔ don't parse/push while user is mid-decimal:
-    // ".", "0.", "123.", "0.0", "123.0", "123.00", etc.
+    // ⛔ don't parse/push while user is mid-decimal
     if (isIntermediateDecimal(normalized)) return;
 
     if (!tokenContract) return;
@@ -230,7 +270,7 @@ function TradeAssetPanelInner() {
   return (
     <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
       <input
-        id="TokenSelectPanelInput"
+        id="TokenPanelInputAmount"
         className={clsx(styles.priceInput, styles.withBottomRadius)}
         placeholder="0"
         disabled={isInputDisabled}
@@ -238,9 +278,9 @@ function TradeAssetPanelInner() {
         onChange={(e) => handleInputChange(e.target.value)}
         onBlur={() => {
           const parsed = parseFloat(inputValue);
-          setInputValue(isNaN(parsed) ? '0' : parsed.toString());
+          const str = isNaN(parsed) ? '0' : parsed.toString();
+          setInputValue(clampDisplay(str, 10));
         }}
-        // --- Anti-autofill flags (minimal; keep div + onBlur) ---
         name={noAutofillName}
         autoComplete="off"
         autoCorrect="off"
@@ -294,7 +334,8 @@ function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
   }
 
   try {
-    const formatted = formatUnits(amount, decimals);
+    const formattedRaw = formatUnits(amount, decimals);
+    const formatted = clampDisplay(formattedRaw, 10);
     debugLog.log(`💰 formatted display amount for ${tokenContract.symbol}: ${formatted}`);
     return formatted;
   } catch {

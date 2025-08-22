@@ -82,7 +82,7 @@ export default function MainTradingPanel() {
   }
 
   function setAssetTokenCallback(tokenContract: TokenContract) {
-    let msg = `✅ setAssetTokenCallback`;
+    let msg = `✅ MainTradingPanel.setAssetTokenCallback`;
     if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
       msg += ' 🔻 → setSellTokenContract';
       setSellTokenContract(tokenContract);
@@ -94,6 +94,7 @@ export default function MainTradingPanel() {
     }
     msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
     debugLog.log(msg);
+    alert(msg);
   }
 
   function setErrorCallback(

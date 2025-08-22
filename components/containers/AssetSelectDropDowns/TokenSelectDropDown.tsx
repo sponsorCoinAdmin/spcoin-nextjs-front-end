@@ -4,6 +4,8 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
+import { useChainId } from 'wagmi';
+import { isAddress } from 'viem';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -15,7 +17,6 @@ import {
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 
@@ -30,6 +31,7 @@ interface Props {
 
 function TokenSelectDropDown({ containerType }: Props) {
   const instanceId = useMemo(() => crypto.randomUUID(), []);
+  const chainId = useChainId();
 
   useEffect(() => {
     console.log(
@@ -50,17 +52,25 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   const { setActiveDisplay } = useActiveDisplay();
 
-  const logoSrc = useAssetLogoURL(tokenContract?.address || '', 'token');
+  // Build the logo src locally; fallback when address/chainId invalid or missing.
+  const logoSrc = useMemo(() => {
+    const addr = tokenContract?.address ?? '';
+    if (!addr || !isAddress(addr) || !chainId) return defaultMissingImage;
+    return `/assets/blockchains/${chainId}/contracts/${addr.toLowerCase()}/logo.png`;
+  }, [tokenContract?.address, chainId]);
 
+  // Safe one-shot error handler: swap to fallback and prevent loops if fallback fails.
   const handleMissingLogoURL = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
-      const tokenAddr = tokenContract?.address;
-      if (!tokenAddr) return;
+      const img = event.currentTarget;
+      img.onerror = null; // prevent infinite loop if fallback fails
+      img.src = defaultMissingImage;
 
-      markLogoAsBroken(tokenAddr);
-      event.currentTarget.src = defaultMissingImage;
-
-      debugLog.log(`⚠️ Missing logo for ${tokenContract?.symbol} (${tokenAddr})`);
+      if (tokenContract?.symbol && tokenContract?.address) {
+        debugLog.log(`⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`);
+      } else {
+        debugLog.log(`⚠️ Missing logo (no tokenContract info available)`);
+      }
     },
     [tokenContract]
   );
@@ -78,6 +88,13 @@ function TokenSelectDropDown({ containerType }: Props) {
     }
   }, [containerType, setActiveDisplay]);
 
+  const handleSelect = () => {
+    let msg: string = stringifyBigInt(tokenContract);
+    msg += `\nlogoSrc = ${logoSrc}`;
+    console.log(msg);
+    alert(msg);
+  };
+
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>
       {tokenContract ? (
@@ -87,7 +104,9 @@ function TokenSelectDropDown({ containerType }: Props) {
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name} logo`}
             src={logoSrc}
-            onClick={() => alert(stringifyBigInt(tokenContract))}
+            loading="lazy"
+            decoding="async"
+            onClick={handleSelect}
             onError={handleMissingLogoURL}
           />
           {tokenContract.symbol}
