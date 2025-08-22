@@ -1,7 +1,7 @@
 // File: components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Address } from 'viem';
 import { useChainId } from 'wagmi';
 import BasePreviewWrapper from './BasePreviewWrapper';
@@ -24,7 +24,7 @@ export default function RenderAssetPreview() {
   const {
     inputState,
     validatedAsset,
-    setValidatedAsset,          // ⬅️ use provider-side setter
+    setValidatedAsset,          // ⬅️ provider-side setter
     setInputState,              // ⬅️ advance FSM to UPDATE_VALIDATED_ASSET
     feedType,
     setManualEntry,
@@ -37,16 +37,47 @@ export default function RenderAssetPreview() {
   const symbol = validatedAsset.symbol ?? 'N/A';
   const address = validatedAsset.address as string | undefined;
 
-  // mirror DataListSelect logo resolution
-  let avatarSrc = defaultMissingImage;
-  if (feedType === FEED_TYPE.TOKEN_LIST) {
-    if (address) avatarSrc = getLogoURL(chainId, address as Address, FEED_TYPE.TOKEN_LIST);
-  } else {
-    avatarSrc =
-      validatedAsset.logoURL ||
-      (address ? `/assets/accounts/${address}/logo.png` : '') ||
-      defaultMissingImage;
-  }
+  // 🔄 Resolve avatarSrc asynchronously when using getLogoURL (TOKEN_LIST)
+  const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveLogo = async () => {
+      // default fallback
+      if (!address) {
+        setAvatarSrc(defaultMissingImage);
+        return;
+      }
+
+      if (feedType === FEED_TYPE.TOKEN_LIST) {
+        try {
+          const url = await getLogoURL(chainId, address as Address, FEED_TYPE.TOKEN_LIST);
+          if (!cancelled) {
+            setAvatarSrc(url || defaultMissingImage);
+            debugLog.log('🖼️ Resolved token logo', { chainId, address, url });
+          }
+        } catch (e) {
+          if (!cancelled) {
+            setAvatarSrc(defaultMissingImage);
+            debugLog.warn('⚠️ getLogoURL failed; using fallback', { chainId, address, error: e });
+          }
+        }
+      } else {
+        // Accounts/agents: build synchronously (no async probe here)
+        const url =
+          validatedAsset.logoURL ||
+          (address ? `/assets/accounts/${address}/logo.png` : '') ||
+          defaultMissingImage;
+        if (!cancelled) setAvatarSrc(url);
+      }
+    };
+
+    resolveLogo();
+    return () => {
+      cancelled = true;
+    };
+  }, [chainId, address, feedType, validatedAsset?.logoURL]);
 
   const onAvatarClick = () => {
     if (!address) return;

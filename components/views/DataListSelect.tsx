@@ -47,6 +47,9 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
 
+  // NEW: async-resolved token list with verified logo URLs
+  const [logoTokenList, setLogoTokenList] = useState<any[]>([]);
+
   const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectionContext();
   const chainId = useChainId();
 
@@ -96,14 +99,37 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     [chainId, isClient, dataFeedType]
   );
 
-  const logoTokenList = useMemo(
-    () =>
-      dataFeedList.map((token) => ({
-        ...token,
-        logoURL: getLogoURL(chainId, token.address as Address, dataFeedType),
-      })),
-    [dataFeedList, chainId, dataFeedType]
-  );
+  // 🚀 Resolve logo URLs asynchronously (since getLogoURL is now async)
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      if (!isClient || dataFeedType !== FEED_TYPE.TOKEN_LIST) {
+        setLogoTokenList([]);
+        return;
+      }
+
+      try {
+        const resolved = await Promise.all(
+          dataFeedList.map(async (token: any) => {
+            try {
+              const logoURL = await getLogoURL(chainId, token.address as Address, dataFeedType);
+              return { ...token, logoURL };
+            } catch (e) {
+              debugLog.warn('getLogoURL failed for token', token.address, e);
+              return { ...token, logoURL: `/assets/blockchains/${chainId}/contracts/${token.address}/logo.png` };
+            }
+          })
+        );
+        if (!cancelled) setLogoTokenList(resolved);
+      } catch (e) {
+        debugLog.error('Failed resolving token logos', e);
+        if (!cancelled) setLogoTokenList(dataFeedList); // fallback without verified logos
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [isClient, dataFeedType, dataFeedList, chainId]);
 
   const handlePickAddress = useCallback((address: string) => {
     if (!programmaticReady) {
@@ -145,14 +171,14 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
         ) : (
           logoTokenList.length === 0
             ? renderEmptyState('No tokens available.')
-            : logoTokenList.map((token) => (
+            : logoTokenList.map((token: any) => (
                 <TokenListItem
                   key={token.address}
                   name={token.name}
                   symbol={token.symbol}
                   address={token.address}
                   logoURL={token.logoURL}
-                  onPick={handlePickAddress}
+                  confirmAssetCallback={handlePickAddress}
                 />
               ))
         )}

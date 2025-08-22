@@ -4,6 +4,7 @@
 import React from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
+import { defaultMissingImage } from '@/lib/network/utils';
 
 type BaseListRowProps = {
   avatarSrc: string;
@@ -38,7 +39,16 @@ const BaseListRow = React.memo(function BaseListRow({
           aria-label={`${title} logo action`}
           title={`${title} logo`}
         >
-          <img className="h-full w-full object-contain" src={avatarSrc} alt={`${title} logo`} />
+          <img
+            className="h-full w-full object-contain"
+            src={avatarSrc}
+            alt={`${title} logo`}
+            onError={(e) => {
+              // prevent error loop if fallback also fails
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = defaultMissingImage;
+            }}
+          />
         </button>
 
         <div className="min-w-0">

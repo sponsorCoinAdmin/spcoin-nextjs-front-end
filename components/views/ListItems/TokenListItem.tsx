@@ -11,18 +11,18 @@ type TokenListItemProps = {
   symbol: string;
   address: string;
   logoURL?: string;
-  onPick: (address: string) => void;
+  confirmAssetCallback: (address: string) => void;
 };
 
 const TokenListItem = React.memo(function TokenListItem({
-  name, symbol, address, logoURL, onPick,
+  name, symbol, address, logoURL, confirmAssetCallback,
 }: TokenListItemProps) {
   return (
     <BaseListRow
       avatarSrc={logoURL || defaultMissingImage}
       title={name}
       subtitle={symbol}
-      onAvatarClick={() => onPick(address)}
+      onAvatarClick={() => confirmAssetCallback(address)}
       titleClassName="font-semibold truncate !text-[#5981F3]"
       subtitleClassName="text-sm truncate !text-[#5981F3]"  // ← force blue
       onInfoClick={() => alert(`${name} Object:\n${stringifyBigInt({ name, symbol, address, logoURL })}`)}

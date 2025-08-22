@@ -65,27 +65,55 @@ const isBurnToken = (tokenContract:TokenContract) : boolean =>
 const isBurnTokenAddress = (address?: Address) : boolean => 
   address === BURN_ADDRESS
 
-const getLogoURL = (
+// Add (or keep) these helpers somewhere above getLogoURL:
+const logoExistenceCache = new Map<string, boolean>();
+
+async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
+  // Don't probe during SSR; let the client verify after hydration.
+  if (typeof window === 'undefined') return true;
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    let res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+    clearTimeout(t);
+    if (res.ok) return true;
+    if (res.status === 405) {
+      res = await fetch(url, { method: 'GET', cache: 'no-store' });
+      return res.ok;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+// Replace your existing getLogoURL with this version (no lowercasing anywhere):
+const getLogoURL = async (
   chainId: number | undefined,
   address: Address,
   dataFeedType: FEED_TYPE
-): string => {
-  if (!address?.trim()) return defaultMissingImage;
+): Promise<string> => {
+  const addr = (address ?? '').trim();
+  if (!addr) return defaultMissingImage;
 
-  const path = (() => {
-    switch (dataFeedType) {
-      case FEED_TYPE.AGENT_ACCOUNTS:
-      case FEED_TYPE.RECIPIENT_ACCOUNTS:
-        return `/assets/accounts/${address}/logo.png`;
-      case FEED_TYPE.TOKEN_LIST:
-        return `/assets/blockchains/${chainId ?? 1}/contracts/${address}/logo.png`;
-      default:
-        return '';
-    }
-  })();
+  const path =
+    dataFeedType === FEED_TYPE.TOKEN_LIST
+      ? `/assets/blockchains/${chainId ?? 1}/contracts/${addr}/logo.png`
+      : (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS)
+        ? `/assets/accounts/${addr}/logo.png`
+        : '';
 
-  return path || defaultMissingImage;
+  if (!path) return defaultMissingImage;
+
+  if (logoExistenceCache.has(path)) {
+    return logoExistenceCache.get(path)! ? path : defaultMissingImage;
+  }
+
+  const ok = await resourceExists(path);
+  logoExistenceCache.set(path, ok);
+  return ok ? path : defaultMissingImage;
 };
+
 
 const useIsActiveAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();

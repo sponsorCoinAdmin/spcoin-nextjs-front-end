@@ -8,7 +8,6 @@ import ErrorAssetPreview from '@/components/views/sharedPreviews/ErrorAssetPrevi
 
 import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useValidateFSMInput } from '@/lib/hooks/inputValidations/validations/useValidateFSMInput';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
 
@@ -38,15 +37,6 @@ export default function AddressSelect() {
     );
   }, [debouncedHexInput, manualEntry]);
 
-  const safeInput = debouncedHexInput.trim() !== '' ? debouncedHexInput : undefined;
-  const { inputState, validatedToken, validatedWallet } = useValidateFSMInput(safeInput);
-
-  debugLog.log('🧪 useValidateFSMInput returned:', {
-    inputState,
-    validatedToken,
-    validatedWallet,
-  });
-
   // Only enforce manualEntry=true while this keystroke/paste is being processed.
   const [enforceManualTrue, setEnforceManualTrue] = useState(false);
   useEnsureBoolWhen([manualEntry, setManualEntry], true, enforceManualTrue);
@@ -66,15 +56,17 @@ export default function AddressSelect() {
           armEnforcementForThisTick();
           setManualEntry(true);
 
-          // EMPTY_INPUT and VALIDATE_ADDRESS have been removed.
-          // Use EMPTY_INPUT as a neutral kick; the FSM hook will advance based on the new input value.
+          // Kick the FSM; it will advance based on the new input value
           setInputState(InputState.EMPTY_INPUT, 'AddressSelect (Manual Entry)');
 
+          // This triggers the provider-side FSM machinery; avoid running any local validator hooks
           handleHexInputChange(val, true);
         }}
         placeholder="Enter address"
         statusEmoji=""
       />
+
+      {/* Render previews driven by provider/FSM state */}
       <ErrorAssetPreview />
       <RenderAssetPreview />
     </div>
