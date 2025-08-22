@@ -298,7 +298,7 @@ function TradeAssetPanelInner() {
         autoComplete="new-password"
         tabIndex={-1}
         aria-hidden="true"
-        style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
+        className="absolute opacity-0 h-0 w-0 pointer-events-none"
       />
 
       <TokenSelectDropDown containerType={containerType} />

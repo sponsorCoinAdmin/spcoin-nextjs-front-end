@@ -1,121 +1,121 @@
 [
-    {
-        "chainId": 8453,
-        "address": "0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562",
-        "name": "Sponsor Coin",
-        "symbol": "SpCoin",
-        "decimals": 18
-    },
-    {
-        "chainId": 84531,
-        "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-        "name": "Ethereum",
-        "symbol": "ETH",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
-        "name": "AERO",
-        "symbol": "AeroDrome Exchange",
-        "decimals": 18
-    },
-     {
-        "chainId": 8453,
-        "address": "0xBC45647eA894030a4E9801Ec03479739FA2485F0",
-        "name": "Basenji Meme Coin",
-        "symbol": "BENJI",
-        "decimals": 6
-    },
-    {
-        "chainId": 8453,
-        "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
-        "name": "Brett Meme Coin",
-        "symbol": "BRETT",
-        "decimals": 6
-    },
-    {
-        "chainId": 8453,
-        "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-        "name": "USD Coin Staked",
-        "symbol": "USDC",
-        "decimals": 6
-    },
-    {
-        "chainId": 8453,
-        "address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
-        "name": "Tether USD",
-        "symbol": "USDT",
-        "decimals": 6
-    },
-    {
-        "chainId": 8453,
-        "address": "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",
-        "name": "Dai Stablecoin",
-        "symbol": "DAI",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x4200000000000000000000000000000000000006",
-        "name": "Wrapped Ethereum",
-        "symbol": "WETH",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
-        "name": "Wrapped Bitcoin",
-        "symbol": "WBTC",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x123456789ABCDEF",
-        "name": "Incomplete Token Address",
-        "symbol": "INCOMPLETE",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
-        "name": "Token Not Found on BASE Network",
-        "symbol": "MISSING",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "",
-        "name": "Empty Token Address",
-        "symbol": "EMPTY",
-        "decimals": 18
-    },
-    {
-        "symbol": "MATIC",
-        "address": "0xe868c3d83ec287c01bcb533a33d197d9bfa79dad",
-        "name": "Matic Token",
-        "chainId": 8453,
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290",
-        "name": "Uniswap",
-        "symbol": "UNI",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x239b9C1F24F3423062B0d364796e07Ee905E9FcE",
-        "name": "Shiba Inu",
-        "symbol": "SHIB",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
-        "name": "AAVE",
-        "symbol": "AAVE",
-        "decimals": 18
-    }
+  {
+    "chainId": 8453,
+    "address": "0xc2816250c07ae56c1583e5f2b0e67f7d7f42d562",
+    "name": "Sponsor Coin",
+    "symbol": "SpCoin",
+    "decimals": 18
+  },
+  {
+    "chainId": 84531,
+    "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "name": "Ethereum",
+    "symbol": "ETH",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+    "name": "AERO",
+    "symbol": "AeroDrome Exchange",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0xbc45647ea894030a4e9801ec03479739fa2485f0",
+    "name": "Basenji Meme Coin",
+    "symbol": "BENJI",
+    "decimals": 6
+  },
+  {
+    "chainId": 8453,
+    "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
+    "name": "Brett Meme Coin",
+    "symbol": "BRETT",
+    "decimals": 6
+  },
+  {
+    "chainId": 8453,
+    "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "name": "USD Coin Staked",
+    "symbol": "USDC",
+    "decimals": 6
+  },
+  {
+    "chainId": 8453,
+    "address": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+    "name": "Tether USD",
+    "symbol": "USDT",
+    "decimals": 6
+  },
+  {
+    "chainId": 8453,
+    "address": "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",
+    "name": "Dai Stablecoin",
+    "symbol": "DAI",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x4200000000000000000000000000000000000006",
+    "name": "Wrapped Ethereum",
+    "symbol": "WETH",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x0555e30da8f98308edb960aa94c0db47230d2b9c",
+    "name": "Wrapped Bitcoin",
+    "symbol": "WBTC",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x123456789abcdef",
+    "name": "Incomplete Token Address",
+    "symbol": "INCOMPLETE",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+    "name": "Token Not Found on BASE Network",
+    "symbol": "MISSING",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "",
+    "name": "Empty Token Address",
+    "symbol": "EMPTY",
+    "decimals": 18
+  },
+  {
+    "symbol": "MATIC",
+    "address": "0xe868c3d83ec287c01bcb533a33d197d9bfa79dad",
+    "name": "Matic Token",
+    "chainId": 8453,
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0xfb3cb973b2a9e2e09746393c59e7fb0d5189d290",
+    "name": "Uniswap",
+    "symbol": "UNI",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x239b9c1f24f3423062b0d364796e07ee905e9fce",
+    "name": "Shiba Inu",
+    "symbol": "SHIB",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
+    "name": "AAVE",
+    "symbol": "AAVE",
+    "decimals": 18
+  }
 ]

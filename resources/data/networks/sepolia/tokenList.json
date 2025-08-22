@@ -1,79 +1,79 @@
 [
-    {
-        "chainId": 11155111,
-        "address": "0xBabA55c7dcE20782fBe8B275216F16d262a70754",
-        "name": "Sponsor Coin",
-        "symbol": "SpCoin",
-        "decimals": 18
-    },
-    {
-        "chainId": 11155111,
-        "address": "0x0f1a713859fB1d1afAc99Fe2D20CAf639560EC83",
-        "name": "USD Coin",
-        "symbol": "USDC",
-        "decimals": 6
-    },
-    {
-        "chainId": 11155111,
-        "address": "0x5E0350d43423B8cD5304A237c723ACcd37a3ACEa",
-        "name": "Matic Token",
-        "symbol": "MATIC",
-        "decimals": 18
-    },
-    {
-        "chainId": 11155111,
-        "address": "0xA0458174681784B65B7dA3ed74D3d50e5dD308D2",
-        "name": "Shiba Inu",
-        "symbol": "SHIB",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x123456789ABCDEF",
-        "name": "Incomplete Token Address",
-        "symbol": "INCOMPLETE",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
-        "name": "Token Not Found on Sepolia Network",
-        "symbol": "MISSING",
-        "decimals": 18
-    },
-    {
-        "chainId": 8453,
-        "address": "",
-        "name": "Empty Token Address",
-        "symbol": "EMPTY",
-        "decimals": 18
-    },
-    {
-        "chainId": 11155111,
-        "address": "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
-        "name": "Tether USD",
-        "symbol": "USDT",
-        "decimals": 6
-    },   
-    {
-        "chainId": 11155111,
-        "address": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-        "name": "Uniswap",
-        "symbol": "UNI",
-        "decimals": 18
-    },
-    {
-        "chainId": 11155111,
-        "address": "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
-        "name": "Wrapped Bitcoin",
-        "symbol": "WBTC",
-        "decimals": 8
-    },
-    {
-        "chainId": 11155111,
-        "address": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
-        "name": "Wrapped Ethereum",
-        "symbol": "WETH",
-        "decimals": 18
-    }
+  {
+    "chainId": 11155111,
+    "address": "0xbaba55c7dce20782fbe8b275216f16d262a70754",
+    "name": "Sponsor Coin",
+    "symbol": "SpCoin",
+    "decimals": 18
+  },
+  {
+    "chainId": 11155111,
+    "address": "0x0f1a713859fb1d1afac99fe2d20caf639560ec83",
+    "name": "USD Coin",
+    "symbol": "USDC",
+    "decimals": 6
+  },
+  {
+    "chainId": 11155111,
+    "address": "0x5e0350d43423b8cd5304a237c723accd37a3acea",
+    "name": "Matic Token",
+    "symbol": "MATIC",
+    "decimals": 18
+  },
+  {
+    "chainId": 11155111,
+    "address": "0xa0458174681784b65b7da3ed74d3d50e5dd308d2",
+    "name": "Shiba Inu",
+    "symbol": "SHIB",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x123456789abcdef",
+    "name": "Incomplete Token Address",
+    "symbol": "INCOMPLETE",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
+    "name": "Token Not Found on Sepolia Network",
+    "symbol": "MISSING",
+    "decimals": 18
+  },
+  {
+    "chainId": 8453,
+    "address": "",
+    "name": "Empty Token Address",
+    "symbol": "EMPTY",
+    "decimals": 18
+  },
+  {
+    "chainId": 11155111,
+    "address": "0xadd8ad605fe57064903a3defc3b4ed676992bba6",
+    "name": "Tether USD",
+    "symbol": "USDT",
+    "decimals": 6
+  },
+  {
+    "chainId": 11155111,
+    "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "name": "Uniswap",
+    "symbol": "UNI",
+    "decimals": 18
+  },
+  {
+    "chainId": 11155111,
+    "address": "0x536bcbe548cef2ce493932fefcec059dda4d5579",
+    "name": "Wrapped Bitcoin",
+    "symbol": "WBTC",
+    "decimals": 8
+  },
+  {
+    "chainId": 11155111,
+    "address": "0xfff9976782d46cc05630d1f6ebab18b2324d6b14",
+    "name": "Wrapped Ethereum",
+    "symbol": "WETH",
+    "decimals": 18
+  }
 ]

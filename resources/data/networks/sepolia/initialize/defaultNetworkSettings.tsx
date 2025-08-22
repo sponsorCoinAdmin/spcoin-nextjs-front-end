@@ -1,20 +1,20 @@
-import {  SEPOLIA, TokenContract } from '@/lib/structure'
+import { SEPOLIA, TokenContract } from '@/lib/structure'
  
- const defaultSellToken: TokenContract = {
-   chainId: SEPOLIA,
-   address: "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
-   name: "Wrapped Bitcoin",
-   symbol: "WBTC",
-   decimals: 8,
-   balance: 0n,
-   totalSupply: 0n,
-   logoURL: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
-   amount: 0n
- };
+const defaultSellToken: TokenContract = {
+  chainId: SEPOLIA,
+  address: "0x536bcbe548cef2ce493932fefcec059dda4d5579",
+  name: "Wrapped Bitcoin",
+  symbol: "WBTC",
+  decimals: 8,
+  balance: 0n,
+  totalSupply: 0n,
+  logoURL: "assets/blockchains/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599.png",
+  amount: 0n
+};
 
 const defaultBuyToken: TokenContract = {
   chainId: SEPOLIA,
-  address: "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
+  address: "0xadd8ad605fe57064903a3defc3b4ed676992bba6",
   name: "Tether USD",
   symbol: "USDT",
   decimals: 6,
@@ -25,26 +25,26 @@ const defaultBuyToken: TokenContract = {
 };
 
 const defaultRecipient = { 
-  "address": "SaveTheTiger4 Wallet Address",
-  "name": "Support The Tiger",
-  "symbol": "Tiger",
-  "url": "ToDo N/A",
-  "logoURL": "/assets/recipients/SaveTheTiger4.png"
+  address: "SaveTheTiger4 Wallet Address",
+  name: "Support The Tiger",
+  symbol: "Tiger",
+  url: "ToDo N/A",
+  logoURL: "/assets/recipients/SaveTheTiger4.png"
 };
 
 const defaultAgent = {
-  "address": "Moe's Wallet Address",
-  "symbol": "Stuge 3",
-  "name": "Moe Howard",
-  "url": "ToDo N/A",
-  "logoURL": "/assets/agents/MoeHoward.png"
+  address: "Moe's Wallet Address",
+  symbol: "Stuge 3",
+  name: "Moe Howard",
+  url: "ToDo N/A",
+  logoURL: "/assets/agents/MoeHoward.png"
 };
 
 const defaultNetworkSettings = {
-  defaultSellToken : defaultSellToken,
-  defaultBuyToken  : defaultBuyToken,
-  defaultRecipient : defaultRecipient,
-  defaultAgent     : defaultAgent
+  defaultSellToken,
+  defaultBuyToken,
+  defaultRecipient,
+  defaultAgent
 }
 
 export { defaultNetworkSettings };

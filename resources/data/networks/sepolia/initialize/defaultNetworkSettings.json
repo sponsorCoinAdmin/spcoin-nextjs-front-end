@@ -8,7 +8,7 @@
   },
   "defaultSellToken": {
     "chainId": 11155111,
-    "address": "0x536BcBE548cef2cE493932fEFCeC059Dda4d5579",
+    "address": "0x536bcbe548cef2ce493932fefcec059dda4d5579",
     "symbol": "WBTC",
     "name": "Wrapped Bitcoin",
     "totalSupply": null,
@@ -17,7 +17,7 @@
   },
   "defaultBuyToken": {
     "chainId": 11155111,
-    "address": "0xAdd8Ad605fE57064903a3DeFC3b4ed676992bba6",
+    "address": "0xadd8ad605fe57064903a3defc3b4ed676992bba6",
     "symbol": "USDT",
     "totalSupply": null,
     "name": "Tether USD",

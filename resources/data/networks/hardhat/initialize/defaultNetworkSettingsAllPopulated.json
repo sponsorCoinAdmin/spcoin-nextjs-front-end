@@ -6,7 +6,7 @@
     "logoURL": "/assets/blockchains/1/info/1.png",
     "url": "https://etherscan.io/"
   },
-  "defaultSellToken":  {
+  "defaultSellToken": {
     "chainId": 31337,
     "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     "name": "USD Coin",
@@ -17,20 +17,20 @@
   },
   "defaultBuyToken": {
     "chainId": 31337,
-    "address": "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1",
+    "address": "0x582d872a1b094fc48f5de31d3b73f2d9be47def1",
     "name": "TONCOIN",
     "symbol": "TON",
     "totalSupply": null,
     "decimals": 9,
-    "logoURL": "assets/blockchains/0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1.png"
+    "logoURL": "assets/blockchains/0x582d872a1b094fc48f5de31d3b73f2d9be47def1.png"
   },
   "defaultRecipient": {
-      "logoURL": "assets/blockchains/0xToDo_SpCoin.png",
-      "name": "Sponsor Coin",
-      "address": "0xToDo_SpCoin.png",
-      "url": "ToDo add URL here",
-      "symbol": "SpCoin"
-    },
+    "logoURL": "assets/blockchains/0xtodo_spcoin.png",
+    "name": "Sponsor Coin",
+    "address": "0xtodo_spcoin.png",
+    "url": "ToDo add URL here",
+    "symbol": "SpCoin"
+  },
   "defaultAgent": {
     "symbol": "Wilma",
     "name": "Wilma Flintstone",
