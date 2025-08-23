@@ -1,5 +1,5 @@
 [
-  { "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "name": "Ethereum", "symbol": "ETH" },
+  { "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "name": "Ethereum", "symbol": "ETH" },
   { "address": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512", "name": "Sponsor Coin", "symbol": "SpCoin" },
   { "address": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9", "name": "Wrapped Ethereum", "symbol": "WETH" },
   { "address": "0x123456789abcdef", "name": "Incomplete Token Address", "symbol": "INCOMPLETE" },

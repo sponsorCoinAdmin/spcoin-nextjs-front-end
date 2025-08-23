@@ -31,7 +31,7 @@ const nativeSymbolByChain: Record<number, { name: string; symbol: string; decima
 function isNativeSentinel(addr: string): boolean {
   const a = addr.toLowerCase();
   const n = String(NATIVE_TOKEN_ADDRESS).toLowerCase();
-  return a === n || a === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+  return a === n || a === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 }
 
 async function fetchNativeTokenMeta(chainId: number): Promise<{ name: string; symbol: string; decimals: number } | undefined> {
