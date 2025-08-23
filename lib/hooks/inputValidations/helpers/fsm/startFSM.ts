@@ -21,6 +21,9 @@ import { makeSignature, signatureDiff, shouldRunFSM } from './internals/guards';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getStateIcon } from './internals/debugFSM';
 
+// 🔽 ensure logoURL is present at commit time
+import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
+
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const TRACE_ENABLED = process.env.NEXT_PUBLIC_FSM_INPUT_STATE_TRACE === 'true';
 const debug = createDebugLogger('startFSM', DEBUG_ENABLED);
@@ -136,7 +139,6 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     validateFSMCore,
     maxSteps: 30,
     onTransition(prev, next) {
-      // debug log per transition
       if (DEBUG_ENABLED) {
         // eslint-disable-next-line no-console
         console.log(
@@ -150,11 +152,58 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   // finalize trace (pretty-print + persist when enabled)
   traceSink.onFinish(finalState);
 
+  // Before logging/returning, ensure a logoURL is present for token-list assets.
+  let committedAsset: WalletAccount | TokenContract | undefined = assetAcc as
+    | WalletAccount
+    | TokenContract
+    | undefined;
+
+  const hasAddr = Boolean((committedAsset as any)?.address);
+
+  if (
+    hasAddr &&
+    feedType === FEED_TYPE.TOKEN_LIST &&
+    (committedAsset as TokenContract) &&
+    !(committedAsset as TokenContract).logoURL
+  ) {
+    const addr = (committedAsset as TokenContract).address as Address;
+    try {
+      const url = await getLogoURL(chainId, addr, FEED_TYPE.TOKEN_LIST);
+      const finalURL = url || defaultMissingImage;
+      committedAsset = {
+        ...(committedAsset as TokenContract),
+        logoURL: finalURL,
+      };
+      if (DEBUG_ENABLED) {
+        debug.log('🖼️ Filled missing logoURL at commit stage', {
+          chainId,
+          address: addr,
+          logoURL: finalURL,
+        });
+      }
+    } catch (e) {
+      committedAsset = {
+        ...(committedAsset as TokenContract),
+        logoURL: defaultMissingImage,
+      };
+      if (DEBUG_ENABLED) {
+        debug.warn('⚠️ getLogoURL failed at commit stage; using fallback', {
+          chainId,
+          address: addr,
+          error: e,
+        });
+      }
+    }
+  }
+
   if (DEBUG_ENABLED) {
-    const addr = (assetAcc as any)?.address ?? '—';
-    const sym = (assetAcc as any)?.symbol ?? '—';
-    const nm = (assetAcc as any)?.name ?? '—';
-    debug.log(`🏁 finalState → ${InputState[finalState]} | asset: { address: ${addr}, symbol: ${sym}, name: ${nm} }`);
+    const addr = (committedAsset as any)?.address ?? '—';
+    const sym = (committedAsset as any)?.symbol ?? '—';
+    const nm = (committedAsset as any)?.name ?? '—';
+    const logo = (committedAsset as any)?.logoURL ?? '—';
+    debug.log(
+      `🏁 finalState → ${InputState[finalState]} | asset: { address: ${addr}, symbol: ${sym}, name: ${nm}, logoURL: ${logo} }`
+    );
   }
 
   // Surface asset only for preview/commit states
@@ -162,9 +211,8 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     finalState === InputState.UPDATE_VALIDATED_ASSET ||
     finalState === InputState.CLOSE_SELECT_PANEL;
   const isPreview = finalState === InputState.VALIDATE_PREVIEW;
-  const hasAddr = Boolean((assetAcc as any).address);
 
   return hasAddr && (isPreview || isCommit)
-    ? { finalState, asset: assetAcc as WalletAccount | TokenContract }
+    ? { finalState, asset: committedAsset }
     : { finalState };
 }

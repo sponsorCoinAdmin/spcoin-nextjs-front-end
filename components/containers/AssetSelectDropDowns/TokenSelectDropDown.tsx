@@ -1,11 +1,9 @@
 // File: components/containers/TokenSelectDropDown.tsx
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
-import { useChainId } from 'wagmi';
-import { isAddress } from 'viem';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -30,20 +28,6 @@ interface Props {
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
-  const instanceId = useMemo(() => crypto.randomUUID(), []);
-  const chainId = useChainId();
-
-  useEffect(() => {
-    console.log(
-      `🆕 Mounted TokenSelectDropDown → instanceId=${instanceId} containerType=${SP_COIN_DISPLAY[containerType]}`
-    );
-    return () => {
-      console.log(
-        `🧹 Unmounted TokenSelectDropDown → instanceId=${instanceId} containerType=${SP_COIN_DISPLAY[containerType]}`
-      );
-    };
-  }, [instanceId, containerType]);
-
   const sellHook = useSellTokenContract();
   const buyHook = useBuyTokenContract();
 
@@ -52,12 +36,19 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   const { setActiveDisplay } = useActiveDisplay();
 
-  // Build the logo src locally; fallback when address/chainId invalid or missing.
-  const logoSrc = useMemo(() => {
-    const addr = tokenContract?.address ?? '';
-    if (!addr || !isAddress(addr) || !chainId) return defaultMissingImage;
-    return `/assets/blockchains/${chainId}/contracts/${addr.toLowerCase()}/logo.png`;
-  }, [tokenContract?.address, chainId]);
+  // Resolve logo from tokenContract.logoURL, with normalization & fallback.
+  const logoURL = useMemo(() => {
+    const raw = tokenContract?.logoURL?.trim();
+    if (raw && raw.length > 0) {
+      // Keep absolute URLs and already-rooted paths; normalize "assets/..." to "/assets/..."
+      return raw.startsWith('http://') ||
+        raw.startsWith('https://') ||
+        raw.startsWith('/')
+        ? raw
+        : `/${raw.replace(/^\/+/, '')}`;
+    }
+    return defaultMissingImage;
+  }, [tokenContract?.logoURL]);
 
   // Safe one-shot error handler: swap to fallback and prevent loops if fallback fails.
   const handleMissingLogoURL = useCallback(
@@ -77,23 +68,25 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   const showPanel = useCallback(() => {
     debugLog.log(`📂 Opening ${SP_COIN_DISPLAY[containerType]} dialog`);
-
-    // 🧹 Clear FSM trace before opening
+    // Optional: clear FSM trace before opening (keep if useful to you)
     clearFSMTraceFromMemory();
 
-    if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-      setActiveDisplay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL);
-    } else {
-      setActiveDisplay(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
-    }
+    setActiveDisplay(
+      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+        ? SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+        : SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL
+    );
   }, [containerType, setActiveDisplay]);
 
-  const handleSelect = () => {
-    let msg: string = stringifyBigInt(tokenContract);
-    msg += `\nlogoSrc = ${logoSrc}`;
+  // Click handler for the token image (restored)
+  const handleSelect = useCallback(() => {
+    const msg = stringifyBigInt({
+      ...tokenContract,
+      _resolvedLogoURL: logoURL, // include what’s actually being displayed
+    } as any);
     console.log(msg);
     alert(msg);
-  };
+  }, [tokenContract, logoURL]);
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>
@@ -103,7 +96,7 @@ function TokenSelectDropDown({ containerType }: Props) {
             id="TokenSelectDropDownImage.png"
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
             alt={`${tokenContract.name} logo`}
-            src={logoSrc}
+            src={logoURL}
             loading="lazy"
             decoding="async"
             onClick={handleSelect}

@@ -24,33 +24,33 @@ export default function RenderAssetPreview() {
   const {
     inputState,
     validatedAsset,
-    setValidatedAsset,          // ⬅️ provider-side setter
-    setInputState,              // ⬅️ advance FSM to UPDATE_VALIDATED_ASSET
+    setValidatedAsset,          // provider-side setter
+    setInputState,              // advance FSM to UPDATE_VALIDATED_ASSET
     feedType,
     setManualEntry,
   } = ctx;
 
-  const visible = isRenderFSMState(inputState);
-  if (!visible || !validatedAsset) return null;
-
-  const name = validatedAsset.name ?? 'N/A';
-  const symbol = validatedAsset.symbol ?? 'N/A';
-  const address = validatedAsset.address as string | undefined;
-
-  // 🔄 Resolve avatarSrc asynchronously when using getLogoURL (TOKEN_LIST)
+  // Always declare hooks unconditionally at the top to preserve order
   const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
 
+  // Resolve avatarSrc asynchronously when appropriate; guard inside the effect
   useEffect(() => {
     let cancelled = false;
 
     const resolveLogo = async () => {
-      // default fallback
-      if (!address) {
-        setAvatarSrc(defaultMissingImage);
-        return;
-      }
+      const visible = isRenderFSMState(inputState);
+      if (!visible || !validatedAsset) return;
+
+      const address = validatedAsset.address as string | undefined;
+
+      // Default while resolving
+      setAvatarSrc((prev) => prev || defaultMissingImage);
 
       if (feedType === FEED_TYPE.TOKEN_LIST) {
+        if (!address) {
+          if (!cancelled) setAvatarSrc(defaultMissingImage);
+          return;
+        }
         try {
           const url = await getLogoURL(chainId, address as Address, FEED_TYPE.TOKEN_LIST);
           if (!cancelled) {
@@ -64,7 +64,7 @@ export default function RenderAssetPreview() {
           }
         }
       } else {
-        // Accounts/agents: build synchronously (no async probe here)
+        // Accounts/agents: construct synchronously
         const url =
           validatedAsset.logoURL ||
           (address ? `/assets/accounts/${address}/logo.png` : '') ||
@@ -77,7 +77,14 @@ export default function RenderAssetPreview() {
     return () => {
       cancelled = true;
     };
-  }, [chainId, address, feedType, validatedAsset?.logoURL]);
+  }, [inputState, validatedAsset, feedType, chainId]);
+
+  const visible = isRenderFSMState(inputState);
+  if (!visible || !validatedAsset) return null;
+
+  const name = validatedAsset.name ?? 'N/A';
+  const symbol = validatedAsset.symbol ?? 'N/A';
+  const address = validatedAsset.address as string | undefined;
 
   const onAvatarClick = () => {
     if (!address) return;
@@ -91,7 +98,7 @@ export default function RenderAssetPreview() {
       if (!assetToCommit.address) assetToCommit.address = address as Address;
       if (!assetToCommit.chainId) assetToCommit.chainId = chainId;
 
-      // 1) Commit the asset to provider context
+      // 1) Commit to provider context
       if (typeof setValidatedAsset === 'function') {
         setValidatedAsset(assetToCommit);
         debugLog.log('✅ setValidatedAsset dispatched', {

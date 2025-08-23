@@ -1,7 +1,7 @@
 [
   {
     "chainId": 137,
-    "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     "name": "Polygon",
     "symbol": "MATIC",
     "decimals": 18
@@ -70,32 +70,25 @@
     "decimals": 8
   },
   {
-    "chainId": 8453,
+    "chainId": 137,
     "address": "0x123456789ABCDEF",
     "name": "Incomplete Token Address",
     "symbol": "INCOMPLETE",
     "decimals": 18
   },
   {
-    "chainId": 8453,
+    "chainId": 137,
     "address": "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb1",
     "name": "Token Not Found on Polygon Network",
     "symbol": "MISSING",
     "decimals": 18
   },
   {
-    "chainId": 8453,
+    "chainId": 137,
     "address": "",
     "name": "Empty Token Address",
     "symbol": "EMPTY",
     "decimals": 18
-  },
-  {
-    "chainId": 147,
-    "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
-    "name": "USD Coin (PoS)",
-    "symbol": "USDC.e",
-    "decimals": 8
   },
   {
     "symbol": "MATIC",

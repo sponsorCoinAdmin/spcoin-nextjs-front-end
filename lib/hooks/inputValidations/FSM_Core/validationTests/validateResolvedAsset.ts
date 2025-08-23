@@ -7,6 +7,7 @@ import { InputState } from '@/lib/structure/assetSelection';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
@@ -36,6 +37,8 @@ export async function validateResolvedAsset(
 
   try {
     const addr = input.debouncedHexInput as Address;
+
+    // Resolve contract core fields (symbol, name, decimals, etc.)
     const resolved = await resolveContract(
       addr,
       input.chainId,
@@ -48,24 +51,48 @@ export async function validateResolvedAsset(
       return { nextState: InputState.TOKEN_NOT_RESOLVED_ERROR };
     }
 
+    // Ensure logoURL is populated (belt & suspenders)
+    let logoURL = (resolved as any).logoURL as string | undefined;
+
+    if (!logoURL && resolved.address) {
+      try {
+        logoURL = await getLogoURL(input.chainId, resolved.address as Address, input.feedType);
+        debugLog.log('🖼️ Resolved logoURL via getLogoURL', {
+          chainId: input.chainId,
+          address: resolved.address,
+          logoURL,
+        });
+      } catch (e) {
+        logoURL = defaultMissingImage;
+        debugLog.warn('⚠️ getLogoURL failed; using defaultMissingImage', {
+          chainId: input.chainId,
+          address: resolved.address,
+          error: e,
+        });
+      }
+    }
+
+    const patched = {
+      ...resolved,
+      logoURL: logoURL || defaultMissingImage, // ✅ guarantee presence
+    };
+
     const nextState = manualEntry
       ? InputState.VALIDATE_PREVIEW
       : InputState.UPDATE_VALIDATED_ASSET;
 
     const result: ValidateFSMOutput = {
       nextState,
-      assetPatch: resolved, // <-- the runner merges this into resolvedAsset
+      assetPatch: patched, // <-- the runner merges this into resolvedAsset
     };
 
-    debugLog.log(
-      `🎯 validateResolvedAsset success → ${InputState[nextState]}`,
-      {
-        address: resolved.address,
-        symbol: (resolved as any).symbol,
-        name:   (resolved as any).name,
-        decimals: (resolved as any).decimals,
-      }
-    );
+    debugLog.log(`🎯 validateResolvedAsset success → ${InputState[nextState]}`, {
+      address: patched.address,
+      symbol: (patched as any).symbol,
+      name:   (patched as any).name,
+      decimals: (patched as any).decimals,
+      logoURL: (patched as any).logoURL,
+    });
 
     return result;
   } catch (err) {
