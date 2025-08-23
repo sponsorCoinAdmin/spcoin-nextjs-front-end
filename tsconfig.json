@@ -18,15 +18,16 @@
     // Enable path aliases like @/lib/structure/types
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@ctx/*": ["lib/context/*"],
+      "@ctx/select/*": ["lib/context/AssetSelectPanels/*"],
+      "@lib/context/providers/*": ["lib/context/Providers/*"]
     },
 
     // Next.js TypeScript plugin
     "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+      { "name": "next" }
+    ]
 
     // Optional stricter cleanup checks (uncomment if desired)
     // "noUnusedLocals": true,

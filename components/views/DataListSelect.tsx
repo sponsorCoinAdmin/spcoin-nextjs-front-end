@@ -17,7 +17,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
 import TokenListItem from './ListItems/TokenListItem';

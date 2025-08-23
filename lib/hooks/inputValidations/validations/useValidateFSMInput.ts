@@ -9,7 +9,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
-import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

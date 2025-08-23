@@ -5,14 +5,14 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { SP_COIN_DISPLAY, WalletAccount, TokenContract } from '@/lib/structure';
 
-import { AssetSelectProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectProvider';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // ✅ Local sub-visibility controller (new panel display system)
 import {
   AssetSelectDisplayProvider,
   useAssetSelectDisplay,
-} from '@/lib/context/AssetSelect/AssetSelectDisplayProvider';
+} from '@/lib/context/Providers/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { AssetSelectPanel } from '../AssetSelectScrollPanels';

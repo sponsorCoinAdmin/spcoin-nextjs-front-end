@@ -8,10 +8,10 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { AssetSelectProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectProvider';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =

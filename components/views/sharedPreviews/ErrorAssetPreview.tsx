@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo, useEffect } from 'react';
-import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { InputState } from '@/lib/structure/assetSelection';
 import { isErrorFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';

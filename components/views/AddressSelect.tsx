@@ -6,7 +6,7 @@ import HexAddressInput from '@/components/shared/utils/HexAddressInput';
 import RenderAssetPreview from '@/components/views/sharedPreviews/RenderAssetPreview';
 import ErrorAssetPreview from '@/components/views/sharedPreviews/ErrorAssetPreview';
 
-import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';

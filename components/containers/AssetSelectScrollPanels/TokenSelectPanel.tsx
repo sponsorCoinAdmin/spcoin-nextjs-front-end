@@ -6,17 +6,17 @@ import { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { AssetSelectProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectProvider';
-import type { AssetSelectBag } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
 // ✅ Local, instance-scoped sub-visibility (new panel display system)
 import {
   AssetSelectDisplayProvider,
   useAssetSelectDisplay,
-} from '@/lib/context/AssetSelect/AssetSelectDisplayProvider';
+} from '@/lib/context/Providers/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY, InputState } from '@/lib/structure/assetSelection';
 
 const LOG_TIME = false;
