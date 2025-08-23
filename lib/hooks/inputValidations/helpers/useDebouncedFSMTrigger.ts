@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
 import { InputState } from '@/lib/structure/assetSelection';
 import { isTerminalFSMState } from '../FSM_Core/fSMInputStates';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
@@ -18,7 +18,7 @@ export function useDebouncedFSMTrigger() {
     setInputState,
     debouncedHexInput,
     manualEntry,
-  } = useAssetSelectionContext();
+  } = useAssetSelectContext();
 
   const inputStateRef = useRef<InputState>(inputState);
   const prevDebouncedInputRef = useRef<string>('');

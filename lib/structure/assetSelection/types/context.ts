@@ -1,8 +1,8 @@
 // lib/structure/assetSelection/types/context.ts
 
-import type { AssetSelectionDisplay } from '../enums';
+import type { AssetSelectDisplay } from '../enums';
 
-export type AssetSelectionContextType = {
+export type AssetSelectContextType = {
   /** Optional: useful when multiple selection instances are mounted */
   instanceId?: string;
 
@@ -26,4 +26,4 @@ export type AssetSelectionContextType = {
 };
 
 /** Optional helper type if you want a read-only view */
-export type ReadonlyAssetSelectionContext = Readonly<AssetSelectionContextType>;
+export type ReadonlyAssetSelectContext = Readonly<AssetSelectContextType>;

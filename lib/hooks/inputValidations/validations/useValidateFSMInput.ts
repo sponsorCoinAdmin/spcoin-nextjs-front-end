@@ -9,7 +9,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -26,7 +26,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
     containerType,
     validatedAsset,
     manualEntry,
-  } = useAssetSelectionContext();
+  } = useAssetSelectContext();
 
   const validatedToken = validatedAsset; // Explicit alias
 

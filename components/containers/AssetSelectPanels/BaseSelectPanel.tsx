@@ -14,7 +14,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 
 // ✅ New local (nested) display system only
-import { useAssetSelectionDisplay } from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+import { useAssetSelectDisplay } from '@/lib/context/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 
 type BaseSelectPanelProps = {
@@ -38,7 +38,7 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
   label,
 }) => {
   const [siteExists, setSiteExists] = useState(false);
-  const { activeSubDisplay } = useAssetSelectionDisplay();
+  const { activeSubDisplay } = useAssetSelectDisplay();
   const isConfigOpen = activeSubDisplay === ASSET_SELECTION_DISPLAY.ASSET_PREVIEW;
 
   const defaultStaticFileUrl = useMemo(() => {

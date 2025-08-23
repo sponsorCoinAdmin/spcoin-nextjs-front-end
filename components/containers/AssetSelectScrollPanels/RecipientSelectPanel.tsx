@@ -8,10 +8,10 @@ import {
 } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
+import { AssetSelectProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectProvider';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -39,18 +39,18 @@ export default function RecipientSelectPanel({
   debugLog.log(`🧩 RecipientSelectPanel → showPanelDisplay=RecipientSelectPanel`);
 
   return (
-    <AssetSelectionProvider
+    <AssetSelectProvider
       closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Cast needed until WalletAccount is handled generically
       containerType={activeDisplay as SP_COIN_DISPLAY}
     >
       <RecipientSelectPanelInner />
-    </AssetSelectionProvider>
+    </AssetSelectProvider>
   );
 }
 
 function RecipientSelectPanelInner() {
-  const { instanceId, containerType } = useAssetSelectionContext();
+  const { instanceId, containerType } = useAssetSelectContext();
 
   useEffect(() => {
     debugLog.log(`🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);

@@ -5,14 +5,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SP_COIN_DISPLAY, WalletAccount, TokenContract } from '@/lib/structure';
 
-import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
+import { AssetSelectProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // ✅ Local sub-visibility controller (new panel display system)
 import {
-  AssetSelectionDisplayProvider,
-  useAssetSelectionDisplay,
-} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+  AssetSelectDisplayProvider,
+  useAssetSelectDisplay,
+} from '@/lib/context/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 import { useExchangeContext } from '@/lib/context/hooks';
 import AssetSelectPanel from './AssetSelectPanel';
@@ -25,7 +25,7 @@ const debugLog = createDebugLogger('AgentSelectPanel', DEBUG_ENABLED, LOG_TIME);
 interface AgentSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  // Widen to match AssetSelectionProvider’s expected type
+  // Widen to match AssetSelectProvider’s expected type
   setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
 }
 
@@ -45,7 +45,7 @@ export default function AgentSelectPanel({
   if (!isActive) return null;
 
   return (
-    <AssetSelectionDisplayProvider
+    <AssetSelectDisplayProvider
       instanceId={instanceId}
       initial={ASSET_SELECTION_DISPLAY.IDLE}
     >
@@ -53,7 +53,7 @@ export default function AgentSelectPanel({
         closePanelCallback={closePanelCallback}
         setTradingTokenCallback={setTradingTokenCallback}
       />
-    </AssetSelectionDisplayProvider>
+    </AssetSelectDisplayProvider>
   );
 }
 
@@ -64,7 +64,7 @@ function AgentSelectPanelInner({
   closePanelCallback: () => void;
   setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
 }) {
-  const { resetPreview } = useAssetSelectionDisplay();
+  const { resetPreview } = useAssetSelectDisplay();
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const [agentAccount, setAgentAccount] = useState(
@@ -88,7 +88,7 @@ function AgentSelectPanelInner({
   }, [agentAccount, exchangeContext, setExchangeContext]);
 
   return (
-    <AssetSelectionProvider
+    <AssetSelectProvider
       closePanelCallback={closePanelCallback}
       setTradingTokenCallback={setTradingTokenCallback}
       // 🔒 Identity only — do NOT toggle this for sub-visibility anymore
@@ -96,6 +96,6 @@ function AgentSelectPanelInner({
     >
       {/* Reads everything from context; no props needed */}
       <AssetSelectPanel />
-    </AssetSelectionProvider>
+    </AssetSelectProvider>
   );
 }

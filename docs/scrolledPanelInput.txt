@@ -5,7 +5,7 @@
       └── onChange(val) → handleHexInputChange(val, true)
               |
               V
-[AssetSelectionProvider context]
+[AssetSelectProvider context]
     ├── validHexInput (immediate, updates)
     ├── failedHexInput (if invalid)
     ├── debouncedHexInput (via useDebounce(validHexInput, 300ms))
@@ -31,6 +31,6 @@ useValidateFSMInput(debouncedHexInput)
 [Debug points]:
   ✅ HexAddressInput → console.log input
   ✅ handleHexInputChange → logs trimmed, isManual, isValid
-  ✅ AssetSelectionProvider → logs debouncedHexInput
+  ✅ AssetSelectProvider → logs debouncedHexInput
   ✅ AddressSelect → logs before + after FSM hook
   ✅ useValidateFSMInput → logs ENTRY, skips, or errors

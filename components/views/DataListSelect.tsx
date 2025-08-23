@@ -17,7 +17,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
 import TokenListItem from './ListItems/TokenListItem';
@@ -50,7 +50,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   // NEW: async-resolved token list with verified logo URLs
   const [logoTokenList, setLogoTokenList] = useState<any[]>([]);
 
-  const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectionContext();
+  const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectContext();
   const chainId = useChainId();
 
   // queue & enforcement for programmatic picks

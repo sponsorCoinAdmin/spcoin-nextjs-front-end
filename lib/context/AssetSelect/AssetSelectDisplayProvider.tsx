@@ -1,4 +1,4 @@
-// File: lib/context/AssetSelection/AssetSelectionDisplayProvider.tsx
+// File: lib/context/AssetSelect/AssetSelectDisplayProvider.tsx
 'use client';
 
 import React, {
@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import {
   ASSET_SELECTION_DISPLAY,
-  type AssetSelectionDisplay,
+  type AssetSelectDisplay,
   ENV_DEBUG_ASSET_SELECTION,
 } from '@/lib/structure/assetSelection';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -18,17 +18,17 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env[ENV_DEBUG_ASSET_SELECTION as 'NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL'] === 'true';
-const debugLog = createDebugLogger('AssetSelectionDisplayProvider', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('AssetSelectDisplayProvider', DEBUG_ENABLED, LOG_TIME);
 
-export type AssetSelectionDisplayContextType = {
+export type AssetSelectDisplayContextType = {
   /** Optional: useful when multiple selection instances are mounted */
   instanceId?: string;
 
   /** Which nested view to show inside the selection panel */
-  activeSubDisplay: AssetSelectionDisplay;
+  activeSubDisplay: AssetSelectDisplay;
 
   /** Low-level setter (kept public for flexibility) */
-  setActiveSubDisplay: (d: AssetSelectionDisplay) => void;
+  setActiveSubDisplay: (d: AssetSelectDisplay) => void;
 
   /** Convenience actions that wrap setActiveSubDisplay */
   showErrorPreview: () => void;
@@ -36,27 +36,27 @@ export type AssetSelectionDisplayContextType = {
   resetPreview: () => void;
 };
 
-const Ctx = createContext<AssetSelectionDisplayContextType | null>(null);
+const Ctx = createContext<AssetSelectDisplayContextType | null>(null);
 
 type Props = {
   children: ReactNode;
   instanceId?: string;
-  initial?: AssetSelectionDisplay;
+  initial?: AssetSelectDisplay;
 };
 
 /**
- * Instance-scoped nested-visibility controller for AssetSelection panels.
- * Keeps AssetSelectionProvider pure by externalizing sub-display state.
+ * Instance-scoped nested-visibility controller for AssetSelect panels.
+ * Keeps AssetSelectProvider pure by externalizing sub-display state.
  */
-export function AssetSelectionDisplayProvider({
+export function AssetSelectDisplayProvider({
   children,
   instanceId,
   initial = ASSET_SELECTION_DISPLAY.IDLE,
 }: Props) {
   const [activeSubDisplay, setActiveSubDisplay] =
-    useState<AssetSelectionDisplay>(initial);
+    useState<AssetSelectDisplay>(initial);
 
-  const value = useMemo<AssetSelectionDisplayContextType>(
+  const value = useMemo<AssetSelectDisplayContextType>(
     () => ({
       instanceId,
       activeSubDisplay,
@@ -80,16 +80,16 @@ export function AssetSelectionDisplayProvider({
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
-export function useAssetSelectionDisplay(): AssetSelectionDisplayContextType {
+export function useAssetSelectDisplay(): AssetSelectDisplayContextType {
   const ctx = useContext(Ctx);
   if (!ctx) {
-    throw new Error('useAssetSelectionDisplay must be used within AssetSelectionDisplayProvider');
+    throw new Error('useAssetSelectDisplay must be used within AssetSelectDisplayProvider');
   }
   return ctx;
 }
 
 /** Optional: lightweight hook when callers only need the actions */
-export function useAssetSelectionDisplayActions() {
-  const { showErrorPreview, showAssetPreview, resetPreview } = useAssetSelectionDisplay();
+export function useAssetSelectDisplayActions() {
+  const { showErrorPreview, showAssetPreview, resetPreview } = useAssetSelectDisplay();
   return { showErrorPreview, showAssetPreview, resetPreview };
 }

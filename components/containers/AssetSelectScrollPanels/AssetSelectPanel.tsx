@@ -4,7 +4,7 @@
 import AddressSelect from '@/components/views/AddressSelect';
 import DataListSelect from '@/components/views/DataListSelect';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -15,10 +15,10 @@ export default function AssetSelectPanel() {
   const {
     instanceId,
     feedType,
-  } = useAssetSelectionContext();
+  } = useAssetSelectContext();
   debugLog.log('✅ [AssetSelectPanel] component file loaded');
   // alert('✅ [AssetSelectPanel] component file loaded');
-  // 🧠 Trigger FSM validation now that we're within AssetSelectionProvider
+  // 🧠 Trigger FSM validation now that we're within AssetSelectProvider
 
   debugLog.log(`🆔 AssetSelectPanel using instanceId: ${instanceId}`);
 

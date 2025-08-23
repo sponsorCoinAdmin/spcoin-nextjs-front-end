@@ -8,7 +8,7 @@
         │           └── <MainTradingPanel>
         │                 ├── <TradeContainerHeader>
         │                 ├── <TokenSelectSection>
-        │                 │     ├── <AssetSelectionProvider> (SELL)
+        │                 │     ├── <AssetSelectProvider> (SELL)
         │                 │     │     └── <TradeAssetPanel> (SELL)
         │                 │     │           ├── <input /> ← user edits amount
         │                 │     │           ├── <TokenSelectDropDown>
@@ -27,7 +27,7 @@
         │                 │     │           ├── {buySellText}
         │                 │     │           └── <ManageSponsorsButton /> ← if isSpCoin
         │                 │     ├── <BuySellSwapArrowButton>
-        │                 │     └── <AssetSelectionProvider> (BUY)
+        │                 │     └── <AssetSelectProvider> (BUY)
         │                 │           └── <TradeAssetPanel> (BUY)
         │                 │                 ├── <input /> ← user edits amount
         │                 │                 ├── <TokenSelectDropDown>

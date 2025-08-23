@@ -6,17 +6,17 @@ import { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { AssetSelectionProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectionProvider';
-import type { AssetSelectionBag } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
+import { AssetSelectProvider } from '@/lib/context/ScrollSelectPanels/AssetSelectProvider';
+import type { AssetSelectBag } from '@/lib/context/ScrollSelectPanels/structure/types/panelBag';
 
 // ✅ Local, instance-scoped sub-visibility (new panel display system)
 import {
-  AssetSelectionDisplayProvider,
-  useAssetSelectionDisplay,
-} from '@/lib/context/AssetSelection/AssetSelectionDisplayProvider';
+  AssetSelectDisplayProvider,
+  useAssetSelectDisplay,
+} from '@/lib/context/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY, InputState } from '@/lib/structure/assetSelection';
 
 const LOG_TIME = false;
@@ -27,7 +27,7 @@ const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, LOG_TIME);
 interface TokenSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  // 🔧 Widen to match AssetSelectionProvider’s expected type
+  // 🔧 Widen to match AssetSelectProvider’s expected type
   setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
   /** Opposing side’s committed address (optional). BUY panel gets SELL’s addr; SELL panel gets BUY’s addr. */
   peerAddress?: string | Address;
@@ -49,12 +49,12 @@ export default function TokenSelectPanel({
     };
   }, []);
 
-  const initialPanelBag: AssetSelectionBag = useMemo(
+  const initialPanelBag: AssetSelectBag = useMemo(
     () =>
       ({
         type: activeDisplay as SP_COIN_DISPLAY,
         ...(peerAddress ? { peerAddress } : {}),
-      } as AssetSelectionBag),
+      } as AssetSelectBag),
     [activeDisplay, peerAddress]
   );
 
@@ -68,26 +68,26 @@ export default function TokenSelectPanel({
   if (!isActive) return null;
 
   return (
-    <AssetSelectionDisplayProvider
+    <AssetSelectDisplayProvider
       instanceId={instanceId}
       initial={ASSET_SELECTION_DISPLAY.IDLE}
     >
-      <AssetSelectionProvider
+      <AssetSelectProvider
         closePanelCallback={closePanelCallback}
         setTradingTokenCallback={setTradingTokenCallback}
         containerType={activeDisplay as SP_COIN_DISPLAY}
         initialPanelBag={initialPanelBag}
       >
         <TokenSelectPanelInner />
-      </AssetSelectionProvider>
-    </AssetSelectionDisplayProvider>
+      </AssetSelectProvider>
+    </AssetSelectDisplayProvider>
   );
 }
 
 function TokenSelectPanelInner() {
-  const { instanceId, inputState, validatedAsset } = useAssetSelectionContext();
+  const { instanceId, inputState, validatedAsset } = useAssetSelectContext();
   const { showErrorPreview, showAssetPreview, resetPreview } =
-    useAssetSelectionDisplay();
+    useAssetSelectDisplay();
 
   useEffect(() => {
     debugLog.log(`🟢 TokenSelectPanelInner mounted → instanceId=${instanceId}`);

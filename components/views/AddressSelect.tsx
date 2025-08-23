@@ -6,7 +6,7 @@ import HexAddressInput from '@/components/shared/utils/HexAddressInput';
 import RenderAssetPreview from '@/components/views/sharedPreviews/RenderAssetPreview';
 import ErrorAssetPreview from '@/components/views/sharedPreviews/ErrorAssetPreview';
 
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
@@ -26,7 +26,7 @@ export default function AddressSelect() {
     debouncedHexInput,
     handleHexInputChange,
     setInputState,
-  } = useAssetSelectionContext();
+  } = useAssetSelectContext();
 
   debugLog.log('🆔 context instanceId:', instanceId);
   debugLog.log('✅ AddressSelect function START');

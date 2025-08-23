@@ -2,13 +2,13 @@
 'use client';
 
 import { useMemo, useEffect } from 'react';
-import { useAssetSelectionContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectionContext';
+import { useAssetSelectContext } from '@/lib/context/ScrollSelectPanels/useAssetSelectContext';
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { InputState } from '@/lib/structure/assetSelection';
 import { isErrorFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 
 export default function ErrorAssetPreview() {
-  const { inputState, instanceId, containerType, feedType } = useAssetSelectionContext();
+  const { inputState, instanceId, containerType, feedType } = useAssetSelectContext();
 
   const stateName = InputState[inputState];
   const visible = isErrorFSMState(inputState);
