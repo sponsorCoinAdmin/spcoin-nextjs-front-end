@@ -27,9 +27,6 @@ export default function Header() {
   const chainId = useLocalChainId();
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const didHydrate = useDidHydrate();
-  const [_, setSellTokenContract] = useSellTokenContract();
-  const [__, setBuyTokenContract] = useBuyTokenContract();
   const { exchangeContext } = useExchangeContext();
   const { isConnected } = useAccount();
 

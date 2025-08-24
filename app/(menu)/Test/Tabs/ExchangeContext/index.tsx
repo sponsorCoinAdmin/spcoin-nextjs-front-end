@@ -1,4 +1,4 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
+// FILE: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 
 'use client';
 
@@ -7,7 +7,7 @@ import JsonInspector from '@/components/shared/JsonInspector';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 
 // Utility to build dropdown options from enum values
 function getNumericEnumEntries<E extends Record<string, string | number>>(
@@ -32,6 +32,42 @@ function getAllNestedKeys(obj: any): string[] {
     }
   }
   return keys;
+}
+
+/**
+ * Registry of enum fields to pretty-print in the inspector.
+ * Add more as needed (e.g., panelState: PANEL_STATE).
+ */
+const enumRegistry: Record<string, any> = {
+  activeDisplay: SP_COIN_DISPLAY,
+  feedType: FEED_TYPE,
+};
+
+/**
+ * Display-only clone of the object where any registered enum field is shown as:
+ *   key(number): LABEL
+ * Example:
+ *   activeDisplay(0): AGENT_SELECT_PANEL
+ *
+ * If no label is found, we show: key(number): [number]
+ */
+function refineEnumLabels(input: any): any {
+  if (Array.isArray(input)) return input.map(refineEnumLabels);
+  if (input && typeof input === 'object') {
+    const out: any = {};
+    for (const [k, v] of Object.entries(input)) {
+      const enumObj = enumRegistry[k];
+      if (enumObj && typeof v === 'number') {
+        const label = enumObj[v];
+        const prettyValue = typeof label === 'string' ? label : `[${v}]`;
+        out[`${k}(${v})`] = prettyValue; // replace key entirely
+      } else {
+        out[k] = refineEnumLabels(v);
+      }
+    }
+    return out;
+  }
+  return input;
 }
 
 export default function ExchangeContextTab() {
@@ -86,42 +122,60 @@ export default function ExchangeContextTab() {
     []
   );
 
+  // Inspector view: enums rendered as key(number): LABEL
+  const contextForInspector = useMemo(
+    () => refineEnumLabels(exchangeContext),
+    [exchangeContext]
+  );
+
   return (
     <div className="space-y-4">
-      {/* Controls */}
-      <div className="w-full flex flex-wrap justify-center gap-4">
-        <button onClick={hideContext} className={buttonClasses}>
-          Hide Context
-        </button>
-        <button onClick={toggleExpandCollapse} className={buttonClasses}>
-          {expandContext ? 'Collapse Context' : 'Expand Context'}
-        </button>
-        <button onClick={logContext} className={buttonClasses}>
-          Log Context
-        </button>
+      {/* Top bar: all controls centered; X at top-right; shift whole bar up by 15px */}
+      <div className="relative w-full -mt-[15px]">
+        {/* Centered controls */}
+        <div className="flex flex-wrap items-center justify-center gap-4 py-2">
+          <button onClick={toggleExpandCollapse} className={buttonClasses}>
+            {expandContext ? 'Collapse Context' : 'Expand Context'}
+          </button>
 
-        <select
-          id="activeDisplaySelect_tab"
-          title="Select activeDisplay"
-          aria-label="Select activeDisplay"
-          value={activeDisplay}
-          onChange={(e) => {
-            const selected = Number(e.target.value) as SP_COIN_DISPLAY;
-            setActiveDisplay(selected);
-          }}
-          className={buttonClasses}
+          <button onClick={logContext} className={buttonClasses}>
+            Log Context
+          </button>
+
+          <select
+            id="activeDisplaySelect_tab"
+            title="Select activeDisplay"
+            aria-label="Select activeDisplay"
+            value={activeDisplay}
+            onChange={(e) => {
+              const selected = Number(e.target.value) as number;
+              setActiveDisplay(selected as any);
+            }}
+            className={buttonClasses}
+          >
+            {displayOptions.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Top-right Close "X" (double text size) */}
+        <button
+          onClick={hideContext}
+          aria-label="Close Context"
+          title="Close Context"
+          className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
+                     hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
         >
-          {displayOptions.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          ×
+        </button>
       </div>
 
       {/* Context viewer */}
       <JsonInspector
-        data={exchangeContext}
+        data={contextForInspector}
         collapsedKeys={collapsedKeys}
         updateCollapsedKeys={handleUpdateCollapsedKeys}
       />

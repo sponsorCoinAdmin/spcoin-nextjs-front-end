@@ -40,12 +40,8 @@ const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);
 const maxInputSz = 28;
 
 // Limit a numeric string to `max` display characters by trimming fractional digits first.
-// If the integer part alone exceeds `max`, hard-truncate to `max`.
-// Replace the old clampDisplay with this version
 function clampDisplay(numStr: string, max = maxInputSz): string {
   if (!numStr) return '0';
-
-  // No scientific notation expected from formatUnits; if present, hard cap.
   if (/[eE][+-]?\d+/.test(numStr)) return numStr.slice(0, max);
 
   let s = numStr;
@@ -55,32 +51,21 @@ function clampDisplay(numStr: string, max = maxInputSz): string {
 
   let [intPart, fracPart = ''] = s.split('.');
 
-  // If the sign + integer already fills/exceeds the limit, return the leftmost integer slice.
   const intLenWithSign = sign.length + intPart.length;
   if (intLenWithSign >= max) {
-    // Keep as many leading integer digits as the cap allows (never include '.')
     const keep = max - sign.length;
     return sign + intPart.slice(0, Math.max(0, keep));
   }
 
-  // Otherwise, we can try to include a '.' and some fractional digits.
-  // Remaining space after placing sign + integer:
   let remaining = max - intLenWithSign;
-
-  // We need at least 2 chars to show a fractional part: '.' + one digit
   if (fracPart && remaining > 1) {
-    // space for fractional digits after the '.'
     const allowFrac = remaining - 1;
     const fracTrimmed = fracPart.slice(0, allowFrac);
-    if (fracTrimmed.length > 0) {
-      return sign + intPart + '.' + fracTrimmed;
-    }
+    if (fracTrimmed.length > 0) return sign + intPart + '.' + fracTrimmed;
   }
 
-  // Not enough room (or no fraction) → just the integer part.
   return sign + intPart;
 }
-
 
 // 🔒 PRIVATE inner component, not exported
 function TradeAssetPanelInner() {
@@ -114,7 +99,7 @@ function TradeAssetPanelInner() {
   useEffect(() => {
     debugLog.log('✅ Connected to TokenPanelContext', { localTokenContract, localAmount });
     debugLog.log('🔎 activeDisplay:', getActiveDisplayString(exchangeContext.settings.activeDisplay));
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (tokenContract) {
@@ -123,21 +108,46 @@ function TradeAssetPanelInner() {
     }
   }, [tokenContract, setLocalTokenContract, containerType]);
 
+  // ➕ NEW: zero the input (and local/global amounts) when the relevant token contract is cleared
+  useEffect(() => {
+    if (tokenContract) return; // only act when it becomes undefined
+
+    debugLog.log(
+      `🧹 Token contract cleared for ${SP_COIN_DISPLAY[containerType]} → zeroing input & amount`
+    );
+
+    // Clear local panel state
+    setLocalTokenContract(undefined as any);
+    setLocalAmount(0n);
+    setInputValue('0');
+
+    // Keep global context consistent (optional but sane default)
+    if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
+      setSellAmount(0n);
+    } else {
+      setBuyAmount(0n);
+    }
+  }, [
+    tokenContract,
+    containerType,
+    setLocalTokenContract,
+    setLocalAmount,
+    setSellAmount,
+    setBuyAmount,
+  ]);
+
   // Helper: treat ".", "123.", "123.0/00..." as mid-typing states
   const isIntermediateDecimal = (s: string): boolean =>
     s === '.' || /^\d+\.$/.test(s) || /^\d+\.\d*0$/.test(s);
 
-  // ⌨️ Typing grace window to prevent racey mirror-overwrites while user edits quickly
+  // ⌨️ Typing grace to prevent racey mirror-overwrites while user edits quickly
   const TYPING_GRACE_MS = 550;
   const typingUntilRef = useRef<number>(0);
 
-  // Keep text input in sync with selected token + global amount
-  // but do NOT clobber while the user is typing or is in an intermediate decimal state.
+  // Keep text input in sync with selected token + global amount (but not while typing)
   useEffect(() => {
     if (!tokenContract) return;
     if (isIntermediateDecimal(inputValue)) return;
-
-    // still within the recent typing window? don't mirror
     if (Date.now() < typingUntilRef.current) return;
 
     const currentAmount =
@@ -147,8 +157,7 @@ function TradeAssetPanelInner() {
     if (inputValue !== formatted) setInputValue(formatted);
   }, [sellAmount, buyAmount, tokenContract, containerType, inputValue]);
 
-  // --- ⛔️ Stop writing debounced value back into global amounts.
-  // --- ✅ Use debounced value ONLY to trigger side-effects (quotes, validations, etc.)
+  // Debounced amount → side-effects only (quotes/validation)
   const lastDebouncedRef = useRef<bigint | null>(null);
   useEffect(() => {
     const debouncedForPanel =
@@ -202,18 +211,14 @@ function TradeAssetPanelInner() {
     // each keystroke opens a "do-not-mirror" window
     typingUntilRef.current = Date.now() + TYPING_GRACE_MS;
 
-    // allow digits with at most one dot
     if (!/^\d*\.?\d*$/.test(value)) return;
 
-    // keep leading zero before a dot (e.g., "0.") but trim other leading zeros
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
 
     debugLog.log(`⌨️ Input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
 
-    // ⛔ don't parse/push while user is mid-decimal
     if (isIntermediateDecimal(normalized)) return;
-
     if (!tokenContract) return;
 
     const decimals = tokenContract.decimals || 18;
@@ -261,7 +266,6 @@ function TradeAssetPanelInner() {
     debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
   }, [spCoinDisplay, setSpCoinDisplay]);
 
-  // 🔕 Stop browser autofill/suggestions without changing structure
   const noAutofillName = useMemo(
     () => `no-autofill-${Math.random().toString(36).slice(2)}`,
     []

@@ -155,6 +155,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       debugLog.log('✅ Initial exchangeContext hydrated');
       debugLog.debug(sanitized);
       setContextState(sanitized);
+      alert(`ExchangeProvider.initExchangeContext:chainId: ${chainId}`)
     });
   }, [chainId, address, isConnected]);
 

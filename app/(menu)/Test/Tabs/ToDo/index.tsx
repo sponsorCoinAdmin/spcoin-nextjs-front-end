@@ -1,4 +1,3 @@
-// File: app/(menu)/Test/Tabs/ToDo/index.tsx
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
@@ -46,9 +45,22 @@ export default function ToDoTab() {
 
   return (
     <div className="space-y-6">
-      <div className="w-full flex justify-center">
-        <button onClick={hideToDo} className={buttonClasses}>
-          Hide ToDo
+      {/* Top bar: consistent with other tabs — centered controls (none) + Close X at top-right, shifted up 15px */}
+      <div className="relative w-full -mt-[15px]">
+        {/* Centered controls placeholder to keep layout consistent */}
+        <div className="flex flex-wrap items-center justify-center gap-4 py-2">
+          {/* (No buttons here yet) */}
+        </div>
+
+        {/* Top-right Close "X" (double text size) */}
+        <button
+          onClick={hideToDo}
+          aria-label="Close ToDo"
+          title="Close ToDo"
+          className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
+                     hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
+        >
+          X
         </button>
       </div>
 

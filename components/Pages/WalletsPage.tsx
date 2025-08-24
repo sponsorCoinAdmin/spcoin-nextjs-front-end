@@ -69,39 +69,37 @@ export default function WalletsPage() {
     return (
         <div>
             {/* Full-width Header Panel */}
-            <header className="relative w-screen ml-[calc(-50vw+50%)] bg-[#1f2639]">
-                <div className="w-full bg-[#333] border-b border-[#444] text-white flex flex-col items-center">
-                    <h1 className="m-0 mt-2 text-[22px] font-bold">
-                        {typeOfWallets} Wallets
-                    </h1>
+            <div className="w-full border-[#444] text-white flex flex-col items-center">
+                <h1 className="m-0 mt-2 text-[22px] font-bold">
+                    {typeOfWallets} Wallets
+                </h1>
 
-                    <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-center">
-                        {walletOptions.map(option => (
-                            <label key={option} className="flex items-center cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="walletFilter"
-                                    value={option}
-                                    checked={typeOfWallets === option}
-                                    onChange={() => setTypeOfWallets(option)}
-                                    className="mr-2"
-                                />
-                                {option}
-                            </label>
-                        ))}
+                <div className="flex items-center gap-3 text-[16px] mb-8 flex-wrap justify-center">
+                    {walletOptions.map(option => (
+                        <label key={option} className="flex items-center cursor-pointer">
+                            <input
+                                type="radio"
+                                name="walletFilter"
+                                value={option}
+                                checked={typeOfWallets === option}
+                                onChange={() => setTypeOfWallets(option)}
+                                className="mr-2"
+                            />
+                            {option}
+                        </label>
+                    ))}
 
-                        <button
-                            onClick={() => fetchWallets(true)}
-                            className="px-3 py-1.5 text-sm cursor-pointer border-0 bg-red-500 text-white rounded"
-                        >
-                            RELOAD
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => fetchWallets(true)}
+                        className="px-3 py-1.5 text-sm cursor-pointer border-0 bg-red-500 text-white rounded"
+                    >
+                        RELOAD
+                    </button>
                 </div>
-            </header>
+            </div>
 
             {/* Wallet List Section with Scrollable Pane */}
-            <main className="px-5 mt-5">
+            <main>
                 <div className="relative max-h-[500px] overflow-y-auto pr-2">
                     {loading ? (
                         <p className="text-center text-lg text-gray-400">Loading...</p>
@@ -113,8 +111,8 @@ export default function WalletsPage() {
                                 <li
                                     key={`${typeOfWallets}-${wallet.address}-${index}`}
                                     className={`flex items-center p-3 mb-2 rounded ${index % 2 === 0
-                                            ? 'bg-[#d6d6d6] text-[#000000]'   // light gray bg, black text
-                                            : 'bg-[#000000] text-[#d6d6d6]'   // black bg, light gray text
+                                        ? 'bg-[#d6d6d6] text-[#000000]'   // light gray bg, black text
+                                        : 'bg-[#000000] text-[#d6d6d6]'   // black bg, light gray text
                                         }`}
                                 >
                                     <img
