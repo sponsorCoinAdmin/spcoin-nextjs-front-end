@@ -155,7 +155,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       debugLog.log('✅ Initial exchangeContext hydrated');
       debugLog.debug(sanitized);
       setContextState(sanitized);
-      // alert(`ExchangeProvider.initExchangeContext:chainId: ${chainId}`)
+      // alert(`ExchangeProvider.initExchangeContext:chainId: ${chainId}`)git checkout 
     });
   }, [chainId, address, isConnected]);
 
