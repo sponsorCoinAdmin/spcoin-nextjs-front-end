@@ -14,7 +14,7 @@ import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 
 // Provider (barrel export)
 import { AssetSelectProvider } from '@/lib/context';
-import { AssetSelectPanel } from './AssetSelectScrollPanels';
+import { AssetSelectPanel } from './AssetSelectPanels';
 
 interface RecipientSelectPanelProps {
   isActive: boolean;

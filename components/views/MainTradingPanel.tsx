@@ -8,7 +8,6 @@ import styles from '@/styles/Exchange.module.css';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import TradingStationPanel from './TradingStationPanel';
 import ErrorMessagePanel from './ErrorMessagePanel';
-import { TokenSelectPanel } from '@/components/containers/AssetSelectScrollPanels';
 
 import {
   useActiveDisplay,
@@ -27,6 +26,7 @@ import {
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { TokenSelectPanel } from '../containers/AssetSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
