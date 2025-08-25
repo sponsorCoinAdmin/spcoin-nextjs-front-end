@@ -14,7 +14,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 
 // ✅ New local (nested) display system only
-import { useAssetSelectDisplay } from '@/lib/context/Providers/AssetSelect/AssetSelectDisplayProvider';
+import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 
 type BaseSelectPanelProps = {

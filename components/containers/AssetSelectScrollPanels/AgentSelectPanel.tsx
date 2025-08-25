@@ -12,7 +12,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import {
   AssetSelectDisplayProvider,
   useAssetSelectDisplay,
-} from '@/lib/context/Providers/AssetSelect/AssetSelectDisplayProvider';
+} from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 import { useExchangeContext } from '@/lib/context/hooks';
 import AssetSelectPanel from './AssetSelectPanel';

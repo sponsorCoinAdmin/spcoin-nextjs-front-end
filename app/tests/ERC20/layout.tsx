@@ -15,8 +15,9 @@ export default function RootLayout(props: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-      <Providers>{props.children}</Providers>
-      {/* {props.children} */}
+      <Providers>
+        { props.children }
+      </Providers>
       </body>
     </html>
   )

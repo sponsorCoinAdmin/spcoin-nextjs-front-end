@@ -1,11 +1,11 @@
 // Context barrels
 export * from './AssetSelectPanels/AssetSelectProvider';
 export * from './AssetSelectPanels/useAssetSelectContext';
-export * from './Providers/AssetSelect/AssetSelectDisplayProvider';
+export * from './providers/AssetSelect/AssetSelectDisplayProvider';
 
 // Panels
-export * from './Providers/Panels/TokenPanelProvider';
-export * from './Providers/Panels/useTokenPanelContext';
+export * from './providers/Panels/TokenPanelProvider';
+export * from './providers/Panels/useTokenPanelContext';
 
 // Exchange
 export * from './ExchangeProvider';

@@ -16,7 +16,7 @@ import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 import {
   AssetSelectDisplayProvider,
   useAssetSelectDisplay,
-} from '@/lib/context/Providers/AssetSelect/AssetSelectDisplayProvider';
+} from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { ASSET_SELECTION_DISPLAY, InputState } from '@/lib/structure/assetSelection';
 
 const LOG_TIME = false;

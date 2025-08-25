@@ -32,7 +32,7 @@ import styles from '@/styles/Exchange.module.css';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
-import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/Providers/Panels';
+import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);

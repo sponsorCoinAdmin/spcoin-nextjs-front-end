@@ -10,7 +10,7 @@ import { InputState } from '@/lib/structure/assetSelection';
 import { dumpFSMContext, dumpInputFeedContext } from '@/lib/hooks/inputValidations/utils/debugContextDump';
 import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
 import { AssetSelectBag, isTokenSelectBag } from '@/lib/context/structure/types/panelBag';
-import { useAssetSelectDisplay } from '@/lib/context/Providers/AssetSelect/AssetSelectDisplayProvider';
+import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { useLatestRef } from '@/lib/hooks/useLatestRef';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

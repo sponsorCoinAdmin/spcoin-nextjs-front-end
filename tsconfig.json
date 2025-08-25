@@ -21,7 +21,7 @@
       "@/*": ["./*"],
       "@ctx/*": ["lib/context/*"],
       "@ctx/select/*": ["lib/context/AssetSelectPanels/*"],
-      "@lib/context/providers/*": ["lib/context/Providers/*"]
+      "@lib/context/providers/*": ["lib/context/providers/*"]
     },
 
     // Next.js TypeScript plugin
