@@ -1,4 +1,3 @@
-// File: components/Dialogs/Popup/ConfigDialog.tsx
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -6,28 +5,44 @@ import SlippageBpsRadioButtons from './SlippageBpsRadioButtons';
 
 type Props = {
   showPanel: boolean;
+  /** Optional: notify parent when the dialog closes (X, Esc, or programmatically) */
+  onClose?: () => void;
 };
 
-export default function Dialog({ showPanel }: Props) {
-  const dialogRef = useRef<null | HTMLDialogElement>(null);
+export default function ConfigPanel({ showPanel, onClose }: Props) {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
 
+  // Open/close imperatively when prop changes
   useEffect(() => {
+    const dlg = dialogRef.current;
+    if (!dlg) return;
+
     if (showPanel) {
-      dialogRef.current?.showModal();
+      if (!dlg.open) dlg.showModal();
     } else {
-      dialogRef.current?.close();
+      if (dlg.open) dlg.close();
     }
   }, [showPanel]);
 
-  const closePanel = () => {
+  // Bridge native <dialog> close event → onClose()
+  useEffect(() => {
+    const dlg = dialogRef.current;
+    if (!dlg) return;
+
+    const handleClose = () => onClose?.();
+    dlg.addEventListener('close', handleClose);
+    return () => dlg.removeEventListener('close', handleClose);
+  }, [onClose]);
+
+  const handleX = () => {
+    // Calling close() will trigger the 'close' event, which invokes onClose (if provided)
     dialogRef.current?.close();
   };
 
   return (
     <dialog
-      id="ConfigDialog"
+      id="ConfigPanel"
       ref={dialogRef}
-      // ⬇️ Replaced inline styles with Tailwind (arbitrary values allowed)
       className="
         absolute top-[-210px] right-[-740px]
         text-white bg-[#0E111B]
@@ -41,7 +56,7 @@ export default function Dialog({ showPanel }: Props) {
         <button
           type="button"
           aria-label="Close"
-          onClick={closePanel}
+          onClick={handleX}
           className="cursor-pointer rounded border-none w-5 text-xl text-bg-txt-ltgry"
         >
           X

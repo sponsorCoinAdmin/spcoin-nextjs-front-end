@@ -6,7 +6,7 @@ import { Settings } from 'lucide-react';
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
-import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
+import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -30,7 +30,7 @@ const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
 
   return (
     <div className={styles.tradeContainerHeader}>
-      <ConfigDialog showPanel={false} />
+      <ConfigPanel showPanel={false} />
 
       <div onClick={() => exchangeContextDump(exchangeContext)}>
         <Image

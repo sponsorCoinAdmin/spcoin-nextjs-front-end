@@ -1,7 +1,7 @@
 'use client'
 import { JUNK_ALERTS } from '@/lib/utils/JUNK_ALERTS';
 
-import ConfigDialog from './Popup/ConfigDialog'
+import ConfigPanel from '../views/Config/ConfigPanel'
 import ErrorPanel from './ErrorPanel';
 
 /** 
@@ -12,7 +12,7 @@ type DialogSelector =
   | '#TokenSelectDialog'
   | '#AccountSelectDialog'
   | '#ErrorPanel'
-  | '#ConfigDialog'
+  | '#ConfigPanel'
 
 /**
  * Open a dialog by CSS selector (e.g., '#TokenSelectDialog').
@@ -44,6 +44,6 @@ const closePanel = (dialogType: DialogSelector) => {
 export {
   openDialog,
   closePanel,
-  ConfigDialog,
+  ConfigPanel,
   ErrorPanel
 }

@@ -1,12 +1,11 @@
-// File: components/Headers/TradeContainerHeader.tsx
 'use client';
 
+import { useState, useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
-import ConfigDialog from '@/components/Dialogs/Popup/ConfigDialog';
-import { openDialog } from '@/components/Dialogs/Dialogs';
+import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -39,15 +38,21 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
 const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const { exchangeContext } = useExchangeContext();
   const { activeDisplay } = useActiveDisplay();
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   const title = getTitleFromDisplay(activeDisplay);
+
+  const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
+  const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
   return (
     <div
       id="TradeContainerHeader"
       className="h-[60px] flex justify-between items-center w-full px-2.5 box-border shrink-0"
     >
-      <ConfigDialog showPanel={false} />
+      {/* Controlled config dialog (no dependency on openDialog helper) */}
+      <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
+
       <div
         id="SponsorCoinLogo.png"
         onClick={() => exchangeContextDump(exchangeContext)}
@@ -69,14 +74,16 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
         {activeDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL ? (
           <Image
             src={cog_png}
-            alt="Info Image"
-            onClick={() => openDialog('#ConfigDialog')}
+            alt="Open settings"
+            title="Open settings"
+            onClick={onOpenConfig}
             className="absolute top-3 right-3 h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
           />
         ) : (
           <button
             id="closeSelectionPanelButton"
-            aria-label="Close dialog"
+            type="button"
+            aria-label="Close Config"
             onClick={closePanelCallback}
             className="cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
           >
