@@ -1,33 +1,29 @@
 // File: components/containers/AssetSelectPanels/TokenSelectPanel.tsx
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { Address } from 'viem';
+import { useMemo, useCallback } from 'react';
+import type { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { useActiveDisplay } from '@/lib/context/hooks';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
-// ✅ Local, instance-scoped sub-visibility (new panel display system)
+// Instance-scoped display provider (kept; provider uses it internally)
 import {
   AssetSelectDisplayProvider,
-  useAssetSelectDisplay,
 } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { ASSET_SELECTION_DISPLAY, InputState } from '@/lib/structure/assetSelection';
+import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
 
-const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
-const debugLog = createDebugLogger('TokenSelectPanel', DEBUG_ENABLED, LOG_TIME);
+// Provider (via barrel export)
+import { AssetSelectProvider } from '@/lib/context';
 
 interface TokenSelectPanelProps {
   isActive: boolean;
+  /** Parent close callback (no args). We’ll adapt to provider’s (fromUser:boolean) signature. */
   closePanelCallback: () => void;
-  // 🔧 Widen to match AssetSelectProvider’s expected type
+  /** Widen to match AssetSelectProvider’s expected type */
   setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
   /** Opposing side’s committed address (optional). BUY panel gets SELL’s addr; SELL panel gets BUY’s addr. */
   peerAddress?: string | Address;
@@ -40,14 +36,6 @@ export default function TokenSelectPanel({
   peerAddress,
 }: TokenSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
-
-  // 🔒 Run hooks unconditionally to satisfy Rules of Hooks
-  useEffect(() => {
-    debugLog.log('🟢 TokenSelectPanel mounted');
-    return () => {
-      debugLog.log('🔴 TokenSelectPanel unmounted');
-    };
-  }, []);
 
   const initialPanelBag: AssetSelectBag = useMemo(
     () =>
@@ -64,7 +52,15 @@ export default function TokenSelectPanel({
     [activeDisplay]
   );
 
-  // ✅ Only branch at return; all hooks above run every render
+  // Adapt parent close callback to provider’s signature (fromUser:boolean)
+  const closeForProvider = useCallback(
+    (_fromUser: boolean) => {
+      // Provider supplies the boolean; parent close has no args
+      closePanelCallback();
+    },
+    [closePanelCallback]
+  );
+
   if (!isActive) return null;
 
   return (
@@ -73,53 +69,14 @@ export default function TokenSelectPanel({
       initial={ASSET_SELECTION_DISPLAY.IDLE}
     >
       <AssetSelectProvider
-        closePanelCallback={closePanelCallback}
+        closePanelCallback={closeForProvider}
         setTradingTokenCallback={setTradingTokenCallback}
         containerType={activeDisplay as SP_COIN_DISPLAY}
         initialPanelBag={initialPanelBag}
       >
-        <TokenSelectPanelInner />
+        {/* Panels no longer need their own preview/terminal effects; provider handles it */}
+        <AssetSelectPanel />
       </AssetSelectProvider>
     </AssetSelectDisplayProvider>
   );
-}
-
-function TokenSelectPanelInner() {
-  const { instanceId, inputState, validatedAsset } = useAssetSelectContext();
-  const { showErrorPreview, showAssetPreview, resetPreview } =
-    useAssetSelectDisplay();
-
-  useEffect(() => {
-    debugLog.log(`🟢 TokenSelectPanelInner mounted → instanceId=${instanceId}`);
-    // Ensure no stale preview is shown when the panel opens
-    resetPreview();
-    return () => {
-      debugLog.log(`🔴 TokenSelectPanelInner unmounted → instanceId=${instanceId}`);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [instanceId]);
-
-  // 🔁 Bridge FSM → new panel display system (keep provider pure)
-  useEffect(() => {
-    switch (inputState) {
-      case InputState.EMPTY_INPUT:
-        resetPreview();
-        break;
-      case InputState.RESOLVE_ASSET:
-        if (validatedAsset) showAssetPreview();
-        break;
-      case InputState.TOKEN_NOT_RESOLVED_ERROR:
-      case InputState.RESOLVE_ASSET_ERROR:
-        showErrorPreview();
-        break;
-      case InputState.CLOSE_SELECT_PANEL:
-        resetPreview();
-        break;
-      default:
-        break;
-    }
-  }, [inputState, validatedAsset, showAssetPreview, showErrorPreview, resetPreview]);
-
-  // Note: AssetSelectPanel reads context; no props needed
-  return <AssetSelectPanel />;
 }

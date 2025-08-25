@@ -1,11 +1,8 @@
 // File: components/containers/RecipientSelectPanel.tsx
 'use client';
 
-import { useEffect } from 'react';
-import {
-  WalletAccount,
-  SP_COIN_DISPLAY,
-} from '@/lib/structure';
+import { useEffect, useCallback } from 'react';
+import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
@@ -31,6 +28,14 @@ export default function RecipientSelectPanel({
 }: RecipientSelectPanelProps) {
   const { activeDisplay } = useActiveDisplay();
 
+  // adapt parent close callback to provider's (fromUser:boolean) signature
+  const closeForProvider = useCallback(
+    (_fromUser: boolean) => {
+      closePanelCallback();
+    },
+    [closePanelCallback]
+  );
+
   if (!isActive) {
     debugLog.log(`⏭️ RecipientSelectPanel → not active, skipping render`);
     return null;
@@ -40,8 +45,8 @@ export default function RecipientSelectPanel({
 
   return (
     <AssetSelectProvider
-      closePanelCallback={closePanelCallback}
-      setTradingTokenCallback={setTradingTokenCallback as any} // ⛳ Cast needed until WalletAccount is handled generically
+      closePanelCallback={closeForProvider}
+      setTradingTokenCallback={setTradingTokenCallback as any} // WalletAccount is OK; provider accepts TokenContract | WalletAccount
       containerType={activeDisplay as SP_COIN_DISPLAY}
     >
       <RecipientSelectPanelInner />
@@ -53,7 +58,9 @@ function RecipientSelectPanelInner() {
   const { instanceId, containerType } = useAssetSelectContext();
 
   useEffect(() => {
-    debugLog.log(`🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`);
+    debugLog.log(
+      `🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`
+    );
   }, [containerType, instanceId]);
 
   return <AssetSelectPanel />;

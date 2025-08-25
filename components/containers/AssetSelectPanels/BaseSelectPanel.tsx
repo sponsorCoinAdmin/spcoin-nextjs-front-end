@@ -55,19 +55,42 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
   }, [selectedAccount?.address]);
 
   useEffect(() => {
+    // SSR guard
     if (typeof window === 'undefined') return;
-    const website = selectedAccount?.website?.trim();
-    if (!website || website === 'N/A') {
+
+    const raw = selectedAccount?.website?.trim();
+    if (!raw || raw === 'N/A') {
+      debugLog.log('🌐 skip website probe: none');
       setSiteExists(false);
       return;
     }
+
+    // Normalize: add protocol if missing
+    const hasProtocol = /^(https?:)?\/\//i.test(raw);
+    const probeURL = hasProtocol ? raw : `https://${raw}`;
+
     let cancelled = false;
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 3000);
-    fetch(website, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
-      .then(() => !cancelled && setSiteExists(true))
-      .catch(() => !cancelled && setSiteExists(false))
+
+    debugLog.log(`🌐 probing website (HEAD, no-cors): ${probeURL}`);
+
+    fetch(probeURL, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
+      // With no-cors, successful network reachability resolves as an opaque response.
+      .then(() => {
+        if (!cancelled) {
+          debugLog.log('✅ probe resolved (opaque or ok) → siteExists=true');
+          setSiteExists(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          debugLog.warn('⚠️ probe failed → siteExists=false');
+          setSiteExists(false);
+        }
+      })
       .finally(() => window.clearTimeout(timeoutId));
+
     return () => {
       cancelled = true;
       controller.abort();
@@ -96,7 +119,11 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
             {selectedAccount.name}
           </Link>
         ) : (
-          <Link href={defaultStaticFileUrl} className={styles.recipientName} aria-label="Open default recipient site">
+          <Link
+            href={defaultStaticFileUrl}
+            className={styles.recipientName}
+            aria-label="Open default recipient site"
+          >
             {selectedAccount?.name || 'No selection'}
           </Link>
         )}
@@ -109,7 +136,7 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
           className={styles.cogImg}
           onClick={onToggleConfig}
         >
-          <Image src={cog_png} className={styles.cogImg} width={20} height={20} alt="Settings" />
+          <Image width={20} height={20} src={cog_png} alt="Settings" />
         </button>
 
         <button

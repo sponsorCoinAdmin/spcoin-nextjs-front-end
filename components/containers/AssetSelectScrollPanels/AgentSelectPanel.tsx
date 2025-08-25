@@ -1,21 +1,15 @@
-// File: components/containers/AgentSelectPanel.tsx
-
+// File: components/containers/AssetSelectPanels/AgentSelectPanel.tsx
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { SP_COIN_DISPLAY, WalletAccount, TokenContract } from '@/lib/structure';
-
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import { useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
+import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
+import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// ✅ Local sub-visibility controller (new panel display system)
-import {
-  AssetSelectDisplayProvider,
-  useAssetSelectDisplay,
-} from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { ASSET_SELECTION_DISPLAY } from '@/lib/structure/assetSelection';
-import { useExchangeContext } from '@/lib/context/hooks';
-import AssetSelectPanel from './AssetSelectPanel';
+// Panels variant (correct location)
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -25,77 +19,60 @@ const debugLog = createDebugLogger('AgentSelectPanel', DEBUG_ENABLED, LOG_TIME);
 interface AgentSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  // Widen to match AssetSelectProvider’s expected type
-  setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
+  setTradingTokenCallback: (wallet: WalletAccount) => void;
 }
+
+// ✅ Explicitly declare the dynamic component has **no props**
+const AssetSelectContent = dynamic<{}>(() => import('./AssetSelectPanel'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function AgentSelectPanel({
   isActive,
   closePanelCallback,
   setTradingTokenCallback,
 }: AgentSelectPanelProps) {
-  // 🚫 Hooks must run before any early return
-  const instanceId = useMemo(() => 'AGENT_SELECT', []);
+  const { activeDisplay } = useActiveDisplay();
 
-  useEffect(() => {
-    if (!isActive) return;
-    debugLog.log(`🧩 AgentSelectPanel → rendering with local sub-display control`);
-  }, [isActive]);
-
-  if (!isActive) return null;
-
-  return (
-    <AssetSelectDisplayProvider
-      instanceId={instanceId}
-      initial={ASSET_SELECTION_DISPLAY.IDLE}
-    >
-      <AgentSelectPanelInner
-        closePanelCallback={closePanelCallback}
-        setTradingTokenCallback={setTradingTokenCallback}
-      />
-    </AssetSelectDisplayProvider>
-  );
-}
-
-function AgentSelectPanelInner({
-  closePanelCallback,
-  setTradingTokenCallback,
-}: {
-  closePanelCallback: () => void;
-  setTradingTokenCallback: (asset: WalletAccount | TokenContract) => void;
-}) {
-  const { resetPreview } = useAssetSelectDisplay();
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
-
-  const [agentAccount, setAgentAccount] = useState(
-    exchangeContext.accounts.agentAccount
+  // Adapt parent close callback to provider's (fromUser:boolean) signature
+  const closeForProvider = useCallback(
+    (_fromUser: boolean) => {
+      closePanelCallback();
+    },
+    [closePanelCallback]
   );
 
-  // ✅ Prevent stale sub-display when panel mounts
-  useEffect(() => {
-    resetPreview();
-  }, [resetPreview]);
+  if (!isActive) {
+    debugLog.log('⏭️ AgentSelectPanel → not active, skipping render');
+    return null;
+  }
 
-  // Keep ExchangeContext in sync with local selection
-  useEffect(() => {
-    if (exchangeContext.accounts.agentAccount !== agentAccount) {
-      setExchangeContext((prev) => {
-        const cloned = structuredClone(prev);
-        cloned.accounts.agentAccount = agentAccount;
-        return cloned;
-      });
-    }
-  }, [agentAccount, exchangeContext, setExchangeContext]);
+  debugLog.log('🧩 AgentSelectPanel → render with AssetSelectProvider', {
+    containerType: SP_COIN_DISPLAY[activeDisplay as SP_COIN_DISPLAY],
+  });
 
   return (
     <AssetSelectProvider
-      closePanelCallback={closePanelCallback}
-      setTradingTokenCallback={setTradingTokenCallback}
-      // 🔒 Identity only — do NOT toggle this for sub-visibility anymore
-      containerType={SP_COIN_DISPLAY.AGENT_SELECT_PANEL}
+      closePanelCallback={closeForProvider}
+      // Provider accepts TokenContract | WalletAccount; WalletAccount is fine
+      setTradingTokenCallback={setTradingTokenCallback as any}
+      containerType={activeDisplay as SP_COIN_DISPLAY}
     >
-      {/* Reads everything from context; no props needed */}
-      <AssetSelectPanel />
+      <AgentSelectPanelInner />
     </AssetSelectProvider>
   );
+}
+
+function AgentSelectPanelInner() {
+  const { instanceId, containerType } = useAssetSelectContext();
+
+  useEffect(() => {
+    debugLog.log(
+      `🧩 AgentSelectPanel mounted → containerType=${SP_COIN_DISPLAY[containerType]}, instanceId=${instanceId}`
+    );
+  }, [containerType, instanceId]);
+
+  // Render the shared asset select UI (dynamically imported)
+  return <AssetSelectContent />;
 }
