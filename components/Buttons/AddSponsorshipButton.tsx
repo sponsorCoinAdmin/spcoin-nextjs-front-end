@@ -3,7 +3,7 @@
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 import { useActiveDisplay } from '@/lib/context/hooks';
 import { RecipientSelectPanel } from '../containers/AssetSelectPanels';
 
@@ -24,7 +24,11 @@ const AddSponsorshipButton = () => {
         <div className={styles.centerBottom}>Sponsorship</div>
       </div>
 
-      {isContainerVisible && <RecipientSelectPanel />}
+      {isContainerVisible && <RecipientSelectPanel isActive={false} closePanelCallback={function (): void {
+        throw new Error('Function not implemented.');
+      } } setTradingTokenCallback={function (wallet: WalletAccount): void {
+        throw new Error('Function not implemented.');
+      } } />}
     </>
   );
 };

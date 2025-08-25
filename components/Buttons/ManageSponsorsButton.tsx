@@ -4,7 +4,7 @@
 
 import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure';
-import ManageSponsorships from '@/components/Dialogs/ManageSponsorships';
+import ManageSponsorships from '@/components/containers/ManageSponsorships';
 import { useState, useCallback } from 'react';
 
 type Props = {

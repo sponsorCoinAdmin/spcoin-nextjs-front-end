@@ -1,61 +1,68 @@
-// File: components/containers/ManageSponsorships.tsx
+// File: components/Sponsorships/ManageSponsorships.tsx
+
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
 import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png';
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import Image from 'next/image';
 import { FEED_TYPE, TokenContract } from '@/lib/structure';
-import { isAddress } from 'ethers';
-import { hideElement, showElement } from '@/lib/spCoin/guiControl';
+import { isAddress, Address } from 'viem';
 import { getTokenDetails } from '@/lib/spCoin/guiUtils';
 import DataListSelect from '../views/DataListSelect';
 import { useAccount } from 'wagmi';
-import { Address } from 'viem';
 
 const TITLE_NAME = 'Select a token to buy';
 const INPUT_PLACE_HOLDER = 'Manage Sponsorships';
 const ELEMENT_DETAILS =
   'This container allows for the entry selection of a valid token address.\n' +
-  'When the address entry is completed and selected, ' +
-  'this address will be verified prior to entry acceptance.\n' +
+  'When the address entry is completed and selected, this address will be verified prior to entry acceptance.\n' +
   'Currently, there is no image token lookup, but that is to come.';
 
 type Props = {
   tokenContract: TokenContract | undefined;
   callBackSetter: (listElement: TokenContract) => null;
+  /** Parent may set this true to (re)open. User can close locally. */
   showPanel: boolean;
 };
 
-export default function Dialog({ showPanel, tokenContract, callBackSetter }: Props) {
+/** Panel (not a <dialog/>) version of ManageSponsorships. */
+export default function ManageSponsorshipsPanel({
+  showPanel,
+  tokenContract,
+  callBackSetter,
+}: Props) {
   const { chainId } = useAccount();
-  const dialogRef = useRef<null | HTMLDialogElement>(null);
+
+  // Local visibility to allow user-initiated close (parity with previous dialog.close()).
+  const [isOpen, setIsOpen] = useState<boolean>(!!showPanel);
+  useEffect(() => {
+    if (showPanel) setIsOpen(true);
+    // if parent sets false, we also respect it
+    if (!showPanel) setIsOpen(false);
+  }, [showPanel]);
 
   const [tokenInput, setTokenInput] = useState('');
   const [tokenSelect, setTokenSelect] = useState('');
   const [tokenContractState, setTokenContractState] = useState<TokenContract | undefined>();
 
+  // Resolve token details when user inputs an address
   useEffect(() => {
-    closePanel();
-  }, []);
-
-  useEffect(() => {
-    showPanel ? dialogRef.current?.showModal() : dialogRef.current?.close();
-  }, [showPanel]);
-
-  useEffect(() => {
-    tokenInput === ''
-      ? hideElement('buySelectGroup_ID')
-      : showElement('buySelectGroup_ID');
-
+    if (!tokenInput) {
+      setTokenSelect('');
+      setTokenContractState(undefined);
+      return;
+    }
     if (isAddress(tokenInput)) {
       setTokenDetails(tokenInput as Address, setTokenContractState);
     } else {
       setTokenSelect('Invalid Token Address');
+      setTokenContractState(undefined);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenInput]);
 
   useEffect(() => {
@@ -64,11 +71,11 @@ export default function Dialog({ showPanel, tokenContract, callBackSetter }: Pro
     }
   }, [tokenContractState]);
 
-  const setTokenInputField = (event: any) => {
+  const setTokenInputField = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTokenInput(event.target.value);
   };
 
-  const setTokenDetails = async (tokenAddr: Address, setFn: any) => {
+  const setTokenDetails = async (tokenAddr: Address, setFn: (t?: TokenContract) => void) => {
     if (typeof chainId === 'number') {
       return getTokenDetails(chainId, tokenAddr, setFn);
     } else {
@@ -76,9 +83,9 @@ export default function Dialog({ showPanel, tokenContract, callBackSetter }: Pro
     }
   };
 
-  const displayElementDetail = async (tokenAddr: any) => {
+  const displayElementDetail = async (tokenAddr: string) => {
     try {
-      if (!(await setTokenDetails(tokenAddr, setTokenContractState))) {
+      if (!(await setTokenDetails(tokenAddr as Address, setTokenContractState))) {
         alert(
           '*** ERROR *** Invalid Buy Token Address: ' +
             tokenInput +
@@ -95,7 +102,7 @@ export default function Dialog({ showPanel, tokenContract, callBackSetter }: Pro
       );
       await getWagmiBalanceOfRec(tokenAddr);
     } catch (e: any) {
-      alert('BUY_ERROR:displayElementDetail e.message' + e.message);
+      alert('BUY_ERROR:displayElementDetail e.message ' + e.message);
     }
   };
 
@@ -121,20 +128,30 @@ export default function Dialog({ showPanel, tokenContract, callBackSetter }: Pro
   const closePanel = () => {
     setTokenInput('');
     setTokenSelect('');
-    hideElement('buySelectGroup_ID');
-    dialogRef.current?.close();
+    setTokenContractState(undefined);
+    setIsOpen(false);
   };
 
+  // Hide entirely when not open (like the old dialog would be closed)
+  if (!isOpen) return null;
+
   return (
-    <dialog id="manageSponsorshipsDialog" ref={dialogRef} className={styles.baseSelectPanel}>
+    <div
+      id="manageSponsorshipsPanel"
+      className={styles.baseSelectPanel}
+      role="region"
+      aria-label="Manage Sponsorships"
+    >
       <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
         <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
-        <div
+        <button
+          type="button"
           className="cursor-pointer rounded border-none w-5 text-xl text-white"
           onClick={closePanel}
+          aria-label="Close panel"
         >
           X
-        </div>
+        </button>
       </div>
 
       <div className={styles.modalBox}>
@@ -143,7 +160,7 @@ export default function Dialog({ showPanel, tokenContract, callBackSetter }: Pro
             <Image
               src={searchMagGlassGrey_png}
               className={styles.searchImage}
-              alt="Search Image Grey"
+              alt="Search"
             />
             <input
               id="tokenInput"
@@ -156,39 +173,50 @@ export default function Dialog({ showPanel, tokenContract, callBackSetter }: Pro
             &nbsp;
           </div>
         </div>
-        <div id="buySelectGroup_ID" className={styles.modalInputSelect}>
-          <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-            <div
-              className="cursor-pointer flex flex-row justify-between"
-              onClick={() => getSelectedListElement(tokenContractState)}
-            >
-              <Image
-                id="tokenImage"
-                src={customUnknownImage_png}
-                className={styles.elementLogo}
-                alt="Search Image Grey"
-              />
-              <div>
-                <div className={styles.elementName}>{tokenSelect}</div>
-                <div className={styles.elementSymbol}>User Specified Token</div>
-              </div>
-            </div>
-            <div
-              className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-              onClick={() => displayElementDetail(tokenInput)}
-            >
-              <Image src={info_png} className={styles.infoLogo} alt="Info Image" />
+
+        {/* Conditionally render suggestion row when there is input */}
+        {tokenInput !== '' && (
+          <div className={styles.modalInputSelect}>
+            <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
+              <button
+                type="button"
+                className="cursor-pointer flex flex-row justify-between"
+                onClick={() => getSelectedListElement(tokenContractState)}
+                aria-label="Select token"
+              >
+                <Image
+                  id="tokenImage"
+                  src={customUnknownImage_png}
+                  className={styles.elementLogo}
+                  alt="Unknown token"
+                />
+                <div className="text-left">
+                  <div className={styles.elementName}>{tokenSelect}</div>
+                  <div className={styles.elementSymbol}>User Specified Token</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
+                onClick={() => displayElementDetail(tokenInput)}
+                aria-label="Show token details"
+                title="Show token details"
+              >
+                <Image src={info_png} className={styles.infoLogo} alt="Info" />
+              </button>
             </div>
           </div>
-        </div>
+        )}
 
+        {/* If you want the data list mode back, un-comment and wire the callback */}
         {/* <div className={styles.scrollDataListPanel}>
           <DataListSelect<TokenContract>
             dataFeedType={FEED_TYPE.TOKEN_LIST}
-            onClickItem={getSelectedListElement} 
+            onClickItem={getSelectedListElement}
           />
         </div> */}
       </div>
-    </dialog>
+    </div>
   );
 }
