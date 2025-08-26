@@ -57,9 +57,10 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
   );
 
   return (
-    <div className="inline-flex items-center relative">
-      {/* Force non-absolute positioning via Tailwind utility */}
-      <div className={`${cx['dropdown-content']} static`} aria-disabled={disabled}>
+    // ✅ No positioning on the wrapper
+    <div className="inline-flex items-center">
+      {/* ✅ Force non-absolute positioning; override any CSS module rule */}
+      <div className={`${cx['dropdown-content']} !static`} aria-disabled={disabled}>
         <div className={cx['networkSelect']}>
           <img
             alt={networkElement?.name ?? 'Network'}
@@ -76,7 +77,8 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
           />
         </div>
 
-        <div id={menuId} className={cx['networks']}>
+        {/* ✅ Ensure the menu itself is not absolutely positioned */}
+        <div id={menuId} className={`${cx['networks']} !static`}>
           {networkOptions}
         </div>
       </div>
