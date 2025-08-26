@@ -4,21 +4,27 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import styles from '@/styles/Header.module.css';
 import { ChevronDown } from 'lucide-react';
-import { NetworkElement } from '@/lib/structure';
-import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 import networks from '@/lib/network/initialize/networks.json';
+import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
+
+import { useExchangeContext } from '@/lib/context/hooks';
 import { useSetLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
 
 type Props = {
-  networkElement: NetworkElement;
   id: string;
-  disabled: boolean;
+  /** Keep the prop so callers can disable if needed; default to enabled */
+  disabled?: boolean;
 };
 
-const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
+const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
   const selectId = `${id}Select`;
   const menuId = `${id}-networks`;
-  const cx = styles as unknown as Record<string, string>;
+
+  // 🔒 Source of truth from ExchangeContext
+  const { exchangeContext } = useExchangeContext();
+  const networkElement = exchangeContext?.network;
+
+  // Request wallet/network switch (context updates via ExchangeProvider watcher)
   const setLocalChainId = useSetLocalChainId();
 
   useEffect(() => {
@@ -28,8 +34,7 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
   const handlePick = useCallback(
     (newChainId: number) => {
       setLocalChainId(newChainId);
-      // Close the dropdown after picking
-      toggleElement(menuId);
+      toggleElement(menuId); // close menu after selection
     },
     [setLocalChainId, menuId]
   );
@@ -38,12 +43,12 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
     () =>
       (networks as any[]).map((net) => (
         <button
-          type="button"
           key={net.chainId}
-          className="mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900 w-full text-left"
+          type="button"
+          className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900"
           onClick={() => handlePick(net.chainId)}
         >
-          <div className={cx['networkSelect']}>
+          <div className={styles.networkSelect}>
             <img
               src={net.img}
               alt={net.symbol || String(net.chainId)}
@@ -53,34 +58,50 @@ const NetworkSelect: React.FC<Props> = ({ networkElement, id, disabled }) => {
           </div>
         </button>
       )),
-    [handlePick, cx]
+    [handlePick]
+  );
+
+  // keyboard open/close for a11y
+  const onTriggerKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleElement(menuId);
+      }
+    },
+    [menuId]
   );
 
   return (
-    // ✅ No positioning on the wrapper
-    <div className="inline-flex items-center">
-      {/* ✅ Force non-absolute positioning; override any CSS module rule */}
-      <div className={`${cx['dropdown-content']} !static`} aria-disabled={disabled}>
-        <div className={cx['networkSelect']}>
-          <img
-            alt={networkElement?.name ?? 'Network'}
-            className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            src={networkElement?.logoURL ?? ''}
-            onClick={() => toggleElement(menuId)}
-          />
-          {networkElement?.name ?? 'Network'}
-          <ChevronDown
-            id={selectId}
-            size={16}
-            onClick={() => toggleElement(menuId)}
-            className="ml-2 cursor-pointer"
-          />
-        </div>
+    <div className="relative inline-flex items-center">
+      {/* Trigger kept in normal flow (no absolute positioning) */}
+      <div
+        className={styles.networkSelect}
+        role="button"
+        tabIndex={0}
+        aria-haspopup="listbox"
+        aria-expanded={false}
+        aria-controls={menuId}
+        onClick={() => toggleElement(menuId)}
+        onKeyDown={onTriggerKeyDown}
+      >
+        <img
+          alt={networkElement?.name ?? 'Network'}
+          className="h-9 w-9 mr-2 rounded-md cursor-pointer"
+          src={networkElement?.logoURL ?? ''}
+        />
+        {networkElement?.name ?? 'Network'}
+        <ChevronDown id={selectId} size={16} className="ml-2 cursor-pointer" />
+      </div>
 
-        {/* ✅ Ensure the menu itself is not absolutely positioned */}
-        <div id={menuId} className={`${cx['networks']} !static`}>
-          {networkOptions}
-        </div>
+      {/* Only the menu is absolutely positioned relative to the wrapper */}
+      <div
+        id={menuId}
+        className={`${styles.networks} absolute right-0 top-[calc(100%+6px)] z-50`}
+        role="listbox"
+        aria-label="Select network"
+      >
+        {networkOptions}
       </div>
     </div>
   );
