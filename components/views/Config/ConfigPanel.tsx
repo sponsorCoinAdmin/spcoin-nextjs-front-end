@@ -1,18 +1,17 @@
+// File: components/views/Config/ConfigPanel.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import SlippageBpsRadioButtons from './SlippageBpsRadioButtons';
 
 type Props = {
   showPanel: boolean;
-  /** Optional: notify parent when the dialog closes (X, Esc, or programmatically) */
   onClose?: () => void;
 };
 
 export default function ConfigPanel({ showPanel, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
-  // Open/close imperatively when prop changes
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
@@ -24,40 +23,67 @@ export default function ConfigPanel({ showPanel, onClose }: Props) {
     }
   }, [showPanel]);
 
-  // Bridge native <dialog> close event → onClose()
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
 
     const handleClose = () => onClose?.();
+    const handleCancel = () => onClose?.();
+
     dlg.addEventListener('close', handleClose);
-    return () => dlg.removeEventListener('close', handleClose);
+    dlg.addEventListener('cancel', handleCancel);
+    return () => {
+      dlg.removeEventListener('close', handleClose);
+      dlg.removeEventListener('cancel', handleCancel);
+    };
   }, [onClose]);
 
-  const handleX = () => {
-    // Calling close() will trigger the 'close' event, which invokes onClose (if provided)
+  const handleX = useCallback(() => {
     dialogRef.current?.close();
-  };
+  }, []);
+
+  const handleBackdropClick = useCallback<React.MouseEventHandler<HTMLDialogElement>>((e) => {
+    if (e.target === dialogRef.current) {
+      dialogRef.current?.close();
+    }
+  }, []);
 
   return (
     <dialog
       id="ConfigPanel"
       ref={dialogRef}
+      onClick={handleBackdropClick}
       className="
         absolute top-[-210px] right-[-740px]
         text-white bg-[#0E111B]
         border border-[#21273a]
         min-h-[10px]
         rounded-[15px]
+        backdrop:bg-black/40
       "
+      aria-labelledby="config-panel-title"
     >
-      <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-white">
-        <h1 className="text-md indent-39 mt-1 text-bg-txt-ltgry">Settings</h1>
+      {/* Header row with 6px top buffer */}
+      <div className="flex flex-row items-center justify-between mt-1.5 mb-1 px-3 text-white">
+        <h1
+          id="config-panel-title"
+          className="text-md text-bg-txt-ltgry m-0 leading-none"
+        >
+          Settings
+        </h1>
+
         <button
           type="button"
           aria-label="Close"
           onClick={handleX}
-          className="cursor-pointer rounded border-none w-5 text-xl text-bg-txt-ltgry"
+          className="
+            cursor-pointer w-5 text-xl leading-none
+            bg-transparent
+            border-0 outline-none ring-0 appearance-none
+            focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0
+            hover:bg-transparent active:bg-transparent
+            text-bg-txt-ltgry self-center
+          "
         >
           X
         </button>

@@ -1,37 +1,28 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import CustomConnectButton from './CustomConnectButton';
 import ExchangeButton from './ExchangeButton';
-import { useExchangeContext } from '@/lib/context/hooks'
-import { useAccount } from 'wagmi';
-import { Address } from 'viem';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 type Props = {
-    isLoadingPrice: boolean
-}
+  isLoadingPrice: boolean;
+};
 
-const PriceButton = ({ isLoadingPrice }: Props) => {    
-    const { exchangeContext } = useExchangeContext();
-    const ACTIVE_ACCOUNT = useAccount();
-    
-    const [walletAccount, setWalletAccount] = useState<Address | undefined>(undefined);
-    
-    useEffect(() => {
-        setWalletAccount(ACTIVE_ACCOUNT?.address);
-    }, [ACTIVE_ACCOUNT?.address]);
+const PriceButton = ({ isLoadingPrice }: Props) => {
+  // ✅ Single source of truth: pull the connected address from ExchangeContext
+  const { exchangeContext } = useExchangeContext();
+  const walletAddress = exchangeContext?.accounts?.connectedAccount?.address;
 
-    return (
-        <div id="PriceButton">
-            {!walletAccount ? (
-                <CustomConnectButton />
-            ) : (
-                <ExchangeButton
-                    isLoadingPrice={isLoadingPrice}
-                />
-            )}
-        </div>
-    );
-}
+  return (
+    <div id="PriceButton">
+      {!walletAddress ? (
+        <CustomConnectButton />
+      ) : (
+        <ExchangeButton isLoadingPrice={isLoadingPrice} />
+      )}
+    </div>
+  );
+};
 
 export default PriceButton;

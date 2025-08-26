@@ -1,43 +1,63 @@
+// File: lib/context/hooks/nestedHooks/useLocalChainId.ts
 'use client';
 
-import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
-import { useSwitchChain } from 'wagmi';
+import { useCallback } from 'react';
+import { useAccount, useSwitchChain } from 'wagmi';
+import { useExchangeContext } from '@/lib/context/hooks';
+import {
+  getBlockChainName,
+  getBlockChainLogoURL,
+  getBlockExplorerURL,
+} from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_USE_LOCAL_CHAIN_ID === 'true';
 const debugLog = createDebugLogger('useLocalChainId', DEBUG_ENABLED, LOG_TIME);
 
-/**
- * Hook to read the local chainId from the ExchangeContext.
- * This is the authoritative value used throughout the app (instead of Wagmi's useChainId).
- */
+/** Read the app’s authoritative chainId from ExchangeProvider */
 export const useLocalChainId = (): number => {
-  const { network } = useNetwork();
-  const chainId = network?.chainId ?? 1;
-
-  if (DEBUG_ENABLED) {
-    debugLog.log(`📦 useLocalChainId → ${chainId}`);
-  }
-
-  return chainId;
+  const { exchangeContext } = useExchangeContext();
+  const id = exchangeContext?.network?.chainId ?? 1;
+  if (DEBUG_ENABLED) debugLog.log(`📦 useLocalChainId → ${id}`);
+  return id;
 };
 
 /**
- * Hook to request a wallet chain switch.
- * This triggers useLocalChainId update, which is then picked up by useNetwork().
+ * Set the app’s chain:
+ * - If connected, request wallet switch (wagmi).
+ * - If disconnected, update ExchangeContext locally (persisted) so UI/logic use it.
  */
 export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) => {
+  const { isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
+  const { setExchangeContext } = useExchangeContext();
 
-  return async (newChainId: number) => {
-    debugLog.log(`🔁 Requesting wallet switch to chainId=${newChainId}`);
+  return useCallback(
+    async (newChainId: number) => {
+      if (DEBUG_ENABLED) debugLog.log(`🔁 setLocalChainId → ${newChainId}, isConnected=${isConnected}`);
 
-    try {
-      switchChain({ chainId: newChainId });
-      debugLog.log(`✅ switchChain success → chainId=${newChainId}`);
-    } catch (err: unknown) {
-      debugLog.error(`❌ switchChain failed: ${(err as Error)?.message || err}`);
-    }
-  };
+      if (isConnected && switchChain) {
+        try {
+          switchChain({ chainId: newChainId });
+          if (DEBUG_ENABLED) debugLog.log(`✅ switchChain invoked → ${newChainId}`);
+        } catch (err: unknown) {
+          debugLog.error(`❌ switchChain failed: ${(err as Error)?.message || String(err)}`);
+        }
+        return;
+      }
+
+      // Disconnected: update local context so app uses this chain
+      setExchangeContext((prev) => {
+        const next = structuredClone(prev);
+        next.network.chainId = newChainId;
+        next.network.name = getBlockChainName(newChainId) || '';
+        next.network.logoURL = getBlockChainLogoURL(newChainId) || '';
+        next.network.url = getBlockExplorerURL(newChainId) || '';
+        // NOTE: do not force connected=true here
+        return next;
+      }, 'ui:setLocalChainId(disconnected)');
+    },
+    [isConnected, switchChain, setExchangeContext]
+  );
 };

@@ -1,8 +1,9 @@
+// File: lib/0X/hooks/usePriceAPI.ts
 import { useEffect, useRef } from 'react';
 import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
 import { stringify } from 'qs';
 import useSWR from 'swr';
-import { isAddress } from 'viem';
+import { isAddress, Address } from 'viem';
 import {
   useApiErrorMessage,
   useBuyAmount,
@@ -11,8 +12,6 @@ import {
   useSellAmount,
   useTradeData
 } from '@/lib/context/hooks';
-import { useIsActiveAccountAddress } from '../../network/utils';
-import { Address } from 'viem';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useChainId } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -22,14 +21,11 @@ const API_PROVIDER = '0X/';
 const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
 const apiPriceBase = '/price';
 
-// 🌐 Debug logging flag and logger controlled by .env.local
 const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true';
-const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME); // tsFlag defaults to true
+const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
-const validTokenOrNetworkCoin = (address: Address, isActiveAccount: boolean): Address => {
-  return  address;
-};
+const validTokenOrNetworkCoin = (address: Address): Address => address;
 
 const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
   endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
@@ -149,14 +145,11 @@ function usePriceAPI() {
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount, setSellAmount] = useSellAmount();
 
-  let sellTokenAddress = tradeData.sellTokenContract?.address;
-  let buyTokenAddress = tradeData.buyTokenContract?.address;
+  let sellTokenAddress = tradeData.sellTokenContract?.address as Address | undefined;
+  let buyTokenAddress = tradeData.buyTokenContract?.address as Address | undefined;
 
-  const isActiveSellAccount = useIsActiveAccountAddress(sellTokenAddress as Address);
-  const isActiveBuyAccount = useIsActiveAccountAddress(buyTokenAddress as Address);
-
-  sellTokenAddress = validTokenOrNetworkCoin(sellTokenAddress as Address, isActiveSellAccount);
-  buyTokenAddress = validTokenOrNetworkCoin(buyTokenAddress as Address, isActiveBuyAccount);
+  sellTokenAddress = sellTokenAddress ? validTokenOrNetworkCoin(sellTokenAddress) : undefined;
+  buyTokenAddress = buyTokenAddress ? validTokenOrNetworkCoin(buyTokenAddress) : undefined;
 
   const debouncedSellToken = useDebounce(sellTokenAddress, 450);
   const debouncedBuyToken = useDebounce(buyTokenAddress, 450);
@@ -168,26 +161,26 @@ function usePriceAPI() {
   );
 
   const shouldFetch = (
-    sellTokenAddress?: Address,
-    buyTokenAddress?: Address,
-    amount?: bigint
+    sellToken?: Address,
+    buyToken?: Address,
+    effectiveAmount?: bigint
   ): boolean => {
-    if (!isAddress(sellTokenAddress ?? '')) {
-      debugLog.warn(`Invalid or missing sellTokenAddress`, sellTokenAddress);
+    if (!isAddress(sellToken ?? '')) {
+      debugLog.warn(`Invalid or missing sellTokenAddress`, sellToken);
       return false;
     }
 
-    if (!isAddress(buyTokenAddress ?? '')) {
-      debugLog.warn(`Invalid or missing buyTokenAddress`, buyTokenAddress);
+    if (!isAddress(buyToken ?? '')) {
+      debugLog.warn(`Invalid or missing buyTokenAddress`, buyToken);
       return false;
     }
 
-    if (sellTokenAddress!.toLowerCase() === buyTokenAddress!.toLowerCase()) {
+    if ((sellToken as string).toLowerCase() === (buyToken as string).toLowerCase()) {
       debugLog.warn(`Sell and buy tokens are the same`);
       return false;
     }
 
-    if (!amount || amount === 0n) {
+    if (!effectiveAmount || effectiveAmount === 0n) {
       debugLog.warn(`Amount is 0`);
       return false;
     }
@@ -200,25 +193,32 @@ function usePriceAPI() {
     return true;
   };
 
+  // Guarded zeroing to avoid extra renders
   useEffect(() => {
     if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
-      setBuyAmount(0n);
+      if (buyAmount !== 0n) setBuyAmount(0n);
     }
     if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n) {
-      setSellAmount(0n);
+      if (sellAmount !== 0n) setSellAmount(0n);
     }
-  }, [tradeData.tradeDirection, sellAmount, buyAmount]);
+  }, [tradeData.tradeDirection, sellAmount, buyAmount, setBuyAmount, setSellAmount]);
 
-  const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken, debouncedSellAmount)
+  // Choose the correct amount to gate fetches based on direction
+  const amountForDirection =
+    tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
+      ? debouncedSellAmount
+      : debouncedBuyAmount;
+
+  const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken, amountForDirection)
     ? getPriceApiCall(
-      tradeData.tradeDirection,
-      chainId,
-      debouncedSellToken,
-      debouncedBuyToken,
-      debouncedSellAmount,
-      debouncedBuyAmount,
-      debouncedSlippage
-    )
+        tradeData.tradeDirection,
+        chainId,
+        debouncedSellToken,
+        debouncedBuyToken,
+        debouncedSellAmount,
+        debouncedBuyAmount,
+        debouncedSlippage
+      )
     : null;
 
   useWhyDidYouUpdate('usePriceAPI', {
@@ -249,17 +249,19 @@ function usePriceAPI() {
               sellTokenAddress,
               buyTokenAddress,
               tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
-              data
+              data as PriceResponse
             ),
             null,
-            2 // optional: pretty print
+            2
           ),
         });
       } else {
-        if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && data?.buyAmount !== undefined) {
-          setBuyAmount(BigInt(data.buyAmount ?? 0));
-        } else if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && data?.sellAmount !== undefined) {
-          setSellAmount(BigInt(data.sellAmount ?? 0));
+        if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (data as any)?.buyAmount !== undefined) {
+          const next = BigInt((data as any).buyAmount ?? 0);
+          if (buyAmount !== next) setBuyAmount(next);
+        } else if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (data as any)?.sellAmount !== undefined) {
+          const next = BigInt((data as any).sellAmount ?? 0);
+          if (sellAmount !== next) setSellAmount(next);
         }
       }
     },

@@ -1,70 +1,145 @@
 // File: lib/context/hooks/nestedHooks/useExchangeTokenBalances.ts
-
 'use client';
 
-import { useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { Address } from 'viem';
-
-import { useExchangeContext } from '../useExchangeContext';
-import { useBalanceOf } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
+import { useEffect, useRef, useMemo } from 'react';
+import { Address, erc20Abi } from 'viem';
+import { usePublicClient } from 'wagmi';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_BALANCES === 'true';
 const debugLog = createDebugLogger('useExchangeTokenBalances', DEBUG_ENABLED, LOG_TIME);
 
-function balancesAreEqual(a?: bigint, b?: bigint): boolean {
-  if (a === b) return true;
-  return a?.toString() === b?.toString();
+// Polling cadence (keep modest to avoid RPC abuse)
+const POLL_MS = 15_000;
+
+function lower(a?: string | Address) {
+  return a ? (a as string).toLowerCase() : undefined;
 }
 
-export const useExchangeTokenBalances = () => {
-  const { address } = useAccount();
+export function useExchangeTokenBalances() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const buyToken = exchangeContext.tradeData.buyTokenContract;
-  const sellToken = exchangeContext.tradeData.sellTokenContract;
+  const chainId = exchangeContext?.network?.chainId ?? 0;
+  const account = exchangeContext?.accounts?.connectedAccount?.address as Address | undefined;
 
-  const buyResult = useBalanceOf({ address: address as Address, token: buyToken?.address as Address });
-  const sellResult = useBalanceOf({ address: address as Address, token: sellToken?.address as Address });
+  const sellAddr = useMemo(
+    () => lower(exchangeContext?.tradeData?.sellTokenContract?.address),
+    [exchangeContext?.tradeData?.sellTokenContract?.address]
+  );
+  const buyAddr = useMemo(
+    () => lower(exchangeContext?.tradeData?.buyTokenContract?.address),
+    [exchangeContext?.tradeData?.buyTokenContract?.address]
+  );
 
-  const buyBalance = buyResult.data?.value;
-  const sellBalance = sellResult.data?.value;
+  const publicClient = usePublicClient({ chainId });
+
+  // Used to ensure only the latest fetch writes results
+  const reqIdRef = useRef(0);
 
   useEffect(() => {
-    if (!address) return;
-
-    const newTradeData = { ...exchangeContext.tradeData };
-    let hasChanged = false;
-
-    if (
-      buyToken?.address &&
-      buyBalance !== undefined &&
-      !balancesAreEqual(buyToken.balance, buyBalance)
-    ) {
-      debugHookChange('buyToken.balance', buyToken.balance, buyBalance);
-      newTradeData.buyTokenContract = { ...buyToken, balance: buyBalance };
-      hasChanged = true;
+    // Preconditions
+    if (!publicClient || !account || (!sellAddr && !buyAddr) || chainId <= 0) {
+      if (DEBUG_ENABLED) {
+        debugLog.log('⏸️ Skipping balance poll', {
+          hasClient: !!publicClient,
+          hasAccount: !!account,
+          sellAddr,
+          buyAddr,
+          chainId,
+        });
+      }
+      return;
     }
 
-    if (
-      sellToken?.address &&
-      sellBalance !== undefined &&
-      !balancesAreEqual(sellToken.balance, sellBalance)
-    ) {
-      debugHookChange('sellToken.balance', sellToken.balance, sellBalance);
-      newTradeData.sellTokenContract = { ...sellToken, balance: sellBalance };
-      hasChanged = true;
-    }
+    let cancelled = false;
+    const myReqId = ++reqIdRef.current;
 
-    if (hasChanged) {
-      debugLog.log('💾 Committing updated token balances to context');
-      setExchangeContext(prev => ({
-        ...prev,
-        tradeData: newTradeData,
-      }));
-    }
-  }, [address, buyBalance, sellBalance, buyToken, sellToken, setExchangeContext]);
-};
+    const fetchOnce = async () => {
+      try {
+        const [sellBal, buyBal] = await Promise.all([
+          sellAddr
+            ? publicClient.readContract({
+                address: sellAddr as Address,
+                abi: erc20Abi,
+                functionName: 'balanceOf',
+                args: [account],
+              }).catch((e) => {
+                if (DEBUG_ENABLED) debugLog.warn('sell balanceOf failed', e);
+                return null;
+              })
+            : null,
+          buyAddr
+            ? publicClient.readContract({
+                address: buyAddr as Address,
+                abi: erc20Abi,
+                functionName: 'balanceOf',
+                args: [account],
+              }).catch((e) => {
+                if (DEBUG_ENABLED) debugLog.warn('buy balanceOf failed', e);
+                return null;
+              })
+            : null,
+        ]);
+
+        if (cancelled || myReqId !== reqIdRef.current) return;
+
+        // Single consolidated context update; skip if nothing actually changed
+        setExchangeContext((prev) => {
+          const next = structuredClone(prev);
+          let changed = false;
+
+          const ctxSellAddr = lower(next.tradeData.sellTokenContract?.address);
+          const ctxBuyAddr = lower(next.tradeData.buyTokenContract?.address);
+
+          // Only write if addresses still match (avoid racing after token switch)
+          if (sellAddr && ctxSellAddr === sellAddr && typeof sellBal === 'bigint') {
+            const prevBal = next.tradeData.sellTokenContract?.balance ?? 0n;
+            if (prevBal !== sellBal) {
+              next.tradeData.sellTokenContract!.balance = sellBal;
+              changed = true;
+            }
+          }
+          if (buyAddr && ctxBuyAddr === buyAddr && typeof buyBal === 'bigint') {
+            const prevBal = next.tradeData.buyTokenContract?.balance ?? 0n;
+            if (prevBal !== buyBal) {
+              next.tradeData.buyTokenContract!.balance = buyBal;
+              changed = true;
+            }
+          }
+
+          if (!changed) return prev;
+          if (DEBUG_ENABLED) {
+            debugLog.log('💾 Balances updated', {
+              sell: sellAddr ? String(sellBal) : undefined,
+              buy: buyAddr ? String(buyBal) : undefined,
+            });
+          }
+          return next;
+        }, 'balances:poll');
+      } catch (err) {
+        if (DEBUG_ENABLED) debugLog.error('❌ balance poll error', err);
+      }
+    };
+
+    // Run immediately, then poll
+    fetchOnce();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchOnce();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    const t = setInterval(fetchOnce, POLL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [publicClient, account, chainId, sellAddr, buyAddr, setExchangeContext]);
+
+  // Hook returns nothing; UI reads balances from context
+  return null;
+}

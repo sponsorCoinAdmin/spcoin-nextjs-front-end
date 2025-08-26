@@ -3,28 +3,35 @@
     "name": "Ethereum",
     "chainId": 1,
     "symbol": "ETH",
-    "img": "/assets/blockchains/1/info/1.png",
+    "img": "/assets/blockchains/1/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/logo.png",
     "url": "https://etherscan.io/"
   },
   {
-    "name": "HardHat",
-    "chainId": 31337,
-    "symbol": "HH",
-    "img": "assets/blockchains/31337.png",
-    "url": "NA"
+    "name": "Base",
+    "chainId": 8453,
+    "symbol": "ETH",
+    "img": "/assets/blockchains/8453/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/logo.png",
+    "url": "https://sepolia.etherscan.io/"
   },
   {
     "name": "Polygon",
     "chainId": 137,
     "symbol": "MATIC",
-    "img": "assets/blockchains/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
+    "img": "/assets/blockchains/137/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/logo.png",
     "url": "https://polygonscan.com/"
   },
+  {
+    "name": "HardHat",
+    "chainId": 31337,
+    "symbol": "HH",
+    "img": "/assets/blockchains/31337/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/logo.png",
+    "url": "NA"
+  },    
   {
     "name": "Sepolia",
     "chainId": 11155111,
     "symbol": "ETH",
-    "img": "/assets/blockchains/1/info/1.png/11155111.png",
+    "img": "/assets/blockchains/11155111/contracts/0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/logo.png",
     "url": "https://sepolia.etherscan.io/"
   }    
 ] 

@@ -1,41 +1,28 @@
+// File: components/panes/header.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useAccount } from 'wagmi';
-import { useResetContracts } from '@/lib/context/hooks/nestedHooks/useResetContracts';
-import { useNetwork } from '@/lib/context/hooks/nestedHooks/useNetwork';
-import { useLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
-import { useExchangeContext, useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';
-import { useDidHydrate } from '@/lib/hooks/useDidHydrate';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { defaultMissingImage } from '@/lib/network/utils';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '../Buttons/ConnectButton';
+import NetworkSelect from '@/components/containers/NetworkSelect';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 export default function Header() {
-  const { setNetworkConnected } = useNetwork();
-  useResetContracts();
+  const { exchangeContext } = useExchangeContext();
 
-  const chainId = useLocalChainId();
   const pathname = usePathname();
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const { exchangeContext } = useExchangeContext();
-  const { isConnected } = useAccount();
 
-  useEffect(() => {
-    setNetworkConnected(isConnected);
-  }, [isConnected]);
-
-  const networkName = exchangeContext?.network?.name ?? '';
-  const logo = exchangeContext?.network?.logoURL ?? '';
+  const networkElement = exchangeContext?.network;
 
   const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
   const ADMIN_LINK = process.env.NEXT_PUBLIC_ADMIN_PAGE === 'true';
@@ -45,7 +32,6 @@ export default function Header() {
   const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
     const isActive = pathname === href && hoveredTab === null;
-
     return `
       px-4 py-2 rounded font-medium transition cursor-pointer
       ${isHovered || isActive ? 'bg-[#222a3a] text-[#5981F3]' : ''}
@@ -103,8 +89,8 @@ export default function Header() {
           )}
 
           {staticLinks
-            .filter(link => pathname === link.href)
-            .map(link => (
+            .filter((link) => pathname === link.href)
+            .map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -117,25 +103,16 @@ export default function Header() {
             ))}
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {logo && (
-              <img
-                key={logo}
-                src={logo}
-                className="h-[36px]"
-                alt={`Header ChainId = ${chainId} Network = ${networkName}`}
-                onError={(event) => {
-                  debugLog.warn(`⚠️ Failed to load logo: ${logo}, using fallback.`);
-                  event.currentTarget.src = defaultMissingImage;
-                }}
-              />
-            )}
-            <span className="text-[15px] font-semibold">{networkName}</span>
-          </div>
-          <div className="ml-2">
-            <ConnectButton />
-          </div>
+        {/* Right side: use Tailwind gap for an exact 10px spacing (gap-2.5 = 0.625rem ≈ 10px) */}
+        <div className="flex items-center gap-2.5">
+          {networkElement && (
+            <NetworkSelect
+              id="header-network"
+              networkElement={networkElement}
+              disabled={false}
+            />
+          )}
+          <ConnectButton />
         </div>
       </div>
     </header>

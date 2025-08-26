@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { parseUnits, formatUnits } from 'viem';
+import { parseUnits, formatUnits, Address } from 'viem';
 import { clsx } from 'clsx';
 
 import {
@@ -38,8 +38,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER =
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG_ENABLED, false);
 
 const maxInputSz = 28;
+const TYPING_GRACE_MS = 550;
 
-// Limit a numeric string to `max` display characters by trimming fractional digits first.
 function clampDisplay(numStr: string, max = maxInputSz): string {
   if (!numStr) return '0';
   if (/[eE][+-]?\d+/.test(numStr)) return numStr.slice(0, max);
@@ -67,6 +67,10 @@ function clampDisplay(numStr: string, max = maxInputSz): string {
   return sign + intPart;
 }
 
+function lower(addr?: string | Address) {
+  return addr ? (addr as string).toLowerCase() : '';
+}
+
 // 🔒 PRIVATE inner component, not exported
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
@@ -92,6 +96,12 @@ function TradeAssetPanelInner() {
   const tokenContract =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellTokenContract : buyTokenContract;
 
+  const tokenAddr = useMemo(
+    () => lower(tokenContract?.address),
+    [tokenContract?.address]
+  );
+  const tokenDecimals = tokenContract?.decimals ?? 18;
+
   const [inputValue, setInputValue] = useState<string>('0');
   const debouncedSellAmount = useDebounce(sellAmount, 600);
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
@@ -99,39 +109,57 @@ function TradeAssetPanelInner() {
   useEffect(() => {
     debugLog.log('✅ Connected to TokenPanelContext', { localTokenContract, localAmount });
     debugLog.log('🔎 activeDisplay:', getActiveDisplayString(exchangeContext.settings.activeDisplay));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // ✅ Only mirror the address change (not whole object identity)
+  const prevAddrRef = useRef<string>('');
   useEffect(() => {
-    if (tokenContract) {
-      debugLog.log(`📦 Loaded tokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenContract);
+    if (!tokenAddr && !prevAddrRef.current) return; // both empty → nothing
+    if (tokenAddr === prevAddrRef.current) return;
+
+    prevAddrRef.current = tokenAddr;
+
+    if (tokenAddr) {
+      debugLog.log(`📦 Loaded tokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenAddr);
       setLocalTokenContract(tokenContract);
-    }
-  }, [tokenContract, setLocalTokenContract, containerType]);
-
-  // ➕ NEW: zero the input (and local/global amounts) when the relevant token contract is cleared
-  useEffect(() => {
-    if (tokenContract) return; // only act when it becomes undefined
-
-    debugLog.log(
-      `🧹 Token contract cleared for ${SP_COIN_DISPLAY[containerType]} → zeroing input & amount`
-    );
-
-    // Clear local panel state
-    setLocalTokenContract(undefined as any);
-    setLocalAmount(0n);
-    setInputValue('0');
-
-    // Keep global context consistent (optional but sane default)
-    if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-      setSellAmount(0n);
     } else {
-      setBuyAmount(0n);
+      // token cleared: handled in the next effect
     }
+  }, [tokenAddr, containerType, setLocalTokenContract, tokenContract]);
+
+  // ➕ Zero input/local/global when token is cleared (only on transition defined → undefined)
+  const wasDefinedRef = useRef<boolean>(Boolean(tokenAddr));
+  useEffect(() => {
+    const wasDefined = wasDefinedRef.current;
+    const isDefined = Boolean(tokenAddr);
+
+    if (wasDefined && !isDefined) {
+      debugLog.log(
+        `🧹 Token contract cleared for ${SP_COIN_DISPLAY[containerType]} → zeroing input & amount`
+      );
+
+      // local
+      setLocalTokenContract(undefined as any);
+      setLocalAmount(0n);
+      setInputValue('0');
+
+      // global
+      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
+        if (sellAmount !== 0n) setSellAmount(0n);
+      } else {
+        if (buyAmount !== 0n) setBuyAmount(0n);
+      }
+    }
+
+    wasDefinedRef.current = isDefined;
   }, [
-    tokenContract,
+    tokenAddr,
     containerType,
     setLocalTokenContract,
     setLocalAmount,
+    sellAmount,
+    buyAmount,
     setSellAmount,
     setBuyAmount,
   ]);
@@ -141,30 +169,31 @@ function TradeAssetPanelInner() {
     s === '.' || /^\d+\.$/.test(s) || /^\d+\.\d*0$/.test(s);
 
   // ⌨️ Typing grace to prevent racey mirror-overwrites while user edits quickly
-  const TYPING_GRACE_MS = 550;
   const typingUntilRef = useRef<number>(0);
 
-  // Keep text input in sync with selected token + global amount (but not while typing)
+  // Keep text input in sync with selected token + its OWN global amount (avoid both amounts)
+  const currentAmount = containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
   useEffect(() => {
-    if (!tokenContract) return;
+    if (!tokenAddr) return;
     if (isIntermediateDecimal(inputValue)) return;
     if (Date.now() < typingUntilRef.current) return;
 
-    const currentAmount =
-      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
-    const formattedRaw = formatUnits(currentAmount, tokenContract.decimals || 18);
+    const formattedRaw = formatUnits(currentAmount ?? 0n, tokenDecimals);
     const formatted = clampDisplay(formattedRaw, maxInputSz);
-    if (inputValue !== formatted) setInputValue(formatted);
-  }, [sellAmount, buyAmount, tokenContract, containerType, inputValue]);
+
+    if (inputValue !== formatted) {
+      setInputValue(formatted);
+    }
+  }, [tokenAddr, tokenDecimals, currentAmount, containerType, inputValue]);
 
   // Debounced amount → side-effects only (quotes/validation)
   const lastDebouncedRef = useRef<bigint | null>(null);
-  useEffect(() => {
-    const debouncedForPanel =
-      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-        ? debouncedSellAmount
-        : debouncedBuyAmount;
+  const debouncedForPanel =
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+      ? debouncedSellAmount
+      : debouncedBuyAmount;
 
+  useEffect(() => {
     const directionOk =
       (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
         tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
@@ -174,13 +203,13 @@ function TradeAssetPanelInner() {
     if (!directionOk) return;
 
     if (lastDebouncedRef.current === debouncedForPanel) return;
-    lastDebouncedRef.current = debouncedForPanel;
+    lastDebouncedRef.current = debouncedForPanel ?? null;
 
     debugLog.log('🔔 Debounced amount ready (side-effects only)', {
       panel: SP_COIN_DISPLAY[containerType],
       tradeDirection,
       amount: debouncedForPanel?.toString?.(),
-      token: tokenContract?.address,
+      token: tokenAddr,
     });
 
     if (typeof window !== 'undefined') {
@@ -191,7 +220,7 @@ function TradeAssetPanelInner() {
               amount: debouncedForPanel,
               containerType,
               tradeDirection,
-              token: tokenContract?.address,
+              token: tokenAddr || undefined,
             },
           }),
         );
@@ -199,13 +228,7 @@ function TradeAssetPanelInner() {
         // ignore if CustomEvent isn't available
       }
     }
-  }, [
-    debouncedSellAmount,
-    debouncedBuyAmount,
-    containerType,
-    tradeDirection,
-    tokenContract,
-  ]);
+  }, [debouncedForPanel, containerType, tradeDirection, tokenAddr]);
 
   const handleInputChange = (value: string) => {
     // each keystroke opens a "do-not-mirror" window
@@ -219,9 +242,9 @@ function TradeAssetPanelInner() {
     setInputValue(normalized);
 
     if (isIntermediateDecimal(normalized)) return;
-    if (!tokenContract) return;
+    if (!tokenAddr) return;
 
-    const decimals = tokenContract.decimals || 18;
+    const decimals = tokenDecimals;
     const formatted = parseValidFormattedAmount(normalized, decimals);
 
     try {
@@ -230,11 +253,15 @@ function TradeAssetPanelInner() {
       setLocalAmount(bigIntValue);
 
       if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-        setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
-        setSellAmount(bigIntValue);
+        if (tradeDirection !== TRADE_DIRECTION.SELL_EXACT_OUT) {
+          setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
+        }
+        if (sellAmount !== bigIntValue) setSellAmount(bigIntValue);
       } else {
-        setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN);
-        setBuyAmount(bigIntValue);
+        if (tradeDirection !== TRADE_DIRECTION.BUY_EXACT_IN) {
+          setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN);
+        }
+        if (buyAmount !== bigIntValue) setBuyAmount(bigIntValue);
       }
     } catch (err) {
       debugLog.warn('⚠️ Failed to parse input:', err);
@@ -253,7 +280,7 @@ function TradeAssetPanelInner() {
   const formattedBalance = useFormattedTokenAmount(tokenContract, tokenContract?.balance ?? 0n);
 
   const isInputDisabled =
-    !tokenContract ||
+    !tokenAddr ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
       containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
 
