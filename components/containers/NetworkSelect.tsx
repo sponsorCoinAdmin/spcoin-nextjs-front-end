@@ -1,4 +1,3 @@
-// File: components/containers/NetworkSelect.tsx
 'use client';
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -39,29 +38,32 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
     [setLocalChainId, menuId]
   );
 
-  const networkOptions = useMemo(
+  const networkOptions = useMemo<JSX.Element[]>(
     () =>
       (networks as any[]).map((net) => (
-        <button
-          key={net.chainId}
-          type="button"
-          className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900"
-          onClick={() => handlePick(net.chainId)}
-        >
-          <div className={styles.networkSelect}>
-            <img
-              src={net.img}
-              alt={net.symbol || String(net.chainId)}
-              className="h-9 w-9 mr-2 rounded-md"
-            />
-            <div>{net.name}</div>
-          </div>
-        </button>
+        <li key={net.chainId} className="list-none">
+          <button
+            type="button"
+            className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900"
+            onClick={() => handlePick(net.chainId)}
+            data-chainid={net.chainId}
+            data-selected={networkElement?.chainId === net.chainId ? 'true' : 'false'}
+          >
+            <div className={styles.networkSelect}>
+              <img
+                src={net.img}
+                alt={net.symbol || String(net.chainId)}
+                className="h-9 w-9 mr-2 rounded-md"
+              />
+              <div>{net.name}</div>
+            </div>
+          </button>
+        </li>
       )),
-    [handlePick]
+    [handlePick, networkElement?.chainId]
   );
 
-  // keyboard open/close for a11y
+  // keyboard open/close for a11y (no ARIA used)
   const onTriggerKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -77,13 +79,10 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
       {/* Trigger kept in normal flow (no absolute positioning) */}
       <div
         className={styles.networkSelect}
-        role="button"
         tabIndex={0}
-        aria-haspopup="listbox"
-        aria-expanded={false}
-        aria-controls={menuId}
         onClick={() => toggleElement(menuId)}
         onKeyDown={onTriggerKeyDown}
+        data-menu-id={menuId}
       >
         <img
           alt={networkElement?.name ?? 'Network'}
@@ -95,14 +94,13 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
       </div>
 
       {/* Only the menu is absolutely positioned relative to the wrapper */}
-      <div
+      <ul
         id={menuId}
         className={`${styles.networks} absolute right-0 top-[calc(100%+6px)] z-50`}
-        role="listbox"
-        aria-label="Select network"
+        data-menu
       >
         {networkOptions}
-      </div>
+      </ul>
     </div>
   );
 };
