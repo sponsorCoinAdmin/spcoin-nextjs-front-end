@@ -16,8 +16,8 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useActiveAccount } from '@/lib/context/hooks/nestedHooks/useActiveAccount';
-import { useProviderSetters } from '@/lib/context/providers/useProviderSetters';
-import { useProviderWatchers } from '@/lib/context/providers/useProviderWatchers';
+import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
+import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
 
 // ✅ new provider-internal hooks (moved code out of this file)
 
