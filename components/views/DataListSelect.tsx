@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useChainId } from 'wagmi';
+import { useChainId as useWagmiChainId } from 'wagmi';
 import {
   BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
@@ -22,6 +22,7 @@ import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
+import { useExchangeContext } from '@/lib/context/hooks';               // ← add this
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -29,12 +30,12 @@ const debugLog = createDebugLogger('DataListSelect', DEBUG_ENABLED, LOG_TIME);
 
 const getDataFeedList = (chainId: number) => {
   switch (chainId) {
-    case BASE: return baseTokenList;
+    case BASE:     return baseTokenList;
     case ETHEREUM: return ethereumTokenList;
-    case POLYGON: return polygonTokenList;
-    case HARDHAT: return hardhatTokenList;
-    case SEPOLIA: return sepoliaTokenList;
-    default: return ethereumTokenList;
+    case POLYGON:  return polygonTokenList;
+    case HARDHAT:  return hardhatTokenList;
+    case SEPOLIA:  return sepoliaTokenList;
+    default:       return []; // ← avoid silently defaulting to Ethereum; empty list is safer
   }
 };
 
@@ -46,18 +47,18 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const [isClient, setIsClient] = useState(false);
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
-
-  // NEW: async-resolved token list with verified logo URLs
   const [logoTokenList, setLogoTokenList] = useState<any[]>([]);
 
   const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectContext();
-  const chainId = useChainId();
 
-  // queue & enforcement for programmatic picks
+  const { exchangeContext } = useExchangeContext();             // ← app network
+  const appChainId = exchangeContext?.network?.chainId;
+  const wagmiChainId = useWagmiChainId();                       // ← wallet network
+  const chainId = appChainId ?? wagmiChainId ?? ETHEREUM;       // ← prefer app, then wallet
+
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
 
-  // only force manualEntry=false while we have a pending pick
   const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
 
   useEffect(() => setIsClient(true), []);
@@ -83,7 +84,6 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     }
   }, [dataFeedType, debugLog]);
 
-  // commit queued pick once manualEntry is false
   useEffect(() => {
     if (programmaticReady && pendingPickRef.current) {
       const addr = pendingPickRef.current;
@@ -99,7 +99,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     [chainId, isClient, dataFeedType]
   );
 
-  // 🚀 Resolve logo URLs asynchronously (since getLogoURL is now async)
+  // Resolve logo URLs asynchronously for current chain
   useEffect(() => {
     let cancelled = false;
 
@@ -116,15 +116,15 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
               const logoURL = await getLogoURL(chainId, token.address as Address, dataFeedType);
               return { ...token, logoURL };
             } catch (e) {
-              debugLog.warn('getLogoURL failed for token', token.address, e);
+              debugLog.warn?.('getLogoURL failed for token', token.address, e);
               return { ...token, logoURL: `/assets/blockchains/${chainId}/contracts/${token.address}/logo.png` };
             }
           })
         );
         if (!cancelled) setLogoTokenList(resolved);
       } catch (e) {
-        debugLog.error('Failed resolving token logos', e);
-        if (!cancelled) setLogoTokenList(dataFeedList); // fallback without verified logos
+        debugLog.error?.('Failed resolving token logos', e);
+        if (!cancelled) setLogoTokenList(dataFeedList);
       }
     })();
 
