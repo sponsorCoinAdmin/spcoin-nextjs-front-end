@@ -1,3 +1,4 @@
+// File: components/containers/NetworkSelect.tsx
 'use client';
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -6,24 +7,32 @@ import { ChevronDown } from 'lucide-react';
 import networks from '@/lib/network/initialize/networks.json';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 
-import { useExchangeContext } from '@/lib/context/hooks';
-import { useSetLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId';
+import { useExchangeContext } from '@/lib/context/hooks'; // keep your existing import
+import { useSetLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId'; // or from your new barrel
+
+type NetworkLike = {
+  name?: string;
+  logoURL?: string;
+  chainId?: number;
+} | null | undefined;
 
 type Props = {
   id: string;
-  /** Keep the prop so callers can disable if needed; default to enabled */
   disabled?: boolean;
+  /** Optional: overrides context network when provided */
+  networkElement?: NetworkLike;
 };
 
-const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
+const NetworkSelect: React.FC<Props> = ({ id, disabled = false, networkElement }) => {
   const selectId = `${id}Select`;
   const menuId = `${id}-networks`;
 
-  // 🔒 Source of truth from ExchangeContext
   const { exchangeContext } = useExchangeContext();
-  const networkElement = exchangeContext?.network;
+  const ctxNetwork = exchangeContext?.network as NetworkLike;
 
-  // Request wallet/network switch (context updates via ExchangeProvider watcher)
+  // Prefer explicit prop, otherwise fall back to context
+  const effectiveNetwork = networkElement ?? ctxNetwork;
+
   const setLocalChainId = useSetLocalChainId();
 
   useEffect(() => {
@@ -33,37 +42,33 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
   const handlePick = useCallback(
     (newChainId: number) => {
       setLocalChainId(newChainId);
-      toggleElement(menuId); // close menu after selection
+      toggleElement(menuId);
     },
     [setLocalChainId, menuId]
   );
 
-  const networkOptions = useMemo<JSX.Element[]>(
+  const networkOptions = useMemo(
     () =>
       (networks as any[]).map((net) => (
-        <li key={net.chainId} className="list-none">
-          <button
-            type="button"
-            className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900"
-            onClick={() => handlePick(net.chainId)}
-            data-chainid={net.chainId}
-            data-selected={networkElement?.chainId === net.chainId ? 'true' : 'false'}
-          >
-            <div className={styles.networkSelect}>
-              <img
-                src={net.img}
-                alt={net.symbol || String(net.chainId)}
-                className="h-9 w-9 mr-2 rounded-md"
-              />
-              <div>{net.name}</div>
-            </div>
-          </button>
-        </li>
+        <button
+          key={net.chainId}
+          type="button"
+          className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900"
+          onClick={() => handlePick(net.chainId)}
+        >
+          <div className={styles.networkSelect}>
+            <img
+              src={net.img}
+              alt={net.symbol || String(net.chainId)}
+              className="h-9 w-9 mr-2 rounded-md"
+            />
+            <div>{net.name}</div>
+          </div>
+        </button>
       )),
-    [handlePick, networkElement?.chainId]
+    [handlePick]
   );
 
-  // keyboard open/close for a11y (no ARIA used)
   const onTriggerKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -76,24 +81,21 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false }) => {
 
   return (
     <div className="relative inline-flex items-center">
-      {/* Trigger kept in normal flow (no absolute positioning) */}
       <div
         className={styles.networkSelect}
         tabIndex={0}
         onClick={() => toggleElement(menuId)}
         onKeyDown={onTriggerKeyDown}
-        data-menu-id={menuId}
       >
         <img
-          alt={networkElement?.name ?? 'Network'}
+          alt={effectiveNetwork?.name ?? 'Network'}
           className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-          src={networkElement?.logoURL ?? ''}
+          src={effectiveNetwork?.logoURL ?? ''}
         />
-        {networkElement?.name ?? 'Network'}
+        {effectiveNetwork?.name ?? 'Network'}
         <ChevronDown id={selectId} size={16} className="ml-2 cursor-pointer" />
       </div>
 
-      {/* Only the menu is absolutely positioned relative to the wrapper */}
       <ul
         id={menuId}
         className={`${styles.networks} absolute right-0 top-[calc(100%+6px)] z-50`}

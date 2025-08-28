@@ -4,12 +4,9 @@
 import { useCallback } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
-import {
-  getBlockChainName,
-  getBlockChainLogoURL,
-  getBlockExplorerURL,
-} from '@/lib/network/utils';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getBlockChainName, getBlockChainLogoURL, getBlockExplorerURL } from '../../helpers/NetworkHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_USE_LOCAL_CHAIN_ID === 'true';
