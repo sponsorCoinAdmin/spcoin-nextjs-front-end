@@ -8,7 +8,7 @@ import networks from '@/lib/network/initialize/networks.json';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 
 import { useExchangeContext } from '@/lib/context/hooks'; // keep your existing import
-import { useSetLocalChainId } from '@/lib/context/hooks/nestedHooks/useLocalChainId'; // or from your new barrel
+import { useSetAppChainId } from '@/lib/context/hooks/nestedHooks/useAppChainId'; // or from your new barrel
 
 type NetworkLike = {
   name?: string;
@@ -33,7 +33,7 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false, networkElement }
   // Prefer explicit prop, otherwise fall back to context
   const effectiveNetwork = networkElement ?? ctxNetwork;
 
-  const setLocalChainId = useSetLocalChainId();
+  const setAppChainId = useSetAppChainId();
 
   useEffect(() => {
     disabled ? hideElement(selectId) : showElement(selectId);
@@ -41,10 +41,10 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false, networkElement }
 
   const handlePick = useCallback(
     (newChainId: number) => {
-      setLocalChainId(newChainId);
+      setAppChainId(newChainId);
       toggleElement(menuId);
     },
-    [setLocalChainId, menuId]
+    [setAppChainId, menuId]
   );
 
   const networkOptions = useMemo(

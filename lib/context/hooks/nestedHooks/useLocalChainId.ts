@@ -1,4 +1,4 @@
-// File: lib/context/hooks/nestedHooks/useLocalChainId.ts
+// File: lib/context/hooks/nestedHooks/useAppChainId.ts
 'use client';
 
 import { useCallback } from 'react';
@@ -10,13 +10,13 @@ import { getBlockChainName, getBlockChainLogoURL, getBlockExplorerURL } from '..
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_USE_LOCAL_CHAIN_ID === 'true';
-const debugLog = createDebugLogger('useLocalChainId', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('useAppChainId', DEBUG_ENABLED, LOG_TIME);
 
 /** Read the app’s authoritative chainId from ExchangeProvider */
-export const useLocalChainId = (): number => {
+export const useAppChainId = (): number => {
   const { exchangeContext } = useExchangeContext();
   const id = exchangeContext?.network?.chainId ?? 1;
-  if (DEBUG_ENABLED) debugLog.log(`📦 useLocalChainId → ${id}`);
+  if (DEBUG_ENABLED) debugLog.log(`📦 useAppChainId → ${id}`);
   return id;
 };
 
@@ -25,14 +25,14 @@ export const useLocalChainId = (): number => {
  * - If connected, request wallet switch (wagmi).
  * - If disconnected, update ExchangeContext locally (persisted) so UI/logic use it.
  */
-export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) => {
+export const useSetAppChainId = (): ((newChainId: number) => Promise<void>) => {
   const { isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
   const { setExchangeContext } = useExchangeContext();
 
   return useCallback(
     async (newChainId: number) => {
-      if (DEBUG_ENABLED) debugLog.log(`🔁 setLocalChainId → ${newChainId}, isConnected=${isConnected}`);
+      if (DEBUG_ENABLED) debugLog.log(`🔁 setAppChainId → ${newChainId}, isConnected=${isConnected}`);
 
       if (isConnected && switchChain) {
         try {
@@ -53,7 +53,7 @@ export const useSetLocalChainId = (): ((newChainId: number) => Promise<void>) =>
         next.network.url = getBlockExplorerURL(newChainId) || '';
         // NOTE: do not force connected=true here
         return next;
-      }, 'ui:setLocalChainId(disconnected)');
+      }, 'ui:setAppChainId(disconnected)');
     },
     [isConnected, switchChain, setExchangeContext]
   );

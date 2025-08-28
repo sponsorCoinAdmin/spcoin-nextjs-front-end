@@ -7,13 +7,13 @@ export const useNetwork = () => {
 };
 
 // File: lib/context/hooks/ExchangeContext/network.ts
-export const useSetLocalChainId = () => {
+export const useSetAppChainId = () => {
   const { setExchangeContext } = useExchangeContext();
   return (chainId: number) =>
     setExchangeContext((p) => {
       const next = structuredClone(p);
       next.network = resolveNetworkElement(chainId, next.network);
       return next;
-    }, 'useSetLocalChainId');
+    }, 'useSetAppChainId');
 };
 
