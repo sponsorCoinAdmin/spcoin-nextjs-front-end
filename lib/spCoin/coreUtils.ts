@@ -1,6 +1,6 @@
 import { isAddress, parseUnits } from 'ethers'
 import { Address, formatUnits, getAddress } from 'viem'
-import { BURN_ADDRESS } from '@/lib/network/utils'
+import { BURN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers'
 import {
   BASE,
   ETHEREUM,

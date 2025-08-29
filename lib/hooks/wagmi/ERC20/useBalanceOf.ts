@@ -4,7 +4,7 @@
 import { useEffect, useMemo } from 'react';
 import { useBalance, useAppChainId } from 'wagmi';
 import { Address } from 'viem';
-import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
+import { NATIVE_TOKEN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers';
 import { useExchangeContext } from '@/lib/context/hooks';
 
 /**
@@ -22,7 +22,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
  * @example Native token (ETH, MATIC, etc.)
  * ```tsx
  * import { useBalanceOf } from '@/lib/hooks/wagmi/ERC20/useBalanceOf';
- * import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
+ * import { NATIVE_TOKEN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers';
  * 
  * const { data, isLoading } = useBalanceOf({ address: NATIVE_TOKEN_ADDRESS });
  * ```

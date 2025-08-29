@@ -8,7 +8,7 @@ import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetS
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import { FEED_TYPE } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
-import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
+import { getLogoURL, defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import BaseListRow from '@/components/views/ListItems/BaseListRow';

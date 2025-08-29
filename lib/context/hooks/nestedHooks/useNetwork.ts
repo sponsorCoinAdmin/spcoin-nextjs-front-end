@@ -8,7 +8,7 @@ import {
   getBlockChainName,
   getBlockChainLogoURL,
   getBlockExplorerURL,
-} from '@/lib/network/utils';
+} from '@/lib/context/helpers/NetworkHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

@@ -7,7 +7,7 @@ import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { useActiveDisplay } from '@/lib/context/hooks';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =

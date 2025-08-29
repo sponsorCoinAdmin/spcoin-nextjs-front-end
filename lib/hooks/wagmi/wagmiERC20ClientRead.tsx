@@ -5,7 +5,7 @@ import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure'
-import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
+import { BURN_ADDRESS, getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
   // console.debug(`useWagmiERC20TokenBalanceOfRec:connectedAccountAddr = ${connectedAccountAddr}, contractAddress = ${contractAddress}`)

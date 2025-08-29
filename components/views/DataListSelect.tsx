@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import {
   BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
-import { getLogoURL } from '@/lib/network/utils';
+import { getLogoURL } from '@/lib/context/helpers/NetworkHelpers';
 import baseTokenList from '@/resources/data/networks/base/tokenList.json';
 import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
 import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';

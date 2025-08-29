@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { BURN_ADDRESS, delay, useIsActiveAccountAddress } from '@/lib/network/utils';
+import { BURN_ADDRESS, delay, useIsActiveAccountAddress } from '@/lib/context/helpers/NetworkHelpers';
 import { Address } from "viem";
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { useAccount } from "wagmi";

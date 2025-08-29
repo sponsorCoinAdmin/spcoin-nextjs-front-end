@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
 import { WalletAccount } from '@/lib/structure';
 
 export default function Page() {

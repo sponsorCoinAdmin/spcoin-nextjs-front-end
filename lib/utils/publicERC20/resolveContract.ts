@@ -2,7 +2,7 @@
 import { Address, isAddress } from 'viem';
 import { TokenContract } from '@/lib/structure/types';
 import { createPublicClient } from 'viem';
-import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
+import { NATIVE_TOKEN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_CONTRACT === 'true';

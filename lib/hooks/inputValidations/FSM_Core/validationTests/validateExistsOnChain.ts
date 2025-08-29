@@ -3,7 +3,7 @@
 import { Address, isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
-import { NATIVE_TOKEN_ADDRESS } from '@/lib/network/utils';
+import { NATIVE_TOKEN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers';
 import { getValidationDebugLogger } from '../../helpers/debugLogInstance';
 
 const log = getValidationDebugLogger('validateExistsOnChain');

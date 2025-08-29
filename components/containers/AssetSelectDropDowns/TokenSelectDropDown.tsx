@@ -15,7 +15,7 @@ import {
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 
 const LOG_TIME = false;

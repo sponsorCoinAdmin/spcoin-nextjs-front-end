@@ -5,7 +5,7 @@
 import { useMemo } from 'react';
 import { useAppChainId } from 'wagmi';
 import { isAddress } from 'viem';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

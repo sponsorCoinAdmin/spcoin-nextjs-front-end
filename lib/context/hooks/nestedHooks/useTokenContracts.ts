@@ -2,7 +2,7 @@
 
 import { TokenContract, SP_COIN_DISPLAY, ExchangeContext } from '@/lib/structure';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { tokenContractsEqual } from '@/lib/network/utils';
+import { tokenContractsEqual } from '@/lib/context/helpers/NetworkHelpers';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

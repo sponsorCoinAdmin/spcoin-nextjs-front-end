@@ -6,7 +6,7 @@ import { Address, formatUnits } from 'viem'
 import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs } from '@/lib/structure'
-import { BURN_ADDRESS, getBlockChainName } from '@/lib/network/utils';
+import { BURN_ADDRESS, getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
   const wagmiDecimalsRec = useReadContract({
