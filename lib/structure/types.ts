@@ -83,6 +83,7 @@ export type NetworkElement = {
   url: string;
 };
 
+
 export type Slippage = {
   bps: number;
   percentage: number;

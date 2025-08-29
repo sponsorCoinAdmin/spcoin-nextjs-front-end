@@ -45,16 +45,13 @@ function getNetworkMeta(chainId: number) {
   const meta = chainIdMap.get(key);
   if (!meta) {
     debugLog.warn?.(
-      `[NetworkHelpers] No chain meta for chainId=${key} — check resources/data/networks/chainIds.json`
+      `[getNetworkMeta] No chain meta for chainId=${key} — check resources/data/networks/chainIds.json`
     );
     return undefined;
   }
-  if (!meta.name) {
-    debugLog.warn?.(`[NetworkHelpers] Missing 'name' for chainId=${key}`);
-  }
-  if (!meta.symbol) {
-    debugLog.warn?.(`[NetworkHelpers] Missing 'symbol' for chainId=${key} (${meta.name ?? 'Unknown'})`);
-  }
+  if (!meta.name) debugLog.warn?.(`[getNetworkMeta] Missing 'name' for chainId=${key}`);
+  if (!meta.symbol) debugLog.warn?.(`[getNetworkMeta] Missing 'symbol' for chainId=${key} (${meta.name ?? 'Unknown'})`);
+  debugLog.log?.('[getNetworkMeta] found meta', { chainId: key, ...meta } as any);
   return meta;
 }
 
@@ -65,105 +62,120 @@ function getNetworkMeta(chainId: number) {
 export const getBlockChainLogoURL = (chainId: number): string =>
   `/assets/blockchains/${chainId}/info/network.png`;
 
-export const getBlockChainName = (chainId: number): string | undefined =>
-  getNetworkMeta(chainId)?.name;
+export const getBlockChainName = (chainId: number): string | undefined => {
+  const name = getNetworkMeta(chainId)?.name;
+  debugLog.log?.('[getBlockChainName]', { chainId, name } as any);
+  return name;
+};
 
-export const getBlockChainSymbol = (chainId: number): string | undefined =>
-  getNetworkMeta(chainId)?.symbol;
+export const getBlockChainSymbol = (chainId: number): string | undefined => {
+  const symbol = getNetworkMeta(chainId)?.symbol;
+  debugLog.log?.('[getBlockChainSymbol]', { chainId, symbol } as any);
+  return symbol;
+};
 
 export const getBlockExplorerURL = (chainId: number): string => {
-  switch (chainId) {
-    case 1:        return 'https://etherscan.io/';
-    case 5:        return 'https://goerli.etherscan.io/';
-    case 137:      return 'https://polygonscan.com/';
-    case 80001:    return 'https://mumbai.polygonscan.com/';
-    case 11155111: return 'https://sepolia.etherscan.io/';
-    case 31337:    return 'http://localhost:8545/';
-    default:       return '';
-  }
+  const url = (() => {
+    switch (chainId) {
+      case 1:        return 'https://etherscan.io/';
+      case 5:        return 'https://goerli.etherscan.io/';
+      case 137:      return 'https://polygonscan.com/';
+      case 80001:    return 'https://mumbai.polygonscan.com/';
+      case 11155111: return 'https://sepolia.etherscan.io/';
+      case 8453:     return 'https://basescan.org/';            // ✅ BASE
+      case 31337:    return 'http://localhost:8545/';
+      default:       return '';
+    }
+  })();
+  debugLog.log?.('[getBlockExplorerURL]', { chainId, url } as any);
+  return url;
 };
 
 /* ────────────────────────────────────────────────────────────────────────── *
  *                        NetworkElement construction
  * ────────────────────────────────────────────────────────────────────────── */
 
-function stripChainDerivedFields(prev?: Partial<NetworkElement> | null) {
-  if (!prev) return {} as Partial<NetworkElement>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { name: _n, symbol: _s, logoURL: _l, url: _u, ...rest } = prev;
-  return rest as Partial<NetworkElement>;
-}
-
 /**
- * Build a NetworkElement from chainId and previous value.
- * SAME_CHAIN path ENFORCES the derived symbol to auto-repair stale state.
+ * Build or update a NetworkElement for a given chainId.
+ * If `prev` has the same chainId, we only backfill missing fields — BUT we also
+ * REPAIR any stale fields to the correct derived values.
  */
 export function resolveNetworkElement(
   chainId: number,
   prev?: Partial<NetworkElement> | null
 ): NetworkElement {
-  const prevId = prev?.chainId;
+  const prevNet = prev ?? {};
+  debugLog.log?.('[resolveNetworkElement] ENTRY', { chainId, prevNet } as any);
 
   const derivedName   = getBlockChainName(chainId)    || '';
   const derivedLogo   = getBlockChainLogoURL(chainId) || '';
   const derivedUrl    = getBlockExplorerURL(chainId)  || '';
   const derivedSymbol = getBlockChainSymbol(chainId)  || '';
 
-  if (prevId !== chainId) {
-    const rest = stripChainDerivedFields(prev);
-    const next = {
-      ...rest,
+  debugLog.log?.('[resolveNetworkElement] DERIVED', {
+    chainId, derivedName, derivedSymbol, derivedLogo, derivedUrl,
+  } as any);
+
+  if (prevNet.chainId !== chainId) {
+    // Chain changed → drop stale fields and use fresh ones
+    const next: NetworkElement = {
+      connected: prevNet.connected ?? false,
       chainId,
-      name:   derivedName,
-      symbol: derivedSymbol,
+      name:    derivedName,
+      symbol:  derivedSymbol,
       logoURL: derivedLogo,
       url:     derivedUrl,
-    } as NetworkElement;
-
-    // Guard: symbol should always be chain-derived
-    if (!derivedSymbol || next.symbol !== derivedSymbol) {
-      debugLog.warn?.('[NetworkHelpers] Symbol mismatch on CHAIN_CHANGED', {
-        chainId, expected: derivedSymbol, got: next.symbol,
-      } as any);
-    }
+    };
+    debugLog.log?.('[resolveNetworkElement] CHAIN_CHANGED → returning NEW object', next as any);
     return next;
   }
 
-  // Same chain → backfill + enforce derived symbol to repair stale storage
-  const base = { ...(prev ?? {}), chainId } as NetworkElement;
-  const next = {
-    ...base,
-    name:   base.name   || derivedName,
-    logoURL: base.logoURL || derivedLogo,
-    url:     base.url     || derivedUrl,
-    symbol:  derivedSymbol, // enforce
-  } as NetworkElement;
+  // Same chainId → enforce derived values (repair stale), but keep "connected"
+  const next: NetworkElement = {
+    connected: prevNet.connected ?? false,
+    chainId,
+    name:    derivedName,   // ✅ always enforce
+    symbol:  derivedSymbol, // ✅ always enforce
+    logoURL: derivedLogo,   // ✅ always enforce
+    url:     derivedUrl,    // ✅ always enforce
+  };
 
-  if (base.symbol && base.symbol !== derivedSymbol) {
-    debugLog.warn?.('[NetworkHelpers] Repaired stale symbol (SAME_CHAIN)', {
-      chainId, stale: base.symbol, fixedTo: derivedSymbol,
+  // Log if we repaired anything stale
+  if (prevNet.name && prevNet.name !== derivedName) {
+    debugLog.warn?.('[resolveNetworkElement] Repaired stale name', {
+      chainId, stale: prevNet.name, fixedTo: derivedName,
     } as any);
   }
+  if (prevNet.symbol && prevNet.symbol !== derivedSymbol) {
+    debugLog.warn?.('[resolveNetworkElement] Repaired stale symbol', {
+      chainId, stale: prevNet.symbol, fixedTo: derivedSymbol,
+    } as any);
+  }
+  if (prevNet.logoURL && prevNet.logoURL !== derivedLogo) {
+    debugLog.warn?.('[resolveNetworkElement] Repaired stale logoURL', {
+      chainId, stale: prevNet.logoURL, fixedTo: derivedLogo,
+    } as any);
+  }
+  if (prevNet.url && prevNet.url !== derivedUrl) {
+    debugLog.warn?.('[resolveNetworkElement] Repaired stale url', {
+      chainId, stale: prevNet.url, fixedTo: derivedUrl,
+    } as any);
+  }
+
+  debugLog.log?.('[resolveNetworkElement] SAME_CHAIN → computed NEXT', next as any);
+  debugLog.log?.('[resolveNetworkElement] FIELD_DIFFS', {
+    nameChanged: prevNet.name !== next.name,
+    symbolChanged: prevNet.symbol !== next.symbol,
+    logoChanged: prevNet.logoURL !== next.logoURL,
+    urlChanged: prevNet.url !== next.url,
+    anyChanged:
+      prevNet.name !== next.name ||
+      prevNet.symbol !== next.symbol ||
+      prevNet.logoURL !== next.logoURL ||
+      prevNet.url !== next.url,
+  } as any);
+
   return next;
-}
-
-/* ────────────────────────────────────────────────────────────────────────── *
- *                  Overwrite detector (opt-in diagnostic)
- * ────────────────────────────────────────────────────────────────────────── */
-
-/**
- * Call right after you write into state to detect accidental overwrites.
- * Only logs when a mismatch occurs.
- */
-export function detectNetworkOverwrite(label: string, resolved: NetworkElement, written: any) {
-  if (!DEBUG_ENABLED) return;
-  if (resolved?.symbol !== written?.symbol) {
-    debugLog.warn?.(`[NetworkHelpers] ${label} symbol overwritten`, {
-      resolvedSymbol: resolved?.symbol,
-      writtenSymbol: written?.symbol,
-      chainId: resolved?.chainId,
-    } as any);
-  }
 }
 
 /* ────────────────────────────────────────────────────────────────────────── *
@@ -171,6 +183,5 @@ export function detectNetworkOverwrite(label: string, resolved: NetworkElement, 
  * ────────────────────────────────────────────────────────────────────────── */
 
 export const createNetworkJsonList = () => {
-  // Keep as a light-weight helper; no alerts/log spam.
   try { return JSON.stringify(rawChainIdList, null, 2); } catch { return '{}'; }
 };

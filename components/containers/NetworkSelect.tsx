@@ -7,14 +7,18 @@ import { ChevronDown } from 'lucide-react';
 import networks from '@/lib/network/initialize/networks.json';
 import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 
-import { useExchangeContext } from '@/lib/context/hooks'; // keep your existing import
-import { useSetAppChainId } from '@/lib/context/hooks/nestedHooks/useAppChainId'; // or from your new barrel
+import { useAppChainId, useExchangeContext } from '@/lib/context/hooks';
+import { getBlockChainLogoURL } from '@/lib/context/helpers/NetworkHelpers';
 
-type NetworkLike = {
-  name?: string;
-  logoURL?: string;
-  chainId?: number;
-} | null | undefined;
+type NetworkLike =
+  | {
+      name?: string;
+      logoURL?: string;
+      chainId?: number;
+      symbol?: string;
+    }
+  | null
+  | undefined;
 
 type Props = {
   id: string;
@@ -33,7 +37,8 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false, networkElement }
   // Prefer explicit prop, otherwise fall back to context
   const effectiveNetwork = networkElement ?? ctxNetwork;
 
-  const setAppChainId = useSetAppChainId();
+  // Single canonical hook → [value, setter]
+  const [appChainId, setAppChainId] = useAppChainId();
 
   useEffect(() => {
     disabled ? hideElement(selectId) : showElement(selectId);
@@ -41,56 +46,72 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false, networkElement }
 
   const handlePick = useCallback(
     (newChainId: number) => {
+      if (disabled) return;
       setAppChainId(newChainId);
       toggleElement(menuId);
     },
-    [setAppChainId, menuId]
+    [disabled, setAppChainId, menuId]
   );
 
   const networkOptions = useMemo(
     () =>
-      (networks as any[]).map((net) => (
-        <button
-          key={net.chainId}
-          type="button"
-          className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900"
-          onClick={() => handlePick(net.chainId)}
-        >
-          <div className={styles.networkSelect}>
-            <img
-              src={net.img}
-              alt={net.symbol || String(net.chainId)}
-              className="h-9 w-9 mr-2 rounded-md"
-            />
-            <div>{net.name}</div>
-          </div>
-        </button>
-      )),
-    [handlePick]
+      (networks as any[]).map((net) => {
+        const optionLogo =
+          net.logoURL ??
+          net.img ??
+          (typeof net.chainId === 'number' ? getBlockChainLogoURL(net.chainId) : '');
+
+        return (
+          <button
+            key={net.chainId}
+            type="button"
+            className="w-full text-left mb-1 mt-1 ml-1 mr-1 pt-1 px-0 hover:bg-spCoin_Blue-900 disabled:opacity-60"
+            onClick={() => handlePick(net.chainId)}
+            disabled={disabled}
+          >
+            <div className={styles.networkSelect}>
+              <img
+                src={optionLogo}
+                alt={net.symbol || net.name || String(net.chainId)}
+                className="h-9 w-9 mr-2 rounded-md"
+              />
+              <div>{net.name ?? net.symbol ?? net.chainId}</div>
+            </div>
+          </button>
+        );
+      }),
+    [handlePick, disabled]
   );
 
   const onTriggerKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         toggleElement(menuId);
       }
     },
-    [menuId]
+    [disabled, menuId]
   );
+
+  // Fallback logo if the context-provided one is missing
+  const currentLogo =
+    effectiveNetwork?.logoURL ??
+    (typeof appChainId === 'number' ? getBlockChainLogoURL(appChainId) : '');
 
   return (
     <div className="relative inline-flex items-center">
       <div
         className={styles.networkSelect}
-        tabIndex={0}
-        onClick={() => toggleElement(menuId)}
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled ? 'true' : 'false'}
+        onClick={() => !disabled && toggleElement(menuId)}
         onKeyDown={onTriggerKeyDown}
       >
         <img
           alt={effectiveNetwork?.name ?? 'Network'}
           className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-          src={effectiveNetwork?.logoURL ?? ''}
+          src={currentLogo}
         />
         {effectiveNetwork?.name ?? 'Network'}
         <ChevronDown id={selectId} size={16} className="ml-2 cursor-pointer" />

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useChainId } from 'wagmi';
+import { useAppChainId } from 'wagmi';
 
 const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 
 export const useFetchLocalLogo = (tokenAddress: string): string => {
-  const chainId = useChainId();
+  const chainId = useAppChainId();
   const [logoSrc, setLogoSrc] = useState<string>(defaultMissingImage);
 
   useEffect(() => {

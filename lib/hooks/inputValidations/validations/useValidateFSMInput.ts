@@ -2,7 +2,7 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
-import { useChainId, useAccount, usePublicClient } from 'wagmi';
+import { useAppChainId, useAccount, usePublicClient } from 'wagmi';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -32,7 +32,7 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
 
   const sellAddress = useSellTokenAddress();
   const buyAddress = useBuyTokenAddress();
-  const chainId = useChainId();
+  const chainId = useAppChainId();
   const publicClient = usePublicClient();
   const { address: accountAddress } = useAccount();
 

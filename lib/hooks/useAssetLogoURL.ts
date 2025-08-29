@@ -3,7 +3,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useChainId } from 'wagmi';
+import { useAppChainId } from 'wagmi';
 import { isAddress } from 'viem';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -23,7 +23,7 @@ export function useAssetLogoURL(
   type: 'wallet' | 'token',
   fallbackURL: string = defaultMissingImage
 ): string {
-  const chainId = useChainId();
+  const chainId = useAppChainId();
 
   return useMemo(() => {
     if (!address || !isAddress(address)) return fallbackURL;

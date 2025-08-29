@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useReadContracts, useChainId } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts, useAppChainId } from 'wagmi';
 import { isAddress, Address, erc20Abi } from 'viem';
 import { TokenContract } from '@/lib/structure';
 
@@ -11,7 +11,7 @@ import { TokenContract } from '@/lib/structure';
 export function useErc20TokenContract(tokenAddress?: Address): TokenContract | undefined {
   const { address: account } = useAccount();
   const enabled = !!tokenAddress && isAddress(tokenAddress);
-  const chainId = useChainId();
+  const chainId = useAppChainId();
 
   const { data: metaData, status: metaStatus } = useReadContracts({
     contracts: [

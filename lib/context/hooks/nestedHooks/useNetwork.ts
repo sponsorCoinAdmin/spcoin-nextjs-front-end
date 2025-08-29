@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useChainId, useAccount } from 'wagmi';
+import { useAppChainId, useAccount } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import {
   getBlockChainName,
@@ -19,7 +19,7 @@ export const useNetwork = () => {
   const { exchangeContext } = useExchangeContext();
 
   // External single sources of truth
-  const wagmiChainId = useChainId();
+  const wagmiChainId = useAppChainId();
   const { status } = useAccount(); // 'connected' | 'connecting' | 'disconnected'
 
   // Prefer context.chainId (kept in sync by ExchangeProvider watcher);

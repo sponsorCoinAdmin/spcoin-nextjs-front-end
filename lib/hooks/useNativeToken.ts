@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { TokenContract as MappedTokenContract } from '@/lib/structure';
-import { useChainId } from 'wagmi';
+import { useAppChainId } from 'wagmi';
 
 export function useNativeToken(): MappedTokenContract | undefined {
   const [token, setToken] = useState<MappedTokenContract>();
-    const chainId = useChainId();
+    const chainId = useAppChainId();
   
 
   useEffect(() => {

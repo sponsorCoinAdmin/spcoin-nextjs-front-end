@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
-import { useChainId, useAccount } from 'wagmi';
+import { useChainId as useWagmiChainId, useAccount } from 'wagmi'; // ← use Wagmi here (aliased)
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 
@@ -15,7 +15,6 @@ import {
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useActiveAccount } from '@/lib/context/hooks/nestedHooks/useActiveAccount';
 import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
 
@@ -54,13 +53,12 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 /** Runs side-effect hooks that require ExchangeContext to be available. */
 function ExchangeRuntime({ children }: { children: React.ReactNode }) {
   // ✅ This runs inside the Provider, so useExchangeContext() inside the hook is safe.
-  useActiveAccount();
   return <>{children}</>;
 }
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
-  // ---- single external sources of truth (wagmi) ----
-  const wagmiChainId = useChainId();
+  // ---- single external source of truth (wagmi) for sync-only ----
+  const wagmiChainId = useWagmiChainId(); // ← actual wallet chain id
   const { address, isConnected, status: accountStatus } = useAccount();
 
   // ---- provider state ----
@@ -112,7 +110,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   useProviderWatchers({
     contextState,
     setExchangeContext,
-    wagmiChainId,
+    wagmiChainId, // ← pass the real wallet chain id into the watchers
     isConnected,
     address,
     accountStatus,

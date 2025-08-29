@@ -1,4 +1,3 @@
-// File: lib/0X/hooks/usePriceAPI.ts
 import { useEffect, useRef } from 'react';
 import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
 import { stringify } from 'qs';
@@ -10,27 +9,29 @@ import {
   useErrorMessage,
   useExchangeContext,
   useSellAmount,
-  useTradeData
+  useTradeData,
+  useAppChainId, // ← now returns [number, setter]
 } from '@/lib/context/hooks';
 import PriceResponse from '@/lib/0X/typesV1';
-import { useChainId } from 'wagmi';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const API_PROVIDER = '0X/';
-const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
+const NEXT_PUBLIC_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '') + API_PROVIDER;
 const apiPriceBase = '/price';
 
-const LOG_TIME: boolean = false;
-const DEBUG_ENABLED = process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true';
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
 const validTokenOrNetworkCoin = (address: Address): Address => address;
 
-const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
-  endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
-  const { sellAmount, buyAmount } = params;
+type FetchKey = [string, PriceRequestParams];
 
+const fetcher = async ([endpoint, params]: FetchKey) => {
+  endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
+
+  const { sellAmount, buyAmount } = params;
   if (
     (sellAmount !== undefined && sellAmount === '0') ||
     (buyAmount !== undefined && buyAmount === '0')
@@ -47,14 +48,12 @@ const fetcher = async ([endpoint, params]: [string, PriceRequestParams]) => {
 
   const query = stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
-
   debugLog.log(`📡 Fetching:`, apiCall);
 
   const response = await fetch(apiCall);
   if (!response.ok) {
     throw new Error(`API request failed with status ${response.status}`);
   }
-
   return response.json();
 };
 
@@ -83,7 +82,7 @@ const getPriceApiCall = (
   sellAmount: bigint,
   buyAmount: bigint,
   slippageBps?: number
-): [string, PriceRequestParams] | undefined => {
+): FetchKey | undefined => {
   if (!sellTokenAddress || !buyTokenAddress) return undefined;
 
   if (
@@ -104,9 +103,7 @@ const getPriceApiCall = (
     ...(tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
       ? { buyAmount: buyAmount.toString() }
       : {}),
-    ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
-      ? { slippageBps }
-      : {}),
+    ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps) ? { slippageBps } : {}),
   };
 
   return [apiPriceBase, params];
@@ -139,7 +136,10 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 function usePriceAPI() {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
-  const chainId = useChainId();
+
+  // ✅ useAppChainId now returns a tuple; destructure the number
+  const [chainId] = useAppChainId();
+
   const [errorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -165,31 +165,30 @@ function usePriceAPI() {
     buyToken?: Address,
     effectiveAmount?: bigint
   ): boolean => {
+    if (!chainId) {
+      debugLog.warn(`Missing chainId`);
+      return false;
+    }
     if (!isAddress(sellToken ?? '')) {
       debugLog.warn(`Invalid or missing sellTokenAddress`, sellToken);
       return false;
     }
-
     if (!isAddress(buyToken ?? '')) {
       debugLog.warn(`Invalid or missing buyTokenAddress`, buyToken);
       return false;
     }
-
     if ((sellToken as string).toLowerCase() === (buyToken as string).toLowerCase()) {
       debugLog.warn(`Sell and buy tokens are the same`);
       return false;
     }
-
     if (!effectiveAmount || effectiveAmount === 0n) {
       debugLog.warn(`Amount is 0`);
       return false;
     }
-
     if (chainId === HARDHAT) {
       debugLog.warn(`Chain is HARDHAT`);
       return false;
     }
-
     return true;
   };
 
@@ -209,7 +208,7 @@ function usePriceAPI() {
       ? debouncedSellAmount
       : debouncedBuyAmount;
 
-  const swrKey = shouldFetch(debouncedSellToken, debouncedBuyToken, amountForDirection)
+  const swrKey: FetchKey | null = shouldFetch(debouncedSellToken, debouncedBuyToken, amountForDirection)
     ? getPriceApiCall(
         tradeData.tradeDirection,
         chainId,
@@ -218,7 +217,7 @@ function usePriceAPI() {
         debouncedSellAmount,
         debouncedBuyAmount,
         debouncedSlippage
-      )
+      ) ?? null
     : null;
 
   useWhyDidYouUpdate('usePriceAPI', {
@@ -231,11 +230,11 @@ function usePriceAPI() {
     sellAmount,
     errorMessage,
     apiErrorMessage,
-    swrKey
+    swrKey,
   });
 
-  const swr = useSWR(swrKey, fetcher, {
-    onSuccess: (data) => {
+  const swr = useSWR<unknown, Error, FetchKey | null>(swrKey, fetcher, {
+    onSuccess: (data: any) => {
       debugLog.log(`✅ API SUCCESS`, data);
 
       if (data && typeof data === 'object' && 'code' in data) {
@@ -256,10 +255,16 @@ function usePriceAPI() {
           ),
         });
       } else {
-        if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && (data as any)?.buyAmount !== undefined) {
+        if (
+          tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT &&
+          (data as any)?.buyAmount !== undefined
+        ) {
           const next = BigInt((data as any).buyAmount ?? 0);
           if (buyAmount !== next) setBuyAmount(next);
-        } else if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && (data as any)?.sellAmount !== undefined) {
+        } else if (
+          tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN &&
+          (data as any)?.sellAmount !== undefined
+        ) {
           const next = BigInt((data as any).sellAmount ?? 0);
           if (sellAmount !== next) setSellAmount(next);
         }
@@ -267,7 +272,6 @@ function usePriceAPI() {
     },
     onError: (error: any) => {
       debugLog.error(`❌ API ERROR`, error);
-
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
         source: 'ApiFetcher',
@@ -279,8 +283,8 @@ function usePriceAPI() {
 
   return {
     ...swr,
-    swrKey
+    swrKey,
   };
 }
 
-export { usePriceAPI };
+export { usePriceAPI, getPriceApiCall };

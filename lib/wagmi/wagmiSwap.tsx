@@ -1,6 +1,6 @@
 'use client'
 
-import { useBalance, useChainId, useReadContract } from 'wagmi'
+import { useBalance, useAppChainId, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 import { erc20Abi } from 'viem'
@@ -101,7 +101,7 @@ const useWagmiERC20TokenBalanceOfStr = (connectedAccountAddr: Address | undefine
 }
 
 const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
-  const chainId = useChainId();
+  const chainId = useAppChainId();
   const name = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
   const symbol = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
   const decimals = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
@@ -127,7 +127,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined) => {
 
 const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => {
   const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
-  const chainId:number            = useChainId();
+  const chainId:number            = useAppChainId();
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
   const name                      = getBlockChainName(chainId);

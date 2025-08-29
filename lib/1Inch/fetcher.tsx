@@ -13,7 +13,7 @@ import {
   useTradeData,
 } from '@/lib/context/hooks';
 import { Address } from 'viem';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount, useAppChainId } from 'wagmi';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -59,7 +59,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 function usePriceAPI() {
   const { exchangeContext } = useExchangeContext(); // ✅ must call first
   const tradeData = useTradeData();
-  const chainId = useChainId();
+  const chainId = useAppChainId();
   const { address: userAddress } = useAccount();
   const [errorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();

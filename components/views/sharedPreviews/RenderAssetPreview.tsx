@@ -3,7 +3,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Address } from 'viem';
-import { useChainId } from 'wagmi';
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
@@ -13,27 +12,26 @@ import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import BaseListRow from '@/components/views/ListItems/BaseListRow';
+import { useAppChainId } from '@/lib/context/hooks'; // ✅ correct source
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 export default function RenderAssetPreview() {
-  const chainId = useChainId();
+  const [chainId] = useAppChainId(); // ✅ tuple form
   const ctx: any = useAssetSelectContext();
 
   const {
     inputState,
     validatedAsset,
-    setValidatedAsset,          // provider-side setter
-    setInputState,              // advance FSM to UPDATE_VALIDATED_ASSET
+    setValidatedAsset,
+    setInputState,
     feedType,
     setManualEntry,
   } = ctx;
 
-  // Always declare hooks unconditionally at the top to preserve order
   const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
 
-  // Resolve avatarSrc asynchronously when appropriate; guard inside the effect
   useEffect(() => {
     let cancelled = false;
 
@@ -43,11 +41,11 @@ export default function RenderAssetPreview() {
 
       const address = validatedAsset.address as string | undefined;
 
-      // Default while resolving
-      setAvatarSrc((prev) => prev || defaultMissingImage);
+      // Default while resolving/guarding
+      setAvatarSrc(prev => prev || defaultMissingImage);
 
       if (feedType === FEED_TYPE.TOKEN_LIST) {
-        if (!address) {
+        if (!address || !chainId) {
           if (!cancelled) setAvatarSrc(defaultMissingImage);
           return;
         }
@@ -90,7 +88,6 @@ export default function RenderAssetPreview() {
     if (!address) return;
 
     try {
-      // Future picks shouldn’t reopen preview
       setManualEntry?.(false);
 
       // Ensure chainId/address present on the committed object
@@ -98,7 +95,6 @@ export default function RenderAssetPreview() {
       if (!assetToCommit.address) assetToCommit.address = address as Address;
       if (!assetToCommit.chainId) assetToCommit.chainId = chainId;
 
-      // 1) Commit to provider context
       if (typeof setValidatedAsset === 'function') {
         setValidatedAsset(assetToCommit);
         debugLog.log('✅ setValidatedAsset dispatched', {
@@ -111,7 +107,6 @@ export default function RenderAssetPreview() {
         debugLog.warn('⚠️ setValidatedAsset not available in context');
       }
 
-      // 2) Let FSM terminal logic run (provider should handle UPDATE → CLOSE)
       setInputState(
         InputState.UPDATE_VALIDATED_ASSET,
         'RenderAssetPreview → UPDATE_VALIDATED_ASSET'
@@ -139,7 +134,7 @@ export default function RenderAssetPreview() {
 
   return (
     <div id="RenderAssetPreview" className="w-full">
-      <BasePreviewWrapper show={true}>
+      <BasePreviewWrapper show>
         <BaseListRow
           className="w-full"
           avatarSrc={avatarSrc}

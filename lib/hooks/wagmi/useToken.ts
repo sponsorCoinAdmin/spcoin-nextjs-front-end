@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { Address, isAddress } from 'viem';
-import { usePublicClient, useAccount, useChainId } from 'wagmi';
+import { usePublicClient, useAccount, useAppChainId } from 'wagmi';
 import { TokenContract } from '@/lib/structure/types';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
 
@@ -12,7 +12,7 @@ export function useToken(tokenAddress?: Address): TokenContract | undefined {
   const [token, setToken] = useState<TokenContract | undefined>();
   const publicClient = usePublicClient();
   const { address: userAddress } = useAccount();
-  const chainId = useChainId();
+  const chainId = useAppChainId();
 
   useEffect(() => {
     if (!tokenAddress || !isAddress(tokenAddress) || !publicClient) {

@@ -9,7 +9,8 @@ import {
   TokenContract,
 } from '@/lib/structure';
 
-import { useAccount, useChainId, usePublicClient } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
+import { useAppChainId } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 
@@ -98,16 +99,16 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   const prevDebouncedInputRef = useRef<string | undefined>(undefined);
   const manualEntryRef = useRef<boolean>(manualEntry ?? false); // ref-backed to avoid races
 
-  // keep the ref synced with latest provider state
+  // keep the ref synced with latest prop
   useEffect(() => {
     manualEntryRef.current = manualEntry ?? false;
   }, [manualEntry]);
 
   const { address: accountAddress } = useAccount();
   const publicClient = usePublicClient();
-  const chainId = useChainId();
+  const [chainId] = useAppChainId(); // ✅ from your context hooks
 
-  // Log param changes (dev aid)
+  // Log select param changes (dev aid)
   const prevParamsRef = useRef<UseFSMStateManagerParams | null>(null);
   useEffect(() => {
     logStateChanges(
@@ -135,7 +136,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
-    params,
   ]);
 
   /**
@@ -179,7 +179,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       // Authoritative state commit
       setInputStateWrapped(result.finalState, 'post-run');
 
-      // Provide asset to context (for preview & commit); only "commit" trading token on commit states
+      // Provide asset to host; only "commit" trading token on commit states
       if ('asset' in result && result.asset) {
         try {
           setValidatedAsset(result.asset);
@@ -209,9 +209,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     setInputStateWrapped,
     isValid,
     failedHexInput,
-    peerAddress, // rerun when opposite-side selection changes
-    // NOTE: do not depend on `manualEntry`; we read from ref to avoid races
-    // We still depend on these because we may call them when result.asset is present:
+    peerAddress,
     setValidatedAsset,
     setTradingTokenCallback,
   ]);

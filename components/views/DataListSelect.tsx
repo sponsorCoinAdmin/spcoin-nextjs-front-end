@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useChainId as useWagmiChainId } from 'wagmi';
 import {
   BASE, ETHEREUM, FEED_TYPE, HARDHAT, POLYGON, SEPOLIA, WalletAccount,
 } from '@/lib/structure';
@@ -22,7 +21,7 @@ import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
-import { useExchangeContext } from '@/lib/context/hooks';               // ← add this
+import { useAppChainId } from '@/lib/context/hooks'; // ✅ canonical app chain id
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
@@ -35,7 +34,7 @@ const getDataFeedList = (chainId: number) => {
     case POLYGON:  return polygonTokenList;
     case HARDHAT:  return hardhatTokenList;
     case SEPOLIA:  return sepoliaTokenList;
-    default:       return []; // ← avoid silently defaulting to Ethereum; empty list is safer
+    default:       return [];
   }
 };
 
@@ -51,10 +50,7 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
 
   const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectContext();
 
-  const { exchangeContext } = useExchangeContext();             // ← app network
-  const appChainId = exchangeContext?.network?.chainId;
-  const wagmiChainId = useWagmiChainId();                       // ← wallet network
-  const chainId = appChainId ?? wagmiChainId ?? ETHEREUM;       // ← prefer app, then wallet
+  const [chainId] = useAppChainId(); // ✅ prefer app’s canonical chain id
 
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
@@ -63,26 +59,28 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
 
   useEffect(() => setIsClient(true), []);
 
+  // Load account feeds (recipients/agents)
   useEffect(() => {
-    if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) {
-      setLoadingWallets(true);
-      const jsonList = dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ? recipientJsonList : agentJsonList;
-      loadAccounts(jsonList)
-        .then((accounts) => {
-          setWallets(
-            accounts.map((account) => ({
-              ...account,
-              name: account.name || 'N/A',
-              symbol: account.symbol || 'N/A',
-              logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
-              address: account.address || '0x0000000000000000000000000000000000000000',
-            }))
-          );
-        })
-        .catch((err) => debugLog.error('Failed to load accounts', err))
-        .finally(() => setLoadingWallets(false));
-    }
-  }, [dataFeedType, debugLog]);
+    if (dataFeedType !== FEED_TYPE.RECIPIENT_ACCOUNTS && dataFeedType !== FEED_TYPE.AGENT_ACCOUNTS) return;
+
+    setLoadingWallets(true);
+    const jsonList = dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ? recipientJsonList : agentJsonList;
+
+    loadAccounts(jsonList)
+      .then((accounts) => {
+        setWallets(
+          accounts.map((account) => ({
+            ...account,
+            name: account.name || 'N/A',
+            symbol: account.symbol || 'N/A',
+            logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
+            address: account.address || '0x0000000000000000000000000000000000000000',
+          }))
+        );
+      })
+      .catch((err) => debugLog.error('Failed to load accounts', err))
+      .finally(() => setLoadingWallets(false));
+  }, [dataFeedType]);
 
   useEffect(() => {
     if (programmaticReady && pendingPickRef.current) {
@@ -116,14 +114,14 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
               const logoURL = await getLogoURL(chainId, token.address as Address, dataFeedType);
               return { ...token, logoURL };
             } catch (e) {
-              debugLog.warn?.('getLogoURL failed for token', token.address, e);
+              if (DEBUG_ENABLED) debugLog.warn('getLogoURL failed for token', token.address, e);
               return { ...token, logoURL: `/assets/blockchains/${chainId}/contracts/${token.address}/logo.png` };
             }
           })
         );
         if (!cancelled) setLogoTokenList(resolved);
       } catch (e) {
-        debugLog.error?.('Failed resolving token logos', e);
+        if (DEBUG_ENABLED) debugLog.error('Failed resolving token logos', e);
         if (!cancelled) setLogoTokenList(dataFeedList);
       }
     })();
