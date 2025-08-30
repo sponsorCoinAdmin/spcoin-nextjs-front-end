@@ -1,30 +1,47 @@
-// File: lib/hooks/inputValidations/tests/validateExistsOnChain.ts
+// File: lib/hooks/inputValidations/FSM_Core/validationTests/validateExistsOnChain.ts
 
-import { Address, isAddress } from 'viem';
+import type { Address } from 'viem';
+import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers';
-import { getValidationDebugLogger } from '../../helpers/debugLogInstance';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 
-const log = getValidationDebugLogger('validateExistsOnChain');
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const log = createDebugLogger('validateExistsOnChain(FSM_Core)', DEBUG_ENABLED, /* timestamp */ false);
 
-export async function validateExistsOnChain({
-  debouncedHexInput,
-  publicClient,
-}: ValidateFSMInput): Promise<ValidateFSMOutput> {
-  const addr = debouncedHexInput;
+/**
+ * Called by FSM core. `publicClient` must already be constructed for the app's canonical chain.
+ * If your caller can provide `appChainId`, include it for clearer diagnostics.
+ */
+export async function validateExistsOnChain(
+  {
+    debouncedHexInput,
+    publicClient,
+    // Optional, for logging: pass if available at call site
+    appChainId,
+  }: ValidateFSMInput & { appChainId?: number }
+): Promise<ValidateFSMOutput> {
+  const addr = (debouncedHexInput ?? '').trim() as Address;
+  const clientChainId = (publicClient as any)?.chain?.id as number | undefined;
 
-  log.log(`📥 validateExistsOnChain(${addr})`);
+  log.log?.('[ENTRY]', {
+    address: addr,
+    isAddress: isAddress(addr || '0x'),
+    isNative: addr === NATIVE_TOKEN_ADDRESS,
+    appChainId,
+    clientChainId,
+  } as any);
 
-  // Native token is always "existent" (no bytecode)
+  // Native token: treated as existing (no bytecode on chain)
   if (addr === NATIVE_TOKEN_ADDRESS) {
-    log.log('💡 Native token sentinel detected → RESOLVE_ASSET');
+    log.log?.('[SHORT-CIRCUIT] Native token → RESOLVE_ASSET');
     return { nextState: InputState.RESOLVE_ASSET };
   }
 
-  // Basic guards
+  // Guards
   if (!publicClient) {
-    log.warn('⛔ Missing publicClient');
+    log.warn?.('[ABORT] Missing publicClient');
     return {
       nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
       errorMessage: 'Public client missing',
@@ -32,25 +49,44 @@ export async function validateExistsOnChain({
   }
 
   if (!addr || !isAddress(addr)) {
-    log.warn('⛔ Invalid address format');
+    log.warn?.('[ABORT] Invalid address', { addr } as any);
     return {
       nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
       errorMessage: 'Invalid address',
     };
   }
 
+  // Helpful warning if caller passed appChainId and client is on a different chain
+  if (typeof appChainId === 'number' && typeof clientChainId === 'number' && appChainId !== clientChainId) {
+    log.warn?.('[MISMATCH] Client not pinned to appChainId', { appChainId, clientChainId } as any);
+  }
+
   try {
-    const code = await publicClient.getBytecode({ address: addr as Address });
-    // EVM returns "0x" (or null) when no contract exists at the address
-    if (!code || code === '0x') {
-      log.log('🔎 No bytecode found → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN');
+    const bytecode = await publicClient.getBytecode({ address: addr });
+    const exists = !!bytecode && bytecode !== '0x';
+
+    if (!exists) {
+      log.log?.('[RESULT] No bytecode → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN', {
+        addr,
+        clientChainId,
+      } as any);
       return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
     }
 
-    log.log(`✅ Bytecode present (length=${code.length}) → RESOLVE_ASSET`);
+    log.log?.(`[RESULT] Bytecode found (len=${bytecode.length}) → RESOLVE_ASSET`, {
+      addr,
+      clientChainId,
+    } as any);
     return { nextState: InputState.RESOLVE_ASSET };
   } catch (err) {
-    log.warn('⚠️ getBytecode threw:', err as any);
-    return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
+    log.warn?.('[ERROR] getBytecode failed', {
+      addr,
+      clientChainId,
+      error: (err as Error)?.message,
+    } as any);
+    return {
+      nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+      errorMessage: 'Bytecode read failed',
+    };
   }
 }

@@ -9,7 +9,6 @@ import type {
 } from '@/lib/structure';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
 const lower = (a?: string | Address) => (a ? (a as string).toLowerCase() : undefined);
 const shallowEqual = <T extends Record<string, any>>(a?: T, b?: T) => {
   if (a === b) return true;
@@ -122,13 +121,22 @@ export function useProviderWatchers({
 
     setExchangeContext((prevCtx) => {
       const next = structuredClone(prevCtx);
-      const current = next.accounts.connectedAccount ?? ({} as WalletAccount);
-      next.accounts.connectedAccount = {
-        ...current,
-        address: (nextSlice.address ?? ZERO_ADDRESS) as Address,
-      };
+
+      if (nextSlice.address && isConnected) {
+        // ✅ Wallet connected → hydrate connectedAccount with real address
+        const current = next.accounts.connectedAccount ?? ({} as WalletAccount);
+        next.accounts.connectedAccount = {
+          ...current,
+          address: nextSlice.address as Address,
+        };
+      } else {
+        // ❌ Wallet disconnected → clear connectedAccount
+        next.accounts.connectedAccount = undefined as any;
+      }
+
       if (next.tradeData.sellTokenContract) next.tradeData.sellTokenContract.balance = 0n;
       if (next.tradeData.buyTokenContract) next.tradeData.buyTokenContract.balance = 0n;
+
       return next;
     }, 'watcher:account');
 

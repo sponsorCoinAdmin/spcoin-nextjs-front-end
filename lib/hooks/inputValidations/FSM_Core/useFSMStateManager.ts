@@ -105,8 +105,20 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   }, [manualEntry]);
 
   const { address: accountAddress } = useAccount();
-  const publicClient = usePublicClient();
-  const [chainId] = useAppChainId(); // ✅ from your context hooks
+
+  // ✅ Canonical chain id from app context
+  const [chainId] = useAppChainId();
+
+  // ✅ Public client **pinned** to the app chain (fixes accidental mainnet reads)
+  const publicClient = usePublicClient({ chainId });
+
+  // Optional: tiny debug to confirm pinning at runtime
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[useFSMStateManager:${instanceId}] usePublicClient pinned -> expected=${chainId}, clientChainId=${(publicClient as any)?.chain?.id ?? '∅'}`
+    );
+  }, [publicClient, chainId, instanceId]);
 
   // Log select param changes (dev aid)
   const prevParamsRef = useRef<UseFSMStateManagerParams | null>(null);
@@ -160,8 +172,8 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       const result = await startFSM({
         debouncedHexInput,
         prevDebouncedInputRef,
-        publicClient,
-        chainId,
+        publicClient,          // ✅ now pinned to chainId
+        chainId,               // ✅ canonical chain id in ValidateFSMInput
         accountAddress,
         containerType,
         feedType,

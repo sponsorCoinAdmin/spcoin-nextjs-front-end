@@ -9,7 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
-import ConnectButton from '../Buttons/ConnectButton';
+import ConnectButton from '@/components/Buttons/ConnectButton';
 import NetworkSelect from '@/components/containers/NetworkSelect';
 
 const LOG_TIME = false;

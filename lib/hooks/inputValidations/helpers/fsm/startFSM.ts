@@ -28,6 +28,15 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const TRACE_ENABLED = process.env.NEXT_PUBLIC_FSM_INPUT_STATE_TRACE === 'true';
 const debug = createDebugLogger('startFSM', DEBUG_ENABLED);
 
+/** Safely read the connected chain id from a wagmi/viem publicClient */
+async function getClientChainIdSafe(client: any): Promise<number | undefined> {
+  try {
+    if (client?.chain?.id != null) return Number(client.chain.id);
+    if (typeof client?.getChainId === 'function') return await client.getChainId();
+  } catch {}
+  return undefined;
+}
+
 export type StartFSMArgs = {
   debouncedHexInput: string;
   prevDebouncedInputRef: MutableRefObject<string | undefined>;
@@ -71,9 +80,10 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   } = args;
 
   if (DEBUG_ENABLED) {
-    debug.log(
-      `↪️ enter: input="${debouncedHexInput || '(empty)'}", isValid=${isValid}, failed="${failedHexInput ?? '—'}", ` +
-        `manual=${String(manualEntry)}, peer=${peerAddress ?? '—'}, chainId=${chainId}`
+    console.log(
+      `↪️ enter: input="${debouncedHexInput || '(empty)'}", isValid=${isValid}, failed="${
+        failedHexInput ?? '—'
+      }", manual=${String(manualEntry)}, peer=${peerAddress ?? '—'}, chainId=${chainId}`
     );
   }
 
@@ -82,17 +92,27 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     return null;
   }
 
+  // Preflight: log if the provided publicClient is on the wrong chain
+  const clientChainId = await getClientChainIdSafe(publicClient);
+  if (clientChainId !== undefined && clientChainId !== chainId) {
+    debug.warn(
+      '⚠️ publicClient chain mismatch — fix caller to use usePublicClient({ chainId })',
+      { expectedChainId: chainId, clientChainId } as any
+    );
+    // NOTE: We *do not* bail here; we continue running to preserve behavior.
+  }
+
   const newSignature = makeSignature(debouncedHexInput, isValid);
   const canRun = shouldRunFSM(prevDebouncedInputRef, newSignature);
 
   if (!canRun) {
-    if (DEBUG_ENABLED) debug.log(`⏸️ Unchanged signature "${newSignature}" — skipping FSM run.`);
+    if (DEBUG_ENABLED) console.log(`⏸️ Unchanged signature "${newSignature}" — skipping FSM run.`);
     return null;
   }
 
   if (DEBUG_ENABLED) {
     const reason = signatureDiff(prevDebouncedInputRef.current, newSignature);
-    debug.log(`▶️ Triggering FSM${reason ? `: ${reason}` : ''}`);
+    console.log(`▶️ Triggering FSM${reason ? `: ${reason}` : ''}`);
   }
 
   // update signature after we decide to run
@@ -132,7 +152,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   };
 
   // Run the pure FSM loop
-  const { finalState, assetAcc, transitions } = await runFSM({
+  const { finalState, assetAcc } = await runFSM({
     initialState: InputState.VALIDATE_ADDRESS,
     current,
     isTriggerFSMState,
@@ -175,7 +195,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
         logoURL: finalURL,
       };
       if (DEBUG_ENABLED) {
-        debug.log('🖼️ Filled missing logoURL at commit stage', {
+        console.log('🖼️ Filled missing logoURL at commit stage', {
           chainId,
           address: addr,
           logoURL: finalURL,
@@ -201,7 +221,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     const sym = (committedAsset as any)?.symbol ?? '—';
     const nm = (committedAsset as any)?.name ?? '—';
     const logo = (committedAsset as any)?.logoURL ?? '—';
-    debug.log(
+    console.log(
       `🏁 finalState → ${InputState[finalState]} | asset: { address: ${addr}, symbol: ${sym}, name: ${nm}, logoURL: ${logo} }`
     );
   }

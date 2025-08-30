@@ -106,15 +106,15 @@ export default function TestPage() {
             className={buttonClasses}
             value={quickSwitch}
             onChange={(e) => handleQuickSwitch(e.target.value)}
-            aria-label="Run Test"
-            title="Run Test"
+            aria-label="Open Sponsor Coin Test Data"
+            title="Open Sponsor Coin Test Data"
           >
-            <option value="">Run Test</option>
-            <option value="context">Show Context</option>
-            <option value="fsm">Show FSM Trace</option>
-            <option value="wallets">Show Test Wallets</option>
-            <option value="panels">Show Panels</option>
-            <option value="todo">Show ToDo</option>
+            <option value="">Open Sponsor Coin Test Data</option>
+            <option value="context">Exchange Context</option>
+            <option value="fsm">FSM Trace</option>
+            <option value="wallets">Test Wallets</option>
+            <option value="panels">Panels</option>
+            <option value="todo">ToDo's</option>
           </select>
         </div>
       )}
