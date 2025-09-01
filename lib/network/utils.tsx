@@ -20,7 +20,7 @@ const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
 
 /* ───────── Asset/logo utilities (no network metadata) ───────── */
 
-const defaultMissingImage = '@/lib/network/utils';
+const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
 const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const logoExistenceCache = new Map<string, boolean>();
 
