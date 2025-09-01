@@ -9,8 +9,9 @@ import {
   TokenContract,
 } from '@/lib/structure';
 
-import { useAccount, usePublicClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useAppChainId } from '@/lib/context/hooks';
+import { useAppPublicClient } from '@/lib/hooks/useAppPublicClient';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 
@@ -109,14 +110,14 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   // ✅ Canonical chain id from app context
   const [chainId] = useAppChainId();
 
-  // ✅ Public client **pinned** to the app chain (fixes accidental mainnet reads)
-  const publicClient = usePublicClient({ chainId });
+  // ✅ Public client **pinned** to the app chain (fixes accidental cross-chain reads)
+  const publicClient = useAppPublicClient();
 
   // Optional: tiny debug to confirm pinning at runtime
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log(
-      `[useFSMStateManager:${instanceId}] usePublicClient pinned -> expected=${chainId}, clientChainId=${(publicClient as any)?.chain?.id ?? '∅'}`
+      `[useFSMStateManager:${instanceId}] publicClient pinned -> expected=${chainId}, clientChainId=${(publicClient as any)?.chain?.id ?? '∅'}`
     );
   }, [publicClient, chainId, instanceId]);
 
@@ -172,8 +173,8 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       const result = await startFSM({
         debouncedHexInput,
         prevDebouncedInputRef,
-        publicClient,          // ✅ now pinned to chainId
-        chainId,               // ✅ canonical chain id in ValidateFSMInput
+        publicClient,          // ✅ pinned to app chainId via useAppPublicClient
+        chainId,               // ✅ canonical app chain id
         accountAddress,
         containerType,
         feedType,

@@ -21,7 +21,7 @@ const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
 /* ───────── Asset/logo utilities (no network metadata) ───────── */
 
 const defaultMissingImage = '@/lib/network/utils';
-const badTokenAddressImage = '@/lib/network/utils';
+const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
 const logoExistenceCache = new Map<string, boolean>();
 
 async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {

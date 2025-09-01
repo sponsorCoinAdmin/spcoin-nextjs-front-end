@@ -16,7 +16,7 @@ const debugLog = createDebugLogger('validateDuplicate', DEBUG_ENABLED, LOG_TIME)
  * - If equal → DUPLICATE_INPUT_ERROR.
  * - Otherwise ALWAYS advance to PREVIEW_CONTRACT_EXISTS_LOCALLY.
  *
- * NOTE:
+ * NOTE:2
  *  - No local cache check here.
  *  - No NOT_FOUND branch here.
  *  - manualEntry logic happens later in validateResolvedAsset.

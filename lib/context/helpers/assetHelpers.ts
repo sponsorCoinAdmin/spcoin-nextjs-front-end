@@ -1,9 +1,7 @@
 // File: lib/context/helpers/assetUtils.ts
 import type { Address } from 'viem';
 import { FEED_TYPE, type WalletAccount } from '@/lib/structure';
-
-export const defaultMissingImage = '@/lib/network/utils';
-export const badTokenAddressImage = '@/lib/network/utils';
+import { defaultMissingImage, badTokenAddressImage } from '@/lib/network/utils';
 
 // Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();

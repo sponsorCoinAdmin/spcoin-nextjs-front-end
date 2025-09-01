@@ -1,4 +1,5 @@
 // File: lib/hooks/inputValidations/FSM_Core/validationTests/validateExistsOnChain.ts
+
 import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
@@ -7,30 +8,53 @@ import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
-const log = createDebugLogger('validateExistsOnChain(FSM_Core)', DEBUG_ENABLED, /* timestamp */ false);
+const log = createDebugLogger(
+  'validateExistsOnChain(FSM_Core)',
+  DEBUG_ENABLED,
+  /* timestamp */ false
+);
 
-// Small helpers for better diagnostics
-const now = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
-
+// ---- Transport helpers to surface the real RPC endpoint ----
+function getTransportUrl(t: any): string | undefined {
+  return t?.url ?? t?.value?.url ?? t?.config?.url ?? t?.details?.url;
+}
+function getTransportType(t: any): string | undefined {
+  return t?.type ?? t?.key ?? t?.name ?? t?.constructor?.name;
+}
 function summarizeClient(client: any) {
   const chainId = client?.chain?.id;
   const chainName = client?.chain?.name;
   const t = client?.transport;
-  // viem http transport usually exposes .url; sometimes behind .value or .config
-  const transportUrl = t?.url ?? t?.value?.url ?? t?.config?.url;
-  const transportType = t?.type ?? t?.key ?? t?.name;
-  return { chainId, chainName, transportType, transportUrl };
+  return {
+    chainId,
+    chainName,
+    transportType: getTransportType(t),
+    transportUrl: getTransportUrl(t),
+  };
 }
 
-async function getBytecodeWithTiming(publicClient: any, address: Address, traceId: string) {
+const now = () =>
+  (typeof performance !== 'undefined' && performance.now
+    ? performance.now()
+    : Date.now());
+
+async function getBytecodeWithTiming(
+  publicClient: any,
+  address: Address,
+  traceId: string,
+  rpcUrl?: string
+) {
   const t0 = now();
-  log.log?.(`[${traceId}] [RPC] getBytecode(start)`, { address } as any);
+  log.log?.(
+    `[${traceId}] [RPC] getBytecode(start) @ ${rpcUrl ?? '∅'}`,
+    { address } as any
+  );
   const bytecode = await publicClient.getBytecode({ address });
   const t1 = now();
   const len = bytecode ? bytecode.length : 0;
   log.log?.(
-    `[${traceId}] [RPC] getBytecode(done) ${Math.round(t1 - t0)}ms, len=${len}`,
-    len ? { head: bytecode.slice(0, 10), tail: bytecode.slice(-10) } as any : undefined
+    `[${traceId}] [RPC] getBytecode(done) ${Math.round(t1 - t0)}ms, len=${len} @ ${rpcUrl ?? '∅'}`,
+    len ? ({ head: bytecode.slice(0, 10), tail: bytecode.slice(-10) } as any) : undefined
   );
   return bytecode as string | null;
 }
@@ -52,17 +76,21 @@ export async function validateExistsOnChain(
 
   const clientSummary = summarizeClient(publicClient);
   const clientChainId = clientSummary.chainId as number | undefined;
+  const rpcUrl = clientSummary.transportUrl;
 
-  log.log?.(`[${traceId}] [ENTRY]`, {
-    address: addr,
-    isAddress: isAddress(addr || '0x'),
-    isNative: addr === NATIVE_TOKEN_ADDRESS,
-    appChainId,
-    clientChainId,
-    clientChainName: clientSummary.chainName,
-    transportType: clientSummary.transportType,
-    transportUrl: clientSummary.transportUrl,
-  } as any);
+  log.log?.(
+    `[${traceId}] [ENTRY] validateExistsOnChain`,
+    {
+      address: addr,
+      isAddress: isAddress(addr || '0x'),
+      isNative: addr === NATIVE_TOKEN_ADDRESS,
+      appChainId,
+      clientChainId,
+      clientChainName: clientSummary.chainName,
+      rpcTransportType: clientSummary.transportType,
+      rpcUrl, // 👈 explicit URL in logs
+    } as any
+  );
 
   // Native token: treated as existing (no bytecode on chain)
   if (addr === NATIVE_TOKEN_ADDRESS) {
@@ -72,68 +100,82 @@ export async function validateExistsOnChain(
 
   // Guards
   if (!publicClient) {
-    log.warn?.(`[${traceId}] [ABORT] Missing publicClient`);
+    const msg = `Public client missing (appChainId=${appChainId ?? '∅'})`;
+    log.warn?.(`[${traceId}] [ABORT] ${msg}`);
     return {
       nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-      errorMessage: 'Public client missing',
+      errorMessage: `${msg}`,
     };
   }
 
   if (!addr || !isAddress(addr)) {
-    log.warn?.(`[${traceId}] [ABORT] Invalid address`, { addr } as any);
+    const msg = `Invalid address "${addr}"`;
+    log.warn?.(`[${traceId}] [ABORT] ${msg}`);
     return {
       nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-      errorMessage: 'Invalid address',
+      errorMessage: msg,
     };
   }
 
-  // Helpful warning if caller passed appChainId and client is on a different chain
-  if (typeof appChainId === 'number' && typeof clientChainId === 'number' && appChainId !== clientChainId) {
-    log.warn?.(
-      `[${traceId}] [MISMATCH] Client not pinned to appChainId`,
-      { appChainId, clientChainId, clientChainName: clientSummary.chainName } as any
-    );
+  // Hard-stop on chain mismatch to avoid false "not found"
+  if (
+    typeof appChainId === 'number' &&
+    typeof clientChainId === 'number' &&
+    appChainId !== clientChainId
+  ) {
+    const msg = `Chain mismatch: app=${appChainId}, client=${clientChainId} (${clientSummary.chainName}) @ ${clientSummary.transportType} ${rpcUrl}`;
+    log.warn?.(`[${traceId}] [MISMATCH] ${msg}`);
+    return {
+      nextState: InputState.RESOLVE_ASSET_ERROR,
+      errorMessage: msg, // 👈 bubbles to UI
+    };
   }
 
   try {
     // First attempt
-    let bytecode = await getBytecodeWithTiming(publicClient, addr, traceId);
+    let bytecode = await getBytecodeWithTiming(publicClient, addr, traceId, rpcUrl);
     let exists = !!bytecode && bytecode !== '0x';
 
     // One retry for transient empty-code responses (some RPCs do this)
     if (!exists) {
       log.warn?.(
         `[${traceId}] [RETRY] Empty bytecode returned; retrying once…`,
-        { addr, clientChainId } as any
+        { addr, clientChainId, rpcUrl } as any
       );
-      // brief micro-delay to avoid hammering same node path
       await new Promise((r) => setTimeout(r, 150));
-      bytecode = await getBytecodeWithTiming(publicClient, addr, traceId);
+      bytecode = await getBytecodeWithTiming(publicClient, addr, traceId, rpcUrl);
       exists = !!bytecode && bytecode !== '0x';
     }
 
     if (!exists) {
-      log.log?.(`[${traceId}] [RESULT] No bytecode → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN`, {
-        addr,
-        clientChainId,
-      } as any);
-      return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
+      const why =
+        bytecode === null ? 'null' :
+        bytecode === '0x' ? 'EOA-or-no-code' :
+        `len=${bytecode.length}`;
+      log.log?.(
+        `[${traceId}] [RESULT] No bytecode (${why}) → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN`,
+        { addr, clientChainId, rpcUrl } as any
+      );
+      return {
+        nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
+        errorMessage: `No bytecode (${why}) on chain ${clientChainId} via ${rpcUrl}`,
+      };
     }
 
     log.log?.(
       `[${traceId}] [RESULT] Bytecode found (len=${bytecode!.length}) → RESOLVE_ASSET`,
-      { addr, clientChainId } as any
+      { addr, clientChainId, rpcUrl } as any
     );
     return { nextState: InputState.RESOLVE_ASSET };
   } catch (err) {
     const msg = (err as Error)?.message ?? String(err);
     log.warn?.(
       `[${traceId}] [ERROR] getBytecode failed`,
-      { addr, clientChainId, error: msg } as any
+      { addr, clientChainId, rpcUrl, error: msg } as any
     );
     return {
       nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
-      errorMessage: 'Bytecode read failed',
+      errorMessage: `Bytecode read failed via ${rpcUrl}: ${msg}`,
     };
   }
 }
