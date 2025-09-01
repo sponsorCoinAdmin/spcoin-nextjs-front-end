@@ -1,8 +1,13 @@
+// File: (wherever this lives) usePriceAPI.ts
+
 import { useEffect, useRef } from 'react';
-import { PriceRequestParams, TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
 import { stringify } from 'qs';
 import useSWR from 'swr';
-import { isAddress, Address } from 'viem';
+import { isAddress, type Address } from 'viem';
+
+import { PriceRequestParams, TRADE_DIRECTION, STATUS } from '@/lib/structure';
+import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
+
 import {
   useApiErrorMessage,
   useBuyAmount,
@@ -10,8 +15,9 @@ import {
   useExchangeContext,
   useSellAmount,
   useTradeData,
-  useAppChainId, // ← now returns [number, setter]
+  useAppChainId, // returns [number, setter]
 } from '@/lib/context/hooks';
+
 import PriceResponse from '@/lib/0X/typesV1';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -118,10 +124,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 
     allKeys.forEach((key) => {
       if (previousProps.current[key] !== props[key]) {
-        changesObj[key] = {
-          from: previousProps.current[key],
-          to: props[key],
-        };
+        changesObj[key] = { from: previousProps.current[key], to: props[key] };
       }
     });
 
@@ -136,8 +139,6 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 function usePriceAPI() {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
-
-  // ✅ useAppChainId now returns a tuple; destructure the number
   const [chainId] = useAppChainId();
 
   const [errorMessage] = useErrorMessage();
@@ -185,14 +186,13 @@ function usePriceAPI() {
       debugLog.warn(`Amount is 0`);
       return false;
     }
-    if (chainId === HARDHAT) {
+    if (chainId === CHAIN_ID.HARDHAT) {
       debugLog.warn(`Chain is HARDHAT`);
       return false;
     }
     return true;
   };
 
-  // Guarded zeroing to avoid extra renders
   useEffect(() => {
     if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
       if (buyAmount !== 0n) setBuyAmount(0n);
@@ -202,7 +202,6 @@ function usePriceAPI() {
     }
   }, [tradeData.tradeDirection, sellAmount, buyAmount, setBuyAmount, setSellAmount]);
 
-  // Choose the correct amount to gate fetches based on direction
   const amountForDirection =
     tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
       ? debouncedSellAmount
@@ -281,10 +280,7 @@ function usePriceAPI() {
     },
   });
 
-  return {
-    ...swr,
-    swrKey,
-  };
+  return { ...swr, swrKey };
 }
 
 export { usePriceAPI, getPriceApiCall };

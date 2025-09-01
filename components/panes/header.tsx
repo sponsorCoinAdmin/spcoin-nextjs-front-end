@@ -53,7 +53,15 @@ export default function Header() {
     <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
       <div className="flex flex-row justify-between items-center w-full">
         <div className="flex items-center gap-4 flex-shrink-0">
-          <Image src={spCoin_png} width={25} height={25} alt="Sponsor Coin Logo" />
+          {/* Fix: if CSS changes one dimension, set the other to auto.
+             - Remove width/height props so Next uses intrinsic metadata.
+             - Size via className: height fixed, width auto to keep aspect ratio. */}
+          <Image
+            src={spCoin_png}
+            alt="Sponsor Coin Logo"
+            priority
+            className="h-8 w-auto"
+          />
 
           {SPCOIN_LINK && (
             <Link

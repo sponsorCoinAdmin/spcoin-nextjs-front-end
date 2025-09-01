@@ -3,10 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import { defaultMissingImage, getAccountLogo } from '@/lib/context/helpers/NetworkHelpers';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import { WalletAccount } from '@/lib/structure';
+import { getAccountLogo, defaultMissingImage } from '@/lib/network/utils';
 
 const walletOptions = ['All', 'Recipients', 'Agents'] as const;
 

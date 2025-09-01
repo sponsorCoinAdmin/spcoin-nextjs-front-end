@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useAppChainId, useAccount } from 'wagmi';
+import { useChainId, useAccount } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import {
   getBlockChainName,
@@ -19,10 +19,10 @@ export const useNetwork = () => {
   const { exchangeContext } = useExchangeContext();
 
   // External single sources of truth
-  const wagmiChainId = useAppChainId();
-  const { status } = useAccount(); // 'connected' | 'connecting' | 'disconnected'
+  const wagmiChainId = useChainId();         // ✅ from wagmi
+  const { status } = useAccount();           // 'connected' | 'connecting' | 'disconnected'
 
-  // Prefer context.chainId (kept in sync by ExchangeProvider watcher);
+  // Prefer context.chainId (kept in sync by provider watchers);
   // fall back to wagmiChainId if context isn’t ready yet.
   const chainId = exchangeContext?.network?.chainId ?? wagmiChainId ?? 0;
 
@@ -30,9 +30,9 @@ export const useNetwork = () => {
     const ctxNet = exchangeContext?.network ?? ({} as any);
 
     // Derive display fields from chainId if not present in context
-    const name = ctxNet.name || getBlockChainName(chainId) || '';
+    const name    = ctxNet.name    || getBlockChainName(chainId)    || '';
     const logoURL = ctxNet.logoURL || getBlockChainLogoURL(chainId) || '';
-    const url = ctxNet.url || getBlockExplorerURL(chainId) || '';
+    const url     = ctxNet.url     || getBlockExplorerURL(chainId)  || '';
 
     // Connected is read-only here; prefer wagmi status
     const connected = status === 'connected';

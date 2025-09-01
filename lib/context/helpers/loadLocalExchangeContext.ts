@@ -1,11 +1,10 @@
 // File: lib/context/helpers/loadLocalExchangeContext.ts
-
 'use client';
 
 import { ExchangeContext } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ETHEREUM } from '@/lib/structure';
+import { CHAIN_ID } from '@/lib/structure';            // ⬅️ use enum (barrel re-exports ./enums/networkIds)
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 
 const STORAGE_KEY = 'exchangeContext';
@@ -28,7 +27,11 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
     try {
       parsed = deserializeWithBigInt(serializedContext);
     } catch (parseError) {
-      debugLog.error(`❌ Failed to deserializeWithBigInt: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      debugLog.error(
+        `❌ Failed to deserializeWithBigInt: ${
+          parseError instanceof Error ? parseError.message : String(parseError)
+        }`
+      );
       console.error(parseError);
       return null;
     }
@@ -46,7 +49,10 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       debugLog.warn('⚠️ Failed to pretty-print parsed ExchangeContext:', stringifyError);
     }
 
-    const chainId = parsed.network?.chainId ?? ETHEREUM;
+    const raw = Number(parsed?.network?.chainId);
+    const chainId = Number.isFinite(raw) ? raw : CHAIN_ID.ETHEREUM;  // ⬅️ fallback to mainnet
+
+    debugLog.log('🔧 sanitizeExchangeContext with chainId:', chainId);
     return sanitizeExchangeContext(parsed, chainId);
   } catch (error) {
     debugLog.error(`⛔ Failed to load exchangeContext: ${error instanceof Error ? error.message : String(error)}`);

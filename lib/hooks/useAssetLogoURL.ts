@@ -3,10 +3,10 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useAppChainId } from 'wagmi';
 import { isAddress } from 'viem';
-import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { useAppChainId } from '../context/hooks';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_ASSET_LOGO_URL === 'true';

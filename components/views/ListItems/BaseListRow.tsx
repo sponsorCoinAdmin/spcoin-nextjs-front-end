@@ -4,7 +4,7 @@
 import React from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
+import { defaultMissingImage } from '@/lib/network/utils';
 
 type BaseListRowProps = {
   avatarSrc: string;

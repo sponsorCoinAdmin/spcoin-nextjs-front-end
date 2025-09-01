@@ -3,7 +3,7 @@
 
 import React from 'react';
 import BaseListRow from './BaseListRow';
-import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
+import { defaultMissingImage } from '@/lib/network/utils';;
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 type TokenListItemProps = {

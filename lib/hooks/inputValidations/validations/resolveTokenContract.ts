@@ -4,8 +4,8 @@ import { isAddress, Address, PublicClient } from 'viem';
 import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
 import { TokenContract, FEED_TYPE } from '@/lib/structure';
-import { getLogoURL, NATIVE_TOKEN_ADDRESS, defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
-import { getNativeTokenInfo } from '@/lib/context/helpers/networkhelpers/getNativeTokenInfo';
+import { getLogoURL, NATIVE_TOKEN_ADDRESS, defaultMissingImage } from '@/lib/network/utils';
+import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
 function dbg(...args: any[]) {

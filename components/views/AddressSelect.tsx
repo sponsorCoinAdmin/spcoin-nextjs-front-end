@@ -6,10 +6,10 @@ import HexAddressInput from '@/components/shared/utils/HexAddressInput';
 import RenderAssetPreview from '@/components/views/sharedPreviews/RenderAssetPreview';
 import ErrorAssetPreview from '@/components/views/sharedPreviews/ErrorAssetPreview';
 
-import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 import { InputState } from '@/lib/structure/assetSelection';
+import { useAssetSelectContext } from '@/lib/context';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
@@ -37,11 +37,9 @@ export default function AddressSelect() {
     );
   }, [debouncedHexInput, manualEntry]);
 
-  // Only enforce manualEntry=true while this keystroke/paste is being processed.
   const [enforceManualTrue, setEnforceManualTrue] = useState(false);
   useEnsureBoolWhen([manualEntry, setManualEntry], true, enforceManualTrue);
 
-  // One-tick enforcement toggle so we don’t fight programmatic selections
   const armEnforcementForThisTick = () => {
     setEnforceManualTrue(true);
     requestAnimationFrame(() => setEnforceManualTrue(false));
@@ -56,17 +54,19 @@ export default function AddressSelect() {
           armEnforcementForThisTick();
           setManualEntry(true);
 
-          // Kick the FSM; it will advance based on the new input value
+          // Kick FSM
           setInputState(InputState.EMPTY_INPUT, 'AddressSelect (Manual Entry)');
 
-          // This triggers the provider-side FSM machinery; avoid running any local validator hooks
-          handleHexInputChange(val, true);
+          // Trace the handler acceptance
+          debugLog.log?.(
+            `✏️ [HexAddressInput] calling handleHexInputChange("${val.slice(0, 6)}…", true)`
+          );
+          const accepted = handleHexInputChange(val, true);
+          debugLog.log?.(`✏️ handleHexInputChange accepted=${accepted}`);
         }}
         placeholder="Enter address"
         statusEmoji=""
       />
-
-      {/* Render previews driven by provider/FSM state */}
       <ErrorAssetPreview />
       <RenderAssetPreview />
     </div>

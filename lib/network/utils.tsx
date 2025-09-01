@@ -11,6 +11,7 @@ import {
 } from '@/lib/structure';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { NATIVE_TOKEN_ADDRESS, BURN_ADDRESS } from '../structure/constants/addresses';
 
 // Debug logging
 const LOG_TIME = false;
@@ -19,9 +20,8 @@ const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
 
 /* ───────── Asset/logo utilities (no network metadata) ───────── */
 
-const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
-const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
-
+const defaultMissingImage = '@/lib/network/utils';
+const badTokenAddressImage = '@/lib/network/utils';
 const logoExistenceCache = new Map<string, boolean>();
 
 async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
@@ -98,9 +98,6 @@ const getAccountLogo = (account?: WalletAccount): string =>
 
 /* ───────── Active account / token helpers (no network metadata) ───────── */
 
-const BURN_ADDRESS: Address  = '0x0000000000000000000000000000000000000000';
-const NATIVE_TOKEN_ADDRESS: Address = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-
 const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address) =>
   address ? address === exchangeContext?.accounts?.connectedAccount?.address : false;
 
@@ -146,15 +143,8 @@ function delay(ms: number | undefined) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const tokenContractsEqual = (a?: TokenContract, b?: TokenContract): boolean =>
-  a?.address === b?.address && a?.symbol === b?.symbol && a?.decimals === b?.decimals;
-
-/* ───────── Exports ───────── */
-
 export {
   type RequiredAssetMembers,
-  BURN_ADDRESS,
-  NATIVE_TOKEN_ADDRESS,
   badTokenAddressImage,
   defaultMissingImage,
   delay,
@@ -172,6 +162,5 @@ export {
   isNativeSellToken,
   isNativeToken,
   isNativeTokenAddress,
-  tokenContractsEqual,
   useIsActiveAccountAddress,
 };

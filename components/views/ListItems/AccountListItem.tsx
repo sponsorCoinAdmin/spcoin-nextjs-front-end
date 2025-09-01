@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { defaultMissingImage } from '@/lib/context/helpers/NetworkHelpers';
+import { defaultMissingImage } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import type { WalletAccount } from '@/lib/structure';
 import BaseListRow from './BaseListRow';

@@ -1,20 +1,13 @@
-import { isAddress, parseUnits } from 'ethers'
-import { Address, formatUnits, getAddress } from 'viem'
-import { BURN_ADDRESS } from '@/lib/context/helpers/NetworkHelpers'
-import {
-  BASE,
-  ETHEREUM,
-  FEED_TYPE,
-  HARDHAT,
-  POLYGON,
-  SEPOLIA,
-  TokenContract,
-} from '@/lib/structure';
+// Fixed file
+
+import { parseUnits, formatUnits, getAddress } from 'viem';
+import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
+import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
+import type { TokenContract } from '@/lib/structure';
 
 /**
  * Parse a user-entered string or bigint into a formatted string value (safe for UI display).
  */
-
 export const parseValidFormattedAmount = (
   value: string | bigint,
   decimals: number | undefined
@@ -38,8 +31,8 @@ export const parseValidFormattedAmount = (
     let formattedValue = (intPart || '0').replace(/^0+/, '') || '0';
 
     if (decimalPart !== undefined) {
-      // ✅ Preserve trailing zeros — don't trim them during input
-      formattedValue += '.' + decimalPart; // Do NOT truncate with substring()
+      // ✅ Preserve trailing zeros
+      formattedValue += '.' + decimalPart;
     } else if (price.endsWith('.')) {
       // ✅ Preserve the trailing decimal
       formattedValue += '.';
@@ -54,62 +47,80 @@ export const parseValidFormattedAmount = (
 /**
  * Given a bigint and decimals, return a formatted string and parse it back to bigint.
  */
-const getValidBigIntToFormattedValue = (value: bigint | undefined, decimals: number | undefined): string => {
-  decimals = decimals || 0
-  const stringValue = formatUnits(value || 0n, decimals)
-  return parseValidFormattedAmount(stringValue, decimals)
-}
+const getValidBigIntToFormattedValue = (
+  value: bigint | undefined,
+  decimals: number | undefined
+): string => {
+  decimals = decimals || 0;
+  const stringValue = formatUnits(value || 0n, decimals);
+  return parseValidFormattedAmount(stringValue, decimals);
+};
 
 /**
  * Format and parse user-entered token values, enforcing precision, then convert to bigint.
  */
-const setValidPriceInput = (txt: string, decimals: number, setSellAmount: (amount: bigint) => void): string => {
-  txt = parseValidFormattedAmount(txt, decimals)
+const setValidPriceInput = (
+  txt: string,
+  decimals: number,
+  setSellAmount: (amount: bigint) => void
+): string => {
+  txt = parseValidFormattedAmount(txt, decimals);
   if (!isNaN(Number(txt))) {
-    setSellAmount(parseUnits(txt, decimals))
+    setSellAmount(parseUnits(txt, decimals));
   }
-  return txt
-}
+  return txt;
+};
 
 /**
  * Parses a query string param from the URL.
  */
 const getQueryVariable = (_urlParams: string, _searchParam: string): string => {
-  const vars = _urlParams.split('&')
+  const vars = _urlParams.split('&');
   for (const param of vars) {
-    const pair = param.split('=')
-    if (pair[0] === _searchParam) return pair[1]
+    const pair = param.split('=');
+    if (pair[0] === _searchParam) return pair[1];
   }
-  console.error('*** ERROR *** Search Param Not Found:', _searchParam)
-  return ''
-}
+  // eslint-disable-next-line no-console
+  console.error('*** ERROR *** Search Param Not Found:', _searchParam);
+  return '';
+};
 
 /**
  * Check if a TokenContract is recognized as SpCoin.
  */
 const isSpCoin = (tokenContract: TokenContract | undefined): boolean => {
-  if (!tokenContract) return false;
-  let chainId = 1;
-  switch (chainId) {
-    case BASE: 
-    case ETHEREUM:
-    case POLYGON:
-    case HARDHAT:
-    case SEPOLIA: return tokenContract?.address === '0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562';
-    default: return false;
+  if (!tokenContract?.address) return false;
+
+  const chainId = Number(tokenContract.chainId ?? CHAIN_ID.ETHEREUM);
+  const supported = [
+    CHAIN_ID.BASE,
+    CHAIN_ID.ETHEREUM,
+    CHAIN_ID.POLYGON,
+    CHAIN_ID.HARDHAT,
+    CHAIN_ID.SEPOLIA,
+  ].includes(chainId);
+
+  if (!supported) return false;
+
+  try {
+    // checksum-compare
+    return (
+      getAddress(tokenContract.address) ===
+      getAddress('0xC2816250c07aE56c1583E5f2b0E67F7D7F42D562')
+    );
+  } catch {
+    return false;
   }
-}
+};
 
 /**
  * Convert between different token decimals using a bigint shift.
  */
 const bigIntDecimalShift = (value: bigint, decimalShift: number): bigint => {
-  return decimalShift === 0
-    ? BigInt(value)
-    : decimalShift >= 0
-    ? BigInt(value) * BigInt(10 ** Math.abs(decimalShift))
-    : BigInt(value) / BigInt(10 ** Math.abs(decimalShift))
-}
+  if (decimalShift === 0) return BigInt(value);
+  const factor = 10n ** BigInt(Math.abs(decimalShift));
+  return decimalShift > 0 ? BigInt(value) * factor : BigInt(value) / factor;
+};
 
 /**
  * Apply decimal adjustment between two TokenContracts.
@@ -119,14 +130,18 @@ const decimalAdjustTokenAmount = (
   newTokenContract: TokenContract | undefined,
   prevTokenContract: TokenContract | undefined
 ): bigint => {
-  const decimalShift: number = (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0)
-  return bigIntDecimalShift(amount, decimalShift)
-}
+  const decimalShift: number =
+    (newTokenContract?.decimals || 0) - (prevTokenContract?.decimals || 0);
+  return bigIntDecimalShift(amount, decimalShift);
+};
 
 /**
  * Return a stub TokenContract when the address is invalid.
  */
-const invalidTokenContract = (textInputField: string | undefined, chainId: number): TokenContract | undefined => {
+const invalidTokenContract = (
+  textInputField: string | undefined,
+  chainId: number
+): TokenContract | undefined => {
   return textInputField
     ? {
         chainId,
@@ -139,11 +154,10 @@ const invalidTokenContract = (textInputField: string | undefined, chainId: numbe
         logoURL: undefined,
         amount: 0n,
       }
-    : undefined
-}
+    : undefined;
+};
 
 export {
-  // ,
   getValidBigIntToFormattedValue,
   setValidPriceInput,
   getQueryVariable,
@@ -151,4 +165,4 @@ export {
   bigIntDecimalShift,
   decimalAdjustTokenAmount,
   invalidTokenContract,
-}
+};
