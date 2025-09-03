@@ -9,7 +9,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const debugLog = createDebugLogger('validateExistsLocally', DEBUG_ENABLED, LOG_TIME);
 
 export function validateExistsLocally({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {
-alert(`ToDo: validateExistsLocally(${debouncedHexInput})`);
+// alert(`ToDo: validateExistsLocally(${debouncedHexInput})`);
   debugLog.log(`ToDo: validateExistsLocally(${debouncedHexInput})`);
-  return { nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN };
+  return { nextState: InputState.VALIDATE_EXISTS_ON_CHAIN };
+  // return { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY};
 }

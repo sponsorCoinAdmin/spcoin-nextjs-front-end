@@ -11,6 +11,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '@/components/Buttons/ConnectButton';
 import NetworkSelect from '@/components/containers/NetworkSelect';
+import ConnectButton2 from '../Buttons/ConnectButton2';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
@@ -113,14 +114,15 @@ export default function Header() {
 
         {/* Right side: use Tailwind gap for an exact 10px spacing (gap-2.5 = 0.625rem ≈ 10px) */}
         <div className="flex items-center gap-2.5">
-          {networkElement && (
+          {/* {networkElement && (
             <NetworkSelect
               id="header-network"
               networkElement={networkElement}
               disabled={false}
             />
-          )}
+          )} */}
           <ConnectButton />
+          <ConnectButton2 />
         </div>
       </div>
     </header>

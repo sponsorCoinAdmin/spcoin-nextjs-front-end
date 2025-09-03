@@ -28,7 +28,10 @@ type SetExchange = (
 type Params = {
   contextState?: ExchangeContextTypeOnly;
   setExchangeContext: SetExchange;
+  /** Wallet (wagmi) chain id — when connected */
   wagmiChainId?: number;
+  /** App-first chain id (preferred source of truth) */
+  appChainId?: number;
   isConnected: boolean;
   address?: string | undefined;
   accountStatus?: string;
@@ -38,6 +41,7 @@ export function useProviderWatchers({
   contextState,
   setExchangeContext,
   wagmiChainId,
+  appChainId,
   isConnected,
   address,
   accountStatus,
@@ -77,14 +81,20 @@ export function useProviderWatchers({
     prevTokensRef.current = { sell: undefined, buy: undefined };
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
 
-  // DISCONNECTED / UI-driven: context chain watcher → hydrate network + clear tokens
+  // DISCONNECTED / UI-driven: context/app chain watcher → hydrate network + clear tokens
   useEffect(() => {
     if (!contextState) return;
 
-    const ctxChain = contextState.network?.chainId ?? 0;
+    // prefer appChainId, fall back to contextState.network.chainId
+    const ctxChain =
+      (typeof appChainId === 'number' ? appChainId : contextState.network?.chainId) ?? 0;
+
     const prevCtxChain = prevCtxChainRef.current ?? 0;
     if (ctxChain === prevCtxChain) return;
 
+    // Local change if:
+    //  - not connected, or
+    //  - selected app/ctx chain differs from current wallet chain
     const isLocalChange = !isConnected || ctxChain !== (wagmiChainId ?? 0);
     if (!isLocalChange) {
       prevCtxChainRef.current = ctxChain;
@@ -105,7 +115,14 @@ export function useProviderWatchers({
 
     prevCtxChainRef.current = ctxChain;
     prevTokensRef.current = { sell: undefined, buy: undefined };
-  }, [contextState?.network?.chainId, isConnected, wagmiChainId, setExchangeContext, contextState]);
+  }, [
+    appChainId,
+    contextState?.network?.chainId,
+    isConnected,
+    wagmiChainId,
+    setExchangeContext,
+    contextState,
+  ]);
 
   // Account watcher — reflect connected account and clear balances on change
   useEffect(() => {

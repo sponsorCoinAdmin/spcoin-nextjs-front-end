@@ -1,3 +1,5 @@
+// File: lib/wagmi/wagmiConfig.ts
+
 'use client';
 
 import { mainnet, base, polygon, sepolia, hardhat } from 'wagmi/chains';

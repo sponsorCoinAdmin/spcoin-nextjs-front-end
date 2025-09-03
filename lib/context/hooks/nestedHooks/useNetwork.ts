@@ -2,8 +2,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useChainId, useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { useAppChainId } from '@/lib/context/hooks';
 import {
   getBlockChainName,
   getBlockChainLogoURL,
@@ -18,23 +19,22 @@ const debugLog = createDebugLogger('useNetwork', DEBUG_ENABLED, LOG_TIME);
 export const useNetwork = () => {
   const { exchangeContext } = useExchangeContext();
 
-  // External single sources of truth
-  const wagmiChainId = useChainId();         // ✅ from wagmi
-  const { status } = useAccount();           // 'connected' | 'connecting' | 'disconnected'
+  // ✅ App-level source of truth
+  const [appChainId] = useAppChainId();
 
-  // Prefer context.chainId (kept in sync by provider watchers);
-  // fall back to wagmiChainId if context isn’t ready yet.
-  const chainId = exchangeContext?.network?.chainId ?? wagmiChainId ?? 0;
+  // Wallet status (connected / disconnected)
+  const { status } = useAccount();
+
+  // Prefer appChainId, otherwise fallback to 0
+  const chainId = appChainId || 0;
 
   const network = useMemo(() => {
     const ctxNet = exchangeContext?.network ?? ({} as any);
 
-    // Derive display fields from chainId if not present in context
     const name    = ctxNet.name    || getBlockChainName(chainId)    || '';
     const logoURL = ctxNet.logoURL || getBlockChainLogoURL(chainId) || '';
     const url     = ctxNet.url     || getBlockExplorerURL(chainId)  || '';
 
-    // Connected is read-only here; prefer wagmi status
     const connected = status === 'connected';
 
     const result = {
@@ -50,15 +50,14 @@ export const useNetwork = () => {
       debugLog.log('🔎 useNetwork computed', {
         ctx: ctxNet,
         result,
-        wagmiChainId,
+        appChainId,
         status,
       });
     }
 
     return result;
-  }, [exchangeContext?.network, chainId, status, wagmiChainId]);
+  }, [exchangeContext?.network, chainId, status, appChainId]);
 
-  // Expose a simple, stable API (no setters → no side effects)
   return {
     network,
     chainId: network.chainId as number,
@@ -66,6 +65,6 @@ export const useNetwork = () => {
     logoURL: network.logoURL as string,
     url: network.url as string,
     connected: network.connected as boolean,
-    status, // passthrough if callers care
+    status,
   };
 };

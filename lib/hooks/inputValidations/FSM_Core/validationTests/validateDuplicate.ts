@@ -14,7 +14,7 @@ const debugLog = createDebugLogger('validateDuplicate', DEBUG_ENABLED, LOG_TIME)
  * Detect duplicate selection:
  * - Compares the candidate (debouncedHexInput) to the opposing side’s address (peerAddress).
  * - If equal → DUPLICATE_INPUT_ERROR.
- * - Otherwise ALWAYS advance to PREVIEW_CONTRACT_EXISTS_LOCALLY.
+ * - Otherwise ALWAYS advance to PREVIEW_CONTRACT_NOT_FOUND_LOCALLY.
  *
  * NOTE:2
  *  - No local cache check here.
@@ -46,7 +46,7 @@ export function validateDuplicate(input: ValidateFSMInput): ValidateFSMOutput {
   }
 
   // ✅ Always proceed to the "exists locally" preview step when not duplicate.
-  const result: ValidateFSMOutput = { nextState: InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY };
+  const result: ValidateFSMOutput = { nextState: InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY };
   debugLog.log('✅ No duplicate found → returning:', result);
   return result;
 }

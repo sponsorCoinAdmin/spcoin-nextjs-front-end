@@ -1,29 +1,26 @@
+// File: components/Wrappers/SpCoinProviders.tsx
 'use client';
 
-import { WagmiProvider } from 'wagmi';
-import { ConnectKitProvider } from 'connectkit';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
+import * as React from 'react';
+import SpCoinConfig from '@/components/Wrappers/SpCoinConfig';
 import { config } from '@/lib/wagmi/wagmiConfig';
-import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext'; // ✅ new import
-import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
 import { PageStateProvider } from '@/lib/context/PageStateContext';
-export default function SpCoinProviders({ children }: { children: React.ReactNode }) {
-  const queryClient = new QueryClient();
+import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext';
+import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
+import AppChainController from '@/lib/network/AppChainController';
 
+export default function SpCoinProviders({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>
-          <PageStateProvider>
-            <ConnectedAccountProvider> {/* ✅ inserted */}
-              <ExchangeProvider>
-                {children}
-              </ExchangeProvider>
-            </ConnectedAccountProvider>
-          </PageStateProvider>
-        </ConnectKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <SpCoinConfig config={config}>
+      <PageStateProvider>
+        <ConnectedAccountProvider>
+          <ExchangeProvider>
+            {/* Anything that calls useExchangeContext/useAppChainId must be below this line */}
+            <AppChainController />
+            {children}
+          </ExchangeProvider>
+        </ConnectedAccountProvider>
+      </PageStateProvider>
+    </SpCoinConfig>
   );
 }

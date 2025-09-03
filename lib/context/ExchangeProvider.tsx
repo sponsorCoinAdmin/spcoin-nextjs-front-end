@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
-import { useChainId as useWagmiChainId, useAccount } from 'wagmi'; // ← use Wagmi here (aliased)
+import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 
@@ -18,8 +18,6 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
 
-// ✅ new provider-internal hooks (moved code out of this file)
-
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'true';
@@ -32,7 +30,6 @@ export type ExchangeContextType = {
     hookName?: string
   ) => void;
 
-  // convenience setters (provided by useProviderSetters)
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
   setSellTokenContract: (contract: TokenContract | undefined) => void;
@@ -41,7 +38,6 @@ export type ExchangeContextType = {
   setSlippageBps: (bps: number) => void;
   setRecipientAccount: (wallet: WalletAccount | undefined) => void;
 
-  // errors
   errorMessage: ErrorMessage | undefined;
   setErrorMessage: (error: ErrorMessage | undefined) => void;
   apiErrorMessage: ErrorMessage | undefined;
@@ -50,24 +46,22 @@ export type ExchangeContextType = {
 
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
-/** Runs side-effect hooks that require ExchangeContext to be available. */
 function ExchangeRuntime({ children }: { children: React.ReactNode }) {
-  // ✅ This runs inside the Provider, so useExchangeContext() inside the hook is safe.
   return <>{children}</>;
 }
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
-  // ---- single external source of truth (wagmi) for sync-only ----
-  const wagmiChainId = useWagmiChainId(); // ← actual wallet chain id
+  // Wallet info (for bootstrap + address/status only)
+  const wagmiChainId = useWagmiChainId();
   const { address, isConnected, status: accountStatus } = useAccount();
 
-  // ---- provider state ----
+  // Provider state
   const [contextState, setContextState] = useState<ExchangeContextTypeOnly | undefined>();
   const [errorMessage, setErrorMessage] = useState<ErrorMessage | undefined>();
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
-  // ---- public setter with persistence + debug ----
+  // Public setter with persistence + debug
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     hookName = 'unknown'
@@ -83,7 +77,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // ---- initial hydration from localStorage + wagmi ----
+  // Initial hydration from localStorage + wallet chain (bootstrap only)
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
@@ -95,7 +89,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- import small setters (removed verbose inline implementations) ----
+  // Convenient local view of the app chainId from context (SOURCE OF TRUTH for app)
+  const appChainId = contextState?.network?.chainId ?? 0;
+
+  // Small setters
   const {
     setRecipientAccount,
     setSellAmount,
@@ -106,14 +103,16 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setSlippageBps,
   } = useProviderSetters(setExchangeContext);
 
-  // ---- central watchers extracted (removes 150+ lines from this file) ----
+  // Central watchers — drive off APP chain (not the wallet)
   useProviderWatchers({
     contextState,
     setExchangeContext,
-    wagmiChainId, // ← pass the real wallet chain id into the watchers
+    appChainId,      // <-- app-first
     isConnected,
     address,
     accountStatus,
+    // If some watchers legitimately need wallet chain for validation, you can also pass:
+    // walletChainId: wagmiChainId,
   });
 
   return (
@@ -140,7 +139,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      {/* Only render runtime + children after context is ready */}
       {contextState && <ExchangeRuntime>{children}</ExchangeRuntime>}
     </ExchangeContextState.Provider>
   );

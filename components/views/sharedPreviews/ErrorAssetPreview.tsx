@@ -70,7 +70,7 @@ export default function ErrorAssetPreview() {
         text: 'Duplicate input selected.',
         colorHex: '#f97316',
       },
-      [InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY]: {
+      [InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY]: {
         emoji: '📭',
         text: 'Missing local asset preview.',
         colorHex: '#f97316',

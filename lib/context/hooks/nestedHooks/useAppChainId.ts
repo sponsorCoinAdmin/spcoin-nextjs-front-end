@@ -1,7 +1,7 @@
 // File: lib/context/hooks/useAppChainId.ts
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useChainId as useWagmiChainId, useSwitchChain } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -17,37 +17,39 @@ const MIRROR_APP_TO_WALLET =
 
 const debugLog = createDebugLogger('useAppChainId', DEBUG_ENABLED, LOG_TIME);
 
+/**
+ * App-first chain id:
+ * - Reads from your exchangeContext.network.chainId
+ * - Optionally copies the wallet's chain ONCE on init if app value is 0
+ * - Optionally mirrors app → wallet (if env flag enabled)
+ */
 export function useAppChainId(): [number, (nextId: number) => void] {
-  const walletChainId = useWagmiChainId(); // 0 while unresolved/SSR
+  const walletChainId = useWagmiChainId(); // may be 0/undefined when disconnected
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const appChainId = exchangeContext?.network?.chainId ?? 0;
 
   const { switchChain } = useSwitchChain();
 
-  // Prefer the APP’s chain id; fall back to wallet; then 0
-  const effectiveId = useMemo<number>(
-    () => (appChainId || walletChainId || 0),
-    [appChainId, walletChainId]
-  );
-
   /* Wallet → App (only on first init when appChainId is 0) */
   useEffect(() => {
     if (!MIRROR_WALLET_TO_APP_ON_INIT) return;
-    if (!walletChainId) return;         // wagmi not ready
-    if (appChainId !== 0) return;       // app already set explicitly; do NOT overwrite
+    if (!walletChainId) return;   // wagmi not ready / disconnected
+    if (appChainId !== 0) return; // app already set; do NOT overwrite
 
     if (DEBUG_ENABLED) debugLog.log(`🔁 Init Wallet→App: 0 → ${walletChainId}`);
-
     setExchangeContext(prev => {
-      const current = prev?.network?.chainId ?? 0;
-      if (current === walletChainId) return prev; // no-op
-      const next = structuredClone(prev);
-      next.network = { ...next.network, chainId: walletChainId };
-      return next;
+      const base = prev ?? {};
+      const prevNetwork = (base as any).network ?? {};
+      const current = prevNetwork.chainId ?? 0;
+      if (current === walletChainId) return prev;
+      return {
+        ...base,
+        network: { ...prevNetwork, chainId: walletChainId },
+      } as typeof prev;
     });
   }, [walletChainId, appChainId, setExchangeContext]);
 
-  /* App → Wallet (optional) */
+  /* App → Wallet (optional flag) */
   useEffect(() => {
     if (!MIRROR_APP_TO_WALLET) return;
     if (!appChainId) return;
@@ -63,18 +65,21 @@ export function useAppChainId(): [number, (nextId: number) => void] {
     })();
   }, [appChainId, walletChainId, switchChain]);
 
-  /* Setter: update app state; optionally request wallet switch */
+  /* Setter: update APP state; optionally request wallet switch (if flag on) */
   const setAppChainId = useCallback(
     (nextId: number) => {
       if (!(nextId > 0)) return;
       if (DEBUG_ENABLED) debugLog.log(`🛠️ setAppChainId(${nextId})`);
 
       setExchangeContext(prev => {
-        const current = prev?.network?.chainId ?? 0;
+        const base = prev ?? {};
+        const prevNetwork = (base as any).network ?? {};
+        const current = prevNetwork.chainId ?? 0;
         if (current === nextId) return prev;
-        const next = structuredClone(prev);
-        next.network = { ...next.network, chainId: nextId };
-        return next;
+        return {
+          ...base,
+          network: { ...prevNetwork, chainId: nextId },
+        } as typeof prev;
       });
 
       if (MIRROR_APP_TO_WALLET && switchChain && walletChainId !== nextId) {
@@ -91,5 +96,6 @@ export function useAppChainId(): [number, (nextId: number) => void] {
     [setExchangeContext, switchChain, walletChainId],
   );
 
-  return [effectiveId, setAppChainId];
+  // 🔑 Return the APP value (no OR with wallet every render)
+  return [appChainId, setAppChainId];
 }

@@ -63,7 +63,7 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
-      await step(out, F.DUPLICATE, () => validateDuplicate(input), InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY);
+      await step(out, F.DUPLICATE, () => validateDuplicate(input), InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY);
       // Safety: ensure we always produce a next state
       if (out.nextState === undefined) {
         merge(out, {
@@ -73,7 +73,7 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       }
       break;
 
-    case InputState.PREVIEW_CONTRACT_EXISTS_LOCALLY:
+    case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
       await step(out, F.EXISTS_LOCALLY, () => validateExistsLocally(input), InputState.VALIDATE_EXISTS_ON_CHAIN);
       break;
 

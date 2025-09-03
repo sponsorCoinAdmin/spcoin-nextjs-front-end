@@ -19,7 +19,6 @@ export * from "./assetSelection/index";
 export * from "./assetSelection/constants/index";
 export * from "./assetSelection/constants/keys";
 export * from "./assetSelection/enums/index";
-export * from "./assetSelection/enums/assetSelectDisplay";
 export * from "./assetSelection/enums/inputState";
 export * from "./assetSelection/types/index";
 export * from "./assetSelection/types/context";
