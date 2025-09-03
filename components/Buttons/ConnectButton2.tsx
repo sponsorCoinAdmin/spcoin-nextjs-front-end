@@ -82,7 +82,7 @@ export default function ConnectButton() {
           (typeof walletChainId === 'number' ? walletChainId : undefined);
 
         return (
-          <div className="relative m-1">
+          <div className="relative m-0">
             <button
               onClick={() => setOpen((v) => !v)}
               type="button"
@@ -90,10 +90,10 @@ export default function ConnectButton() {
               aria-expanded={open}
               title={isPending ? 'Switching…' : 'Select network'}
               className={`
-                bg-connect-bg text-connect-color rounded-lg px-3 py-1.5
-                flex items-center gap-2 text-sm outline-none border border-transparent
+                bg-connect-bg text-connect-color font-bold rounded-lg px-3 py-1.5
+                flex items-center gap-2 text-sm outline-none border-0
                 hover:bg-connect-hover-bg hover:text-connect-hover-color
-                focus:ring-2 focus:ring-offset-0 focus:ring-focus-ring
+                focus:ring-0
               `}
             >
               {typeof currentId === 'number' && (
@@ -113,8 +113,8 @@ export default function ConnectButton() {
               <ul
                 ref={listRef}
                 role="menu"
-                className="absolute right-0 mt-2 w-72 rounded-lg border shadow-2xl p-1.5 z-50
-                           bg-panel-bg border-panel-border text-panel-text"
+                className="absolute right-0 top-full w-72 rounded-lg p-0 z-50
+                           bg-panel-bg text-panel-text shadow-none"
               >
                 {options.map((opt) => {
                   const isCurrent = currentId === opt.id;
@@ -181,3 +181,4 @@ export default function ConnectButton() {
     </ConnectKitButton.Custom>
   );
 }
+atus

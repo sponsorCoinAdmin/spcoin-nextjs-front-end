@@ -24,10 +24,10 @@ export default {
       bermuda: '#78dcca',
 
       // new semantic colors for ConnectButton (from connectTheme.json)
-      'connect-bg': '#243056',
-      'connect-color': '#5981F3',
-      'connect-hover-bg': '#F0F2F5',
-      'connect-hover-color': '#373737',
+      'connect-bg': 'transparent',         // base is now transparent
+      'connect-color': '#ffffff',       // base text is white
+      'connect-hover-bg': '#243056',
+      'connect-hover-color': '#5981F3',
 
       'panel-bg': '#1b2232',
       'panel-hover-bg': '#2a3350',
