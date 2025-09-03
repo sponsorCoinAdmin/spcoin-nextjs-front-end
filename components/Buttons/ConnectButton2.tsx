@@ -181,4 +181,3 @@ export default function ConnectButton() {
     </ConnectKitButton.Custom>
   );
 }
-atus
