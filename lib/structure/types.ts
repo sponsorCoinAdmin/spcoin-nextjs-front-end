@@ -76,6 +76,7 @@ export type DisplaySettings = Settings;
 
 export type NetworkElement = {
   connected: boolean;
+  appChainId: number;
   chainId: number;
   logoURL: string;
   name: string;

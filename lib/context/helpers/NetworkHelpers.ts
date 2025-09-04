@@ -76,10 +76,8 @@ export function networkEquals(a?: NetworkElement | null, b?: NetworkElement | nu
 }
 
 /**
- * Canonicalize a NetworkElement for a given chainId.
- * - Always re-derive chain-dependent fields.
- * - If equal to prev, return prev to preserve referential identity (prevents re-renders).
- * - Only log on real chain changes (quiet on same-chain).
+ * Canonicalize a NetworkElement for a given *wallet* chainId.
+ * NOTE: This keeps the older behavior for callers that rely on it.
  */
 export function resolveNetworkElement(
   chainId: number,
@@ -90,6 +88,7 @@ export function resolveNetworkElement(
 
   const next: NetworkElement = {
     connected: !!prevNet?.connected,
+    appChainId: prevNet?.appChainId ?? 0, // preserve current app selection
     chainId,
     name:    getBlockChainName(chainId)    || '',
     symbol:  getBlockChainSymbol(chainId)  || '',
@@ -100,9 +99,55 @@ export function resolveNetworkElement(
   if (prevNet && networkEquals(prevNet, next)) return prevNet;
 
   if (DEBUG_ENABLED && typeof prevId === 'number' && prevId !== chainId) {
-    debugLog.log?.('[resolveNetworkElement] CHAIN_CHANGED', {
+    debugLog.log?.('[resolveNetworkElement] WALLET_CHAIN_CHANGED', {
       from: prevId,
       to: chainId,
+      name: next.name,
+      symbol: next.symbol,
+      url: next.url,
+      logoURL: next.logoURL,
+    } as any);
+  }
+  return next;
+}
+
+/**
+ * ✅ Derive app-driven network metadata from `appChainId` ONLY.
+ * - Updates: appChainId, name, symbol, logoURL, url
+ * - Preserves: connected, wallet chainId
+ */
+export function deriveNetworkFromApp(
+  appChainId: number,
+  prev?: Partial<NetworkElement> | null
+): NetworkElement {
+  const prevNet = (prev ?? null) as NetworkElement | null;
+
+  const next: NetworkElement = {
+    connected: !!prevNet?.connected,
+    chainId:   prevNet?.chainId ?? 0, // preserve wallet id
+    appChainId,
+    name:    getBlockChainName(appChainId)    || '',
+    symbol:  getBlockChainSymbol(appChainId)  || '',
+    logoURL: getBlockChainLogoURL(appChainId),
+    url:     getBlockExplorerURL(appChainId),
+  };
+
+  // If nothing substantive changed, return prev to avoid re-renders
+  if (
+    prevNet &&
+    prevNet.appChainId === next.appChainId &&
+    prevNet.name === next.name &&
+    prevNet.symbol === next.symbol &&
+    prevNet.logoURL === next.logoURL &&
+    prevNet.url === next.url
+  ) {
+    return prevNet;
+  }
+
+  if (DEBUG_ENABLED) {
+    debugLog.log?.('[deriveNetworkFromApp] APP_CHAIN_CHANGED', {
+      from: prevNet?.appChainId,
+      to: appChainId,
       name: next.name,
       symbol: next.symbol,
       url: next.url,
@@ -122,6 +167,7 @@ const NetworkHelpers = {
   getBlockChainSymbol,
   getBlockExplorerURL,
   resolveNetworkElement,
+  deriveNetworkFromApp,
   networkEquals,
 };
 

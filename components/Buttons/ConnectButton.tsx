@@ -97,7 +97,7 @@ export default function ConnectButton() {
   return (
     <ConnectKitButton.Custom>
       {({ isConnected }) => (
-        <div className="relative m-1">
+        <div className="relative m-0">
           <button
             onClick={() => setOpen((v) => !v)}
             title={isPending ? 'Switching…' : 'Select network'}
@@ -105,15 +105,18 @@ export default function ConnectButton() {
             aria-haspopup="menu"
             aria-expanded={open}
             className={clsx(
-              'bg-transparent rounded-lg px-3 py-1.5 flex items-center gap-2 leading-tight text-sm outline-none border border-transparent',
-              'focus:ring-2 focus:ring-offset-0 focus:ring-[#2a3350]'
+              // unified button style
+              'bg-connect-bg text-connect-color font-bold rounded-lg px-3 py-1.5',
+              'flex items-center gap-2 leading-tight text-sm outline-none border-0',
+              'hover:bg-connect-hover-bg hover:text-connect-hover-color',
+              'focus:ring-0'
             )}
           >
             {currentLogo && typeof currentId === 'number' && (
               <img
                 key={currentId}
                 src={`${currentLogo}?v=${currentId}`}
-                alt={`Network ${currentId}`}
+                alt="Network"
                 className="h-8 w-8 rounded"
               />
             )}
@@ -123,9 +126,11 @@ export default function ConnectButton() {
             <ul
               ref={listRef}
               role="menu"
+              aria-orientation="vertical"
               className={clsx(
-                'absolute right-0 mt-2 w-72 rounded-lg border shadow-2xl p-1.5 z-50',
-                'bg-[#1b2232] border-[#2a3350] text-[#E7ECF6]'
+                'absolute right-0 top-full w-72 rounded-lg p-0 z-50',
+                // unified panel style
+                'bg-panel-bg text-panel-text shadow-none'
               )}
             >
               {options.map((opt) => {
@@ -138,19 +143,19 @@ export default function ConnectButton() {
                       onClick={() => selectNetwork(opt.id, isConnected)}
                       className={clsx(
                         'w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-md transition-colors disabled:opacity-50 focus:outline-none',
-                        'hover:bg-[#2a3350]',
-                        isCurrent && 'bg-[#2a3350]'
+                        'text-panel-text hover:bg-panel-hover-bg',
+                        isCurrent && 'bg-panel-hover-bg'
                       )}
                     >
                       <img src={opt.logo} alt={opt.name} className="h-8 w-8 rounded" />
                       <div className="flex-1">
-                        <div className="leading-tight">{opt.name}</div>
-                        <div className="text-xs opacity-75">
+                        <div className="leading-tight font-bold">{opt.name}</div>
+                        <div className="text-xs opacity-75 font-bold">
                           {opt.symbol} • Chain ID {opt.id}
                         </div>
                       </div>
                       {isCurrent && (
-                        <span className="text-xs opacity-75">Current</span>
+                        <span className="text-xs opacity-75 font-bold">Current</span>
                       )}
                     </button>
                   </li>

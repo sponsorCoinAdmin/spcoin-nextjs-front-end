@@ -17,6 +17,7 @@ import {
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
+import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
 const LOG_TIME = false;
 const LOG_LEVEL = 'info';
@@ -68,12 +69,14 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setContextState((prev) => {
       DEBUG_ENABLED && debugLog.log('info', '🧪 setExchangeContext triggered by', hookName);
-      const updated = prev ? updater(structuredClone(prev)) : prev;
-      if (updated) {
-        saveLocalExchangeContext(updated);
-        DEBUG_ENABLED && debugLog.log('info', '📦 exchangeContext saved to localStorage');
-      }
-      return updated;
+
+      // Pass real prev; let updater decide if change is needed
+      const next = prev ? updater(prev) : prev;
+      if (!next || next === prev) return prev; // no real change
+
+      saveLocalExchangeContext(next);
+      DEBUG_ENABLED && debugLog.log('info', '📦 exchangeContext saved to localStorage');
+      return next;
     });
   };
 
@@ -89,8 +92,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Convenient local view of the app chainId from context (SOURCE OF TRUTH for app)
-  const appChainId = contextState?.network?.chainId ?? 0;
+  // 🔑 App chainId (SOURCE OF TRUTH for the UI)
+  const appChainId = contextState?.network?.appChainId ?? 0;
 
   // Small setters
   const {
@@ -107,13 +110,95 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   useProviderWatchers({
     contextState,
     setExchangeContext,
-    appChainId,      // <-- app-first
+    appChainId, // <-- app-first
     isConnected,
     address,
     accountStatus,
     // If some watchers legitimately need wallet chain for validation, you can also pass:
     // walletChainId: wagmiChainId,
   });
+
+  /** Keep `network.connected` in sync with wallet connection */
+  useEffect(() => {
+    if (!contextState) return;
+
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      const was = !!prev.network?.connected;
+      const now = !!isConnected;
+      if (was === now) return prev;
+
+      const next = structuredClone(prev);
+      next.network = { ...(next.network ?? {}), connected: now };
+      return next;
+    }, 'provider:syncNetworkConnected');
+  }, [isConnected, contextState, setExchangeContext]);
+
+  /**
+   * While CONNECTED: keep `network.chainId` in sync with wallet (wagmi).
+   * (Avoids fighting the app selection while disconnected.)
+   */
+  useEffect(() => {
+    if (!contextState) return;
+    if (!isConnected) return; // 🔒 only when connected
+
+    const walletId = typeof wagmiChainId === 'number' ? wagmiChainId : 0;
+
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      const current = prev.network?.chainId ?? 0;
+      if (current === walletId) return prev;
+
+      const next = structuredClone(prev);
+      next.network = { ...(next.network ?? {}), chainId: walletId };
+      return next;
+    }, 'provider:syncWalletChainId(connected)');
+  }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
+
+  /**
+   * While DISCONNECTED: mirror `network.chainId` to `network.appChainId`
+   * so the app uses the selected chain immediately (no flashing back).
+   */
+  useEffect(() => {
+    if (!contextState) return;
+    if (isConnected) return; // 🔒 only when disconnected
+
+    const app = contextState.network?.appChainId ?? 0;
+    const ch  = contextState.network?.chainId ?? 0;
+    if (app > 0 && ch !== app) {
+      setExchangeContext((prev) => {
+        if (!prev) return prev;
+        const next = structuredClone(prev);
+        next.network = { ...(next.network ?? {}), chainId: app };
+        return next;
+      }, 'provider:mirrorChainIdToApp(disconnected)');
+    }
+  }, [
+    isConnected,
+    contextState?.network?.appChainId,
+    contextState?.network?.chainId,
+    contextState,
+    setExchangeContext,
+  ]);
+
+  /**
+   * Hydrate name/symbol/logo/url from the APP chain selection (`network.appChainId`).
+   * Does not modify `network.chainId` (wallet) or `connected`.
+   */
+  useEffect(() => {
+    if (!contextState) return;
+    const currentAppId = contextState.network?.appChainId ?? 0;
+
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      const prevApp = prev.network?.appChainId ?? 0;
+      if (prevApp === currentAppId) return prev; // no change
+
+      const next = structuredClone(prev);
+      next.network = deriveNetworkFromApp(currentAppId, next.network);
+      return next;
+    }, 'provider:hydrateFromAppChain');
+  }, [contextState?.network?.appChainId, contextState, setExchangeContext]);
 
   return (
     <ExchangeContextState.Provider
