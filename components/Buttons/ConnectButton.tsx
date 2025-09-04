@@ -3,53 +3,26 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { ConnectKitButton } from 'connectkit';
-import { useSwitchChain } from 'wagmi';
+import { useSwitchChain, useDisconnect, useChainId } from 'wagmi';
+import connectTheme from '@/styles/connectTheme.json';
 import networks from '@/lib/network/initialize/networks.json';
 import { useAppChainId } from '@/lib/context/hooks';
 import { getBlockChainLogoURL } from '@/lib/context/helpers/NetworkHelpers';
-import { clsx } from 'clsx';
 
 export default function ConnectButton() {
   const [open, setOpen] = useState(false);
   const listRef = useRef<HTMLUListElement | null>(null);
 
-  // App chain (source of truth for your app)
+  const { switchChainAsync, isPending } = useSwitchChain();
+  const { disconnect } = useDisconnect();
+
+  const walletChainId = useChainId();
   const [appChainId, setAppChainId] = useAppChainId();
 
-  const appIdNum = useMemo(
-    () => (typeof appChainId === 'number' ? appChainId : Number(appChainId)),
-    [appChainId]
-  );
+  // NOTE: Removed wallet↔app sync useEffect here to prevent update loops.
+  // Syncing is handled centrally in ExchangeProvider/useAppChainId.
 
-  const [currentId, setCurrentId] = useState<number | undefined>(
-    Number.isFinite(appIdNum) ? appIdNum : undefined
-  );
-  useEffect(() => {
-    if (Number.isFinite(appIdNum)) setCurrentId(appIdNum);
-  }, [appIdNum]);
-
-  // Wagmi wallet chain switching (only valid when connected)
-  const { switchChainAsync, isPending } = useSwitchChain();
-
-  // Build dropdown options
-  const options = useMemo(
-    () =>
-      (networks as any[]).map((n) => {
-        const id = Number(n.chainId);
-        return {
-          id,
-          name: String(n.name ?? ''),
-          symbol: String(n.symbol ?? ''),
-          logo:
-            n.logoURL ??
-            getBlockChainLogoURL(id) ??
-            `/assets/blockchains/${id}/info/network.png`,
-        };
-      }),
-    []
-  );
-
-  // Close on Escape / click-outside
+  // close dropdown on Escape/outside click
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
@@ -65,106 +38,257 @@ export default function ConnectButton() {
     };
   }, [open]);
 
-  // Selection behavior:
-  // - Always update appChainId (UI/source of truth).
-  // - If connected, request wallet switch.
-  // - If disconnected, remember preference for later.
-  const selectNetwork = async (targetId: number, isConnected: boolean | undefined) => {
-    // optimistic UI
-    setCurrentId(targetId);
-    setAppChainId(
-      (typeof appChainId === 'string' ? String(targetId) : targetId) as any
-    );
+  const options = useMemo(
+    () =>
+      (networks as any[]).map((n) => ({
+        id: Number(n.chainId),
+        name: String(n.name ?? ''),
+        symbol: String(n.symbol ?? ''),
+        logo: n.logoURL ?? getBlockChainLogoURL(Number(n.chainId)),
+      })),
+    []
+  );
 
+  const switchTo = async (targetId: number, isConnected?: boolean) => {
+    setAppChainId(targetId);
+    if (!isConnected) return setOpen(false);
     try {
-      if (isConnected) {
-        await switchChainAsync({ chainId: targetId });
-      } else {
-        localStorage.setItem('preferredChainId', String(targetId));
-      }
+      await switchChainAsync({ chainId: targetId });
     } finally {
       setOpen(false);
     }
   };
 
-  // Resolve current logo robustly
-  const currentLogo =
-    typeof currentId === 'number'
-      ? options.find((o) => o.id === currentId)?.logo ??
-        `/assets/blockchains/${currentId}/info/network.png`
-      : undefined;
+  const doDisconnect = () => {
+    disconnect();
+    setOpen(false);
+  };
 
   return (
     <ConnectKitButton.Custom>
-      {({ isConnected }) => (
-        <div className="relative m-0">
-          <button
-            onClick={() => setOpen((v) => !v)}
-            title={isPending ? 'Switching…' : 'Select network'}
-            type="button"
-            aria-haspopup="menu"
-            aria-expanded={open}
-            className={clsx(
-              // unified button style
-              'bg-connect-bg text-connect-color font-bold rounded-lg px-3 py-1.5',
-              'flex items-center gap-2 leading-tight text-sm outline-none border-0',
-              'hover:bg-connect-hover-bg hover:text-connect-hover-color',
-              'focus:ring-0'
-            )}
-          >
-            {currentLogo && typeof currentId === 'number' && (
-              <img
-                key={currentId}
-                src={`${currentLogo}?v=${currentId}`}
-                alt="Network"
-                className="h-8 w-8 rounded"
-              />
-            )}
-          </button>
+      {({ isConnected, address, truncatedAddress, chain, show }) => {
+        // --- DISCONNECTED (unchanged look/behavior) ---
+        if (!isConnected) {
+          const fallbackId = options[0]?.id;
+          const currentId =
+            (typeof appChainId === 'number' && appChainId > 0 ? appChainId : undefined) ??
+            (typeof walletChainId === 'number' && walletChainId > 0 ? walletChainId : undefined) ??
+            fallbackId;
 
-          {open && (
-            <ul
-              ref={listRef}
-              role="menu"
-              aria-orientation="vertical"
-              className={clsx(
-                'absolute right-0 top-full w-72 rounded-lg p-0 z-50',
-                // unified panel style
-                'bg-panel-bg text-panel-text shadow-none'
+          return (
+            <div className="relative m-0">
+              <div
+                className={`
+                  bg-connect-bg text-connect-color font-bold rounded-lg px-3 py-1.5
+                  flex items-center gap-2 text-sm border-0
+                  hover:bg-connect-hover-bg hover:text-connect-hover-color
+                  focus-within:ring-0
+                `}
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={open}
+                  className="flex items-center outline-none"
+                >
+                  {typeof currentId === 'number' && (
+                    <img
+                      src={`/assets/blockchains/${currentId}/info/network.png`}
+                      alt="Network"
+                      className="h-8 w-8 rounded"
+                    />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => show?.()}
+                  className="font-bold text-base opacity-90 outline-none"
+                >
+                  Connect
+                </button>
+              </div>
+
+              {open && (
+                <ul
+                  ref={listRef}
+                  role="menu"
+                  aria-orientation="vertical"
+                  className="absolute right-0 top-full w-72 rounded-lg p-0 z-50
+                             bg-panel-bg text-panel-text shadow-none"
+                >
+                  {options.map((opt) => {
+                    const isCurrent = currentId === opt.id;
+                    return (
+                      <li key={opt.id} role="none">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => switchTo(opt.id, false)}
+                          className={`
+                            w-full flex items-center gap-2 px-2.5 py-2 rounded-md font-bold
+                            transition-colors text-panel-text
+                            hover:bg-panel-hover-bg ${isCurrent ? 'bg-panel-hover-bg' : ''}
+                          `}
+                        >
+                          <img src={opt.logo} alt={opt.name} className="h-8 w-8 rounded" />
+                          <div className="flex-1 text-left">
+                            <div className="leading-tight font-bold">{opt.name}</div>
+                            <div className="text-xs opacity-75 font-bold">
+                              {opt.symbol} • Chain ID {opt.id}
+                            </div>
+                          </div>
+                          {isCurrent && (
+                            <span className="text-xs opacity-75 font-bold">Current</span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
+            </div>
+          );
+        }
+
+        // --- CONNECTED (network name on button; address row first; chevron shown) ---
+        const currentId =
+          chain?.id ??
+          appChainId ??
+          (typeof walletChainId === 'number' ? walletChainId : undefined);
+
+        const currentName =
+          (typeof currentId === 'number' &&
+            options.find((o) => o.id === currentId)?.name) ||
+          chain?.name ||
+          (typeof currentId === 'number' ? `Chain ${currentId}` : 'Select Network');
+
+        return (
+          <div className="relative m-0">
+            <button
+              onClick={() => setOpen((v) => !v)}
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={open}
+              className={`
+                bg-connect-bg text-connect-color font-bold rounded-lg px-3 py-1.5
+                flex items-center gap-2 text-sm outline-none border-0
+                hover:bg-connect-hover-bg hover:text-connect-hover-color
+                focus:ring-0
+              `}
             >
-              {options.map((opt) => {
-                const isCurrent = currentId === opt.id;
-                return (
-                  <li key={opt.id} role="none">
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => selectNetwork(opt.id, isConnected)}
-                      className={clsx(
-                        'w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-md transition-colors disabled:opacity-50 focus:outline-none',
-                        'text-panel-text hover:bg-panel-hover-bg',
-                        isCurrent && 'bg-panel-hover-bg'
-                      )}
-                    >
-                      <img src={opt.logo} alt={opt.name} className="h-8 w-8 rounded" />
-                      <div className="flex-1">
-                        <div className="leading-tight font-bold">{opt.name}</div>
-                        <div className="text-xs opacity-75 font-bold">
-                          {opt.symbol} • Chain ID {opt.id}
-                        </div>
+              {typeof currentId === 'number' && (
+                <img
+                  src={`/assets/blockchains/${currentId}/info/network.png`}
+                  alt="Network"
+                  className="h-8 w-8 rounded"
+                />
+              )}
+              <span className="opacity-85 font-bold">{currentName}</span>
+              <span className="text-xs opacity-75 font-bold">▼</span>
+            </button>
+
+            {open && (
+              <ul
+                ref={listRef}
+                role="menu"
+                aria-orientation="vertical"
+                className="absolute right-0 top-full w-72 rounded-lg p-0 z-50
+                           bg-panel-bg text-panel-text shadow-none"
+              >
+                {/* Address row — presentational (non-interactive) */}
+                <li role="presentation">
+                  <div
+                    role="presentation"
+                    className={`
+                      w-full flex items-center gap-2 px-2.5 py-2 rounded-md
+                      text-panel-text font-bold select-text cursor-default
+                    `}
+                  >
+                    {typeof currentId === 'number' && (
+                      <img
+                        src={`/assets/blockchains/${currentId}/info/network.png`}
+                        alt=""               /* decorative */
+                        aria-hidden="true"   /* not focusable/announced */
+                        className="h-6 w-6 rounded"
+                      />
+                    )}
+                    <div className="flex-1 text-left">
+                      <div className="text-xs opacity-75 font-bold">Address</div>
+                      <div className="leading-tight font-bold">
+                        {truncatedAddress ?? address}
                       </div>
-                      {isCurrent && (
-                        <span className="text-xs opacity-75 font-bold">Current</span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
+                    </div>
+                  </div>
+                </li>
+
+                {/* Network options */}
+                {options.map((opt) => {
+                  const isCurrent = currentId === opt.id;
+                  return (
+                    <li key={opt.id} role="none">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={isPending}
+                        onClick={() => switchTo(opt.id, true)}
+                        className={`
+                          w-full flex items-center gap-2 px-2.5 py-2 rounded-md font-bold
+                          transition-colors text-panel-text disabled:opacity-50
+                          hover:bg-panel-hover-bg ${isCurrent ? 'bg-panel-hover-bg' : ''}
+                        `}
+                      >
+                        <img src={opt.logo} alt={opt.name} className="h-8 w-8 rounded" />
+                        <div className="flex-1 text-left">
+                          <div className="leading-tight font-bold">{opt.name}</div>
+                          <div className="text-xs opacity-75 font-bold">
+                            {opt.symbol} • Chain ID {opt.id}
+                          </div>
+                        </div>
+                        {isCurrent && (
+                          <span className="text-xs opacity-75 font-bold">Current</span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+
+                <li className="mt-1 pt-1 border-t border-panel-border" role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      disconnect();
+                      setOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md font-bold
+                               transition-colors text-panel-text hover:bg-panel-hover-bg"
+                  >
+                    <span className="text-lg">🔌</span>
+                    <span className="font-bold">Disconnect</span>
+                  </button>
+                </li>
+
+                <li className="mt-1 pt-1 border-t border-panel-border" role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpen(false);
+                      show?.();
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md font-bold
+                               transition-colors text-panel-text hover:bg-panel-hover-bg"
+                  >
+                    <span className="font-bold">Open Wallet Modal…</span>
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
+        );
+      }}
     </ConnectKitButton.Custom>
   );
 }

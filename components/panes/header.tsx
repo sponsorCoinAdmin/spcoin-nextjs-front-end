@@ -11,7 +11,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '@/components/Buttons/ConnectButton';
 import NetworkSelect from '@/components/containers/NetworkSelect';
-import ConnectButton2 from '../Buttons/ConnectButton2';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
@@ -122,7 +121,6 @@ export default function Header() {
             />
           )} */}
           <ConnectButton />
-          <ConnectButton2 />
         </div>
       </div>
     </header>
