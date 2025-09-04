@@ -69,8 +69,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setContextState((prev) => {
       DEBUG_ENABLED && debugLog.log('info', '🧪 setExchangeContext triggered by', hookName);
-
-      // Pass real prev; let updater decide if change is needed
       const next = prev ? updater(prev) : prev;
       if (!next || next === prev) return prev; // no real change
 
@@ -136,50 +134,44 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * While CONNECTED: keep `network.chainId` in sync with wallet (wagmi).
-   * (Avoids fighting the app selection while disconnected.)
    */
   useEffect(() => {
     if (!contextState) return;
     if (!isConnected) return; // 🔒 only when connected
 
-    const walletId = typeof wagmiChainId === 'number' ? wagmiChainId : 0;
+    const walletId = typeof wagmiChainId === 'number' ? wagmiChainId : undefined;
 
     setExchangeContext((prev) => {
       if (!prev) return prev;
-      const current = prev.network?.chainId ?? 0;
+      const current = prev.network?.chainId;
       if (current === walletId) return prev;
 
       const next = structuredClone(prev);
-      next.network = { ...(next.network ?? {}), chainId: walletId };
+      next.network = { ...(next.network ?? {}), chainId: walletId as any };
       return next;
     }, 'provider:syncWalletChainId(connected)');
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
 
   /**
-   * While DISCONNECTED: mirror `network.chainId` to `network.appChainId`
-   * so the app uses the selected chain immediately (no flashing back).
+   * While DISCONNECTED: ensure `network.chainId` is undefined.
+   * (Wallet not connected → no "actual" chain.)
    */
   useEffect(() => {
     if (!contextState) return;
     if (isConnected) return; // 🔒 only when disconnected
 
-    const app = contextState.network?.appChainId ?? 0;
-    const ch  = contextState.network?.chainId ?? 0;
-    if (app > 0 && ch !== app) {
-      setExchangeContext((prev) => {
-        if (!prev) return prev;
-        const next = structuredClone(prev);
-        next.network = { ...(next.network ?? {}), chainId: app };
-        return next;
-      }, 'provider:mirrorChainIdToApp(disconnected)');
-    }
-  }, [
-    isConnected,
-    contextState?.network?.appChainId,
-    contextState?.network?.chainId,
-    contextState,
-    setExchangeContext,
-  ]);
+    const ch = contextState.network?.chainId;
+    if (typeof ch === 'undefined') return; // already cleared
+
+    setExchangeContext((prev) => {
+      if (!prev) return prev;
+      if (typeof prev.network?.chainId === 'undefined') return prev; // no change
+
+      const next = structuredClone(prev);
+      next.network = { ...(next.network ?? {}), chainId: undefined as any };
+      return next;
+    }, 'provider:clearWalletChainId(disconnected)');
+  }, [isConnected, contextState?.network?.chainId, contextState, setExchangeContext]);
 
   /**
    * Hydrate name/symbol/logo/url from the APP chain selection (`network.appChainId`).

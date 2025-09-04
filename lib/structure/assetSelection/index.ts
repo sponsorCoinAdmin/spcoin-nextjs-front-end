@@ -5,6 +5,7 @@
 // lib/structure/assetSelection/index.ts
 
 // Single, top-level barrel (no subfolder barrels)
+export * from './enums/assetSelectDisplay';
 export * from './enums/inputState'
 export * from './types/context';
 export * from './constants/keys';

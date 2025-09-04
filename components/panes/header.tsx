@@ -120,7 +120,13 @@ export default function Header() {
               disabled={false}
             />
           )} */}
-          <ConnectButton />
+          <ConnectButton
+            showName={true}
+            showSymbol={false}
+            showChevron={true}
+            showConnect={true}
+            showHoverBg={false}
+          />
         </div>
       </div>
     </header>

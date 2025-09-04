@@ -7,11 +7,12 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_APP_CHAIN_ID === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_USE_APP_CHAIN_ID === 'true';
 
 // Env flags
 const MIRROR_WALLET_TO_APP_ON_INIT =
-  process.env.NEXT_PUBLIC_MIRROR_WALLET_CHAIN_ID_ON_INIT !== 'false'; // default: true (only when app/appChainId==0)
+  process.env.NEXT_PUBLIC_MIRROR_WALLET_CHAIN_ID_ON_INIT !== 'false'; // default: true (only when appChainId==0)
 const MIRROR_APP_TO_WALLET =
   process.env.NEXT_PUBLIC_MIRROR_APP_CHAIN_ID_TO_WALLET === 'true';   // default: false
 
@@ -19,16 +20,17 @@ const debugLog = createDebugLogger('useAppChainId', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * App-first chain id:
- * - Reads from exchangeContext.network.appChainId  ✅ (new field)
+ * - Reads from exchangeContext.network.appChainId
  * - Optionally copies the wallet's chain ONCE on init if app value is 0
  * - Optionally mirrors app → wallet (if env flag enabled)
+ * - Never writes to `network.chainId` while disconnected (that field = wallet-only)
  */
 export function useAppChainId(): [number, (nextId: number) => void] {
   const walletChainId = useWagmiChainId(); // may be 0/undefined when disconnected
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const connected = !!exchangeContext?.network?.connected;       // ✅ know connection state
-  const appChainId = exchangeContext?.network?.appChainId ?? 0;  // ✅ read appChainId (not chainId)
+  const connected = !!exchangeContext?.network?.connected;
+  const appChainId = exchangeContext?.network?.appChainId ?? 0;
 
   const { switchChain } = useSwitchChain();
 
@@ -42,28 +44,29 @@ export function useAppChainId(): [number, (nextId: number) => void] {
     setExchangeContext(prev => {
       const base = prev ?? {};
       const prevNetwork = (base as any).network ?? {};
-      const current = prevNetwork.appChainId ?? 0;
-      if (current === walletChainId) return prev;
+      const currentApp = prevNetwork.appChainId ?? 0;
+      if (currentApp === walletChainId) return prev;
 
-      // When initializing from wallet, set both fields.
+      // Initialize the app preference from the wallet.
+      // Do NOT force chainId here if disconnected; chainId is wallet-only.
       return {
         ...base,
         network: {
           ...prevNetwork,
           appChainId: walletChainId,
-          // If already connected, wallet drives chainId;
-          // if not connected, mirror to chainId so UI uses the same chain.
-          chainId: connected ? (prevNetwork.chainId ?? walletChainId) : walletChainId,
+          // If connected, wallet owns chainId; otherwise leave as-is/undefined.
+          chainId: connected ? walletChainId : prevNetwork.chainId,
         },
       } as typeof prev;
     });
+    // Intentionally exclude `connected` so this only runs for the first-init path
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletChainId, appChainId, setExchangeContext]);
-  // ^ note: we intentionally don't include `connected` in deps to run only on the first init path
 
   /* App → Wallet (optional flag) */
   useEffect(() => {
     if (!MIRROR_APP_TO_WALLET) return;
+    if (!connected) return;        // only when connected
     if (!appChainId) return;
     if (!walletChainId) return;
     if (appChainId === walletChainId) return;
@@ -76,31 +79,31 @@ export function useAppChainId(): [number, (nextId: number) => void] {
         debugLog.warn(`⚠️ switchChain failed`, e);
       }
     })();
-  }, [appChainId, walletChainId, switchChain]);
+  }, [appChainId, walletChainId, connected, switchChain]);
 
-  /* Setter: update APP preference; when disconnected also mirror to chainId */
+  /* Setter: update APP preference; never write chainId when disconnected */
   const setAppChainId = useCallback(
     (nextId: number) => {
       if (!(nextId > 0)) return;
-      if (DEBUG_ENABLED) debugLog.log(`🛠️ setAppChainId(${nextId}) [connected=${connected}]`);
+      if (DEBUG_ENABLED)
+        debugLog.log(`🛠️ setAppChainId(${nextId}) [connected=${connected}]`);
 
       setExchangeContext(prev => {
         const base = prev ?? {};
         const prevNetwork = (base as any).network ?? {};
         const prevApp = prevNetwork.appChainId ?? 0;
-        const prevChain = prevNetwork.chainId ?? 0;
 
-        // If nothing changes, no-op to avoid loops/rerenders.
-        const willMirrorChain = !connected; // only mirror to chainId when disconnected
-        const nextChainId = willMirrorChain ? nextId : prevChain;
-        if (prevApp === nextId && prevChain === nextChainId) return prev;
+        // chainId is wallet-owned; only change appChainId here
+        if (prevApp === nextId) return prev;
 
         return {
           ...base,
           network: {
             ...prevNetwork,
             appChainId: nextId,
-            chainId: nextChainId,
+            // Leave chainId untouched. When disconnected it's undefined;
+            // when connected, wallet effects keep it in sync.
+            chainId: prevNetwork.chainId,
           },
         } as typeof prev;
       });
