@@ -9,8 +9,8 @@ import AssetSelectPanel from './AssetSelectPanel';
 import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
-// ❌ Removed AssetSelectDisplayProvider + ASSET_SELECTION_DISPLAY
 import { AssetSelectProvider } from '@/lib/context';
+import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 
 interface TokenSelectPanelProps {
   isActive: boolean;
@@ -52,14 +52,16 @@ export default function TokenSelectPanel({
   if (!isActive) return null;
 
   return (
-    <AssetSelectProvider
-      key={instanceId}
-      closePanelCallback={closeForProvider}
-      setTradingTokenCallback={setTradingTokenCallback}
-      containerType={activeDisplay as SP_COIN_DISPLAY}
-      initialPanelBag={initialPanelBag}
-    >
-      <AssetSelectPanel />
-    </AssetSelectProvider>
+    <AssetSelectDisplayProvider instanceId={instanceId}>
+      <AssetSelectProvider
+        key={instanceId}
+        closePanelCallback={closeForProvider}
+        setTradingTokenCallback={setTradingTokenCallback}
+        containerType={activeDisplay as SP_COIN_DISPLAY}
+        initialPanelBag={initialPanelBag}
+      >
+        <AssetSelectPanel />
+      </AssetSelectProvider>
+    </AssetSelectDisplayProvider>
   );
 }

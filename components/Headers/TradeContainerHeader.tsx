@@ -9,6 +9,7 @@ import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import ConnectButton from '../Buttons/Connect/ConnectButton';
 
 interface Props {
   closePanelCallback: () => void;
@@ -55,14 +56,22 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
 
       <div
         id="SponsorCoinLogo.png"
-        onClick={() => exchangeContextDump(exchangeContext)}
+        onDoubleClick={true ? () => exchangeContextDump(exchangeContext) : undefined}
         className={styles.leftLogo}
       >
-        <Image
+        {/* <Image
           src={spCoin_png}
           className={styles.logoImg}
           alt="SponsorCoin Logo"
           style={{ height: 'auto', width: 'auto' }}
+        /> */}
+        <ConnectButton
+          showName={false}
+          showSymbol={false}
+          showChevron={false}
+          showConnect={false}
+          showDisconnect={false}
+          showHoverBg={false}
         />
       </div>
 

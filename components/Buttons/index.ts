@@ -2,7 +2,7 @@
 
 export * from './AddSponsorshipButton';
 export * from './BuySellSwapArrowButton';
-export * from './ConnectButton';
+export * from './Connect/ConnectButton';
 export * from './CustomConnectButton';
 export * from './ExchangeButton';
 export * from './ManageSponsorsButton';

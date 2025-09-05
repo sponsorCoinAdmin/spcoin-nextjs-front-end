@@ -9,7 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
-import ConnectButton from '@/components/Buttons/ConnectButton';
+import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
 import NetworkSelect from '@/components/containers/NetworkSelect';
 
 const LOG_TIME = false;
@@ -113,19 +113,13 @@ export default function Header() {
 
         {/* Right side: use Tailwind gap for an exact 10px spacing (gap-2.5 = 0.625rem ≈ 10px) */}
         <div className="flex items-center gap-2.5">
-          {/* {networkElement && (
-            <NetworkSelect
-              id="header-network"
-              networkElement={networkElement}
-              disabled={false}
-            />
-          )} */}
           <ConnectButton
             showName={true}
             showSymbol={false}
             showChevron={true}
             showConnect={true}
-            showHoverBg={false}
+            showDisconnect={false}
+            showHoverBg={true}
           />
         </div>
       </div>
