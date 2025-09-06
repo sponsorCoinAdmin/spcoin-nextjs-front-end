@@ -3,7 +3,6 @@
 import { Address } from 'viem';
 import { FEED_TYPE } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
-
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
