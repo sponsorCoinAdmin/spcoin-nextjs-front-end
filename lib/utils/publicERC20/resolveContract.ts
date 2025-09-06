@@ -8,13 +8,13 @@ import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 const LOG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_CONTRACT === 'true';
 const debug = createDebugLogger('resolveContract', LOG_ENABLED);
 
+// ERC-20 metadata-only ABI (no balanceOf here)
 const erc20Abi = [
   { name: 'name', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'string' }] },
   { name: 'symbol', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'string' }] },
   { name: 'decimals', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] },
   { name: 'totalSupply', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
-  { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ type: 'address' }], outputs: [{ type: 'uint256' }] },
-];
+] as const;
 
 // Minimal mapping so native tokens don’t show “NATIVE”
 const nativeSymbolByChain: Record<number, { name: string; symbol: string; decimals: number }> = {
@@ -28,10 +28,9 @@ const nativeSymbolByChain: Record<number, { name: string; symbol: string; decima
   250: { name: 'Fantom', symbol: 'FTM', decimals: 18 },    // Fantom
 };
 
+// Use ONLY the imported canonical sentinel; detect natively by case-insensitive compare
 function isNativeSentinel(addr: string): boolean {
-  const a = addr.toLowerCase();
-  const n = String(NATIVE_TOKEN_ADDRESS).toLowerCase();
-  return a === n || a === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+  return addr.toLowerCase() === String(NATIVE_TOKEN_ADDRESS).toLowerCase();
 }
 
 async function fetchNativeTokenMeta(chainId: number): Promise<{ name: string; symbol: string; decimals: number } | undefined> {
@@ -65,7 +64,7 @@ export async function resolveContract(
   tokenAddress: Address,
   chainId: number,
   publicClient: ReturnType<typeof createPublicClient>,
-  accountAddress?: Address
+  _accountAddress?: Address // kept for compatibility; unused
 ): Promise<TokenContract | undefined> {
   if (!tokenAddress) return undefined;
 
@@ -77,7 +76,7 @@ export async function resolveContract(
     return undefined;
   }
 
-  // Native path
+  // Native path (metadata only)
   if (isNativeSentinel(addrStr)) {
     debug.log('🟢 detected native sentinel, taking native path');
 
@@ -86,30 +85,20 @@ export async function resolveContract(
     const symbol = meta?.symbol ?? 'NATIVE';
     const decimals = meta?.decimals ?? 18;
 
-    let balance: bigint = 0n;
-    if (accountAddress) {
-      try {
-        balance = await publicClient.getBalance({ address: accountAddress });
-        debug.log('💰 native balance', { accountAddress, balance: balance.toString() });
-      } catch (err: any) {
-        debug.warn('⚠️ getBalance failed (ignored):', err?.message ?? err);
-      }
-    }
-
     const nativeToken: TokenContract = {
       address: NATIVE_TOKEN_ADDRESS as Address,
       name,
       symbol,
       decimals,
       totalSupply: 0n,
-      balance,
+      balance: 0n, // live value comes from useGetBalance
       chainId,
     };
-    debug.log('✅ native token resolved', nativeToken);
+    debug.log('✅ native token resolved (no balance)', nativeToken);
     return nativeToken;
   }
 
-  // ERC-20 path
+  // ERC-20 path (metadata only)
   try {
     const results = await publicClient.multicall({
       allowFailure: true,
@@ -134,32 +123,16 @@ export async function resolveContract(
     const decimals = decimalsRes.status === 'success' && typeof decimalsRes.result === 'number' ? decimalsRes.result : 18;
     const totalSupply = totalSupplyRes.status === 'success' && typeof totalSupplyRes.result === 'bigint' ? totalSupplyRes.result : 0n;
 
-    let balance: bigint = 0n;
-    if (accountAddress) {
-      try {
-        const balanceResult = await publicClient.readContract({
-          address: tokenAddress,
-          abi: erc20Abi,
-          functionName: 'balanceOf',
-          args: [accountAddress],
-        });
-        if (typeof balanceResult === 'bigint') balance = balanceResult;
-        debug.log('💰 erc20 balance', { accountAddress, balance: balance.toString() });
-      } catch (err: any) {
-        debug.warn('⚠️ balanceOf failed (ignored):', err?.message ?? err);
-      }
-    }
-
     const token: TokenContract = {
       address: tokenAddress,
       name,
       symbol,
       decimals,
       totalSupply,
-      balance,
+      balance: 0n, // live value comes from useGetBalance
       chainId,
     };
-    debug.log('✅ erc20 token resolved', token);
+    debug.log('✅ erc20 token resolved (no balance)', token);
     return token;
   } catch (err: any) {
     debug.error('❌ ERC-20 resolve failed:', err?.message ?? err);

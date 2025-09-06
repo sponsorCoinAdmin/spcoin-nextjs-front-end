@@ -1,9 +1,12 @@
 // File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { parseUnits, formatUnits, Address } from 'viem';
 import { clsx } from 'clsx';
+
+import { useGetBalance } from '@/lib/hooks/useGetBalance';
+import { useContextBalance } from '@/lib/hooks/useContextBalance';
 
 import {
   useApiProvider,
@@ -20,7 +23,6 @@ import {
 import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 
 import {
   SP_COIN_DISPLAY,
@@ -50,8 +52,8 @@ function clampDisplay(numStr: string, max = maxInputSz): string {
   if (neg) s = s.slice(1);
 
   let [intPart, fracPart = ''] = s.split('.');
-
   const intLenWithSign = sign.length + intPart.length;
+
   if (intLenWithSign >= max) {
     const keep = max - sign.length;
     return sign + intPart.slice(0, Math.max(0, keep));
@@ -63,7 +65,6 @@ function clampDisplay(numStr: string, max = maxInputSz): string {
     const fracTrimmed = fracPart.slice(0, allowFrac);
     if (fracTrimmed.length > 0) return sign + intPart + '.' + fracTrimmed;
   }
-
   return sign + intPart;
 }
 
@@ -71,7 +72,6 @@ function lower(addr?: string | Address) {
   return addr ? (addr as string).toLowerCase() : '';
 }
 
-// 🔒 PRIVATE inner component, not exported
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
   const { exchangeContext } = useExchangeContext();
@@ -82,69 +82,45 @@ function TradeAssetPanelInner() {
   const { data: slippage } = useSlippage();
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
-  const [spCoinDisplay, setSpCoinDisplay] = useSpCoinDisplay();
+  const [spCoinDisplay] = useSpCoinDisplay();
 
-  const {
-    localTokenContract,
-    setLocalTokenContract,
-    localAmount,
-    setLocalAmount,
-    dumpTokenContext,
-    containerType,
-  } = useTokenPanelContext();
+  const { setLocalTokenContract, setLocalAmount, containerType } = useTokenPanelContext();
 
   const tokenContract =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellTokenContract : buyTokenContract;
 
-  const tokenAddr = useMemo(
-    () => lower(tokenContract?.address),
-    [tokenContract?.address]
-  );
+  const tokenAddr = useMemo(() => lower(tokenContract?.address), [tokenContract?.address]);
   const tokenDecimals = tokenContract?.decimals ?? 18;
 
   const [inputValue, setInputValue] = useState<string>('0');
   const debouncedSellAmount = useDebounce(sellAmount, 600);
   const debouncedBuyAmount = useDebounce(buyAmount, 600);
 
-  useEffect(() => {
-    debugLog.log('✅ Connected to TokenPanelContext', { localTokenContract, localAmount });
-    debugLog.log('🔎 activeDisplay:', getActiveDisplayString(exchangeContext.settings.activeDisplay));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ✅ Only mirror the address change (not whole object identity)
+  // Mirror token selection into local panel state only when the address changes
   const prevAddrRef = useRef<string>('');
   useEffect(() => {
-    if (!tokenAddr && !prevAddrRef.current) return; // both empty → nothing
+    if (!tokenAddr && !prevAddrRef.current) return;
     if (tokenAddr === prevAddrRef.current) return;
 
-    prevAddrRef.current = tokenAddr;
+    prevAddrRef.current = tokenAddr || '';
 
     if (tokenAddr) {
-      debugLog.log(`📦 Loaded tokenContract for ${SP_COIN_DISPLAY[containerType]}:`, tokenAddr);
-      setLocalTokenContract(tokenContract);
-    } else {
-      // token cleared: handled in the next effect
+      debugLog.log(`📦 Loaded token for ${SP_COIN_DISPLAY[containerType]}:`, tokenAddr);
+      setLocalTokenContract(tokenContract as any);
     }
   }, [tokenAddr, containerType, setLocalTokenContract, tokenContract]);
 
-  // ➕ Zero input/local/global when token is cleared (only on transition defined → undefined)
+  // When token cleared, zero local/global amounts and UI input
   const wasDefinedRef = useRef<boolean>(Boolean(tokenAddr));
   useEffect(() => {
     const wasDefined = wasDefinedRef.current;
     const isDefined = Boolean(tokenAddr);
 
     if (wasDefined && !isDefined) {
-      debugLog.log(
-        `🧹 Token contract cleared for ${SP_COIN_DISPLAY[containerType]} → zeroing input & amount`
-      );
-
-      // local
       setLocalTokenContract(undefined as any);
       setLocalAmount(0n);
       setInputValue('0');
 
-      // global
       if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
         if (sellAmount !== 0n) setSellAmount(0n);
       } else {
@@ -164,15 +140,17 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   ]);
 
-  // Helper: treat ".", "123.", "123.0/00..." as mid-typing states
+  // Treat ".", "123.", "123.0…" as mid-typing states
   const isIntermediateDecimal = (s: string): boolean =>
     s === '.' || /^\d+\.$/.test(s) || /^\d+\.\d*0$/.test(s);
 
-  // ⌨️ Typing grace to prevent racey mirror-overwrites while user edits quickly
+  // Give the user a grace window while typing to avoid mirror overwrites
   const typingUntilRef = useRef<number>(0);
 
-  // Keep text input in sync with selected token + its OWN global amount (avoid both amounts)
-  const currentAmount = containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+  // Keep input text synced to the selected token’s own global amount
+  const currentAmount =
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+
   useEffect(() => {
     if (!tokenAddr) return;
     if (isIntermediateDecimal(inputValue)) return;
@@ -180,13 +158,10 @@ function TradeAssetPanelInner() {
 
     const formattedRaw = formatUnits(currentAmount ?? 0n, tokenDecimals);
     const formatted = clampDisplay(formattedRaw, maxInputSz);
-
-    if (inputValue !== formatted) {
-      setInputValue(formatted);
-    }
+    if (inputValue !== formatted) setInputValue(formatted);
   }, [tokenAddr, tokenDecimals, currentAmount, containerType, inputValue]);
 
-  // Debounced amount → side-effects only (quotes/validation)
+  // Debounced amount → side-effects (quotes/validation) via CustomEvent
   const lastDebouncedRef = useRef<bigint | null>(null);
   const debouncedForPanel =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
@@ -199,18 +174,10 @@ function TradeAssetPanelInner() {
         tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
       (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
         tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN);
-
     if (!directionOk) return;
 
     if (lastDebouncedRef.current === debouncedForPanel) return;
     lastDebouncedRef.current = debouncedForPanel ?? null;
-
-    debugLog.log('🔔 Debounced amount ready (side-effects only)', {
-      panel: SP_COIN_DISPLAY[containerType],
-      tradeDirection,
-      amount: debouncedForPanel?.toString?.(),
-      token: tokenAddr,
-    });
 
     if (typeof window !== 'undefined') {
       try {
@@ -225,20 +192,16 @@ function TradeAssetPanelInner() {
           }),
         );
       } catch {
-        // ignore if CustomEvent isn't available
+        /* no-op */
       }
     }
   }, [debouncedForPanel, containerType, tradeDirection, tokenAddr]);
 
   const handleInputChange = (value: string) => {
-    // each keystroke opens a "do-not-mirror" window
     typingUntilRef.current = Date.now() + TYPING_GRACE_MS;
-
     if (!/^\d*\.?\d*$/.test(value)) return;
 
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
-
-    debugLog.log(`⌨️ Input: ${value} → normalized: ${normalized}`);
     setInputValue(normalized);
 
     if (isIntermediateDecimal(normalized)) return;
@@ -249,7 +212,6 @@ function TradeAssetPanelInner() {
 
     try {
       const bigIntValue = parseUnits(formatted, decimals);
-      debugLog.log(`🔢 Parsed BigInt: ${bigIntValue}`);
       setLocalAmount(bigIntValue);
 
       if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
@@ -277,21 +239,37 @@ function TradeAssetPanelInner() {
         ? `You Receive ± ${slippage.percentageString}`
         : `You Exactly Receive:`;
 
-  const formattedBalance = useFormattedTokenAmount(tokenContract, tokenContract?.balance ?? 0n);
+  // Live balance (SSOT)
+  const chainId = exchangeContext?.network?.chainId ?? 1;
+  const {
+    balance,
+    formatted: liveFormattedBalance,
+    isLoading: balanceLoading,
+    error: balanceError,
+  } = useGetBalance({
+    chainId,
+    tokenAddress: tokenContract?.address as Address | undefined,
+    decimalsHint: tokenDecimals,
+    enabled: Boolean(tokenContract?.address),
+  });
+
+  // Mirror live balance into ExchangeContext.tradeData.*TokenContract
+  const side = containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? 'sell' : 'buy';
+  useContextBalance({
+    balance,
+    tokenAddress: tokenContract?.address as Address | undefined,
+    side,
+    enabled: Boolean(tokenContract?.address),
+    mirrorTradeToken: true,
+  });
+
+  const formattedBalance =
+    balanceError ? '—' : balanceLoading ? '…' : (liveFormattedBalance ?? '0.0');
 
   const isInputDisabled =
     !tokenAddr ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
       containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
-
-  const toggleTokenConfig = useCallback(() => {
-    if (spCoinDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-    } else {
-      setSpCoinDisplay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL);
-    }
-    debugLog.log(`⚙️ Toggled token config → ${getActiveDisplayString(spCoinDisplay)}`);
-  }, [spCoinDisplay, setSpCoinDisplay]);
 
   const noAutofillName = useMemo(
     () => `no-autofill-${Math.random().toString(36).slice(2)}`,
@@ -323,7 +301,7 @@ function TradeAssetPanelInner() {
         data-1p-ignore="true"
         data-form-type="other"
       />
-      {/* Optional decoy to appease aggressive managers (invisible, harmless) */}
+      {/* Invisible decoy to placate aggressive managers */}
       <input
         type="text"
         autoComplete="new-password"
@@ -346,31 +324,10 @@ function TradeAssetPanelInner() {
   );
 }
 
-// ✅ EXPORTED component with built-in provider
 export default function TradeAssetPanel({ containerType }: { containerType: SP_COIN_DISPLAY }) {
   return (
     <TokenPanelProvider containerType={containerType}>
       <TradeAssetPanelInner />
     </TokenPanelProvider>
   );
-}
-
-// 🔧 Helper function
-function useFormattedTokenAmount(tokenContract: any, amount: bigint): string {
-  const decimals = tokenContract?.decimals ?? 18;
-
-  if (!tokenContract || tokenContract.balance === undefined) {
-    debugLog.log(`💰 fallback: tokenContract or balance undefined for ${tokenContract?.symbol}`);
-    return '0.0';
-  }
-
-  try {
-    const formattedRaw = formatUnits(amount, decimals);
-    const formatted = clampDisplay(formattedRaw, 10);
-    debugLog.log(`💰 formatted display amount for ${tokenContract.symbol}: ${formatted}`);
-    return formatted;
-  } catch {
-    debugLog.warn(`⚠️ Failed to format amount with decimals:`, decimals);
-    return '0.0';
-  }
 }

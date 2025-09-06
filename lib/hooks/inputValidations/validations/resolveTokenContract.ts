@@ -2,9 +2,9 @@
 
 import { isAddress, Address, PublicClient } from 'viem';
 import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
-import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
-import { TokenContract, FEED_TYPE } from '@/lib/structure';
-import { getLogoURL, NATIVE_TOKEN_ADDRESS, defaultMissingImage } from '@/lib/network/utils';
+// 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
+import { TokenContract, FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
+import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
@@ -15,7 +15,8 @@ function dbg(...args: any[]) {
 /**
  * Resolves a TokenContract from an address:
  * - Keeps address case AS-IS (no checksum/case normalization)
- * - Fetches logo URL (async), balance, and metadata in parallel
+ * - Fetches logo URL and metadata in parallel
+ * - ❌ Does NOT fetch user balance (authoritative source is useGetBalance hook)
  * - Always returns a TokenContract with a logoURL (fallbacks to defaultMissingImage)
  */
 export async function resolveTokenContract(
@@ -23,7 +24,7 @@ export async function resolveTokenContract(
   chainId: number,
   feedType: FEED_TYPE,
   publicClient: PublicClient,
-  accountAddress?: Address
+  _accountAddress?: Address // kept for compatibility; unused
 ): Promise<TokenContract | undefined> {
   const t0 = Date.now();
   dbg('entry', {
@@ -31,7 +32,7 @@ export async function resolveTokenContract(
     chainId,
     feedType,
     hasPublicClient: !!publicClient,
-    accountAddress,
+    accountAddress: _accountAddress,
   });
 
   // Allow native sentinel; otherwise require a valid EVM address
@@ -41,9 +42,8 @@ export async function resolveTokenContract(
   }
 
   // Keep native sentinel verbatim; otherwise use the provided address AS-IS (no case normalization)
-  const resolvedAddress = (tokenAddress === NATIVE_TOKEN_ADDRESS
-    ? tokenAddress
-    : (tokenAddress as `0x${string}`));
+  const resolvedAddress =
+    tokenAddress === NATIVE_TOKEN_ADDRESS ? tokenAddress : (tokenAddress as `0x${string}`);
 
   const isNative = resolvedAddress === NATIVE_TOKEN_ADDRESS;
   dbg('normalized (no case changes)', { resolvedAddress, isNative });
@@ -54,7 +54,7 @@ export async function resolveTokenContract(
     dbg('expected token logo path', expectedPath);
   }
 
-  // Prepare async tasks (run in parallel)
+  // Prepare async tasks (run in parallel) — logo only
   const logoP = getLogoURL(chainId, resolvedAddress, feedType)
     .then((url) => {
       dbg('logo resolved', { url });
@@ -65,20 +65,9 @@ export async function resolveTokenContract(
       return defaultMissingImage;
     });
 
-  const balanceP = accountAddress
-    ? fetchTokenBalance(resolvedAddress, accountAddress, isNative, publicClient)
-        .then((b) => {
-          dbg('balance resolved', { b: b?.toString?.() ?? String(b) });
-          return b;
-        })
-        .catch((e) => {
-          dbg('⚠️ balance fetch failed, using 0n', e);
-          return 0n;
-        })
-    : Promise.resolve<bigint>(0n);
-
+  // 🟢 Native: metadata from getNativeTokenInfo, no balance
   if (isNative) {
-    const [logoURL, balance] = await Promise.all([logoP, balanceP]);
+    const [logoURL] = await Promise.all([logoP]);
     const nativeInfo = getNativeTokenInfo(chainId);
 
     const ret: TokenContract = {
@@ -89,15 +78,14 @@ export async function resolveTokenContract(
       decimals: nativeInfo.decimals,
       totalSupply: nativeInfo.totalSupply,
       amount: 0n,
-      balance,
+      balance: 0n, // ⬅️ balance omitted here; fetched via useGetBalance in UI
       logoURL: logoURL || defaultMissingImage,
     };
 
-    dbg('return native', {
+    dbg('return native (no balance fetch)', {
       ms: Date.now() - t0,
       ret: {
         ...ret,
-        balance: ret.balance.toString(),
         totalSupply: ret.totalSupply?.toString?.() ?? ret.totalSupply,
       },
     });
@@ -105,8 +93,8 @@ export async function resolveTokenContract(
     return ret;
   }
 
-  // ERC-20: metadata + balance + logo in parallel
-  const [metadata, balance, logoURL] = await Promise.all([
+  // 🧱 ERC-20: metadata + logo in parallel (no balance)
+  const [metadata, logoURL] = await Promise.all([
     fetchTokenMetadata(resolvedAddress, publicClient)
       .then((m) => {
         dbg('metadata resolved', m);
@@ -116,7 +104,6 @@ export async function resolveTokenContract(
         dbg('⚠️ metadata fetch failed', e);
         return undefined;
       }),
-    balanceP,
     logoP,
   ]);
 
@@ -133,15 +120,14 @@ export async function resolveTokenContract(
     decimals: metadata.decimals,
     totalSupply: metadata.totalSupply,
     amount: 0n,
-    balance,
+    balance: 0n, // ⬅️ UI will show live value from the TanStack cache
     logoURL: logoURL || defaultMissingImage,
   };
 
-  dbg('return erc20', {
+  dbg('return erc20 (no balance fetch)', {
     ms: Date.now() - t0,
     ret: {
       ...ret,
-      balance: ret.balance.toString(),
       totalSupply: ret.totalSupply?.toString?.() ?? ret.totalSupply,
     },
   });

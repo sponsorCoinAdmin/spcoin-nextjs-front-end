@@ -1,11 +1,12 @@
-// File: lib/context/ExchangeInitialContext.ts
+// File: lib/network/initialize/defaultNetworkSettings.tsx
+
 'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
-import defaultPolygonSettings from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
-import defaultHardHatSettings from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
-import defaultSoliditySettings from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
-import { isLowerCase } from '../utils';
+import defaultPolygonSettings  from '@/resources/data/networks/polygon/initialize/defaultNetworkSettings.json';
+import defaultHardHatSettings  from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
+import defaultSepoliaSettings  from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
+
 import {
   TradeData,
   TRADE_DIRECTION,
@@ -13,15 +14,12 @@ import {
   NetworkElement,
   WalletAccount,
   SP_COIN_DISPLAY,
-  ETHEREUM,
-  HARDHAT,
-  POLYGON,
-  SEPOLIA,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
+import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOG_TIME: boolean = false;
+const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_NETWORK_SETTINGS === 'true';
 const logger = createDebugLogger('NetworkSettings', DEBUG_ENABLED, LOG_TIME);
 
@@ -38,14 +36,14 @@ const defaultInitialTradeData: TradeData = {
 };
 
 const initialContext = () => {
-  const chainId: number = 1; // Default startup network to Ethereum
+  const chainId: number = CHAIN_ID.ETHEREUM; // default startup network
   const exchangeContext: ExchangeContext = getInitialContext(chainId);
   logger.log('🟢 [initialContext] Initialized ExchangeContext:', exchangeContext);
   return { exchangeContext };
 };
 
-const getInitialContext = (chain: any | number): ExchangeContext => {
-  const chainId: number = chain || 1;
+const getInitialContext = (chain: number | string | { id: number } | undefined): ExchangeContext => {
+  const chainId = normalizeChainId(chain);
   const initialContextMap = getInitialContextMap(chainId);
   logger.log(`🛠️ [getInitialContext] Generating context for chainId: ${chainId}`);
 
@@ -64,7 +62,7 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL, // ✅ ONLY activeDisplay kept
+      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,
@@ -74,36 +72,60 @@ const getInitialContext = (chain: any | number): ExchangeContext => {
   return exchangeContext;
 };
 
-function getInitialContextMap(chain: any) {
+function getInitialContextMap(chain: number) {
   const initialNetworkContext = getDefaultNetworkSettings(chain);
   logger.log(`📦 [getInitialContextMap] Network settings loaded for chain: ${chain}`);
   return new Map(Object.entries(initialNetworkContext));
 }
 
-const getDefaultNetworkSettings = (chain: any) => {
-  if (chain && typeof chain === 'string' && !isLowerCase(chain)) {
-    chain = chain.toLowerCase();
-  } else if (chain && typeof chain !== 'number' && typeof chain !== 'string') {
-    chain = chain.id;
+/** Accepts number | string | {id:number}, returns a numeric CHAIN_ID. Defaults to ETHEREUM. */
+function normalizeChainId(chain: number | string | { id: number } | undefined): number {
+  if (typeof chain === 'number' && Number.isFinite(chain)) return chain;
+
+  if (typeof chain === 'object' && chain && typeof chain.id === 'number') {
+    return chain.id;
   }
 
+  if (typeof chain === 'string') {
+    const key = chain.toLowerCase();
+    switch (key) {
+      case 'ethereum':
+      case 'mainnet':
+      case 'eth':
+        return CHAIN_ID.ETHEREUM;
+      case 'polygon':
+      case 'matic':
+        return CHAIN_ID.POLYGON;
+      case 'hardhat':
+        return CHAIN_ID.HARDHAT;
+      case 'sepolia':
+        return CHAIN_ID.SEPOLIA;
+      case 'base':
+        return CHAIN_ID.BASE;
+      case 'goerli':
+        return CHAIN_ID.GOERLI;
+      default:
+        return CHAIN_ID.ETHEREUM;
+    }
+  }
+
+  return CHAIN_ID.ETHEREUM;
+}
+
+const getDefaultNetworkSettings = (chain: number) => {
   switch (chain) {
-    case ETHEREUM:
-    case 'ethereum':
+    case CHAIN_ID.ETHEREUM:
       logger.log('🔗 [getDefaultNetworkSettings] Using Ethereum settings');
       return defaultEthereumSettings;
-    case POLYGON:
-    case 'polygon':
+    case CHAIN_ID.POLYGON:
       logger.log('🔗 [getDefaultNetworkSettings] Using Polygon settings');
       return defaultPolygonSettings;
-    case HARDHAT:
-    case 'hardhat':
+    case CHAIN_ID.HARDHAT:
       logger.log('🔗 [getDefaultNetworkSettings] Using Hardhat settings');
       return defaultHardHatSettings;
-    case SEPOLIA:
-    case 'sepolia':
+    case CHAIN_ID.SEPOLIA:
       logger.log('🔗 [getDefaultNetworkSettings] Using Sepolia settings');
-      return defaultSoliditySettings;
+      return defaultSepoliaSettings;
     default:
       logger.warn('⚠️ [getDefaultNetworkSettings] Unknown chain, defaulting to Ethereum');
       return defaultEthereumSettings;
