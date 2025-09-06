@@ -8,6 +8,25 @@ export default {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  // ✅ Ensure these utilities are never purged (needed for Connect dropdown colors)
+  safelist: [
+    // text colors (we use "!text-..." in markup; safelist the base utility)
+    'text-emerald-400',
+    'text-red-400',
+
+    // small status dots
+    'bg-emerald-400',
+    'bg-red-400',
+
+    // arbitrary accent color on checkbox (belt & suspenders)
+    'accent-[#5981F3]',
+
+    // hover background tints via pattern so Tailwind also emits hover: variants
+    {
+      pattern: /bg-(emerald|red)-500\/15/,
+      variants: ['hover'],
+    },
+  ],
   theme: {
     colors: {
       transparent: 'transparent',
@@ -23,9 +42,9 @@ export default {
       'bubble-gum': '#ff77e9',
       bermuda: '#78dcca',
 
-      // new semantic colors for ConnectButton (from connectTheme.json)
-      'connect-bg': 'transparent',         // base is now transparent
-      'connect-color': '#ffffff',       // base text is white
+      // semantic colors for ConnectButton (from connectTheme.json)
+      'connect-bg': 'transparent',
+      'connect-color': '#ffffff',
       'connect-hover-bg': '#243056',
       'connect-hover-color': '#5981F3',
 

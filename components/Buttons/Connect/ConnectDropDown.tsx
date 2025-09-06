@@ -80,27 +80,27 @@ export default function ConnectDropdown({
         hoverBg={!!showHoverBg}
         aria-current={active ? 'true' : undefined}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {opt.logo ? (
             <Image
               src={opt.logo}
               alt={opt.name}
               width={16}
               height={16}
-              className="h-4 w-4 object-contain"
+              className="h-4 w-4 object-contain shrink-0"
             />
           ) : (
-            <div className="h-4 w-4 rounded-full bg-white/20" />
+            <div className="h-4 w-4 rounded-full bg-white/20 shrink-0" />
           )}
-          <span className="truncate">{opt.name}</span>
+          <span className="truncate text-sm">{opt.name}</span>
         </div>
-        <span className="text-xs opacity-70">{opt.symbol}</span>
+        <span className="text-sm opacity-70 shrink-0">{opt.symbol}</span>
       </Row>
     );
   };
 
   return (
-    <div className="min-w-[220px] max-w-[320px] rounded-lg shadow-xl border border-white/10 bg-[#101218] text-white p-2 backdrop-blur-sm">
+    <div className="min-w-[260px] max-w-[360px] rounded-lg shadow-xl border border-white/10 bg-[#101218] text-white p-2 backdrop-blur-sm">
       {/* MAINNETS */}
       {mainnetOptions.map(renderOption)}
 
@@ -115,17 +115,42 @@ export default function ConnectDropdown({
       {/* ACTIONS */}
       {(showConnectRow || showDisconnectRow) && <Divider />}
 
-      {showConnectRow && <Row onClick={onConnect} hoverBg={!!showHoverBg}>Connect</Row>}
+      {/* Green “Connect” (same text size as network rows) */}
+      {showConnectRow && (
+        <Row
+          onClick={onConnect}
+          hoverBg={!!showHoverBg}
+          className="!text-[#34d399] hover:bg-[rgba(52,211,153,0.12)]"
+          data-variant="connect"
+        >
+          <span className="flex items-center gap-2 font-medium min-w-0 text-sm">
+            <span className="h-2 w-2 rounded-full bg-[#34d399] shrink-0" />
+            <span className="truncate">Connect</span>
+          </span>
+          <span className="shrink-0" />
+        </Row>
+      )}
 
+      {/* Red “Disconnect” (same text size) + right-aligned address (same size) */}
       {showDisconnectRow && (
-        <Row onClick={onDisconnect} hoverBg={!!showHoverBg}>
-          <span>Disconnect</span>
-          <span className="text-xs opacity-70">{truncatedAddress ?? address}</span>
+        <Row
+          onClick={onDisconnect}
+          hoverBg={!!showHoverBg}
+          className="!text-[#f87171] hover:bg-[rgba(248,113,113,0.12)]"
+          data-variant="disconnect"
+        >
+          <span className="flex items-center gap-2 font-medium min-w-0 text-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f87171] shrink-0" />
+            <span className="truncate">Disconnect</span>
+          </span>
+          <span className="ml-3 text-sm opacity-70 whitespace-nowrap font-mono shrink-0 max-w-[60%] truncate text-right">
+            {truncatedAddress ?? address}
+          </span>
         </Row>
       )}
 
       <Row onClick={onOpenWalletModal} hoverBg={!!showHoverBg}>
-        Open Wallet Modal…
+        <span className="text-sm">Open Wallet Modal…</span>
       </Row>
 
       {/* Checkbox row */}
