@@ -6,7 +6,6 @@ import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
-import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 
@@ -26,9 +25,10 @@ export default function RecipientSelectPanel({
   closePanelCallback,
   setTradingTokenCallback,
 }: RecipientSelectPanelProps) {
-  const { activeDisplay } = useActiveDisplay();
+  // This panel should always advertise itself explicitly as the RECIPIENT panel.
+  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
 
-  // adapt parent close callback to provider's (fromUser:boolean) signature
+  // Adapt parent close callback to provider's (fromUser: boolean) signature
   const closeForProvider = useCallback(
     (_fromUser: boolean) => {
       closePanelCallback();
@@ -37,17 +37,19 @@ export default function RecipientSelectPanel({
   );
 
   if (!isActive) {
-    debugLog.log(`⏭️ RecipientSelectPanel → not active, skipping render`);
+    DEBUG_ENABLED && debugLog.log(`⏭️ RecipientSelectPanel → not active, skipping render`);
     return null;
   }
 
-  debugLog.log(`🧩 RecipientSelectPanel → showPanelDisplay=RecipientSelectPanel`);
+  DEBUG_ENABLED &&
+    debugLog.log(`🧩 RecipientSelectPanel → activating (containerType=${containerType})`);
 
   return (
     <AssetSelectProvider
       closePanelCallback={closeForProvider}
-      setTradingTokenCallback={setTradingTokenCallback as any} // WalletAccount is OK; provider accepts TokenContract | WalletAccount
-      containerType={activeDisplay as SP_COIN_DISPLAY}
+      // Provider accepts TokenContract | WalletAccount; WalletAccount is valid here.
+      setTradingTokenCallback={setTradingTokenCallback as any}
+      containerType={containerType}
     >
       <RecipientSelectPanelInner />
     </AssetSelectProvider>
@@ -58,9 +60,10 @@ function RecipientSelectPanelInner() {
   const { instanceId, containerType } = useAssetSelectContext();
 
   useEffect(() => {
-    debugLog.log(
-      `🧩 RecipientSelectPanel mounted for containerType=${containerType}, instanceId=${instanceId}`
-    );
+    DEBUG_ENABLED &&
+      debugLog.log(
+        `🧩 RecipientSelectPanel mounted → containerType=${containerType}, instanceId=${instanceId}`
+      );
   }, [containerType, instanceId]);
 
   return <AssetSelectPanel />;
