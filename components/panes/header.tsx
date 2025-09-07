@@ -10,7 +10,6 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
-// ⬇️ Removed: NetworkSelect (to avoid introducing an extra control)
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
@@ -108,15 +107,18 @@ export default function Header() {
             ))}
         </div>
 
-        {/* Right side: same layout, no extra elements */}
+        {/* Right side */}
         <div className="flex items-center gap-2.5">
-          {/* Display: contents ensures no extra box is introduced */}
+          {/* ✅ Normal wrapper (no display: contents), participates in hover group */}
           <div
-            className="contents"
-            onMouseEnter={() => setHoveredTab(NON_NAV_HOVER)}
+            id="WalletConnectWrapper"
+            className="relative z-[1000]"
+            onMouseEnter={() => setHoveredTab(NON_NAV_HOVER)}   // highlight only this
             onMouseLeave={() => setHoveredTab(null)}
-            onFocus={() => setHoveredTab(NON_NAV_HOVER)}
-            onBlur={() => setHoveredTab(null)}
+            // Shield clicks so header/global handlers don't interfere with RainbowKit
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onMouseDownCapture={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <ConnectButton
               showName={false}
