@@ -38,6 +38,7 @@ export type ExchangeContextType = {
   setTradeDirection: (type: TRADE_DIRECTION) => void;
   setSlippageBps: (bps: number) => void;
   setRecipientAccount: (wallet: WalletAccount | undefined) => void;
+  setAppChainId: (chainId: number) => void;
 
   errorMessage: ErrorMessage | undefined;
   setErrorMessage: (error: ErrorMessage | undefined) => void;
@@ -68,12 +69,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     hookName = 'unknown'
   ) => {
     setContextState((prev) => {
-      DEBUG_ENABLED && debugLog.log('info', '🧪 setExchangeContext triggered by', hookName);
+      if (DEBUG_ENABLED) debugLog.log('info', `🛠️ setExchangeContext → triggered by ${hookName}`);
       const next = prev ? updater(prev) : prev;
       if (!next || next === prev) return prev; // no real change
 
       saveLocalExchangeContext(next);
-      DEBUG_ENABLED && debugLog.log('info', '📦 exchangeContext saved to localStorage');
+      if (DEBUG_ENABLED) debugLog.log('info', '📦 exchangeContext → saved to localStorage');
       return next;
     });
   };
@@ -84,7 +85,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     hasInitializedRef.current = true;
 
     initExchangeContext(wagmiChainId, isConnected, address).then((sanitized) => {
-      DEBUG_ENABLED && debugLog.log('info', '✅ Initial exchangeContext hydrated', sanitized);
+      if (DEBUG_ENABLED) debugLog.log('info', `✅ Initial exchangeContext → hydrated`, sanitized);
       setContextState(sanitized);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,6 +103,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setBuyTokenContract,
     setTradeDirection,
     setSlippageBps,
+    setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
   // Central watchers — drive off APP chain (not the wallet)
@@ -112,8 +114,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     isConnected,
     address,
     accountStatus,
-    // If some watchers legitimately need wallet chain for validation, you can also pass:
-    // walletChainId: wagmiChainId,
   });
 
   /** Keep `network.connected` in sync with wallet connection */
@@ -126,15 +126,14 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const now = !!isConnected;
       if (was === now) return prev;
 
+      if (DEBUG_ENABLED) debugLog.log(`🛠️ syncNetworkConnected → ${was} → ${now}`);
       const next = structuredClone(prev);
       next.network = { ...(next.network ?? {}), connected: now };
       return next;
     }, 'provider:syncNetworkConnected');
   }, [isConnected, contextState, setExchangeContext]);
 
-  /**
-   * While CONNECTED: keep `network.chainId` in sync with wallet (wagmi).
-   */
+  /** While CONNECTED: keep `network.chainId` in sync with wallet (wagmi). */
   useEffect(() => {
     if (!contextState) return;
     if (!isConnected) return; // 🔒 only when connected
@@ -146,16 +145,14 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const current = prev.network?.chainId;
       if (current === walletId) return prev;
 
+      if (DEBUG_ENABLED) debugLog.log(`🛠️ syncWalletChainId → ${current} → ${walletId}`);
       const next = structuredClone(prev);
       next.network = { ...(next.network ?? {}), chainId: walletId as any };
       return next;
     }, 'provider:syncWalletChainId(connected)');
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
 
-  /**
-   * While DISCONNECTED: ensure `network.chainId` is undefined.
-   * (Wallet not connected → no "actual" chain.)
-   */
+  /** While DISCONNECTED: ensure `network.chainId` is undefined. */
   useEffect(() => {
     if (!contextState) return;
     if (isConnected) return; // 🔒 only when disconnected
@@ -167,16 +164,14 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       if (!prev) return prev;
       if (typeof prev.network?.chainId === 'undefined') return prev; // no change
 
+      if (DEBUG_ENABLED) debugLog.log(`🛠️ clearWalletChainId(disconnected) → ${ch} → undefined`);
       const next = structuredClone(prev);
       next.network = { ...(next.network ?? {}), chainId: undefined as any };
       return next;
     }, 'provider:clearWalletChainId(disconnected)');
   }, [isConnected, contextState?.network?.chainId, contextState, setExchangeContext]);
 
-  /**
-   * Hydrate name/symbol/logo/url from the APP chain selection (`network.appChainId`).
-   * Does not modify `network.chainId` (wallet) or `connected`.
-   */
+  /** Hydrate name/symbol/logo/url from the APP chain selection (`network.appChainId`). */
   useEffect(() => {
     if (!contextState) return;
     const currentAppId = contextState.network?.appChainId ?? 0;
@@ -186,6 +181,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const prevApp = prev.network?.appChainId ?? 0;
       if (prevApp === currentAppId) return prev; // no change
 
+      if (DEBUG_ENABLED) debugLog.log(`🛠️ hydrateFromAppChain → ${prevApp} → ${currentAppId}`);
       const next = structuredClone(prev);
       next.network = deriveNetworkFromApp(currentAppId, next.network);
       return next;
@@ -209,6 +205,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setTradeDirection,
         setSlippageBps,
         setRecipientAccount,
+        setAppChainId,
         // errors
         errorMessage,
         setErrorMessage,

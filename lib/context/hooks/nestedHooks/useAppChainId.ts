@@ -1,7 +1,7 @@
 // File: lib/context/hooks/useAppChainId.ts
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useChainId as useWagmiChainId, useSwitchChain } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -23,11 +23,11 @@ const debugLog = createDebugLogger('useAppChainId', DEBUG_ENABLED, LOG_TIME);
  * - Reads from exchangeContext.network.appChainId
  * - Optionally copies the wallet's chain ONCE on init if app value is 0
  * - Optionally mirrors app → wallet (if env flag enabled)
- * - Never writes to `network.chainId` while disconnected (that field = wallet-only)
+ * - Setter delegates to `setAppChainId` from ExchangeContext (via useProviderSetters)
  */
 export function useAppChainId(): [number, (nextId: number) => void] {
   const walletChainId = useWagmiChainId(); // may be 0/undefined when disconnected
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setAppChainId } = useExchangeContext();
 
   const connected = !!exchangeContext?.network?.connected;
   const appChainId = exchangeContext?.network?.appChainId ?? 0;
@@ -40,28 +40,10 @@ export function useAppChainId(): [number, (nextId: number) => void] {
     if (!walletChainId) return;      // wagmi not ready / disconnected
     if (appChainId !== 0) return;    // app already set; do NOT overwrite
 
-    if (DEBUG_ENABLED) debugLog.log(`🔁 Init Wallet→App: 0 → ${walletChainId}`);
-    setExchangeContext(prev => {
-      const base = prev ?? {};
-      const prevNetwork = (base as any).network ?? {};
-      const currentApp = prevNetwork.appChainId ?? 0;
-      if (currentApp === walletChainId) return prev;
-
-      // Initialize the app preference from the wallet.
-      // Do NOT force chainId here if disconnected; chainId is wallet-only.
-      return {
-        ...base,
-        network: {
-          ...prevNetwork,
-          appChainId: walletChainId,
-          // If connected, wallet owns chainId; otherwise leave as-is/undefined.
-          chainId: connected ? walletChainId : prevNetwork.chainId,
-        },
-      } as typeof prev;
-    });
-    // Intentionally exclude `connected` so this only runs for the first-init path
+    debugLog.log(`🛠️ wallet→app init → 0 → ${walletChainId}`);
+    setAppChainId(walletChainId); // ExchangeProvider logs again when state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walletChainId, appChainId, setExchangeContext]);
+  }, [walletChainId, appChainId]);
 
   /* App → Wallet (optional flag) */
   useEffect(() => {
@@ -73,7 +55,7 @@ export function useAppChainId(): [number, (nextId: number) => void] {
 
     (async () => {
       try {
-        if (DEBUG_ENABLED) debugLog.log(`🔁 App→Wallet: ${walletChainId} → ${appChainId}`);
+        debugLog.log(`🛠️ app→wallet mirror → ${walletChainId} → ${appChainId}`);
         await switchChain?.({ chainId: appChainId });
       } catch (e) {
         debugLog.warn(`⚠️ switchChain failed`, e);
@@ -81,47 +63,11 @@ export function useAppChainId(): [number, (nextId: number) => void] {
     })();
   }, [appChainId, walletChainId, connected, switchChain]);
 
-  /* Setter: update APP preference; never write chainId when disconnected */
-  const setAppChainId = useCallback(
-    (nextId: number) => {
-      if (!(nextId > 0)) return;
-      if (DEBUG_ENABLED)
-        debugLog.log(`🛠️ setAppChainId(${nextId}) [connected=${connected}]`);
+  /** Thin wrapper around ExchangeProvider setter with extra debug logging */
+  const wrappedSetAppChainId = (nextId: number) => {
+    debugLog.log(`🛠️ setAppChainId → ${nextId}`);
+    setAppChainId(nextId); // ExchangeProvider logs again when state changes
+  };
 
-      setExchangeContext(prev => {
-        const base = prev ?? {};
-        const prevNetwork = (base as any).network ?? {};
-        const prevApp = prevNetwork.appChainId ?? 0;
-
-        // chainId is wallet-owned; only change appChainId here
-        if (prevApp === nextId) return prev;
-
-        return {
-          ...base,
-          network: {
-            ...prevNetwork,
-            appChainId: nextId,
-            // Leave chainId untouched. When disconnected it's undefined;
-            // when connected, wallet effects keep it in sync.
-            chainId: prevNetwork.chainId,
-          },
-        } as typeof prev;
-      });
-
-      // Optional: request wallet switch only when the flag is on and connected
-      if (connected && MIRROR_APP_TO_WALLET && switchChain && walletChainId !== nextId) {
-        (async () => {
-          try {
-            if (DEBUG_ENABLED) debugLog.log(`↪️ Request wallet switch → ${nextId}`);
-            await switchChain({ chainId: nextId });
-          } catch (e) {
-            debugLog.warn(`⚠️ switchChain request failed`, e);
-          }
-        })();
-      }
-    },
-    [connected, setExchangeContext, switchChain, walletChainId],
-  );
-
-  return [appChainId, setAppChainId];
+  return [appChainId, wrappedSetAppChainId];
 }

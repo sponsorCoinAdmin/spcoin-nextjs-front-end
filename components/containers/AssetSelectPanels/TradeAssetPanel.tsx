@@ -68,26 +68,51 @@ function TradeAssetPanelInner() {
 
   // Sync panel input with global amount (for *this* side)
   const typingUntilRef = useRef(0);
-  const currentAmount = containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+  const currentAmount =
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
 
   useEffect(() => {
-    if (!tokenAddr) return;
+    // If user is actively typing, don't overwrite
     if (isIntermediateDecimal(inputValue)) return;
     if (Date.now() < typingUntilRef.current) return;
 
+    // If token is cleared, explicitly reflect "0" in the input
+    if (!tokenAddr) {
+      if (inputValue !== '0') {
+        DEBUG && debugLog.log(`Input reset → token cleared: "${inputValue}" → "0"`);
+        setInputValue('0');
+      }
+      return;
+    }
+
+    // Normal sync when a token exists
     const formattedRaw = formatUnits(currentAmount ?? 0n, tokenDecimals);
     const formatted = clampDisplay(formattedRaw, maxInputSz);
-    if (inputValue !== formatted) setInputValue(formatted);
+    if (inputValue !== formatted) {
+      DEBUG && debugLog.log(`Input sync → "${inputValue}" → "${formatted}"`);
+      setInputValue(formatted);
+    }
   }, [tokenAddr, tokenDecimals, currentAmount, containerType, inputValue]);
+
+  // Ensure local panel amount is zeroed when token is cleared (keeps local/UI in lockstep)
+  useEffect(() => {
+    if (!tokenAddr) {
+      DEBUG && debugLog.log('Local amount reset → token cleared');
+      setLocalAmount(0n);
+    }
+  }, [tokenAddr, setLocalAmount]);
 
   // Emit debounced amount event (kept as-is if other parts listen)
   const lastDebouncedRef = useRef<bigint | null>(null);
-  const debouncedForPanel = containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? debouncedSell : debouncedBuy;
+  const debouncedForPanel =
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? debouncedSell : debouncedBuy;
 
   useEffect(() => {
     const directionOk =
-      (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL && tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
-      (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL && tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN);
+      (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
+        tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
+      (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
+        tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN);
     if (!directionOk) return;
 
     if (lastDebouncedRef.current === debouncedForPanel) return;
@@ -96,7 +121,12 @@ function TradeAssetPanelInner() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('spcoin:debouncedAmount', {
-          detail: { amount: debouncedForPanel, containerType, tradeDirection, token: tokenAddr || undefined },
+          detail: {
+            amount: debouncedForPanel,
+            containerType,
+            tradeDirection,
+            token: tokenAddr || undefined,
+          },
         }),
       );
     }
@@ -119,10 +149,12 @@ function TradeAssetPanelInner() {
       setLocalAmount(bi);
 
       if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
-        if (tradeDirection !== TRADE_DIRECTION.SELL_EXACT_OUT) setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
+        if (tradeDirection !== TRADE_DIRECTION.SELL_EXACT_OUT)
+          setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         if (sellAmount !== bi) setSellAmount(bi);
       } else {
-        if (tradeDirection !== TRADE_DIRECTION.BUY_EXACT_IN) setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN);
+        if (tradeDirection !== TRADE_DIRECTION.BUY_EXACT_IN)
+          setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN);
         if (buyAmount !== bi) setBuyAmount(bi);
       }
     } catch (e) {
@@ -142,21 +174,32 @@ function TradeAssetPanelInner() {
 
   // SSOT balance + mirror to context
   const chainId = exchangeContext?.network?.chainId ?? 1;
-  const { formatted: liveFormattedBalance, isLoading: balanceLoading, error: balanceError } = useBalanceSSOT({
+  const {
+    formatted: liveFormattedBalance,
+    isLoading: balanceLoading,
+    error: balanceError,
+  } = useBalanceSSOT({
     chainId,
     tokenAddress: tokenContract?.address as Address | undefined,
     tokenDecimals,
     containerType,
   });
 
-  const formattedBalance = balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
+  const formattedBalance = balanceError
+    ? '—'
+    : balanceLoading
+    ? '…'
+    : liveFormattedBalance ?? '0.0';
 
   const isInputDisabled =
     !tokenAddr ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
       containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
 
-  const noAutofillName = useMemo(() => `no-autofill-${Math.random().toString(36).slice(2)}`, []);
+  const noAutofillName = useMemo(
+    () => `no-autofill-${Math.random().toString(36).slice(2)}`,
+    [],
+  );
 
   return (
     <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
@@ -184,7 +227,13 @@ function TradeAssetPanelInner() {
         data-form-type="other"
       />
       {/* Invisible decoy for autofill managers */}
-      <input type="text" autoComplete="new-password" tabIndex={-1} aria-hidden="true" className="absolute opacity-0 h-0 w-0 pointer-events-none" />
+      <input
+        type="text"
+        autoComplete="new-password"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute opacity-0 h-0 w-0 pointer-events-none"
+      />
 
       <TokenSelectDropDown containerType={containerType} />
       <div className={styles.buySell}>{buySellText}</div>
@@ -200,7 +249,11 @@ function TradeAssetPanelInner() {
   );
 }
 
-export default function TradeAssetPanel({ containerType }: { containerType: SP_COIN_DISPLAY }) {
+export default function TradeAssetPanel({
+  containerType,
+}: {
+  containerType: SP_COIN_DISPLAY;
+}) {
   return (
     <TokenPanelProvider containerType={containerType}>
       <TradeAssetPanelInner />
