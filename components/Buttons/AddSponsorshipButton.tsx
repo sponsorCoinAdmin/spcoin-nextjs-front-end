@@ -1,5 +1,4 @@
 // File: components/buttons/AddSponsorshipButton.tsx
-
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
@@ -9,21 +8,20 @@ import { useActiveDisplay } from '@/lib/context/hooks';
 const AddSponsorshipButton = () => {
   const { setActiveDisplay } = useActiveDisplay();
 
-  const openRecipientPanel = () =>
-    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  const openSponsorConfig = () =>
+    setActiveDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
 
   return (
-    // Use a <div> so existing CSS (targeting this class) still applies
     <div
       role="button"
       tabIndex={0}
       aria-label="Add Sponsorship"
       className={styles.addSponsorshipDiv}
-      onClick={openRecipientPanel}
+      onClick={openSponsorConfig}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          openRecipientPanel();
+          openSponsorConfig();
         }
       }}
     >
