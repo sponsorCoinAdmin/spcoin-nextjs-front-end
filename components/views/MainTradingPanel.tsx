@@ -1,3 +1,4 @@
+// File: components/panes/MainTradingPanel.tsx
 'use client';
 
 import { useMemo, useCallback } from 'react';
@@ -12,6 +13,7 @@ import {
   useSellTokenContract,
   useBuyTokenContract,
   useErrorMessage,
+  useExchangeContext,
 } from '@/lib/context/hooks';
 
 import {
@@ -19,12 +21,13 @@ import {
   STATUS,
   TokenContract,
   ErrorMessage,
+  WalletAccount,
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { TokenSelectPanel } from '../containers/AssetSelectPanels';
+import { TokenSelectPanel, RecipientSelectPanel } from '../containers/AssetSelectPanels';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -39,10 +42,18 @@ export default function MainTradingPanel() {
 
   const [___, setErrorMessage] = useErrorMessage();
 
+  // Access provider setters for recipient selection
+  const { setRecipientAccount } = useExchangeContext();
+
   const isTokenScrollPanel = useMemo(
     () =>
       activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
       activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
+    [activeDisplay]
+  );
+
+  const isRecipientPanel = useMemo(
+    () => activeDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
     [activeDisplay]
   );
 
@@ -65,7 +76,7 @@ export default function MainTradingPanel() {
   debugLog.log(`🔍 MainTradingPanel render`);
   debugLog.log(`🧩 activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
   debugLog.log(
-    `💬 isTokenScrollPanel = ${isTokenScrollPanel}, isErrorMessagePanel = ${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
+    `💬 isTokenScrollPanel=${isTokenScrollPanel}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
   );
 
   const closePanelCallback = useCallback(() => {
@@ -93,6 +104,28 @@ export default function MainTradingPanel() {
     [activeDisplay, setSellTokenContract, setBuyTokenContract]
   );
 
+  // When a recipient is picked from the RecipientSelectPanel
+  const setRecipientFromPanel = useCallback(
+    (asset: TokenContract | WalletAccount) => {
+      // Heuristic: WalletAccount has a "type" field in your types; TokenContract doesn't.
+      const isWalletAccount =
+        asset && typeof (asset as any).type === 'string';
+
+      debugLog.log(
+        `👤 setRecipientFromPanel called; isWalletAccount=${isWalletAccount}`
+      );
+
+      if (isWalletAccount) {
+        setRecipientAccount(asset as WalletAccount);
+      } else {
+        debugLog.warn('setRecipientFromPanel received a TokenContract; ignoring for recipient.');
+      }
+
+      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    },
+    [setRecipientAccount, setActiveDisplay]
+  );
+
   const setErrorCallback = useCallback(
     (errorMsg: string, source: string = 'MainTradingPanel', errCode: number = 500): ErrorMessage => {
       const errorObj: ErrorMessage = {
@@ -114,6 +147,8 @@ export default function MainTradingPanel() {
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
         <TradeContainerHeader closePanelCallback={closePanelCallback} />
         <TradingStationPanel />
+
+        {/* Token selection (sell/buy) */}
         <TokenSelectPanel
           isActive={isTokenScrollPanel}
           closePanelCallback={closePanelCallback}
@@ -121,7 +156,15 @@ export default function MainTradingPanel() {
           /** 👇 provide the opposing address so duplicate check works */
           peerAddress={peerAddress}
         />
-        {/* ErrorMessagePanel only needs isActive now; it dismisses itself and the provider/parent controls closing */}
+
+        {/* Recipient selection panel */}
+        <RecipientSelectPanel
+          isActive={isRecipientPanel}
+          closePanelCallback={closePanelCallback}
+          setTradingTokenCallback={setRecipientFromPanel}
+        />
+
+        {/* Error panel */}
         <ErrorMessagePanel isActive={isErrorMessagePanel} />
       </div>
     </div>

@@ -1,34 +1,54 @@
-// File: components/containers/RecipientSelectPanel.tsx
+// File: components/containers/AssetSelectPanels/RecipientSelectPanel.tsx
 'use client';
 
-import { useEffect, useCallback } from 'react';
-import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
+import { useMemo, useCallback } from 'react';
+import type { Address } from 'viem';
+import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
+import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
-const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SCROLL_PANEL_CONTEXT === 'true';
-const debugLog = createDebugLogger('RecipientSelectPanel', DEBUG_ENABLED, LOG_TIME);
+import { AssetSelectProvider } from '@/lib/context';
+import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 
 interface RecipientSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  setTradingTokenCallback: (wallet: WalletAccount) => void;
+  /** Recipient selection returns a WalletAccount; provider accepts TokenContract | WalletAccount */
+  setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
+  /** Included for API symmetry; not usually needed for recipients */
+  peerAddress?: string | Address;
 }
 
 export default function RecipientSelectPanel({
   isActive,
   closePanelCallback,
   setTradingTokenCallback,
+  peerAddress,
 }: RecipientSelectPanelProps) {
-  // This panel should always advertise itself explicitly as the RECIPIENT panel.
-  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+  const { activeDisplay } = useActiveDisplay();
+  const { exchangeContext } = useExchangeContext();
+  const chainId = exchangeContext?.network?.chainId ?? 1;
 
-  // Adapt parent close callback to provider's (fromUser: boolean) signature
+  // Match TokenSelectPanel: pass the current display (which will be RECIPIENT_SELECT_PANEL when active)
+  const initialPanelBag: AssetSelectBag = useMemo(
+    () =>
+      ({
+        type: activeDisplay as SP_COIN_DISPLAY,
+        chainId,
+        ...(peerAddress ? { peerAddress } : {}),
+      } as AssetSelectBag),
+    [activeDisplay, peerAddress, chainId]
+  );
+
+  // Same instanceId strategy (panel kind + chain)
+  const instanceId = useMemo(
+    () =>
+      `RECIPIENT_SELECT_${SP_COIN_DISPLAY[activeDisplay as SP_COIN_DISPLAY] ?? 'UNKNOWN'}_${chainId}`,
+    [activeDisplay, chainId]
+  );
+
   const closeForProvider = useCallback(
     (_fromUser: boolean) => {
       closePanelCallback();
@@ -36,35 +56,19 @@ export default function RecipientSelectPanel({
     [closePanelCallback]
   );
 
-  if (!isActive) {
-    DEBUG_ENABLED && debugLog.log(`⏭️ RecipientSelectPanel → not active, skipping render`);
-    return null;
-  }
-
-  DEBUG_ENABLED &&
-    debugLog.log(`🧩 RecipientSelectPanel → activating (containerType=${containerType})`);
+  if (!isActive) return null;
 
   return (
-    <AssetSelectProvider
-      closePanelCallback={closeForProvider}
-      // Provider accepts TokenContract | WalletAccount; WalletAccount is valid here.
-      setTradingTokenCallback={setTradingTokenCallback as any}
-      containerType={containerType}
-    >
-      <RecipientSelectPanelInner />
-    </AssetSelectProvider>
+    <AssetSelectDisplayProvider instanceId={instanceId}>
+      <AssetSelectProvider
+        key={instanceId}
+        closePanelCallback={closeForProvider}
+        setTradingTokenCallback={setTradingTokenCallback}
+        containerType={activeDisplay as SP_COIN_DISPLAY}
+        initialPanelBag={initialPanelBag}
+      >
+        <AssetSelectPanel />
+      </AssetSelectProvider>
+    </AssetSelectDisplayProvider>
   );
-}
-
-function RecipientSelectPanelInner() {
-  const { instanceId, containerType } = useAssetSelectContext();
-
-  useEffect(() => {
-    DEBUG_ENABLED &&
-      debugLog.log(
-        `🧩 RecipientSelectPanel mounted → containerType=${containerType}, instanceId=${instanceId}`
-      );
-  }, [containerType, instanceId]);
-
-  return <AssetSelectPanel />;
 }
