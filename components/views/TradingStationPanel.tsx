@@ -13,6 +13,7 @@ import { useActiveDisplay } from '@/lib/context/hooks';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import FeeDisclosure from '../containers/FeeDisclosure';
+import RecipientSelectContainer from './RecipientSelectContainer';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -41,6 +42,7 @@ export default function TradingStationPanel() {
       <BuySellSwapArrowButton />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceResponse} />
+      <RecipientSelectContainer />
       <FeeDisclosure />
     </div>
   );
