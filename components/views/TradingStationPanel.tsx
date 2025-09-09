@@ -40,9 +40,9 @@ export default function TradingStationPanel() {
       <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
       <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
       <BuySellSwapArrowButton />
+      <RecipientSelectContainer />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceResponse} />
-      <RecipientSelectContainer />
       <FeeDisclosure />
     </div>
   );

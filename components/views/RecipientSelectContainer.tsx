@@ -1,33 +1,58 @@
-// File: components/containers/RecipientSelectContainer.tsx
-'use client';
+"use client";
 
-import React, { useCallback } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { clsx } from 'clsx';
-import styles from '@/styles/Exchange.module.css';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
+import React, { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { clsx } from "clsx";
+import styles from "@/styles/Exchange.module.css";
+import cog_png from "@/public/assets/miscellaneous/cog.png";
 
-import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
-import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
+import { WalletAccount } from "@/lib/structure/types";
+import { getPublicFileUrl } from "@/lib/spCoin/guiUtils";
+import { SP_COIN_DISPLAY } from "@/lib/structure";
+import SponsorRateConfigPanel from "../containers/SponsorRateConfigPanel";
+import { useExchangeContext } from "@/lib/context";
+import { RecipientSelectDropDown } from "../containers/AssetSelectDropDowns";
+import { useActiveDisplay } from "@/lib/context/hooks";
 
 const RecipientSelectContainer: React.FC = () => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Access global context
   const { setActiveDisplay } = useActiveDisplay();
 
-  const recipient = exchangeContext?.accounts?.recipientAccount;
+  const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
+    exchangeContext.accounts.recipientAccount
+  );
+  const [siteExists, setSiteExists] = useState<boolean>(false);
 
-  // Fallback link for recipient info page
-  const baseURL = getPublicFileUrl('assets/accounts/site-info.html');
-  const sitekey = recipient?.address ? `siteKey=${recipient.address}` : '';
-  const fallbackUrl = `Recipient?url=${baseURL}?${sitekey}`;
-  const linkHref = recipient?.website && recipient.website.trim() !== ''
-    ? `Recipient?url=${recipient.website}`
-    : fallbackUrl;
+  // ✅ Default URL if recipient website does not exist
+  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
+  const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : "";
+  let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
-  // Clear recipient in global context and return to main panel
+    // Open ratio config panel
+  const openSponsorRateConfig = useCallback(() => {
+    setActiveDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  }, [setActiveDisplay]);
+
+  // ✅ Check if recipient's website exists
+  useEffect(() => {
+    const website = recipientWallet?.website;
+    if (website && website !== "N/A" && website.trim() !== "") {
+      fetch(website, { method: "HEAD", mode: "no-cors" })
+        .then(() => {
+          setSiteExists(true); // Assume the site exists since we can't check response.ok
+          console.log(`Site ${website} is reachable.`);
+        })
+        .catch((error) => {
+          console.error(`ERROR: WalletContainer.Fetching ${website}:`, error);
+          setSiteExists(false);
+        });
+    } else {
+      setSiteExists(false);
+    }
+  }, [recipientWallet?.website]); // Keep dependency array unchanged
+
+    // Clear recipient in global context and return to main panel
   const clearRecipient = useCallback(() => {
     setExchangeContext(prev => {
       const next = structuredClone(prev);
@@ -37,39 +62,26 @@ const RecipientSelectContainer: React.FC = () => {
     setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [setExchangeContext, setActiveDisplay]);
 
-  // Open ratio config panel
-  const openSponsorRateConfig = useCallback(() => {
-    setActiveDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-  }, [setActiveDisplay]);
-
-  // Open recipient selection panel (the dropdown should call this on click)
-  const openRecipientPanel = useCallback(() => {
-    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
-  }, [setActiveDisplay]);
-
   return (
-    <div
-      id="recipientContainerDiv_ID"
-      className={clsx(styles.inputs, styles.AccountSelectContainer)}
-    >
+    <>
+      <div
+        id="recipientContainerDiv_ID"
+        className={clsx(styles.inputs, styles.AccountSelectContainer)}
+      >
       <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
-
       <div className={styles.yourRecipient}>You are sponsoring:</div>
-
-      <Link href={linkHref} className={styles.recipientName}>
-        {recipient?.name || 'No recipient selected'}
-      </Link>
-
+      {recipientWallet && siteExists ? (
+        <Link href={`Recipient?url=${recipientWallet.website}`} className={styles.recipientName}>
+          {recipientWallet.name}
+        </Link>
+      ) : (
+        <Link href={defaultStaticFileUrl} className={styles.recipientName}>
+          {recipientWallet?.name || "No recipient selected"}
+        </Link>
+      )}
       <div className={styles.recipientSelect}>
-        {/* Keep the dropdown UI, but it should open the panel instead of mutating state locally */}
-        <RecipientSelectDropDown
-          recipientAccount={recipient}
-          // kept for backward compat; panel handles selection now
-          callBackAccount={() => {}}
-          // ensure your dropdown triggers openRecipientPanel on click internally
-        />
+        <RecipientSelectDropDown recipientAccount={recipientWallet} callBackAccount={setRecipientWallet} />
       </div>
-
       <div>
         <Image
           src={cog_png}
@@ -80,15 +92,12 @@ const RecipientSelectContainer: React.FC = () => {
           onClick={openSponsorRateConfig}
         />
       </div>
-
-      <div
-        id="clearSponsorSelect"
-        className={styles.clearSponsorSelect}
-        onClick={clearRecipient}
-      >
+      <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={clearRecipient}>
         X
       </div>
-    </div>
+    </div >
+      <SponsorRateConfigPanel />
+    </>
   );
 };
 
