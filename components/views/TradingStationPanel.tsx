@@ -30,13 +30,17 @@ export default function TradingStationPanel() {
 
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
 
+  // Narrow the unknown from the hook to the expected prop type at the callsite.
+  // If you later type `usePriceAPI` to return `PriceResponse_V1`, you can remove the cast.
+  const priceResponse = (isLoadingPrice ? undefined : (priceData as any));
+
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
       <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
       <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
       <BuySellSwapArrowButton />
       <PriceButton isLoadingPrice={isLoadingPrice} />
-      <AffiliateFee priceResponse={priceData} />
+      <AffiliateFee priceResponse={priceResponse} />
       <FeeDisclosure />
     </div>
   );
