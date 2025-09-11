@@ -5,10 +5,9 @@ import { loadLocalExchangeContext } from './loadLocalExchangeContext';
 import {
   WalletAccount,
   ExchangeContext,
-  SP_COIN_DISPLAY,
-  STATUS, // ✅ use enum, not raw string
+  STATUS,
 } from '@/lib/structure';
-import { Address } from 'viem'; // ✅ ensure Address type for casting
+import { Address } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -20,8 +19,9 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  * Initializes the ExchangeContext by hydrating from localStorage and optionally
  * augmenting it with connected wallet metadata if `address` is provided.
  *
- * - Normalizes panel state via `sanitizeExchangeContext` (coerces settings.activeDisplay).
- * - Seeds transitional `settings_NEW.spCoinDisplay` for legacy paths if missing.
+ * Notes:
+ * - No legacy `settings` / `settings_NEW` writes. Panel state is owned elsewhere
+ *   (via MAIN_PANEL_NODE_STORAGE_KEY) and is not touched here.
  */
 export async function initExchangeContext(
   chainId: number,
@@ -38,53 +38,41 @@ export async function initExchangeContext(
   debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
   debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
 
-  // ✅ Ensure the transitional settings_NEW bag exists with a sane default
-  const ctxAny = sanitized as any;
-  if (!ctxAny.settings_NEW) {
-    ctxAny.settings_NEW = {
-      spCoinDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-    };
-  } else if (ctxAny.settings_NEW.spCoinDisplay === undefined) {
-    ctxAny.settings_NEW.spCoinDisplay = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-  }
-
+  // 🔐 Wallet metadata enrichment (does not affect panel storage)
   if (isConnected && address) {
     try {
       const res = await fetch(`/assets/accounts/${address}/wallet.json`);
       const metadata = res.ok ? (await res.json()) : null;
 
       if (metadata) {
-        // ✅ Merge metadata safely, ensuring required WalletAccount fields exist
         const merged: WalletAccount = {
           name: metadata.name ?? '',
           symbol: metadata.symbol ?? '',
           type: metadata.type ?? 'ERC20_WALLET',
           website: metadata.website ?? '',
           description: metadata.description ?? '',
-          status: STATUS.INFO, // choose a sensible default status for loaded metadata
+          status: STATUS.INFO,
           address: address as Address,
           logoURL: metadata.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
           balance: BigInt(metadata.balance ?? 0),
         };
         sanitized.accounts.connectedAccount = merged;
       } else {
-        // ✅ Fallback WalletAccount using proper enum and types
         const fallback: WalletAccount = {
           address: address as Address,
           type: 'ERC20_WALLET',
           name: '',
           symbol: '',
           website: '',
-          status: STATUS.MESSAGE_ERROR, // ← enum, not string
+          status: STATUS.MESSAGE_ERROR,
           description: `Account ${address} not registered on this site`,
-          logoURL: '/assets/miscellaneous/SkullAndBones.png', // no '/public' prefix
+          logoURL: '/assets/miscellaneous/SkullAndBones.png',
           balance: 0n,
         };
         sanitized.accounts.connectedAccount = fallback;
       }
     } catch (err) {
       debugLog.error('⛔ Failed to load wallet.json:', err);
-      // On fetch error, still ensure we set a sensible fallback
       const fallback: WalletAccount = {
         address: address as Address,
         type: 'ERC20_WALLET',

@@ -30,7 +30,7 @@ const RecipientSelectContainer: React.FC = () => {
   let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
     // Open ratio config panel
-  const openSponsorRateConfig = useCallback(() => {
+  const toggleSponsorRateConfig = useCallback(() => {
     setActiveDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
   }, [setActiveDisplay]);
 
@@ -68,7 +68,6 @@ const RecipientSelectContainer: React.FC = () => {
         id="recipientContainerDiv_ID"
         className={clsx(styles.inputs, styles.AccountSelectContainer)}
       >
-      <div className={styles.lineDivider}>-------------------------------------------------------------------</div>
       <div className={styles.yourRecipient}>You are sponsoring:</div>
       {recipientWallet && siteExists ? (
         <Link href={`Recipient?url=${recipientWallet.website}`} className={styles.recipientName}>
@@ -89,7 +88,7 @@ const RecipientSelectContainer: React.FC = () => {
           width={20}
           height={20}
           alt="Settings"
-          onClick={openSponsorRateConfig}
+          onClick={toggleSponsorRateConfig}
         />
       </div>
       <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={clearRecipient}>
