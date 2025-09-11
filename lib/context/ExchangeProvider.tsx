@@ -14,6 +14,7 @@ import {
   ErrorMessage,
   WalletAccount,
   NetworkElement,
+  SP_COIN_DISPLAY, // ← for legacy migration mapping
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -21,7 +22,7 @@ import { useProviderSetters } from '@/lib/context/providers/Exchange/useProvider
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
-// Panel-tree types & defaults (no separate storage key anymore)
+// Panel-tree types & defaults
 import {
   ExchangeContextWithPanels,
   defaultMainPanelNode,
@@ -62,7 +63,8 @@ export type ExchangeContextType = {
 
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
-// ✅ Strong helper so `network` never becomes `{}` (which breaks typing)
+/* --------------------------------- Helpers -------------------------------- */
+
 function ensureNetwork(n?: Partial<NetworkElement>): NetworkElement {
   return {
     connected: !!n?.connected,
@@ -75,7 +77,6 @@ function ensureNetwork(n?: Partial<NetworkElement>): NetworkElement {
   };
 }
 
-// 🔎 Narrow shape check for a PanelNode tree
 function isMainPanelNode(x: any): x is MainPanelNode {
   return (
     !!x &&
@@ -85,6 +86,62 @@ function isMainPanelNode(x: any): x is MainPanelNode {
     Array.isArray(x.children)
   );
 }
+
+const OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
+  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
+];
+const TRADING = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+
+function clone<T>(o: T): T {
+  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+}
+
+function findNode(root: MainPanelNode | undefined, panel: SP_COIN_DISPLAY): MainPanelNode | null {
+  if (!root) return null as any;
+  if (root.panel === panel) return root as any;
+  for (const c of root.children || []) {
+    const n = findNode(c as any, panel);
+    if (n) return n;
+  }
+  return null;
+}
+
+function setVisible(root: MainPanelNode, panel: SP_COIN_DISPLAY, visible: boolean) {
+  const n = findNode(root, panel);
+  if (n) n.visible = visible;
+}
+
+/**
+ * One-time migration: if legacy settings.activeDisplay exists,
+ * reflect it into the visibility tree (radio behavior for overlays),
+ * then drop `activeDisplay` from settings.
+ */
+function migrateLegacyActiveDisplayToTree(
+  tree: MainPanelNode,
+  activeDisplay: unknown
+): MainPanelNode {
+  if (typeof activeDisplay !== 'number') return tree;
+
+  const next = clone(tree);
+
+  if (activeDisplay === TRADING) {
+    OVERLAY_GROUP.forEach((p) => setVisible(next, p, false));
+    setVisible(next, TRADING, true);
+  } else if (OVERLAY_GROUP.includes(activeDisplay)) {
+    OVERLAY_GROUP.forEach((p) => setVisible(next, p, p === activeDisplay));
+    setVisible(next, TRADING, false);
+  } else {
+    // Non-overlay: just ensure it's visible (don’t hide others)
+    setVisible(next, activeDisplay, true);
+  }
+
+  return next;
+}
+
+/* --------------------------------- Provider -------------------------------- */
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const wagmiChainId = useWagmiChainId();
@@ -115,7 +172,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       };
 
       try {
-        // Persist the updated base context (panel tree is saved by a separate effect below)
         saveLocalExchangeContext(nextBase);
       } catch (e) {
         if (DEBUG_ENABLED) debugLog.warn('⚠️ saveLocalExchangeContext failed', e);
@@ -134,37 +190,53 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const sanitizedBase = await initExchangeContext(wagmiChainId, isConnected, address);
 
-      // 🔁 Read panel settings from exchangeContext.settings.mainPanelNode
+      // Read current settings
       const settingsAny = (sanitizedBase as any).settings ?? {};
+      const legacyActiveDisplay = settingsAny.activeDisplay; // may exist from old system
+
+      // Load or seed panel tree
       let mainPanelNode: MainPanelNode | undefined = isMainPanelNode(settingsAny.mainPanelNode)
         ? (settingsAny.mainPanelNode as MainPanelNode)
         : undefined;
 
-      // Normalize names for human readability
-      if (mainPanelNode) {
+      if (!mainPanelNode) {
+        mainPanelNode = ensurePanelNames(defaultMainPanelNode);
+        if (DEBUG_ENABLED) debugLog.log('info', '🌱 Seeded mainPanelNode from default');
+      } else {
         mainPanelNode = ensurePanelNames(mainPanelNode);
       }
 
-      // If missing/invalid → seed from default (with names) and store back into exchangeContext.settings
-      if (!mainPanelNode) {
-        mainPanelNode = ensurePanelNames(defaultMainPanelNode);
+      // One-time migration from legacy activeDisplay → tree
+      if (typeof legacyActiveDisplay === 'number') {
+        const migrated = migrateLegacyActiveDisplayToTree(mainPanelNode, legacyActiveDisplay);
+        mainPanelNode = ensurePanelNames(migrated);
+
+        // drop legacy key from settings going forward
+        const { activeDisplay: _drop, ...rest } = settingsAny;
+        (sanitizedBase as any).settings = { ...rest, mainPanelNode };
+
+        try {
+          saveLocalExchangeContext(sanitizedBase);
+          if (DEBUG_ENABLED) debugLog.log('info', '🧹 Migrated activeDisplay → tree and removed legacy key');
+        } catch (e) {
+          if (DEBUG_ENABLED) debugLog.warn('⚠️ Failed to persist after migration', e);
+        }
+      } else if (!settingsAny.mainPanelNode) {
+        // Save seeded tree if it didn’t exist
         (sanitizedBase as any).settings = { ...settingsAny, mainPanelNode };
         try {
           saveLocalExchangeContext(sanitizedBase);
-          if (DEBUG_ENABLED)
-            debugLog.log('info', '🌱 Seeded settings.mainPanelNode (named) from default and saved exchangeContext');
+          if (DEBUG_ENABLED) debugLog.log('info', '💾 Saved seeded mainPanelNode into exchangeContext');
         } catch (e) {
-          if (DEBUG_ENABLED) debugLog.warn('⚠️ Failed saving seeded mainPanelNode into exchangeContext', e);
+          if (DEBUG_ENABLED) debugLog.warn('⚠️ Failed to save seeded mainPanelNode', e);
         }
       } else {
-        // If we normalized (added names), write back once so storage stays human-readable
+        // Ensure normalized names are written back once
         (sanitizedBase as any).settings = { ...settingsAny, mainPanelNode };
         try {
           saveLocalExchangeContext(sanitizedBase);
-          if (DEBUG_ENABLED)
-            debugLog.log('info', '🌳 settings.mainPanelNode normalized with names and saved');
-        } catch (e) {
-          if (DEBUG_ENABLED) debugLog.warn('⚠️ Failed to persist normalized mainPanelNode', e);
+        } catch {
+          /* ignore */
         }
       }
 
@@ -275,14 +347,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!contextState?.mainPanelNode) return;
 
-    // Take the current base exchangeContext (drop Extended-only fields)
     const baseCtx: any = { ...(contextState as ExchangeContextTypeOnly) };
-
-    // Normalize names right before saving so storage is always human-readable
     const namedTree = ensurePanelNames(contextState.mainPanelNode);
 
-    // Ensure settings bag exists and store full MainPanelNode with names
-    baseCtx.settings = { ...(baseCtx.settings ?? {}), mainPanelNode: namedTree };
+    // Drop any lingering legacy activeDisplay when saving (safety)
+    const { activeDisplay: _drop, ...currSettings } = baseCtx.settings ?? {};
+
+    baseCtx.settings = { ...currSettings, mainPanelNode: namedTree };
 
     try {
       saveLocalExchangeContext(baseCtx);

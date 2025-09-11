@@ -6,7 +6,7 @@ import type { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
 import { AssetSelectProvider } from '@/lib/context';
@@ -27,32 +27,29 @@ export default function RecipientSelectPanel({
   setTradingTokenCallback,
   peerAddress,
 }: RecipientSelectPanelProps) {
-  const { activeDisplay } = useActiveDisplay();
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
-  // Match TokenSelectPanel: pass the current display (which will be RECIPIENT_SELECT_PANEL when active)
+  // Recipient panel is a single known overlay; no need for useActiveDisplay
+  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+
   const initialPanelBag: AssetSelectBag = useMemo(
     () =>
       ({
-        type: activeDisplay as SP_COIN_DISPLAY,
+        type: containerType,
         chainId,
         ...(peerAddress ? { peerAddress } : {}),
       } as AssetSelectBag),
-    [activeDisplay, peerAddress, chainId]
+    [containerType, peerAddress, chainId]
   );
 
-  // Same instanceId strategy (panel kind + chain)
   const instanceId = useMemo(
-    () =>
-      `RECIPIENT_SELECT_${SP_COIN_DISPLAY[activeDisplay as SP_COIN_DISPLAY] ?? 'UNKNOWN'}_${chainId}`,
-    [activeDisplay, chainId]
+    () => `RECIPIENT_SELECT_${SP_COIN_DISPLAY[containerType]}_${chainId}`,
+    [containerType, chainId]
   );
 
   const closeForProvider = useCallback(
-    (_fromUser: boolean) => {
-      closePanelCallback();
-    },
+    (_fromUser: boolean) => { closePanelCallback(); },
     [closePanelCallback]
   );
 
@@ -64,7 +61,7 @@ export default function RecipientSelectPanel({
         key={instanceId}
         closePanelCallback={closeForProvider}
         setTradingTokenCallback={setTradingTokenCallback}
-        containerType={activeDisplay as SP_COIN_DISPLAY}
+        containerType={containerType}
         initialPanelBag={initialPanelBag}
       >
         <AssetSelectPanel />

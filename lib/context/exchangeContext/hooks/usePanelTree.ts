@@ -1,78 +1,130 @@
 // File: lib/context/exchangeContext/hooks/usePanelTree.ts
-
 'use client';
 
-import { useMemo, useCallback } from 'react';
-import { SP_COIN_DISPLAY } from '@/lib/structure/enums/spCoinDisplay';
-import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
-import {
-  flattenPanels,
-  findNode,
-  toggleVisibility,
-  openOnly,
-} from '@/lib/context/exchangeContext/helpers/panelTree';
+import { useCallback, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
-type SetMainPanelNodeFn = (
-  updater: (prev: MainPanelNode | null) => MainPanelNode | null,
-  hookName?: string
-) => void;
+const OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
+  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
+];
 
-// Incremental compatibility: provider may not expose setMainPanelNode yet.
-type CtxMaybePanels = {
-  exchangeContext: any;
-  setMainPanelNode?: SetMainPanelNodeFn;
-};
+const TRADING = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+
+function clone<T>(o: T): T {
+  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+}
+
+function findNode(root: MainPanelNode | undefined, panel: SP_COIN_DISPLAY): any | null {
+  if (!root) return null;
+  if (root.panel === panel) return root;
+  for (const c of root.children || []) {
+    const n = findNode(c as any, panel);
+    if (n) return n;
+  }
+  return null;
+}
 
 export function usePanelTree() {
-  const ctx = useExchangeContext() as CtxMaybePanels;
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const root = exchangeContext.settings?.mainPanelNode as MainPanelNode | undefined;
 
-  // Prefer the context node; fall back to a stable default so UI doesn’t crash pre-hydration.
-  const root: MainPanelNode =
-    (ctx.exchangeContext?.mainPanelNode as MainPanelNode | undefined) ?? defaultMainPanelNode;
+  const isVisible = useCallback(
+    (panel: SP_COIN_DISPLAY) => {
+      const n = findNode(root, panel);
+      return !!n?.visible;
+    },
+    [root]
+  );
 
-  // Use provider setter if available; otherwise a safe no-op (until wired).
-  const setMainPanelNode: SetMainPanelNodeFn =
-    ctx.setMainPanelNode ??
-    (() => {
-      if (process.env.NODE_ENV !== 'production') {
-        // eslint-disable-next-line no-console
-        console.warn('[usePanelTree] setMainPanelNode is not available yet. Wire it in ExchangeProvider to enable updates.');
+  const showPanel = useCallback(
+    (panel: SP_COIN_DISPLAY) => {
+      setExchangeContext((prev) => {
+        const r = prev.settings?.mainPanelNode as MainPanelNode | undefined;
+        if (!r) return prev;
+        const next = clone(r);
+        const n = findNode(next, panel);
+        if (n) n.visible = true;
+        return { ...prev, settings: { ...prev.settings, mainPanelNode: next } };
+      }, 'usePanelTree:showPanel');
+    },
+    [setExchangeContext]
+  );
+
+  const hidePanel = useCallback(
+    (panel: SP_COIN_DISPLAY) => {
+      setExchangeContext((prev) => {
+        const r = prev.settings?.mainPanelNode as MainPanelNode | undefined;
+        if (!r) return prev;
+        const next = clone(r);
+        const n = findNode(next, panel);
+        if (n) n.visible = false;
+        return { ...prev, settings: { ...prev.settings, mainPanelNode: next } };
+      }, 'usePanelTree:hidePanel');
+    },
+    [setExchangeContext]
+  );
+
+  /** Radio behavior for overlays */
+  const openOverlay = useCallback(
+    (panel: SP_COIN_DISPLAY) => {
+      setExchangeContext((prev) => {
+        const r = prev.settings?.mainPanelNode as MainPanelNode | undefined;
+        if (!r) return prev;
+        const next = clone(r);
+
+        // hide all overlays
+        for (const p of OVERLAY_GROUP) {
+          const n = findNode(next, p);
+          if (n) n.visible = false;
+        }
+        // show requested overlay
+        const target = findNode(next, panel);
+        if (target) target.visible = true;
+
+        // hide trading station
+        const trading = findNode(next, TRADING);
+        if (trading) trading.visible = false;
+
+        return { ...prev, settings: { ...prev.settings, mainPanelNode: next } };
+      }, 'usePanelTree:openOverlay');
+    },
+    [setExchangeContext]
+  );
+
+  const closeOverlays = useCallback(() => {
+    setExchangeContext((prev) => {
+      const r = prev.settings?.mainPanelNode as MainPanelNode | undefined;
+      if (!r) return prev;
+      const next = clone(r);
+
+      for (const p of OVERLAY_GROUP) {
+        const n = findNode(next, p);
+        if (n) n.visible = false;
       }
-    });
+      const trading = findNode(next, TRADING);
+      if (trading) trading.visible = true;
 
-  // Derived helpers
-  const flat = useMemo(() => flattenPanels(root), [root]);
+      return { ...prev, settings: { ...prev.settings, mainPanelNode: next } };
+    }, 'usePanelTree:closeOverlays');
+  }, [setExchangeContext]);
 
-  const get = useCallback((panel: SP_COIN_DISPLAY) => findNode(root, panel), [root]);
-
-  const toggle = useCallback(
-    (panel: SP_COIN_DISPLAY, hookName = 'usePanelTree:toggle') => {
-      setMainPanelNode((prev) => {
-        const base = prev ?? defaultMainPanelNode;
-        return toggleVisibility(base, panel);
-      }, hookName);
-    },
-    [setMainPanelNode]
+  const isTokenScrollVisible = useMemo(
+    () => isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) || isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL),
+    [isVisible]
   );
 
-  const openOnlyIn = useCallback(
-    (panel: SP_COIN_DISPLAY, group?: SP_COIN_DISPLAY[], hookName = 'usePanelTree:openOnlyIn') => {
-      setMainPanelNode((prev) => {
-        const base = prev ?? defaultMainPanelNode;
-        return openOnly(base, panel, group);
-      }, hookName);
-    },
-    [setMainPanelNode]
-  );
-
-  const replace = useCallback(
-    (nextRoot: MainPanelNode, hookName = 'usePanelTree:replace') => {
-      setMainPanelNode(() => nextRoot, hookName);
-    },
-    [setMainPanelNode]
-  );
-
-  return { root, flat, get, toggle, openOnlyIn, replace };
+  return {
+    isVisible,
+    showPanel,
+    hidePanel,
+    openOverlay,
+    closeOverlays,
+    // small conveniences used by MainTradingPanel
+    isTokenScrollVisible,
+  };
 }

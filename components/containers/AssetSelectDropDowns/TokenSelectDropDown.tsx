@@ -10,13 +10,13 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import {
   useBuyTokenContract,
   useSellTokenContract,
-  useActiveDisplay,
 } from '@/lib/context/hooks';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { defaultMissingImage } from '@/lib/network/utils';;
+import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -34,7 +34,7 @@ function TokenSelectDropDown({ containerType }: Props) {
   const [tokenContract] =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellHook : buyHook;
 
-  const { setActiveDisplay } = useActiveDisplay();
+  const { openOverlay } = usePanelTree();
 
   // Resolve logo from tokenContract.logoURL, with normalization & fallback.
   const logoURL = useMemo(() => {
@@ -71,12 +71,13 @@ function TokenSelectDropDown({ containerType }: Props) {
     // Optional: clear FSM trace before opening (keep if useful to you)
     clearFSMTraceFromMemory();
 
-    setActiveDisplay(
+    // Open as overlay (radio group) via the panel tree; this also hides Trading Station
+    openOverlay(
       containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
         ? SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
         : SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL
     );
-  }, [containerType, setActiveDisplay]);
+  }, [containerType, openOverlay]);
 
   // Click handler for the token image (restored)
   const handleSelect = useCallback(() => {

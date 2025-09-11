@@ -9,7 +9,6 @@ import TradingStationPanel from './TradingStationPanel';
 import ErrorMessagePanel from './ErrorMessagePanel';
 
 import {
-  useActiveDisplay,
   useSellTokenContract,
   useBuyTokenContract,
   useErrorMessage,
@@ -25,16 +24,17 @@ import {
 } from '@/lib/structure';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { TokenSelectPanel, RecipientSelectPanel } from '../containers/AssetSelectPanels';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
 const debugLog = createDebugLogger('MainTradingPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function MainTradingPanel() {
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+  // Tree-driven visibility
+  const { isVisible, openOverlay, closeOverlays, isTokenScrollVisible } = usePanelTree();
 
   // Current selections (needed to derive peerAddress)
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
@@ -45,54 +45,42 @@ export default function MainTradingPanel() {
   // Access provider setters for recipient selection
   const { setRecipientAccount } = useExchangeContext();
 
-  const isTokenScrollPanel = useMemo(
-    () =>
-      activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ||
-      activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
-    [activeDisplay]
-  );
+  const isTradingStationVisible = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  const isErrorMessagePanel = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
 
-  const isRecipientPanel = useMemo(
-    () => activeDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
-    [activeDisplay]
-  );
-
-  const isErrorMessagePanel = useMemo(
-    () => activeDisplay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-    [activeDisplay]
-  );
-
-  // Derive the opposing address for the open panel
+  // Derive the opposing address for the open token panel
   const peerAddress = useMemo(() => {
-    if (activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)) {
       return sellTokenContract?.address;
     }
-    if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) {
       return buyTokenContract?.address;
     }
     return undefined;
-  }, [activeDisplay, sellTokenContract?.address, buyTokenContract?.address]);
+  }, [
+    isVisible,
+    sellTokenContract?.address,
+    buyTokenContract?.address,
+  ]);
 
   debugLog.log(`🔍 MainTradingPanel render`);
-  debugLog.log(`🧩 activeDisplay = ${getActiveDisplayString(activeDisplay)}`);
   debugLog.log(
-    `💬 isTokenScrollPanel=${isTokenScrollPanel}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
+    `💬 isTradingStationVisible=${isTradingStationVisible}, isTokenScrollPanel=${isTokenScrollVisible}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
   );
 
   const closePanelCallback = useCallback(() => {
-    debugLog.log(
-      `🛑 closePanelCallback called source=${SP_COIN_DISPLAY[activeDisplay]} → switching to TRADING_STATION_PANEL`
-    );
-    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [activeDisplay, setActiveDisplay]);
+    debugLog.log('🛑 closePanelCallback → closeOverlays (show trading)');
+    closeOverlays();
+  }, [closeOverlays]);
 
   const setAssetTokenCallback = useCallback(
     (tokenContract: TokenContract) => {
       let msg = `✅ MainTradingPanel.setAssetTokenCallback`;
-      if (activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
+      if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) {
         msg += ' 🔻 → setSellTokenContract';
         setSellTokenContract(tokenContract);
-      } else if (activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) {
+      } else if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)) {
         msg += ' 🔺 → setBuyTokenContract';
         setBuyTokenContract(tokenContract);
       } else {
@@ -100,20 +88,19 @@ export default function MainTradingPanel() {
       }
       msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
       debugLog.log(msg);
+
+      // Close overlays after selection
+      closeOverlays();
     },
-    [activeDisplay, setSellTokenContract, setBuyTokenContract]
+    [isVisible, setSellTokenContract, setBuyTokenContract, closeOverlays]
   );
 
   // When a recipient is picked from the RecipientSelectPanel
   const setRecipientFromPanel = useCallback(
     (asset: TokenContract | WalletAccount) => {
-      // Heuristic: WalletAccount has a "type" field in your types; TokenContract doesn't.
-      const isWalletAccount =
-        asset && typeof (asset as any).type === 'string';
+      const isWalletAccount = asset && typeof (asset as any).type === 'string';
 
-      debugLog.log(
-        `👤 setRecipientFromPanel called; isWalletAccount=${isWalletAccount}`
-      );
+      debugLog.log(`👤 setRecipientFromPanel called; isWalletAccount=${isWalletAccount}`);
 
       if (isWalletAccount) {
         setRecipientAccount(asset as WalletAccount);
@@ -121,9 +108,10 @@ export default function MainTradingPanel() {
         debugLog.warn('setRecipientFromPanel received a TokenContract; ignoring for recipient.');
       }
 
-      setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+      // Close overlays after selection
+      closeOverlays();
     },
-    [setRecipientAccount, setActiveDisplay]
+    [setRecipientAccount, closeOverlays]
   );
 
   const setErrorCallback = useCallback(
@@ -136,21 +124,25 @@ export default function MainTradingPanel() {
       };
       debugLog.error(`🚨 setErrorCallback → ${JSON.stringify(errorObj)}`);
       setErrorMessage(errorObj);
-      setActiveDisplay(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+
+      // Open error overlay (radio behavior)
+      openOverlay(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
       return errorObj;
     },
-    [setErrorMessage, setActiveDisplay]
+    [setErrorMessage, openOverlay]
   );
 
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
         <TradeContainerHeader closePanelCallback={closePanelCallback} />
-        <TradingStationPanel />
+
+        {/* Trading Station (now gated by tree visibility) */}
+        {isTradingStationVisible && <TradingStationPanel />}
 
         {/* Token selection (sell/buy) */}
         <TokenSelectPanel
-          isActive={isTokenScrollPanel}
+          isActive={isTokenScrollVisible}
           closePanelCallback={closePanelCallback}
           setTradingTokenCallback={setAssetTokenCallback}
           /** 👇 provide the opposing address so duplicate check works */

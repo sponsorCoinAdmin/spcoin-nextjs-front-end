@@ -1,15 +1,17 @@
+// File: components/Headers/TradeContainerHeader.tsx
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ConnectButton from '../Buttons/Connect/ConnectButton';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 interface Props {
   closePanelCallback: () => void;
@@ -38,10 +40,21 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
 
 const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const { exchangeContext } = useExchangeContext();
-  const { activeDisplay } = useActiveDisplay();
+  const { isVisible } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  const title = getTitleFromDisplay(activeDisplay);
+  // Derive the "current" display from the tree
+  const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL))  return SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL))      return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL))    return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+    return SP_COIN_DISPLAY.UNDEFINED;
+  }, [isVisible]);
+
+  const title = getTitleFromDisplay(currentDisplay);
+  const isTradingVisible = currentDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
@@ -51,7 +64,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
       id="TradeContainerHeader"
       className="h-[60px] flex justify-between items-center w-full px-2.5 box-border shrink-0"
     >
-      {/* Controlled config dialog (no dependency on openDialog helper) */}
+      {/* Controlled config dialog */}
       <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
 
       <div
@@ -80,7 +93,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
       </h4>
 
       <div className={styles.rightSideControl}>
-        {activeDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL ? (
+        {isTradingVisible ? (
           <Image
             src={cog_png}
             alt="Open settings"
@@ -92,11 +105,13 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
           <button
             id="closeSelectionPanelButton"
             type="button"
-            aria-label="Close Config"
+            aria-label="Close"
+            title="Close"
             onClick={closePanelCallback}
-            className="cursor-pointer rounded border-none w-5 text-xl text-white hover:text-gray-400"
+            className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
+                       hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
           >
-            X
+            ×
           </button>
         )}
       </div>

@@ -7,13 +7,13 @@ import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useActiveDisplay } from '@/lib/context/hooks';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const MIN_STEP = 2; // matches prior code
 const MAX_STEP = 10;
 
 const SponsorRateConfigPanel: React.FC = () => {
-  const { setActiveDisplay } = useActiveDisplay();
+  const { openOverlay } = usePanelTree();
 
   // "step" from 2..10 where displayed percentages are step*10 and (100 - step*10)
   const [step, setStep] = useState<number>(5);
@@ -45,7 +45,7 @@ const SponsorRateConfigPanel: React.FC = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
+          onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
         >
           X
         </div>

@@ -1,8 +1,8 @@
+// File: components/containers/ErrorMessagePanel.tsx
 'use client';
 
-import { useErrorMessage, useActiveDisplay } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useErrorMessage } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -11,7 +11,7 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('ErrorMessagePanel', DEBUG_ENABLED, LOG_TIME);
 
 interface ErrorMessagePanelProps {
-  /** Whether this panel should be visible (parent controls via activeDisplay) */
+  /** Whether this panel should be visible (parent controls via panel tree) */
   isActive: boolean;
   /** @deprecated Previously used to close parent; no longer needed. */
   closePanelCallback?: () => void;
@@ -19,13 +19,12 @@ interface ErrorMessagePanelProps {
 
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
-  const { setActiveDisplay } = useActiveDisplay();
+  const { closeOverlays } = usePanelTree();
 
   const onDismiss = () => {
-    debugLog.log('✅ Dismiss ErrorMessagePanel → switching to TRADING_STATION_PANEL');
-    // Dismiss only our own UI; parent/provider owns panel lifecycle.
+    debugLog.log('✅ Dismiss ErrorMessagePanel → closeOverlays() & clear error');
     setErrorMessage(undefined);
-    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    closeOverlays(); // return to Trading Station
   };
 
   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);
@@ -86,22 +85,11 @@ function ErrorMessagePanelInner() {
   );
 }
 
-export default function ErrorMessagePanel({
-  isActive,
-}: ErrorMessagePanelProps) {
-  const { activeDisplay } = useActiveDisplay();
-
-  debugLog.log(
-    '🛠️ ErrorMessagePanel → activeDisplay:',
-    getActiveDisplayString(activeDisplay)
-  );
-
+export default function ErrorMessagePanel({ isActive }: ErrorMessagePanelProps) {
+  debugLog.log('🛠️ ErrorMessagePanel render; isActive=', isActive);
   if (!isActive) {
-    debugLog.log('⏭️ ErrorMessagePanel → not active or display hidden, skipping render');
+    debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');
     return null;
-    // Alternatively: render a hidden container instead of returning null:
-    // return <div id="ErrorMessagePanel" className="hidden" />;
   }
-
   return <ErrorMessagePanelInner />;
 }

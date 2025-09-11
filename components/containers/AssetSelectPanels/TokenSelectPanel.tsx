@@ -6,11 +6,12 @@ import type { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
-import { useActiveDisplay, useExchangeContext } from '@/lib/context/hooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
 import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 interface TokenSelectPanelProps {
   isActive: boolean;
@@ -25,31 +26,38 @@ export default function TokenSelectPanel({
   setTradingTokenCallback,
   peerAddress,
 }: TokenSelectPanelProps) {
-  const { activeDisplay } = useActiveDisplay();
+  const { isVisible } = usePanelTree();
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
-  const initialPanelBag: AssetSelectBag = useMemo(
-    () =>
-      ({
-        type: activeDisplay as SP_COIN_DISPLAY,
-        chainId,
-        ...(peerAddress ? { peerAddress } : {}),
-      } as AssetSelectBag),
-    [activeDisplay, peerAddress, chainId]
-  );
+  // Determine which token-select overlay is currently active (BUY or SELL)
+  const activeType: SP_COIN_DISPLAY | null = useMemo(() => {
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL))  return SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+    return null;
+  }, [isVisible]);
 
-  const instanceId = useMemo(
-    () => `TOKEN_SELECT_${SP_COIN_DISPLAY[activeDisplay as SP_COIN_DISPLAY] ?? 'UNKNOWN'}_${chainId}`,
-    [activeDisplay, chainId]
-  );
+  const initialPanelBag: AssetSelectBag | null = useMemo(() => {
+    if (!activeType) return null;
+    return {
+      type: activeType,
+      chainId,
+      ...(peerAddress ? { peerAddress } : {}),
+    } as AssetSelectBag;
+  }, [activeType, peerAddress, chainId]);
+
+  const instanceId = useMemo(() => {
+    const label = activeType != null ? SP_COIN_DISPLAY[activeType] : 'UNKNOWN';
+    return `TOKEN_SELECT_${label}_${chainId}`;
+  }, [activeType, chainId]);
 
   const closeForProvider = useCallback(
     (_fromUser: boolean) => { closePanelCallback(); },
     [closePanelCallback]
   );
 
-  if (!isActive) return null;
+  // If the overlay isn't active or we couldn't resolve which one, render nothing
+  if (!isActive || !activeType || !initialPanelBag) return null;
 
   return (
     <AssetSelectDisplayProvider instanceId={instanceId}>
@@ -57,7 +65,7 @@ export default function TokenSelectPanel({
         key={instanceId}
         closePanelCallback={closeForProvider}
         setTradingTokenCallback={setTradingTokenCallback}
-        containerType={activeDisplay as SP_COIN_DISPLAY}
+        containerType={activeType}
         initialPanelBag={initialPanelBag}
       >
         <AssetSelectPanel />

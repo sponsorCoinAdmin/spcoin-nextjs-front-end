@@ -1,4 +1,6 @@
-"use client";
+// File: components/containers/RecipientSelectContainer.tsx
+
+'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
@@ -13,34 +15,35 @@ import { SP_COIN_DISPLAY } from "@/lib/structure";
 import SponsorRateConfigPanel from "../containers/SponsorRateConfigPanel";
 import { useExchangeContext } from "@/lib/context";
 import { RecipientSelectDropDown } from "../containers/AssetSelectDropDowns";
-import { useActiveDisplay } from "@/lib/context/hooks";
+// ⬇️ Replace legacy activeDisplay with panel-tree controls
+import { usePanelTree } from "@/lib/context/exchangeContext/hooks/usePanelTree";
 
 const RecipientSelectContainer: React.FC = () => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext(); // ✅ Access global context
-  const { setActiveDisplay } = useActiveDisplay();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { openOverlay, closeOverlays } = usePanelTree();
 
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
     exchangeContext.accounts.recipientAccount
   );
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
-  // ✅ Default URL if recipient website does not exist
+  // Default URL if recipient website does not exist
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : "";
-  let defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
+  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
-    // Open ratio config panel
+  // Open Sponsor Rate Config as an overlay (radio behavior with other overlays)
   const toggleSponsorRateConfig = useCallback(() => {
-    setActiveDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-  }, [setActiveDisplay]);
+    openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  }, [openOverlay]);
 
-  // ✅ Check if recipient's website exists
+  // Check if recipient's website exists
   useEffect(() => {
     const website = recipientWallet?.website;
     if (website && website !== "N/A" && website.trim() !== "") {
       fetch(website, { method: "HEAD", mode: "no-cors" })
         .then(() => {
-          setSiteExists(true); // Assume the site exists since we can't check response.ok
+          setSiteExists(true); // Assume reachable (no-cors)
           console.log(`Site ${website} is reachable.`);
         })
         .catch((error) => {
@@ -50,17 +53,18 @@ const RecipientSelectContainer: React.FC = () => {
     } else {
       setSiteExists(false);
     }
-  }, [recipientWallet?.website]); // Keep dependency array unchanged
+  }, [recipientWallet?.website]);
 
-    // Clear recipient in global context and return to main panel
+  // Clear recipient in global context and return to main trading (close overlays)
   const clearRecipient = useCallback(() => {
     setExchangeContext(prev => {
       const next = structuredClone(prev);
       next.accounts.recipientAccount = undefined;
       return next;
     }, 'RecipientSelectContainer:clearRecipient');
-    setActiveDisplay(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [setExchangeContext, setActiveDisplay]);
+
+    closeOverlays(); // show Trading Station again
+  }, [setExchangeContext, closeOverlays]);
 
   return (
     <>
@@ -68,33 +72,45 @@ const RecipientSelectContainer: React.FC = () => {
         id="recipientContainerDiv_ID"
         className={clsx(styles.inputs, styles.AccountSelectContainer)}
       >
-      <div className={styles.yourRecipient}>You are sponsoring:</div>
-      {recipientWallet && siteExists ? (
-        <Link href={`Recipient?url=${recipientWallet.website}`} className={styles.recipientName}>
-          {recipientWallet.name}
-        </Link>
-      ) : (
-        <Link href={defaultStaticFileUrl} className={styles.recipientName}>
-          {recipientWallet?.name || "No recipient selected"}
-        </Link>
-      )}
-      <div className={styles.recipientSelect}>
-        <RecipientSelectDropDown recipientAccount={recipientWallet} callBackAccount={setRecipientWallet} />
+        <div className={styles.yourRecipient}>You are sponsoring:</div>
+
+        {recipientWallet && siteExists ? (
+          <Link href={`Recipient?url=${recipientWallet.website}`} className={styles.recipientName}>
+            {recipientWallet.name}
+          </Link>
+        ) : (
+          <Link href={defaultStaticFileUrl} className={styles.recipientName}>
+            {recipientWallet?.name || "No recipient selected"}
+          </Link>
+        )}
+
+        <div className={styles.recipientSelect}>
+          <RecipientSelectDropDown
+            recipientAccount={recipientWallet}
+            callBackAccount={setRecipientWallet}
+          />
+        </div>
+
+        <div>
+          <Image
+            src={cog_png}
+            className={styles.cogImg}
+            width={20}
+            height={20}
+            alt="Settings"
+            onClick={toggleSponsorRateConfig}
+          />
+        </div>
+
+        <div
+          id="clearSponsorSelect"
+          className={styles.clearSponsorSelect}
+          onClick={clearRecipient}
+        >
+          X
+        </div>
       </div>
-      <div>
-        <Image
-          src={cog_png}
-          className={styles.cogImg}
-          width={20}
-          height={20}
-          alt="Settings"
-          onClick={toggleSponsorRateConfig}
-        />
-      </div>
-      <div id="clearSponsorSelect" className={styles.clearSponsorSelect} onClick={clearRecipient}>
-        X
-      </div>
-    </div >
+
       <SponsorRateConfigPanel />
     </>
   );

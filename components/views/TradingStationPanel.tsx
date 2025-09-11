@@ -9,11 +9,10 @@ import PriceButton from '@/components/Buttons/PriceButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
 
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
-import { useActiveDisplay } from '@/lib/context/hooks';
-import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import FeeDisclosure from '../containers/FeeDisclosure';
 import RecipientSelectContainer from './RecipientSelectContainer';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -21,19 +20,14 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TradingStationPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function TradingStationPanel() {
-  const { activeDisplay } = useActiveDisplay();
-  const isActive = activeDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+  // Tree-driven visibility (replaces useActiveDisplay)
+  const { isVisible } = usePanelTree();
+  const isActive = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
-  debugLog.log(
-    `🛠️ TradingStationPanel → activeDisplay:`,
-    getActiveDisplayString(activeDisplay)
-  );
+  debugLog.log(`🛠️ TradingStationPanel → tradingStationVisible=${isActive}`);
 
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
-
-  // Narrow the unknown from the hook to the expected prop type at the callsite.
-  // If you later type `usePriceAPI` to return `PriceResponse_V1`, you can remove the cast.
-  const priceResponse = (isLoadingPrice ? undefined : (priceData as any));
+  const priceResponse = isLoadingPrice ? undefined : (priceData as any);
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>

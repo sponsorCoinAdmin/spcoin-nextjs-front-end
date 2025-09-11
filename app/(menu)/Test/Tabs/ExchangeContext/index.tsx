@@ -5,9 +5,10 @@
 import React, { useCallback, useMemo } from 'react';
 import JsonInspector from '@/components/shared/JsonInspector';
 import { usePageState } from '@/lib/context/PageStateContext';
-import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 // Utility to build dropdown options from enum values
 function getNumericEnumEntries<E extends Record<string, string | number>>(
@@ -39,6 +40,7 @@ function getAllNestedKeys(obj: any): string[] {
  * Add more as needed (e.g., panelState: PANEL_STATE).
  */
 const enumRegistry: Record<string, any> = {
+  // activeDisplay no longer used, but keeping here is harmless
   activeDisplay: SP_COIN_DISPLAY,
   feedType: FEED_TYPE,
 };
@@ -70,9 +72,17 @@ function refineEnumLabels(input: any): any {
   return input;
 }
 
+// Overlays behave like a radio group
+const OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
+  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
+];
+
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+  const { isVisible, openOverlay, closeOverlays, showPanel } = usePanelTree();
   const { state, setState } = usePageState();
 
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -122,6 +132,33 @@ export default function ExchangeContextTab() {
     []
   );
 
+  // Compute a single "selected" option reflecting the tree state
+  const selectedDisplay: SP_COIN_DISPLAY = useMemo(() => {
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL))  return SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL))      return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL))    return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+    return SP_COIN_DISPLAY.UNDEFINED;
+  }, [isVisible]);
+
+  const onChangeDisplay = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const next = Number(e.target.value) as SP_COIN_DISPLAY;
+      if (next === SP_COIN_DISPLAY.TRADING_STATION_PANEL) {
+        // close overlays, show trading
+        closeOverlays();
+      } else if (OVERLAY_GROUP.includes(next)) {
+        // open the chosen overlay (radio behavior)
+        openOverlay(next);
+      } else {
+        // generic “show panel” (non-overlay)
+        showPanel(next);
+      }
+    },
+    [closeOverlays, openOverlay, showPanel]
+  );
+
   // Inspector view: enums rendered as key(number): LABEL
   const contextForInspector = useMemo(
     () => refineEnumLabels(exchangeContext),
@@ -144,13 +181,10 @@ export default function ExchangeContextTab() {
 
           <select
             id="activeDisplaySelect_tab"
-            title="Select activeDisplay"
-            aria-label="Select activeDisplay"
-            value={activeDisplay}
-            onChange={(e) => {
-              const selected = Number(e.target.value) as number;
-              setActiveDisplay(selected as any);
-            }}
+            title="Select panel"
+            aria-label="Select panel"
+            value={selectedDisplay}
+            onChange={onChangeDisplay}
             className={buttonClasses}
           >
             {displayOptions.map(({ value, label }) => (

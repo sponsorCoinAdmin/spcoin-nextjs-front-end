@@ -8,6 +8,7 @@ import {
   SP_COIN_DISPLAY,
   API_TRADING_PROVIDER, // ✅ include provider enum
 } from '@/lib/structure';
+import { MainPanelNode } from './exchangeContext';
 
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.
@@ -67,8 +68,21 @@ export type Accounts = {
  * - `apiTradingProvider` selects the quote/route provider (e.g., 0x, 1inch).
  */
 export type Settings = {
-  activeDisplay: SP_COIN_DISPLAY;
-  apiTradingProvider: API_TRADING_PROVIDER; // ✅ added
+  /** Which backend to use for trading operations */
+  apiTradingProvider: API_TRADING_PROVIDER;
+
+  /**
+   * New visibility model: full panel tree persisted in settings.
+   * Always present after hydration (provider seeds it from defaults).
+   */
+  mainPanelNode: MainPanelNode;
+
+  /**
+   * @deprecated Legacy single-focus model.
+   * Kept optional during migration so old readers don’t crash.
+   * New code should ignore this and use `mainPanelNode` instead.
+   */
+  activeDisplay?: SP_COIN_DISPLAY;
 };
 
 /** (Legacy alias – kept only if you still import it elsewhere) */

@@ -1,13 +1,14 @@
 // File: components/containers/RecipientSelectDropDown.tsx
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
-import { useActiveDisplay } from '@/lib/context/hooks';
 import { defaultMissingImage } from '@/lib/network/utils';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_SELECT_DROP_DOWN === 'true';
@@ -22,9 +23,8 @@ const RecipientSelectDropDown: React.FC<Props> = ({
   recipientAccount,
   callBackAccount,
 }) => {
-  const [showPanel, setShowDialog] = useState(false);
   const hasErroredRef = useRef(false);
-  const { setActiveDisplay } = useActiveDisplay();
+  const { openOverlay } = usePanelTree();
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
@@ -45,9 +45,8 @@ const RecipientSelectDropDown: React.FC<Props> = ({
 
   const openDialog = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    setActiveDisplay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
-    setShowDialog(true);
-  }, [setActiveDisplay]);
+    openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  }, [openOverlay]);
 
   return (
     <div className="flex items-center cursor-pointer" onClick={openDialog}>
