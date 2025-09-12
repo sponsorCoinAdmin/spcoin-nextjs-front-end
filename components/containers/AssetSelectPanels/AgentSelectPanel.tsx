@@ -4,7 +4,6 @@
 import { useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
-import { useActiveDisplay } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // Panels variant (correct location)
@@ -33,7 +32,7 @@ export default function AgentSelectPanel({
   closePanelCallback,
   setTradingTokenCallback,
 }: AgentSelectPanelProps) {
-  const { activeDisplay } = useActiveDisplay();
+  const containerType = SP_COIN_DISPLAY.AGENT_SELECT_PANEL;
 
   // Adapt parent close callback to provider's (fromUser:boolean) signature
   const closeForProvider = useCallback(
@@ -49,7 +48,7 @@ export default function AgentSelectPanel({
   }
 
   debugLog.log('🧩 AgentSelectPanel → render with AssetSelectProvider', {
-    containerType: SP_COIN_DISPLAY[activeDisplay as SP_COIN_DISPLAY],
+    containerType: SP_COIN_DISPLAY[containerType],
   });
 
   return (
@@ -57,7 +56,7 @@ export default function AgentSelectPanel({
       closePanelCallback={closeForProvider}
       // Provider accepts TokenContract | WalletAccount; WalletAccount is fine
       setTradingTokenCallback={setTradingTokenCallback as any}
-      containerType={activeDisplay as SP_COIN_DISPLAY}
+      containerType={containerType}
     >
       <AgentSelectPanelInner />
     </AssetSelectProvider>

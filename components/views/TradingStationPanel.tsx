@@ -20,7 +20,6 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TradingStationPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function TradingStationPanel() {
-  // Tree-driven visibility (replaces useActiveDisplay)
   const { isVisible } = usePanelTree();
   const isActive = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 

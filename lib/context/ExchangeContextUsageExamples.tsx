@@ -2,7 +2,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   useSellAmount,
   useBuyAmount,
@@ -12,13 +12,13 @@ import {
   useSlippage,
   useErrorMessage,
   useApiErrorMessage,
-  useActiveDisplay,
   useTradeData,
   useSellTokenAddress,
   useBuyTokenAddress,
 } from './hooks';
 
-import { TRADE_DIRECTION, STATUS } from '@/lib/structure';
+import { SP_COIN_DISPLAY, TRADE_DIRECTION, STATUS } from '@/lib/structure';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 export default function ExchangeContextUsageExamples() {
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -29,13 +29,26 @@ export default function ExchangeContextUsageExamples() {
   const { data: slippage, setSlippage, setBps } = useSlippage();
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
-  const { activeDisplay } = useActiveDisplay();
   const tradeData = useTradeData();
   const sellTokenAddress = useSellTokenAddress();
   const buyTokenAddress = useBuyTokenAddress();
 
+  const { isVisible, openOverlay, closeOverlays } = usePanelTree();
+
+  const activePanelLabel = useMemo(() => {
+    const firstVisible =
+      (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) && 'SELL_SELECT_SCROLL_PANEL') ||
+      (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) && 'BUY_SELECT_SCROLL_PANEL') ||
+      (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL) && 'RECIPIENT_SELECT_PANEL') ||
+      (isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL) && 'SPONSOR_RATE_CONFIG_PANEL') ||
+      (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL) && 'ERROR_MESSAGE_PANEL') ||
+      (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL) && 'TRADING_STATION_PANEL') ||
+      'NONE';
+    return firstVisible;
+  }, [isVisible]);
+
   return (
-    <div className="font-mono p-4">
+    <div className="font-mono p-4 space-y-2">
       <h2>🧪 Exchange Context Hook Tester</h2>
       <pre>Sell Amount: {sellAmount.toString()}</pre>
       <pre>Buy Amount: {buyAmount.toString()}</pre>
@@ -47,116 +60,135 @@ export default function ExchangeContextUsageExamples() {
       <pre>Slippage Bps: {slippage.bps}</pre>
       <pre>Slippage Percentage: {slippage.percentage}</pre>
       <pre>Slippage Percentage String: {slippage.percentageString}</pre>
-      <pre>activeDisplay: {activeDisplay}</pre>
+
+      {/* 👇 Replaces activeDisplay */}
+      <pre>Active Panel (panel-tree): {activePanelLabel}</pre>
+
       <pre>Trade Data: {JSON.stringify(tradeData, null, 2)}</pre>
       <pre>Error Message: {JSON.stringify(errorMessage)}</pre>
       <pre>API Error Message: {JSON.stringify(apiErrorMessage)}</pre>
 
       <hr className="my-4" />
 
-      <button onClick={() => setSellAmount(sellAmount + 1n)}>+1 Sell</button>
-      <button onClick={() => setBuyAmount(buyAmount + 1n)}>+1 Buy</button>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => setSellAmount(sellAmount + 1n)}>+1 Sell</button>
+        <button onClick={() => setBuyAmount(buyAmount + 1n)}>+1 Buy</button>
 
-      <button
-        onClick={() =>
-          setSellTokenContract({
-            address: '0x111' as any,
-            symbol: 'ETH',
-            name: 'Ethereum',
-            decimals: 18,
-            balance: 0n,
-            amount: sellAmount,
-            totalSupply: 100000000000000000000n,
-            chainId: 1,
-          })
-        }
-      >
-        Set Sell Token (ETH)
-      </button>
+        <button
+          onClick={() =>
+            setSellTokenContract({
+              address: '0x111' as any,
+              symbol: 'ETH',
+              name: 'Ethereum',
+              decimals: 18,
+              balance: 0n,
+              amount: sellAmount,
+              totalSupply: 100000000000000000000n,
+              chainId: 1,
+            })
+          }
+        >
+          Set Sell Token (ETH)
+        </button>
 
-      <button
-        onClick={() =>
-          setBuyTokenContract({
-            address: '0x222' as any,
-            symbol: 'DAI',
-            name: 'Dai Stablecoin',
-            decimals: 18,
-            balance: 0n,
-            amount: buyAmount,
-            totalSupply: 100000000000000000000n,
-            chainId: 1,
-          })
-        }
-      >
-        Set Buy Token (DAI)
-      </button>
+        <button
+          onClick={() =>
+            setBuyTokenContract({
+              address: '0x222' as any,
+              symbol: 'DAI',
+              name: 'Dai Stablecoin',
+              decimals: 18,
+              balance: 0n,
+              amount: buyAmount,
+              totalSupply: 100000000000000000000n,
+              chainId: 1,
+            })
+          }
+        >
+          Set Buy Token (DAI)
+        </button>
 
-      <button onClick={() => setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN)}>
-        Set Trade Direction: BUY_EXACT_IN
-      </button>
+        <button onClick={() => setTradeDirection(TRADE_DIRECTION.BUY_EXACT_IN)}>
+          Set Trade Direction: BUY_EXACT_IN
+        </button>
 
-      <button onClick={() => setBps(slippage.bps + 10)}>Increase Slippage by 10bps</button>
+        <button onClick={() => setBps(slippage.bps + 10)}>Increase Slippage by 10bps</button>
+        <button onClick={() => setBps(100)}>Set Bps to 100 (1%)</button>
 
-      <button onClick={() => setBps(100)}>Set Bps to 100 (1%)</button>
+        <button
+          onClick={() =>
+            setSlippage({
+              bps: 200,
+              percentage: 2.0,
+              percentageString: '2.00%',
+            })
+          }
+        >
+          Set Slippage to 2.00%
+        </button>
 
-      <button
-        onClick={() =>
-          setSlippage({
-            bps: 200,
-            percentage: 2.0,
-            percentageString: '2.00%',
-          })
-        }
-      >
-        Set Slippage to 2.00%
-      </button>
+        <button
+          onClick={() =>
+            setSlippage({
+              bps: 50,
+              percentage: 0.5,
+              percentageString: '0.50%',
+            })
+          }
+        >
+          Set Slippage to 0.50%
+        </button>
 
-      <button
-        onClick={() =>
-          setSlippage({
-            bps: 50,
-            percentage: 0.5,
-            percentageString: '0.50%',
-          })
-        }
-      >
-        Set Slippage to 0.50%
-      </button>
+        <button
+          onClick={() =>
+            setErrorMessage({
+              errCode: 1,
+              msg: 'Something broke',
+              source: 'test',
+              status: STATUS.FAILED,
+            })
+          }
+        >
+          Trigger Error
+        </button>
 
-      <button
-        onClick={() =>
-          setErrorMessage({
-            errCode: 1,
-            msg: 'Something broke',
-            source: 'test',
-            status: STATUS.FAILED,
-          })
-        }
-      >
-        Trigger Error
-      </button>
+        <button
+          onClick={() =>
+            setApiErrorMessage({
+              errCode: 2,
+              msg: 'API failure',
+              source: 'api',
+              status: STATUS.FAILED,
+            })
+          }
+        >
+          Trigger API Error
+        </button>
 
-      <button
-        onClick={() =>
-          setApiErrorMessage({
-            errCode: 2,
-            msg: 'API failure',
-            source: 'api',
-            status: STATUS.FAILED,
-          })
-        }
-      >
-        Trigger API Error
-      </button>
+        <button
+          onClick={() => {
+            setErrorMessage(undefined);
+            setApiErrorMessage(undefined);
+          }}
+        >
+          Clear Errors
+        </button>
 
-      <button
-        onClick={() => {
-          setErrorMessage(undefined);
-          setApiErrorMessage(undefined);
-        }}
-      >
-        Clear Errors
-      </button>
+        {/* 🔧 Panel-tree test controls */}
+        <button onClick={() => openOverlay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)}>
+          Open SELL panel
+        </button>
+        <button onClick={() => openOverlay(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)}>
+          Open BUY panel
+        </button>
+        <button onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}>
+          Open RECIPIENT panel
+        </button>
+        <button onClick={() => openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)}>
+          Open SPONSOR CONFIG
+        </button>
+        <button onClick={closeOverlays}>Close overlays (show Trading)</button>
+      </div>
     </div>
   );
 }

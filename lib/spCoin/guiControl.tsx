@@ -1,11 +1,11 @@
 // File: lib/utils/guiControl.ts
 'use client';
 
-import { useActiveDisplay } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { useEffect } from 'react';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_GUI_CONTROLLER === 'true';
@@ -40,26 +40,37 @@ const toggleElement = (id: string): boolean => {
 /** Fast, allocation-light label (only builds when called). */
 const spCoinDisplayString = (display?: SP_COIN_DISPLAY): string =>
   display == null
-    ? 'activeDisplay(undefined) = ❓ UNKNOWN'
-    : `activeDisplay(${display}) = ${getActiveDisplayString(display)}`;
+    ? 'display(undefined) = ❓ UNKNOWN'
+    : `display(${display}) = ${getActiveDisplayString(display)}`;
 
 /** Avoids building strings when debug is off. */
-const logActiveDisplay = (prefix: string, display?: SP_COIN_DISPLAY) => {
+const logDesiredDisplay = (prefix: string, display?: SP_COIN_DISPLAY) => {
   if (!DEBUG_ENABLED) return;
   debugLog.log(`${prefix} ${spCoinDisplayString(display)}`);
 };
 
-/** ── Hook: keep global display in sync with desired value ──────────────────
- * Back-compat name, now standardized on useActiveDisplay()
+/** ── Hook: keep panel-tree overlays in sync with a desired display ─────────
+ * Back-compat name: `useDisplaySpCoinContainers`
+ * Behavior:
+ *   - If desired = TRADING_STATION_PANEL → close overlays (show trading)
+ *   - Else → open the desired overlay (radio behavior among overlays)
  */
 const useDisplaySpCoinContainers = (desiredDisplay: SP_COIN_DISPLAY) => {
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+  const { isVisible, openOverlay, closeOverlays } = usePanelTree();
 
   useEffect(() => {
-    if (activeDisplay === desiredDisplay) return;
-    logActiveDisplay('🧩 [useDisplaySpCoinContainers] Sync to →', desiredDisplay);
-    setActiveDisplay(desiredDisplay);
-  }, [desiredDisplay, activeDisplay, setActiveDisplay]);
+    if (desiredDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL) {
+      logDesiredDisplay('🧩 [useDisplaySpCoinContainers] → closeOverlays for', desiredDisplay);
+      closeOverlays();
+      return;
+    }
+
+    // Only open if not already visible to avoid redundant writes/renders
+    if (!isVisible(desiredDisplay)) {
+      logDesiredDisplay('🧩 [useDisplaySpCoinContainers] → openOverlay for', desiredDisplay);
+      openOverlay(desiredDisplay);
+    }
+  }, [desiredDisplay, isVisible, openOverlay, closeOverlays]);
 };
 
 export {

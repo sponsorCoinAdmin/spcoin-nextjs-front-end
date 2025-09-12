@@ -3,13 +3,15 @@
 
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { useActiveDisplay } from '@/lib/context/hooks';
+// ⬇️ Replace legacy activeDisplay with panel-tree overlays
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const AddSponsorshipButton = () => {
-  const { setActiveDisplay } = useActiveDisplay();
+  const { openOverlay } = usePanelTree();
 
-  const openSponsorConfig = () =>
-    setActiveDisplay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  const openSponsorConfig = () => {
+    openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  };
 
   return (
     <div

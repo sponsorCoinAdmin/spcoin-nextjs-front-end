@@ -8,24 +8,24 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useExchangeContext, useActiveDisplay } from '@/lib/context/hooks';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 /**
  * Header for the Recipient selection flow.
- * Migrated to SP_COIN_DISPLAY + useActiveDisplay.
  */
 const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
   const { exchangeContext } = useExchangeContext();
-  const { activeDisplay, setActiveDisplay } = useActiveDisplay();
+  const { isVisible, openOverlay } = usePanelTree();
 
   const toggleSponsorRateConfigPanel = () => {
-    const next =
-      activeDisplay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL
-        ? SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
-        : SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
-
-    setActiveDisplay(next);
+    // Toggle between Recipient panel and Sponsor Rate Config as radio overlays
+    if (isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)) {
+      openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+    } else {
+      openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+    }
   };
 
   return (
