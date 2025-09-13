@@ -7,10 +7,10 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const AddSponsorshipButton = () => {
-  const { openOverlay } = usePanelTree();
+  const { openPanel } = usePanelTree();
 
   const openSponsorConfig = () => {
-    openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+    openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
   };
 
   return (

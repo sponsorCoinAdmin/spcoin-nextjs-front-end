@@ -17,14 +17,15 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
  */
 const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible, openOverlay } = usePanelTree();
+  const { isVisible, openPanel } = usePanelTree();
 
   const toggleSponsorRateConfigPanel = () => {
-    // Toggle between Recipient panel and Sponsor Rate Config as radio overlays
+    // Switch between RECIPIENT_SELECT_PANEL and SPONSOR_RATE_CONFIG_PANEL.
+    // Both are handled as main overlays by usePanelTree (radio behavior).
     if (isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)) {
-      openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+      openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     } else {
-      openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+      openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
     }
   };
 

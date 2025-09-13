@@ -12,7 +12,6 @@ import {
   useSellTokenContract,
 } from '@/lib/context/hooks';
 
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
@@ -24,6 +23,7 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
+  /** The container this dropdown belongs to (SELL_SELECT_SCROLL_PANEL or BUY_SELECT_SCROLL_PANEL caller) */
   containerType: SP_COIN_DISPLAY;
 }
 
@@ -34,13 +34,19 @@ function TokenSelectDropDown({ containerType }: Props) {
   const [tokenContract] =
     containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellHook : buyHook;
 
-  const { openOverlay } = usePanelTree();
+  // Panel-tree controls
+  const { openPanel } = usePanelTree();
 
-  // Resolve logo from tokenContract.logoURL, with normalization & fallback.
+  // Compute the exact TokenSelect panel we must open (BUY or SELL selector)
+  const targetTokenSelectPanel: SP_COIN_DISPLAY =
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+      ? SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+      : SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+
+  // Resolve logo with safe fallback
   const logoURL = useMemo(() => {
     const raw = tokenContract?.logoURL?.trim();
     if (raw && raw.length > 0) {
-      // Keep absolute URLs and already-rooted paths; normalize "assets/..." to "/assets/..."
       return raw.startsWith('http://') ||
         raw.startsWith('https://') ||
         raw.startsWith('/')
@@ -50,11 +56,10 @@ function TokenSelectDropDown({ containerType }: Props) {
     return defaultMissingImage;
   }, [tokenContract?.logoURL]);
 
-  // Safe one-shot error handler: swap to fallback and prevent loops if fallback fails.
   const handleMissingLogoURL = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
       const img = event.currentTarget;
-      img.onerror = null; // prevent infinite loop if fallback fails
+      img.onerror = null;
       img.src = defaultMissingImage;
 
       if (tokenContract?.symbol && tokenContract?.address) {
@@ -66,28 +71,22 @@ function TokenSelectDropDown({ containerType }: Props) {
     [tokenContract]
   );
 
-  const showPanel = useCallback(() => {
-    debugLog.log(`📂 Opening ${SP_COIN_DISPLAY[containerType]} dialog`);
-    // Optional: clear FSM trace before opening (keep if useful to you)
+  const openTokenSelectPanel = useCallback(() => {
+    // (Optional) clear FSM trace
     clearFSMTraceFromMemory();
 
-    // Open as overlay (radio group) via the panel tree; this also hides Trading Station
-    openOverlay(
-      containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-        ? SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-        : SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL
+    // Open the correct TokenSelect panel inside the main overlay group (radio behavior)
+    debugLog.log(
+      `📂 Opening TokenSelectPanel: ${SP_COIN_DISPLAY[targetTokenSelectPanel]} in MAIN_OVERLAY_GROUP`
     );
-  }, [containerType, openOverlay]);
 
-  // Click handler for the token image (restored)
-  const handleSelect = useCallback(() => {
-    const msg = stringifyBigInt({
-      ...tokenContract,
-      _resolvedLogoURL: logoURL, // include what’s actually being displayed
-    } as any);
-    console.log(msg);
-    alert(msg);
-  }, [tokenContract, logoURL]);
+    // If your hook supports a group/options arg, keep it. Otherwise, just pass the enum.
+    // @ts-expect-error — openPanel’s overload may accept options in your app; remove if not needed.
+    openPanel(targetTokenSelectPanel, { group: 'MAIN_OVERLAY_GROUP', exclusive: true });
+  }, [targetTokenSelectPanel, openPanel]);
+
+  // Click on the avatar should also open the selector (no alert dumps)
+  const handleAvatarClick = openTokenSelectPanel;
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>
@@ -96,23 +95,24 @@ function TokenSelectDropDown({ containerType }: Props) {
           <img
             id="TokenSelectDropDownImage.png"
             className="h-9 w-9 mr-2 rounded-md cursor-pointer"
-            alt={`${tokenContract.name} logo`}
+            alt={`${tokenContract.name ?? tokenContract.symbol ?? 'token'} logo`}
             src={logoURL}
             loading="lazy"
             decoding="async"
-            onClick={handleSelect}
+            onClick={handleAvatarClick}
             onError={handleMissingLogoURL}
           />
-          {tokenContract.symbol}
+          {tokenContract.symbol ?? 'Select Token'}
         </>
       ) : (
         <>Select Token:</>
       )}
+
       <ChevronDown
         id="ChevronDown"
         size={18}
         className="ml-2 cursor-pointer"
-        onClick={showPanel}
+        onClick={openTokenSelectPanel}
       />
     </div>
   );

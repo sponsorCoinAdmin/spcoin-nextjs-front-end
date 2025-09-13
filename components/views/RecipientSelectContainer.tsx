@@ -1,5 +1,4 @@
 // File: components/containers/RecipientSelectContainer.tsx
-
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -15,27 +14,37 @@ import { SP_COIN_DISPLAY } from "@/lib/structure";
 import SponsorRateConfigPanel from "../containers/SponsorRateConfigPanel";
 import { useExchangeContext } from "@/lib/context";
 import { RecipientSelectDropDown } from "../containers/AssetSelectDropDowns";
-// ⬇️ Replace legacy activeDisplay with panel-tree controls
 import { usePanelTree } from "@/lib/context/exchangeContext/hooks/usePanelTree";
 
 const RecipientSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { openOverlay, closeOverlays } = usePanelTree();
+  const { openPanel, activeMainOverlay } = usePanelTree();
 
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
     exchangeContext.accounts.recipientAccount
   );
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
+  // Only show this container when:
+  // 1) We're on the Trading main overlay, and
+  // 2) Inline radio flag says to show it
+  const showRecipientContainer =
+    activeMainOverlay === SP_COIN_DISPLAY.TRADING_STATION_PANEL &&
+    (exchangeContext as any)?.settings?.ui?.showRecipientContainer === true;
+
+  if (!showRecipientContainer) return null;
+
   // Default URL if recipient website does not exist
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
-  const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : "";
+  const sitekey = recipientWallet?.address?.trim()
+    ? `siteKey=${recipientWallet.address.trim()}`
+    : "";
   const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
-  // Open Sponsor Rate Config as an overlay (radio behavior with other overlays)
+  // Open Sponsor Rate Config (non-main panel; does not affect activeMainOverlay)
   const toggleSponsorRateConfig = useCallback(() => {
-    openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-  }, [openOverlay]);
+    openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  }, [openPanel]);
 
   // Check if recipient's website exists
   useEffect(() => {
@@ -55,16 +64,28 @@ const RecipientSelectContainer: React.FC = () => {
     }
   }, [recipientWallet?.website]);
 
-  // Clear recipient in global context and return to main trading (close overlays)
+  // Clear recipient in global context and return to Trading main overlay.
+  // Also flip inline radio back to show the Add button instead of this container.
   const clearRecipient = useCallback(() => {
-    setExchangeContext(prev => {
-      const next = structuredClone(prev);
-      next.accounts.recipientAccount = undefined;
-      return next;
-    }, 'RecipientSelectContainer:clearRecipient');
+    setExchangeContext(
+      (prev) => {
+        const next: any = structuredClone(prev);
+        next.accounts.recipientAccount = undefined;
+        next.settings = {
+          ...(next.settings ?? {}),
+          ui: {
+            ...((next.settings as any)?.ui ?? {}),
+            showRecipientContainer: false,
+          },
+        };
+        return next;
+      },
+      'RecipientSelectContainer:clearRecipient'
+    );
 
-    closeOverlays(); // show Trading Station again
-  }, [setExchangeContext, closeOverlays]);
+    // Ensure Trading is the active main overlay
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  }, [setExchangeContext, openPanel]);
 
   return (
     <>
@@ -111,6 +132,7 @@ const RecipientSelectContainer: React.FC = () => {
         </div>
       </div>
 
+      {/* Non-main panel; visibility managed separately via openPanel/closePanel */}
       <SponsorRateConfigPanel />
     </>
   );

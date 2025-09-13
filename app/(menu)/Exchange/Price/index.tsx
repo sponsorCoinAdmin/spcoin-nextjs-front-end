@@ -26,11 +26,6 @@ export default function PriceView() {
   usePriceErrorEffect();
   useResetAmountsOnTokenChange();
 
-  debugLog.log('🧪 PriceView DisplayState Check', {
-    activeDisplay,
-    stringValue: getActiveDisplayString(activeDisplay),
-  });
-
   return (
     <div className={styles.pageWrap}>
       <MainTradingPanel />

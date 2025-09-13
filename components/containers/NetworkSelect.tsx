@@ -5,10 +5,10 @@ import React, { useEffect, useMemo, useCallback } from 'react';
 import styles from '@/styles/Header.module.css';
 import { ChevronDown } from 'lucide-react';
 import networks from '@/lib/network/initialize/networks.json';
-import { hideElement, showElement, toggleElement } from '@/lib/spCoin/guiControl';
 
 import { useAppChainId, useExchangeContext } from '@/lib/context/hooks';
 import { getBlockChainLogoURL } from '@/lib/context/helpers/NetworkHelpers';
+import { hideElement, showElement, toggleElement } from '@/lib/spCoin/coreUtils';
 
 type NetworkLike =
   | {
@@ -48,7 +48,7 @@ const NetworkSelect: React.FC<Props> = ({ id, disabled = false, networkElement }
     (newChainId: number) => {
       if (disabled) return;
       setAppChainId(newChainId);
-      toggleElement(menuId);
+      // toggleElement(menuId);
     },
     [disabled, setAppChainId, menuId]
   );

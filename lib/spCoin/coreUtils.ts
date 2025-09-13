@@ -44,6 +44,31 @@ export const parseValidFormattedAmount = (
   return '0';
 };
 
+/** ── DOM helpers ────────────────────────────────────────────────────────── */
+const getEl = (id: string): HTMLElement | null =>
+  typeof document !== 'undefined' ? document.getElementById(id) : null;
+
+const hideElement = (id: string): boolean => {
+  const el = getEl(id);
+  if (!el) return false;
+  el.style.display = 'none';
+  return true;
+};
+
+const showElement = (id: string): boolean => {
+  const el = getEl(id);
+  if (!el) return false;
+  el.style.display = 'block';
+  return true;
+};
+
+const toggleElement = (id: string): boolean => {
+  const el = getEl(id);
+  if (!el) return false;
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  return true;
+};
+
 /**
  * Given a bigint and decimals, return a formatted string and parse it back to bigint.
  */
@@ -144,20 +169,23 @@ const invalidTokenContract = (
 ): TokenContract | undefined => {
   return textInputField
     ? {
-        chainId,
-        address: BURN_ADDRESS,
-        name: 'Invalid Network/Token Address',
-        symbol: 'Please Enter Valid Token Address',
-        decimals: undefined,
-        balance: 0n,
-        totalSupply: undefined,
-        logoURL: undefined,
-        amount: 0n,
-      }
+      chainId,
+      address: BURN_ADDRESS,
+      name: 'Invalid Network/Token Address',
+      symbol: 'Please Enter Valid Token Address',
+      decimals: undefined,
+      balance: 0n,
+      totalSupply: undefined,
+      logoURL: undefined,
+      amount: 0n,
+    }
     : undefined;
 };
 
 export {
+  hideElement,
+  showElement,
+  toggleElement,
   getValidBigIntToFormattedValue,
   setValidPriceInput,
   getQueryVariable,

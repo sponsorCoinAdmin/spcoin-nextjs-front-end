@@ -24,7 +24,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
   callBackAccount,
 }) => {
   const hasErroredRef = useRef(false);
-  const { openOverlay } = usePanelTree();
+  const { openPanel } = usePanelTree();
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
@@ -43,13 +43,13 @@ const RecipientSelectDropDown: React.FC<Props> = ({
     [recipientAccount]
   );
 
-  const openDialog = useCallback(() => {
+  const showRecipientSelectPanel = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
-  }, [openOverlay]);
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  }, [openPanel]);
 
   return (
-    <div className="flex items-center cursor-pointer" onClick={openDialog}>
+    <div className="flex items-center cursor-pointer" onClick={showRecipientSelectPanel}>
       {recipientAccount ? (
         <>
           <img

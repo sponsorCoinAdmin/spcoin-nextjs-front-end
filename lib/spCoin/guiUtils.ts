@@ -2,7 +2,6 @@
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
 import { ExchangeContext, TokenContract } from '@/lib/structure'
-import { toggleElement } from './guiControl'
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
 import { isAddress } from 'ethers'
 import { Address } from 'viem'
@@ -15,7 +14,7 @@ const exchangeContextDump = (exchangeContext: ExchangeContext) => {
   if (typeof window !== 'undefined') {
     alert(exchangeData)
   }
-  toggleElement('AddSponsorshipButton_ID')
+  // toggleElement('AddSponsorshipButton_ID')
   console.log(exchangeData)
 }
 

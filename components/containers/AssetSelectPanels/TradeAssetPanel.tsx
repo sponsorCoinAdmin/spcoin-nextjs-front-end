@@ -7,7 +7,6 @@ import { clsx } from 'clsx';
 
 import {
   useApiProvider,
-  useSpCoinDisplay,
   useBuyAmount,
   useSellAmount,
   useSlippage,
@@ -44,7 +43,6 @@ function TradeAssetPanelInner() {
   const { data: slippage } = useSlippage();
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
-  const [spCoinDisplay] = useSpCoinDisplay();
 
   const { setLocalTokenContract, setLocalAmount, containerType } = useTokenPanelContext();
 

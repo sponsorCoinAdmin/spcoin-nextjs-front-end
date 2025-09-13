@@ -1,4 +1,4 @@
-// FILE: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
+// File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 
 'use client';
 
@@ -72,17 +72,9 @@ function refineEnumLabels(input: any): any {
   return input;
 }
 
-// Overlays behave like a radio group
-const OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
-  SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
-  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
-  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-];
-
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible, openOverlay, closeOverlays, showPanel } = usePanelTree();
+  const { isVisible, openPanel, closePanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
   const { state, setState } = usePageState();
 
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -132,31 +124,20 @@ export default function ExchangeContextTab() {
     []
   );
 
-  // Compute a single "selected" option reflecting the tree state
-  const selectedDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL))  return SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL))      return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL))    return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-    return SP_COIN_DISPLAY.UNDEFINED;
-  }, [isVisible]);
+  // Reflect the current main-overlay selection (radio behavior enforced by hook)
+  const selectedDisplay: SP_COIN_DISPLAY = useMemo(
+    () => activeMainOverlay,
+    [activeMainOverlay]
+  );
 
   const onChangeDisplay = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const next = Number(e.target.value) as SP_COIN_DISPLAY;
-      if (next === SP_COIN_DISPLAY.TRADING_STATION_PANEL) {
-        // close overlays, show trading
-        closeOverlays();
-      } else if (OVERLAY_GROUP.includes(next)) {
-        // open the chosen overlay (radio behavior)
-        openOverlay(next);
-      } else {
-        // generic “show panel” (non-overlay)
-        showPanel(next);
-      }
+      // `openPanel` already enforces radio behavior for MAIN_OVERLAY_GROUP and
+      // simply marks non-main panels visible when applicable.
+      openPanel(next);
     },
-    [closeOverlays, openOverlay, showPanel]
+    [openPanel]
   );
 
   // Inspector view: enums rendered as key(number): LABEL

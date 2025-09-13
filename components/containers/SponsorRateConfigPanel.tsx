@@ -13,7 +13,7 @@ const MIN_STEP = 2; // matches prior code
 const MAX_STEP = 10;
 
 const SponsorRateConfigPanel: React.FC = () => {
-  const { openOverlay } = usePanelTree();
+  const { openPanel } = usePanelTree();
 
   // "step" from 2..10 where displayed percentages are step*10 and (100 - step*10)
   const [step, setStep] = useState<number>(5);
@@ -45,7 +45,7 @@ const SponsorRateConfigPanel: React.FC = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
+          onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}
         >
           X
         </div>

@@ -33,8 +33,8 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true
 const debugLog = createDebugLogger('MainTradingPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function MainTradingPanel() {
-  // Tree-driven visibility
-  const { isVisible, openOverlay, closeOverlays, isTokenScrollVisible } = usePanelTree();
+  // Tree-driven visibility (new API)
+  const { isVisible, openPanel, isTokenScrollVisible } = usePanelTree();
 
   // Current selections (needed to derive peerAddress)
   const [sellTokenContract, setSellTokenContract] = useSellTokenContract();
@@ -69,10 +69,11 @@ export default function MainTradingPanel() {
     `💬 isTradingStationVisible=${isTradingStationVisible}, isTokenScrollPanel=${isTokenScrollVisible}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
   );
 
+  // “Close overlays” under the new API = switch the main overlay back to TRADING
   const closePanelCallback = useCallback(() => {
-    debugLog.log('🛑 closePanelCallback → closeOverlays (show trading)');
-    closeOverlays();
-  }, [closeOverlays]);
+    debugLog.log('🛑 closePanelCallback → openPanel(TRADING_STATION_PANEL)');
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  }, [openPanel]);
 
   const setAssetTokenCallback = useCallback(
     (tokenContract: TokenContract) => {
@@ -89,10 +90,10 @@ export default function MainTradingPanel() {
       msg += `\n🔍 tokenContract → ${stringifyBigInt(tokenContract)}`;
       debugLog.log(msg);
 
-      // Close overlays after selection
-      closeOverlays();
+      // Return to trading after selection
+      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     },
-    [isVisible, setSellTokenContract, setBuyTokenContract, closeOverlays]
+    [isVisible, setSellTokenContract, setBuyTokenContract, openPanel]
   );
 
   // When a recipient is picked from the RecipientSelectPanel
@@ -108,10 +109,10 @@ export default function MainTradingPanel() {
         debugLog.warn('setRecipientFromPanel received a TokenContract; ignoring for recipient.');
       }
 
-      // Close overlays after selection
-      closeOverlays();
+      // Return to trading after selection
+      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     },
-    [setRecipientAccount, closeOverlays]
+    [setRecipientAccount, openPanel]
   );
 
   const setErrorCallback = useCallback(
@@ -125,11 +126,11 @@ export default function MainTradingPanel() {
       debugLog.error(`🚨 setErrorCallback → ${JSON.stringify(errorObj)}`);
       setErrorMessage(errorObj);
 
-      // Open error overlay (radio behavior)
-      openOverlay(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+      // Show error as the active main overlay
+      openPanel(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
       return errorObj;
     },
-    [setErrorMessage, openOverlay]
+    [setErrorMessage, openPanel]
   );
 
   return (

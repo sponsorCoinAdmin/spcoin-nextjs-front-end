@@ -33,19 +33,15 @@ export default function ExchangeContextUsageExamples() {
   const sellTokenAddress = useSellTokenAddress();
   const buyTokenAddress = useBuyTokenAddress();
 
-  const { isVisible, openOverlay, closeOverlays } = usePanelTree();
+  // ⬇️ Updated panel-tree API
+  const { isVisible, openPanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
 
+  // Prefer showing which token scroll is open; otherwise show the active main overlay label
   const activePanelLabel = useMemo(() => {
-    const firstVisible =
-      (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) && 'SELL_SELECT_SCROLL_PANEL') ||
-      (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) && 'BUY_SELECT_SCROLL_PANEL') ||
-      (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL) && 'RECIPIENT_SELECT_PANEL') ||
-      (isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL) && 'SPONSOR_RATE_CONFIG_PANEL') ||
-      (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL) && 'ERROR_MESSAGE_PANEL') ||
-      (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL) && 'TRADING_STATION_PANEL') ||
-      'NONE';
-    return firstVisible;
-  }, [isVisible]);
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return 'SELL_SELECT_SCROLL_PANEL';
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)) return 'BUY_SELECT_SCROLL_PANEL';
+    return SP_COIN_DISPLAY[activeMainOverlay] ?? 'NONE';
+  }, [isVisible, activeMainOverlay]);
 
   return (
     <div className="font-mono p-4 space-y-2">
@@ -63,6 +59,7 @@ export default function ExchangeContextUsageExamples() {
 
       {/* 👇 Replaces activeDisplay */}
       <pre>Active Panel (panel-tree): {activePanelLabel}</pre>
+      <pre>Token Scroll Visible: {isTokenScrollVisible ? 'yes' : 'no'}</pre>
 
       <pre>Trade Data: {JSON.stringify(tradeData, null, 2)}</pre>
       <pre>Error Message: {JSON.stringify(errorMessage)}</pre>
@@ -174,20 +171,22 @@ export default function ExchangeContextUsageExamples() {
           Clear Errors
         </button>
 
-        {/* 🔧 Panel-tree test controls */}
-        <button onClick={() => openOverlay(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)}>
+        {/* 🔧 Panel-tree test controls (new API) */}
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)}>
           Open SELL panel
         </button>
-        <button onClick={() => openOverlay(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)}>
           Open BUY panel
         </button>
-        <button onClick={() => openOverlay(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)}>
           Open RECIPIENT panel
         </button>
-        <button onClick={() => openOverlay(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)}>
           Open SPONSOR CONFIG
         </button>
-        <button onClick={closeOverlays}>Close overlays (show Trading)</button>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL)}>
+          Close overlays (show Trading)
+        </button>
       </div>
     </div>
   );
