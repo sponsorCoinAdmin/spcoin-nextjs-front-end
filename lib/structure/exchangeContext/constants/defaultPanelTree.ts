@@ -8,6 +8,11 @@ import type {
   PanelNode,
 } from '@/lib/structure/exchangeContext/types/PanelNode';
 
+// Panels that must NOT be persisted in mainPanelNode (ephemeral UI)
+export const EPHEMERAL_PANELS: SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL,
+];
+
 const n = (panel: SP_COIN_DISPLAY, visible: boolean, children: PanelNode[] = []): PanelNode => ({
   panel,
   name: SP_COIN_DISPLAY[panel] ?? String(panel),
@@ -18,13 +23,10 @@ const n = (panel: SP_COIN_DISPLAY, visible: boolean, children: PanelNode[] = [])
 /**
  * Source of truth for panels persisted in mainPanelNode.
  * - MAIN_OVERLAY_GROUP covers the radio overlays (Trading, Buy, Sell, Recipient, Agent, Error).
- * - We also include SPONSOR_RATE_CONFIG_PANEL so the range 0..6 is dense (no null at 5).
+ * - ❌ SPONSOR_RATE_CONFIG_PANEL is intentionally EXCLUDED (ephemeral).
  */
 const ALL_PANELS: SP_COIN_DISPLAY[] = Array.from(
-  new Set<SP_COIN_DISPLAY>([
-    ...MAIN_OVERLAY_GROUP,
-    SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL, // non-overlay, but part of mainPanelNode
-  ])
+  new Set<SP_COIN_DISPLAY>([...MAIN_OVERLAY_GROUP])
 ).sort((a, b) => a - b);
 
 /**
@@ -45,17 +47,19 @@ function buildIdIndexedPanels(): MainPanels {
 
 export const defaultMainPanels: MainPanels = buildIdIndexedPanels();
 
-
+/**
+ * Legacy tree node (used for migration-only code paths).
+ * Children include ONLY persisted overlays. No Sponsor Rate Config here.
+ */
 export const defaultMainPanelNode: MainPanelNode = n(
   SP_COIN_DISPLAY.TRADING_STATION_PANEL,
   true,
   [
-    n(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,    false),
-    n(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,   false),
-    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,     false),
-    n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL,         false),
-    n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,        false),
-    n(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL,  false),
+    n(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,   false),
+    n(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,  false),
+    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,    false),
+    n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL,        false),
+    n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,       false),
   ]
 );
 

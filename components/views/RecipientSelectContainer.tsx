@@ -1,4 +1,4 @@
-// File: components/containers/RecipientSelectContainer.tsx
+// File: components/views/RecipientSelectContainer.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -18,54 +18,23 @@ import { usePanelTree } from "@/lib/context/exchangeContext/hooks/usePanelTree";
 
 const RecipientSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { openPanel, activeMainOverlay } = usePanelTree();
+  const { isVisible, openPanel, closePanel, activeMainOverlay } = usePanelTree();
 
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
     exchangeContext.accounts.recipientAccount
   );
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
-  // Only show this container when:
-  // 1) We're on the Trading main overlay, and
-  // 2) Inline radio flag says to show it
-  const showRecipientContainer =
-    activeMainOverlay === SP_COIN_DISPLAY.TRADING_STATION_PANEL &&
-    (exchangeContext as any)?.settings?.ui?.showRecipientContainer === true;
-
-  if (!showRecipientContainer) return null;
-
-  // Default URL if recipient website does not exist
-  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
-  const sitekey = recipientWallet?.address?.trim()
-    ? `siteKey=${recipientWallet.address.trim()}`
-    : "";
-  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
-
-  // Open Sponsor Rate Config (non-main panel; does not affect activeMainOverlay)
+  // Toggle the Sponsor Rate Config panel visibility
   const toggleSponsorRateConfig = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-  }, [openPanel]);
-
-  // Check if recipient's website exists
-  useEffect(() => {
-    const website = recipientWallet?.website;
-    if (website && website !== "N/A" && website.trim() !== "") {
-      fetch(website, { method: "HEAD", mode: "no-cors" })
-        .then(() => {
-          setSiteExists(true); // Assume reachable (no-cors)
-          console.log(`Site ${website} is reachable.`);
-        })
-        .catch((error) => {
-          console.error(`ERROR: WalletContainer.Fetching ${website}:`, error);
-          setSiteExists(false);
-        });
+    const id = SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL;
+    if (isVisible(id)) {
+      closePanel(id);
     } else {
-      setSiteExists(false);
+      openPanel(id);
     }
-  }, [recipientWallet?.website]);
+  }, [isVisible, closePanel, openPanel]);
 
-  // Clear recipient in global context and return to Trading main overlay.
-  // Also flip inline radio back to show the Add button instead of this container.
   const clearRecipient = useCallback(() => {
     setExchangeContext(
       (prev) => {
@@ -82,10 +51,31 @@ const RecipientSelectContainer: React.FC = () => {
       },
       'RecipientSelectContainer:clearRecipient'
     );
-
-    // Ensure Trading is the active main overlay
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [setExchangeContext, openPanel]);
+
+  useEffect(() => {
+    const website = recipientWallet?.website?.trim();
+    if (!website || website === "N/A") {
+      setSiteExists(false);
+      return;
+    }
+    fetch(website, { method: "HEAD", mode: "no-cors" })
+      .then(() => setSiteExists(true))
+      .catch(() => setSiteExists(false));
+  }, [recipientWallet?.website]);
+
+  const showRecipientContainer =
+    activeMainOverlay === SP_COIN_DISPLAY.TRADING_STATION_PANEL &&
+    (exchangeContext as any)?.settings?.ui?.showRecipientContainer === true;
+
+  if (!showRecipientContainer) return null;
+
+  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
+  const sitekey = recipientWallet?.address?.trim()
+    ? `siteKey=${recipientWallet.address.trim()}`
+    : "";
+  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
 
   return (
     <>
@@ -132,7 +122,7 @@ const RecipientSelectContainer: React.FC = () => {
         </div>
       </div>
 
-      {/* Non-main panel; visibility managed separately via openPanel/closePanel */}
+      {/* Visible when SPONSOR_RATE_CONFIG_PANEL is open in the panel tree */}
       <SponsorRateConfigPanel />
     </>
   );

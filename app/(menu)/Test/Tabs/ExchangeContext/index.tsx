@@ -22,7 +22,7 @@ const PlusMarker: React.FC<{ onClick?: () => void; title?: string; className?: s
 }) => (
   <button
     type="button"
-    className={`inline-block mr-1 underline-offset-2 hover:underline text-green-500 ${className}`}
+    className={`inline-block mr-1 underline-offset-2 hover:underline text-[#22c55e] ${className}`}
     onClick={onClick}
     aria-label="Expand"
     title={title}
@@ -38,7 +38,7 @@ const MinusMarker: React.FC<{ onClick?: () => void; title?: string; className?: 
 }) => (
   <button
     type="button"
-    className={`inline-block mr-1 underline-offset-2 hover:underline text-amber-500 ${className}`}
+    className={`inline-block mr-1 underline-offset-2 hover:underline text-[#f59e0b] ${className}`}
     onClick={onClick}
     aria-label="Collapse"
     title={title}
@@ -46,7 +46,6 @@ const MinusMarker: React.FC<{ onClick?: () => void; title?: string; className?: 
     [-]
   </button>
 );
-
 
 /* ---------- utilities ---------- */
 const buttonClasses =

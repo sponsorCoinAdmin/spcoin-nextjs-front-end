@@ -4,12 +4,37 @@
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useExchangeContext } from '@/lib/context';
 
 const AddSponsorshipButton = () => {
   const { openPanel } = usePanelTree();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const openSponsorConfig = () => {
-    openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  const showRecipientContainer =
+    (exchangeContext as any)?.settings?.ui?.showRecipientContainer === true;
+
+  // 🔒 If the recipient container is shown, hide this button
+  if (showRecipientContainer) return null;
+
+  const openRecipientSelect = () => {
+    // 1) flip the inline UI flag so the container renders
+    setExchangeContext(
+      (prev) => {
+        const next: any = structuredClone(prev);
+        next.settings = {
+          ...(next.settings ?? {}),
+          ui: {
+            ...((next.settings as any)?.ui ?? {}),
+            showRecipientContainer: true,
+          },
+        };
+        return next;
+      },
+      'AddSponsorshipButton:openRecipientSelect'
+    );
+
+    // 2) ensure Trading is the active main overlay
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
 
   return (
@@ -18,11 +43,11 @@ const AddSponsorshipButton = () => {
       tabIndex={0}
       aria-label="Add Sponsorship"
       className={styles.addSponsorshipDiv}
-      onClick={openSponsorConfig}
+      onClick={openRecipientSelect}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          openSponsorConfig();
+          openRecipientSelect();
         }
       }}
     >
