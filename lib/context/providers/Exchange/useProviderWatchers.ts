@@ -7,6 +7,7 @@ import type {
   ExchangeContext as ExchangeContextTypeOnly,
   WalletAccount,
 } from '@/lib/structure';
+import type { MainPanelNode, PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
 
 const lower = (a?: string | Address) => (a ? (a as string).toLowerCase() : undefined);
@@ -36,6 +37,50 @@ type Params = {
   address?: string | undefined;
   accountStatus?: string;
 };
+
+/* -------------------------- Panel tree helpers -------------------------- */
+
+// Radio group for main overlays
+const MAIN_OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
+  SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+  SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
+  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
+  SP_COIN_DISPLAY.AGENT_SELECT_PANEL,
+  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
+];
+
+function clone<T>(o: T): T {
+  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+}
+
+function visitTree(node: PanelNode, fn: (n: PanelNode) => void) {
+  fn(node);
+  if (Array.isArray(node.children)) {
+    for (const c of node.children) visitTree(c, fn);
+  }
+}
+
+function anyVisible(root: MainPanelNode, ids: SP_COIN_DISPLAY[]): boolean {
+  let open = false;
+  visitTree(root, (n) => {
+    if (ids.includes(n.panel as SP_COIN_DISPLAY) && n.visible) open = true;
+  });
+  return open;
+}
+
+/** Set radio visibility across MAIN_OVERLAY_GROUP, turning on only `targetId`. */
+function setOverlayVisible(root: MainPanelNode, targetId: SP_COIN_DISPLAY): MainPanelNode {
+  const next = clone(root);
+  visitTree(next, (n) => {
+    if (MAIN_OVERLAY_GROUP.includes(n.panel as SP_COIN_DISPLAY)) {
+      n.visible = (n.panel as SP_COIN_DISPLAY) === targetId;
+    }
+  });
+  return next;
+}
+
+/* ----------------------------------------------------------------------- */
 
 export function useProviderWatchers({
   contextState,
@@ -67,7 +112,7 @@ export function useProviderWatchers({
     setExchangeContext((prevCtx) => {
       const next = structuredClone(prevCtx);
 
-      // ✅ Overwrite chain-derived fields when chain changes
+      // Overwrite chain-derived fields when chain changes
       next.network = resolveNetworkElement(nextWagmi, next.network);
 
       // Clear cross-chain selections
@@ -104,7 +149,7 @@ export function useProviderWatchers({
     setExchangeContext((prevCtx) => {
       const next = structuredClone(prevCtx);
 
-      // ✅ Hydrate full NetworkElement for local chain selection
+      // Hydrate full NetworkElement for local chain selection
       next.network = resolveNetworkElement(ctxChain, next.network);
 
       next.tradeData.sellTokenContract = undefined;
@@ -140,14 +185,14 @@ export function useProviderWatchers({
       const next = structuredClone(prevCtx);
 
       if (nextSlice.address && isConnected) {
-        // ✅ Wallet connected → hydrate connectedAccount with real address
+        // Wallet connected → hydrate connectedAccount with real address
         const current = next.accounts.connectedAccount ?? ({} as WalletAccount);
         next.accounts.connectedAccount = {
           ...current,
           address: nextSlice.address as Address,
         };
       } else {
-        // ❌ Wallet disconnected → clear connectedAccount
+        // Wallet disconnected → clear connectedAccount
         next.accounts.connectedAccount = undefined as any;
       }
 
@@ -180,15 +225,22 @@ export function useProviderWatchers({
       }, 'watcher:tokens:dedupe');
     }
 
-    // B) Close selection panel after a token commit
-    const isSelectPanelOpen =
-      contextState.settings?.activeDisplay === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL ||
-      contextState.settings?.activeDisplay === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
+    // B) Auto-close selection overlay → switch to TRADING when a token is committed
+    const root = contextState.settings?.mainPanelNode as MainPanelNode | undefined;
+    const selectOpen = root
+      ? anyVisible(root, [
+          SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
+          SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
+        ])
+      : false;
 
-    if ((sellAddr || buyAddr) && isSelectPanelOpen) {
+    if ((sellAddr || buyAddr) && selectOpen && root) {
       setExchangeContext((prevCtx) => {
         const next = structuredClone(prevCtx);
-        next.settings.activeDisplay = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+        next.settings.mainPanelNode = setOverlayVisible(
+          next.settings.mainPanelNode as MainPanelNode,
+          SP_COIN_DISPLAY.TRADING_STATION_PANEL
+        );
         return next;
       }, 'watcher:tokens:autoClose');
     }
@@ -198,7 +250,7 @@ export function useProviderWatchers({
     contextState,
     contextState?.tradeData.sellTokenContract?.address,
     contextState?.tradeData.buyTokenContract?.address,
-    contextState?.settings?.activeDisplay,
+    contextState?.settings?.mainPanelNode, // re-run when panel tree changes
     setExchangeContext,
   ]);
 }

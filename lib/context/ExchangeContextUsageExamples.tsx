@@ -57,7 +57,6 @@ export default function ExchangeContextUsageExamples() {
       <pre>Slippage Percentage: {slippage.percentage}</pre>
       <pre>Slippage Percentage String: {slippage.percentageString}</pre>
 
-      {/* 👇 Replaces activeDisplay */}
       <pre>Active Panel (panel-tree): {activePanelLabel}</pre>
       <pre>Token Scroll Visible: {isTokenScrollVisible ? 'yes' : 'no'}</pre>
 

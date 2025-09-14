@@ -12,7 +12,6 @@ import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
 import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { getActiveDisplayString } from '@/lib/context/helpers/activeDisplayHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PRICE_VIEW === 'true';
@@ -20,7 +19,6 @@ const debugLog = createDebugLogger('PriceView', DEBUG_ENABLED, LOG_TIME);
 
 export default function PriceView() {
   const { exchangeContext } = useExchangeContext();
-  const { activeDisplay } = exchangeContext.settings;
 
   // keep side-effects that matter for UX
   usePriceErrorEffect();

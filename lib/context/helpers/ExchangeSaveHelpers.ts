@@ -11,7 +11,8 @@ const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIM
 
 /**
  * Save the provided ExchangeContext to localStorage
- * @param contextData ExchangeContext to save
+ * - Preserves full settings (including mainPanelNode)
+ * - Normalizes bigint balances
  */
 export const saveLocalExchangeContext = (contextData: ExchangeContext): void => {
   if (typeof window === 'undefined') return;
@@ -19,12 +20,12 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
   try {
     debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
 
+    // Build a safe, non-mutating copy
     const safeContext: ExchangeContext = {
       ...contextData,
 
       settings: {
         ...contextData.settings,
-        activeDisplay: contextData.settings.activeDisplay, // ✅ only activeDisplay kept
       },
 
       tradeData: {
@@ -63,7 +64,7 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
     };
 
     const serializedContext = serializeWithBigInt(safeContext);
-    debugLog.log('🔓 SAVING EXCHANGE CONTEXT TO LOCALSTORAGE (serializedContext)\n:', serializedContext);
+    debugLog.log('🔓 SAVING EXCHANGE CONTEXT TO LOCALSTORAGE (serialized)\n:', serializedContext);
 
     try {
       const prettyPrinted = JSON.stringify(

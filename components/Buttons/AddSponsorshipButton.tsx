@@ -3,7 +3,6 @@
 
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-// ⬇️ Replace legacy activeDisplay with panel-tree overlays
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const AddSponsorshipButton = () => {

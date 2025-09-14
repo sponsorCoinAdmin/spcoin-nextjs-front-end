@@ -40,7 +40,6 @@ export const useSellTokenContract = (): [
 
 /**
  * Hook for managing buyTokenContract from context.
- * ✅ Simplified: no side-effects on activeDisplay.
  */
 export const useBuyTokenContract = (): [
   TokenContract | undefined,

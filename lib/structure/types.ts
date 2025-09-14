@@ -5,10 +5,9 @@ import { UseReadContractReturnType } from 'wagmi';
 import {
   STATUS,
   TRADE_DIRECTION,
-  SP_COIN_DISPLAY,
-  API_TRADING_PROVIDER, // ✅ include provider enum
+  API_TRADING_PROVIDER, // provider enum
 } from '@/lib/structure';
-import { MainPanelNode } from './exchangeContext';
+import { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.
@@ -64,8 +63,8 @@ export type Accounts = {
 
 /**
  * ✅ Settings for view/panel management and API provider choice.
- * - `activeDisplay` drives which primary panel is visible.
  * - `apiTradingProvider` selects the quote/route provider (e.g., 0x, 1inch).
+ * - `mainPanelNode` persists the full panel tree (new visibility model).
  */
 export type Settings = {
   /** Which backend to use for trading operations */
@@ -76,13 +75,6 @@ export type Settings = {
    * Always present after hydration (provider seeds it from defaults).
    */
   mainPanelNode: MainPanelNode;
-
-  /**
-   * @deprecated Legacy single-focus model.
-   * Kept optional during migration so old readers don’t crash.
-   * New code should ignore this and use `mainPanelNode` instead.
-   */
-  activeDisplay?: SP_COIN_DISPLAY;
 };
 
 /** (Legacy alias – kept only if you still import it elsewhere) */
@@ -97,7 +89,6 @@ export type NetworkElement = {
   symbol: string;
   url: string;
 };
-
 
 export type Slippage = {
   bps: number;

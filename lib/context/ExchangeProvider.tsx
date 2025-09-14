@@ -21,10 +21,8 @@ import { useProviderSetters } from '@/lib/context/providers/Exchange/useProvider
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
-// NEW: flat panels default
-import {
-  defaultMainPanels,
-} from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+// Panels (default flat list)
+import { defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import type {
   PanelNode,
   MainPanelNode, // legacy tree node (for migration only)
@@ -90,16 +88,17 @@ function isLegacyMainPanelNode(x: any): x is MainPanelNode {
 
 // New flat shape check
 function isMainPanels(x: any): x is PanelNode[] {
-  return Array.isArray(x) && x.every(n =>
-    n && typeof n === 'object' &&
-    typeof n.panel === 'number' &&
-    typeof n.visible === 'boolean' &&
-    Array.isArray(n.children)
+  return (
+    Array.isArray(x) &&
+    x.every(
+      (n) =>
+        n &&
+        typeof n === 'object' &&
+        typeof (n as any).panel === 'number' &&
+        typeof (n as any).visible === 'boolean' &&
+        Array.isArray((n as any).children)
+    )
   );
-}
-
-function clone<T>(o: T): T {
-  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
 // Ensure human-readable names for a single node
@@ -132,31 +131,9 @@ function legacyTreeToFlatPanels(root: MainPanelNode): PanelNode[] {
   return flat;
 }
 
-// Radio group for main overlays (now includes TRADING per your latest design)
-const MAIN_OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-  SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
-  SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
-  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
-  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-];
-
-// Apply legacy activeDisplay to a flat list (radio across MAIN_OVERLAY_GROUP)
-function applyLegacyActiveDisplayToFlat(panels: PanelNode[], activeDisplay: number): PanelNode[] {
-  const next = clone(panels);
-  if (MAIN_OVERLAY_GROUP.includes(activeDisplay as SP_COIN_DISPLAY)) {
-    for (const p of next) {
-      if (MAIN_OVERLAY_GROUP.includes(p.panel)) {
-        p.visible = (p.panel === (activeDisplay as SP_COIN_DISPLAY));
-      }
-    }
-  } else {
-    // Non-main panel: just ensure that panel is visible, keep others as-is
-    const t = next.find(p => p.panel === (activeDisplay as SP_COIN_DISPLAY));
-    if (t) t.visible = true;
-  }
-  return ensurePanelNamesFlat(next);
-}
+// Ensure SPONSOR_RATE_CONFIG_PANEL is never persisted to storage
+const excludeSponsorFromPanels = (panels: PanelNode[]): PanelNode[] =>
+  panels.filter((p) => p.panel !== SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
 
 /* --------------------------------- Provider -------------------------------- */
 
@@ -181,8 +158,24 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const nextBase = updater(prev);
       if (!nextBase) return prev;
 
+      // Create a sanitized copy for persistence (strip sponsor panel)
+      let toSave =
+        typeof structuredClone === 'function'
+          ? structuredClone(nextBase)
+          : JSON.parse(JSON.stringify(nextBase));
       try {
-        saveLocalExchangeContext(nextBase);
+        const maybePanels: PanelNode[] | undefined = (toSave as any)?.settings?.mainPanelNode;
+        if (Array.isArray(maybePanels)) {
+          (toSave as any).settings.mainPanelNode = excludeSponsorFromPanels(
+            ensurePanelNamesFlat(maybePanels)
+          );
+        }
+      } catch {
+        // ignore sanitize errors; fall back to saving as-is
+      }
+
+      try {
+        saveLocalExchangeContext(toSave);
       } catch (e) {
         if (DEBUG_ENABLED) debugLog.warn('⚠️ saveLocalExchangeContext failed', e);
       }
@@ -192,7 +185,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Initial hydration + migration → flat panels under settings.mainPanelNode
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
@@ -200,10 +192,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const sanitizedBase = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (sanitizedBase as any).settings ?? {};
-      const legacyActiveDisplay = settingsAny.activeDisplay; // number | undefined
       const stored = settingsAny.mainPanelNode;
 
-      let flatPanels: PanelNode[] | undefined;
+      let flatPanels: PanelNode[];
 
       if (isMainPanels(stored)) {
         // Already flat → ensure names
@@ -216,19 +207,21 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         flatPanels = ensurePanelNamesFlat(defaultMainPanels);
       }
 
-      // If legacy activeDisplay exists, apply radio behavior and drop the key
-      if (typeof legacyActiveDisplay === 'number') {
-        flatPanels = applyLegacyActiveDisplayToFlat(flatPanels, legacyActiveDisplay);
-        const { activeDisplay: _drop, ...rest } = settingsAny;
-        (sanitizedBase as any).settings = { ...rest, mainPanelNode: flatPanels };
-      } else {
-        (sanitizedBase as any).settings = { ...settingsAny, mainPanelNode: flatPanels };
-      }
+      // Always exclude sponsor panel from persisted panels
+      flatPanels = excludeSponsorFromPanels(flatPanels);
+
+      // Persist normalized panels (sanitizer handles legacy key cleanup)
+      (sanitizedBase as any).settings = { ...settingsAny, mainPanelNode: flatPanels };
 
       // Persist once post-migration/normalization
       try {
         saveLocalExchangeContext(sanitizedBase);
-        if (DEBUG_ENABLED) debugLog.log('info', '💾 settings.mainPanelNode (flat) saved to exchangeContext');
+        if (DEBUG_ENABLED) {
+          const vis = flatPanels
+            .map((p) => `${SP_COIN_DISPLAY[p.panel]}:${p.visible ? 1 : 0}`)
+            .join(' | ');
+          debugLog.log('info', `💾 settings.mainPanelNode (flat, sponsor-excluded) saved → ${vis}`);
+        }
       } catch (e) {
         if (DEBUG_ENABLED) debugLog.warn('⚠️ Failed to persist mainPanelNode (flat)', e);
       }
@@ -290,7 +283,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const next = structuredClone(prev);
       const net = ensureNetwork(next.network);
-      net.chainId = walletId as any;
+      (net as any).chainId = walletId as any;
       next.network = net;
       return next;
     }, 'provider:syncWalletChainId(connected)');
@@ -309,7 +302,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const next = structuredClone(prev);
       const net = ensureNetwork(next.network);
-      net.chainId = undefined as any;
+      (net as any).chainId = undefined as any;
       next.network = net;
       return next;
     }, 'provider:clearWalletChainId(disconnected)');

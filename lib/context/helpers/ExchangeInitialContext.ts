@@ -11,6 +11,23 @@ import {
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
 
+// ✅ Use the tree root default, not the flat array
+import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+
+function clone<T>(o: T): T {
+  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+}
+
+// Build a default tree and exclude SPONSOR_RATE_CONFIG_PANEL from children
+function buildDefaultMainPanelNode(): MainPanelNode {
+  const root = clone(defaultMainPanelNode) as MainPanelNode;
+  root.children = (root.children ?? []).filter(
+    (ch) => ch?.panel !== SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
+  );
+  return root;
+}
+
 export const getInitialContext = (chainId: number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
 
@@ -21,7 +38,8 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      // ✅ must be a MainPanelNode
+      mainPanelNode: buildDefaultMainPanelNode(),
     },
     accounts: {
       connectedAccount: undefined,
@@ -39,8 +57,8 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       rateRatio: 1,
       slippage: {
         bps: 200,
-        percentage: 2,           // keep in sync with bps
-        percentageString: '2.00%', // keep in sync with bps
+        percentage: 2,
+        percentageString: '2.00%',
       },
     },
     errorMessage: undefined,

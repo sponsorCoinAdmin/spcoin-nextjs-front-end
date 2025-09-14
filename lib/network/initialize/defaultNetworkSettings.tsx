@@ -16,6 +16,8 @@ import {
   SP_COIN_DISPLAY,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
+import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -34,6 +36,20 @@ const defaultInitialTradeData: TradeData = {
     percentageString: '0.00%',
   },
 };
+
+// ---- panel tree helpers ----
+function clone<T>(o: T): T {
+  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+}
+
+/** Build a default MainPanelNode and exclude SPONSOR_RATE_CONFIG_PANEL from children */
+function buildDefaultMainPanelNode(): MainPanelNode {
+  const root = clone(defaultMainPanelNode) as MainPanelNode;
+  root.children = (root.children ?? []).filter(
+    (ch) => ch?.panel !== SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
+  );
+  return root;
+}
 
 const initialContext = () => {
   const chainId: number = CHAIN_ID.ETHEREUM; // default startup network
@@ -62,7 +78,8 @@ const getInitialContext = (chain: number | string | { id: number } | undefined):
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      activeDisplay: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      // ✅ satisfy required Settings.mainPanelNode with a full tree root
+      mainPanelNode: buildDefaultMainPanelNode(),
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,

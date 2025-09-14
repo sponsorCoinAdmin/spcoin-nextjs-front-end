@@ -1,22 +1,13 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// ✅ Updated type definition
 export interface ExchangePageState {
   showContext?: boolean;
   showWallets?: boolean;
   collapsedKeys?: string[];
   expandContext?: boolean;
-  showActiveDisplayPanel?: boolean; // ✅ Add this
 }
-
 
 export type PageStateTree = {
   page: {
@@ -24,14 +15,13 @@ export type PageStateTree = {
   };
 };
 
-// ✅ Updated default state
 const defaultState: PageStateTree = {
   page: {
     exchangePage: {
       showContext: false,
       showWallets: false,
       collapsedKeys: [],
-      expandContext: false, // ✅ added
+      expandContext: false,
     },
   },
 };
@@ -48,7 +38,7 @@ export const PageStateProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<PageStateTree>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('PageStateContext');
-      return saved ? JSON.parse(saved) : defaultState;
+      return saved ? (JSON.parse(saved) as PageStateTree) : defaultState;
     }
     return defaultState;
   });
