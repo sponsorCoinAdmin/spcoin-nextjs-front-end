@@ -69,7 +69,7 @@ const enumRegistry: Record<string, Record<number, string>> = {
 
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible, openPanel, closePanel, getPanelChildren } = usePanelTree();
+  const { isVisible, openPanel, closePanel } = usePanelTree();
   const { state, setState } = usePageState();
 
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -166,7 +166,7 @@ export default function ExchangeContextTab() {
     ctx: boolean;
     settings: boolean;
     main: boolean;
-    exp: Record<string, boolean>; // expansion for “other branches” by path (and panel children)
+    exp: Record<string, boolean>; // expansion for “other branches”
   }>({
     ctx: true,
     settings: true,
@@ -303,11 +303,6 @@ export default function ExchangeContextTab() {
                     const visible = isVisible(panelId);
                     const label = SP_COIN_DISPLAY[panelId] ?? `PANEL_${panelId}`;
 
-                    // Children are now read from settings.panelChildren (persistent graph)
-                    const childrenPath = `settings.panelChildren.${panelId}`;
-                    const childrenExpanded = !!ui.exp[childrenPath];
-                    const childIds = getPanelChildren(panelId);
-
                     return (
                       <React.Fragment key={idx}>
                         <Row
@@ -318,38 +313,9 @@ export default function ExchangeContextTab() {
                           onClick={() => onTogglePanel(panelId)}
                         />
                         {visible && (
-                          <>
-                            {/* TOGGLABLE children row */}
-                            <Row
-                              text={`children`}
-                              depth={4}
-                              open={childrenExpanded}
-                              clickable
-                              onClick={() => togglePath(childrenPath)}
-                            />
-                            {childrenExpanded && (
-                              <>
-                                {childIds.length > 0 ? (
-                                  childIds.map((childId, cIdx) => {
-                                    const chLabel = SP_COIN_DISPLAY[childId] ?? `PANEL_${childId}`;
-                                    return (
-                                      <div
-                                        key={`${childrenPath}.${cIdx}`}
-                                        className="font-mono whitespace-pre leading-6 text-slate-200"
-                                      >
-                                        {'  '.repeat(5)}
-                                        {`[${cIdx}] → ${chLabel}`}
-                                      </div>
-                                    );
-                                  })
-                                ) : (
-                                  <div className="font-mono whitespace-pre leading-6 text-slate-400">
-                                    {'  '.repeat(5)}(empty)
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </>
+                          <div className="font-mono whitespace-pre leading-6 text-slate-400">
+                            {'  '.repeat(4)}children: (empty)
+                          </div>
                         )}
                       </React.Fragment>
                     );

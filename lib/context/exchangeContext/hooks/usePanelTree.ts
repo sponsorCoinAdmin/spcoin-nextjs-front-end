@@ -26,7 +26,7 @@ const isPanelArray = (x: any): x is PanelEntry[] =>
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // Authoritative list of main overlays (array-only, no legacy/object tree)
+  // Authoritative list of main overlays (array-only, flat, childless)
   const list = useMemo<PanelEntry[]>(
     () =>
       isPanelArray((exchangeContext as any)?.settings?.mainPanelNode)
@@ -39,11 +39,11 @@ export function usePanelTree() {
   useEffect(() => {
     if (!list.length) return;
 
-    const count = MAIN_OVERLAY_GROUP.reduce(
+    const visibleCount = MAIN_OVERLAY_GROUP.reduce(
       (n, id) => n + (list.find((e) => e.panel === id)?.visible ? 1 : 0),
       0
     );
-    if (count === 1) return;
+    if (visibleCount === 1) return;
 
     setExchangeContext(
       (prev) => {
@@ -72,21 +72,6 @@ export function usePanelTree() {
     [list]
   );
 
-  /**
-   * Read-only children for display only.
-   * We do NOT mutate or seed any relationships here; if settings.panelChildren
-   * is absent, this returns an empty array so your UI shows “(empty)”.
-   */
-  const getPanelChildren = useCallback(
-    (parent: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
-      const map = (((exchangeContext as any)?.settings ?? {}).panelChildren ??
-        {}) as Record<number, number[]>;
-      const arr = map[parent] ?? [];
-      return Array.from(new Set(arr)).filter((id) => id !== parent) as SP_COIN_DISPLAY[];
-    },
-    [exchangeContext]
-  );
-
   /* ───────────────────────────── actions ───────────────────────────── */
 
   const openPanel = useCallback(
@@ -97,6 +82,12 @@ export function usePanelTree() {
             ? ((prev as any).settings.mainPanelNode as PanelEntry[])
             : [];
           if (!current.length) return prev;
+
+          // If it's already the active one, skip changing anything
+          const alreadyActive = current.some(
+            (e) => MAIN_OVERLAY_GROUP.includes(e.panel) && e.panel === panel && e.visible
+          );
+          if (alreadyActive) return prev;
 
           const next = current.map((e) =>
             MAIN_OVERLAY_GROUP.includes(e.panel)
@@ -112,7 +103,7 @@ export function usePanelTree() {
     [setExchangeContext]
   );
 
-  // Radio overlays can't be "closed" from here; no-op keeps behavior predictable
+  // Radio overlays can't be "closed" from here; keep as a no-op for predictability
   const closePanel = useCallback((_panel: SP_COIN_DISPLAY) => {}, []);
 
   /* ───────────────────────────── derived ───────────────────────────── */
@@ -138,7 +129,6 @@ export function usePanelTree() {
     // queries
     isVisible,
     isTokenScrollVisible,
-    getPanelChildren, // display-only; empty unless settings.panelChildren exists
 
     // actions
     openPanel,

@@ -1,8 +1,5 @@
-// File: lib/context/helpers/ExchangeInitialContext.ts
-
 import {
   API_TRADING_PROVIDER,
-  SP_COIN_DISPLAY,
   TRADE_DIRECTION,
   WalletAccount,
   NetworkElement,
@@ -10,8 +7,6 @@ import {
 } from '@/lib/structure';
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
-
-// ✅ Use the tree root default, not the flat array
 import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
@@ -19,14 +14,11 @@ function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
-// Build a default tree and exclude SPONSOR_RATE_CONFIG_PANEL from children
-function buildDefaultMainPanelNode(): MainPanelNode {
-  const root = clone(defaultMainPanelNode) as MainPanelNode;
-  root.children = (root.children ?? []).filter(
-    (ch) => ch?.panel !== SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL
-  );
+const buildDefaultMainPanelNode = (): MainPanelNode => {
+  const root = clone(defaultMainPanelNode);
+  // no filtering needed; keep shallow children as-is
   return root;
-}
+};
 
 export const getInitialContext = (chainId: number): ExchangeContext => {
   const initialContextMap = getInitialContextMap(chainId);
@@ -38,8 +30,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      // ✅ must be a MainPanelNode
-      mainPanelNode: buildDefaultMainPanelNode(),
+      mainPanelNode: buildDefaultMainPanelNode(), // ✅ a MainPanelNode, not an array
     },
     accounts: {
       connectedAccount: undefined,

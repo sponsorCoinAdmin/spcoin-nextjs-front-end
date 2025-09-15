@@ -45,7 +45,7 @@
         │                 │                 ├── Balance: {formattedBalance}
         │                 │                 ├── {buySellText}
         │                 │                 └── <AddSponsorshipButton /> ← if isSpCoin
-        │                 │                       ├── onClick → setSpCoinDisplay(RECIPIENT_SELECT_PANEL)
+        │                 │                       ├── onClick → setSpCoinDisplay(RECIPIENT_SELECT_CONFIG_PANEL)
         │                 │                       └── isContainerVisible → <RecipientSelectScrollPanel>
         │                 │                             └── <RecipientSelectPanel>
         │                 │                                   └── <AddressSelect> (Recipient)

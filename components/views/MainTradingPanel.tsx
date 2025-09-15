@@ -46,7 +46,7 @@ export default function MainTradingPanel() {
   const { setRecipientAccount } = useExchangeContext();
 
   const isTradingStationVisible = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL);
   const isErrorMessagePanel = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
 
   // Derive the opposing address for the open token panel

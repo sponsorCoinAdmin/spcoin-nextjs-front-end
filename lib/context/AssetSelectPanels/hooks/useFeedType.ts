@@ -10,11 +10,11 @@ const debugLog = createDebugLogger('useFeedType', DEBUG, false);
 export function useFeedType(containerType: SP_COIN_DISPLAY): FEED_TYPE {
   const feed = useMemo<FEED_TYPE>(() => {
     switch (containerType) {
-      case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL:
+      case SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL:
         return FEED_TYPE.RECIPIENT_ACCOUNTS;
 
     //   If you later add an Agent panel:
-      case SP_COIN_DISPLAY.AGENT_SELECT_PANEL:
+      case SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL:
         return FEED_TYPE.AGENT_ACCOUNTS;
 
       case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:

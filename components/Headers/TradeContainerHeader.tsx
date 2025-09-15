@@ -19,13 +19,13 @@ interface Props {
 
 function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
   switch (d) {
-    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL:
+    case SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL:
       return 'Select Sponsors Agent';
     case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:
       return 'Select a Token to Buy';
     case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
       return 'Error Message Panel';
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL:
       return 'Select Recipient to Sponsor';
     case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL:
       return 'Select a Token to Sell';
@@ -47,7 +47,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
     if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
     if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL))  return SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL;
     if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL))      return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
     if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL))    return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
     return SP_COIN_DISPLAY.UNDEFINED;

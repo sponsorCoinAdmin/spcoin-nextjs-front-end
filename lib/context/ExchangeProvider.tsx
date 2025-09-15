@@ -53,8 +53,6 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 
 /* --------------------------------- Helpers -------------------------------- */
 
-type PanelChildrenMap = Record<number, number[]>;
-
 const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   connected: !!n?.connected,
   appChainId: n?.appChainId ?? 0,
@@ -68,7 +66,7 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
 const isLegacyMainPanelNode = (x: any): x is MainPanelNode =>
   !!x && typeof x === 'object' && typeof x.panel === 'number' && typeof x.visible === 'boolean' && Array.isArray(x.children);
 
-// Accepts an array of panel nodes (children may or may not be present)
+// Accept an array of panel nodes; children may exist in legacy data but will be stripped
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
   x.every(
@@ -79,12 +77,12 @@ const isMainPanels = (x: any): x is PanelNode[] =>
       typeof (n as any).visible === 'boolean'
   );
 
-// Strip children from panel nodes (we keep relationships in settings.panelChildren only)
+// Strip children and ensure a name
 const ensurePanelName = (n: PanelNode): PanelNode => ({
   panel: n.panel,
   name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
   visible: !!n.visible,
-  children: [], // ← ensure no embedded children ever persist in mainPanelNode
+  children: [], // <- always childless in storage
 });
 
 const ensurePanelNamesFlat = (panels: PanelNode[]): PanelNode[] => panels.map(ensurePanelName);
@@ -97,25 +95,12 @@ const legacyTreeToFlatPanels = (root: MainPanelNode): PanelNode[] => {
       panel: m.panel,
       name: m.name || (SP_COIN_DISPLAY[m.panel] ?? String(m.panel)),
       visible: m.visible,
-      children: [], // ← legacy children are discarded here
+      children: [], // <- discard legacy children
     });
   push(root);
   for (const c of root.children || []) push(c as MainPanelNode);
   return flat;
 };
-
-// Minimal validator for a panel-children map
-function isPanelChildrenMap(x: any): x is PanelChildrenMap {
-  if (!x || typeof x !== 'object') return false;
-  for (const k of Object.keys(x)) {
-    const arr = (x as any)[k];
-    if (!Array.isArray(arr) || !arr.every((n) => typeof n === 'number')) return false;
-  }
-  return true;
-}
-
-// Default relationships — empty by default (no seeding)
-const DEFAULT_PANEL_CHILDREN: PanelChildrenMap = {};
 
 /* --------------------------------- Provider -------------------------------- */
 
@@ -128,7 +113,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
-  // Persist + update state (no injection/stripping)
+  // Persist + update state
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     _hookName = 'unknown'
@@ -148,7 +133,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Initial hydrate + normalize (mainPanelNode + panelChildren + ui.nonMainVisible)
+  // Initial hydrate + normalize (mainPanelNode only)
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
@@ -158,30 +143,15 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // mainPanelNode (flat, children always stripped)
+      // mainPanelNode (flat, childless)
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) flatPanels = ensurePanelNamesFlat(storedPanels);
       else if (isLegacyMainPanelNode(storedPanels)) flatPanels = ensurePanelNamesFlat(legacyTreeToFlatPanels(storedPanels));
       else flatPanels = ensurePanelNamesFlat(defaultMainPanels);
 
-      // panelChildren (graph)
-      const storedChildren = settingsAny.panelChildren;
-      const panelChildren: PanelChildrenMap = isPanelChildrenMap(storedChildren)
-        ? storedChildren
-        : DEFAULT_PANEL_CHILDREN;
-
-      // ui.nonMainVisible (ephemeral visibility for non-main panels)
-      const ui = (settingsAny.ui ?? {}) as any;
-      const nonMainVisible =
-        ui && ui.nonMainVisible && typeof ui.nonMainVisible === 'object'
-          ? ui.nonMainVisible
-          : ({} as Record<number, boolean>);
-
       (base as any).settings = {
         ...settingsAny,
         mainPanelNode: flatPanels,
-        panelChildren,
-        ui: { ...ui, nonMainVisible },
       };
 
       try {

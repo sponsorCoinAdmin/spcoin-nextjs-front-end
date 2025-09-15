@@ -13,12 +13,12 @@ export type TokenSelectBag = {
 };
 
 export type RecipientSelectBag = {
-  type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+  type: SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL;
   defaultRecipient?: string;
 };
 
 export type AgentSelectBag = {
-  type: SP_COIN_DISPLAY.AGENT_SELECT_PANEL;
+  type: SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL;
   defaultAgentId?: string;
 };
 

@@ -3,16 +3,16 @@
 import { SP_COIN_DISPLAY } from '@/lib/structure/enums/spCoinDisplay';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 import type {
-  MainPanelNode,   // legacy alias (single node)
   MainPanels,      // id-indexed flat list (index === enum id)
   PanelNode,
+  MainPanelNode,   // single root node with shallow children
 } from '@/lib/structure/exchangeContext/types/PanelNode';
 
-// Panels that must NOT be persisted in mainPanelNode (ephemeral UI)
-export const EPHEMERAL_PANELS: SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL,
-];
-
+/**
+ * Generic node factory.
+ * Use `children` only when constructing the tree default (defaultMainPanelNode).
+ * Flat defaults (defaultMainPanels) keep children empty by design.
+ */
 const n = (panel: SP_COIN_DISPLAY, visible: boolean, children: PanelNode[] = []): PanelNode => ({
   panel,
   name: SP_COIN_DISPLAY[panel] ?? String(panel),
@@ -21,9 +21,8 @@ const n = (panel: SP_COIN_DISPLAY, visible: boolean, children: PanelNode[] = [])
 });
 
 /**
- * Source of truth for panels persisted in mainPanelNode.
- * - MAIN_OVERLAY_GROUP covers the radio overlays (Trading, Buy, Sell, Recipient, Agent, Error).
- * - ❌ SPONSOR_RATE_CONFIG_PANEL is intentionally EXCLUDED (ephemeral).
+ * Source of truth for the MAIN overlays that belong in the persisted state.
+ * (Trading, Buy, Sell, Recipient, Agent, Error)
  */
 const ALL_PANELS: SP_COIN_DISPLAY[] = Array.from(
   new Set<SP_COIN_DISPLAY>([...MAIN_OVERLAY_GROUP])
@@ -32,7 +31,7 @@ const ALL_PANELS: SP_COIN_DISPLAY[] = Array.from(
 /**
  * Build an **id-indexed** array so defaultMainPanels[id].panel === id.
  * TRADING_STATION_PANEL is visible by default; others are hidden.
- * No default children are seeded.
+ * Children are NOT seeded in the flat model.
  */
 function buildIdIndexedPanels(): MainPanels {
   const maxId = Math.max(...ALL_PANELS);
@@ -40,7 +39,7 @@ function buildIdIndexedPanels(): MainPanels {
 
   for (const id of ALL_PANELS) {
     const isTrading = id === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-    arr[id] = n(id, isTrading, []);
+    arr[id] = n(id, isTrading, []); // children empty in flat model
   }
 
   return arr as MainPanels;
@@ -49,15 +48,19 @@ function buildIdIndexedPanels(): MainPanels {
 export const defaultMainPanels: MainPanels = buildIdIndexedPanels();
 
 /**
- * Legacy tree node (used for migration-only code paths).
- * Kept childless to avoid any accidental seeding of children in mainPanelNode.
- * ExchangeProvider already flattens legacy shapes and strips children defensively.
+ * Tree default for settings.mainPanelNode (single root with shallow children).
+ * - Root: TRADING_STATION_PANEL (visible)
+ * - Children: other overlays (hidden)
+ * This satisfies code paths that expect a MainPanelNode (not an array).
  */
 export const defaultMainPanelNode: MainPanelNode = n(
   SP_COIN_DISPLAY.TRADING_STATION_PANEL,
   true,
-  [] // <- no children to keep legacy default in sync with the flat design
+  [
+    n(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,      false),
+    n(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,       false),
+    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL, false),
+    n(SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL,     false),
+    n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,           false),
+  ]
 );
-
-/** @deprecated No longer used; panel state is stored under exchangeContext.settings.mainPanelNode */
-export const MAIN_PANEL_NODE_STORAGE_KEY = 'mainPanelNode';

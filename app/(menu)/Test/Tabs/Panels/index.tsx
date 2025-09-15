@@ -21,8 +21,8 @@ export default function PanelsTab() {
       SP_COIN_DISPLAY.TRADING_STATION_PANEL,     // main overlay (radio group)
       SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,
       SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,
-      SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
-      SP_COIN_DISPLAY.AGENT_SELECT_PANEL,
+      SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL,
+      SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL,
       SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL,
     ],
     []
@@ -132,11 +132,11 @@ export default function PanelsTab() {
         />
         <QuickAction
           label="Toggle Recipient Select"
-          onClick={() => togglePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL, 'PanelsTab:toggleRecipient')}
+          onClick={() => togglePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL, 'PanelsTab:toggleRecipient')}
         />
         <QuickAction
           label="Toggle Agent Select"
-          onClick={() => togglePanel(SP_COIN_DISPLAY.AGENT_SELECT_PANEL, 'PanelsTab:toggleAgent')}
+          onClick={() => togglePanel(SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL, 'PanelsTab:toggleAgent')}
         />
         <QuickAction
           label="Toggle Sponsor Rate Config"
