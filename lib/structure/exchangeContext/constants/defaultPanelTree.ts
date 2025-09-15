@@ -32,6 +32,7 @@ const ALL_PANELS: SP_COIN_DISPLAY[] = Array.from(
 /**
  * Build an **id-indexed** array so defaultMainPanels[id].panel === id.
  * TRADING_STATION_PANEL is visible by default; others are hidden.
+ * No default children are seeded.
  */
 function buildIdIndexedPanels(): MainPanels {
   const maxId = Math.max(...ALL_PANELS);
@@ -49,18 +50,13 @@ export const defaultMainPanels: MainPanels = buildIdIndexedPanels();
 
 /**
  * Legacy tree node (used for migration-only code paths).
- * Children include ONLY persisted overlays. No Sponsor Rate Config here.
+ * Kept childless to avoid any accidental seeding of children in mainPanelNode.
+ * ExchangeProvider already flattens legacy shapes and strips children defensively.
  */
 export const defaultMainPanelNode: MainPanelNode = n(
   SP_COIN_DISPLAY.TRADING_STATION_PANEL,
   true,
-  [
-    n(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL,   false),
-    n(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL,  false),
-    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,    false),
-    n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL,        false),
-    n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,       false),
-  ]
+  [] // <- no children to keep legacy default in sync with the flat design
 );
 
 /** @deprecated No longer used; panel state is stored under exchangeContext.settings.mainPanelNode */

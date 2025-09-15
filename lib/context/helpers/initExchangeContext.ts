@@ -2,11 +2,7 @@
 
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import {
-  WalletAccount,
-  ExchangeContext,
-  STATUS,
-} from '@/lib/structure';
+import { WalletAccount, ExchangeContext, STATUS } from '@/lib/structure';
 import { Address } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -19,9 +15,10 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  * Initializes the ExchangeContext by hydrating from localStorage and optionally
  * augmenting it with connected wallet metadata if `address` is provided.
  *
- * Notes:
- * - No legacy `settings` / `settings_NEW` writes. Panel state is owned elsewhere
- *   (via MAIN_PANEL_NODE_STORAGE_KEY) and is not touched here.
+ * Important:
+ * - This function does **not** create or mutate any panel state
+ *   (`settings.mainPanelNode`, `settings.panelChildren`, or `settings.ui.nonMainVisible`).
+ *   Panel state is initialized and persisted exclusively by the ExchangeProvider.
  */
 export async function initExchangeContext(
   chainId: number,
@@ -36,15 +33,24 @@ export async function initExchangeContext(
   debugLog.log(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
   const sanitized = sanitizeExchangeContext(stored, effectiveChainId);
   debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
-  debugLog.warn(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
+  debugLog.log(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
 
   // 🔐 Wallet metadata enrichment (does not affect panel storage)
   if (isConnected && address) {
     try {
       const res = await fetch(`/assets/accounts/${address}/wallet.json`);
-      const metadata = res.ok ? (await res.json()) : null;
+      const metadata = res.ok ? (await res.json()) as Partial<WalletAccount> & { balance?: string | number } : null;
 
       if (metadata) {
+        // Normalize balance to bigint safely
+        const rawBalance = metadata.balance ?? 0;
+        let balance: bigint = 0n;
+        try {
+          balance = BigInt(typeof rawBalance === 'string' ? rawBalance : String(rawBalance));
+        } catch {
+          balance = 0n;
+        }
+
         const merged: WalletAccount = {
           name: metadata.name ?? '',
           symbol: metadata.symbol ?? '',
@@ -54,7 +60,7 @@ export async function initExchangeContext(
           status: STATUS.INFO,
           address: address as Address,
           logoURL: metadata.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
-          balance: BigInt(metadata.balance ?? 0),
+          balance,
         };
         sanitized.accounts.connectedAccount = merged;
       } else {

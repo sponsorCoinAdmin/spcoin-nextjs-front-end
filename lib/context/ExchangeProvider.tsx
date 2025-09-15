@@ -3,8 +3,13 @@
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
+
 import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
+import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
+import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
+import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
+
 import {
   ExchangeContext as ExchangeContextTypeOnly,
   TRADE_DIRECTION,
@@ -14,11 +19,10 @@ import {
   NetworkElement,
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
-import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
-import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
-import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
+
 import { defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 /* ---------------------------- Types & Context API --------------------------- */
@@ -49,6 +53,8 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 
 /* --------------------------------- Helpers -------------------------------- */
 
+type PanelChildrenMap = Record<number, number[]>;
+
 const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   connected: !!n?.connected,
   appChainId: n?.appChainId ?? 0,
@@ -62,20 +68,28 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
 const isLegacyMainPanelNode = (x: any): x is MainPanelNode =>
   !!x && typeof x === 'object' && typeof x.panel === 'number' && typeof x.visible === 'boolean' && Array.isArray(x.children);
 
+// Accepts an array of panel nodes (children may or may not be present)
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
   x.every(
-    (n) => n && typeof n === 'object' && typeof (n as any).panel === 'number' && typeof (n as any).visible === 'boolean'
+    (n) =>
+      n &&
+      typeof n === 'object' &&
+      typeof (n as any).panel === 'number' &&
+      typeof (n as any).visible === 'boolean'
   );
 
+// Strip children from panel nodes (we keep relationships in settings.panelChildren only)
 const ensurePanelName = (n: PanelNode): PanelNode => ({
-  ...n,
+  panel: n.panel,
   name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
-  children: n.children?.map(ensurePanelName) ?? [],
+  visible: !!n.visible,
+  children: [], // ← ensure no embedded children ever persist in mainPanelNode
 });
 
 const ensurePanelNamesFlat = (panels: PanelNode[]): PanelNode[] => panels.map(ensurePanelName);
 
+// Flatten a legacy root+children into a flat list and strip children
 const legacyTreeToFlatPanels = (root: MainPanelNode): PanelNode[] => {
   const flat: PanelNode[] = [];
   const push = (m: MainPanelNode) =>
@@ -83,12 +97,25 @@ const legacyTreeToFlatPanels = (root: MainPanelNode): PanelNode[] => {
       panel: m.panel,
       name: m.name || (SP_COIN_DISPLAY[m.panel] ?? String(m.panel)),
       visible: m.visible,
-      children: m.children?.map(ensurePanelName) ?? [],
+      children: [], // ← legacy children are discarded here
     });
   push(root);
   for (const c of root.children || []) push(c as MainPanelNode);
   return flat;
 };
+
+// Minimal validator for a panel-children map
+function isPanelChildrenMap(x: any): x is PanelChildrenMap {
+  if (!x || typeof x !== 'object') return false;
+  for (const k of Object.keys(x)) {
+    const arr = (x as any)[k];
+    if (!Array.isArray(arr) || !arr.every((n) => typeof n === 'number')) return false;
+  }
+  return true;
+}
+
+// Default relationships — empty by default (no seeding)
+const DEFAULT_PANEL_CHILDREN: PanelChildrenMap = {};
 
 /* --------------------------------- Provider -------------------------------- */
 
@@ -101,7 +128,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
-  // Persist + update state (no sponsor injection/stripping anywhere)
+  // Persist + update state (no injection/stripping)
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     _hookName = 'unknown'
@@ -121,7 +148,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Initial hydrate + normalize panels from storage
+  // Initial hydrate + normalize (mainPanelNode + panelChildren + ui.nonMainVisible)
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
@@ -129,14 +156,33 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const base = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (base as any).settings ?? {};
-      const stored = settingsAny.mainPanelNode;
+      const storedPanels = settingsAny.mainPanelNode;
 
+      // mainPanelNode (flat, children always stripped)
       let flatPanels: PanelNode[];
-      if (isMainPanels(stored)) flatPanels = ensurePanelNamesFlat(stored);
-      else if (isLegacyMainPanelNode(stored)) flatPanels = ensurePanelNamesFlat(legacyTreeToFlatPanels(stored));
+      if (isMainPanels(storedPanels)) flatPanels = ensurePanelNamesFlat(storedPanels);
+      else if (isLegacyMainPanelNode(storedPanels)) flatPanels = ensurePanelNamesFlat(legacyTreeToFlatPanels(storedPanels));
       else flatPanels = ensurePanelNamesFlat(defaultMainPanels);
 
-      (base as any).settings = { ...settingsAny, mainPanelNode: flatPanels };
+      // panelChildren (graph)
+      const storedChildren = settingsAny.panelChildren;
+      const panelChildren: PanelChildrenMap = isPanelChildrenMap(storedChildren)
+        ? storedChildren
+        : DEFAULT_PANEL_CHILDREN;
+
+      // ui.nonMainVisible (ephemeral visibility for non-main panels)
+      const ui = (settingsAny.ui ?? {}) as any;
+      const nonMainVisible =
+        ui && ui.nonMainVisible && typeof ui.nonMainVisible === 'object'
+          ? ui.nonMainVisible
+          : ({} as Record<number, boolean>);
+
+      (base as any).settings = {
+        ...settingsAny,
+        mainPanelNode: flatPanels,
+        panelChildren,
+        ui: { ...ui, nonMainVisible },
+      };
 
       try {
         saveLocalExchangeContext(base);
@@ -179,19 +225,17 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const next = structuredClone(prev);
       const net = ensureNetwork(next.network);
 
-      // connected flag
-      const conn = !!isConnected;
-      // chainId reflects wallet only when connected
-      const desiredChainId = conn && typeof wagmiChainId === 'number' ? wagmiChainId : undefined;
+      const connected = !!isConnected;
+      const desiredChainId = connected && typeof wagmiChainId === 'number' ? wagmiChainId : undefined;
 
       const noChange =
-        net.connected === conn &&
+        net.connected === connected &&
         ((typeof net.chainId === 'undefined' && typeof desiredChainId === 'undefined') ||
           net.chainId === desiredChainId);
 
       if (noChange) return prev;
 
-      net.connected = conn;
+      net.connected = connected;
       (net as any).chainId = desiredChainId as any;
       next.network = net;
       return next;

@@ -69,7 +69,7 @@ const enumRegistry: Record<string, Record<number, string>> = {
 
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible, openPanel, closePanel } = usePanelTree();
+  const { isVisible, openPanel, closePanel, getPanelChildren } = usePanelTree();
   const { state, setState } = usePageState();
 
   const pageAny: any = state.page?.exchangePage ?? {};
@@ -303,10 +303,10 @@ export default function ExchangeContextTab() {
                     const visible = isVisible(panelId);
                     const label = SP_COIN_DISPLAY[panelId] ?? `PANEL_${panelId}`;
 
-                    // per-panel children expansion path
-                    const childrenPath = `settings.mainPanelNode.${idx}.children`;
+                    // Children are now read from settings.panelChildren (persistent graph)
+                    const childrenPath = `settings.panelChildren.${panelId}`;
                     const childrenExpanded = !!ui.exp[childrenPath];
-                    const children = Array.isArray(node.children) ? node.children : [];
+                    const childIds = getPanelChildren(panelId);
 
                     return (
                       <React.Fragment key={idx}>
@@ -329,14 +329,9 @@ export default function ExchangeContextTab() {
                             />
                             {childrenExpanded && (
                               <>
-                                {children.length > 0 ? (
-                                  // ✅ typed callback params to avoid implicit 'any'
-                                  children.map((ch: any, cIdx: number) => {
-                                    const chId = (ch as any)?.panel as SP_COIN_DISPLAY | undefined;
-                                    const chLabel =
-                                      typeof chId === 'number'
-                                        ? SP_COIN_DISPLAY[chId] ?? `PANEL_${chId}`
-                                        : `(child ${cIdx})`;
+                                {childIds.length > 0 ? (
+                                  childIds.map((childId, cIdx) => {
+                                    const chLabel = SP_COIN_DISPLAY[childId] ?? `PANEL_${childId}`;
                                     return (
                                       <div
                                         key={`${childrenPath}.${cIdx}`}

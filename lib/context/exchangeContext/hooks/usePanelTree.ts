@@ -4,154 +4,142 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 const TRADING = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
 type PanelEntry = {
   panel: SP_COIN_DISPLAY;
-  name?: string;
-  visible?: boolean;
-  // kept for legacy flattening compatibility (not used in array mode)
-  children?: MainPanelNode[];
+  visible: boolean;
 };
 
-const clone = <T,>(o: T): T =>
-  typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
-
-/** Normalize settings.mainPanelNode into a flat list (supports legacy object or array). */
-function toList(nodeOrList?: MainPanelNode | PanelEntry[]): PanelEntry[] {
-  if (!nodeOrList) return [];
-  if (Array.isArray(nodeOrList)) return nodeOrList as PanelEntry[];
-
-  const root = nodeOrList as MainPanelNode;
-  const base: PanelEntry[] = [{ panel: root.panel, name: (root as any).name, visible: root.visible, children: root.children }];
-  for (const c of root.children ?? []) {
-    base.push({ panel: c.panel, name: (c as any).name, visible: c.visible, children: c.children });
-  }
-  return base;
-}
-
-const findInList = (list: PanelEntry[], panel: SP_COIN_DISPLAY) => list.find((e) => e.panel === panel);
-const isMainOverlay = (panel: SP_COIN_DISPLAY) => MAIN_OVERLAY_GROUP.includes(panel);
-
-/** Enforce exactly one visible among MAIN_OVERLAY_GROUP; fallback to TRADING if needed. */
-function ensureRadioInvariant(list: PanelEntry[]): PanelEntry[] {
-  const visibleCount = MAIN_OVERLAY_GROUP.reduce((n, p) => n + (findInList(list, p)?.visible ? 1 : 0), 0);
-  if (visibleCount === 1) return list;
-
-  const next = clone(list);
-  for (const p of MAIN_OVERLAY_GROUP) {
-    const n = findInList(next, p);
-    if (n) n.visible = p === TRADING;
-  }
-  return next;
-}
-
-/** Read ephemeral visibility map for non-main panels. */
-const getNonMainMap = (ctx: any): Record<number, boolean> =>
-  ((ctx?.settings?.ui ?? {}).nonMainVisible ?? {}) as Record<number, boolean>;
-
-/** Helper to update settings.ui.nonMainVisible immutably. */
-function withNonMainUpdate(prev: any, updater: (map: Record<number, boolean>) => Record<number, boolean>) {
-  const next = clone(prev);
-  const settings = (next.settings ??= {});
-  const ui = (settings.ui ??= {});
-  const current = (ui.nonMainVisible ?? {}) as Record<number, boolean>;
-  ui.nonMainVisible = updater(current);
-  return next;
-}
+const isPanelArray = (x: any): x is PanelEntry[] =>
+  Array.isArray(x) &&
+  x.every(
+    (n) =>
+      n &&
+      typeof n === 'object' &&
+      typeof (n as any).panel === 'number' &&
+      typeof (n as any).visible === 'boolean'
+  );
 
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // Always operate on a flat list for main overlays
-  const list = useMemo(() => toList((exchangeContext as any)?.settings?.mainPanelNode), [exchangeContext]);
+  // Authoritative list of main overlays (array-only, no legacy/object tree)
+  const list = useMemo<PanelEntry[]>(
+    () =>
+      isPanelArray((exchangeContext as any)?.settings?.mainPanelNode)
+        ? ((exchangeContext as any).settings.mainPanelNode as PanelEntry[])
+        : [],
+    [exchangeContext]
+  );
 
-  // Reconcile radio invariants whenever the list hydrates/changes
+  // Keep exactly one visible panel across MAIN_OVERLAY_GROUP (fallback to TRADING)
   useEffect(() => {
     if (!list.length) return;
-    const repaired = ensureRadioInvariant(list);
-    if (repaired !== list) {
-      setExchangeContext(
-        (prev) => ({
-          ...prev,
-          settings: { ...(prev as any).settings, mainPanelNode: repaired },
-        }),
-        'usePanelTree:reconcile'
-      );
-    }
+
+    const count = MAIN_OVERLAY_GROUP.reduce(
+      (n, id) => n + (list.find((e) => e.panel === id)?.visible ? 1 : 0),
+      0
+    );
+    if (count === 1) return;
+
+    setExchangeContext(
+      (prev) => {
+        const current = isPanelArray((prev as any)?.settings?.mainPanelNode)
+          ? ((prev as any).settings.mainPanelNode as PanelEntry[])
+          : [];
+        if (!current.length) return prev;
+
+        const next = current.map((e) =>
+          MAIN_OVERLAY_GROUP.includes(e.panel)
+            ? { ...e, visible: e.panel === TRADING }
+            : e
+        );
+
+        return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
+      },
+      'usePanelTree:reconcile'
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list.length]);
 
+  /* ───────────────────────────── queries ───────────────────────────── */
+
   const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) =>
-      isMainOverlay(panel)
-        ? !!findInList(list, panel)?.visible
-        : !!getNonMainMap(exchangeContext as any)[panel],
-    [list, exchangeContext]
+    (panel: SP_COIN_DISPLAY) => !!list.find((e) => e.panel === panel)?.visible,
+    [list]
   );
+
+  /**
+   * Read-only children for display only.
+   * We do NOT mutate or seed any relationships here; if settings.panelChildren
+   * is absent, this returns an empty array so your UI shows “(empty)”.
+   */
+  const getPanelChildren = useCallback(
+    (parent: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] => {
+      const map = (((exchangeContext as any)?.settings ?? {}).panelChildren ??
+        {}) as Record<number, number[]>;
+      const arr = map[parent] ?? [];
+      return Array.from(new Set(arr)).filter((id) => id !== parent) as SP_COIN_DISPLAY[];
+    },
+    [exchangeContext]
+  );
+
+  /* ───────────────────────────── actions ───────────────────────────── */
 
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY) => {
-      if (isMainOverlay(panel)) {
-        if (!list.length) return;
-        setExchangeContext(
-          (prev) => {
-            const current = toList((prev as any)?.settings?.mainPanelNode);
-            if (!current.length) return prev;
-
-            const next = clone(current);
-            for (const p of MAIN_OVERLAY_GROUP) {
-              const n = findInList(next, p);
-              if (n) n.visible = p === panel;
-            }
-            return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
-          },
-          'usePanelTree:openPanel(main)'
-        );
-      } else {
-        setExchangeContext(
-          (prev) => withNonMainUpdate(prev, (m) => ({ ...m, [panel]: true })),
-          'usePanelTree:openPanel(nonMain)'
-        );
-      }
-    },
-    [list, setExchangeContext]
-  );
-
-  const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY) => {
-      if (isMainOverlay(panel)) return; // cannot close radio overlays
       setExchangeContext(
-        (prev) => withNonMainUpdate(prev, (m) => ({ ...m, [panel]: false })),
-        'usePanelTree:closePanel(nonMain)'
+        (prev) => {
+          const current = isPanelArray((prev as any)?.settings?.mainPanelNode)
+            ? ((prev as any).settings.mainPanelNode as PanelEntry[])
+            : [];
+          if (!current.length) return prev;
+
+          const next = current.map((e) =>
+            MAIN_OVERLAY_GROUP.includes(e.panel)
+              ? { ...e, visible: e.panel === panel }
+              : e
+          );
+
+          return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
+        },
+        'usePanelTree:openPanel'
       );
     },
     [setExchangeContext]
   );
 
+  // Radio overlays can't be "closed" from here; no-op keeps behavior predictable
+  const closePanel = useCallback((_panel: SP_COIN_DISPLAY) => {}, []);
+
+  /* ───────────────────────────── derived ───────────────────────────── */
+
   const activeMainOverlay = useMemo<SP_COIN_DISPLAY>(() => {
-    for (const p of MAIN_OVERLAY_GROUP) {
-      if (findInList(list, p)?.visible) return p;
+    for (const id of MAIN_OVERLAY_GROUP) {
+      if (list.find((e) => e.panel === id)?.visible) return id;
     }
     return TRADING;
   }, [list]);
 
   const isTokenScrollVisible = useMemo(
     () =>
-      !!findInList(list, SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)?.visible ||
-      !!findInList(list, SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)?.visible,
+      !!list.find((e) => e.panel === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)?.visible ||
+      !!list.find((e) => e.panel === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)?.visible,
     [list]
   );
 
   return {
     // state
     activeMainOverlay,
+
     // queries
     isVisible,
     isTokenScrollVisible,
+    getPanelChildren, // display-only; empty unless settings.panelChildren exists
+
     // actions
     openPanel,
     closePanel,

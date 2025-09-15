@@ -11,74 +11,41 @@ const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIM
 
 /**
  * Save the provided ExchangeContext to localStorage
- * - Preserves full settings (including mainPanelNode)
- * - Normalizes bigint balances
+ * - Mirrors state exactly (no seeding, no stripping, no normalization)
+ * - BigInt-safe serialization
+ * - No-ops on the server / SSR
  */
 export const saveLocalExchangeContext = (contextData: ExchangeContext): void => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !window.localStorage) return;
 
   try {
-    debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
-
-    // Build a safe, non-mutating copy
-    const safeContext: ExchangeContext = {
-      ...contextData,
-
-      settings: {
-        ...contextData.settings,
-      },
-
-      tradeData: {
-        ...contextData.tradeData,
-        sellTokenContract: contextData.tradeData.sellTokenContract
-          ? {
-              ...contextData.tradeData.sellTokenContract,
-              balance: contextData.tradeData.sellTokenContract.balance ?? 0n,
-            }
-          : undefined,
-        buyTokenContract: contextData.tradeData.buyTokenContract
-          ? {
-              ...contextData.tradeData.buyTokenContract,
-              balance: contextData.tradeData.buyTokenContract.balance ?? 0n,
-            }
-          : undefined,
-      },
-
-      accounts: {
-        connectedAccount: contextData.accounts?.connectedAccount
-          ? { ...contextData.accounts.connectedAccount, balance: contextData.accounts.connectedAccount.balance ?? 0n }
-          : undefined,
-        sponsorAccount: contextData.accounts?.sponsorAccount
-          ? { ...contextData.accounts.sponsorAccount, balance: contextData.accounts.sponsorAccount.balance ?? 0n }
-          : undefined,
-        recipientAccount: contextData.accounts?.recipientAccount
-          ? { ...contextData.accounts.recipientAccount, balance: contextData.accounts.recipientAccount.balance ?? 0n }
-          : undefined,
-        agentAccount: contextData.accounts?.agentAccount
-          ? { ...contextData.accounts.agentAccount, balance: contextData.accounts.agentAccount.balance ?? 0n }
-          : undefined,
-        sponsorAccounts: contextData.accounts?.sponsorAccounts ?? [],
-        recipientAccounts: contextData.accounts?.recipientAccounts ?? [],
-        agentAccounts: contextData.accounts?.agentAccounts ?? [],
-      },
-    };
-
-    const serializedContext = serializeWithBigInt(safeContext);
-    debugLog.log('🔓 SAVING EXCHANGE CONTEXT TO LOCALSTORAGE (serialized)\n:', serializedContext);
-
-    try {
-      const prettyPrinted = JSON.stringify(
-        safeContext,
-        (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
-        2
-      );
-      debugLog.log('✅ (PRETTY PRINT) SAVED EXCHANGE CONTEXT TO LOCALSTORAGE (parsed)\n:', prettyPrinted);
-    } catch (prettyError) {
-      debugLog.warn('⚠️ Failed to pretty-print exchangeContext', prettyError);
+    if (DEBUG_ENABLED) {
+      debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
     }
 
-    localStorage.setItem(STORAGE_KEY, serializedContext);
-    debugLog.log('✅ exchangeContext successfully saved');
+    // Mirror exactly: do not mutate or normalize anything
+    const safeContext: ExchangeContext = contextData;
+
+    const serializedContext = serializeWithBigInt(safeContext);
+
+    if (DEBUG_ENABLED) {
+      debugLog.log('🔓 SAVING EXCHANGE CONTEXT TO LOCALSTORAGE (serialized)\n:', serializedContext);
+
+      // Pretty log (for humans) — BigInt -> string
+      try {
+        const prettyPrinted = JSON.stringify(
+          safeContext,
+          (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
+          2
+        );
+        debugLog.log('✅ (PRETTY PRINT) SAVED EXCHANGE CONTEXT TO LOCALSTORAGE (parsed)\n:', prettyPrinted);
+      } catch (prettyError) {
+        debugLog.warn('⚠️ Failed to pretty-print exchangeContext', prettyError);
+      }
+    }
+
+    window.localStorage.setItem(STORAGE_KEY, serializedContext);
+    if (DEBUG_ENABLED) debugLog.log('✅ exchangeContext successfully saved');
   } catch (err) {
     debugLog.error('❌ Failed to save exchangeContext to localStorage', err);
   }
