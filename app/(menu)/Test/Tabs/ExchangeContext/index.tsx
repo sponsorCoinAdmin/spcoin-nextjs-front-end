@@ -1,5 +1,3 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
-
 'use client';
 
 import React, { useCallback, useMemo, useState } from 'react';
@@ -10,50 +8,14 @@ import { SP_COIN_DISPLAY, FEED_TYPE, TRADE_DIRECTION } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Colored marker components
-   [+] → green   |   [-] → orange
-   Use these everywhere a marker is shown.
-─────────────────────────────────────────────────────────────────────────── */
-const PlusMarker: React.FC<{ onClick?: () => void; title?: string; className?: string }> = ({
-  onClick,
-  title = 'Expand',
-  className = '',
-}) => (
-  <button
-    type="button"
-    className={`inline-block mr-1 underline-offset-2 hover:underline text-[#22c55e] ${className}`}
-    onClick={onClick}
-    aria-label="Expand"
-    title={title}
-  >
-    [+]
-  </button>
-);
-
-const MinusMarker: React.FC<{ onClick?: () => void; title?: string; className?: string }> = ({
-  onClick,
-  title = 'Collapse',
-  className = '',
-}) => (
-  <button
-    type="button"
-    className={`inline-block mr-1 underline-offset-2 hover:underline text-[#f59e0b] ${className}`}
-    onClick={onClick}
-    aria-label="Collapse"
-    title={title}
-  >
-    [-]
-  </button>
-);
+import Row from './components/Row';
+import Branch from './components/Branch';
+import MainPanelsList from './components/MainPanelList';
+import { isObjectLike } from './components/utils';
 
 /* ---------- utilities ---------- */
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
-
-function isObjectLike(v: any) {
-  return v !== null && typeof v === 'object';
-}
 
 function quoteIfString(v: any) {
   return typeof v === 'string' ? `"${v}"` : String(v);
@@ -64,8 +26,6 @@ const enumRegistry: Record<string, Record<number, string>> = {
   feedType: FEED_TYPE as unknown as Record<number, string>,
   tradeDirection: TRADE_DIRECTION as unknown as Record<number, string>,
 };
-
-/* ------------------------------------------ */
 
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
@@ -183,95 +143,6 @@ export default function ExchangeContextTab() {
     setUi((prev) => ({ ...prev, exp: { ...prev.exp, [path]: !prev.exp[path] } }));
   }, []);
 
-  const Row: React.FC<{
-    text: string;
-    depth: number;
-    open?: boolean;
-    clickable?: boolean;
-    onClick?: () => void;
-  }> = ({ text, depth, open, clickable, onClick }) => {
-    const indent = '  '.repeat(depth);
-    const colorClass = open === undefined ? 'text-slate-200' : open ? 'text-green-400' : 'text-orange-400';
-
-    const markerEl =
-      open === undefined ? (
-        <MinusMarker className="pointer-events-none" />
-      ) : open ? (
-        <MinusMarker className={clickable ? '' : 'cursor-default'} onClick={clickable ? onClick : undefined} />
-      ) : (
-        <PlusMarker className={clickable ? '' : 'cursor-default'} onClick={clickable ? onClick : undefined} />
-      );
-
-    return (
-      <div className={`font-mono whitespace-pre leading-6 ${colorClass}`}>
-        {indent}
-        {markerEl}
-        {text}
-      </div>
-    );
-  };
-
-  /* ---------- generic branch renderer for the top tree (other keys) ---------- */
-  const Branch: React.FC<{ label: string; value: any; depth: number; path: string }> = ({
-    label,
-    value,
-    depth,
-    path,
-  }) => {
-    if (isObjectLike(value)) {
-      const expanded = !!ui.exp[path];
-      const keys = Array.isArray(value) ? value.map((_, i) => String(i)) : Object.keys(value);
-      return (
-        <>
-          <Row
-            text={label}
-            depth={depth}
-            open={expanded}
-            clickable
-            onClick={() => togglePath(path)}
-          />
-          {expanded &&
-            keys.map((k) => {
-              const childPath = `${path}.${k}`;
-              const childVal = Array.isArray(value) ? value[Number(k)] : (value as any)[k];
-              const childLabel = Array.isArray(value) ? `[${k}]` : k;
-              return (
-                <Branch
-                  key={childPath}
-                  label={childLabel}
-                  value={childVal}
-                  depth={depth + 1}
-                  path={childPath}
-                />
-              );
-            })}
-        </>
-      );
-    }
-
-    // Primitive leaf:
-    // If key is in enumRegistry and value is a number with a label, show: key(number): LABEL (blue)
-    const enumForKey = enumRegistry[label];
-    if (enumForKey && typeof value === 'number') {
-      const enumLabel = enumForKey[value];
-      const pretty = typeof enumLabel === 'string' ? enumLabel : `[${value}]`;
-      return (
-        <div className="font-mono whitespace-pre leading-6 text-slate-200">
-          {'  '.repeat(depth)}
-          {`${label}(${value}): `}<span className="text-[#5981F3]">{pretty}</span>
-        </div>
-      );
-    }
-
-    // Default leaf with blue value
-    return (
-      <div className="font-mono whitespace-pre leading-6 text-slate-200">
-        {'  '.repeat(depth)}
-        {`${label}: `}<span className="text-[#5981F3]">{quoteIfString(value)}</span>
-      </div>
-    );
-  };
-
   const SettingsWithMainPanelNode: React.FC = () => (
     <div className="p-4">
       {/* Headers clickable to expand/collapse */}
@@ -295,39 +166,27 @@ export default function ExchangeContextTab() {
                 onClick={() => toggleHeader('main')}
               />
               {ui.main && (
-                <>
-                  {mainPanels.map((node, idx) => {
-                    if (!node) return null;
-                    const panelId: SP_COIN_DISPLAY =
-                      typeof node.panel === 'number' ? node.panel : (idx as SP_COIN_DISPLAY);
-                    const visible = isVisible(panelId);
-                    const label = SP_COIN_DISPLAY[panelId] ?? `PANEL_${panelId}`;
-
-                    return (
-                      <React.Fragment key={idx}>
-                        <Row
-                          text={`${idx} → ${label}`}
-                          depth={3}
-                          open={visible}
-                          clickable
-                          onClick={() => onTogglePanel(panelId)}
-                        />
-                        {visible && (
-                          <div className="font-mono whitespace-pre leading-6 text-slate-400">
-                            {'  '.repeat(4)}children: (empty)
-                          </div>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </>
+                <MainPanelsList
+                  mainPanels={mainPanels}
+                  isVisible={isVisible}
+                  onTogglePanel={onTogglePanel}
+                />
               )}
             </>
           )}
 
           {/* ───── Additional branches (everything except settings) ───── */}
           {Object.keys(restRaw).map((k) => (
-            <Branch key={`rest.${k}`} label={k} value={(restRaw as any)[k]} depth={1} path={`rest.${k}`} />
+            <Branch
+              key={`rest.${k}`}
+              label={k}
+              value={(restRaw as any)[k]}
+              depth={1}
+              path={`rest.${k}`}
+              exp={ui.exp}
+              togglePath={togglePath}
+              enumRegistry={enumRegistry}
+            />
           ))}
         </>
       )}

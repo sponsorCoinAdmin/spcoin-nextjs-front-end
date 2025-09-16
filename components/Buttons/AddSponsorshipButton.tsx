@@ -4,36 +4,19 @@
 import styles from '@/styles/Exchange.module.css';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useExchangeContext } from '@/lib/context';
 
 const AddSponsorshipButton = () => {
-  const { openPanel } = usePanelTree();
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+  const { isVisible, openPanel, closePanel } = usePanelTree();
 
-  const showRecipientContainer =
-    (exchangeContext as any)?.settings?.ui?.showRecipientContainer === true;
-
-  // 🔒 If the recipient container is shown, hide this button
-  if (showRecipientContainer) return null;
+  // Only show the button if its node is visible
+  if (!isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON)) return null;
 
   const openRecipientSelect = () => {
-    // 1) flip the inline UI flag so the container renders
-    setExchangeContext(
-      (prev) => {
-        const next: any = structuredClone(prev);
-        next.settings = {
-          ...(next.settings ?? {}),
-          ui: {
-            ...((next.settings as any)?.ui ?? {}),
-            showRecipientContainer: true,
-          },
-        };
-        return next;
-      },
-      'AddSponsorshipButton:openRecipientSelect'
-    );
-
-    // 2) ensure Trading is the active main overlay
+    // hide the button…
+    closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
+    // …and show the inline recipient config panel
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL);
+    // If you need Trading active, this is safe (radio behavior handled by the hook):
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
 

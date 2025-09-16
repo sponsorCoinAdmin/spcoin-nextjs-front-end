@@ -17,11 +17,6 @@ export interface PanelNode<M extends Record<string, unknown> = Record<string, un
   panel: SP_COIN_DISPLAY;
   name: string;
   visible: boolean;
-
-  /**
-   * @deprecated Main panel state is a flat list; do NOT persist `children` in settings.mainPanelNode.
-   *             Use settings.panelChildren (parent → child ids) + ui.nonMainVisible for runtime behavior.
-   */
   children?: PanelNode<M>[];
 
   meta?: M;

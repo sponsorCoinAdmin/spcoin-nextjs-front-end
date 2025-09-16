@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/constants/spCoinDisplay.ts
 
-import { SP_COIN_DISPLAY } from "../../enums/spCoinDisplay";
+import { SP_COIN_DISPLAY } from "../enums/spCoinDisplay";
 
 export const MAIN_OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
   SP_COIN_DISPLAY.TRADING_STATION_PANEL,

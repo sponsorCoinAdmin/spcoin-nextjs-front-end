@@ -1,6 +1,7 @@
 // File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree'; // ← add this
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Address, formatUnits, parseUnits } from 'viem';
 import { clsx } from 'clsx';
@@ -46,7 +47,9 @@ function TradeAssetPanelInner() {
 
   const { setLocalTokenContract, setLocalAmount, containerType } = useTokenPanelContext();
 
-  // Token selection state
+   const { openPanel } = usePanelTree();
+   
+   // Token selection state
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
     containerType,
     sellTokenContract,
@@ -58,6 +61,11 @@ function TradeAssetPanelInner() {
     setSellAmount,
     setBuyAmount,
   });
+
+  // Call the panel opener without mutating context during render
+  useEffect(() => {
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
+  }, [openPanel]);
 
   // Input text
   const [inputValue, setInputValue] = useState('0');
@@ -237,12 +245,16 @@ function TradeAssetPanelInner() {
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
 
-      {isSpCoin(tokenContract) &&
+      <AddSponsorshipButton />
+
+      {(openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON))}
+
+      {/* {isSpCoin(tokenContract) &&
         (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorshipButton />
-        ))}
+        ))} */}
     </div>
   );
 }

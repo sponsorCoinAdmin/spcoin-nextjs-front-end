@@ -66,7 +66,7 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
 const isLegacyMainPanelNode = (x: any): x is MainPanelNode =>
   !!x && typeof x === 'object' && typeof x.panel === 'number' && typeof x.visible === 'boolean' && Array.isArray(x.children);
 
-// Accept an array of panel nodes; children may exist in legacy data but will be stripped
+// Accept an array of panel nodes; children allowed and preserved
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
   x.every(
@@ -74,33 +74,40 @@ const isMainPanels = (x: any): x is PanelNode[] =>
       n &&
       typeof n === 'object' &&
       typeof (n as any).panel === 'number' &&
-      typeof (n as any).visible === 'boolean'
+      typeof (n as any).visible === 'boolean' &&
+      Array.isArray((n as any).children ?? [])
   );
 
-// Strip children and ensure a name
+// ✅ Preserve children recursively
 const ensurePanelName = (n: PanelNode): PanelNode => ({
   panel: n.panel,
   name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
   visible: !!n.visible,
-  children: [], // <- always childless in storage
+  children: Array.isArray(n.children) ? n.children.map(ensurePanelName) : [],
 });
 
-const ensurePanelNamesFlat = (panels: PanelNode[]): PanelNode[] => panels.map(ensurePanelName);
+const ensurePanelNamesPreserveChildren = (panels: PanelNode[]): PanelNode[] =>
+  panels.map(ensurePanelName);
 
-// Flatten a legacy root+children into a flat list and strip children
+// Legacy: flatten root + children into list
+// - Root (TRADING) is pushed WITHOUT children (so TRADING never carries children)
+// - Each child overlay is pushed with its own children PRESERVED
 const legacyTreeToFlatPanels = (root: MainPanelNode): PanelNode[] => {
   const flat: PanelNode[] = [];
-  const push = (m: MainPanelNode) =>
-    flat.push({
-      panel: m.panel,
-      name: m.name || (SP_COIN_DISPLAY[m.panel] ?? String(m.panel)),
-      visible: m.visible,
-      children: [], // <- discard legacy children
-    });
-  push(root);
-  for (const c of root.children || []) push(c as MainPanelNode);
+  flat.push({
+    panel: root.panel,
+    name: root.name || (SP_COIN_DISPLAY[root.panel] ?? String(root.panel)),
+    visible: root.visible,
+    children: [], // strip TRADING children
+  });
+  for (const c of root.children || []) {
+    flat.push(ensurePanelName(c as MainPanelNode));
+  }
   return flat;
 };
+
+const clone = <T,>(o: T): T =>
+  typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
 /* --------------------------------- Provider -------------------------------- */
 
@@ -113,7 +120,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
-  // Persist + update state
+  // Persist + update (mirror to localStorage every change)
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     _hookName = 'unknown'
@@ -143,11 +150,15 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // mainPanelNode (flat, childless)
+      // Honor stored if valid; otherwise deep-copy defaults (includes BUY → [RECIPIENT] child)
       let flatPanels: PanelNode[];
-      if (isMainPanels(storedPanels)) flatPanels = ensurePanelNamesFlat(storedPanels);
-      else if (isLegacyMainPanelNode(storedPanels)) flatPanels = ensurePanelNamesFlat(legacyTreeToFlatPanels(storedPanels));
-      else flatPanels = ensurePanelNamesFlat(defaultMainPanels);
+      if (isMainPanels(storedPanels)) {
+        flatPanels = ensurePanelNamesPreserveChildren(storedPanels);
+      } else if (isLegacyMainPanelNode(storedPanels)) {
+        flatPanels = legacyTreeToFlatPanels(storedPanels);
+      } else {
+        flatPanels = ensurePanelNamesPreserveChildren(clone(defaultMainPanels as unknown as PanelNode[]));
+      }
 
       (base as any).settings = {
         ...settingsAny,
@@ -187,12 +198,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     accountStatus,
   });
 
-  // Single wallet/network sync effect (connected + chainId)
+  // Wallet/network sync
   useEffect(() => {
     if (!contextState) return;
 
     setExchangeContext((prev) => {
-      const next = structuredClone(prev);
+      const next = clone(prev);
       const net = ensureNetwork(next.network);
 
       const connected = !!isConnected;
@@ -220,7 +231,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setExchangeContext((prev) => {
       const prevApp = prev.network?.appChainId ?? 0;
       if (prevApp === currentAppId) return prev;
-      const next = structuredClone(prev);
+      const next = clone(prev);
       next.network = deriveNetworkFromApp(currentAppId, next.network);
       return next;
     }, 'provider:hydrateFromAppChain');
@@ -237,7 +248,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           apiErrorMessage,
         } as ExchangeContextTypeOnly,
         setExchangeContext,
-        // setters
         setSellAmount,
         setBuyAmount,
         setSellTokenContract,
@@ -246,7 +256,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setSlippageBps,
         setRecipientAccount,
         setAppChainId,
-        // errors
         errorMessage,
         setErrorMessage,
         apiErrorMessage,

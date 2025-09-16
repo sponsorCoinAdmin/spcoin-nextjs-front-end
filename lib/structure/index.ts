@@ -8,7 +8,7 @@
 // Core enums & types
 export * from "./enums/enums";
 export * from "./enums/networkIds";
-export * from "./enums/spCoinDisplay";
+export * from "./exchangeContext/enums/spCoinDisplay";
 export * from "./types";
 
 // Constants
