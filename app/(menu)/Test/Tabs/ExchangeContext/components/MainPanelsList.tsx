@@ -1,7 +1,8 @@
+// File: app/(menu)/Test/Tabs/ExchangeContext/components/MainPanelsList.tsx
 'use client';
 
 import React from 'react';
-import Row from './Row';
+import Row from './Tree/Row';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 type Props = {
@@ -35,7 +36,8 @@ const MainPanelsList: React.FC<Props> = ({ mainPanels, isVisible, onTogglePanel 
             {Array.isArray(node.children) && node.children.length > 0 ? (
               node.children.map((child: any, cIdx: number) => {
                 const childId: SP_COIN_DISPLAY = child?.panel;
-                const childVisible = typeof child?.visible === 'boolean' ? child.visible : isVisible(childId);
+                const childVisible =
+                  typeof child?.visible === 'boolean' ? child.visible : isVisible(childId);
                 const childLabel = SP_COIN_DISPLAY[childId] ?? `PANEL_${childId}`;
 
                 return (

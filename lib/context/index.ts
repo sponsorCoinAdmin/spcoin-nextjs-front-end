@@ -5,7 +5,7 @@ export * from './providers/AssetSelect/AssetSelectDisplayProvider';
 
 // Panels
 export * from './providers/Panels/TokenPanelProvider';
-export * from './providers/Panels/useTokenPanelContext';
+export * from '../../app/(menu)/Test/Tabs/ExchangeContext/hooks/useTokenPanelContext';
 
 // Exchange
 export * from './ExchangeProvider';

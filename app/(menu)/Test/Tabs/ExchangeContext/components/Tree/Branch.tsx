@@ -1,8 +1,9 @@
+// File: app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
 'use client';
 
 import React from 'react';
 import Row from './Row';
-import { isObjectLike, quoteIfString } from './utils';
+import { isObjectLike, quoteIfString } from '../../utils/object';
 
 type BranchProps = {
   label: string;
@@ -12,15 +13,16 @@ type BranchProps = {
   exp: Record<string, boolean>;
   togglePath: (path: string) => void;
   enumRegistry: Record<string, Record<number, string>>;
+  dense?: boolean;
 };
 
-const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry }) => {
+const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   if (isObjectLike(value)) {
     const expanded = !!exp[path];
     const keys = Array.isArray(value) ? value.map((_, i) => String(i)) : Object.keys(value);
     return (
       <>
-        <Row text={label} depth={depth} open={expanded} clickable onClick={() => togglePath(path)} />
+        <Row text={label} depth={depth} open={expanded} clickable onClick={() => togglePath(path)} dense={dense} />
         {expanded &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
@@ -36,6 +38,7 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
                 exp={exp}
                 togglePath={togglePath}
                 enumRegistry={enumRegistry}
+                dense={dense}
               />
             );
           })}
@@ -43,24 +46,27 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     );
   }
 
-  // Pretty-print enums when key is in enumRegistry
+  // Primitive leaf
+  const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];
-  if (enumForKey && typeof value === 'number') {
-    const enumLabel = enumForKey[value];
-    const pretty = typeof enumLabel === 'string' ? enumLabel : `[${value}]`;
-    return (
-      <div className="font-mono whitespace-pre leading-6 text-slate-200">
-        {'  '.repeat(depth)}
-        {`${label}(${value}): `}<span className="text-[#5981F3]">{pretty}</span>
-      </div>
-    );
-  }
 
-  // Default primitive leaf
+  const content =
+    enumForKey && typeof value === 'number' ? (
+      <>
+        {`${label}(${value}): `}
+        <span className="text-[#5981F3]">{typeof enumForKey[value] === 'string' ? enumForKey[value] : `[${value}]`}</span>
+      </>
+    ) : (
+      <>
+        {`${label}: `}
+        <span className="text-[#5981F3]">{quoteIfString(value)}</span>
+      </>
+    );
+
   return (
-    <div className="font-mono whitespace-pre leading-6 text-slate-200">
-      {'  '.repeat(depth)}
-      {`${label}: `}<span className="text-[#5981F3]">{quoteIfString(value)}</span>
+    <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>
+      <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
+      <span>{content}</span>
     </div>
   );
 };

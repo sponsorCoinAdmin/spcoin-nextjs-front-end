@@ -47,9 +47,14 @@ function TradeAssetPanelInner() {
 
   const { setLocalTokenContract, setLocalAmount, containerType } = useTokenPanelContext();
 
-   const { openPanel } = usePanelTree();
-   
-   // Token selection state
+  const { openPanel } = usePanelTree();
+
+  // ✅ Call openPanel AFTER render (avoids setState during render warning)
+  useEffect(() => {
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
+  }, [openPanel]);
+
+  // Token selection state
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
     containerType,
     sellTokenContract,
@@ -61,11 +66,6 @@ function TradeAssetPanelInner() {
     setSellAmount,
     setBuyAmount,
   });
-
-  // Call the panel opener without mutating context during render
-  useEffect(() => {
-    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
-  }, [openPanel]);
 
   // Input text
   const [inputValue, setInputValue] = useState('0');
@@ -247,7 +247,7 @@ function TradeAssetPanelInner() {
 
       <AddSponsorshipButton />
 
-      {(openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON))}
+      {/* removed inline openPanel call that caused state update during render */}
 
       {/* {isSpCoin(tokenContract) &&
         (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? (
