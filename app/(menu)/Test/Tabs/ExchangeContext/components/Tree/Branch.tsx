@@ -5,6 +5,7 @@ import React from 'react';
 import Row from './Row';
 import { isObjectLike, quoteIfString } from '../../utils/object';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 type BranchProps = {
   label: string;
@@ -17,23 +18,76 @@ type BranchProps = {
   dense?: boolean;
 };
 
+/**
+ * Derive the *default* expanded state for PanelNode branches:
+ * - If this node is a PanelNode item under `...mainPanelNode.[i]` or `...children.[j]`,
+ *   expand by default when `value.visible === true`.
+ * - If this node is the `children` container (`...mainPanelNode.[i].children`),
+ *   expand by default when *any* child has `visible === true`.
+ *
+ * NOTE: This is only the default. If the user toggles the row, `exp[path]` wins.
+ */
+function defaultExpandedFor(path: string, label: string, value: any): boolean {
+  const isPanelArrayItem =
+    (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) &&
+    value &&
+    typeof value.visible === 'boolean';
+
+  if (isPanelArrayItem) {
+    return !!value.visible;
+  }
+
+  const isChildrenContainer = /\.mainPanelNode\.\d+\.children$/.test(path) && Array.isArray(value);
+  if (isChildrenContainer) {
+    return value.some((c) => c && typeof c.visible === 'boolean' && c.visible);
+  }
+
+  return false;
+}
+
 const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
+  const { openPanel, closePanel } = usePanelTree();
+
   if (isObjectLike(value)) {
-    const expanded = !!exp[path];
+    // Effective expanded: explicit UI toggle wins; otherwise follow PanelNode.visible defaults
+    const expanded = (path in exp) ? !!exp[path] : defaultExpandedFor(path, label, value);
+
     const isArray = Array.isArray(value);
     const keys = isArray ? value.map((_: any, i: number) => String(i)) : Object.keys(value);
 
+    // Click handler that both toggles UI and (for PanelNode items) updates ExchangeContext via open/closePanel
+    const onRowClick = () => {
+      const willExpand = !expanded;
+      togglePath(path);
+
+      // If this row represents a PanelNode array item, mirror expansion -> visibility
+      const isPanelArrayItem =
+        (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) &&
+        value &&
+        typeof value.panel === 'number';
+
+      if (isPanelArrayItem) {
+        const panelId = value.panel as SP_COIN_DISPLAY;
+        if (willExpand) {
+          openPanel(panelId);
+        } else {
+          closePanel(panelId);
+        }
+      }
+      // Note: for the "children" container row itself, we *only* toggle UI (no open/closePanel).
+    };
+
     return (
       <>
-        <Row text={label} depth={depth} open={expanded} clickable onClick={() => togglePath(path)} dense={dense} />
+        <Row text={label} depth={depth} open={expanded} clickable onClick={onRowClick} dense={dense} />
         {expanded &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
             const childVal = isArray ? value[Number(k)] : (value as any)[k];
 
-            // ── Relabel array items:
-            // [idx]            (default)
-            // [idx]: PANELNAME (when parent label is "mainPanelNode" or "children" AND child has numeric .panel)
+            // Relabel array items:
+            //   [idx] (default)
+            //   [idx]: PANELNAME (when parent label is "mainPanelNode" or "children" AND child has numeric .panel)
             let childLabel: string;
             if (isArray) {
               let suffix = '';
