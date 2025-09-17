@@ -4,6 +4,7 @@
 import React from 'react';
 import Row from './Row';
 import { isObjectLike, quoteIfString } from '../../utils/object';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 type BranchProps = {
   label: string;
@@ -19,15 +20,37 @@ type BranchProps = {
 const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
   if (isObjectLike(value)) {
     const expanded = !!exp[path];
-    const keys = Array.isArray(value) ? value.map((_, i) => String(i)) : Object.keys(value);
+    const isArray = Array.isArray(value);
+    const keys = isArray ? value.map((_: any, i: number) => String(i)) : Object.keys(value);
+
     return (
       <>
         <Row text={label} depth={depth} open={expanded} clickable onClick={() => togglePath(path)} dense={dense} />
         {expanded &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
-            const childVal = Array.isArray(value) ? value[Number(k)] : (value as any)[k];
-            const childLabel = Array.isArray(value) ? `[${k}]` : k;
+            const childVal = isArray ? value[Number(k)] : (value as any)[k];
+
+            // ── Relabel array items:
+            // [idx]            (default)
+            // [idx]: PANELNAME (when parent label is "mainPanelNode" or "children" AND child has numeric .panel)
+            let childLabel: string;
+            if (isArray) {
+              let suffix = '';
+              const looksLikePanelNode =
+                (label === 'mainPanelNode' || label === 'children') &&
+                childVal &&
+                typeof childVal.panel === 'number';
+
+              if (looksLikePanelNode) {
+                const enumName = SP_COIN_DISPLAY[childVal.panel];
+                if (typeof enumName === 'string') suffix = `: ${enumName}`;
+              }
+              childLabel = `[${k}]${suffix}`;
+            } else {
+              childLabel = k;
+            }
+
             return (
               <Branch
                 key={childPath}
