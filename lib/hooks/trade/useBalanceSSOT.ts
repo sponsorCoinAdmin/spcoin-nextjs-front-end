@@ -14,7 +14,7 @@ type Params = {
 };
 
 export function useBalanceSSOT({ chainId, tokenAddress, tokenDecimals, containerType }: Params) {
-  const side = containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? 'sell' : 'buy';
+  const side = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? 'sell' : 'buy';
 
   const { balance, formatted, isLoading, error } = useGetBalance({
     chainId,

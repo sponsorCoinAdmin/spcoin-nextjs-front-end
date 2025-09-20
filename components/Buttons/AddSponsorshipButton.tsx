@@ -2,7 +2,9 @@
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+// import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const AddSponsorshipButton = () => {
@@ -15,10 +17,16 @@ const AddSponsorshipButton = () => {
     // hide the button…
     closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
     // …and show the inline recipient config panel
-    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL);
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     // If you need Trading active, this is safe (radio behavior handled by the hook):
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
+
+  console.log('[AddSponsorshipButton] ids', {
+    RECIPIENT_SELECT_CONFIG_BUTTON: SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON,
+    RECIPIENT_SELECT_PANEL: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
+    TRADING_STATION_PANEL: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+  });
 
   return (
     <div

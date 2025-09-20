@@ -6,7 +6,6 @@ import React, { useState, useMemo, useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
@@ -22,15 +21,8 @@ const SponsorRateConfigPanel: React.FC = () => {
   const recipientPct = useMemo(() => step * 10, [step]);
   const sponsorPct = useMemo(() => 100 - step * 10, [step]);
 
-  // Toggle THIS panel (non-main panel) via the cog
-  const toggleSelf = useCallback(() => {
-    const id = SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL;
-    if (isVisible(id)) closePanel(id);
-    else openPanel(id);
-  }, [isVisible, openPanel, closePanel]);
-
   // Only render when this panel is visible
-  const selfVisible = isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  const selfVisible = isVisible(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL);
   if (!selfVisible) return null;
 
   return (
@@ -51,24 +43,6 @@ const SponsorRateConfigPanel: React.FC = () => {
           onClick={() => alert('rateInfo')}
         />
 
-        {/* Cog icon toggles this panel’s visibility */}
-        <Image
-          src={cog_png}
-          className={styles.cogImg}
-          width={18}
-          height={18}
-          alt="Toggle Sponsor Rate Config"
-          role="button"
-          tabIndex={0}
-          onClick={toggleSelf}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              toggleSelf();
-            }
-          }}
-        />
-
         <div className={`${styles.assetSelect} ${styles.sponsorRatio}`}>
           Sponsor:
           <div id="sponsorRatio">{sponsorPct}%</div>
@@ -78,7 +52,7 @@ const SponsorRateConfigPanel: React.FC = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => closePanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)}
+          onClick={() => closePanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL)}
         >
           X
         </div>

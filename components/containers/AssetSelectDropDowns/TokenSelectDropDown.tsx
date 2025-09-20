@@ -23,7 +23,7 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
-  /** The container this dropdown belongs to (SELL_SELECT_SCROLL_PANEL or BUY_SELECT_SCROLL_PANEL caller) */
+  /** The container this dropdown belongs to (SELL_SELECT_PANEL_LIST or BUY_SELECT_PANEL_LIST caller) */
   containerType: SP_COIN_DISPLAY;
 }
 
@@ -32,16 +32,16 @@ function TokenSelectDropDown({ containerType }: Props) {
   const buyHook = useBuyTokenContract();
 
   const [tokenContract] =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellHook : buyHook;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? sellHook : buyHook;
 
   // Panel-tree controls
   const { openPanel } = usePanelTree();
 
   // Compute the exact TokenSelect panel we must open (BUY or SELL selector)
   const targetTokenSelectPanel: SP_COIN_DISPLAY =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-      ? SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
-      : SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
+      ? SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
+      : SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
 
   // Resolve logo with safe fallback
   const logoURL = useMemo(() => {

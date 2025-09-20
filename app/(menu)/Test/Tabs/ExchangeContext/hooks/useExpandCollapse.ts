@@ -1,48 +1,183 @@
 // File: app/(menu)/Test/Tabs/ExchangeContext/hooks/useExpandCollapse.ts
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isObjectLike } from '../utils/object';
+import { filterPaths, loadExCtxMap, saveExCtxMap } from '../utils/exCtxMapStorage';
+
+/** Path classifiers (dot-style) */
+function isPanelArrayItemPath(path: string): boolean {
+  // ...mainPanelNode.<index> OR ...children.<index>
+  return /\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path);
+}
+function isChildrenContainerPath(path: string): boolean {
+  // ...mainPanelNode.<index>.children
+  return /\.mainPanelNode\.\d+\.children$/.test(path);
+}
+
+/** Treat arrays as branch nodes (not just plain objects) */
+function isBranchNode(val: any): boolean {
+  return val !== null && typeof val === 'object'; // includes arrays
+}
+
+/**
+ * Discover ALL expandable branch paths so exCtxMap stays in sync with the UI:
+ *  - rest.settings
+ *  - rest.settings.mainPanelNode (array)
+ *  - every panel item:                      rest.settings.mainPanelNode.N
+ *  - every children container:              rest.settings.mainPanelNode.N.children
+ *  - nested children recursively:           …children.M, …children.M.children, …
+ *  - everything else under rest.*
+ */
+function discoverNonPanelPaths(exchangeContext: any): Set<string> {
+  const found = new Set<string>();
+
+  const add = (path: string, value: any) => {
+    if (!isBranchNode(value)) return;
+    found.add(path);
+  };
+
+  // Include settings + mainPanelNode group line
+  const settings = (exchangeContext ?? {}).settings;
+  if (isBranchNode(settings)) {
+    add('rest.settings', settings);
+
+    const main = (settings as any).mainPanelNode;
+    if (Array.isArray(main)) {
+      add('rest.settings.mainPanelNode', main);
+
+      // Traverse mainPanelNode recursively (include panel items AND their children containers)
+      const walkPanels = (arr: any[], basePath: string) => {
+        for (let i = 0; i < arr.length; i++) {
+          const item = arr[i];
+          const itemPath = `${basePath}.${i}`; // e.g., rest.settings.mainPanelNode.0
+          add(itemPath, item);                  // include panel item as expandable node
+
+          const children = item?.children;
+          if (Array.isArray(children)) {
+            const childrenPath = `${itemPath}.children`;
+            add(childrenPath, children);        // include children container
+            // Recurse into children (they are also panel items)
+            walkPanels(children, childrenPath);
+          }
+        }
+      };
+
+      walkPanels(main, 'rest.settings.mainPanelNode');
+    }
+  }
+
+  // Everything except settings under rest.*
+  const rest: Record<string, any> = (() => {
+    const { settings: _omit, ...restObj } = (exchangeContext ?? {}) as any;
+    return restObj;
+  })();
+
+  // Traverse rest.* recursively (arrays included)
+  const walk = (val: any, basePath: string) => {
+    if (!isBranchNode(val)) return;
+    add(basePath, val);
+
+    if (Array.isArray(val)) {
+      for (let i = 0; i < val.length; i++) {
+        walk(val[i], `${basePath}.${i}`);
+      }
+    } else {
+      for (const k of Object.keys(val)) {
+        walk(val[k], `${basePath}.${k}`);
+      }
+    }
+  };
+
+  for (const k of Object.keys(rest)) {
+    walk(rest[k], `rest.${k}`);
+  }
+
+  return found;
+}
 
 type UI = { ctx: boolean; settings: boolean; main: boolean; exp: Record<string, boolean> };
 
+/**
+ * useExpandCollapse:
+ * - Maintains the UI expansion map for ALL branches (independent of visibility).
+ * - Persists to localStorage in 'exCtxMap', prunes stale paths as ExchangeContext changes.
+ */
 export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) {
   const [ui, setUi] = useState<UI>({ ctx: true, settings: true, main: true, exp: {} });
 
+  // Compute "rest" (everything but settings) for rendering
   const restRaw = useMemo(() => {
     const { settings: _omit, ...rest } = (exchangeContext ?? {}) as any;
     return rest;
   }, [exchangeContext]);
 
-  const collect = useCallback((value: any, basePath: string, acc: string[]) => {
-    if (!isObjectLike(value)) return;
-    acc.push(basePath);
-    const keys = Array.isArray(value) ? value.map((_, i) => String(i)) : Object.keys(value);
-    for (const k of keys) {
-      collect(Array.isArray(value) ? value[Number(k)] : (value as any)[k], `${basePath}.${k}`, acc);
-    }
-  }, []);
+  // Discover current branch paths (now includes panel items + children containers)
+  const allowedPaths = useMemo(
+    () => discoverNonPanelPaths(exchangeContext),
+    [exchangeContext]
+  );
 
+  // Hydrate UI.exp on exchangeContext changes: defaults → saved (filtered to allowed)
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    const defaults: Record<string, boolean> = {
+      'rest.settings': true,
+      'rest.settings.mainPanelNode': true,
+    };
+
+    const stored = loadExCtxMap();
+    const restored = filterPaths(stored, allowedPaths);
+
+    setUi((prev) => ({
+      ...prev,
+      exp: { ...defaults, ...restored },
+    }));
+
+    hydratedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedPaths]);
+
+  // Persist exp to localStorage whenever it changes after hydration
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    const pruned: Record<string, boolean> = {};
+    for (const [k, v] of Object.entries(ui.exp)) {
+      if (allowedPaths.has(k)) pruned[k] = !!v;
+    }
+    const shapeSig = Array.from(allowedPaths).sort().join('|');
+    saveExCtxMap(pruned, shapeSig);
+  }, [ui.exp, allowedPaths]);
+
+  // Expand/Collapse all (UI-only) helpers
   const toggleAll = useCallback(
     (nextExpand: boolean) => {
       if (nextExpand) {
-        const paths: string[] = [];
-        for (const k of Object.keys(restRaw)) collect((restRaw as any)[k], `rest.${k}`, paths);
-        const expMap = Object.fromEntries(paths.map((p) => [p, true]));
-        setUi({ ctx: true, settings: true, main: true, exp: expMap });
+        const expAll: Record<string, boolean> = {};
+        for (const p of allowedPaths) expAll[p] = true;
+        setUi({ ctx: true, settings: true, main: true, exp: expAll });
       } else {
         setUi({ ctx: false, settings: false, main: false, exp: {} });
       }
     },
-    [restRaw, collect]
+    [allowedPaths]
   );
 
+  // Toggle an individual path (UI-only)
+  const togglePath = useCallback(
+    (path: string) => {
+      // DEBUG: print whether this path is permitted before guarding
+      console.debug('[useExpandCollapse] togglePath', path, 'allowed?', allowedPaths.has(path));
+
+      if (!allowedPaths.has(path)) return; // ignore truly unknown paths
+      setUi((prev) => ({ ...prev, exp: { ...prev.exp, [path]: !prev.exp[path] } }));
+    },
+    [allowedPaths]
+  );
+
+  // Header toggles (UI only)
   const setHeader = useCallback((key: 'ctx' | 'settings' | 'main') => {
     setUi((prev) => ({ ...prev, [key]: !prev[key] }));
-  }, []);
-
-  const togglePath = useCallback((path: string) => {
-    setUi((prev) => ({ ...prev, exp: { ...prev.exp, [path]: !prev.exp[path] } }));
   }, []);
 
   return { ui, setHeader, toggleAll, togglePath, restRaw };

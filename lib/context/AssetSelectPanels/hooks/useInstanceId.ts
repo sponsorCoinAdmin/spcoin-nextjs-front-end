@@ -7,11 +7,11 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 export function useInstanceId(containerType: SP_COIN_DISPLAY): string {
   return useMemo(() => {
     switch (containerType) {
-      case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:
+      case SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST:
         return 'buy';
-      case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL:
+      case SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST:
         return 'sell';
-      case SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL:
+      case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST:
         return 'recipient';
       default:
         return 'main';

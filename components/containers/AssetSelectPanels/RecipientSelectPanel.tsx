@@ -30,7 +30,7 @@ export default function RecipientSelectPanel({
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
-  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL;
+  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
 
   const initialPanelBag: AssetSelectBag = useMemo(
     () =>

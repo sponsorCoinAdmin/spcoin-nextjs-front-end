@@ -75,7 +75,7 @@ function TradeAssetPanelInner() {
   // Sync panel input with global amount (for *this* side)
   const typingUntilRef = useRef(0);
   const currentAmount =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? sellAmount : buyAmount;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? sellAmount : buyAmount;
 
   useEffect(() => {
     // If user is actively typing, don't overwrite
@@ -111,13 +111,13 @@ function TradeAssetPanelInner() {
   // Emit debounced amount event (kept as-is if other parts listen)
   const lastDebouncedRef = useRef<bigint | null>(null);
   const debouncedForPanel =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? debouncedSell : debouncedBuy;
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? debouncedSell : debouncedBuy;
 
   useEffect(() => {
     const directionOk =
-      (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL &&
+      (containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST &&
         tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
-      (containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL &&
+      (containerType === SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST &&
         tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN);
     if (!directionOk) return;
 
@@ -154,7 +154,7 @@ function TradeAssetPanelInner() {
       const bi = parseUnits(formatted, tokenDecimals);
       setLocalAmount(bi);
 
-      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL) {
+      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST) {
         if (tradeDirection !== TRADE_DIRECTION.SELL_EXACT_OUT)
           setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
         if (sellAmount !== bi) setSellAmount(bi);
@@ -170,7 +170,7 @@ function TradeAssetPanelInner() {
 
   // Copy text for “You Pay/Receive …”
   const buySellText =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
       ? tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
         ? `You Pay ± ${slippage.percentageString}`
         : `You Exactly Pay:`
@@ -200,7 +200,7 @@ function TradeAssetPanelInner() {
   const isInputDisabled =
     !tokenAddr ||
     (apiProvider === API_TRADING_PROVIDER.API_0X &&
-      containerType === SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL);
+      containerType === SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST);
 
   const noAutofillName = useMemo(
     () => `no-autofill-${Math.random().toString(36).slice(2)}`,
@@ -245,16 +245,16 @@ function TradeAssetPanelInner() {
       <div className={styles.buySell}>{buySellText}</div>
       <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
 
-      <AddSponsorshipButton />
+      {/* <AddSponsorshipButton /> */}
 
       {/* removed inline openPanel call that caused state update during render */}
 
-      {/* {isSpCoin(tokenContract) &&
-        (containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL ? (
+      {//isSpCoin(tokenContract) &&
+        (containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorshipButton />
-        ))} */}
+        ))}
     </div>
   );
 }

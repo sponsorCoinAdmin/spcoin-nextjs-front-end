@@ -32,8 +32,8 @@ export default function TokenSelectPanel({
 
   // Determine which token-select overlay is currently active (BUY or SELL)
   const activeType: SP_COIN_DISPLAY | null = useMemo(() => {
-    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) return SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL))  return SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST))  return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
     return null;
   }, [isVisible]);
 

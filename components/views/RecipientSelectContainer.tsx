@@ -18,41 +18,44 @@ import { usePanelTree } from "@/lib/context/exchangeContext/hooks/usePanelTree";
 
 const RecipientSelectContainer: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { isVisible, openPanel, closePanel, activeMainOverlay } = usePanelTree();
+  const { isVisible, openPanel, closePanel } = usePanelTree();
 
   const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
     exchangeContext.accounts.recipientAccount
   );
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
-  // Toggle the Sponsor Rate Config panel visibility
+  // Toggle the Recipient Config panel (ensure parent is open first)
   const toggleSponsorRateConfig = useCallback(() => {
-    const id = SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL;
-    if (isVisible(id)) {
-      closePanel(id);
-    } else {
-      openPanel(id);
-    }
-  }, [isVisible, closePanel, openPanel]);
+    const parentId = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+    const cfgId   = SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL;
 
+    // Ensure parent container is visible so child has somewhere to render
+    if (!isVisible(parentId)) openPanel(parentId);
+
+    // Toggle the child panel
+    if (isVisible(cfgId)) {
+      closePanel(cfgId);
+    } else {
+      openPanel(cfgId);
+    }
+  }, [isVisible, openPanel, closePanel]);
+
+  // Clear recipient, close its panels, and keep Trading overlay active
   const clearRecipient = useCallback(() => {
     setExchangeContext(
       (prev) => {
         const next: any = structuredClone(prev);
         next.accounts.recipientAccount = undefined;
-        next.settings = {
-          ...(next.settings ?? {}),
-          ui: {
-            ...((next.settings as any)?.ui ?? {}),
-            showRecipientContainer: false,
-          },
-        };
         return next;
       },
       'RecipientSelectContainer:clearRecipient'
     );
+
+    closePanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL);
+    closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [setExchangeContext, openPanel]);
+  }, [setExchangeContext, closePanel, openPanel]);
 
   useEffect(() => {
     const website = recipientWallet?.website?.trim();
@@ -65,11 +68,9 @@ const RecipientSelectContainer: React.FC = () => {
       .catch(() => setSiteExists(false));
   }, [recipientWallet?.website]);
 
-  const showRecipientContainer =
-    activeMainOverlay === SP_COIN_DISPLAY.TRADING_STATION_PANEL &&
-    (exchangeContext as any)?.settings?.ui?.showRecipientContainer === true;
-
-  if (!showRecipientContainer) return null;
+  // Panel-tree–driven visibility (single source of truth)
+  const selfVisible = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  if (!selfVisible) return null;
 
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientWallet?.address?.trim()
@@ -109,7 +110,15 @@ const RecipientSelectContainer: React.FC = () => {
             width={20}
             height={20}
             alt="Settings"
+            role="button"
+            tabIndex={0}
             onClick={toggleSponsorRateConfig}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSponsorRateConfig();
+              }
+            }}
           />
         </div>
 
@@ -122,7 +131,7 @@ const RecipientSelectContainer: React.FC = () => {
         </div>
       </div>
 
-      {/* Visible when SPONSOR_RATE_CONFIG_PANEL is open in the panel tree */}
+      {/* Visible when RECIPIENT_CONFIG_PANEL is open in the panel tree */}
       <SponsorRateConfigPanel />
     </>
   );

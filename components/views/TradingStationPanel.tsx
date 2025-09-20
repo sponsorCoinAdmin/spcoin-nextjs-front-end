@@ -30,8 +30,8 @@ export default function TradingStationPanel() {
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL} />
-      <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL} />
+      <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST} />
+      <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST} />
       <BuySellSwapArrowButton />
       <RecipientSelectContainer />
       <PriceButton isLoadingPrice={isLoadingPrice} />

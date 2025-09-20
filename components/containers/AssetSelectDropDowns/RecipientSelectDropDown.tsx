@@ -45,7 +45,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({
 
   const showRecipientSelectPanel = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL);
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
   }, [openPanel]);
 
   return (

@@ -32,7 +32,7 @@ export default function AgentSelectPanel({
   closePanelCallback,
   setTradingTokenCallback,
 }: AgentSelectPanelProps) {
-  const containerType = SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL;
+  const containerType = SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
 
   // Adapt parent close callback to provider's (fromUser:boolean) signature
   const closeForProvider = useCallback(

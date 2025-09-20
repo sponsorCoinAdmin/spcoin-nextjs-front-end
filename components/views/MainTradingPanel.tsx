@@ -46,15 +46,15 @@ export default function MainTradingPanel() {
   const { setRecipientAccount } = useExchangeContext();
 
   const isTradingStationVisible = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL);
+  const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
   const isErrorMessagePanel = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
 
   // Derive the opposing address for the open token panel
   const peerAddress = useMemo(() => {
-    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)) {
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST)) {
       return sellTokenContract?.address;
     }
-    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) {
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) {
       return buyTokenContract?.address;
     }
     return undefined;
@@ -78,10 +78,10 @@ export default function MainTradingPanel() {
   const setAssetTokenCallback = useCallback(
     (tokenContract: TokenContract) => {
       let msg = `✅ MainTradingPanel.setAssetTokenCallback`;
-      if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL)) {
+      if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) {
         msg += ' 🔻 → setSellTokenContract';
         setSellTokenContract(tokenContract);
-      } else if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL)) {
+      } else if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST)) {
         msg += ' 🔺 → setBuyTokenContract';
         setBuyTokenContract(tokenContract);
       } else {

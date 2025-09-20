@@ -1,9 +1,9 @@
 // File: app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Row from './Row';
-import { isObjectLike, quoteIfString } from '../../utils/object';
+import { quoteIfString } from '../../utils/object';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
@@ -11,98 +11,233 @@ type BranchProps = {
   label: string;
   value: any;
   depth: number;
-  path: string;
+  path: string; // dot style: a.b.c.0.children
   exp: Record<string, boolean>;
   togglePath: (path: string) => void;
   enumRegistry: Record<string, Record<number, string>>;
   dense?: boolean;
 };
 
-/**
- * Derive the *default* expanded state for PanelNode branches:
- * - If this node is a PanelNode item under `...mainPanelNode.[i]` or `...children.[j]`,
- *   expand by default when `value.visible === true`.
- * - If this node is the `children` container (`...mainPanelNode.[i].children`),
- *   expand by default when *any* child has `visible === true`.
- *
- * NOTE: This is only the default. If the user toggles the row, `exp[path]` wins.
- */
-function defaultExpandedFor(path: string, label: string, value: any): boolean {
-  const isPanelArrayItem =
-    (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) &&
-    value &&
-    typeof value.visible === 'boolean';
+const looksLikePanelNode = (v: any) => v && typeof v.panel === 'number';
 
-  if (isPanelArrayItem) {
-    return !!value.visible;
-  }
-
-  const isChildrenContainer = /\.mainPanelNode\.\d+\.children$/.test(path) && Array.isArray(value);
-  if (isChildrenContainer) {
-    return value.some((c) => c && typeof c.visible === 'boolean' && c.visible);
-  }
-
-  return false;
-}
-
-const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, togglePath, enumRegistry, dense }) => {
+const Branch: React.FC<BranchProps> = ({
+  label,
+  value,
+  depth,
+  path,
+  exp,
+  togglePath,
+  enumRegistry,
+  dense,
+}) => {
   const { openPanel, closePanel } = usePanelTree();
 
-  if (isObjectLike(value)) {
-    // Effective expanded: explicit UI toggle wins; otherwise follow PanelNode.visible defaults
-    const expanded = (path in exp) ? !!exp[path] : defaultExpandedFor(path, label, value);
+  const isArray = Array.isArray(value);
+  const isObject = value !== null && typeof value === 'object' && !isArray;
+  const isBranch = isArray || isObject;
 
-    const isArray = Array.isArray(value);
-    const keys = isArray ? value.map((_: any, i: number) => String(i)) : Object.keys(value);
+  // dot-path classifiers
+  const isPanelArrayItem =
+    (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) && looksLikePanelNode(value);
 
-    // Click handler that both toggles UI and (for PanelNode items) updates ExchangeContext via open/closePanel
-    const onRowClick = () => {
-      const willExpand = !expanded;
-      togglePath(path);
+  // ⬅️ NEW: treat any array labeled exactly "children" as a pure container (no row rendered)
+  const isChildrenContainer = isArray && label === 'children';
 
-      // If this row represents a PanelNode array item, mirror expansion -> visibility
-      const isPanelArrayItem =
-        (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) &&
-        value &&
-        typeof value.panel === 'number';
+  // helper: set expansion open if currently closed
+  const ensureOpen = (p: string) => {
+    if (!exp[p]) togglePath(p);
+  };
 
-      if (isPanelArrayItem) {
-        const panelId = value.panel as SP_COIN_DISPLAY;
-        if (willExpand) {
-          openPanel(panelId);
-        } else {
-          closePanel(panelId);
+  // Track visible changes for panel rows (helps catch "parent closed" side-effect)
+  const lastVisibleRef = useRef<boolean | undefined>(undefined);
+  useEffect(() => {
+    if (isPanelArrayItem) {
+      const vis = !!(value as any)?.visible;
+      if (lastVisibleRef.current !== vis) {
+        console.log('[PanelTree] visible change', {
+          path,
+          label,
+          panelId: (value as any)?.panel,
+          from: lastVisibleRef.current,
+          to: vis,
+        });
+        lastVisibleRef.current = vis;
+
+        // If a panel becomes visible, auto-expand its own row and its parent children container
+        if (vis) {
+          ensureOpen(path);
+          // try to expand parent children container if exists
+          const parentChildrenPath = path.replace(/\.\d+$/, '') + '.children'; // rough but works for known shapes
+          if (parentChildrenPath !== path && parentChildrenPath.includes('.children')) {
+            ensureOpen(parentChildrenPath);
+          }
         }
       }
-      // Note: for the "children" container row itself, we *only* toggle UI (no open/closePanel).
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPanelArrayItem, value?.visible, path, label]);
+
+  // ──────────────────────────────────────────────────────────────
+  // BRANCH NODES (objects & arrays)
+  // ──────────────────────────────────────────────────────────────
+  if (isBranch) {
+    // Count entries (arrays vs objects)
+    const numEntries = isArray ? (value as any[]).length : Object.keys(value as object).length;
+    const hasEntries = numEntries > 0;
+
+    // Expanded state:
+    let expanded = false;
+    if (hasEntries) {
+      if (isPanelArrayItem) {
+        // HARD-GATE: panel nodes expand ONLY when they are visible.
+        expanded = (value as any)?.visible === true;
+      } else if (isChildrenContainer) {
+        // ⬅️ NEW: children containers never render their own row; we always render their items.
+        expanded = true;
+      } else {
+        expanded = !!exp[path];
+      }
+    }
+
+    const onRowClick = () => {
+      // Always log when the row handler fires
+      console.log('[PanelTree] onRowClick', {
+        path,
+        label,
+        isPanelArrayItem,
+        isChildrenContainer,
+        panelId: isPanelArrayItem ? (value as any).panel : undefined,
+      });
+
+      if (isPanelArrayItem) {
+        const panelId = (value as any).panel as SP_COIN_DISPLAY;
+        const currentlyVisible = !!(value as any).visible;
+
+        console.log('[PanelTree] click panel item', {
+          path,
+          label,
+          panelId,
+          fromExpanded: expanded,
+          toExpanded: !expanded,
+          currentVisible: currentlyVisible,
+        });
+
+        // Toggle by visibility (source of truth)
+        if (!currentlyVisible) {
+          openPanel(panelId);
+          // When we make it visible, ensure its UI expansion flag is open too
+          ensureOpen(path);
+        } else {
+          // When hiding, we do NOT force-collapse the UI expansion flag;
+          // but since "expanded" is derived from visibility, it will close visually.
+          closePanel(panelId);
+        }
+      } else if (hasEntries) {
+        // UI-only expand/collapse
+        console.log('[PanelTree] toggle exp', {
+          path,
+          label,
+          from: !!exp[path],
+          to: !exp[path],
+          isChildrenContainer,
+        });
+        togglePath(path);
+      } else {
+        console.log('[PanelTree] noop (no entries)', { path, label, numEntries });
+      }
     };
+
+    console.log('[PanelTree] render branch', {
+      label,
+      path,
+      isArray,
+      isObject,
+      isPanelArrayItem,
+      isChildrenContainer,
+      numEntries,
+      hasEntries,
+      expanded,
+      expHit: path in exp,
+      expVal: exp[path],
+      visible: isPanelArrayItem ? !!(value as any).visible : undefined,
+      panelId: isPanelArrayItem ? (value as any).panel : undefined,
+    });
+
+    // Build children entries (dot paths)
+    const keys = isArray ? (value as any[]).map((_, i) => String(i)) : Object.keys(value as object);
+
+    // ⬅️ NEW: If this is a "children" container, DO NOT render a row for it.
+    // Render its items directly at the same depth (no "[-] children" or "[+] children" row at any level).
+    if (isChildrenContainer) {
+      return (
+        <>
+          {expanded &&
+            keys.map((k) => {
+              const childPath = `${path}.${k}`;
+              const childVal = (value as any[])[Number(k)];
+
+              // Label: show index and enum name if it's a panel node
+              let childLabel = `[${k}]`;
+              if (looksLikePanelNode(childVal)) {
+                const enumName = SP_COIN_DISPLAY[(childVal as any).panel];
+                if (typeof enumName === 'string') childLabel = `[${k}] ${enumName}`;
+                console.log('[PanelTree] child panel row', {
+                  childPath,
+                  childLabel,
+                  panelId: (childVal as any)?.panel,
+                  visible: !!(childVal as any)?.visible,
+                });
+              }
+
+              return (
+                <Branch
+                  key={childPath}
+                  label={childLabel}
+                  value={childVal}
+                  depth={depth}              // same depth (no "children" row shown)
+                  path={childPath}
+                  exp={exp}
+                  togglePath={togglePath}
+                  enumRegistry={enumRegistry}
+                  dense={dense}
+                />
+              );
+            })}
+        </>
+      );
+    }
 
     return (
       <>
-        <Row text={label} depth={depth} open={expanded} clickable onClick={onRowClick} dense={dense} />
-        {expanded &&
+        <Row
+          text={label}
+          path={path}            // pass path for Row logs (debug only)
+          depth={depth}
+          // NOTE: For panel nodes, the "open" marker mirrors *visibility* only.
+          open={hasEntries ? (isPanelArrayItem ? ((value as any)?.visible === true) : expanded) : undefined}
+          clickable={isPanelArrayItem || hasEntries}
+          onClick={onRowClick}
+          dense={dense}
+        />
+        {/* For panel nodes: children render ONLY when the node is visible */}
+        {(isPanelArrayItem ? ((value as any)?.visible === true) : expanded) &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
-            const childVal = isArray ? value[Number(k)] : (value as any)[k];
+            const childVal = isArray ? (value as any[])[Number(k)] : (value as any)[k];
 
-            // Relabel array items:
-            //   [idx] (default)
-            //   [idx]: PANELNAME (when parent label is "mainPanelNode" or "children" AND child has numeric .panel)
-            let childLabel: string;
-            if (isArray) {
-              let suffix = '';
-              const looksLikePanelNode =
-                (label === 'mainPanelNode' || label === 'children') &&
-                childVal &&
-                typeof childVal.panel === 'number';
+            // Minimal label to keep layout intact
+            let childLabel = isArray ? `[${k}]` : k;
 
-              if (looksLikePanelNode) {
-                const enumName = SP_COIN_DISPLAY[childVal.panel];
-                if (typeof enumName === 'string') suffix = `: ${enumName}`;
-              }
-              childLabel = `[${k}]${suffix}`;
-            } else {
-              childLabel = k;
+            // If listing panel nodes under mainPanelNode/children, append enum name
+            if (isArray && (label === 'mainPanelNode' || label === 'children') && looksLikePanelNode(childVal)) {
+              const enumName = SP_COIN_DISPLAY[(childVal as any).panel];
+              if (typeof enumName === 'string') childLabel = `[${k}] ${enumName}`;
+              console.log('[PanelTree] child panel row', {
+                childPath,
+                childLabel,
+                panelId: (childVal as any)?.panel,
+                visible: !!(childVal as any)?.visible,
+              });
             }
 
             return (
@@ -123,7 +258,9 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     );
   }
 
-  // Primitive leaf
+  // ──────────────────────────────────────────────────────────────
+  // LEAF NODES (primitives) — unchanged layout
+  // ──────────────────────────────────────────────────────────────
   const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];
 
@@ -131,7 +268,9 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
     enumForKey && typeof value === 'number' ? (
       <>
         {`${label}(${value}): `}
-        <span className="text-[#5981F3]">{typeof enumForKey[value] === 'string' ? enumForKey[value] : `[${value}]`}</span>
+        <span className="text-[#5981F3]">
+          {typeof enumForKey[value] === 'string' ? enumForKey[value] : `[${value}]`}
+        </span>
       </>
     ) : (
       <>
@@ -139,6 +278,8 @@ const Branch: React.FC<BranchProps> = ({ label, value, depth, path, exp, toggleP
         <span className="text-[#5981F3]">{quoteIfString(value)}</span>
       </>
     );
+
+  console.log('[PanelTree] render leaf', { label, path, value });
 
   return (
     <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>

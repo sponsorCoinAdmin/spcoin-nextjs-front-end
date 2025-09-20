@@ -20,12 +20,12 @@ const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
   const { isVisible, openPanel } = usePanelTree();
 
   const toggleSponsorRateConfigPanel = () => {
-    // Switch between RECIPIENT_SELECT_CONFIG_PANEL and SPONSOR_RATE_CONFIG_PANEL.
+    // Switch between RECIPIENT_SELECT_PANEL_LIST and RECIPIENT_CONFIG_PANEL.
     // Both are handled as main overlays by usePanelTree (radio behavior).
-    if (isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)) {
-      openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL);
+    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL)) {
+      openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
     } else {
-      openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+      openPanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL);
     }
   };
 

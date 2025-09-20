@@ -10,16 +10,16 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
  */
 export function getDuplicateMessage(containerType: SP_COIN_DISPLAY): string {
   switch (containerType) {
-    case SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL:
+    case SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST:
       return 'Sell Address Cannot Be the Same as Buy Address';
 
-    case SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL:
+    case SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST:
       return 'Buy Address Cannot Be the Same as Sell Address';
 
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_PANEL:
+    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST:
       return 'Recipient Address Cannot Match Sender';
 
-    case SP_COIN_DISPLAY.AGENT_SELECT_CONFIG_PANEL:
+    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST:
       return 'Agent Address Cannot Match Connected Account';
 
     default:

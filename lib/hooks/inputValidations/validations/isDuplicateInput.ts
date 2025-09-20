@@ -28,7 +28,7 @@ export function isDuplicateInput(
   }
 
   const oppositeAddress =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
       ? buyAddress
       : sellAddress;
 
