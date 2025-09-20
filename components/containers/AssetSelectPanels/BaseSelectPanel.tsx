@@ -1,4 +1,3 @@
-// File: components/containers/AssetSelectPanels/BaseSelectPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -6,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 
-import styles from '@/styles/Exchange.module.css';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { WalletAccount } from '@/lib/structure';
@@ -55,7 +53,6 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
   }, [selectedAccount?.address]);
 
   useEffect(() => {
-    // SSR guard
     if (typeof window === 'undefined') return;
 
     const raw = selectedAccount?.website?.trim();
@@ -65,7 +62,6 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
       return;
     }
 
-    // Normalize: add protocol if missing
     const hasProtocol = /^(https?:)?\/\//i.test(raw);
     const probeURL = hasProtocol ? raw : `https://${raw}`;
 
@@ -76,7 +72,6 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
     debugLog.log(`🌐 probing website (HEAD, no-cors): ${probeURL}`);
 
     fetch(probeURL, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
-      // With no-cors, successful network reachability resolves as an opaque response.
       .then(() => {
         if (!cancelled) {
           debugLog.log('✅ probe resolved (opaque or ok) → siteExists=true');
@@ -102,18 +97,26 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
     <>
       <div
         className={clsx(
-          styles.inputs,
-          styles.AccountSelectContainer,
-          isConfigOpen ? styles.noBottomRadius : styles.withBottomRadius
+          'relative bg-[#1f2639] text-[#94a3b8] border-0 h-[90px] text-[25px] overflow-hidden',
+          isConfigOpen ? 'rounded-b-none' : 'rounded-b-[12px]'
         )}
       >
-        <div className={styles.lineDivider} />
-        <div className={styles.yourRecipient}>{label}</div>
+        <div className="absolute -top-3 left-[11px] right-[11px] h-px bg-[#94a3b8] opacity-20 pointer-events-none" />
 
+        {/* label */}
+        <div className="absolute top-0 left-[11px] text-[14px] text-[#94a3b8]">{label}</div>
+
+        {/* name link */}
         {selectedAccount && siteExists ? (
           <Link
             href={{ pathname: '/RecipientSite', query: { url: selectedAccount.website! } }}
-            className={styles.recipientName}
+            className="
+              absolute top-[47px] left-[10px]
+              min-w-[50px] h-[10px]
+              text-[#94a3b8] text-[25px]
+              pr-2 flex items-center justify-start gap-1
+              cursor-pointer hover:text-[orange] transition-colors duration-200
+            "
             aria-label="Open recipient website"
           >
             {selectedAccount.name}
@@ -121,29 +124,40 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
         ) : (
           <Link
             href={defaultStaticFileUrl}
-            className={styles.recipientName}
+            className="
+              absolute top-[47px] left-[10px]
+              min-w-[50px] h-[10px]
+              text-[#94a3b8] text-[25px]
+              pr-2 flex items-center justify-start gap-1
+              cursor-pointer hover:text-[orange] transition-colors duration-200
+            "
             aria-label="Open default recipient site"
           >
             {selectedAccount?.name || 'No selection'}
           </Link>
         )}
 
-        <div className={styles.recipientSelect}>{DropDownComponent}</div>
+        {/* dropdown slot */}
+        <div className="absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]">
+          {DropDownComponent}
+        </div>
 
+        {/* settings (cog) button */}
         <button
           type="button"
           aria-label="Toggle settings"
-          className={styles.cogImg}
+          className="absolute right-[39px] inline-block transition-transform duration-300 hover:rotate-[360deg] hover:cursor-pointer"
           onClick={onToggleConfig}
         >
           <Image width={20} height={20} src={cog_png} alt="Settings" />
         </button>
 
+        {/* clear (X) */}
         <button
           id="clearSelect"
           type="button"
           aria-label="Clear selection"
-          className={styles.clearSponsorSelect}
+          className="absolute -top-1 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer"
           onClick={onClearSelect}
         >
           X

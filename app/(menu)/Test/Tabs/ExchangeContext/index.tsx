@@ -12,7 +12,32 @@ import Row from './components/Tree/Row';
 import { enumRegistry } from './state/enumRegistry';
 import PriceView from '@/app/(menu)/Exchange/Price';
 
-const SHOW_GUI_KEY = 'exchange_show_gui';
+const PAGES_KEY = 'test_exchangeContext_pages';
+
+type PagesState = {
+  showGui?: boolean;
+  expanded?: boolean;
+};
+
+function readPagesState(): PagesState {
+  try {
+    if (typeof window === 'undefined') return {};
+    const raw = window.localStorage.getItem(PAGES_KEY);
+    return raw ? (JSON.parse(raw) as PagesState) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePagesState(patch: PagesState) {
+  try {
+    const current = readPagesState();
+    const next = { ...current, ...patch };
+    window.localStorage.setItem(PAGES_KEY, JSON.stringify(next));
+  } catch {
+    // ignore storage issues
+  }
+}
 
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
@@ -23,25 +48,26 @@ export default function ExchangeContextTab() {
     expandContext
   );
 
-  // Show/Hide GUI toggle (persisted to localStorage)
-  const [showGui, setShowGui] = useState<boolean>(false);
+  // Show/Hide GUI toggle — hydrate synchronously from the shared key
+  const [showGui, setShowGui] = useState<boolean>(() => {
+    const { showGui } = readPagesState();
+    return !!showGui;
+  });
 
+  // On mount: hydrate Expand/Collapse (and mirror to Tree expand-all)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SHOW_GUI_KEY);
-      setShowGui(raw === 'true'); // defaults to false when null
-    } catch {
-      setShowGui(false);
+    const { expanded } = readPagesState();
+    if (typeof expanded === 'boolean') {
+      setExpandContext(expanded);
+      toggleAll(expanded);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Persist both states any time either changes
   useEffect(() => {
-    try {
-      localStorage.setItem(SHOW_GUI_KEY, String(showGui));
-    } catch {
-      /* ignore storage issues */
-    }
-  }, [showGui]);
+    writePagesState({ showGui, expanded: expandContext });
+  }, [showGui, expandContext]);
 
   const onToggleShowGui = useCallback(() => {
     setShowGui((prev) => !prev);
@@ -61,6 +87,7 @@ export default function ExchangeContextTab() {
           const next = !expandContext;
           setExpandContext(next);
           toggleAll(next);
+          writePagesState({ expanded: next });
         }}
         onToggleGui={onToggleShowGui}
         showGui={showGui}
@@ -101,7 +128,7 @@ export default function ExchangeContextTab() {
           ))}
         </div>
 
-        {/* RIGHT PANE (PriceView, lowered by 48px) */}
+        {/* RIGHT PANE (PriceView, lowered by 48px as in your current version) */}
         {showGui && (
           <div className="flex-1 border-l border-slate-700">
             <div className="h-full min-h-[240px] pt-[48px]">

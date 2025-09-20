@@ -33,10 +33,8 @@ const ALL_IDS: SP_COIN_DISPLAY[] = Array.from(
  * - TRADING_STATION_PANEL (visible) children:
  *    • RECIPIENT_SELECT_CONFIG_BUTTON (visible)
  *    • RECIPIENT_SELECT_PANEL (visible)
- *        └─ RECIPIENT_CONFIG_PANEL (hidden)   ← NEW child requested
- * - BUY_SELECT_PANEL_LIST is a sibling ROOT (visible) with:
- *    • MANAGEMENT_SELECT_CONFIG_BUTTON (visible)
- *    • MANAGEMENT_CONFIG_PANEL (hidden)
+ *        └─ RECIPIENT_CONFIG_PANEL (hidden)
+ * - BUY_SELECT_PANEL_LIST is a sibling ROOT (visible, **no children** per request).
  * - SELL_SELECT_PANEL_LIST is a sibling ROOT (visible, no children).
  * - RECIPIENT_SELECT_PANEL_LIST is a sibling ROOT (hidden).
  * - AGENT_SELECT_PANEL_LIST and ERROR_MESSAGE_PANEL are sibling ROOTS (hidden).
@@ -48,7 +46,7 @@ function buildIdIndexedPanels(): MainPanels {
 
   for (const id of ALL_IDS) {
     if (id === SP_COIN_DISPLAY.TRADING_STATION_PANEL) {
-      // TRADING root with recipient-related children (+ new RECIPIENT_CONFIG_PANEL under RECIPIENT_SELECT_PANEL)
+      // TRADING root with recipient-related children (+ RECIPIENT_CONFIG_PANEL under RECIPIENT_SELECT_PANEL)
       arr[id] = n(
         id,
         true,
@@ -58,23 +56,16 @@ function buildIdIndexedPanels(): MainPanels {
             SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
             true,
             [
-              n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []), // NEW
+              n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []),
             ]
           ),
         ]
       );
     } else if (id === SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST) {
-      // BUY is a sibling root with its management controls
-      arr[id] = n(
-        id,
-        true,
-        [
-          n(SP_COIN_DISPLAY.MANAGEMENT_SELECT_CONFIG_BUTTON, true, []),
-          n(SP_COIN_DISPLAY.MANAGEMENT_CONFIG_PANEL, false, []),
-        ]
-      );
+      // BUY is a sibling root (visible) — **no children**
+      arr[id] = n(id, true, []);
     } else if (id === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST) {
-      // SELL is a sibling root (no children)
+      // SELL is a sibling root (visible) — no children
       arr[id] = n(id, true, []);
     } else if (id === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST) {
       // Recipient list lives at root level (hidden by default)
@@ -95,7 +86,8 @@ export const defaultMainPanels: MainPanels = buildIdIndexedPanels();
 
 /**
  * Optional legacy shape exported as a sibling array (not a single root).
- * Mirrors the required localStorage structure with the NEW child under RECIPIENT_SELECT_PANEL.
+ * Mirrors the required localStorage structure with the child under RECIPIENT_SELECT_PANEL
+ * and **no children** under BUY_SELECT_PANEL_LIST.
  */
 export const defaultMainPanelNode: MainPanelNode[] = [
   n(SP_COIN_DISPLAY.TRADING_STATION_PANEL, true, [
@@ -104,20 +96,13 @@ export const defaultMainPanelNode: MainPanelNode[] = [
       SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
       true,
       [
-        n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []), // NEW
+        n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []),
       ]
     ),
   ]),
 
-  // BUY as a sibling root (visible, with management controls)
-  n(
-    SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,
-    true,
-    [
-      n(SP_COIN_DISPLAY.MANAGEMENT_SELECT_CONFIG_BUTTON, true, []),
-      n(SP_COIN_DISPLAY.MANAGEMENT_CONFIG_PANEL, false, []),
-    ]
-  ),
+  // BUY as a sibling root (visible, **no children**)
+  n(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST, true, []),
 
   // SELL as a sibling root (visible, no children)
   n(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST, true, []),

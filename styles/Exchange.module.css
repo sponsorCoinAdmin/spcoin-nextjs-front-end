@@ -269,16 +269,6 @@
   gap: 10px;
 }
 
-.lineDivider {
-  position: absolute;
-  top: -12px;
-  left: 11px;
-  right: 11px; /* Ensures it spans the container width evenly */
-  height: 1px;
-  background-color: #94a3b8;
-  opacity: 0.2;
-}
-
 .manageSponsorshipsDiv {
   /* display: none; */
   position: absolute;
@@ -330,54 +320,12 @@
   font-size: 17px;
 }
 
-.rateRatioContainer {
-  position: relative;
-  top: 0px;
-  background-color: #1f2639 !important;
-  color: #94a3b8 !important;
-  border-width: 0px !important;
-  height: 57px !important;
-  margin-bottom: 5px;
-  font-size: 25px;
-  border-radius: 0 0 12px 12px !important; /* ⬅️ Only bottom corners rounded */}
-
-.recipientName {
-  position: absolute;
-  display: flex;
-  top: 47px;
-  left: 10px;
-  min-width: 50px;
-  height: 10px;
-  color: #94a3b8; 
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  font-size: 25px;
-  padding-right: 8px;
-}
-
-.recipientName:hover {
-  cursor: pointer;
-  color: orange
-}
-
 .rewardRatio {
   position: absolute;
   top: 5px;
   left: 10px;
   color: #94a3b8; 
   font-size: 14px;
-}
-
-.AccountSelectContainer {
-  /* top: 100px; */
-
-  background-color: #1f2639 !important;
-  color: #94a3b8 !important;
-  border-width: 0px !important;
-  height: 90px !important;
-  font-size: 25px;
-  border-radius: 0 0 12px 12px !important; /* ⬅️ Only bottom corners rounded */
 }
 
 .swapButton {
@@ -431,11 +379,6 @@
   position: relative;
 }
 
-.tokenSelectContainer {
-  position: relative;
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
 
 .priceInput {
   padding-top: 10px;

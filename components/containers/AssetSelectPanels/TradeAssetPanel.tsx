@@ -1,7 +1,6 @@
-// File: components/containers/AssetSelectPanels/TradeAssetPanel.tsx
 'use client';
 
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree'; // ← add this
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Address, formatUnits, parseUnits } from 'viem';
 import { clsx } from 'clsx';
@@ -18,14 +17,13 @@ import {
 } from '@/lib/context/hooks';
 
 import { SP_COIN_DISPLAY, TRADE_DIRECTION, API_TRADING_PROVIDER } from '@/lib/structure';
-import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
+import { parseValidFormattedAmount } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useTokenSelection } from '@/lib/hooks/trade/useTokenSelection';
 import { useBalanceSSOT } from '@/lib/hooks/trade/useBalanceSSOT';
 import { clampDisplay, isIntermediateDecimal, maxInputSz, TYPING_GRACE_MS } from '@/lib/utils/tradeFormat';
 
-import styles from '@/styles/Exchange.module.css';
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
@@ -175,8 +173,8 @@ function TradeAssetPanelInner() {
         ? `You Pay ± ${slippage.percentageString}`
         : `You Exactly Pay:`
       : tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-      ? `You Receive ± ${slippage.percentageString}`
-      : `You Exactly Receive:`;
+        ? `You Receive ± ${slippage.percentageString}`
+        : `You Exactly Receive:`;
 
   // SSOT balance + mirror to context
   const chainId = exchangeContext?.network?.chainId ?? 1;
@@ -194,8 +192,8 @@ function TradeAssetPanelInner() {
   const formattedBalance = balanceError
     ? '—'
     : balanceLoading
-    ? '…'
-    : liveFormattedBalance ?? '0.0';
+      ? '…'
+      : liveFormattedBalance ?? '0.0';
 
   const isInputDisabled =
     !tokenAddr ||
@@ -208,10 +206,23 @@ function TradeAssetPanelInner() {
   );
 
   return (
-    <div id="TradeAssetPanelInner" className={styles.tokenSelectContainer}>
+    <div
+      id="TradeAssetPanelInner"
+      className={clsx(
+        // container (replaces styles.tokenSelectContainer)
+        'relative mt-[5px] mb-[5px]',
+        'rounded-[12px] overflow-hidden'
+      )}
+    >
       <input
         id="TokenPanelInputAmount"
-        className={clsx(styles.priceInput, styles.withBottomRadius)}
+        className={clsx(
+          // replaces styles.priceInput + styles.withBottomRadius
+          'w-full h-[106px] indent-[10px] pt-[10px]',
+          'bg-[#1f2639] text-[#94a3b8] text-[25px]',
+          'border-0 outline-none focus:outline-none',
+          'rounded-b-[12px]'
+        )}
         placeholder="0"
         disabled={isInputDisabled}
         value={inputValue}
@@ -232,6 +243,7 @@ function TradeAssetPanelInner() {
         data-1p-ignore="true"
         data-form-type="other"
       />
+
       {/* Invisible decoy for autofill managers */}
       <input
         type="text"
@@ -242,19 +254,24 @@ function TradeAssetPanelInner() {
       />
 
       <TokenSelectDropDown containerType={containerType} />
-      <div className={styles.buySell}>{buySellText}</div>
-      <div className={styles.assetBalance}>Balance: {formattedBalance}</div>
 
-      {/* <AddSponsorshipButton /> */}
+      {/* replaces styles.buySell */}
+      <div className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
+        {buySellText}
+      </div>
 
-      {/* removed inline openPanel call that caused state update during render */}
+      {/* replaces styles.assetBalance */}
+      <div className="absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
+        Balance: {formattedBalance}
+      </div>
 
-      {//isSpCoin(tokenContract) &&
-        (containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? (
+      {
+        containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
           <AddSponsorshipButton />
-        ))}
+        )
+      }
     </div>
   );
 }
