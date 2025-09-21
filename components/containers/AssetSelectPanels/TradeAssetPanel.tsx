@@ -47,11 +47,6 @@ function TradeAssetPanelInner() {
 
   const { openPanel } = usePanelTree();
 
-  // ✅ Call openPanel AFTER render (avoids setState during render warning)
-  useEffect(() => {
-    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
-  }, [openPanel]);
-
   // Token selection state
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
     containerType,
@@ -266,6 +261,11 @@ function TradeAssetPanelInner() {
       </div>
 
       {
+          // ✅ Call openPanel AFTER render (avoids setState during render warning)
+          // useEffect(() => {
+          //   openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
+          // }, [openPanel]);
+
         containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? (
           <ManageSponsorsButton tokenContract={tokenContract} />
         ) : (
