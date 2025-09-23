@@ -276,20 +276,21 @@ export function usePanelTree() {
     );
   }, [list, setExchangeContext]);
 
-  // ⬇️ NEW: restrict the radio group to ids that actually exist as roots right now.
-  // This keeps behavior resilient when defaults/storage evolve.
+  // Restrict the radio group to ids that actually exist as roots right now.
   const radioRootIds = useMemo<SP_COIN_DISPLAY[]>(
     () => list.map((e) => e.panel).filter((id) => MAIN_OVERLAY_GROUP.includes(id)),
     [list]
   );
 
-  // Keep exactly one visible panel across the radio roots (fallback to TRADING)
+  // Ensure **at most one** visible radio root (allow 0 or 1; fix only if >1)
   useEffect(() => {
     if (!list.length || !radioRootIds.length) return;
 
     const visCount = __dbg_countVisibleInGroup(list, radioRootIds);
     debugLog.log('reconcile:run', { rootVisibleCount: visCount });
-    if (visCount === 1) return;
+
+    // allow 0 or 1
+    if (visCount <= 1) return;
 
     setExchangeContext(
       (prev) => {
@@ -298,13 +299,19 @@ export function usePanelTree() {
           : [];
         if (!current.length) return prev;
 
+        // keep the first currently visible radio root, hide the rest
+        const firstVisible = radioRootIds.find(
+          (id) => !!current.find((e) => e.panel === id && e.visible)
+        );
+        const keep = firstVisible ?? TRADING;
+
         const next = current.map((e) =>
           radioRootIds.includes(e.panel)
-            ? { ...e, visible: e.panel === TRADING }
+            ? { ...e, visible: e.panel === keep }
             : e
         );
 
-        debugLog.log('reconcile:normalize-to-trading');
+        debugLog.log('reconcile:at-most-one', { keep });
         return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
       },
       'usePanelTree:reconcile'
@@ -395,11 +402,7 @@ export function usePanelTree() {
         path: __dbg_findPath(list as any, panel),
       });
 
-      // Radio overlays aren't closable
-      if (radioRootIds.includes(panel)) {
-        debugLog.log('close:not-closable-radio', { panel });
-        return;
-      }
+      // ⬇️ Radio overlays ARE closable now (allow zero-visible state)
 
       setExchangeContext(
         (prev) => {

@@ -12,6 +12,10 @@ import {
 import { mutate } from 'swr';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
+// ⬇️ Visibility control
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+
 /** Normalize mixed numeric inputs to a decimal string. */
 function toDecimalString(v: unknown): string {
   if (typeof v === 'bigint') return v.toString();
@@ -67,10 +71,16 @@ function coerceShiftedAmount(original: unknown, shifted: string): bigint | strin
 }
 
 const BuySellSwapArrowButton = () => {
+  // ✅ Always call hooks in the same order — no early return before these.
+  const { isVisible } = usePanelTree();
   const { exchangeContext } = useExchangeContext();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
   const { swrKey } = usePriceAPI();
+
+  // Now it’s safe to branch based on visibility
+  const show = isVisible(SP_TREE.SWAP_ARROW_BUTTON);
+  if (!show) return null;
 
   const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
     e.preventDefault();

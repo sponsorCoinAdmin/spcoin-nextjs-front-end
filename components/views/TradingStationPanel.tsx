@@ -3,7 +3,8 @@
 'use client';
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { TradeAssetPanel } from '../containers/AssetSelectPanels';
+import SellAssetPanel from '@/components/containers/AssetSelectPanels/SellAssetPanel';
+import BuyAssetPanel from '@/components/containers/AssetSelectPanels/BuyAssetPanel';
 import BuySellSwapArrowButton from '@/components/Buttons/BuySellSwapArrowButton';
 import PriceButton from '@/components/Buttons/PriceButton';
 import AffiliateFee from '@/components/containers/AffiliateFee';
@@ -30,8 +31,10 @@ export default function TradingStationPanel() {
 
   return (
     <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      <TradeAssetPanel containerType={SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST} />
-      <TradeAssetPanel containerType={SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST} />
+      {/* Panels are now visibility-gated inside these wrappers */}
+      <SellAssetPanel />
+      <BuyAssetPanel />
+
       <BuySellSwapArrowButton />
       <RecipientSelectContainer />
       <PriceButton isLoadingPrice={isLoadingPrice} />

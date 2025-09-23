@@ -4,6 +4,7 @@
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useErrorMessage } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -19,12 +20,13 @@ interface ErrorMessagePanelProps {
 
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
-  const { closeOverlays } = usePanelTree();
+  const { openPanel } = usePanelTree();
 
   const onDismiss = () => {
-    debugLog.log('✅ Dismiss ErrorMessagePanel → closeOverlays() & clear error');
+    debugLog.log('✅ Dismiss ErrorMessagePanel → openPanel(TRADING_STATION_PANEL) & clear error');
     setErrorMessage(undefined);
-    closeOverlays(); // return to Trading Station
+    // Return to Trading Station overlay
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
 
   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);

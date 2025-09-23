@@ -2,9 +2,9 @@
 
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 import type {
-  MainPanels,      // id-indexed flat list (index === enum id)
+  MainPanels,
   PanelNode,
-  MainPanelNode,   // optional legacy single-root shape
+  MainPanelNode,
 } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { SP_COIN_DISPLAY } from '../enums/spCoinDisplay';
 
@@ -15,15 +15,18 @@ const n = (panel: SP_COIN_DISPLAY, visible: boolean, children: PanelNode[] = [])
   children,
 });
 
-// Panels that should *not* participate in the main "radio" group behavior.
-const INDEPENDENT_PANELS: SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.MANAGEMENT_CONFIG_PANEL,
-];
-
-// Build over both radio-group panels and independent panels, while the
-// radio behavior itself should only consider MAIN_OVERLAY_GROUP.
+// Include all ids we need slots for in the id-indexed array.
+// NOTE: No MANAGEMENT_CONFIG_PANEL here (removed).
 const ALL_IDS: SP_COIN_DISPLAY[] = Array.from(
-  new Set<SP_COIN_DISPLAY>([...MAIN_OVERLAY_GROUP, ...INDEPENDENT_PANELS])
+  new Set<SP_COIN_DISPLAY>([
+    ...MAIN_OVERLAY_GROUP,              // includes SPONSORSHIPS_CONFIG_PANEL
+    SP_COIN_DISPLAY.SELL_SELECT_PANEL,  // child under TRADING_STATION_PANEL
+    SP_COIN_DISPLAY.BUY_SELECT_PANEL,   // child under TRADING_STATION_PANEL
+    SP_COIN_DISPLAY.SWAP_ARROW_BUTTON,  // child under TRADING_STATION_PANEL
+    SP_COIN_DISPLAY.PRICE_BUTTON,       // child under TRADING_STATION_PANEL
+    SP_COIN_DISPLAY.FEE_DISCLOSURE,     // child under TRADING_STATION_PANEL
+    SP_COIN_DISPLAY.AFFILIATE_FEE,      // child under TRADING_STATION_PANEL
+  ])
 ).sort((a, b) => a - b);
 
 /**
@@ -31,14 +34,18 @@ const ALL_IDS: SP_COIN_DISPLAY[] = Array.from(
  *
  * Layout:
  * - TRADING_STATION_PANEL (visible) children:
- *    • RECIPIENT_SELECT_CONFIG_BUTTON (visible)
- *    • RECIPIENT_SELECT_PANEL (visible)
- *        └─ RECIPIENT_CONFIG_PANEL (hidden)
- * - BUY_SELECT_PANEL_LIST is a sibling ROOT (visible, **no children** per request).
- * - SELL_SELECT_PANEL_LIST is a sibling ROOT (visible, no children).
+ *    • BUY_SELECT_PANEL                      (visible by default)
+ *         └─ RECIPIENT_SELECT_CONFIG_BUTTON  (hidden by default; component controls it)
+ *    • SELL_SELECT_PANEL                     (visible by default)
+ *         └─ SPONSORSHIP_SELECT_CONFIG_BUTTON (hidden by default; component controls it)
+ *    • RECIPIENT_SELECT_PANEL                (hidden by default)
+ *    • SWAP_ARROW_BUTTON                     (visible by default)
+ *    • PRICE_BUTTON                          (visible by default)
+ *    • FEE_DISCLOSURE                        (visible by default)
+ *    • AFFILIATE_FEE                         (visible by default)
+ * - BUY_SELECT_PANEL_LIST / SELL_SELECT_PANEL_LIST are sibling ROOTS (visible).
  * - RECIPIENT_SELECT_PANEL_LIST is a sibling ROOT (hidden).
- * - AGENT_SELECT_PANEL_LIST and ERROR_MESSAGE_PANEL are sibling ROOTS (hidden).
- * - MANAGEMENT_CONFIG_PANEL also exists as an independent ROOT (hidden).
+ * - AGENT_SELECT_PANEL_LIST / ERROR_MESSAGE_PANEL / SPONSORSHIPS_CONFIG_PANEL are sibling ROOTS (hidden).
  */
 function buildIdIndexedPanels(): MainPanels {
   const maxId = Math.max(...ALL_IDS);
@@ -46,35 +53,46 @@ function buildIdIndexedPanels(): MainPanels {
 
   for (const id of ALL_IDS) {
     if (id === SP_COIN_DISPLAY.TRADING_STATION_PANEL) {
-      // TRADING root with recipient-related children (+ RECIPIENT_CONFIG_PANEL under RECIPIENT_SELECT_PANEL)
       arr[id] = n(
         id,
         true,
         [
-          n(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON, true, []),
+          // BUY subtree (visible by default)
+          n(
+            SP_COIN_DISPLAY.BUY_SELECT_PANEL,
+            true,
+            [n(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON, false, [])]
+          ),
+
+          // SELL subtree (visible by default)
+          n(
+            SP_COIN_DISPLAY.SELL_SELECT_PANEL,
+            true,
+            [n(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON, false, [])]
+          ),
+
+          // Recipient inline panel (default hidden)
           n(
             SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
-            true,
-            [
-              n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []),
-            ]
+            false,
+            [n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, [])]
           ),
+
+          // Independent UI controls under Trading (default visible)
+          n(SP_COIN_DISPLAY.SWAP_ARROW_BUTTON,  true, []),
+          n(SP_COIN_DISPLAY.PRICE_BUTTON,       true, []),
+          n(SP_COIN_DISPLAY.FEE_DISCLOSURE,     true, []),
+          n(SP_COIN_DISPLAY.AFFILIATE_FEE,      true, []),
         ]
       );
     } else if (id === SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST) {
-      // BUY is a sibling root (visible) — **no children**
       arr[id] = n(id, true, []);
     } else if (id === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST) {
-      // SELL is a sibling root (visible) — no children
       arr[id] = n(id, true, []);
     } else if (id === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST) {
-      // Recipient list lives at root level (hidden by default)
-      arr[id] = n(id, false, []);
-    } else if (INDEPENDENT_PANELS.includes(id)) {
-      // Independent panel as a root (hidden)
       arr[id] = n(id, false, []);
     } else {
-      // Other ids default hidden as roots
+      // All other roots default hidden (AGENT / ERROR / SPONSORSHIPS_CONFIG_PANEL, etc.)
       arr[id] = n(id, false, []);
     }
   }
@@ -85,35 +103,37 @@ function buildIdIndexedPanels(): MainPanels {
 export const defaultMainPanels: MainPanels = buildIdIndexedPanels();
 
 /**
- * Optional legacy shape exported as a sibling array (not a single root).
- * Mirrors the required localStorage structure with the child under RECIPIENT_SELECT_PANEL
- * and **no children** under BUY_SELECT_PANEL_LIST.
+ * Optional legacy shape (sibling array).
+ * Keep defaults consistent with the id-indexed build above.
  */
 export const defaultMainPanelNode: MainPanelNode[] = [
   n(SP_COIN_DISPLAY.TRADING_STATION_PANEL, true, [
-    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON, true, []),
-    n(
-      SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL,
-      true,
-      [
-        n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []),
-      ]
-    ),
+    // BUY subtree (visible by default)
+    n(SP_COIN_DISPLAY.BUY_SELECT_PANEL, true, [
+      n(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON, false, []),
+    ]),
+
+    // SELL subtree (visible by default)
+    n(SP_COIN_DISPLAY.SELL_SELECT_PANEL, true, [
+      n(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON, false, []),
+    ]),
+
+    // Recipient inline panel (default hidden)
+    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL, false, [
+      n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL as SP_COIN_DISPLAY, false, []),
+    ]),
+
+    // Independent UI controls under Trading (default visible)
+    n(SP_COIN_DISPLAY.SWAP_ARROW_BUTTON,  true, []),
+    n(SP_COIN_DISPLAY.PRICE_BUTTON,       true, []),
+    n(SP_COIN_DISPLAY.FEE_DISCLOSURE,     true, []),
+    n(SP_COIN_DISPLAY.AFFILIATE_FEE,      true, []),
   ]),
 
-  // BUY as a sibling root (visible, **no children**)
-  n(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST, true, []),
-
-  // SELL as a sibling root (visible, no children)
-  n(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST, true, []),
-
-  // Recipient list as its own root (hidden)
+  n(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,       true,  []),
+  n(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST,      true,  []),
   n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST, false, []),
-
-  // Sibling roots (hidden by default)
-  n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST, false, []),
-  n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,     false, []),
-
-  // Independent (non-radio) panel as a root
-  n(SP_COIN_DISPLAY.MANAGEMENT_CONFIG_PANEL, false, []),
+  n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,     false, []),
+  n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,         false, []),
+  n(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL,   false, []),
 ];

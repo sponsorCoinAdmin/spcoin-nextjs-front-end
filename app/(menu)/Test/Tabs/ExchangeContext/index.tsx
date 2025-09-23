@@ -1,7 +1,7 @@
 // File: app/(menu)/Test/Tabs/ExchangeContext/index.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelControls } from './hooks/usePanelControls';
 import { useExpandCollapse } from './hooks/useExpandCollapse';
@@ -11,6 +11,7 @@ import TreeView from './components/Tree/TreeView';
 import Row from './components/Tree/Row';
 import { enumRegistry } from './state/enumRegistry';
 import PriceView from '@/app/(menu)/Exchange/Price';
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 const PAGES_KEY = 'test_exchangeContext_pages';
 
@@ -73,11 +74,56 @@ export default function ExchangeContextTab() {
     setShowGui((prev) => !prev);
   }, []);
 
+  /**
+   * Reorder only for display in this Test page:
+   * Under TRADING_STATION_PANEL, show SELL_SELECT_PANEL before BUY_SELECT_PANEL.
+   * This does NOT mutate the stored exchangeContext.
+   */
+  const reorderedMainPanelNode = useMemo(() => {
+    const node = (exchangeContext as any)?.settings?.mainPanelNode;
+    if (!Array.isArray(node)) return [];
+
+    // Deep clone
+    const cloned = JSON.parse(JSON.stringify(node)) as any[];
+
+    // Find TRADING_STATION_PANEL root
+    const tradingIdx = cloned.findIndex((n) => n?.panel === SP_TREE.TRADING_STATION_PANEL);
+    if (tradingIdx < 0) return cloned;
+
+    const trading = cloned[tradingIdx];
+    const children = Array.isArray(trading?.children) ? trading.children.slice() : [];
+    if (!children.length) return cloned;
+
+    const sell = children.find((c: any) => c?.panel === SP_TREE.SELL_SELECT_PANEL);
+    const buy  = children.find((c: any) => c?.panel === SP_TREE.BUY_SELECT_PANEL);
+    const rest = children.filter(
+      (c: any) =>
+        c?.panel !== SP_TREE.SELL_SELECT_PANEL &&
+        c?.panel !== SP_TREE.BUY_SELECT_PANEL
+    );
+
+    // Only change order if at least one of sell/buy exists
+    if (sell || buy) {
+      trading.children = [
+        ...(sell ? [sell] : []),
+        ...(buy  ? [buy]  : []),
+        ...rest,
+      ];
+      cloned[tradingIdx] = trading;
+    }
+
+    return cloned;
+  }, [exchangeContext]);
+
   // Render settings via TreeView so spacing matches other branches
-  const settingsObj = {
-    apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
-    mainPanelNode: ((exchangeContext as any)?.settings?.mainPanelNode) ?? [],
-  };
+  const settingsObj = useMemo(
+    () => ({
+      apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
+      // Use the reordered version here
+      mainPanelNode: reorderedMainPanelNode,
+    }),
+    [exchangeContext, reorderedMainPanelNode]
+  );
 
   return (
     <div className="space-y-4">

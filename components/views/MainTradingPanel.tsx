@@ -27,6 +27,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { TokenSelectPanel, RecipientSelectPanel } from '../containers/AssetSelectPanels';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import SponsorshipsConfigPanel from '@/components/containers/SponsorshipsConfigPanel';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -48,6 +49,7 @@ export default function MainTradingPanel() {
   const isTradingStationVisible = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
   const isErrorMessagePanel = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+  const isSponsorshipsPanel = isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
 
   // Derive the opposing address for the open token panel
   const peerAddress = useMemo(() => {
@@ -66,7 +68,7 @@ export default function MainTradingPanel() {
 
   debugLog.log(`🔍 MainTradingPanel render`);
   debugLog.log(
-    `💬 isTradingStationVisible=${isTradingStationVisible}, isTokenScrollPanel=${isTokenScrollVisible}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, peerAddress=${peerAddress ?? 'none'}`
+    `💬 isTradingStationVisible=${isTradingStationVisible}, isTokenScrollPanel=${isTokenScrollVisible}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, isSponsorshipsPanel=${isSponsorshipsPanel}, peerAddress=${peerAddress ?? 'none'}`
   );
 
   // “Close overlays” under the new API = switch the main overlay back to TRADING
@@ -159,6 +161,13 @@ export default function MainTradingPanel() {
 
         {/* Error panel */}
         <ErrorMessagePanel isActive={isErrorMessagePanel} />
+
+        {/* Sponsorships config overlay (behaves like Error panel; uses panel-tree visibility internally) */}
+        <SponsorshipsConfigPanel
+          showPanel={isSponsorshipsPanel}
+          tokenContract={undefined}
+          callBackSetter={() => null}
+        />
       </div>
     </div>
   );

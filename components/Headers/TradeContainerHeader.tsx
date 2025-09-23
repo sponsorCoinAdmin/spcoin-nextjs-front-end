@@ -33,8 +33,11 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
       return 'Sponsor Rate Configuration';
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
       return 'Sponsor Coin Exchange';
+   case SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL:
+      return 'Manage Sponsorships';
+      
     default:
-      return 'Panel';
+      return 'Main Panel Header';
   }
 }
 

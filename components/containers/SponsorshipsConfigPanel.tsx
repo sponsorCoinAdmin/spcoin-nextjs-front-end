@@ -1,21 +1,21 @@
-// File: components/Sponsorships/ManageSponsorships.tsx
-
+// File: components/Sponsorships/SponsorshipsConfigPanel.tsx
 'use client';
 
 import styles from '@/styles/Modal.module.css';
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
+import { isAddress, Address } from 'viem';
+
 import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png';
 import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import Image from 'next/image';
-import { FEED_TYPE, TokenContract } from '@/lib/structure';
-import { isAddress, Address } from 'viem';
-import { getTokenDetails } from '@/lib/spCoin/guiUtils';
-import DataListSelect from '../views/DataListSelect';
-import { useAccount } from 'wagmi';
 
-const TITLE_NAME = 'Select a token to buy';
+import { TokenContract, SP_COIN_DISPLAY } from '@/lib/structure';
+import { getTokenDetails } from '@/lib/spCoin/guiUtils';
+import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+
 const INPUT_PLACE_HOLDER = 'Manage Sponsorships';
 const ELEMENT_DETAILS =
   'This container allows for the entry selection of a valid token address.\n' +
@@ -24,27 +24,25 @@ const ELEMENT_DETAILS =
 
 type Props = {
   tokenContract: TokenContract | undefined;
-  callBackSetter: (listElement: TokenContract) => null;
-  /** Parent may set this true to (re)open. User can close locally. */
-  showPanel: boolean;
+  callBackSetter: (listElement: TokenContract) => void; // void (not null)
+  /** Deprecated – visibility is controlled by panel-tree (SPONSORSHIPS_CONFIG_PANEL). */
+  showPanel?: boolean;
 };
 
-/** Panel (not a <dialog/>) version of ManageSponsorships. */
-export default function ManageSponsorshipsPanel({
+/** Root overlay version of the Sponsorships Config panel (acts like Error overlay). */
+export default function SponsorshipsConfigPanel({
+  // showPanel is ignored for visibility; panel-tree controls it
   showPanel,
   tokenContract,
   callBackSetter,
 }: Props) {
   const { chainId } = useAccount();
 
-  // Local visibility to allow user-initiated close (parity with previous dialog.close()).
-  const [isOpen, setIsOpen] = useState<boolean>(!!showPanel);
-  useEffect(() => {
-    if (showPanel) setIsOpen(true);
-    // if parent sets false, we also respect it
-    if (!showPanel) setIsOpen(false);
-  }, [showPanel]);
+  // Panel-tree visibility control (radio overlay)
+  const { isVisible, openPanel } = usePanelTree();
+  const show = isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
 
+  // Local input state
   const [tokenInput, setTokenInput] = useState('');
   const [tokenSelect, setTokenSelect] = useState('');
   const [tokenContractState, setTokenContractState] = useState<TokenContract | undefined>();
@@ -116,44 +114,32 @@ export default function ManageSponsorshipsPanel({
       return;
     }
     if (listElement.address === tokenContract?.address) {
-      alert(`Buy Token cannot be the same as Sell Token (${tokenContract.symbol})`);
-      console.log(`Buy Token cannot be the same as Sell Token (${tokenContract.symbol})`);
+      alert(`Buy Token cannot be the same as Sell Token (${tokenContract?.symbol})`);
       return;
     }
 
     callBackSetter(listElement);
-    closePanel();
+    handleClose();
   };
 
-  const closePanel = () => {
+  const handleClose = () => {
     setTokenInput('');
     setTokenSelect('');
     setTokenContractState(undefined);
-    setIsOpen(false);
+    // Switch the radio overlay back to Trading Station
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
 
-  // Hide entirely when not open (like the old dialog would be closed)
-  if (!isOpen) return null;
+  // Hide entirely when not the active overlay
+  if (!show) return null;
 
   return (
     <div
-      id="manageSponsorshipsPanel"
+      id="sponsorshipsConfigPanel"
       className={styles.baseSelectPanel}
       role="region"
       aria-label="Manage Sponsorships"
     >
-      <div className="flex flex-row justify-between mb-1 pt-0 px-3 text-gray-600">
-        <h1 className="text-sm indent-9 mt-1">{TITLE_NAME}</h1>
-        <button
-          type="button"
-          className="cursor-pointer rounded border-none w-5 text-xl text-white"
-          onClick={closePanel}
-          aria-label="Close panel"
-        >
-          X
-        </button>
-      </div>
-
       <div className={styles.modalBox}>
         <div className={styles.modalElementSelect}>
           <div className={styles.leftH}>
@@ -174,7 +160,6 @@ export default function ManageSponsorshipsPanel({
           </div>
         </div>
 
-        {/* Conditionally render suggestion row when there is input */}
         {tokenInput !== '' && (
           <div className={styles.modalInputSelect}>
             <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
@@ -209,8 +194,8 @@ export default function ManageSponsorshipsPanel({
           </div>
         )}
 
-        {/* If you want the data list mode back, un-comment and wire the callback */}
-        {/* <div className={styles.scrollDataListPanel}>
+        {/* Optional list mode
+        <div className={styles.scrollDataListPanel}>
           <DataListSelect<TokenContract>
             dataFeedType={FEED_TYPE.TOKEN_LIST}
             onClickItem={getSelectedListElement}
