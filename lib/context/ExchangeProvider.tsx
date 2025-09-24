@@ -53,10 +53,11 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 
 /* --------------------------------- Helpers -------------------------------- */
 
+// Always return a *number* for chainId (0 == "unset")
 const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   connected: !!n?.connected,
   appChainId: n?.appChainId ?? 0,
-  chainId: (n?.chainId as any) ?? undefined,
+  chainId: typeof n?.chainId === 'number' ? (n!.chainId as number) : 0,
   logoURL: n?.logoURL ?? '',
   name: n?.name ?? '',
   symbol: n?.symbol ?? '',
@@ -90,8 +91,6 @@ const ensurePanelNamesPreserveChildren = (panels: PanelNode[]): PanelNode[] =>
   panels.map(ensurePanelName);
 
 // Legacy: flatten root + children into list
-// - Root (TRADING) is pushed WITHOUT children (so TRADING never carries children)
-// - Each child overlay is pushed with its own children PRESERVED
 const legacyTreeToFlatPanels = (root: MainPanelNode): PanelNode[] => {
   const flat: PanelNode[] = [];
   flat.push({
@@ -140,7 +139,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Initial hydrate + normalize (mainPanelNode only)
+  // Initial hydrate + normalize (mainPanelNode only) + ⚡ immediate network reconcile
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
@@ -150,7 +149,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // Honor stored if valid; otherwise deep-copy defaults (includes BUY → [RECIPIENT] child)
+      // Honor stored if valid; otherwise deep-copy defaults
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
         flatPanels = ensurePanelNamesPreserveChildren(storedPanels);
@@ -159,6 +158,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       } else {
         flatPanels = ensurePanelNamesPreserveChildren(clone(defaultMainPanels as unknown as PanelNode[]));
       }
+
+      // 🔧 Reconcile network against current Wagmi *before* persisting (kills the flicker)
+      const net = ensureNetwork((base as any).network);
+      net.connected = !!isConnected;
+      net.chainId = isConnected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
+      (base as any).network = net;
 
       (base as any).settings = {
         ...settingsAny,
@@ -189,16 +194,18 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
+  // Pass wagmiChainId so watchers can log/compare transitions cleanly
   useProviderWatchers({
     contextState,
     setExchangeContext,
     appChainId,
+    wagmiChainId,
     isConnected,
     address,
     accountStatus,
   });
 
-  // Wallet/network sync
+  // Wallet/network sync for any subsequent changes
   useEffect(() => {
     if (!contextState) return;
 
@@ -207,17 +214,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const net = ensureNetwork(next.network);
 
       const connected = !!isConnected;
-      const desiredChainId = connected && typeof wagmiChainId === 'number' ? wagmiChainId : undefined;
+      const desiredChainId = connected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
 
-      const noChange =
-        net.connected === connected &&
-        ((typeof net.chainId === 'undefined' && typeof desiredChainId === 'undefined') ||
-          net.chainId === desiredChainId);
-
+      const noChange = net.connected === connected && net.chainId === desiredChainId;
       if (noChange) return prev;
 
       net.connected = connected;
-      (net as any).chainId = desiredChainId as any;
+      net.chainId = desiredChainId;
       next.network = net;
       return next;
     }, 'provider:syncNetworkAndWallet');

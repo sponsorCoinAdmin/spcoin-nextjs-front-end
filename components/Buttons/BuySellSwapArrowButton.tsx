@@ -86,25 +86,36 @@ const BuySellSwapArrowButton = () => {
     e.preventDefault();
 
     const trade = exchangeContext?.tradeData;
-    const currentSell = trade?.sellTokenContract;
-    const currentBuy = trade?.buyTokenContract;
-    if (!currentSell || !currentBuy) return;
+    const sell = trade?.sellTokenContract ?? undefined;
+    const buy = trade?.buyTokenContract ?? undefined;
 
-    const sellDecimals = currentSell.decimals ?? 0;
-    const buyDecimals = currentBuy.decimals ?? 0;
-    const originalAmt = (currentSell as any).amount ?? 0n;
+    // If both are missing, nothing to swap.
+    if (!sell && !buy) return;
 
-    // Scale old SELL amount into the new SELL token’s decimals
-    const shift = buyDecimals - sellDecimals;
-    const shiftedStr = shiftDecimal(toDecimalString(originalAmt), shift);
-    const shiftedAmount = coerceShiftedAmount(originalAmt, shiftedStr);
+    // Prepare flipped objects (works even if one side is undefined)
+    const nextSell = buy ? { ...buy } : undefined;
+    const nextBuy = sell ? { ...sell } : undefined;
 
-    // Apply swap
-    const nextSell = { ...currentBuy, amount: shiftedAmount } as typeof currentBuy;
-    const nextBuy = { ...currentSell } as typeof currentSell;
+    if (sell && buy) {
+      // both exist → scale the previous SELL amount into the new SELL token's decimals
+      const sellDecimals = sell.decimals ?? 0;
+      const buyDecimals = buy.decimals ?? 0;
+      const originalAmt = (sell as any).amount ?? 0n;
 
-    setSellTokenContract(nextSell);
-    setBuyTokenContract(nextBuy);
+      const shift = buyDecimals - sellDecimals;
+      const str = shiftDecimal(toDecimalString(originalAmt), shift);
+      const amtOut = coerceShiftedAmount(originalAmt, str);
+
+      (nextSell as any).amount = amtOut; // keep the amount on SELL after swap
+      delete (nextBuy as any)?.amount; // avoid stale amount on BUY
+    } else {
+      // one side missing → don't carry amounts to avoid stale values
+      if (nextSell) delete (nextSell as any).amount;
+      if (nextBuy) delete (nextBuy as any).amount;
+    }
+
+    setSellTokenContract(nextSell as any);
+    setBuyTokenContract(nextBuy as any);
 
     // Revalidate pricing after state is queued
     if (swrKey) queueMicrotask(() => mutate(swrKey));
@@ -112,11 +123,7 @@ const BuySellSwapArrowButton = () => {
 
   return (
     <div id="BuySellSwapArrowButton" className={styles.switchButton}>
-      <ArrowDown
-        size={20}
-        className={styles.switchArrow}
-        onClick={handleClick}
-      />
+      <ArrowDown size={20} className={styles.switchArrow} onClick={handleClick} />
     </div>
   );
 };

@@ -54,13 +54,7 @@ const Branch: React.FC<BranchProps> = ({
     if (isPanelArrayItem) {
       const vis = !!(value as any)?.visible;
       if (lastVisibleRef.current !== vis) {
-        console.log('[PanelTree] visible change', {
-          path,
-          label,
-          panelId: (value as any)?.panel,
-          from: lastVisibleRef.current,
-          to: vis,
-        });
+
         lastVisibleRef.current = vis;
 
         // If a panel becomes visible, auto-expand its own row and its parent children container
@@ -100,27 +94,11 @@ const Branch: React.FC<BranchProps> = ({
     }
 
     const onRowClick = () => {
-      // Always log when the row handler fires
-      console.log('[PanelTree] onRowClick', {
-        path,
-        label,
-        isPanelArrayItem,
-        isChildrenContainer,
-        panelId: isPanelArrayItem ? (value as any).panel : undefined,
-      });
+
 
       if (isPanelArrayItem) {
         const panelId = (value as any).panel as SP_COIN_DISPLAY;
         const currentlyVisible = !!(value as any).visible;
-
-        console.log('[PanelTree] click panel item', {
-          path,
-          label,
-          panelId,
-          fromExpanded: expanded,
-          toExpanded: !expanded,
-          currentVisible: currentlyVisible,
-        });
 
         // Toggle by visibility (source of truth)
         if (!currentlyVisible) {
@@ -134,36 +112,11 @@ const Branch: React.FC<BranchProps> = ({
         }
       } else if (hasEntries) {
         // UI-only expand/collapse
-        console.log('[PanelTree] toggle exp', {
-          path,
-          label,
-          from: !!exp[path],
-          to: !exp[path],
-          isChildrenContainer,
-        });
-        togglePath(path);
-      } else {
-        console.log('[PanelTree] noop (no entries)', { path, label, numEntries });
-      }
+         togglePath(path);
+      } 
     };
 
-    console.log('[PanelTree] render branch', {
-      label,
-      path,
-      isArray,
-      isObject,
-      isPanelArrayItem,
-      isChildrenContainer,
-      numEntries,
-      hasEntries,
-      expanded,
-      expHit: path in exp,
-      expVal: exp[path],
-      visible: isPanelArrayItem ? !!(value as any).visible : undefined,
-      panelId: isPanelArrayItem ? (value as any).panel : undefined,
-    });
-
-    // Build children entries (dot paths)
+      // Build children entries (dot paths)
     const keys = isArray ? (value as any[]).map((_, i) => String(i)) : Object.keys(value as object);
 
     // ⬅️ NEW: If this is a "children" container, DO NOT render a row for it.
@@ -181,12 +134,6 @@ const Branch: React.FC<BranchProps> = ({
               if (looksLikePanelNode(childVal)) {
                 const enumName = SP_COIN_DISPLAY[(childVal as any).panel];
                 if (typeof enumName === 'string') childLabel = `[${k}] ${enumName}`;
-                console.log('[PanelTree] child panel row', {
-                  childPath,
-                  childLabel,
-                  panelId: (childVal as any)?.panel,
-                  visible: !!(childVal as any)?.visible,
-                });
               }
 
               return (
@@ -232,12 +179,6 @@ const Branch: React.FC<BranchProps> = ({
             if (isArray && (label === 'mainPanelNode' || label === 'children') && looksLikePanelNode(childVal)) {
               const enumName = SP_COIN_DISPLAY[(childVal as any).panel];
               if (typeof enumName === 'string') childLabel = `[${k}] ${enumName}`;
-              console.log('[PanelTree] child panel row', {
-                childPath,
-                childLabel,
-                panelId: (childVal as any)?.panel,
-                visible: !!(childVal as any)?.visible,
-              });
             }
 
             return (
@@ -278,8 +219,6 @@ const Branch: React.FC<BranchProps> = ({
         <span className="text-[#5981F3]">{quoteIfString(value)}</span>
       </>
     );
-
-  console.log('[PanelTree] render leaf', { label, path, value });
 
   return (
     <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>

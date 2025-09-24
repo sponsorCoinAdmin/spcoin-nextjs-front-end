@@ -16,11 +16,13 @@ import {
   useExchangeContext,
 } from '@/lib/context/hooks';
 
-// Root enum used across the app (unchanged)
-import { SP_COIN_DISPLAY as SP_ROOT, TRADE_DIRECTION, API_TRADING_PROVIDER } from '@/lib/structure';
-// ❌ remove: import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import {
+  SP_COIN_DISPLAY as SP_ROOT,
+  TRADE_DIRECTION,
+  API_TRADING_PROVIDER,
+} from '@/lib/structure';
 
-import { isSpCoin, parseValidFormattedAmount } from '@/lib/spCoin/coreUtils';
+import { parseValidFormattedAmount } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useTokenSelection } from '@/lib/hooks/trade/useTokenSelection';
@@ -32,19 +34,14 @@ import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
 
-// ✅ add for visibility gating of the accessory buttons
+import { useConfigButtonVisibility } from '@/lib/hooks/trade/useConfigButtonVisibility';
+
+// 🔽 minimal addition for the new rule (hide Add button when RECIPIENT_SELECT_PANEL is open)
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
-
-function isBuyContainer(rootId: number): boolean {
-  return (SP_ROOT as any)[rootId] === 'BUY_SELECT_PANEL_LIST';
-}
-function isSellContainer(rootId: number): boolean {
-  return (SP_ROOT as any)[rootId] === 'SELL_SELECT_PANEL_LIST';
-}
 
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
@@ -59,13 +56,8 @@ function TradeAssetPanelInner() {
 
   const { setLocalTokenContract, setLocalAmount, containerType: containerTypeRoot } = useTokenPanelContext();
 
-  const isBuy = isBuyContainer(containerTypeRoot);
-  const isSell = isSellContainer(containerTypeRoot);
-
-  // ✅ panel-tree to gate accessory buttons like before
-  const { isVisible } = usePanelTree();
-  const showManageBtn = isSell && isVisible(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
-  const showRecipientBtn = isBuy && isVisible(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+  const isBuy  = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL_LIST;
+  const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL_LIST;
 
   // Token selection state (used for amounts/decimals/etc.)
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
@@ -80,15 +72,27 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   });
 
-  // Input text
+  // Button visibility (small hook you already had)
+  const { showManageBtn, showRecipientBtn } = useConfigButtonVisibility({
+    isSell,
+    isBuy,
+    tokenContract,
+  });
+
+  // 🔽 minimal addition: hide Add button while RECIPIENT_SELECT_PANEL is visible
+  const { isVisible } = usePanelTree();
+  const isRecipientPanelOpen = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+  const showRecipientBtnFinal = showRecipientBtn && !isRecipientPanelOpen;
+
+  // Amount input state
   const [inputValue, setInputValue] = useState('0');
   const debouncedSell = useDebounce(sellAmount, 600);
-  const debouncedBuy = useDebounce(buyAmount, 600);
+  const debouncedBuy  = useDebounce(buyAmount, 600);
 
-  // Sync panel input with global amount (for *this* side)
   const typingUntilRef = useRef(0);
   const currentAmount = isSell ? sellAmount : buyAmount;
 
+  // Keep input text in sync with amount (unless user is mid-typing)
   useEffect(() => {
     if (isIntermediateDecimal(inputValue)) return;
     if (Date.now() < typingUntilRef.current) return;
@@ -98,44 +102,42 @@ function TradeAssetPanelInner() {
       return;
     }
 
-    const formattedRaw = formatUnits(currentAmount ?? 0n, tokenDecimals);
-    const formatted = clampDisplay(formattedRaw, maxInputSz);
+    const raw = formatUnits(currentAmount ?? 0n, tokenDecimals);
+    const formatted = clampDisplay(raw, maxInputSz);
     if (inputValue !== formatted) setInputValue(formatted);
-  }, [tokenAddr, tokenDecimals, currentAmount, containerTypeRoot, inputValue]);
+  }, [tokenAddr, tokenDecimals, currentAmount, inputValue]);
 
-  // Ensure local panel amount is zeroed when token is cleared
+  // Zero local amount if token cleared
   useEffect(() => {
     if (!tokenAddr) setLocalAmount(0n);
   }, [tokenAddr, setLocalAmount]);
 
-  // Emit debounced amount event
+  // Emit debounced amount event (only when this side is the active direction)
   const lastDebouncedRef = useRef<bigint | null>(null);
   const debouncedForPanel = isSell ? debouncedSell : debouncedBuy;
 
   useEffect(() => {
-    const directionOk =
+    const correctDirection =
       (isSell && tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT) ||
       (!isSell && tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN);
-    if (!directionOk) return;
+    if (!correctDirection) return;
 
     if (lastDebouncedRef.current === debouncedForPanel) return;
     lastDebouncedRef.current = debouncedForPanel ?? null;
 
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('spcoin:debouncedAmount', {
-          detail: {
-            amount: debouncedForPanel,
-            containerType: containerTypeRoot,
-            tradeDirection,
-            token: tokenAddr || undefined,
-          },
-        }),
-      );
-    }
+    window.dispatchEvent(
+      new CustomEvent('spcoin:debouncedAmount', {
+        detail: {
+          amount: debouncedForPanel,
+          containerType: containerTypeRoot,
+          tradeDirection,
+          token: tokenAddr || undefined,
+        },
+      }),
+    );
   }, [debouncedForPanel, isSell, tradeDirection, tokenAddr, containerTypeRoot]);
 
-  // Input change → parse → update local/global
+  // Parse & push amount
   const onChangeAmount = (value: string) => {
     typingUntilRef.current = Date.now() + TYPING_GRACE_MS;
     if (!/^\d*\.?\d*$/.test(value)) return;
@@ -143,8 +145,7 @@ function TradeAssetPanelInner() {
     const normalized = value.replace(/^0+(?!\.)/, '') || '0';
     setInputValue(normalized);
 
-    if (isIntermediateDecimal(normalized)) return;
-    if (!tokenAddr) return;
+    if (isIntermediateDecimal(normalized) || !tokenAddr) return;
 
     const formatted = parseValidFormattedAmount(normalized, tokenDecimals);
     try {
@@ -167,15 +168,14 @@ function TradeAssetPanelInner() {
 
   const buySellText = isSell
     ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-      ? `You Pay ± ${slippage.percentageString}`
-      : `You Exactly Pay:`)
+        ? `You Pay ± ${slippage.percentageString}`
+        : `You Exactly Pay:`)
     : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-      ? `You Receive ± ${slippage.percentageString}`
-      : `You Exactly Receive:`);
+        ? `You Receive ± ${slippage.percentageString}`
+        : `You Exactly Receive:`);
 
-  // SSOT balance + mirror to context
-  const { exchangeContext: ctx } = useExchangeContext();
-  const chainId = ctx?.network?.chainId ?? 1;
+  // Balance (single source of truth)
+  const chainId = exchangeContext?.network?.chainId ?? 1;
   const {
     formatted: liveFormattedBalance,
     isLoading: balanceLoading,
@@ -187,15 +187,10 @@ function TradeAssetPanelInner() {
     containerType: containerTypeRoot,
   });
 
-  const formattedBalance = balanceError
-    ? '—'
-    : balanceLoading
-      ? '…'
-      : liveFormattedBalance ?? '0.0';
+  const formattedBalance = balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
 
   const isInputDisabled =
-    !tokenAddr ||
-    (apiProvider === API_TRADING_PROVIDER.API_0X && isBuy);
+    !tokenAddr || (apiProvider === API_TRADING_PROVIDER.API_0X && isBuy);
 
   const noAutofillName = useMemo(
     () => `no-autofill-${Math.random().toString(36).slice(2)}`,
@@ -220,9 +215,8 @@ function TradeAssetPanelInner() {
         value={inputValue}
         onChange={(e) => onChangeAmount(e.target.value)}
         onBlur={() => {
-          const parsed = parseFloat(inputValue);
-          const str = isNaN(parsed) ? '0' : parsed.toString();
-          setInputValue(clampDisplay(str, 10));
+          const n = parseFloat(inputValue);
+          setInputValue(clampDisplay(isNaN(n) ? '0' : String(n), 10));
         }}
         name={noAutofillName}
         autoComplete="off"
@@ -247,25 +241,22 @@ function TradeAssetPanelInner() {
 
       <TokenSelectDropDown containerType={containerTypeRoot} />
 
-      {/* replaces styles.buySell */}
       <div className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
         {buySellText}
       </div>
 
-      {/* replaces styles.assetBalance */}
       <div className="absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
         Balance: {formattedBalance}
       </div>
 
-      {/* Render ONLY if their panel-tree button node says they should */}
       {showManageBtn && <ManageSponsorsButton tokenContract={tokenContract} />}
-      {showRecipientBtn && <AddSponsorshipButton />}
+      {showRecipientBtnFinal && <AddSponsorshipButton />}
     </div>
   );
 }
 
 export default function TradeAssetPanel({
-  containerType, // SP_ROOT enum id (BUY_SELECT_PANEL_LIST or SELL_SELECT_PANEL_LIST)
+  containerType,
 }: {
   containerType: SP_ROOT.SELL_SELECT_PANEL_LIST | SP_ROOT.BUY_SELECT_PANEL_LIST;
 }) {
