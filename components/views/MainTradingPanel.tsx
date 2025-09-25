@@ -25,7 +25,11 @@ import {
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { TokenSelectPanel, RecipientSelectPanel } from '../containers/AssetSelectPanels';
+import {
+  TokenSelectPanel,
+  RecipientSelectPanel,
+  AgentSelectPanel,
+} from '../containers/AssetSelectPanels';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import SponsorshipsConfigPanel from '@/components/containers/SponsorshipsConfigPanel';
 
@@ -43,11 +47,12 @@ export default function MainTradingPanel() {
 
   const [___, setErrorMessage] = useErrorMessage();
 
-  // Access provider setters for recipient selection
+  // Access provider setters for recipient/agent selection
   const { setRecipientAccount } = useExchangeContext();
 
   const isTradingStationVisible = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+  const isAgentPanel = isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
   const isErrorMessagePanel = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
   const isSponsorshipsPanel = isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
 
@@ -60,15 +65,11 @@ export default function MainTradingPanel() {
       return buyTokenContract?.address;
     }
     return undefined;
-  }, [
-    isVisible,
-    sellTokenContract?.address,
-    buyTokenContract?.address,
-  ]);
+  }, [isVisible, sellTokenContract?.address, buyTokenContract?.address]);
 
   debugLog.log(`🔍 MainTradingPanel render`);
   debugLog.log(
-    `💬 isTradingStationVisible=${isTradingStationVisible}, isTokenScrollPanel=${isTokenScrollVisible}, isRecipientPanel=${isRecipientPanel}, isErrorMessagePanel=${isErrorMessagePanel}, isSponsorshipsPanel=${isSponsorshipsPanel}, peerAddress=${peerAddress ?? 'none'}`
+    `💬 isTradingStationVisible=${isTradingStationVisible}, isTokenScrollPanel=${isTokenScrollVisible}, isRecipientPanel=${isRecipientPanel}, isAgentPanel=${isAgentPanel}, isErrorMessagePanel=${isErrorMessagePanel}, isSponsorshipsPanel=${isSponsorshipsPanel}, peerAddress=${peerAddress ?? 'none'}`
   );
 
   // “Close overlays” under the new API = switch the main overlay back to TRADING
@@ -159,6 +160,13 @@ export default function MainTradingPanel() {
           setTradingTokenCallback={setRecipientFromPanel}
         />
 
+        {/* Agent selection panel (same pattern as Recipient) */}
+        <AgentSelectPanel
+          isActive={isAgentPanel}
+          closePanelCallback={closePanelCallback}
+          setTradingTokenCallback={setRecipientFromPanel}
+        />
+
         {/* Error panel */}
         <ErrorMessagePanel isActive={isErrorMessagePanel} />
 
@@ -172,3 +180,4 @@ export default function MainTradingPanel() {
     </div>
   );
 }
+

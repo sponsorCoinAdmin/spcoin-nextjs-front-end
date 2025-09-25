@@ -46,13 +46,17 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   // Derive the "current" display from the tree
-  const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
+   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
     // Include sponsorships panel so it can set the header correctly
     if (isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL)) return SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL;
 
     if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
     if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST))  return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
     if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
+
+    // ✅ Add this line for Agent panel
+    if (isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
+
     if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL)) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
     if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL)) return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
