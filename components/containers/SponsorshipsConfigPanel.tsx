@@ -1,207 +1,117 @@
-// File: components/Sponsorships/SponsorshipsConfigPanel.tsx
+// File: components/containers/SponsorshipsConfigPanel.tsx
 'use client';
 
-import styles from '@/styles/Modal.module.css';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
-import { isAddress, Address } from 'viem';
-
-import searchMagGlassGrey_png from '@/public/assets/miscellaneous/SearchMagGlassGrey.png';
-import customUnknownImage_png from '@/public/assets/miscellaneous/QuestionWhiteOnRed.png';
-import info_png from '@/public/assets/miscellaneous/info1.png';
-
-import { TokenContract, SP_COIN_DISPLAY } from '@/lib/structure';
-import { getTokenDetails } from '@/lib/spCoin/guiUtils';
-import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
+import React, { useEffect } from 'react';
+import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const INPUT_PLACE_HOLDER = 'Manage Sponsorships';
-const ELEMENT_DETAILS =
-  'This container allows for the entry selection of a valid token address.\n' +
-  'When the address entry is completed and selected, this address will be verified prior to entry acceptance.\n' +
-  'Currently, there is no image token lookup, but that is to come.';
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SPONSORSHIPS_CONFIG_PANEL === 'true';
+const debugLog = createDebugLogger('SponsorshipsConfigPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = {
+  /** Panel-tree controlled visibility, like ErrorMessagePanel's `isActive` */
+  showPanel: boolean;
   tokenContract: TokenContract | undefined;
-  callBackSetter: (listElement: TokenContract) => void; // void (not null)
-  /** Deprecated – visibility is controlled by panel-tree (SPONSORSHIPS_CONFIG_PANEL). */
-  showPanel?: boolean;
+  /** Placeholder to keep compatibility with callers */
+  callBackSetter?: (tc: TokenContract) => any;
+  /** Optional external close hook */
+  onClose?: () => void;
 };
 
-/** Root overlay version of the Sponsorships Config panel (acts like Error overlay). */
 export default function SponsorshipsConfigPanel({
-  // showPanel is ignored for visibility; panel-tree controls it
   showPanel,
   tokenContract,
   callBackSetter,
+  onClose,
 }: Props) {
-  const { chainId } = useAccount();
+  const { openPanel, closePanel } = usePanelTree();
 
-  // Panel-tree visibility control (radio overlay)
-  const { isVisible, openPanel } = usePanelTree();
-  const show = isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
-
-  // Local input state
-  const [tokenInput, setTokenInput] = useState('');
-  const [tokenSelect, setTokenSelect] = useState('');
-  const [tokenContractState, setTokenContractState] = useState<TokenContract | undefined>();
-
-  // Resolve token details when user inputs an address
-  useEffect(() => {
-    if (!tokenInput) {
-      setTokenSelect('');
-      setTokenContractState(undefined);
-      return;
-    }
-    if (isAddress(tokenInput)) {
-      setTokenDetails(tokenInput as Address, setTokenContractState);
-    } else {
-      setTokenSelect('Invalid Token Address');
-      setTokenContractState(undefined);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenInput]);
+  debugLog.log('🛠️ SponsorshipsConfigPanel render; showPanel=', showPanel);
 
   useEffect(() => {
-    if (tokenContractState?.symbol != undefined) {
-      setTokenSelect(tokenContractState.symbol);
-    }
-  }, [tokenContractState]);
+    if (!showPanel) return;
+    debugLog.log('🎯 SponsorshipsConfigPanel active; token:', tokenContract?.symbol ?? '(none)');
+  }, [showPanel, tokenContract]);
 
-  const setTokenInputField = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTokenInput(event.target.value);
-  };
-
-  const setTokenDetails = async (tokenAddr: Address, setFn: (t?: TokenContract) => void) => {
-    if (typeof chainId === 'number') {
-      return getTokenDetails(chainId, tokenAddr, setFn);
-    } else {
-      console.error(`Missing chainId for getTokenDetails(${tokenAddr}, setTokenContract())`);
-    }
-  };
-
-  const displayElementDetail = async (tokenAddr: string) => {
-    try {
-      if (!(await setTokenDetails(tokenAddr as Address, setTokenContractState))) {
-        alert(
-          '*** ERROR *** Invalid Buy Token Address: ' +
-            tokenInput +
-            '\n\n' +
-            ELEMENT_DETAILS
-        );
-        return;
-      }
-      alert(
-        'displayElementDetail\n' +
-          JSON.stringify(tokenContractState, null, 2) +
-          '\n\n' +
-          ELEMENT_DETAILS
-      );
-      await getWagmiBalanceOfRec(tokenAddr);
-    } catch (e: any) {
-      alert('BUY_ERROR:displayElementDetail e.message ' + e.message);
-    }
-  };
-
-  const getSelectedListElement = (listElement: TokenContract | undefined) => {
-    if (!listElement) {
-      alert('Undefined Token address');
-      return;
-    }
-    if (!isAddress(listElement.address)) {
-      alert(`${listElement.name} has invalid token address: ${listElement.address}`);
-      return;
-    }
-    if (listElement.address === tokenContract?.address) {
-      alert(`Buy Token cannot be the same as Sell Token (${tokenContract?.symbol})`);
-      return;
-    }
-
-    callBackSetter(listElement);
-    handleClose();
-  };
+  if (!showPanel) {
+    debugLog.log('⏭️ SponsorshipsConfigPanel → not active, skipping render');
+    return null;
+  }
 
   const handleClose = () => {
-    setTokenInput('');
-    setTokenSelect('');
-    setTokenContractState(undefined);
-    // Switch the radio overlay back to Trading Station
+    debugLog.log('✅ Close SponsorshipsConfigPanel → back to TRADING_STATION_PANEL');
+    // Mirror ErrorMessagePanel: close self, then open Trading Station
+    closePanel(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    onClose?.();
   };
 
-  // Hide entirely when not the active overlay
-  if (!show) return null;
-
   return (
-    <div
-      id="sponsorshipsConfigPanel"
-      className={styles.baseSelectPanel}
-      role="region"
-      aria-label="Manage Sponsorships"
+    <section
+      id="SponsorshipsConfigPanel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="SponsorshipsConfigPanelHeader"
+      className="flex flex-col w-full rounded-[15px] overflow-hidden
+                 border border-slate-500/30 bg-slate-900/30 text-slate-100"
     >
-      <div className={styles.modalBox}>
-        <div className={styles.modalElementSelect}>
-          <div className={styles.leftH}>
-            <Image
-              src={searchMagGlassGrey_png}
-              className={styles.searchImage}
-              alt="Search"
-            />
-            <input
-              id="tokenInput"
-              className={styles.modalElementSelect}
-              autoComplete="off"
-              placeholder={INPUT_PLACE_HOLDER}
-              onChange={setTokenInputField}
-              value={tokenInput}
-            />
-            &nbsp;
+      {/* Header — this was missing */}
+      <header
+        id="SponsorshipsConfigPanelHeader"
+        className="flex items-center justify-between px-4 py-3
+                   bg-slate-800/50 border-b border-slate-600/30"
+      >
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">Manage Sponsorships</h3>
+          {tokenContract?.symbol ? (
+            <span className="text-xs opacity-80">for {tokenContract.symbol}</span>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          aria-label="Close panel"
+          onClick={handleClose}
+          className="h-7 w-7 inline-flex items-center justify-center rounded
+                     border border-slate-400/30 text-slate-200
+                     hover:text-white hover:border-slate-300 transition-colors"
+        >
+          ×
+        </button>
+      </header>
+
+      {/* Body */}
+      <div className="p-4 flex flex-col gap-4">
+        {/* Replace with real sponsorship management UI */}
+        <div className="text-sm opacity-90">
+          Configure sponsorships for this token. (Placeholder content)
+        </div>
+
+        <div className="rounded-lg border border-slate-500/30 p-3">
+          <div className="text-sm font-medium mb-1">Selected token</div>
+          <div className="text-xs opacity-80 break-all">
+            {tokenContract
+              ? `${tokenContract.name ?? 'Token'} (${tokenContract.symbol ?? '—'}) on chain ${
+                  tokenContract.chainId ?? '—'
+                }`
+              : 'No token selected'}
           </div>
         </div>
 
-        {tokenInput !== '' && (
-          <div className={styles.modalInputSelect}>
-            <div className="flex flex-row justify-between mb-1 pt-2 px-5 hover:bg-spCoin_Blue-900">
-              <button
-                type="button"
-                className="cursor-pointer flex flex-row justify-between"
-                onClick={() => getSelectedListElement(tokenContractState)}
-                aria-label="Select token"
-              >
-                <Image
-                  id="tokenImage"
-                  src={customUnknownImage_png}
-                  className={styles.elementLogo}
-                  alt="Unknown token"
-                />
-                <div className="text-left">
-                  <div className={styles.elementName}>{tokenSelect}</div>
-                  <div className={styles.elementSymbol}>User Specified Token</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className="py-3 cursor-pointer rounded border-none w-8 h-8 text-lg font-bold text-white"
-                onClick={() => displayElementDetail(tokenInput)}
-                aria-label="Show token details"
-                title="Show token details"
-              >
-                <Image src={info_png} className={styles.infoLogo} alt="Info" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Optional list mode
-        <div className={styles.scrollDataListPanel}>
-          <DataListSelect<TokenContract>
-            dataFeedType={FEED_TYPE.TOKEN_LIST}
-            onClickItem={getSelectedListElement}
-          />
-        </div> */}
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-3 py-1.5 rounded-md bg-slate-700/80 hover:bg-slate-700 text-white text-sm
+                       transition-colors"
+          >
+            Done
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
