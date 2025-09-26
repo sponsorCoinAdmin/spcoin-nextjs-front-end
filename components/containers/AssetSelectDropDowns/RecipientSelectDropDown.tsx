@@ -1,4 +1,3 @@
-// File: components/containers/RecipientSelectDropDown.tsx
 'use client';
 
 import React, { useCallback, useRef } from 'react';
@@ -15,14 +14,10 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('RecipientSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
-  recipientAccount: WalletAccount | undefined;
-  callBackAccount: (walletAccount: WalletAccount) => void;
+  recipientAccount?: WalletAccount;
 }
 
-const RecipientSelectDropDown: React.FC<Props> = ({
-  recipientAccount,
-  callBackAccount,
-}) => {
+const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   const hasErroredRef = useRef(false);
   const { openPanel } = usePanelTree();
 

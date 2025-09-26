@@ -1,15 +1,17 @@
+// File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidateFSMInput, ValidateFSMOutput } from './types/validateFSMTypes';
 
-import { validateAddress } from './validationTests/validateAddress';
-import { validateDuplicate } from './validationTests/validateDuplicate';
-import { validateExistsOnChain } from './validationTests/validateExistsOnChain';
-import { validateExistsLocally } from './validationTests/validateExistsLocally';
-import { validateResolvedAsset } from './validationTests/validateResolvedAsset';
-import { updateValidated } from './validationTests/updateValidated';
-import { closeSelectPanel } from './validationTests/closeSelectPanel';
+
 
 import { InputState } from '@/lib/structure/assetSelection';
+import { ValidateFSMOutput, ValidateFSMInput } from './FSM_Core/types/validateFSMTypes';
+import { closeSelectPanel } from './FSM_Core/validationTests/closeSelectPanel';
+import { resolveAsset } from './FSM_Core/validationTests/resolveAsset';
+import { updateValidated } from './FSM_Core/validationTests/updateValidated';
+import { validateAddress } from './FSM_Core/validationTests/validateAddress';
+import { validateDuplicate } from './FSM_Core/validationTests/validateDuplicate';
+import { validateExistsLocally } from './FSM_Core/validationTests/validateExistsLocally';
+import { validateExistsOnChain } from './FSM_Core/validationTests/validateExistsOnChain';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const log = createDebugLogger('validateFSMCore', DEBUG_ENABLED, false).log;
@@ -33,6 +35,7 @@ function merge(dst: ValidateFSMOutput, src?: Partial<ValidateFSMOutput>) {
   if (src.nextState !== undefined) dst.nextState = src.nextState;
   if (src.errorMessage !== undefined) dst.errorMessage = src.errorMessage;
   if (src.assetPatch !== undefined) dst.assetPatch = src.assetPatch; // unified asset patch
+  // NOTE: ValidateFSMOutput is patch-only in your types; do not copy validatedAsset/resolvedAsset here.
 }
 
 /** Conditionally run a validator or jump to a fallback next state. */
@@ -59,12 +62,10 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
   switch (input.inputState) {
     case InputState.VALIDATE_ADDRESS:
       await step(out, F.VALID_ADDRESS, () => validateAddress(input), InputState.TEST_DUPLICATE_INPUT);
-      // alert(`validateFSMCore.nextState: ${InputState[out.nextState]} - ${out.errorMessage}`)
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
       await step(out, F.DUPLICATE, () => validateDuplicate(input), InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY);
-      // Safety: ensure we always produce a next state
       if (out.nextState === undefined) {
         merge(out, {
           nextState: InputState.VALIDATE_ADDRESS,
@@ -82,10 +83,12 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       break;
 
     case InputState.RESOLVE_ASSET:
-      await step(out, F.RESOLVE, () => validateResolvedAsset(input), InputState.UPDATE_VALIDATED_ASSET);
+      // 🔧 crucial: panel-aware; returns assetPatch for account-like flows
+      await step(out, F.RESOLVE, () => resolveAsset(input), InputState.UPDATE_VALIDATED_ASSET);
       break;
 
     case InputState.UPDATE_VALIDATED_ASSET:
+      // Your updateValidated should read input.assetPatch (runner merges patches across steps)
       await step(out, F.UPDATE, () => updateValidated(input), InputState.CLOSE_SELECT_PANEL);
       break;
 

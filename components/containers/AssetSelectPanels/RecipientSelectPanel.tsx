@@ -15,8 +15,8 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 interface RecipientSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  /** Recipient selection returns a WalletAccount; provider accepts TokenContract | WalletAccount */
-  setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
+  /** Recipient selection returns a WalletAccount */
+  setRecipientCallback?: (wallet: WalletAccount) => void; // ← make optional
   /** Included for API symmetry; not usually needed for recipients */
   peerAddress?: string | Address;
 }
@@ -24,10 +24,10 @@ interface RecipientSelectPanelProps {
 export default function RecipientSelectPanel({
   isActive,
   closePanelCallback,
-  setTradingTokenCallback,
+  setRecipientCallback,
   peerAddress,
 }: RecipientSelectPanelProps) {
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
   const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
@@ -48,8 +48,44 @@ export default function RecipientSelectPanel({
   );
 
   const closeForProvider = useCallback(
-    (_fromUser: boolean) => { closePanelCallback(); },
+    (_fromUser: boolean) => {
+      closePanelCallback();
+    },
     [closePanelCallback]
+  );
+
+  // Fallback: if parent didn't provide a callback, commit to ExchangeContext here (keeps provider pure).
+  const defaultSetRecipient = useCallback(
+    (wallet: WalletAccount) => {
+      setExchangeContext(
+        (prev) => {
+          const next: any = structuredClone(prev);
+          next.accounts = next.accounts ?? {};
+          next.accounts.recipientAccount = wallet;
+          return next;
+        },
+        'RecipientSelectPanel:autoSetRecipient'
+      );
+    },
+    [setExchangeContext]
+  );
+
+  const effectiveSetRecipient = setRecipientCallback ?? defaultSetRecipient;
+
+  // Adapter: provider emits (TokenContract | WalletAccount); this panel wants a WalletAccount.
+  const onAssetChosen = useCallback(
+    (asset: TokenContract | WalletAccount) => {
+      try {
+        // Heuristic guard: ignore tokens for this panel
+        const looksLikeToken = typeof (asset as any)?.decimals === 'number';
+        if (looksLikeToken) return;
+
+        effectiveSetRecipient(asset as WalletAccount);
+      } catch (e) {
+        console.error('[RecipientSelectPanel] setRecipientCallback failed', e || {});
+      }
+    },
+    [effectiveSetRecipient]
   );
 
   if (!isActive) return null;
@@ -59,7 +95,7 @@ export default function RecipientSelectPanel({
       <AssetSelectProvider
         key={instanceId}
         closePanelCallback={closeForProvider}
-        setTradingTokenCallback={setTradingTokenCallback}
+        setSelectedAssetCallback={onAssetChosen}
         containerType={containerType}
         initialPanelBag={initialPanelBag}
       >

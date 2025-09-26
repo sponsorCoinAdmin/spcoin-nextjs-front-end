@@ -17,5 +17,5 @@ export enum SP_COIN_DISPLAY {
   FEE_DISCLOSURE,
   AFFILIATE_FEE,
   UNDEFINED,
-  SPONSORSHIPS_CONFIG_PANEL, // never persist
+  SPONSOR_SELECT_PANEL_LIST, // never persist
 }

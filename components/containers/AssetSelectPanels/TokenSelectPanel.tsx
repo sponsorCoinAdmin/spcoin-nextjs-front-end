@@ -16,7 +16,8 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 interface TokenSelectPanelProps {
   isActive: boolean;
   closePanelCallback: () => void;
-  setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
+  /** Parent-provided handler to store the chosen token (buy/sell) */
+  setTradingTokenCallback: (asset: TokenContract) => void;
   peerAddress?: string | Address;
 }
 
@@ -56,6 +57,21 @@ export default function TokenSelectPanel({
     [closePanelCallback]
   );
 
+  // Adapter: provider emits (TokenContract | WalletAccount). We only accept TokenContract here.
+  const onAssetChosen = useCallback(
+    (asset: TokenContract | WalletAccount) => {
+      // Heuristic: tokens have numeric "decimals"
+      const looksLikeToken = typeof (asset as any)?.decimals === 'number';
+      if (!looksLikeToken) {
+        // Ignore wallet selections in token panel
+        // console.warn('[TokenSelectPanel] Ignoring non-token selection', asset);
+        return;
+      }
+      setTradingTokenCallback(asset as TokenContract);
+    },
+    [setTradingTokenCallback]
+  );
+
   // If the overlay isn't active or we couldn't resolve which one, render nothing
   if (!isActive || !activeType || !initialPanelBag) return null;
 
@@ -64,7 +80,8 @@ export default function TokenSelectPanel({
       <AssetSelectProvider
         key={instanceId}
         closePanelCallback={closeForProvider}
-        setTradingTokenCallback={setTradingTokenCallback}
+        // IMPORTANT: AssetSelectProvider expects `setSelectedAssetCallback`, not `setTradingTokenCallback`
+        setSelectedAssetCallback={onAssetChosen}
         containerType={activeType}
         initialPanelBag={initialPanelBag}
       >

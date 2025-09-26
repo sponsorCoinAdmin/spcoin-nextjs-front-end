@@ -54,7 +54,7 @@ export default function MainTradingPanel() {
   const isRecipientPanel = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
   const isAgentPanel = isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
   const isErrorMessagePanel = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
-  const isSponsorshipsPanel = isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
+  const isSponsorshipsPanel = isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
 
   // Derive the opposing address for the open token panel
   const peerAddress = useMemo(() => {

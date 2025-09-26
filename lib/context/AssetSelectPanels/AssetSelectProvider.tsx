@@ -28,7 +28,13 @@ const debugLog = createDebugLogger('AssetSelectProvider', DEBUG_ENABLED, LOG_TIM
 type Props = {
   children: ReactNode;
   closePanelCallback: (fromUser: boolean) => void;
-  setTradingTokenCallback: (asset: TokenContract | WalletAccount) => void;
+
+  /**
+   * New, clearer name: the selected asset can be a TokenContract OR a WalletAccount.
+   * (We still expose `setTradingTokenCallback` in context for backwards compatibility.)
+   */
+  setSelectedAssetCallback: (asset: TokenContract | WalletAccount) => void;
+
   containerType: SP_COIN_DISPLAY;
   initialPanelBag?: AssetSelectBag;
 };
@@ -36,7 +42,7 @@ type Props = {
 export const AssetSelectProvider = ({
   children,
   closePanelCallback,
-  setTradingTokenCallback,
+  setSelectedAssetCallback,
   containerType,
   initialPanelBag,
 }: Props) => {
@@ -57,8 +63,10 @@ export const AssetSelectProvider = ({
   } = useValidatedAsset<TokenContract | WalletAccount>();
 
   // Parent callback wrappers (stable + debug-safe)
+  // NOTE: useProviderCallbacks currently expects `{ setTradingTokenCallback }`.
+  // We pass our renamed prop under that key to avoid touching the hook.
   const { fireClosePanel, fireSetTradingToken } = useProviderCallbacks(
-    { closePanelCallback, setTradingTokenCallback },
+    { closePanelCallback, setTradingTokenCallback: setSelectedAssetCallback },
     instanceId,
   );
 
@@ -151,9 +159,11 @@ export const AssetSelectProvider = ({
       feedType,
       instanceId,
 
-      // Parent bridges exposed to children (matches old API)
+      // Parent bridges exposed to children (legacy name preserved)
       closePanelCallback: () => fireClosePanel(true),
-      setTradingTokenCallback: (a: TokenContract) => fireSetTradingToken(a),
+      setTradingTokenCallback: (a: TokenContract | WalletAccount) => fireSetTradingToken(a),
+      // If you also want to expose the new name on context (only if your context type allows it):
+      // setSelectedAssetCallback: (a: TokenContract | WalletAccount) => fireSetTradingToken(a),
 
       // Panel bag
       panelBag,

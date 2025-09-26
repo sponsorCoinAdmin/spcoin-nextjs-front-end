@@ -9,7 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SPONSORSHIPS_CONFIG_PANEL === 'true';
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SPONSOR_SELECT_PANEL_LIST === 'true';
 const debugLog = createDebugLogger('SponsorshipsConfigPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = {
@@ -45,7 +45,7 @@ export default function SponsorshipsConfigPanel({
   const handleClose = () => {
     debugLog.log('✅ Close SponsorshipsConfigPanel → back to TRADING_STATION_PANEL');
     // Mirror ErrorMessagePanel: close self, then open Trading Station
-    closePanel(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
+    closePanel(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     onClose?.();
   };

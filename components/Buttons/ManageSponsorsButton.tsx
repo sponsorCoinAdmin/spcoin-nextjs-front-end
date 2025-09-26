@@ -19,10 +19,10 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
   const showButton = isVisible(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
 
   // Whether the SponsorshipsConfigPanel should be visible (panel-tree driven)
-  const showPanel = isVisible(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
+  const showPanel = isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
 
   const openDialog = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL);
+    openPanel(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
   }, [closePanel, openPanel]);
 
   // Placeholder until upstream logic consumes this callback
@@ -37,7 +37,7 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}
         // If the panel supports an onClose prop, wire it to close via the panel tree:
-        // onClose={() => closePanel(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL)}
+        // onClose={() => closePanel(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST)}
       />
 
       {showButton ? (

@@ -3,9 +3,10 @@
 import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
-import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
+import { FEED_TYPE, NATIVE_TOKEN_ADDRESS, SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import { isStudyEnabled, StudyId } from '../studyPolicy';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const log = createDebugLogger('validateExistsOnChain(FSM_Core)', DEBUG_ENABLED, /* timestamp */ false);
@@ -57,6 +58,8 @@ async function getBytecodeWithTiming(
  * - TOKEN_LIST flows require contract bytecode.
  * - Non-token flows accept EOAs (bytecode '0x') as valid accounts.
  * - Native token address short-circuits to RESOLVE_ASSET.
+ *
+ * ⚙️ Policy-aware: respects studyPolicy for VALIDATE_EXISTS_ON_CHAIN.
  */
 export async function validateExistsOnChain(
   {
@@ -64,7 +67,8 @@ export async function validateExistsOnChain(
     publicClient,
     feedType,     // ← use the feed type to decide EOA handling
     appChainId,   // optional; used only for logging/mismatch detection
-  }: ValidateFSMInput & { appChainId?: number }
+    containerType, // ← panel that invoked the study (policy gate)
+  }: ValidateFSMInput & { appChainId?: number; containerType: SP_COIN_DISPLAY }
 ): Promise<ValidateFSMOutput> {
   const addr = (debouncedHexInput ?? '').trim() as Address;
   const traceId = Math.random().toString(36).slice(2, 8);
@@ -85,8 +89,17 @@ export async function validateExistsOnChain(
       clientChainName: clientSummary.chainName,
       rpcTransportType: clientSummary.transportType,
       rpcUrl,
+      containerType: SP_COIN_DISPLAY[containerType],
     } as any
   );
+
+  // 🔐 Policy gate — allow selective bypass per panel
+  if (!isStudyEnabled(containerType, StudyId.VALIDATE_EXISTS_ON_CHAIN)) {
+    log.log?.(
+      `[${traceId}] [POLICY] VALIDATE_EXISTS_ON_CHAIN disabled for ${SP_COIN_DISPLAY[containerType]} → RESOLVE_ASSET`
+    );
+    return { nextState: InputState.RESOLVE_ASSET };
+  }
 
   // Native token has no bytecode by definition
   if (addr === NATIVE_TOKEN_ADDRESS) {
@@ -163,11 +176,14 @@ export async function validateExistsOnChain(
       );
       return { nextState: InputState.RESOLVE_ASSET };
     } else {
-      // Account/recipient/agent flows: EOAs are valid
+      // Account/recipient/agent/sponsor flows: EOAs are valid
       if (bytecode === null) {
         // RPC failed repeatedly; this is a transport issue
         const msg = `Bytecode read failed (null) via ${rpcUrl}`;
-        log.warn?.(`[${traceId}] [RESULT] Transport issue → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN`, { addr, clientChainId, rpcUrl } as any);
+        log.warn?.(
+          `[${traceId}] [RESULT] Transport issue → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN`,
+          { addr, clientChainId, rpcUrl } as any
+        );
         return {
           nextState: InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN,
           errorMessage: msg,

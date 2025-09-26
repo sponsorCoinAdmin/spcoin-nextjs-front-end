@@ -1,3 +1,4 @@
+// File: components/RecipientSelectTradingPanel.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -13,17 +14,19 @@ import { useExchangeContext } from '@/lib/context';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
-const RecipientSelectContainer: React.FC = () => {
+const RecipientSelectTradingPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { isVisible, openPanel, closePanel } = usePanelTree();
 
-  const [recipientWallet, setRecipientWallet] = useState<WalletAccount | undefined>(
-    exchangeContext.accounts.recipientAccount
-  );
+  // ✅ derive from context (source of truth)
+  const recipientWallet: WalletAccount | undefined =
+    exchangeContext.accounts.recipientAccount;
+
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   const toggleSponsorRateConfig = useCallback(() => {
-    const parentId = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL;
+    // Keep parent open, then toggle config
+    const parentId = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL; // ⬅ align to PANEL id
     const cfgId = SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL;
 
     if (!isVisible(parentId)) openPanel(parentId);
@@ -41,9 +44,9 @@ const RecipientSelectContainer: React.FC = () => {
         next.accounts.recipientAccount = undefined;
         return next;
       },
-      'RecipientSelectContainer:clearRecipient'
+      'RecipientSelectTradingPanel:clearRecipient'
     );
-    closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+    closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL); // ⬅ align to PANEL id
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [setExchangeContext, closePanel, openPanel]);
 
@@ -58,6 +61,7 @@ const RecipientSelectContainer: React.FC = () => {
       .catch(() => setSiteExists(false));
   }, [recipientWallet?.website]);
 
+  // ⬅ visibility aligned to PANEL id
   const selfVisible = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
   if (!selfVisible) return null;
 
@@ -79,8 +83,7 @@ const RecipientSelectContainer: React.FC = () => {
         bg-[#1f2639] text-[#94a3b8]
       "
     >
-      <div
-        id="recipientContainerDiv_ID" className="h-[90px]" >
+      <div id="recipientContainerDiv_ID" className="h-[90px]">
         <div className="absolute top-3 left-[11px] text-[14px] text-[#94a3b8]">
           You are sponsoring:
         </div>
@@ -125,10 +128,7 @@ const RecipientSelectContainer: React.FC = () => {
             text-white bg-[#243056]
           "
         >
-          <RecipientSelectDropDown
-            recipientAccount={recipientWallet}
-            callBackAccount={setRecipientWallet}
-          />
+          <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
 
         {/* Settings (cog) icon */}
@@ -174,10 +174,10 @@ const RecipientSelectContainer: React.FC = () => {
         </div>
       </div>
 
-      {/* Visible when RECIPIENT_CONFIG_PANEL is open in the panel tree */}
+      {/* Visible when RECIPIENT_CONFIG_PANEL is open */}
       <RecipientConfigPanel />
     </div>
   );
 };
 
-export default RecipientSelectContainer;
+export default RecipientSelectTradingPanel;

@@ -10,7 +10,7 @@ import {
 } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
-import { validateFSMCore } from '../../FSM_Core/validateFSMCore';
+import { validateFSMCore } from '../../validateFSMCore';
 import type { ValidateFSMInput } from '../../FSM_Core/types/validateFSMTypes';
 
 import { Address, zeroAddress } from 'viem';

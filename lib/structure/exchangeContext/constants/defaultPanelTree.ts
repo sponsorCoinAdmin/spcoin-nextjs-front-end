@@ -19,7 +19,7 @@ const n = (panel: SP_COIN_DISPLAY, visible: boolean, children: PanelNode[] = [])
 // NOTE: No MANAGEMENT_CONFIG_PANEL here (removed).
 const ALL_IDS: SP_COIN_DISPLAY[] = Array.from(
   new Set<SP_COIN_DISPLAY>([
-    ...MAIN_OVERLAY_GROUP,              // includes SPONSORSHIPS_CONFIG_PANEL
+    ...MAIN_OVERLAY_GROUP,              // includes SPONSOR_SELECT_PANEL_LIST
     SP_COIN_DISPLAY.SELL_SELECT_PANEL,  // child under TRADING_STATION_PANEL
     SP_COIN_DISPLAY.BUY_SELECT_PANEL,   // child under TRADING_STATION_PANEL
     SP_COIN_DISPLAY.SWAP_ARROW_BUTTON,  // child under TRADING_STATION_PANEL
@@ -45,7 +45,7 @@ const ALL_IDS: SP_COIN_DISPLAY[] = Array.from(
  *    • AFFILIATE_FEE                         (visible by default)
  * - BUY_SELECT_PANEL_LIST / SELL_SELECT_PANEL_LIST are sibling ROOTS (visible).
  * - RECIPIENT_SELECT_PANEL_LIST is a sibling ROOT (hidden).
- * - AGENT_SELECT_PANEL_LIST / ERROR_MESSAGE_PANEL / SPONSORSHIPS_CONFIG_PANEL are sibling ROOTS (hidden).
+ * - AGENT_SELECT_PANEL_LIST / ERROR_MESSAGE_PANEL / SPONSOR_SELECT_PANEL_LIST are sibling ROOTS (hidden).
  */
 function buildIdIndexedPanels(): MainPanels {
   const maxId = Math.max(...ALL_IDS);
@@ -92,7 +92,7 @@ function buildIdIndexedPanels(): MainPanels {
     } else if (id === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST) {
       arr[id] = n(id, false, []);
     } else {
-      // All other roots default hidden (AGENT / ERROR / SPONSORSHIPS_CONFIG_PANEL, etc.)
+      // All other roots default hidden (AGENT / ERROR / SPONSOR_SELECT_PANEL_LIST, etc.)
       arr[id] = n(id, false, []);
     }
   }
@@ -135,5 +135,5 @@ export const defaultMainPanelNode: MainPanelNode[] = [
   n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST, false, []),
   n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,     false, []),
   n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,         false, []),
-  n(SP_COIN_DISPLAY.SPONSORSHIPS_CONFIG_PANEL,   false, []),
+  n(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST,   false, []),
 ];
