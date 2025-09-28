@@ -2,8 +2,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import type { Address } from 'viem';
-import { SP_COIN_DISPLAY, WalletAccount, type TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY, type WalletAccount, type TokenContract } from '@/lib/structure';
 
 import AssetSelectPanel from './AssetSelectPanel';
 import { useExchangeContext } from '@/lib/context/hooks';
@@ -11,63 +10,52 @@ import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
 import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 
-interface AgentSelectPanelProps {
-  isActive: boolean;
-  closePanelCallback: () => void;
-  /** Agent selection returns a WalletAccount (adapter will satisfy provider prop) */
-  setAgentCallback: (wallet: WalletAccount) => void;
-  /** Included for API symmetry; rarely needed here */
-  peerAddress?: string | Address;
+/** Wrapper component: only checks visibility and returns null. No other hooks/logic here. */
+export default function AgentSelectPanel() {
+  const { isVisible } = usePanelTree();
+  const active = isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
+  if (!active) return null;
+  return <AgentSelectPanelInner />;
 }
 
-export default function AgentSelectPanel({
-  isActive,
-  closePanelCallback,
-  setAgentCallback,
-  peerAddress,
-}: AgentSelectPanelProps) {
+/** Inner component: all hooks live here; no early returns. */
+function AgentSelectPanelInner() {
+  const { openPanel } = usePanelTree();
   const { exchangeContext } = useExchangeContext();
-  const chainId = exchangeContext?.network?.chainId ?? 1;
+  const { commitAgent } = useSelectionCommit();
 
-  // list variant for the scroll panel
+  const chainId = exchangeContext?.network?.chainId ?? 1;
   const containerType = SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
 
-  // seed provider
-  const initialPanelBag: AssetSelectBag = useMemo(
-    () =>
-      ({
-        type: containerType,
-        chainId,
-        ...(peerAddress ? { peerAddress } : {}),
-      } as AssetSelectBag),
-    [containerType, peerAddress, chainId]
-  );
-
-  // stable instance id (and React key)
   const instanceId = useMemo(
     () => `AGENT_SELECT_${SP_COIN_DISPLAY[containerType]}_${chainId}`,
     [containerType, chainId]
   );
 
-  // adapt parent close callback to provider signature
   const closeForProvider = useCallback(
     (_fromUser: boolean) => {
-      closePanelCallback();
+      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     },
-    [closePanelCallback]
+    [openPanel]
   );
 
-  // 🔁 Adapter: provider expects (TokenContract | WalletAccount),
-  // but this panel only ever returns a WalletAccount.
+  // Provider emits (TokenContract | WalletAccount); only accept WalletAccount for agent picker
   const onAssetChosen = useCallback(
     (asset: TokenContract | WalletAccount) => {
-      setAgentCallback(asset as WalletAccount);
+      const looksLikeToken = typeof (asset as any)?.decimals === 'number';
+      if (looksLikeToken) return;
+      commitAgent(asset as WalletAccount); // handles context + navigation
     },
-    [setAgentCallback]
+    [commitAgent]
   );
 
-  if (!isActive) return null;
+  const initialPanelBag: AssetSelectBag = useMemo(
+    () => ({ type: containerType, chainId }),
+    [containerType, chainId]
+  );
 
   return (
     <AssetSelectDisplayProvider instanceId={instanceId}>

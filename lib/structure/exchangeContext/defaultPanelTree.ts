@@ -19,6 +19,6 @@ export enum SP_COIN_DISPLAY {
   UNDEFINED,
   SPONSOR_SELECT_PANEL_LIST, // never persist
 
-  // New entry — appended to preserve all prior numeric ids
+  // Append new members at the end to preserve prior numeric ids:
   SPONSOR_RATE_CONFIG_PANEL,
 }

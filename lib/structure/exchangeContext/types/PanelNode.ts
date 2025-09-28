@@ -3,30 +3,21 @@
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
- * Generic panel node (can still have children for nested UIs).
+ * Panel node (may still have children for ephemeral/nested UI).
  * NOTE: For the persisted main panel list (settings.mainPanelNode), we keep a FLAT array.
  *       The `children` field is deprecated for persistence and should not be written.
- *
- * - panel: enum identifier (canonical SP_COIN_DISPLAY)
- * - name: human-readable label (e.g. "TRADING_STATION_PANEL")
- * - visible: whether the panel is currently shown
- * - children: (legacy/ephemeral) nested sub-panels; DO NOT persist under mainPanelNode
- * - meta: optional per-node data (ids, tags, anything)
  */
 export interface PanelNode<M extends Record<string, unknown> = Record<string, unknown>> {
   panel: SP_COIN_DISPLAY;
-  name: string;
   visible: boolean;
-  children?: PanelNode<M>[];
-
-  meta?: M;
+  name?: string;                 // optional label (e.g., "TRADING_STATION_PANEL")
+  children?: PanelNode<M>[];     // legacy/ephemeral — do not persist under mainPanelNode
+  meta?: M;                      // optional per-node data
 }
 
-/** Flat list of top-level main panels (siblings). */
-export type MainPanels<M extends Record<string, unknown> = Record<string, unknown>> = PanelNode<M>[];
-
 /**
- * LEGACY: single "root" node alias kept for compatibility during migration/normalization.
- * Not used for persistence anymore; only for reading older shapes.
+ * The persisted main panel state is a FLAT array of PanelNode.
+ * Use this type for settings.mainPanelNode everywhere.
  */
-export type MainPanelNode<M extends Record<string, unknown> = Record<string, unknown>> = PanelNode<M>;
+export type MainPanelNode<M extends Record<string, unknown> = Record<string, unknown>> =
+  PanelNode<M>[];

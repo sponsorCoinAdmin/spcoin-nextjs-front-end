@@ -4,7 +4,7 @@
  * @file Manually adjusted during panel-tree migration.
  */
 
-export * from "./useExchangeContext";
+export * from "./ExchangeContext/useExchangeContext";
 export * from "./nestedHooks/useAmounts";
 export * from "./nestedHooks/useApiProvider";
 export * from "./nestedHooks/useErrorMessages";

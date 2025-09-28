@@ -36,7 +36,7 @@ import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/provider
 
 import { useConfigButtonVisibility } from '@/lib/hooks/trade/useConfigButtonVisibility';
 
-// 🔽 minimal addition for the new rule (hide Add button when RECIPIENT_SELECT_PANEL is open)
+// (optional) only needed if you still hide Add while inline panel is open
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
@@ -54,10 +54,14 @@ function TradeAssetPanelInner() {
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
 
-  const { setLocalTokenContract, setLocalAmount, containerType: containerTypeRoot } = useTokenPanelContext();
+  const { setLocalTokenContract, setLocalAmount, containerType: containerTypeRoot } =
+    useTokenPanelContext();
 
-  const isBuy  = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL_LIST;
-  const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL_LIST;
+  const isBuy  = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL;
+  const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL;
+
+  // ✅ Explicitly select the token for THIS side for button visibility logic
+  const tokenContractForSide = isSell ? sellTokenContract : buyTokenContract;
 
   // Token selection state (used for amounts/decimals/etc.)
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
@@ -72,14 +76,14 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   });
 
-  // Button visibility (small hook you already had)
+  // ✅ Feed the side-specific token into the visibility hook
   const { showManageBtn, showRecipientBtn } = useConfigButtonVisibility({
     isSell,
     isBuy,
-    tokenContract,
+    tokenContract: tokenContractForSide,
   });
 
-  // 🔽 minimal addition: hide Add button while RECIPIENT_SELECT_PANEL is visible
+  // (optional) if you still want to hide Add when inline panel is open
   const { isVisible } = usePanelTree();
   const isRecipientPanelOpen = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
   const showRecipientBtnFinal = showRecipientBtn && !isRecipientPanelOpen;
@@ -92,7 +96,6 @@ function TradeAssetPanelInner() {
   const typingUntilRef = useRef(0);
   const currentAmount = isSell ? sellAmount : buyAmount;
 
-  // Keep input text in sync with amount (unless user is mid-typing)
   useEffect(() => {
     if (isIntermediateDecimal(inputValue)) return;
     if (Date.now() < typingUntilRef.current) return;
@@ -107,12 +110,10 @@ function TradeAssetPanelInner() {
     if (inputValue !== formatted) setInputValue(formatted);
   }, [tokenAddr, tokenDecimals, currentAmount, inputValue]);
 
-  // Zero local amount if token cleared
   useEffect(() => {
     if (!tokenAddr) setLocalAmount(0n);
   }, [tokenAddr, setLocalAmount]);
 
-  // Emit debounced amount event (only when this side is the active direction)
   const lastDebouncedRef = useRef<bigint | null>(null);
   const debouncedForPanel = isSell ? debouncedSell : debouncedBuy;
 
@@ -137,7 +138,6 @@ function TradeAssetPanelInner() {
     );
   }, [debouncedForPanel, isSell, tradeDirection, tokenAddr, containerTypeRoot]);
 
-  // Parse & push amount
   const onChangeAmount = (value: string) => {
     typingUntilRef.current = Date.now() + TYPING_GRACE_MS;
     if (!/^\d*\.?\d*$/.test(value)) return;
@@ -174,7 +174,6 @@ function TradeAssetPanelInner() {
         ? `You Receive ± ${slippage.percentageString}`
         : `You Exactly Receive:`);
 
-  // Balance (single source of truth)
   const chainId = exchangeContext?.network?.chainId ?? 1;
   const {
     formatted: liveFormattedBalance,
@@ -187,7 +186,8 @@ function TradeAssetPanelInner() {
     containerType: containerTypeRoot,
   });
 
-  const formattedBalance = balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
+  const formattedBalance =
+    balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
 
   const isInputDisabled =
     !tokenAddr || (apiProvider === API_TRADING_PROVIDER.API_0X && isBuy);
@@ -239,7 +239,13 @@ function TradeAssetPanelInner() {
         className="absolute opacity-0 h-0 w-0 pointer-events-none"
       />
 
-      <TokenSelectDropDown containerType={containerTypeRoot} />
+      <TokenSelectDropDown
+        containerType={
+          (isSell ? SP_ROOT.SELL_SELECT_PANEL : SP_ROOT.BUY_SELECT_PANEL) as
+            | SP_ROOT.SELL_SELECT_PANEL
+            | SP_ROOT.BUY_SELECT_PANEL
+        }
+      />
 
       <div className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
         {buySellText}
@@ -249,7 +255,8 @@ function TradeAssetPanelInner() {
         Balance: {formattedBalance}
       </div>
 
-      {showManageBtn && <ManageSponsorsButton tokenContract={tokenContract} />}
+      {/* ✅ Correct buttons per side */}
+      {showManageBtn && <ManageSponsorsButton tokenContract={tokenContractForSide} />}
       {showRecipientBtnFinal && <AddSponsorshipButton />}
     </div>
   );
@@ -258,7 +265,7 @@ function TradeAssetPanelInner() {
 export default function TradeAssetPanel({
   containerType,
 }: {
-  containerType: SP_ROOT.SELL_SELECT_PANEL_LIST | SP_ROOT.BUY_SELECT_PANEL_LIST;
+  containerType: SP_ROOT.SELL_SELECT_PANEL | SP_ROOT.BUY_SELECT_PANEL;
 }) {
   return (
     <TokenPanelProvider containerType={containerType}>

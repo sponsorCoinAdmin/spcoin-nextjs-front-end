@@ -23,25 +23,27 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
 
 interface Props {
-  /** The container this dropdown belongs to (SELL_SELECT_PANEL_LIST or BUY_SELECT_PANEL_LIST caller) */
-  containerType: SP_COIN_DISPLAY;
+  /** The root container this dropdown belongs to (SELL_SELECT_PANEL or BUY_SELECT_PANEL) */
+  containerType:
+    | SP_COIN_DISPLAY.SELL_SELECT_PANEL
+    | SP_COIN_DISPLAY.BUY_SELECT_PANEL;
 }
 
 function TokenSelectDropDown({ containerType }: Props) {
   const sellHook = useSellTokenContract();
-  const buyHook = useBuyTokenContract();
+  const buyHook  = useBuyTokenContract();
 
-  const [tokenContract] =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? sellHook : buyHook;
+  // ✅ Use the *root* panel to decide which token state to read
+  const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
+  const [tokenContract] = isSellRoot ? sellHook : buyHook;
 
   // Panel-tree controls
   const { openPanel } = usePanelTree();
 
-  // Compute the exact TokenSelect panel we must open (BUY or SELL selector)
-  const targetTokenSelectPanel: SP_COIN_DISPLAY =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
-      ? SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
-      : SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
+  // ✅ When opening the selector, map root → the correct *_PANEL_LIST
+  const targetTokenSelectPanel: SP_COIN_DISPLAY = isSellRoot
+    ? SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
+    : SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
 
   // Resolve logo with safe fallback
   const logoURL = useMemo(() => {
@@ -72,21 +74,16 @@ function TokenSelectDropDown({ containerType }: Props) {
   );
 
   const openTokenSelectPanel = useCallback(() => {
-    // (Optional) clear FSM trace
     clearFSMTraceFromMemory();
 
-    // Open the correct TokenSelect panel inside the main overlay group (radio behavior)
     debugLog.log(
-      `📂 Opening TokenSelectPanel: ${SP_COIN_DISPLAY[targetTokenSelectPanel]} in MAIN_OVERLAY_GROUP`
+      `📂 Opening TokenSelectPanel: ${SP_COIN_DISPLAY[targetTokenSelectPanel]} (mapped from ${SP_COIN_DISPLAY[containerType]})`
     );
 
-    // If your hook supports a group/options arg, keep it. Otherwise, just pass the enum.
-    // @ts-expect-error — openPanel’s overload may accept options in your app; remove if not needed.
+    // If your openPanel doesn’t take options, remove the 2nd arg.
+    // @ts-expect-error openPanel may accept options in your app; safe to drop if not used.
     openPanel(targetTokenSelectPanel, { group: 'MAIN_OVERLAY_GROUP', exclusive: true });
-  }, [targetTokenSelectPanel, openPanel]);
-
-  // Click on the avatar should also open the selector (no alert dumps)
-  const handleAvatarClick = openTokenSelectPanel;
+  }, [targetTokenSelectPanel, containerType, openPanel]);
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>
@@ -99,7 +96,7 @@ function TokenSelectDropDown({ containerType }: Props) {
             src={logoURL}
             loading="lazy"
             decoding="async"
-            onClick={handleAvatarClick}
+            onClick={openTokenSelectPanel}
             onError={handleMissingLogoURL}
           />
           {tokenContract.symbol ?? 'Select Token'}

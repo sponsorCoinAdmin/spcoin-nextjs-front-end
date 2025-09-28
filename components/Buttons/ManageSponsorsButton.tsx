@@ -1,7 +1,7 @@
 // File: components/Buttons/ManageSponsorsButton.tsx
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -14,16 +14,34 @@ type Props = {
 
 const ManageSponsorsButton = ({ tokenContract }: Props) => {
   const { isVisible, openPanel, closePanel } = usePanelTree();
+  const busyRef = useRef(false);
 
-  // The entry-point button visibility is controlled by the SELL subtree toggle
+  // Launcher button visibility (button enum)
   const showButton = isVisible(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
 
-  // Whether the SponsorshipsConfigPanel should be visible (panel-tree driven)
-  const showPanel = isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
+  // Sponsorship configuration panel visibility (real panel enum)
+  const showPanel = isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
 
   const openDialog = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
-  }, [closePanel, openPanel]);
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      // Hide the launcher button
+      if (isVisible(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON)) {
+        closePanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+      }
+      // Show the sponsorship configuration panel
+      if (!isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)) {
+        openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+      }
+      // Optional: ensure Trading stays visible (safe, idempotent)
+      if (!isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL)) {
+        openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+      }
+    } finally {
+      busyRef.current = false;
+    }
+  }, [isVisible, openPanel, closePanel]);
 
   // Placeholder until upstream logic consumes this callback
   const junkManageSponsorshipCallback = useCallback((tc: TokenContract) => {
@@ -36,8 +54,11 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
         showPanel={showPanel}
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}
-        // If the panel supports an onClose prop, wire it to close via the panel tree:
-        // onClose={() => closePanel(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST)}
+        // If/when the panel exposes onClose, wire it like this:
+        // onClose={() => {
+        //   closePanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+        //   openPanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+        // }}
       />
 
       {showButton ? (

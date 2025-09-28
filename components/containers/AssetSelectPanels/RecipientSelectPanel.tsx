@@ -2,93 +2,59 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import type { Address } from 'viem';
 import { TokenContract, SP_COIN_DISPLAY, WalletAccount } from '@/lib/structure';
-
 import AssetSelectPanel from './AssetSelectPanel';
 import { useExchangeContext } from '@/lib/context/hooks';
-import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
-
 import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
+import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 
-interface RecipientSelectPanelProps {
-  isActive: boolean;
-  closePanelCallback: () => void;
-  /** Recipient selection returns a WalletAccount */
-  setRecipientCallback?: (wallet: WalletAccount) => void; // ← make optional
-  /** Included for API symmetry; not usually needed for recipients */
-  peerAddress?: string | Address;
+/** Wrapper does ONLY visibility gating (no hooks after the conditional). */
+export default function RecipientSelectPanel() {
+  const { isVisible } = usePanelTree();
+  const active = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+  if (!active) return null;
+  return <RecipientSelectPanelInner />;
 }
 
-export default function RecipientSelectPanel({
-  isActive,
-  closePanelCallback,
-  setRecipientCallback,
-  peerAddress,
-}: RecipientSelectPanelProps) {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
+/** All hooks live in the inner component so the hook order is stable. */
+function RecipientSelectPanelInner() {
+  const { openPanel } = usePanelTree();
+  const { exchangeContext } = useExchangeContext();
+  const { commitRecipient } = useSelectionCommit();
+
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
-  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
-
-  const initialPanelBag: AssetSelectBag = useMemo(
-    () =>
-      ({
-        type: containerType,
-        chainId,
-        ...(peerAddress ? { peerAddress } : {}),
-      } as AssetSelectBag),
-    [containerType, peerAddress, chainId]
-  );
-
   const instanceId = useMemo(
-    () => `RECIPIENT_SELECT_${SP_COIN_DISPLAY[containerType]}_${chainId}`,
-    [containerType, chainId]
+    () =>
+      `RECIPIENT_SELECT_${SP_COIN_DISPLAY[SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST]}_${chainId}`,
+    [chainId]
   );
 
+  // Close → back to Trading
   const closeForProvider = useCallback(
     (_fromUser: boolean) => {
-      closePanelCallback();
+      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
     },
-    [closePanelCallback]
+    [openPanel]
   );
 
-  // Fallback: if parent didn't provide a callback, commit to ExchangeContext here (keeps provider pure).
-  const defaultSetRecipient = useCallback(
-    (wallet: WalletAccount) => {
-      setExchangeContext(
-        (prev) => {
-          const next: any = structuredClone(prev);
-          next.accounts = next.accounts ?? {};
-          next.accounts.recipientAccount = wallet;
-          return next;
-        },
-        'RecipientSelectPanel:autoSetRecipient'
-      );
-    },
-    [setExchangeContext]
-  );
-
-  const effectiveSetRecipient = setRecipientCallback ?? defaultSetRecipient;
-
-  // Adapter: provider emits (TokenContract | WalletAccount); this panel wants a WalletAccount.
+  // Provider emits (TokenContract | WalletAccount); this panel only accepts WalletAccount
   const onAssetChosen = useCallback(
     (asset: TokenContract | WalletAccount) => {
-      try {
-        // Heuristic guard: ignore tokens for this panel
-        const looksLikeToken = typeof (asset as any)?.decimals === 'number';
-        if (looksLikeToken) return;
-
-        effectiveSetRecipient(asset as WalletAccount);
-      } catch (e) {
-        console.error('[RecipientSelectPanel] setRecipientCallback failed', e || {});
-      }
+      const looksLikeToken = typeof (asset as any)?.decimals === 'number';
+      if (looksLikeToken) return; // ignore tokens here
+      commitRecipient(asset as WalletAccount); // commits + navigates inside the hook
     },
-    [effectiveSetRecipient]
+    [commitRecipient]
   );
 
-  if (!isActive) return null;
+  const initialPanelBag: AssetSelectBag = useMemo(
+    () => ({ type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST, chainId }),
+    [chainId]
+  );
 
   return (
     <AssetSelectDisplayProvider instanceId={instanceId}>
@@ -96,7 +62,7 @@ export default function RecipientSelectPanel({
         key={instanceId}
         closePanelCallback={closeForProvider}
         setSelectedAssetCallback={onAssetChosen}
-        containerType={containerType}
+        containerType={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST}
         initialPanelBag={initialPanelBag}
       >
         <AssetSelectPanel />

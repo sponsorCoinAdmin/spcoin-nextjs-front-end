@@ -7,236 +7,70 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-// ⬇️ Unified debug logger (kept)
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
-const debugLog = createDebugLogger('PriceView', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('usePanelTree', DEBUG_ENABLED, LOG_TIME);
 
 const TRADING = SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
-type ChildEntry = {
-  panel: SP_COIN_DISPLAY;
-  visible: boolean;
-  children?: ChildEntry[];
-};
+/** The only shape we keep now: flat list of { panel, visible }. */
+type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
-type PanelEntry = ChildEntry;
+/* ------------------------------ helpers ------------------------------ */
 
-/* ----------------------------- type guards ----------------------------- */
-
-const isChildArray = (x: any): x is ChildEntry[] =>
-  Array.isArray(x) &&
-  x.every(
-    (n) =>
-      n &&
-      typeof n === 'object' &&
-      typeof (n as any).panel === 'number' &&
-      typeof (n as any).visible === 'boolean' &&
-      (((n as any).children === undefined) || isChildArray((n as any).children))
-  );
-
-const isPanelArray = (x: any): x is PanelEntry[] =>
-  Array.isArray(x) &&
-  x.every(
-    (n) =>
-      n &&
-      typeof n === 'object' &&
-      typeof (n as any).panel === 'number' &&
-      typeof (n as any).visible === 'boolean' &&
-      (((n as any).children === undefined) || isChildArray((n as any).children))
-  );
-
-/* ------------------------------ DEBUG utils ------------------------------ */
-
-type PanelDbg = { panel: number; name?: string; visible?: boolean; children?: PanelDbg[] };
-
-function __dbg_flatten(nodes: PanelDbg[] = [], out: PanelDbg[] = []): PanelDbg[] {
+/** Recursively flatten any legacy nested structure into a flat list. */
+function flattenAny(nodes: any[] | undefined, out: PanelEntry[] = []): PanelEntry[] {
+  if (!Array.isArray(nodes)) return out;
   for (const n of nodes) {
-    out.push(n);
-    if (n.children?.length) __dbg_flatten(n.children, out);
+    if (n && typeof n === 'object' && typeof n.panel === 'number') {
+      out.push({ panel: n.panel as SP_COIN_DISPLAY, visible: !!n.visible });
+      if (Array.isArray(n.children) && n.children.length) flattenAny(n.children, out);
+    }
   }
   return out;
 }
-function __dbg_snap(nodes: PanelDbg[] = []) {
-  return __dbg_flatten(nodes).map((n) => ({ panel: n.panel, name: n.name, visible: !!n.visible }));
-}
-/** path form: [idx, -1, childIdx, -1, ...] where -1 means ".children" boundary */
-function __dbg_findPath(nodes: PanelDbg[] = [], id: number, path: number[] = []): number[] | null {
-  for (let i = 0; i < nodes.length; i++) {
-    const n = nodes[i];
-    if (n.panel === id) return [...path, i];
-    if (n.children?.length) {
-      const p = __dbg_findPath(n.children, id, [...path, i, -1]);
-      if (p) return p;
+
+/** Read the current flat list from context, flattening legacy trees if needed. */
+function readFlatList(exchangeContext: any): PanelEntry[] {
+  const raw = exchangeContext?.settings?.mainPanelNode;
+  const flat = flattenAny(Array.isArray(raw) ? raw : []);
+  // De-dupe by panel id (keep first occurrence)
+  const seen = new Set<number>();
+  const dedup: PanelEntry[] = [];
+  for (const e of flat) {
+    if (!seen.has(e.panel)) {
+      seen.add(e.panel);
+      dedup.push(e);
     }
   }
-  return null;
-}
-function __dbg_countVisibleInGroup(list: PanelEntry[], group: number[]) {
-  return group.reduce((n, id) => n + (list.find((e) => e.panel === id)?.visible ? 1 : 0), 0);
+  return dedup;
 }
 
-/* ------------------------------ utilities ------------------------------ */
-
-function clone<T>(o: T): T {
-  return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+/** Convert flat list to a fast lookup map. */
+function toMap(list: PanelEntry[]): Record<number, boolean> {
+  const m: Record<number, boolean> = {};
+  for (const e of list) m[e.panel] = !!e.visible;
+  return m;
 }
 
-/** Recursively find a child by panel id. */
-function findChildById(nodes: ChildEntry[] | undefined, id: SP_COIN_DISPLAY): ChildEntry | undefined {
-  if (!nodes) return undefined;
-  for (const n of nodes) {
-    if (n.panel === id) return n;
-    const found = findChildById(n.children, id);
-    if (found) return found;
-  }
-  return undefined;
+/** Ensure at most one visible in the radio group; keep first visible or TRADING if needed. */
+function reconcileRadio(list: PanelEntry[], radioIds: SP_COIN_DISPLAY[]): PanelEntry[] {
+  const visible = radioIds.filter((id) => list.find((e) => e.panel === id && e.visible));
+  if (visible.length <= 1) return list; // already fine (0 or 1)
+  const keep = visible[0] ?? TRADING;
+  return list.map((e) =>
+    radioIds.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
+  );
 }
 
-/** Recursively set a child's visible property; returns new cloned subtree + change flag. */
-function setChildVisibleIn(
-  nodes: ChildEntry[] | undefined,
-  id: SP_COIN_DISPLAY,
-  visible: boolean
-): { nodes?: ChildEntry[]; changed: boolean } {
-  if (!nodes) return { nodes, changed: false };
-
-  let changed = false;
-  const next = nodes.map((n) => {
-    let nodeChanged = false;
-    let newChildren: ChildEntry[] | undefined = n.children;
-
-    if (n.children && n.children.length) {
-      const res = setChildVisibleIn(n.children, id, visible);
-      if (res.changed) {
-        nodeChanged = true;
-        newChildren = res.nodes;
-      }
-    }
-
-    if (n.panel === id && n.visible !== visible) {
-      debugLog.log('setChildVisibleIn:toggle', { target: id, from: n.visible, to: visible });
-      nodeChanged = true;
-    }
-
-    if (nodeChanged) {
-      changed = true;
-      return {
-        ...n,
-        visible: n.panel === id ? visible : n.visible,
-        children: newChildren,
-      };
-    }
-    return n;
-  });
-
-  return { nodes: changed ? next : nodes, changed };
-}
-
-/** Find visibility for any id (root or nested). */
-function isVisibleInTree(list: PanelEntry[], id: SP_COIN_DISPLAY): boolean {
-  const root = list.find((e) => e.panel === id);
-  if (root) return !!root.visible;
-  for (const r of list) {
-    const c = findChildById(r.children, id);
-    if (c) return !!c.visible;
-  }
-  return false;
-}
-
-/** Get children for any id (root or nested). */
-function getChildrenFromTree(list: PanelEntry[], id: SP_COIN_DISPLAY): ChildEntry[] {
-  const root = list.find((e) => e.panel === id);
-  if (root && Array.isArray(root.children)) return root.children;
-  for (const r of list) {
-    const c = findChildById(r.children, id);
-    if (c && Array.isArray(c.children)) return c.children;
-  }
-  return [];
-}
-
-/** Set visible for any id (root or nested). Returns { list, changed }. */
-function setVisibleForId(
-  list: PanelEntry[],
-  id: SP_COIN_DISPLAY,
-  visible: boolean
-): { list: PanelEntry[]; changed: boolean } {
-  debugLog.log('setVisibleForId:req', { id, visible });
-
-  // Root first
-  const idx = list.findIndex((e) => e.panel === id);
-  if (idx >= 0) {
-    if (list[idx].visible === visible) {
-      debugLog.log('setVisibleForId:root-noop', { id, visible });
-      return { list, changed: false };
-    }
-    const next = clone(list);
-    debugLog.log('setVisibleForId:root-toggle', { id, from: next[idx].visible, to: visible });
-    next[idx] = { ...next[idx], visible };
-    return { list: next, changed: true };
-  }
-
-  // Then nested
-  const next = clone(list);
-  let changed = false;
-  for (let i = 0; i < next.length; i++) {
-    const res = setChildVisibleIn(next[i].children, id, visible);
-    if (res.changed) {
-      next[i] = { ...next[i], children: res.nodes };
-      changed = true;
-      debugLog.log('setVisibleForId:nested-toggle', { id, rootIndex: i });
-      break;
-    }
-  }
-  if (!changed) {
-    debugLog.log('setVisibleForId:not-found', { id });
-  }
-  return { list: changed ? next : list, changed };
-}
-
-/* ------------------------ migration (by node.name) ------------------------ */
-
-type AnyNode = { panel: number; name?: string; visible?: boolean; children?: AnyNode[] };
-
-function nameToEnum(name?: string): SP_COIN_DISPLAY | null {
-  if (!name) return null;
-  return (SP_COIN_DISPLAY as any)[name] ?? null;
-}
-
-/** Remap nodes whose `name` implies a different enum id than the persisted numeric `panel`. */
-function remapIdsByName(nodes: AnyNode[] | undefined): { nodes?: AnyNode[]; changed: boolean } {
-  if (!Array.isArray(nodes)) return { nodes, changed: false };
-
-  let changed = false;
-
-  const next = nodes.map((n) => {
-    let innerChanged = false;
-
-    // Fix children first
-    let newChildren = n.children;
-    if (Array.isArray(n.children) && n.children.length) {
-      const res = remapIdsByName(n.children);
-      if (res.changed) {
-        newChildren = res.nodes;
-        innerChanged = true;
-      }
-    }
-
-    // Validate this node’s panel id against its `name`
-    const desired = nameToEnum(n.name);
-    if (typeof desired === 'number' && desired !== n.panel) {
-      innerChanged = true;
-      return { ...n, panel: desired, children: newChildren };
-    }
-
-    if (innerChanged) {
-      changed = true;
-      return { ...n, children: newChildren };
-    }
-    return n;
-  });
-
-  return { nodes: changed ? next : nodes, changed };
+/** Upsert a single panel’s visibility (non-radio). */
+function setVisible(list: PanelEntry[], panel: SP_COIN_DISPLAY, visible: boolean): PanelEntry[] {
+  const idx = list.findIndex((e) => e.panel === panel);
+  if (idx === -1) return [...list, { panel, visible }];
+  if (list[idx].visible === visible) return list;
+  const next = [...list];
+  next[idx] = { ...next[idx], visible };
+  return next;
 }
 
 /* --------------------------------- hook --------------------------------- */
@@ -244,192 +78,106 @@ function remapIdsByName(nodes: AnyNode[] | undefined): { nodes?: AnyNode[]; chan
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // Authoritative list of main overlays (array, may include children)
+  // Always operate on a flat list
   const list = useMemo<PanelEntry[]>(
-    () =>
-      isPanelArray((exchangeContext as any)?.settings?.mainPanelNode)
-        ? ((exchangeContext as any).settings.mainPanelNode as PanelEntry[])
-        : [],
+    () => readFlatList(exchangeContext),
     [exchangeContext]
   );
 
-  // ⬇️ Run a one-time migration to remap numeric ids using each node's `name`
-  useEffect(() => {
-    if (!list.length) return;
-    const { nodes, changed } = remapIdsByName(list as unknown as AnyNode[]);
-    if (!changed) return;
-
-    debugLog.log('migrate:remap-ids-by-name');
-    setExchangeContext(
-      (prev) => {
-        const cur = (prev as any)?.settings?.mainPanelNode;
-        if (!isPanelArray(cur)) return prev;
-        return {
-          ...prev,
-          settings: {
-            ...(prev as any).settings,
-            mainPanelNode: nodes as PanelEntry[],
-          },
-        };
-      },
-      'usePanelTree:migrateIds'
-    );
-  }, [list, setExchangeContext]);
-
-  // Restrict the radio group to ids that actually exist as roots right now.
+  // Keep the radio set limited to ids that exist in the flat list
   const radioRootIds = useMemo<SP_COIN_DISPLAY[]>(
-    () => list.map((e) => e.panel).filter((id) => MAIN_OVERLAY_GROUP.includes(id)),
+    () =>
+      list
+        .map((e) => e.panel)
+        .filter((id): id is SP_COIN_DISPLAY => MAIN_OVERLAY_GROUP.includes(id)),
     [list]
   );
 
-  // Ensure **at most one** visible radio root (allow 0 or 1; fix only if >1)
+  // One-time reconciliation if multiple radio overlays are visible
   useEffect(() => {
     if (!list.length || !radioRootIds.length) return;
+    const vis = radioRootIds.filter((id) => list.find((e) => e.panel === id && e.visible));
+    if (vis.length <= 1) return;
 
-    const visCount = __dbg_countVisibleInGroup(list, radioRootIds);
-    debugLog.log('reconcile:run', { rootVisibleCount: visCount });
-
-    // allow 0 or 1
-    if (visCount <= 1) return;
-
+    debugLog.log('reconcile: multiple radio visible → collapsing to first');
     setExchangeContext(
       (prev) => {
-        const current = isPanelArray((prev as any)?.settings?.mainPanelNode)
-          ? ((prev as any).settings.mainPanelNode as PanelEntry[])
-          : [];
-        if (!current.length) return prev;
-
-        // keep the first currently visible radio root, hide the rest
-        const firstVisible = radioRootIds.find(
-          (id) => !!current.find((e) => e.panel === id && e.visible)
-        );
-        const keep = firstVisible ?? TRADING;
-
-        const next = current.map((e) =>
-          radioRootIds.includes(e.panel)
-            ? { ...e, visible: e.panel === keep }
-            : e
-        );
-
-        debugLog.log('reconcile:at-most-one', { keep });
+        const flat = readFlatList(prev);
+        const next = reconcileRadio(flat, radioRootIds);
         return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
       },
       'usePanelTree:reconcile'
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list.length, radioRootIds.join('|')]);
+  }, [radioRootIds.join('|'), list.length]);
 
   /* ------------------------------- queries ------------------------------- */
 
-  /** Works for BOTH radio overlays and nested children. */
   const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => isVisibleInTree(list, panel),
+    (panel: SP_COIN_DISPLAY) => {
+      const map = toMap(list);
+      return !!map[panel];
+    },
     [list]
   );
 
-  /** Children for a node (root or nested). */
-  const getPanelChildren = useCallback(
-    (parent: SP_COIN_DISPLAY): SP_COIN_DISPLAY[] =>
-      getChildrenFromTree(list, parent)
-        .map((c) => c?.panel)
-        .filter((p): p is SP_COIN_DISPLAY => typeof p === 'number'),
-    [list]
-  );
+  // Children are no longer modeled; return [] for compatibility.
+  const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
-  /* ------------------------------- actions -------------------------------- */
+  /* ------------------------------- actions ------------------------------- */
 
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY) => {
-      debugLog.log('open:req', {
-        panel,
-        path: __dbg_findPath(list as any, panel),
-      });
+      debugLog.log('open:req', { panel });
 
       setExchangeContext(
         (prev) => {
-          const current = isPanelArray((prev as any)?.settings?.mainPanelNode)
-            ? ((prev as any).settings.mainPanelNode as PanelEntry[])
-            : [];
-          if (!current.length) return prev;
+          const flat = readFlatList(prev);
 
-          // Radio overlays → exclusive selection among *present* radio roots
+          // Radio overlays: exclusive selection among radio roots that exist
           if (radioRootIds.includes(panel)) {
-            const alreadyActive = current.some(
-              (e) => radioRootIds.includes(e.panel) && e.panel === panel && e.visible
+            const next = flat.map((e) =>
+              radioRootIds.includes(e.panel) ? { ...e, visible: e.panel === panel } : e
             );
-            if (alreadyActive) {
-              debugLog.log('open:radio-already-active', { panel });
-              return prev;
-            }
-
-            const next = current.map((e) =>
-              radioRootIds.includes(e.panel)
-                ? { ...e, visible: e.panel === panel }
-                : e
-            );
-
-            debugLog.log('open:radio-set', { panel });
+            debugLog.log('open:radio', { panel });
             return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
           }
 
-          // Non-radio panels → just set its visible = true anywhere in the tree
-          const { list: next, changed } = setVisibleForId(current, panel, true);
-          if (!changed) {
+          // Non-radio: simply set this one to visible (idempotent)
+          const next = setVisible(flat, panel, true);
+          if (next === flat) {
             debugLog.log('open:non-radio-noop', { panel });
             return prev;
           }
-
-          // Detect parent flip (panel 0) which could collapse TRADING_STATION_PANEL
-          const before0 = (__dbg_flatten(current as any).find((n) => n.panel === TRADING) || {} as any).visible;
-          const after0  = (__dbg_flatten(next as any).find((n) => n.panel === TRADING) || {} as any).visible;
-          if (before0 !== after0) {
-            debugLog.log('open:parent-trading-changed', { panel, before0, after0 });
-          }
-
-          debugLog.log('open:non-radio-set', { panel });
+          debugLog.log('open:non-radio', { panel });
           return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
         },
-        'usePanelTree:openPanel'
+        'usePanelTree:open'
       );
     },
-    [setExchangeContext, list, radioRootIds]
+    [setExchangeContext, radioRootIds]
   );
 
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY) => {
-      debugLog.log('close:req', {
-        panel,
-        path: __dbg_findPath(list as any, panel),
-      });
-
-      // ⬇️ Radio overlays ARE closable now (allow zero-visible state)
+      debugLog.log('close:req', { panel });
 
       setExchangeContext(
         (prev) => {
-          const current = isPanelArray((prev as any)?.settings?.mainPanelNode)
-            ? ((prev as any).settings.mainPanelNode as PanelEntry[])
-            : [];
-          if (!current.length) return prev;
-
-          const { list: next, changed } = setVisibleForId(current, panel, false);
-          if (!changed) {
-            debugLog.log('close:non-radio-noop', { panel });
+          const flat = readFlatList(prev);
+          const cur = flat.find((e) => e.panel === panel);
+          if (!cur || cur.visible === false) {
+            debugLog.log('close:noop', { panel });
             return prev;
           }
-
-          const before0 = (__dbg_flatten(current as any).find((n) => n.panel === TRADING) || {} as any).visible;
-          const after0  = (__dbg_flatten(next as any).find((n) => n.panel === TRADING) || {} as any).visible;
-          if (before0 !== after0) {
-            debugLog.log('close:parent-trading-changed', { panel, before0, after0 });
-          }
-
-          debugLog.log('close:non-radio-set', { panel });
+          const next = setVisible(flat, panel, false);
+          debugLog.log('close:set', { panel });
           return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
         },
-        'usePanelTree:closePanel'
+        'usePanelTree:close'
       );
     },
-    [setExchangeContext, list, radioRootIds]
+    [setExchangeContext]
   );
 
   /* ------------------------------- derived -------------------------------- */
@@ -441,11 +189,12 @@ export function usePanelTree() {
     return TRADING;
   }, [list, radioRootIds]);
 
+  // Use the updated enum names from your recent config (scroll panels)
   const isTokenScrollVisible = useMemo(
     () =>
-      isVisibleInTree(list, SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST) ||
-      isVisibleInTree(list, SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST),
-    [list]
+      isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL) ||
+      isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL),
+    [isVisible]
   );
 
   return {
@@ -455,7 +204,7 @@ export function usePanelTree() {
     // queries
     isVisible,
     isTokenScrollVisible,
-    getPanelChildren,
+    getPanelChildren, // now always []
 
     // actions
     openPanel,

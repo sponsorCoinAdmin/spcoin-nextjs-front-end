@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ExchangeContextState } from '../ExchangeProvider';
+import { ExchangeContextState } from '../../ExchangeProvider';
 
 export const useExchangeContext = () => {
   const context = useContext(ExchangeContextState);

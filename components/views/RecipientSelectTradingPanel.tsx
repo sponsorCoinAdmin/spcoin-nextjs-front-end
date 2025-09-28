@@ -1,33 +1,40 @@
 // File: components/RecipientSelectTradingPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+
+// 🔒 Panel-tree enum (what the tree uses internally)
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+// 🧪 Optional: generic barrel import to sanity-check enum identity at runtime
+import { SP_COIN_DISPLAY as SP_GENERIC } from '@/lib/structure';
+
 import RecipientConfigPanel from '../containers/RecipientConfigPanel';
 import { useExchangeContext } from '@/lib/context';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
+const DEBUG =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_TRADING_PANEL === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_PANELS === 'true';
+
 const RecipientSelectTradingPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { isVisible, openPanel, closePanel } = usePanelTree();
 
-  // ✅ derive from context (source of truth)
   const recipientWallet: WalletAccount | undefined =
     exchangeContext.accounts.recipientAccount;
 
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   const toggleSponsorRateConfig = useCallback(() => {
-    // Keep parent open, then toggle config
-    const parentId = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL; // ⬅ align to PANEL id
-    const cfgId = SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL;
+    const parentId = SP_TREE.RECIPIENT_SELECT_PANEL;
+    const cfgId = SP_TREE.RECIPIENT_CONFIG_PANEL;
 
     if (!isVisible(parentId)) openPanel(parentId);
     if (isVisible(cfgId)) {
@@ -46,8 +53,8 @@ const RecipientSelectTradingPanel: React.FC = () => {
       },
       'RecipientSelectTradingPanel:clearRecipient'
     );
-    closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL); // ⬅ align to PANEL id
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    closePanel(SP_TREE.RECIPIENT_SELECT_PANEL);
+    openPanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
   useEffect(() => {
@@ -61,8 +68,57 @@ const RecipientSelectTradingPanel: React.FC = () => {
       .catch(() => setSiteExists(false));
   }, [recipientWallet?.website]);
 
-  // ⬅ visibility aligned to PANEL id
-  const selfVisible = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+  // 🔍 Compute all relevant booleans once (so logs don't call isVisible repeatedly)
+  const vis = useMemo(() => {
+    const showPanel = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+    // The two names that often get mixed up – log both:
+    const addBtnRecipient = isVisible(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+    const addBtnSponsorship = isVisible(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+
+    const trading = isVisible(SP_TREE.TRADING_STATION_PANEL);
+    const buyList = isVisible(SP_TREE.BUY_SELECT_PANEL_LIST);
+    const sellList = isVisible(SP_TREE.SELL_SELECT_PANEL_LIST);
+    const configPanel = isVisible(SP_TREE.RECIPIENT_CONFIG_PANEL);
+
+    return {
+      showPanel,
+      addBtnRecipient,
+      addBtnSponsorship,
+      trading,
+      buyList,
+      sellList,
+      configPanel,
+    };
+  }, [isVisible]);
+
+  // 🧾 Visibility rule: only the RECIPIENT_SELECT_PANEL flag controls this panel
+  const selfVisible = vis.showPanel;
+
+  // 🧪 Debug: enum identity + panel states (runs every render since vis changes cause rerender)
+  if (DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log('[RecipientSelectTradingPanel] Enum identity check:', {
+      same_ENUM_OBJECT: SP_TREE === (SP_GENERIC as any),
+      RECIPIENT_SELECT_CONFIG_BUTTON_equal:
+        SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON === SP_GENERIC.RECIPIENT_SELECT_CONFIG_BUTTON,
+      RECIPIENT_SELECT_PANEL_equal:
+        SP_TREE.RECIPIENT_SELECT_PANEL === SP_GENERIC.RECIPIENT_SELECT_PANEL,
+      SPONSORSHIP_SELECT_CONFIG_BUTTON_equal:
+        SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON === SP_GENERIC.SPONSORSHIP_SELECT_CONFIG_BUTTON,
+    });
+    // eslint-disable-next-line no-console
+    console.table({
+      RECIPIENT_SELECT_PANEL: vis.showPanel,
+      RECIPIENT_SELECT_CONFIG_BUTTON: vis.addBtnRecipient,
+      SPONSORSHIP_SELECT_CONFIG_BUTTON: vis.addBtnSponsorship,
+      RECIPIENT_CONFIG_PANEL: vis.configPanel,
+      TRADING_STATION_PANEL: vis.trading,
+      BUY_SELECT_PANEL_LIST: vis.buyList,
+      SELL_SELECT_PANEL_LIST: vis.sellList,
+      selfVisible,
+    });
+  }
+
   if (!selfVisible) return null;
 
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
@@ -88,7 +144,6 @@ const RecipientSelectTradingPanel: React.FC = () => {
           You are sponsoring:
         </div>
 
-        {/* Recipient name link */}
         {recipientWallet && siteExists ? (
           <Link
             href={`Recipient?url=${recipientWallet.website}`}
@@ -117,7 +172,6 @@ const RecipientSelectTradingPanel: React.FC = () => {
           </Link>
         )}
 
-        {/* Recipient select dropdown */}
         <div
           className="
             absolute left-[160px]
@@ -131,7 +185,6 @@ const RecipientSelectTradingPanel: React.FC = () => {
           <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
 
-        {/* Settings (cog) icon */}
         <div>
           <Image
             src={cog_png}
@@ -158,7 +211,6 @@ const RecipientSelectTradingPanel: React.FC = () => {
           />
         </div>
 
-        {/* Clear (X) */}
         <div
           id="clearSponsorSelect"
           className="
@@ -174,8 +226,22 @@ const RecipientSelectTradingPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Visible when RECIPIENT_CONFIG_PANEL is open */}
       <RecipientConfigPanel />
+
+      {DEBUG && (
+        <div className="mt-2 p-2 text-xs bg-black/30 rounded">
+          <div>
+            <b>Debug:</b>{' '}
+            RECIPIENT_SELECT_PANEL={String(vis.showPanel)} |{' '}
+            RECIPIENT_SELECT_CONFIG_BUTTON={String(vis.addBtnRecipient)} |{' '}
+            SPONSORSHIP_SELECT_CONFIG_BUTTON={String(vis.addBtnSponsorship)} |{' '}
+            RECIPIENT_CONFIG_PANEL={String(vis.configPanel)} |{' '}
+            BUY_SELECT_PANEL_LIST={String(vis.buyList)} |{' '}
+            SELL_SELECT_PANEL_LIST={String(vis.sellList)} |{' '}
+            selfVisible={String(selfVisible)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

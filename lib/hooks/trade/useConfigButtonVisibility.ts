@@ -1,7 +1,7 @@
 // File: lib/hooks/trade/useConfigButtonVisibility.ts
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
@@ -13,40 +13,59 @@ type Params = {
   tokenContract?: TokenContract;
 };
 
-/**
- * Controls the button nodes under the SELL/BUY panels and returns whether to render them.
- * - SELL: toggles SPONSORSHIP_SELECT_CONFIG_BUTTON
- * - BUY : toggles RECIPIENT_SELECT_CONFIG_BUTTON
- * - Hides Add button when RECIPIENT_SELECT_PANEL is visible (inline panel is open)
- */
 export function useConfigButtonVisibility({ isSell, isBuy, tokenContract }: Params) {
   const { isVisible, openPanel, closePanel } = usePanelTree();
 
-  // Gate the config-button nodes based on whether current token is an spCoin
+  // Use a stable key for deps so the effect doesn't fire on every render.
+  const addr = tokenContract?.address?.toLowerCase() ?? '';
+  const isInlineOpen = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+  const isButtonOn   = isVisible(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+  const isSellBtnOn  = isVisible(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+
+  // Track previous token & sp status to detect meaningful transitions
+  const prevAddrRef = useRef(addr);
+  const prevSpRef   = useRef<boolean | null>(null);
+
   useEffect(() => {
     const sp = tokenContract ? isSpCoin(tokenContract) : false;
+    const tokenChanged = prevAddrRef.current !== addr;
+    const spChanged    = prevSpRef.current !== sp;
 
+    // SELL side button
     if (isSell) {
-      sp ? openPanel(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON)
-         : closePanel(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+      if (!sp && isSellBtnOn) closePanel(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+      if (sp && (tokenChanged || spChanged) && !isSellBtnOn) {
+        openPanel(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+      }
     }
+
+    // BUY side button
     if (isBuy) {
-      sp ? openPanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON)
-         : closePanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+      // Always close when inline panel is open or not an spCoin
+      if (isInlineOpen || !sp) {
+        if (isButtonOn) closePanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+      } else {
+        // Only auto-open on token/sp transitions (respect manual close)
+        if ((tokenChanged || spChanged) && !isButtonOn) {
+          openPanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+        }
+      }
     }
-  }, [isSell, isBuy, tokenContract, openPanel, closePanel]);
 
-  // Compute render flags
-  const isRecipientInlineVisible = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+    prevAddrRef.current = addr;
+    prevSpRef.current   = sp;
+    // Fire when the things above can *meaningfully* change behavior
+  }, [addr, isSell, isBuy, isInlineOpen, isSellBtnOn, isButtonOn, openPanel, closePanel, tokenContract]);
 
+  // Render booleans
   const showManageBtn = useMemo(
-    () => isSell && isVisible(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON),
-    [isSell, isVisible]
+    () => isSell && isSellBtnOn,
+    [isSell, isSellBtnOn]
   );
 
   const showRecipientBtn = useMemo(
-    () => isBuy && isVisible(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON) && !isRecipientInlineVisible,
-    [isBuy, isVisible, isRecipientInlineVisible]
+    () => isBuy && isButtonOn && !isInlineOpen,
+    [isBuy, isButtonOn, isInlineOpen]
   );
 
   return { showManageBtn, showRecipientBtn };

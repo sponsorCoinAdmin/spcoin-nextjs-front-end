@@ -1,6 +1,6 @@
 // File: lib/context/hooks/nestedHooks/useApiProvider.ts
 
-import { useExchangeContext } from '../useExchangeContext';
+import { useExchangeContext } from '@/lib/context/hooks/ExchangeContext/useExchangeContext';
 import { API_TRADING_PROVIDER } from '@/lib/structure';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 

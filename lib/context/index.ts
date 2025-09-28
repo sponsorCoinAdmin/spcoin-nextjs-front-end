@@ -9,6 +9,6 @@ export * from '../../app/(menu)/Test/Tabs/ExchangeContext/hooks/useTokenPanelCon
 
 // Exchange
 export * from './ExchangeProvider';
-export * from './hooks/useExchangeContext';
+export * from './hooks/ExchangeContext/useExchangeContext';
 export * from './hooks/nestedHooks/useTokenContracts';
 // …(other nestedHooks you want public)

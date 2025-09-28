@@ -19,5 +19,5 @@ export default function BuyAssetPanel() {
   if (!buyVisible) return null;
 
   // Provide the root container type that the rest of the app expects
-  return <TradeAssetPanel containerType={SP_ROOT.BUY_SELECT_PANEL_LIST} />;
+  return <TradeAssetPanel containerType={SP_ROOT.BUY_SELECT_PANEL} />;
 }
