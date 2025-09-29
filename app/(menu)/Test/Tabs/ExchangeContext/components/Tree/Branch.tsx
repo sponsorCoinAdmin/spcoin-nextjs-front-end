@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import Row from './Row';
 import { quoteIfString } from '../../utils/object';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 type BranchProps = {
@@ -18,7 +18,16 @@ type BranchProps = {
   dense?: boolean;
 };
 
-const looksLikePanelNode = (v: any) => v && typeof v.panel === 'number';
+// This page renders VIRTUAL nodes: { id, name, visible, children }
+const looksLikeVirtualPanelNode = (v: any) =>
+  v && typeof v.id === 'number' && 'visible' in v;
+
+const nameForVirtual = (v: any): string => {
+  if (!looksLikeVirtualPanelNode(v)) return '';
+  if (typeof v.name === 'string' && v.name.length > 0) return v.name;
+  const mapped = (SP_COIN_DISPLAY as any)?.[v.id];
+  return typeof mapped === 'string' ? mapped : String(v.id);
+};
 
 const Branch: React.FC<BranchProps> = ({
   label,
@@ -36,11 +45,12 @@ const Branch: React.FC<BranchProps> = ({
   const isObject = value !== null && typeof value === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
-  // dot-path classifiers
+  // dot-path classifiers for *virtual* panel nodes
   const isPanelArrayItem =
-    (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) && looksLikePanelNode(value);
+    (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) &&
+    looksLikeVirtualPanelNode(value);
 
-  // ⬅️ NEW: treat any array labeled exactly "children" as a pure container (no row rendered)
+  // Treat any array labeled exactly "children" as a pure container (no row rendered)
   const isChildrenContainer = isArray && label === 'children';
 
   // helper: set expansion open if currently closed
@@ -54,17 +64,12 @@ const Branch: React.FC<BranchProps> = ({
     if (isPanelArrayItem) {
       const vis = !!(value as any)?.visible;
       if (lastVisibleRef.current !== vis) {
-
         lastVisibleRef.current = vis;
 
-        // If a panel becomes visible, auto-expand its own row and its parent children container
+        // If a panel becomes visible, auto-expand its own row and its children container
         if (vis) {
           ensureOpen(path);
-          // try to expand parent children container if exists
-          const parentChildrenPath = path.replace(/\.\d+$/, '') + '.children'; // rough but works for known shapes
-          if (parentChildrenPath !== path && parentChildrenPath.includes('.children')) {
-            ensureOpen(parentChildrenPath);
-          }
+          ensureOpen(`${path}.children`);
         }
       }
     }
@@ -75,7 +80,6 @@ const Branch: React.FC<BranchProps> = ({
   // BRANCH NODES (objects & arrays)
   // ──────────────────────────────────────────────────────────────
   if (isBranch) {
-    // Count entries (arrays vs objects)
     const numEntries = isArray ? (value as any[]).length : Object.keys(value as object).length;
     const hasEntries = numEntries > 0;
 
@@ -83,10 +87,10 @@ const Branch: React.FC<BranchProps> = ({
     let expanded = false;
     if (hasEntries) {
       if (isPanelArrayItem) {
-        // HARD-GATE: panel nodes expand ONLY when they are visible.
+        // Panel nodes expand ONLY when they are visible.
         expanded = (value as any)?.visible === true;
       } else if (isChildrenContainer) {
-        // ⬅️ NEW: children containers never render their own row; we always render their items.
+        // Children containers never render their own row; we always render their items.
         expanded = true;
       } else {
         expanded = !!exp[path];
@@ -94,33 +98,27 @@ const Branch: React.FC<BranchProps> = ({
     }
 
     const onRowClick = () => {
-
-
       if (isPanelArrayItem) {
-        const panelId = (value as any).panel as SP_COIN_DISPLAY;
+        const panelId = (value as any).id as number; // virtual id
         const currentlyVisible = !!(value as any).visible;
 
         // Toggle by visibility (source of truth)
         if (!currentlyVisible) {
           openPanel(panelId);
-          // When we make it visible, ensure its UI expansion flag is open too
           ensureOpen(path);
+          ensureOpen(`${path}.children`);
         } else {
-          // When hiding, we do NOT force-collapse the UI expansion flag;
-          // but since "expanded" is derived from visibility, it will close visually.
           closePanel(panelId);
         }
       } else if (hasEntries) {
-        // UI-only expand/collapse
-         togglePath(path);
-      } 
+        togglePath(path);
+      }
     };
 
-      // Build children entries (dot paths)
     const keys = isArray ? (value as any[]).map((_, i) => String(i)) : Object.keys(value as object);
 
-    // ⬅️ NEW: If this is a "children" container, DO NOT render a row for it.
-    // Render its items directly at the same depth (no "[-] children" or "[+] children" row at any level).
+    // If this is a "children" container, DO NOT render a row for it.
+    // Render its items directly at the same depth (no "[-] children" or "[+] children" row).
     if (isChildrenContainer) {
       return (
         <>
@@ -129,11 +127,11 @@ const Branch: React.FC<BranchProps> = ({
               const childPath = `${path}.${k}`;
               const childVal = (value as any[])[Number(k)];
 
-              // Label: show index and enum name if it's a panel node
+              // Label: show index and enum/name if it's a virtual panel node
               let childLabel = `[${k}]`;
-              if (looksLikePanelNode(childVal)) {
-                const enumName = SP_COIN_DISPLAY[(childVal as any).panel];
-                if (typeof enumName === 'string') childLabel = `[${k}] ${enumName}`;
+              if (looksLikeVirtualPanelNode(childVal)) {
+                const displayName = nameForVirtual(childVal);
+                childLabel = `[${k}] ${displayName}`;
               }
 
               return (
@@ -141,7 +139,7 @@ const Branch: React.FC<BranchProps> = ({
                   key={childPath}
                   label={childLabel}
                   value={childVal}
-                  depth={depth}              // same depth (no "children" row shown)
+                  depth={depth} // same depth (no "children" row shown)
                   path={childPath}
                   exp={exp}
                   togglePath={togglePath}
@@ -158,15 +156,14 @@ const Branch: React.FC<BranchProps> = ({
       <>
         <Row
           text={label}
-          path={path}            // pass path for Row logs (debug only)
+          path={path} // for Row logs (debug only)
           depth={depth}
-          // NOTE: For panel nodes, the "open" marker mirrors *visibility* only.
+          // For panel nodes, the "open" marker mirrors *visibility* only.
           open={hasEntries ? (isPanelArrayItem ? ((value as any)?.visible === true) : expanded) : undefined}
           clickable={isPanelArrayItem || hasEntries}
           onClick={onRowClick}
           dense={dense}
         />
-        {/* For panel nodes: children render ONLY when the node is visible */}
         {(isPanelArrayItem ? ((value as any)?.visible === true) : expanded) &&
           keys.map((k) => {
             const childPath = `${path}.${k}`;
@@ -175,10 +172,14 @@ const Branch: React.FC<BranchProps> = ({
             // Minimal label to keep layout intact
             let childLabel = isArray ? `[${k}]` : k;
 
-            // If listing panel nodes under mainPanelNode/children, append enum name
-            if (isArray && (label === 'mainPanelNode' || label === 'children') && looksLikePanelNode(childVal)) {
-              const enumName = SP_COIN_DISPLAY[(childVal as any).panel];
-              if (typeof enumName === 'string') childLabel = `[${k}] ${enumName}`;
+            // If listing panel nodes under mainPanelNode/children, append enum/name
+            if (
+              isArray &&
+              (label === 'mainPanelNode' || label === 'children') &&
+              looksLikeVirtualPanelNode(childVal)
+            ) {
+              const displayName = nameForVirtual(childVal);
+              childLabel = `[${k}] ${displayName}`;
             }
 
             return (
@@ -200,7 +201,7 @@ const Branch: React.FC<BranchProps> = ({
   }
 
   // ──────────────────────────────────────────────────────────────
-  // LEAF NODES (primitives) — unchanged layout
+  // LEAF NODES (primitives)
   // ──────────────────────────────────────────────────────────────
   const lineClass = dense ? 'flex items-center leading-tight' : 'flex items-center leading-6';
   const enumForKey = enumRegistry[label];

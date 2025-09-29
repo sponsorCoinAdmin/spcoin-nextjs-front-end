@@ -11,14 +11,45 @@ import TreeView from './components/Tree/TreeView';
 import Row from './components/Tree/Row';
 import { enumRegistry } from './state/enumRegistry';
 import PriceView from '@/app/(menu)/Exchange/Price';
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+
+// Virtual tree builder (page-local)
+import { useVirtualPanelTree } from './hooks/useVirtualPanelTree';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+
+import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { VirtualPanelNode } from './structure/types/virtualPanel';
 
 const PAGES_KEY = 'test_exchangeContext_pages';
 
-type PagesState = {
-  showGui?: boolean;
-  expanded?: boolean;
-};
+// Show SPONSOR row at top-level? (purely visual)
+const SHOW_SPONSOR_ROW = false;
+
+// ────────────────────────────────────────────────────────────────────────────
+// Pretty console helpers
+function flatForConsole(flat?: PanelNode[]) {
+  if (!Array.isArray(flat)) return flat;
+  return flat.map((n) => ({
+    id: `${SP[n.panel] ?? 'UNKNOWN'} (#${n.panel})`,
+    visible: !!n.visible,
+    children: Array.isArray(n.children)
+      ? n.children.map((c) => ({
+          id: `${SP[c.panel] ?? 'UNKNOWN'} (#${c.panel})`,
+          visible: !!c.visible,
+        }))
+      : undefined,
+  }));
+}
+function virtualForConsole(nodes: VirtualPanelNode[]) {
+  const walk = (ns: VirtualPanelNode[]): any[] =>
+    ns.map((n) => ({
+      id: `${SP[n.id] ?? 'UNKNOWN'} (#${n.id})`,
+      visible: n.visible,
+      children: walk(n.children),
+    }));
+  return walk(nodes);
+}
+
+type PagesState = { showGui?: boolean; expanded?: boolean };
 
 function readPagesState(): PagesState {
   try {
@@ -29,33 +60,71 @@ function readPagesState(): PagesState {
     return {};
   }
 }
-
 function writePagesState(patch: PagesState) {
   try {
     const current = readPagesState();
     const next = { ...current, ...patch };
     window.localStorage.setItem(PAGES_KEY, JSON.stringify(next));
   } catch {
-    // ignore storage issues
+    /* ignore */
   }
+}
+
+// ✅ Decorate each node with a human-readable name (shown when expanded).
+//    This does NOT change paths or expansion logic (still arrays).
+function addNamesShallow(nodes: VirtualPanelNode[]): VirtualPanelNode[] {
+  return nodes.map((n) => ({
+    ...n,
+    // add a readable name field
+    name: SP[n.id] ?? String(n.id),
+    // keep children shape, but also decorate their names (one level is enough for current use)
+    children: n.children?.map((c) => ({ ...c, name: SP[c.id] ?? String(c.id) })) ?? n.children,
+  }));
 }
 
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
   const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
-  const { isVisible, onTogglePanel } = usePanelControls(); // kept if you later re-add panel toggles
-  const { ui, setHeader, toggleAll, togglePath, restRaw } = useExpandCollapse(
+  // kept if you later re-add panel toggles
+  const { isVisible, onTogglePanel } = usePanelControls();
+  const { ui, toggleAll, togglePath, restRaw } = useExpandCollapse(
     exchangeContext,
     expandContext
   );
 
-  // Show/Hide GUI toggle — hydrate synchronously from the shared key
-  const [showGui, setShowGui] = useState<boolean>(() => {
-    const { showGui } = readPagesState();
-    return !!showGui;
-  });
+  // Build the virtual, display-only tree from the flat persisted state
+  const { tree, orphans, missing } = useVirtualPanelTree(exchangeContext);
 
-  // On mount: hydrate Expand/Collapse (and mirror to Tree expand-all)
+  // Filter sponsor row visually (doesn't touch keys/paths)
+  const treeForDisplay = useMemo(
+    () => (SHOW_SPONSOR_ROW ? tree : tree.filter((n) => n.id !== SP.SPONSOR_SELECT_PANEL_LIST)),
+    [tree]
+  );
+
+  // Add `name` string to every top-level node (and its direct children)
+  const treeWithNames = useMemo(() => addNamesShallow(treeForDisplay), [treeForDisplay]);
+
+  // Console dump (original + derived)
+  useEffect(() => {
+    const flat = (exchangeContext as any)?.settings?.mainPanelNode as PanelNode[] | undefined;
+    console.groupCollapsed('%c[ExchangeContextTab] Panel State Dump', 'color:#0bf');
+    console.log('Flat mainPanelNode:', flatForConsole(flat));
+    console.log('Virtual tree (derived):', virtualForConsole(treeWithNames));
+    console.log('Orphans (in state, not in schema):', orphans.map((id) => `${SP[id]} (#${id})`));
+    console.log('Missing (in schema, not in state):', missing.map((id) => `${SP[id]} (#${id})`));
+    (window as any).__dumpPanels = () => ({
+      flat: flatForConsole(flat),
+      virtual: virtualForConsole(treeWithNames),
+      orphans: orphans.map((id) => `${SP[id]} (#${id})`),
+      missing: missing.map((id) => `${SP[id]} (#${id})`),
+    });
+    console.groupEnd();
+  }, [exchangeContext, treeWithNames, orphans, missing]);
+
+  // Show/Hide GUI toggle — hydrate synchronously
+  const [showGui, setShowGui] = useState<boolean>(() => !!readPagesState().showGui);
+
+  // Hydrate expand state on mount
   useEffect(() => {
     const { expanded } = readPagesState();
     if (typeof expanded === 'boolean') {
@@ -65,64 +134,45 @@ export default function ExchangeContextTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist both states any time either changes
+  // Persist both states
   useEffect(() => {
     writePagesState({ showGui, expanded: expandContext });
   }, [showGui, expandContext]);
 
-  const onToggleShowGui = useCallback(() => {
-    setShowGui((prev) => !prev);
-  }, []);
+  const onToggleShowGui = useCallback(() => setShowGui((prev) => !prev), []);
 
-  /**
-   * Reorder only for display in this Test page:
-   * Under TRADING_STATION_PANEL, show SELL_SELECT_PANEL before BUY_SELECT_PANEL.
-   * This does NOT mutate the stored exchangeContext.
-   */
-  const reorderedMainPanelNode = useMemo(() => {
-    const node = (exchangeContext as any)?.settings?.mainPanelNode;
-    if (!Array.isArray(node)) return [];
-
-    // Deep clone
-    const cloned = JSON.parse(JSON.stringify(node)) as any[];
-
-    // Find TRADING_STATION_PANEL root
-    const tradingIdx = cloned.findIndex((n) => n?.panel === SP_TREE.TRADING_STATION_PANEL);
-    if (tradingIdx < 0) return cloned;
-
-    const trading = cloned[tradingIdx];
-    const children = Array.isArray(trading?.children) ? trading.children.slice() : [];
-    if (!children.length) return cloned;
-
-    const sell = children.find((c: any) => c?.panel === SP_TREE.SELL_SELECT_PANEL);
-    const buy  = children.find((c: any) => c?.panel === SP_TREE.BUY_SELECT_PANEL);
-    const rest = children.filter(
-      (c: any) =>
-        c?.panel !== SP_TREE.SELL_SELECT_PANEL &&
-        c?.panel !== SP_TREE.BUY_SELECT_PANEL
-    );
-
-    // Only change order if at least one of sell/buy exists
-    if (sell || buy) {
-      trading.children = [
-        ...(sell ? [sell] : []),
-        ...(buy  ? [buy]  : []),
-        ...rest,
-      ];
-      cloned[tradingIdx] = trading;
-    }
-
-    return cloned;
-  }, [exchangeContext]);
-
-  // Render settings via TreeView so spacing matches other branches
+  // Use ARRAY for mainPanelNode so paths are numeric (no changes to logic)
   const settingsObj = useMemo(
     () => ({
       apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
-      // Use the reordered version here
-      mainPanelNode: reorderedMainPanelNode,
+      mainPanelNode: treeWithNames, // array; each node now has a `name` field
     }),
-    [exchangeContext, reorderedMainPanelNode]
+    [exchangeContext, treeWithNames]
+  );
+
+  // 🔍 Keep detailed click-debugging; do not change toggle logic
+  const onTogglePathLogged = useCallback(
+    (path: string) => {
+      console.log('[TreeView] toggle START');
+      console.log('  raw path:', path);
+      const parts = path.split('.');
+      console.log('  raw parts:', parts);
+
+      const before = (ui as any)?.exp?.[path];
+      console.log('  ui.exp BEFORE (has key?):', !!before, 'value:', before);
+
+      togglePath(path);
+
+      setTimeout(() => {
+        const after = (ui as any)?.exp?.[path];
+        console.log('  ui.exp AFTER (raw key):', after);
+
+        const sampleKeys = Object.keys((ui as any)?.exp ?? {}).slice(0, 20);
+        console.log('  ui.exp keys sample:', sampleKeys);
+        console.log('[TreeView] toggle END');
+      }, 0);
+    },
+    [togglePath, ui]
   );
 
   return (
@@ -141,19 +191,17 @@ export default function ExchangeContextTab() {
         onClose={hideContext}
       />
 
-      {/* Split layout: when showGui=false → left fills the space; showGui=true → left/right panes */}
       <div className={`px-4 ${showGui ? 'flex gap-4' : ''}`}>
-        {/* LEFT PANE (always visible) */}
+        {/* LEFT PANE */}
         <div className={`${showGui ? 'flex-1' : 'w-full'}`}>
-          {/* Title row (not collapsible) */}
           <Row text="Exchange Context" depth={0} open />
 
-          {/* Settings rendered exactly like other branches */}
+          {/* Settings (virtual tree as ARRAY; nodes include `name` string) */}
           <TreeView
             label="settings"
             value={settingsObj}
             exp={ui.exp}
-            onTogglePath={togglePath}
+            onTogglePath={onTogglePathLogged}
             enumRegistry={enumRegistry}
             dense
             rootDepth={1}
@@ -166,7 +214,7 @@ export default function ExchangeContextTab() {
               label={k}
               value={(restRaw as any)[k]}
               exp={ui.exp}
-              onTogglePath={togglePath}
+              onTogglePath={onTogglePathLogged}
               enumRegistry={enumRegistry}
               dense
               rootDepth={1}
@@ -174,7 +222,7 @@ export default function ExchangeContextTab() {
           ))}
         </div>
 
-        {/* RIGHT PANE (PriceView, lowered by 48px as in your current version) */}
+        {/* RIGHT PANE */}
         {showGui && (
           <div className="flex-1 border-l border-slate-700">
             <div className="h-full min-h-[240px] pt-[48px]">

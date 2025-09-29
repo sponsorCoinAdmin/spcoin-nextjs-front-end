@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -43,10 +43,17 @@ export default function SponsorshipsConfigPanel({
   }
 
   const handleClose = () => {
-    debugLog.log('✅ Close SponsorshipsConfigPanel → back to TRADING_STATION_PANEL');
-    // Mirror ErrorMessagePanel: close self, then open Trading Station
-    closePanel(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
+    debugLog.log('✅ Close SponsorshipsConfigPanel → back to TRADING_STATION_PANEL, re-show launcher');
+
+    // ❗ Correct pair for Manage flow:
+    //   - Close the RATE_CONFIG panel we opened
+    //   - Re-open the launcher button (so "Manage Sponsorships" button is visible again)
+    closePanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+    openPanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+
+    // Keep Trading station visible (safety / idempotent)
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+
     onClose?.();
   };
 
@@ -59,7 +66,6 @@ export default function SponsorshipsConfigPanel({
       className="flex flex-col w-full rounded-[15px] overflow-hidden
                  border border-slate-500/30 bg-slate-900/30 text-slate-100"
     >
-      {/* Header — this was missing */}
       <header
         id="SponsorshipsConfigPanelHeader"
         className="flex items-center justify-between px-4 py-3
@@ -83,9 +89,7 @@ export default function SponsorshipsConfigPanel({
         </button>
       </header>
 
-      {/* Body */}
       <div className="p-4 flex flex-col gap-4">
-        {/* Replace with real sponsorship management UI */}
         <div className="text-sm opacity-90">
           Configure sponsorships for this token. (Placeholder content)
         </div>

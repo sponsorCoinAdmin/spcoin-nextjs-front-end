@@ -34,10 +34,6 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
       if (!isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)) {
         openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
       }
-      // Optional: ensure Trading stays visible (safe, idempotent)
-      if (!isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL)) {
-        openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-      }
     } finally {
       busyRef.current = false;
     }
