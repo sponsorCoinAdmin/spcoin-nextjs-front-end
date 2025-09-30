@@ -27,8 +27,8 @@ export const defaultMainPanelNode: MainPanelNode = [
     ]),
 
     // Recipient inline panel (default hidden)
-    n(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL, false, [
-      n(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL, false),
+    n(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, false, [
+      n(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, false),
     ]),
 
     // Independent UI controls under Trading (default visible)

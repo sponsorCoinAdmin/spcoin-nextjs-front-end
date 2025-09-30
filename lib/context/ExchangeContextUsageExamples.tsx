@@ -180,7 +180,7 @@ export default function ExchangeContextUsageExamples() {
         <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST)}>
           Open RECIPIENT panel
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)}>
           Open SPONSOR CONFIG
         </button>
         <button onClick={() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL)}>

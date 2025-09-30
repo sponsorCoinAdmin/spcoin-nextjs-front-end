@@ -23,11 +23,7 @@ import {
 // NOTE: The constant is exported as `defaultMainPanelNode`; we alias it locally to keep your identifier.
 import { defaultMainPanelNode as defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
-import type {
-  PanelNode,
-  MainPanelNode,
-  LegacyMainPanelRoot, // ⬅️ new legacy root type
-} from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
@@ -70,15 +66,7 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   url: n?.url ?? '',
 });
 
-// ✅ Properly detect the *legacy single-root object* shape
-const isLegacyMainPanelRoot = (x: any): x is LegacyMainPanelRoot =>
-  !!x &&
-  typeof x === 'object' &&
-  typeof x.panel === 'number' &&
-  typeof x.visible === 'boolean' &&
-  Array.isArray(x.children);
-
-// Accept a flat array of panel nodes; children allowed and preserved (not persisted)
+// Flat-array guard (children may exist in-memory but are not persisted)
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
   x.every(
@@ -86,35 +74,29 @@ const isMainPanels = (x: any): x is PanelNode[] =>
       n &&
       typeof n === 'object' &&
       typeof (n as any).panel === 'number' &&
-      typeof (n as any).visible === 'boolean' &&
-      Array.isArray((n as any).children ?? [])
+      typeof (n as any).visible === 'boolean'
   );
 
-// ✅ Preserve names recursively so UI/debug always have a label
+// Ensure each node has a stable name; keep structure in memory
 const ensurePanelName = (n: PanelNode): PanelNode => ({
   panel: n.panel,
   name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
   visible: !!n.visible,
-  children: Array.isArray(n.children) ? n.children.map(ensurePanelName) : [],
+  // keep any in-memory children if present, but we won't persist them
+  children: Array.isArray(n.children) ? n.children.map(ensurePanelName) : undefined,
 });
 
-const ensurePanelNamesPreserveChildren = (panels: PanelNode[]): PanelNode[] =>
-  panels.map(ensurePanelName);
+// Normalize an array for use in memory (names ensured; children allowed in memory)
+const ensurePanelNamesInMemory = (panels: PanelNode[]): PanelNode[] => panels.map(ensurePanelName);
 
-// Legacy: flatten root + children into a flat list for persistence
-const legacyTreeToFlatPanels = (root: LegacyMainPanelRoot): PanelNode[] => {
-  const flat: PanelNode[] = [];
-  flat.push({
-    panel: root.panel,
-    name: root.name || (SP_COIN_DISPLAY[root.panel] ?? String(root.panel)),
-    visible: root.visible,
-    children: [], // strip legacy children from persistence
-  });
-  for (const c of root.children || []) {
-    flat.push(ensurePanelName(c));
-  }
-  return flat;
-};
+// Normalize for persistence: strip children and ensure names → MainPanelNode
+const normalizeForPersistence = (panels: PanelNode[]): MainPanelNode =>
+  panels.map((n) => ({
+    panel: n.panel,
+    name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
+    visible: !!n.visible,
+    // children intentionally omitted (flat persistence)
+  }));
 
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
@@ -141,7 +123,14 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       if (!nextBase) return prev;
 
       try {
-        saveLocalExchangeContext(nextBase);
+        // Normalize panels to FLAT before persisting
+        const normalized = clone(nextBase);
+        if (Array.isArray(normalized?.settings?.mainPanelNode)) {
+          normalized.settings.mainPanelNode = normalizeForPersistence(
+            normalized.settings.mainPanelNode as unknown as PanelNode[]
+          );
+        }
+        saveLocalExchangeContext(normalized);
       } catch {
         /* ignore persist errors */
       }
@@ -160,16 +149,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // Honor stored if valid; otherwise deep-copy defaults
+      // Accept only FLAT arrays; otherwise fall back to defaults
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
-        flatPanels = ensurePanelNamesPreserveChildren(storedPanels);
-      } else if (isLegacyMainPanelRoot(storedPanels)) {
-        flatPanels = legacyTreeToFlatPanels(storedPanels);
+        flatPanels = ensurePanelNamesInMemory(storedPanels);
       } else {
-        flatPanels = ensurePanelNamesPreserveChildren(
-          clone(defaultMainPanels as unknown as PanelNode[])
-        );
+        flatPanels = ensurePanelNamesInMemory(clone(defaultMainPanels as unknown as PanelNode[]));
       }
 
       // 🔧 Reconcile network against current Wagmi *before* persisting (kills the flicker)
@@ -178,9 +163,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       net.chainId = isConnected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
       (base as any).network = net;
 
+      // Persist FLAT panels (strip children) but keep in-memory array with names (children allowed in memory)
       (base as any).settings = {
         ...settingsAny,
-        mainPanelNode: flatPanels,
+        mainPanelNode: normalizeForPersistence(flatPanels),
       };
 
       try {
@@ -188,6 +174,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* ignore persist errors */
       }
+
+      // Keep in-memory version with ensured names; children (if any) can exist only in memory
+      (base as any).settings.mainPanelNode = flatPanels;
 
       setContextState(base as ExchangeContextTypeOnly);
     })();

@@ -29,7 +29,7 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
       return 'Select Recipient to Sponsor';
     case SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST:
       return 'Select a Token to Sell';
-    case SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL:
+    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL:
       return 'Sponsor Rate Configuration';
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
       return 'Sponsor Coin Exchange';

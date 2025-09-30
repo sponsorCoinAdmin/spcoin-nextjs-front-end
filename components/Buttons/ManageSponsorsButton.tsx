@@ -6,7 +6,7 @@ import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import SponsorshipsConfigPanel from '../containers/SponsorshipsConfigPanel';
+import ManageSponsorShipsPanel from '../containers/ManageSponsorShipsPanel';
 
 type Props = {
   tokenContract: TokenContract | undefined;
@@ -46,7 +46,7 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
 
   return (
     <>
-      <SponsorshipsConfigPanel
+      <ManageSponsorShipsPanel
         showPanel={showPanel}
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}

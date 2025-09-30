@@ -1,4 +1,4 @@
-// File: components/RecipientSelectTradingPanel.tsx
+// File: components/AddSponsorShipPanel.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -14,7 +14,7 @@ import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enum
 // 🧪 Optional: generic barrel import to sanity-check enum identity at runtime
 import { SP_COIN_DISPLAY as SP_GENERIC } from '@/lib/structure';
 
-import RecipientConfigPanel from '../containers/RecipientConfigPanel';
+import ConfigSponsorshipPanel from '../containers/ConfigSponsorshipPanel';
 import { useExchangeContext } from '@/lib/context';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -23,7 +23,7 @@ const DEBUG =
   process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_TRADING_PANEL === 'true' ||
   process.env.NEXT_PUBLIC_DEBUG_LOG_PANELS === 'true';
 
-const RecipientSelectTradingPanel: React.FC = () => {
+const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { isVisible, openPanel, closePanel } = usePanelTree();
 
@@ -33,8 +33,8 @@ const RecipientSelectTradingPanel: React.FC = () => {
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   const toggleSponsorRateConfig = useCallback(() => {
-    const parentId = SP_TREE.RECIPIENT_SELECT_PANEL;
-    const cfgId = SP_TREE.RECIPIENT_CONFIG_PANEL;
+    const parentId = SP_TREE.ADD_SPONSORSHIP_PANEL;
+    const cfgId = SP_TREE.CONFIG_SPONSORSHIP_PANEL;
 
     if (!isVisible(parentId)) openPanel(parentId);
     if (isVisible(cfgId)) {
@@ -51,9 +51,9 @@ const RecipientSelectTradingPanel: React.FC = () => {
         next.accounts.recipientAccount = undefined;
         return next;
       },
-      'RecipientSelectTradingPanel:clearRecipient'
+      'AddSponsorShipPanel:clearRecipient'
     );
-    closePanel(SP_TREE.RECIPIENT_SELECT_PANEL);
+    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
@@ -70,7 +70,7 @@ const RecipientSelectTradingPanel: React.FC = () => {
 
   // 🔍 Compute all relevant booleans once (so logs don't call isVisible repeatedly)
   const vis = useMemo(() => {
-    const showPanel = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+    const showPanel = isVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
     // The two names that often get mixed up – log both:
     const addBtnRecipient = isVisible(SP_TREE.ADD_SPONSORSHIP_BUTTON);
     const addBtnSponsorship = isVisible(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
@@ -78,7 +78,7 @@ const RecipientSelectTradingPanel: React.FC = () => {
     const trading = isVisible(SP_TREE.TRADING_STATION_PANEL);
     const buyList = isVisible(SP_TREE.BUY_SELECT_PANEL_LIST);
     const sellList = isVisible(SP_TREE.SELL_SELECT_PANEL_LIST);
-    const configPanel = isVisible(SP_TREE.RECIPIENT_CONFIG_PANEL);
+    const configPanel = isVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
 
     return {
       showPanel,
@@ -91,27 +91,27 @@ const RecipientSelectTradingPanel: React.FC = () => {
     };
   }, [isVisible]);
 
-  // 🧾 Visibility rule: only the RECIPIENT_SELECT_PANEL flag controls this panel
+  // 🧾 Visibility rule: only the ADD_SPONSORSHIP_PANEL flag controls this panel
   const selfVisible = vis.showPanel;
 
   // 🧪 Debug: enum identity + panel states (runs every render since vis changes cause rerender)
   if (DEBUG) {
     // eslint-disable-next-line no-console
-    console.log('[RecipientSelectTradingPanel] Enum identity check:', {
+    console.log('[AddSponsorShipPanel] Enum identity check:', {
       same_ENUM_OBJECT: SP_TREE === (SP_GENERIC as any),
       ADD_SPONSORSHIP_BUTTON_equal:
         SP_TREE.ADD_SPONSORSHIP_BUTTON === SP_GENERIC.ADD_SPONSORSHIP_BUTTON,
       RECIPIENT_SELECT_PANEL_equal:
-        SP_TREE.RECIPIENT_SELECT_PANEL === SP_GENERIC.RECIPIENT_SELECT_PANEL,
+        SP_TREE.ADD_SPONSORSHIP_PANEL === SP_GENERIC.ADD_SPONSORSHIP_PANEL,
       MANAGE_SPONSORSHIPS_BUTTON_equal:
         SP_TREE.MANAGE_SPONSORSHIPS_BUTTON === SP_GENERIC.MANAGE_SPONSORSHIPS_BUTTON,
     });
     // eslint-disable-next-line no-console
     console.table({
-      RECIPIENT_SELECT_PANEL: vis.showPanel,
+      ADD_SPONSORSHIP_PANEL: vis.showPanel,
       ADD_SPONSORSHIP_BUTTON: vis.addBtnRecipient,
       MANAGE_SPONSORSHIPS_BUTTON: vis.addBtnSponsorship,
-      RECIPIENT_CONFIG_PANEL: vis.configPanel,
+      CONFIG_SPONSORSHIP_PANEL: vis.configPanel,
       TRADING_STATION_PANEL: vis.trading,
       BUY_SELECT_PANEL_LIST: vis.buyList,
       SELL_SELECT_PANEL_LIST: vis.sellList,
@@ -226,16 +226,16 @@ const RecipientSelectTradingPanel: React.FC = () => {
         </div>
       </div>
 
-      <RecipientConfigPanel />
+      <ConfigSponsorshipPanel />
 
       {DEBUG && (
         <div className="mt-2 p-2 text-xs bg-black/30 rounded">
           <div>
             <b>Debug:</b>{' '}
-            RECIPIENT_SELECT_PANEL={String(vis.showPanel)} |{' '}
+            ADD_SPONSORSHIP_PANEL={String(vis.showPanel)} |{' '}
             ADD_SPONSORSHIP_BUTTON={String(vis.addBtnRecipient)} |{' '}
             MANAGE_SPONSORSHIPS_BUTTON={String(vis.addBtnSponsorship)} |{' '}
-            RECIPIENT_CONFIG_PANEL={String(vis.configPanel)} |{' '}
+            CONFIG_SPONSORSHIP_PANEL={String(vis.configPanel)} |{' '}
             BUY_SELECT_PANEL_LIST={String(vis.buyList)} |{' '}
             SELL_SELECT_PANEL_LIST={String(vis.sellList)} |{' '}
             selfVisible={String(selfVisible)}
@@ -246,4 +246,4 @@ const RecipientSelectTradingPanel: React.FC = () => {
   );
 };
 
-export default RecipientSelectTradingPanel;
+export default AddSponsorShipPanel;

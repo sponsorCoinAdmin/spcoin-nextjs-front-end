@@ -42,11 +42,11 @@ function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
-/** Build a default MainPanelNode and exclude RECIPIENT_CONFIG_PANEL from children */
+/** Build a default MainPanelNode and exclude CONFIG_SPONSORSHIP_PANEL from children */
 function buildDefaultMainPanelNode(): MainPanelNode {
   const root = clone(defaultMainPanelNode) as MainPanelNode;
   root.children = (root.children ?? []).filter(
-    (ch) => ch?.panel !== SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL
+    (ch) => ch?.panel !== SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
   );
   return root;
 }

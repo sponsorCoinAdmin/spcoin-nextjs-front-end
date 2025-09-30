@@ -23,7 +23,7 @@ export default function PanelsTab() {
       SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST,
       SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST,
       SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,
-      SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL,
+      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST,
     ],
     []
@@ -141,7 +141,7 @@ export default function PanelsTab() {
         />
         <QuickAction
           label="Toggle Sponsor Rate Config"
-          onClick={() => togglePanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL, 'PanelsTab:toggleSponsorCfg')}
+          onClick={() => togglePanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'PanelsTab:toggleSponsorCfg')}
         />
       </div>
 

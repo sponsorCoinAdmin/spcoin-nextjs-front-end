@@ -85,7 +85,7 @@ function TradeAssetPanelInner() {
 
   // (optional) if you still want to hide Add when inline panel is open
   const { isVisible } = usePanelTree();
-  const isRecipientPanelOpen = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+  const isRecipientPanelOpen = isVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
   const showRecipientBtnFinal = showRecipientBtn && !isRecipientPanelOpen;
 
   // Amount input state

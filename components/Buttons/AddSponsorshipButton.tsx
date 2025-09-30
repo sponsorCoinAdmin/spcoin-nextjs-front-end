@@ -24,8 +24,8 @@ const AddSponsorshipButton = () => {
       }
 
       // 2) Show the inline recipient config panel (idempotent guard).
-      if (!isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL)) {
-        openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL);
+      if (!isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL)) {
+        openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
       }
 
       // (Optional) Keep Trading Station visible if your UX expects it on screen.

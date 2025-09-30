@@ -16,7 +16,7 @@ import {
   AgentSelectPanel,
 } from '../containers/AssetSelectPanels';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import SponsorshipsConfigPanel from '@/components/containers/SponsorshipsConfigPanel';
+import ManageSponsorShipsPanel from '@/components/containers/ManageSponsorShipsPanel';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_MAIN_SWAP_VIEW === 'true';
@@ -52,7 +52,7 @@ export default function MainTradingPanel() {
         <ErrorMessagePanel isActive={isErrorMessagePanel} />
 
         {/* Sponsorships config overlay (uses panel-tree visibility internally) */}
-        <SponsorshipsConfigPanel
+        <ManageSponsorShipsPanel
           showPanel={isSponsorshipsPanel}
           tokenContract={undefined}
           callBackSetter={() => null}

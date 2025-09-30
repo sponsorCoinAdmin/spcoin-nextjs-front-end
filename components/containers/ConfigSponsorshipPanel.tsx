@@ -1,4 +1,4 @@
-// File: components/containers/RecipientConfigPanel.tsx
+// File: components/containers/ConfigSponsorshipPanel.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -11,7 +11,7 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 const MIN_STEP = 2; // matches prior code
 const MAX_STEP = 10;
 
-const RecipientConfigPanel: React.FC = () => {
+const ConfigSponsorshipPanel: React.FC = () => {
   const { isVisible, closePanel } = usePanelTree();
 
   // "step" from 2..10 where displayed percentages are step*10 and (100 - step*10)
@@ -21,7 +21,7 @@ const RecipientConfigPanel: React.FC = () => {
   const sponsorPct = useMemo(() => 100 - step * 10, [step]);
 
   // Only render when this panel is visible
-  const selfVisible = isVisible(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL);
+  const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
   if (!selfVisible) return null;
 
   return (
@@ -57,7 +57,7 @@ const RecipientConfigPanel: React.FC = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => closePanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL)}
+          onClick={() => closePanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)}
         >
           X
         </div>
@@ -81,4 +81,4 @@ const RecipientConfigPanel: React.FC = () => {
   );
 };
 
-export default RecipientConfigPanel;
+export default ConfigSponsorshipPanel;

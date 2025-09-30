@@ -19,13 +19,13 @@ const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
   const { exchangeContext } = useExchangeContext();
   const { isVisible, openPanel } = usePanelTree();
 
-  const toggleRecipientConfigPanel = () => {
-    // Switch between RECIPIENT_SELECT_PANEL_LIST and RECIPIENT_CONFIG_PANEL.
+  const toggleConfigSponsorshipPanel = () => {
+    // Switch between RECIPIENT_SELECT_PANEL_LIST and CONFIG_SPONSORSHIP_PANEL.
     // Both are handled as main overlays by usePanelTree (radio behavior).
-    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL)) {
+    if (isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)) {
       openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
     } else {
-      openPanel(SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL);
+      openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
     }
   };
 
@@ -56,7 +56,7 @@ const RecipientSelectHeader = ({ slippageBps, closePanel }: any) => {
           width={20}
           height={20}
           alt="Toggle Sponsor Rate Config"
-          onClick={toggleRecipientConfigPanel}
+          onClick={toggleConfigSponsorshipPanel}
         />
       </div>
     </div>

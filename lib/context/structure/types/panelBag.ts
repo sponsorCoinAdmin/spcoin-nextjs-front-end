@@ -32,7 +32,7 @@ export type ErrorMessageBag = {
 export type SimplePanelBag = {
   type:
     | SP_COIN_DISPLAY.TRADING_STATION_PANEL
-    | SP_COIN_DISPLAY.RECIPIENT_CONFIG_PANEL
+    | SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
     | SP_COIN_DISPLAY.UNDEFINED;
 };
 

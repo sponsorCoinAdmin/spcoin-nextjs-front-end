@@ -18,7 +18,7 @@ export function useConfigButtonVisibility({ isSell, isBuy, tokenContract }: Para
 
   // Use a stable key for deps so the effect doesn't fire on every render.
   const addr = tokenContract?.address?.toLowerCase() ?? '';
-  const isInlineOpen = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
+  const isInlineOpen = isVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
   const isButtonOn   = isVisible(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   const isSellBtnOn  = isVisible(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
 

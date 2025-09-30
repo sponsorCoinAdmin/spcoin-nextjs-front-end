@@ -12,7 +12,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import FeeDisclosure from '../containers/FeeDisclosure';
-import RecipientSelectTradingPanel from './RecipientSelectTradingPanel';
+import AddSponsorShipPanel from './AddSponsorshipPanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 const LOG_TIME = false;
@@ -36,7 +36,7 @@ export default function TradingStationPanel() {
       <BuyAssetPanel />
 
       <BuySellSwapArrowButton />
-      <RecipientSelectTradingPanel />
+      <AddSponsorShipPanel />
       <PriceButton isLoadingPrice={isLoadingPrice} />
       <AffiliateFee priceResponse={priceResponse} />
       <FeeDisclosure />
