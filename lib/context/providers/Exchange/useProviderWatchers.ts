@@ -7,9 +7,10 @@ import type {
   ExchangeContext as ExchangeContextTypeOnly,
   WalletAccount,
 } from '@/lib/structure';
-import type { MainPanelNode, PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
 
 /* ------------------------------- utils -------------------------------- */
 
@@ -28,41 +29,21 @@ function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
-/* -------------------------- Panel tree helpers -------------------------- */
+/* ----------------------- Flat panel visibility helpers ---------------------- */
 
-const MAIN_OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
-  SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-  SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-];
-
-function visitTree(node: PanelNode, fn: (n: PanelNode) => void) {
-  fn(node);
-  if (Array.isArray(node.children)) {
-    for (const c of node.children) visitTree(c, fn);
-  }
+/** Any of the given IDs visible within the FLAT mainPanelNode array? */
+function anyVisible(panels: MainPanelNode, ids: SP_COIN_DISPLAY[]): boolean {
+  return panels.some((n) => ids.includes(n.panel as SP_COIN_DISPLAY) && !!n.visible);
 }
 
-function anyVisible(root: MainPanelNode, ids: SP_COIN_DISPLAY[]): boolean {
-  let open = false;
-  visitTree(root, (n) => {
-    if (ids.includes(n.panel as SP_COIN_DISPLAY) && n.visible) open = true;
-  });
-  return open;
-}
-
-/** Set radio visibility across MAIN_OVERLAY_GROUP, turning on only `targetId`. */
-function setOverlayVisible(root: MainPanelNode, targetId: SP_COIN_DISPLAY): MainPanelNode {
-  const next = clone(root);
-  visitTree(next, (n) => {
+/** Radio-toggle across MAIN_OVERLAY_GROUP in the FLAT array, enabling only targetId. */
+function setOverlayVisible(panels: MainPanelNode, targetId: SP_COIN_DISPLAY): MainPanelNode {
+  const next = clone(panels);
+  for (const n of next) {
     if (MAIN_OVERLAY_GROUP.includes(n.panel as SP_COIN_DISPLAY)) {
       n.visible = (n.panel as SP_COIN_DISPLAY) === targetId;
     }
-  });
+  }
   return next;
 }
 
@@ -346,7 +327,7 @@ export function useProviderWatchers({
     contextState,
     contextState?.tradeData.sellTokenContract?.address,
     contextState?.tradeData.buyTokenContract?.address,
-    contextState?.settings?.mainPanelNode, // re-run when panel tree changes
+    contextState?.settings?.mainPanelNode, // re-run when panel array changes
     setExchangeContext,
   ]);
 }

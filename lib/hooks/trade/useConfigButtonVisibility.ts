@@ -19,8 +19,8 @@ export function useConfigButtonVisibility({ isSell, isBuy, tokenContract }: Para
   // Use a stable key for deps so the effect doesn't fire on every render.
   const addr = tokenContract?.address?.toLowerCase() ?? '';
   const isInlineOpen = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
-  const isButtonOn   = isVisible(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
-  const isSellBtnOn  = isVisible(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+  const isButtonOn   = isVisible(SP_TREE.ADD_SPONSORSHIP_BUTTON);
+  const isSellBtnOn  = isVisible(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
 
   // Track previous token & sp status to detect meaningful transitions
   const prevAddrRef = useRef(addr);
@@ -33,9 +33,9 @@ export function useConfigButtonVisibility({ isSell, isBuy, tokenContract }: Para
 
     // SELL side button
     if (isSell) {
-      if (!sp && isSellBtnOn) closePanel(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+      if (!sp && isSellBtnOn) closePanel(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
       if (sp && (tokenChanged || spChanged) && !isSellBtnOn) {
-        openPanel(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+        openPanel(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
       }
     }
 
@@ -43,11 +43,11 @@ export function useConfigButtonVisibility({ isSell, isBuy, tokenContract }: Para
     if (isBuy) {
       // Always close when inline panel is open or not an spCoin
       if (isInlineOpen || !sp) {
-        if (isButtonOn) closePanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+        if (isButtonOn) closePanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
       } else {
         // Only auto-open on token/sp transitions (respect manual close)
         if ((tokenChanged || spChanged) && !isButtonOn) {
-          openPanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+          openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
         }
       }
     }

@@ -18,12 +18,12 @@ export const defaultMainPanelNode: MainPanelNode = [
   n(SP_COIN_DISPLAY.TRADING_STATION_PANEL, true, [
     // BUY subtree (visible by default)
     n(SP_COIN_DISPLAY.BUY_SELECT_PANEL, true, [
-      n(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON, false),
+      n(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, false),
     ]),
 
     // SELL subtree (visible by default)
     n(SP_COIN_DISPLAY.SELL_SELECT_PANEL, true, [
-      n(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON, false),
+      n(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, false),
     ]),
 
     // Recipient inline panel (default hidden)

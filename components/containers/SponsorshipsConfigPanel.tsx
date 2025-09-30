@@ -48,8 +48,8 @@ export default function SponsorshipsConfigPanel({
     // ❗ Correct pair for Manage flow:
     //   - Close the RATE_CONFIG panel we opened
     //   - Re-open the launcher button (so "Manage Sponsorships" button is visible again)
-    closePanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-    openPanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
     // Keep Trading station visible (safety / idempotent)
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);

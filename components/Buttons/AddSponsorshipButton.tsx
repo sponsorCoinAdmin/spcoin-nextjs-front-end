@@ -11,7 +11,7 @@ const AddSponsorshipButton = () => {
   const busyRef = useRef(false);
 
   // Only render when this button is meant to be visible.
-  if (!isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON)) return null;
+  if (!isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON)) return null;
 
   const openRecipientSelect = useCallback(() => {
     if (busyRef.current) return;
@@ -19,8 +19,8 @@ const AddSponsorshipButton = () => {
 
     try {
       // 1) Hide the config button if it's still visible.
-      if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON)) {
-        closePanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_CONFIG_BUTTON);
+      if (isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON)) {
+        closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
       }
 
       // 2) Show the inline recipient config panel (idempotent guard).
