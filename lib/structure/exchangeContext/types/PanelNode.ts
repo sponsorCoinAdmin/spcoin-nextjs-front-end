@@ -21,3 +21,15 @@ export interface PanelNode<M extends Record<string, unknown> = Record<string, un
  */
 export type MainPanelNode<M extends Record<string, unknown> = Record<string, unknown>> =
   PanelNode<M>[];
+
+/**
+ * LEGACY shape: single root object with `.panel/.visible/.children`.
+ * Still accepted on hydration; converted to the flat MainPanelNode array.
+ */
+export interface LegacyMainPanelRoot<M extends Record<string, unknown> = Record<string, unknown>> {
+  panel: SP_COIN_DISPLAY;
+  visible: boolean;
+  name?: string;
+  children: PanelNode<M>[];
+  meta?: M;
+}

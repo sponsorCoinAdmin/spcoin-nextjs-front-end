@@ -20,8 +20,14 @@ import {
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
-import { defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+// NOTE: The constant is exported as `defaultMainPanelNode`; we alias it locally to keep your identifier.
+import { defaultMainPanelNode as defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+
+import type {
+  PanelNode,
+  MainPanelNode,
+  LegacyMainPanelRoot, // ⬅️ new legacy root type
+} from '@/lib/structure/exchangeContext/types/PanelNode';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
@@ -64,10 +70,15 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   url: n?.url ?? '',
 });
 
-const isLegacyMainPanelNode = (x: any): x is MainPanelNode =>
-  !!x && typeof x === 'object' && typeof x.panel === 'number' && typeof x.visible === 'boolean' && Array.isArray(x.children);
+// ✅ Properly detect the *legacy single-root object* shape
+const isLegacyMainPanelRoot = (x: any): x is LegacyMainPanelRoot =>
+  !!x &&
+  typeof x === 'object' &&
+  typeof x.panel === 'number' &&
+  typeof x.visible === 'boolean' &&
+  Array.isArray(x.children);
 
-// Accept an array of panel nodes; children allowed and preserved
+// Accept a flat array of panel nodes; children allowed and preserved (not persisted)
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
   x.every(
@@ -79,7 +90,7 @@ const isMainPanels = (x: any): x is PanelNode[] =>
       Array.isArray((n as any).children ?? [])
   );
 
-// ✅ Preserve children recursively
+// ✅ Preserve names recursively so UI/debug always have a label
 const ensurePanelName = (n: PanelNode): PanelNode => ({
   panel: n.panel,
   name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
@@ -90,17 +101,17 @@ const ensurePanelName = (n: PanelNode): PanelNode => ({
 const ensurePanelNamesPreserveChildren = (panels: PanelNode[]): PanelNode[] =>
   panels.map(ensurePanelName);
 
-// Legacy: flatten root + children into list
-const legacyTreeToFlatPanels = (root: MainPanelNode): PanelNode[] => {
+// Legacy: flatten root + children into a flat list for persistence
+const legacyTreeToFlatPanels = (root: LegacyMainPanelRoot): PanelNode[] => {
   const flat: PanelNode[] = [];
   flat.push({
     panel: root.panel,
     name: root.name || (SP_COIN_DISPLAY[root.panel] ?? String(root.panel)),
     visible: root.visible,
-    children: [], // strip TRADING children
+    children: [], // strip legacy children from persistence
   });
   for (const c of root.children || []) {
-    flat.push(ensurePanelName(c as MainPanelNode));
+    flat.push(ensurePanelName(c));
   }
   return flat;
 };
@@ -153,10 +164,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
         flatPanels = ensurePanelNamesPreserveChildren(storedPanels);
-      } else if (isLegacyMainPanelNode(storedPanels)) {
+      } else if (isLegacyMainPanelRoot(storedPanels)) {
         flatPanels = legacyTreeToFlatPanels(storedPanels);
       } else {
-        flatPanels = ensurePanelNamesPreserveChildren(clone(defaultMainPanels as unknown as PanelNode[]));
+        flatPanels = ensurePanelNamesPreserveChildren(
+          clone(defaultMainPanels as unknown as PanelNode[])
+        );
       }
 
       // 🔧 Reconcile network against current Wagmi *before* persisting (kills the flicker)
@@ -214,7 +227,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const net = ensureNetwork(next.network);
 
       const connected = !!isConnected;
-      const desiredChainId = connected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
+      const desiredChainId =
+        connected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
 
       const noChange = net.connected === connected && net.chainId === desiredChainId;
       if (noChange) return prev;
