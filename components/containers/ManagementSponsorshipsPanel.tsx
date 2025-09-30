@@ -1,4 +1,4 @@
-// File: components/containers/SponsorshipsConfigPanel.tsx
+// File: components/containers/ManageSponsorshipsPanel.tsx
 'use client';
 
 import React, { useEffect } from 'react';
@@ -10,7 +10,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SPONSOR_SELECT_PANEL_LIST === 'true';
-const debugLog = createDebugLogger('SponsorshipsConfigPanel', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = {
   /** Panel-tree controlled visibility, like ErrorMessagePanel's `isActive` */
@@ -22,7 +22,7 @@ type Props = {
   onClose?: () => void;
 };
 
-export default function SponsorshipsConfigPanel({
+export default function ManageSponsorshipsPanel({
   showPanel,
   tokenContract,
   callBackSetter,
@@ -30,26 +30,26 @@ export default function SponsorshipsConfigPanel({
 }: Props) {
   const { openPanel, closePanel } = usePanelTree();
 
-  debugLog.log('🛠️ SponsorshipsConfigPanel render; showPanel=', showPanel);
+  debugLog.log('🛠️ ManageSponsorshipsPanel render; showPanel=', showPanel);
 
   useEffect(() => {
     if (!showPanel) return;
-    debugLog.log('🎯 SponsorshipsConfigPanel active; token:', tokenContract?.symbol ?? '(none)');
+    debugLog.log('🎯 ManageSponsorshipsPanel active; token:', tokenContract?.symbol ?? '(none)');
   }, [showPanel, tokenContract]);
 
   if (!showPanel) {
-    debugLog.log('⏭️ SponsorshipsConfigPanel → not active, skipping render');
+    debugLog.log('⏭️ ManageSponsorshipsPanel → not active, skipping render');
     return null;
   }
 
   const handleClose = () => {
-    debugLog.log('✅ Close SponsorshipsConfigPanel → back to TRADING_STATION_PANEL, re-show launcher');
+    debugLog.log('✅ Close ManageSponsorshipsPanel → back to TRADING_STATION_PANEL, re-show launcher');
 
     // ❗ Correct pair for Manage flow:
     //   - Close the RATE_CONFIG panel we opened
     //   - Re-open the launcher button (so "Manage Sponsorships" button is visible again)
-    closePanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-    openPanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
     // Keep Trading station visible (safety / idempotent)
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
@@ -59,15 +59,15 @@ export default function SponsorshipsConfigPanel({
 
   return (
     <section
-      id="SponsorshipsConfigPanel"
+      id="ManageSponsorshipsPanel"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="SponsorshipsConfigPanelHeader"
+      aria-labelledby="ManageSponsorshipsPanelHeader"
       className="flex flex-col w-full rounded-[15px] overflow-hidden
                  border border-slate-500/30 bg-slate-900/30 text-slate-100"
     >
       <header
-        id="SponsorshipsConfigPanelHeader"
+        id="ManageSponsorshipsPanelHeader"
         className="flex items-center justify-between px-4 py-3
                    bg-slate-800/50 border-b border-slate-600/30"
       >

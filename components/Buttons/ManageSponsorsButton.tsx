@@ -6,7 +6,7 @@ import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import SponsorshipsConfigPanel from '../containers/SponsorshipsConfigPanel';
+import ManageSponsorshipsPanel from '../containers/ManagementSponsorshipsPanel';
 
 type Props = {
   tokenContract: TokenContract | undefined;
@@ -17,22 +17,22 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
   const busyRef = useRef(false);
 
   // Launcher button visibility (button enum)
-  const showButton = isVisible(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+  const showButton = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
   // Sponsorship configuration panel visibility (real panel enum)
-  const showPanel = isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+  const showPanel = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
 
   const openDialog = useCallback(() => {
     if (busyRef.current) return;
     busyRef.current = true;
     try {
       // Hide the launcher button
-      if (isVisible(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON)) {
-        closePanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+      if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON)) {
+        closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
       }
       // Show the sponsorship configuration panel
-      if (!isVisible(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL)) {
-        openPanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
+      if (!isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)) {
+        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
       }
     } finally {
       busyRef.current = false;
@@ -46,14 +46,14 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
 
   return (
     <>
-      <SponsorshipsConfigPanel
+      <ManageSponsorshipsPanel
         showPanel={showPanel}
         tokenContract={tokenContract}
         callBackSetter={junkManageSponsorshipCallback}
         // If/when the panel exposes onClose, wire it like this:
         // onClose={() => {
-        //   closePanel(SP_COIN_DISPLAY.SPONSOR_RATE_CONFIG_PANEL);
-        //   openPanel(SP_COIN_DISPLAY.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+        //   closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+        //   openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
         // }}
       />
 

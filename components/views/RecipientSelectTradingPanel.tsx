@@ -54,7 +54,7 @@ const RecipientSelectTradingPanel: React.FC = () => {
       'RecipientSelectTradingPanel:clearRecipient'
     );
     closePanel(SP_TREE.RECIPIENT_SELECT_PANEL);
-    openPanel(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
+    openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
   useEffect(() => {
@@ -72,8 +72,8 @@ const RecipientSelectTradingPanel: React.FC = () => {
   const vis = useMemo(() => {
     const showPanel = isVisible(SP_TREE.RECIPIENT_SELECT_PANEL);
     // The two names that often get mixed up – log both:
-    const addBtnRecipient = isVisible(SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON);
-    const addBtnSponsorship = isVisible(SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON);
+    const addBtnRecipient = isVisible(SP_TREE.ADD_SPONSORSHIP_BUTTON);
+    const addBtnSponsorship = isVisible(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
 
     const trading = isVisible(SP_TREE.TRADING_STATION_PANEL);
     const buyList = isVisible(SP_TREE.BUY_SELECT_PANEL_LIST);
@@ -99,18 +99,18 @@ const RecipientSelectTradingPanel: React.FC = () => {
     // eslint-disable-next-line no-console
     console.log('[RecipientSelectTradingPanel] Enum identity check:', {
       same_ENUM_OBJECT: SP_TREE === (SP_GENERIC as any),
-      RECIPIENT_SELECT_CONFIG_BUTTON_equal:
-        SP_TREE.RECIPIENT_SELECT_CONFIG_BUTTON === SP_GENERIC.RECIPIENT_SELECT_CONFIG_BUTTON,
+      ADD_SPONSORSHIP_BUTTON_equal:
+        SP_TREE.ADD_SPONSORSHIP_BUTTON === SP_GENERIC.ADD_SPONSORSHIP_BUTTON,
       RECIPIENT_SELECT_PANEL_equal:
         SP_TREE.RECIPIENT_SELECT_PANEL === SP_GENERIC.RECIPIENT_SELECT_PANEL,
-      SPONSORSHIP_SELECT_CONFIG_BUTTON_equal:
-        SP_TREE.SPONSORSHIP_SELECT_CONFIG_BUTTON === SP_GENERIC.SPONSORSHIP_SELECT_CONFIG_BUTTON,
+      MANAGE_SPONSORSHIPS_BUTTON_equal:
+        SP_TREE.MANAGE_SPONSORSHIPS_BUTTON === SP_GENERIC.MANAGE_SPONSORSHIPS_BUTTON,
     });
     // eslint-disable-next-line no-console
     console.table({
       RECIPIENT_SELECT_PANEL: vis.showPanel,
-      RECIPIENT_SELECT_CONFIG_BUTTON: vis.addBtnRecipient,
-      SPONSORSHIP_SELECT_CONFIG_BUTTON: vis.addBtnSponsorship,
+      ADD_SPONSORSHIP_BUTTON: vis.addBtnRecipient,
+      MANAGE_SPONSORSHIPS_BUTTON: vis.addBtnSponsorship,
       RECIPIENT_CONFIG_PANEL: vis.configPanel,
       TRADING_STATION_PANEL: vis.trading,
       BUY_SELECT_PANEL_LIST: vis.buyList,
@@ -233,8 +233,8 @@ const RecipientSelectTradingPanel: React.FC = () => {
           <div>
             <b>Debug:</b>{' '}
             RECIPIENT_SELECT_PANEL={String(vis.showPanel)} |{' '}
-            RECIPIENT_SELECT_CONFIG_BUTTON={String(vis.addBtnRecipient)} |{' '}
-            SPONSORSHIP_SELECT_CONFIG_BUTTON={String(vis.addBtnSponsorship)} |{' '}
+            ADD_SPONSORSHIP_BUTTON={String(vis.addBtnRecipient)} |{' '}
+            MANAGE_SPONSORSHIPS_BUTTON={String(vis.addBtnSponsorship)} |{' '}
             RECIPIENT_CONFIG_PANEL={String(vis.configPanel)} |{' '}
             BUY_SELECT_PANEL_LIST={String(vis.buyList)} |{' '}
             SELL_SELECT_PANEL_LIST={String(vis.sellList)} |{' '}

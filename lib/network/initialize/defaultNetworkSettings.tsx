@@ -17,7 +17,7 @@ import {
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
 import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
-import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+import { defaultMainPanelNode } from '@/lib/structure/constants/enums/spCoinDisplay.ts';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
