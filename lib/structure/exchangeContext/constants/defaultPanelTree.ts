@@ -47,4 +47,7 @@ export const defaultMainPanelNode: MainPanelNode = [
   n(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,     false),
   n(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,         false),
   n(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST,   false), // legacy; never persist at runtime
+
+  // ✨ Newly added root panel
+  n(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,   false),
 ];

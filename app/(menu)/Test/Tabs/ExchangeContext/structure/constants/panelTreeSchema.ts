@@ -13,6 +13,9 @@ export const ROOTS: SP[] = [
   SP.AGENT_SELECT_PANEL_LIST,
   SP.ERROR_MESSAGE_PANEL,
   SP.SPONSOR_SELECT_PANEL_LIST,
+
+  // ✅ Add it to the main overlay row
+  SP.MANAGE_SPONSORSHIPS_PANEL,
 ];
 
 // Only show BUY/SELL/RECIPIENT inline under Trading (no controls here)
@@ -45,6 +48,9 @@ export const KINDS: Partial<Record<SP, PanelKind>> = {
 
   [SP.ERROR_MESSAGE_PANEL]: 'panel',
   [SP.SPONSOR_SELECT_PANEL_LIST]: 'panel',
+
+  // ✅ Give it a kind so it renders as a panel
+  [SP.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 };
 
 // Optional grouping tags if you ever want to use them
@@ -56,5 +62,7 @@ export const GROUPS = {
     SP.RECIPIENT_SELECT_PANEL_LIST,
     SP.AGENT_SELECT_PANEL_LIST,
     SP.ERROR_MESSAGE_PANEL,
+    // ✅ Include it if you want it grouped with overlays/lists in tooling
+    SP.MANAGE_SPONSORSHIPS_PANEL,
   ] as SP[],
 };

@@ -84,6 +84,9 @@ export function usePanelTree() {
     [exchangeContext]
   );
 
+  // Fast lookup for visibility checks
+  const visMap = useMemo(() => toMap(list), [list]);
+
   // Keep the radio set limited to ids that exist in the flat list
   const radioRootIds = useMemo<SP_COIN_DISPLAY[]>(
     () =>
@@ -114,11 +117,8 @@ export function usePanelTree() {
   /* ------------------------------- queries ------------------------------- */
 
   const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => {
-      const map = toMap(list);
-      return !!map[panel];
-    },
-    [list]
+    (panel: SP_COIN_DISPLAY) => !!visMap[panel],
+    [visMap]
   );
 
   // Children are no longer modeled; return [] for compatibility.
@@ -189,11 +189,11 @@ export function usePanelTree() {
     return TRADING;
   }, [list, radioRootIds]);
 
-  // Use the updated enum names from your recent config (scroll panels)
+  // Use updated enum names (scroll panels)
   const isTokenScrollVisible = useMemo(
     () =>
-      isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL) ||
-      isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL),
+      isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) ||
+      isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL),
     [isVisible]
   );
 
