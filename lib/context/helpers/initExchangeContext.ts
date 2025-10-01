@@ -1,5 +1,4 @@
 // File: lib/context/helpers/initExchangeContext.ts
-
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
 import { WalletAccount, ExchangeContext, STATUS } from '@/lib/structure';
@@ -15,10 +14,9 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  * Initializes the ExchangeContext by hydrating from localStorage and optionally
  * augmenting it with connected wallet metadata if `address` is provided.
  *
- * Important:
- * - This function does **not** create or mutate any panel state
- *   (`settings.mainPanelNode`, `settings.panelChildren`, or `settings.ui.nonMainVisible`).
- *   Panel state is initialized and persisted exclusively by the ExchangeProvider.
+ * 🚫 This function does **not** create or mutate any panel state
+ *     (`settings.mainPanelNode`, `settings.panelChildren`, or `settings.ui`).
+ *     Panel state is initialized and persisted exclusively by the ExchangeProvider.
  */
 export async function initExchangeContext(
   chainId: number,
@@ -30,10 +28,10 @@ export async function initExchangeContext(
   debugLog.log('🔍 Loading stored ExchangeContext...');
   const stored = loadLocalExchangeContext();
 
-  debugLog.log(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
+  debugLog.log(`🔗 Stored network.chainId = ${(stored as any)?.network?.chainId}`);
   const sanitized = sanitizeExchangeContext(stored, effectiveChainId);
-  debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
-  debugLog.log(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
+  debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${(sanitized as any)?.network?.chainId}`);
+  debugLog.log(`📥 Final network.chainId before hydration: ${(sanitized as any)?.network?.chainId}`);
 
   // 🔐 Wallet metadata enrichment (does not affect panel storage)
   if (isConnected && address) {
@@ -62,7 +60,8 @@ export async function initExchangeContext(
           logoURL: metadata.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
           balance,
         };
-        sanitized.accounts.connectedAccount = merged;
+        (sanitized as any).accounts = (sanitized as any).accounts ?? {};
+        (sanitized as any).accounts.connectedAccount = merged;
       } else {
         const fallback: WalletAccount = {
           address: address as Address,
@@ -75,7 +74,8 @@ export async function initExchangeContext(
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
           balance: 0n,
         };
-        sanitized.accounts.connectedAccount = fallback;
+        (sanitized as any).accounts = (sanitized as any).accounts ?? {};
+        (sanitized as any).accounts.connectedAccount = fallback;
       }
     } catch (err) {
       debugLog.error('⛔ Failed to load wallet.json:', err);
@@ -90,7 +90,8 @@ export async function initExchangeContext(
         logoURL: '/assets/miscellaneous/SkullAndBones.png',
         balance: 0n,
       };
-      sanitized.accounts.connectedAccount = fallback;
+      (sanitized as any).accounts = (sanitized as any).accounts ?? {};
+      (sanitized as any).accounts.connectedAccount = fallback;
     }
   }
 

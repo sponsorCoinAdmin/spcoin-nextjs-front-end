@@ -34,12 +34,6 @@ const AddSponsorshipButton = () => {
         openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
       }
 
-      // Debug trace (safe to keep)
-      console.log('[AddSponsorshipButton] toggled:', {
-        hidConfigButton: true,
-        showedRecipientPanel: true,
-        ensuredTradingVisible: true,
-      });
     } finally {
       busyRef.current = false;
     }

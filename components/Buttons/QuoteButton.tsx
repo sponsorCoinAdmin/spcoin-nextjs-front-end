@@ -12,7 +12,6 @@ const PlaceOrder = ({
     }
 
     const placeOrder = async () => {
-        console.log(`placing order transaction sendTransaction = ${sendTransaction}`);
         if (sendTransaction) {
             let receipt = await sendTransaction();
             alert("Transaction receipt : " + receipt)

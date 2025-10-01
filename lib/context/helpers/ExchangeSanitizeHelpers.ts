@@ -6,28 +6,59 @@ import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/t
 
 /** Legacy guards — we only use them to decide whether to preserve or drop. */
 function isPanelNodeArray(x: unknown): x is PanelNode[] {
-  return Array.isArray(x) && x.every(
-    (n) =>
-      n &&
-      typeof n === 'object' &&
-      typeof (n as any).panel === 'number' &&
-      typeof (n as any).visible === 'boolean' &&
-      Array.isArray((n as any).children ?? [])
+  return (
+    Array.isArray(x) &&
+    x.every(
+      (n) =>
+        n &&
+        typeof n === 'object' &&
+        typeof (n as any).panel === 'number' &&
+        typeof (n as any).visible === 'boolean' &&
+        Array.isArray((n as any).children ?? [])
+    )
   );
 }
 function isMainPanelNode(x: unknown): x is MainPanelNode {
-  return !!x &&
+  return (
+    !!x &&
     typeof x === 'object' &&
     typeof (x as any).panel === 'number' &&
     typeof (x as any).visible === 'boolean' &&
-    Array.isArray((x as any).children ?? []);
+    Array.isArray((x as any).children ?? [])
+  );
+}
+
+/** Names that must exist in legacy arrays; otherwise we seed defaults. */
+const REQUIRED_DEFAULT_NAMES = new Set<string>([
+  'TRADING_STATION_PANEL',
+  'SELL_SELECT_PANEL',
+  'BUY_SELECT_PANEL',
+  'SWAP_ARROW_BUTTON',
+  'PRICE_BUTTON',
+  'FEE_DISCLOSURE',
+]);
+
+function legacyPanelsContainRequiredDefaults(arr: PanelNode[]): boolean {
+  const names = new Set(
+    arr
+      .map((n: any) => n?.name)
+      .filter((v: unknown): v is string => typeof v === 'string' && v.length > 0)
+  );
+  if (names.size === 0) return false;
+  for (const req of REQUIRED_DEFAULT_NAMES) {
+    if (!names.has(req)) return false;
+  }
+  return true;
 }
 
 /**
  * Safely merges a raw (possibly partial or malformed) ExchangeContext object with defaults.
  * IMPORTANT:
- * - Do NOT seed/overwrite `settings.mainPanelNode` here. If present, preserve it as-is.
- *   Provider/init code is responsible for seeding/migrating defaults.
+ * - We DO ensure the final object is fully usable (no undefined branches).
+ * - For `settings.mainPanelNode`:
+ *   - If persisted tree is valid → keep it.
+ *   - If legacy array is present but missing required defaults → seed with provider defaults.
+ *   - If malformed → seed with provider defaults.
  */
 export const sanitizeExchangeContext = (
   raw: { tradeData?: Partial<TradeData> } & Partial<ExchangeContext> | null,
@@ -36,24 +67,37 @@ export const sanitizeExchangeContext = (
   const defaultContext = getInitialContext(chainId);
 
   if (!raw) {
-    // No raw context → return defaults (which already include settings.mainPanelNode).
+    // No raw context → return defaults (includes settings.mainPanelNode).
     return { ...defaultContext };
   }
 
-  // ----- SETTINGS: shallow merge defaults <- raw.settings; preserve mainPanelNode if present.
+  // ----- SETTINGS: shallow merge defaults <- raw.settings
   const prevSettings: any = (raw as any).settings ?? {};
   const sanitizedSettings: any = {
     ...defaultContext.settings,
     ...prevSettings,
   };
 
- // Preserve persisted panel state if it looks like either the new tree or the old array
-  const mpn = prevSettings.mainPanelNode;
-  if (isMainPanelNode(mpn) || isPanelNodeArray(mpn)) {
-    sanitizedSettings.mainPanelNode = mpn;
-  } else if (typeof mpn !== 'undefined') {
-    // Malformed → drop; provider will seed/migrate later
-    delete sanitizedSettings.mainPanelNode;
+  // Handle mainPanelNode carefully
+  if ('mainPanelNode' in prevSettings) {
+    const mpn = prevSettings.mainPanelNode;
+
+    if (isMainPanelNode(mpn)) {
+      // New tree shape → keep as-is.
+      sanitizedSettings.mainPanelNode = mpn;
+    } else if (isPanelNodeArray(mpn)) {
+      // Legacy array → keep only if it already contains the required defaults.
+      if (legacyPanelsContainRequiredDefaults(mpn)) {
+        sanitizedSettings.mainPanelNode = mpn;
+      } else {
+        // Incomplete legacy → seed provider defaults immediately.
+        sanitizedSettings.mainPanelNode = defaultContext.settings.mainPanelNode;
+      }
+    } else {
+      // Malformed → seed provider defaults.
+      sanitizedSettings.mainPanelNode = defaultContext.settings.mainPanelNode;
+    }
+    // If raw.settings didn’t have mainPanelNode at all, we keep whatever came from defaults above.
   }
 
   // ----- NETWORK

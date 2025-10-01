@@ -3,7 +3,7 @@
 
 import { useCallback } from 'react';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 export function usePanelControls() {

@@ -3,12 +3,9 @@
 
 import { useCallback } from 'react';
 import { usePageState } from '@/lib/context/PageStateContext';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { useExchangeContext } from '@/lib/context/hooks';
 
 export function useExchangePageState() {
   const { state, setState } = usePageState();
-  const { exchangeContext } = useExchangeContext();
 
   const pageAny: any = state.page?.exchangePage ?? {};
   const expandContext: boolean = pageAny.expandContext ?? false;
@@ -42,9 +39,8 @@ export function useExchangePageState() {
     }));
   }, [setState]);
 
-  const logContext = useCallback(() => {
-    console.log('📦 Log Context (tab):', stringifyBigInt(exchangeContext));
-  }, [exchangeContext]);
+  // No-op logger to preserve API without console output
+  const logContext = useCallback(() => {}, []);
 
   return { expandContext, setExpandContext, hideContext, logContext };
 }

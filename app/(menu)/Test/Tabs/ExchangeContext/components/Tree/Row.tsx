@@ -11,7 +11,7 @@ type Props = {
   clickable?: boolean;
   onClick?: () => void;
   dense?: boolean;          // compact line-height for dense trees
-  path?: string;            // optional, for debug logs
+  path?: string;            // optional, for dev tooling
 };
 
 const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, path }) => {
@@ -26,10 +26,9 @@ const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, pa
   const handleActivate = useCallback(
     (e?: React.MouseEvent | React.KeyboardEvent) => {
       e?.stopPropagation(); // stop at bubble so it won't hit parent rows
-      console.log('[Row] activate', { text, path, depth, open, clickable });
       if (clickable) onClick?.();
     },
-    [text, path, depth, open, clickable, onClick]
+    [clickable, onClick]
   );
 
   // Keyboard support
@@ -40,23 +39,6 @@ const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, pa
       handleActivate(e);
     }
   };
-
-  // Capture phase: **log only**, do NOT stop propagation here
-  const onCapture = useCallback(
-    (e: React.MouseEvent) => {
-      console.log('[Row] click CAPTURE', {
-        text,
-        path,
-        depth,
-        open,
-        clickable,
-        target: (e.target as HTMLElement)?.tagName,
-        currentTarget: (e.currentTarget as HTMLElement)?.tagName,
-      });
-      // DO NOT e.stopPropagation() here — it blocks target onClick handlers
-    },
-    [text, path, depth, open, clickable]
-  );
 
   const marker =
     open === undefined ? (
@@ -85,7 +67,7 @@ const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, pa
     );
 
   return (
-    <div className={`font-mono ${layout} ${colorClass} m-0 p-0`} onClickCapture={onCapture}>
+    <div className={`font-mono ${layout} ${colorClass} m-0 p-0`}>
       {/* Preserve spaces only for indent, not the whole row */}
       <span className="whitespace-pre select-none">{indent}</span>
       <span

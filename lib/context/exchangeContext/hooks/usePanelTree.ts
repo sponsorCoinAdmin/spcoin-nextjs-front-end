@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -73,12 +73,21 @@ function setVisible(list: PanelEntry[], panel: SP_COIN_DISPLAY, visible: boolean
   return next;
 }
 
+/** Ensure all required radio ids exist in the flat list (hidden by default). */
+function ensurePresent(list: PanelEntry[], required: SP_COIN_DISPLAY[]): PanelEntry[] {
+  const have = new Set(list.map((e) => e.panel));
+  const adds = required
+    .filter((id) => !have.has(id))
+    .map((id) => ({ panel: id, visible: false } as PanelEntry));
+  return adds.length ? [...list, ...adds] : list;
+}
+
 /* --------------------------------- hook --------------------------------- */
 
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  // Always operate on a flat list
+  // Always operate on a flat list from state
   const list = useMemo<PanelEntry[]>(
     () => readFlatList(exchangeContext),
     [exchangeContext]
@@ -87,32 +96,46 @@ export function usePanelTree() {
   // Fast lookup for visibility checks
   const visMap = useMemo(() => toMap(list), [list]);
 
-  // Keep the radio set limited to ids that exist in the flat list
-  const radioRootIds = useMemo<SP_COIN_DISPLAY[]>(
-    () =>
-      list
-        .map((e) => e.panel)
-        .filter((id): id is SP_COIN_DISPLAY => MAIN_OVERLAY_GROUP.includes(id)),
-    [list]
+  // Canonical radio ids come from the registry-backed constant
+  const radioAllIds = MAIN_OVERLAY_GROUP as SP_COIN_DISPLAY[];
+
+  // Among the current list, which radios are already present?
+  const radioPresentIds = useMemo<SP_COIN_DISPLAY[]>(
+    () => list.map((e) => e.panel).filter((id): id is SP_COIN_DISPLAY => radioAllIds.includes(id)),
+    [list, radioAllIds]
   );
 
-  // One-time reconciliation if multiple radio overlays are visible
+  // If multiple radio overlays are visible, collapse to the first.
+  // Also auto-append any missing radio ids (hidden) so new overlays migrate into old local states.
   useEffect(() => {
-    if (!list.length || !radioRootIds.length) return;
-    const vis = radioRootIds.filter((id) => list.find((e) => e.panel === id && e.visible));
-    if (vis.length <= 1) return;
+    if (!radioAllIds.length) return;
 
-    debugLog.log('reconcile: multiple radio visible → collapsing to first');
     setExchangeContext(
       (prev) => {
         const flat = readFlatList(prev);
-        const next = reconcileRadio(flat, radioRootIds);
+
+        // 1) Ensure all radio ids are present (hidden by default)
+        const withAll = ensurePresent(flat, radioAllIds);
+
+        // 2) Reconcile if multiple radios are visible
+        const currentlyVisible = radioAllIds.filter((id) =>
+          withAll.find((e) => e.panel === id && e.visible)
+        );
+        if (currentlyVisible.length <= 1) {
+          // nothing to reconcile, but we may still have appended missing radios
+          if (withAll === flat) return prev; // no-op
+          debugLog.log('migrate: appended missing radio ids (hidden)');
+          return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: withAll } };
+        }
+
+        debugLog.log('reconcile: multiple radio visible → collapsing to first');
+        const next = reconcileRadio(withAll, radioAllIds);
         return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
       },
-      'usePanelTree:reconcile'
+      'usePanelTree:reconcile+migrate'
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioRootIds.join('|'), list.length]);
+  }, [radioAllIds.join('|')]);
 
   /* ------------------------------- queries ------------------------------- */
 
@@ -134,12 +157,15 @@ export function usePanelTree() {
         (prev) => {
           const flat = readFlatList(prev);
 
-          // Radio overlays: exclusive selection among radio roots that exist
-          if (radioRootIds.includes(panel)) {
-            const next = flat.map((e) =>
-              radioRootIds.includes(e.panel) ? { ...e, visible: e.panel === panel } : e
+          // For radio overlays: ensure all radios exist, then exclusively select this one
+          if (radioAllIds.includes(panel)) {
+            const withAll = ensurePresent(flat, radioAllIds);
+            const next = withAll.map((e) =>
+              radioAllIds.includes(e.panel) ? { ...e, visible: e.panel === panel } : e
             );
             debugLog.log('open:radio', { panel });
+            // If nothing changed, avoid write
+            if (JSON.stringify(next) === JSON.stringify(flat)) return prev;
             return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
           }
 
@@ -155,7 +181,7 @@ export function usePanelTree() {
         'usePanelTree:open'
       );
     },
-    [setExchangeContext, radioRootIds]
+    [setExchangeContext, radioAllIds]
   );
 
   const closePanel = useCallback(
@@ -183,17 +209,18 @@ export function usePanelTree() {
   /* ------------------------------- derived -------------------------------- */
 
   const activeMainOverlay = useMemo<SP_COIN_DISPLAY>(() => {
-    for (const id of radioRootIds) {
-      if (list.find((e) => e.panel === id)?.visible) return id;
+    // Prefer the first radio id that is visible, else default to TRADING
+    for (const id of radioAllIds) {
+      if (list.find((e) => e.panel === id)?.visible) return id as SP_COIN_DISPLAY;
     }
     return TRADING;
-  }, [list, radioRootIds]);
+  }, [list, radioAllIds]);
 
-  // Use updated enum names (scroll panels)
+  // Token “scroll/list” overlays visible?
   const isTokenScrollVisible = useMemo(
     () =>
-      isVisible(SP_COIN_DISPLAY.BUY_SELECT_SCROLL_PANEL) ||
-      isVisible(SP_COIN_DISPLAY.SELL_SELECT_SCROLL_PANEL),
+      isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST) ||
+      isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST),
     [isVisible]
   );
 

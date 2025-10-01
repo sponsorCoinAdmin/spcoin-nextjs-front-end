@@ -30,18 +30,12 @@ const TreeView: React.FC<Props> = ({
     return label === 'settings' ? 'rest.settings' : `rest.${label}`;
   }, [label]);
 
-  // Lightweight logger wrapper — leaves the core logic untouched.
-  const onTogglePathLogged = useCallback(
+  // Clean passthrough without console logging
+  const onTogglePathClean = useCallback(
     (path: string) => {
-      // eslint-disable-next-line no-console
-      console.log('[TreeView] toggle request', {
-        rootLabel: label,
-        rootPath,
-        path,
-      });
       onTogglePath(path);
     },
-    [onTogglePath, label, rootPath]
+    [onTogglePath]
   );
 
   return (
@@ -51,7 +45,7 @@ const TreeView: React.FC<Props> = ({
       depth={rootDepth}
       path={rootPath}
       exp={exp}
-      togglePath={onTogglePathLogged}
+      togglePath={onTogglePathClean}
       enumRegistry={enumRegistry}
       dense={dense}
     />

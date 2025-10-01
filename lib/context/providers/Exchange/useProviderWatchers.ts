@@ -9,8 +9,7 @@ import type {
 } from '@/lib/structure';
 import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 /* ------------------------------- utils -------------------------------- */
 
@@ -21,9 +20,12 @@ const shallowEqual = <T extends Record<string, any>>(a?: T, b?: T) => {
   const ak = Object.keys(a);
   const bk = Object.keys(b);
   if (ak.length !== bk.length) return false;
-  for (const k of ak) if (a[k] !== b[k]) return false;
+  for (const k of ak) if ((a as any)[k] !== (b as any)[k]) return false;
   return true;
 };
+
+const isValidChainId = (n: unknown): n is number =>
+  typeof n === 'number' && Number.isInteger(n) && n > 0;
 
 function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
@@ -31,14 +33,12 @@ function clone<T>(o: T): T {
 
 /* ----------------------- Flat panel visibility helpers ---------------------- */
 
-/** Any of the given IDs visible within the FLAT mainPanelNode array? */
 function anyVisible(panels: MainPanelNode, ids: SP_COIN_DISPLAY[]): boolean {
-  return panels.some((n) => ids.includes(n.panel as SP_COIN_DISPLAY) && !!n.visible);
+  return panels?.some?.((n) => ids.includes(n.panel as SP_COIN_DISPLAY) && !!n.visible) ?? false;
 }
 
-/** Radio-toggle across MAIN_OVERLAY_GROUP in the FLAT array, enabling only targetId. */
 function setOverlayVisible(panels: MainPanelNode, targetId: SP_COIN_DISPLAY): MainPanelNode {
-  const next = clone(panels);
+  const next = clone(panels ?? []);
   for (const n of next) {
     if (MAIN_OVERLAY_GROUP.includes(n.panel as SP_COIN_DISPLAY)) {
       n.visible = (n.panel as SP_COIN_DISPLAY) === targetId;
@@ -57,10 +57,8 @@ type SetExchange = (
 type Params = {
   contextState?: ExchangeContextTypeOnly;
   setExchangeContext: SetExchange;
-  /** Wallet (wagmi) chain id — when connected */
-  wagmiChainId?: number;
-  /** App-first chain id (preferred source of truth) */
-  appChainId?: number;
+  wagmiChainId?: number; // wallet chain id
+  appChainId?: number;   // UI/app-preferred chain id
   isConnected: boolean;
   address?: string | undefined;
   accountStatus?: string;
@@ -77,161 +75,119 @@ export function useProviderWatchers({
   address,
   accountStatus,
 }: Params) {
-  // previous snapshots for change detection
   const prevWagmiChainRef = useRef<number | undefined>();
   const prevCtxChainRef = useRef<number | undefined>();
   const prevAccountRef = useRef<{ address?: string; status?: string; connected?: boolean }>();
   const prevTokensRef = useRef<{ sell?: string; buy?: string }>();
 
-  // first-run guards so we don't clear tokens on initial hydration
   const isFirstWagmiRunRef = useRef(true);
   const isFirstCtxRunRef = useRef(true);
 
-  // quick debug helper that always uses stringifyBigInt
-  const dbg = (msg: string, data?: any) => {
-    // keep this lightweight—your global logger prints a header already
-    if (data !== undefined) {
-      // eslint-disable-next-line no-console
-      console.log(`[🛠️ watchers] LOG: ${msg}`, stringifyBigInt(data));
-    } else {
-      // eslint-disable-next-line no-console
-      console.log(`[🛠️ watchers] LOG: ${msg}`);
-    }
-  };
-
-  // MOUNT snapshots (helps verify whether tokens are present right after restore)
+  /* ---------------- wagmi chain watcher (wallet-driven) ----------------
+     Wallet is the single source of truth while connected.
+  ---------------------------------------------------------------------- */
   useEffect(() => {
     if (!contextState) return;
-    dbg('mount:snapshot');
-    dbg('snapshot:context', {
-      settings: contextState.settings,
-      network: contextState.network,
-      accounts: contextState.accounts,
-      tradeData: contextState.tradeData,
-    });
-    dbg('snapshot:tradeData', contextState.tradeData);
-    dbg('snapshot:settings', contextState.settings);
-  }, [contextState]);
-
-  /* ---------------- wagmi chain watcher (wallet-driven) ---------------- */
-
-  useEffect(() => {
-    dbg('effect:wagmiChain', { isConnected, wagmiChainId });
-
-    if (!contextState) return;
-
-    // Skip if wallet not connected or chainId not ready.
-    if (!isConnected || wagmiChainId == null) {
-      dbg('wagmiChain: not connected/missing chainId → skip');
-      return;
-    }
+    if (!isConnected) return;
+    if (!isValidChainId(wagmiChainId)) return;
 
     const prevWagmi = prevWagmiChainRef.current;
-    const nextWagmi = wagmiChainId;
+    const nextWagmi = wagmiChainId!;
 
-    // First run: record only, do not clear tokens
+    // First run → record only, don't clear tokens
     if (isFirstWagmiRunRef.current) {
       isFirstWagmiRunRef.current = false;
       prevWagmiChainRef.current = nextWagmi;
-      dbg('wagmiChain:init-skip', { nextWagmi });
+      // Ensure context network matches wallet on first connect (no token clears)
+      setExchangeContext((prevCtx) => {
+        const currentCtxChain = prevCtx.network?.chainId;
+        if (currentCtxChain === nextWagmi) return prevCtx;
+        const next = structuredClone(prevCtx);
+        next.network = resolveNetworkElement(nextWagmi, next.network);
+        return next;
+      }, 'watcher:wagmiChain:firstSync');
       return;
     }
 
-    if (prevWagmi === nextWagmi) {
-      dbg('wagmiChain: no change', { prevWagmi, nextWagmi });
-      return;
-    }
-
-    dbg('wagmiChain:apply', { prevWagmi, nextWagmi });
+    if (prevWagmi === nextWagmi) return;
 
     setExchangeContext((prevCtx) => {
-      const next = structuredClone(prevCtx);
+      const currentCtxChain = prevCtx.network?.chainId;
+      if (currentCtxChain === nextWagmi) return prevCtx;
 
-      const currentCtxChain = next.network?.chainId;
+      const next = structuredClone(prevCtx);
       next.network = resolveNetworkElement(nextWagmi, next.network);
 
-      // Only clear tokens when the effective chain actually changes
+      // Clear selected tokens only if the effective chain actually changed
       if (currentCtxChain !== nextWagmi) {
-        next.tradeData.sellTokenContract = undefined;
-        next.tradeData.buyTokenContract = undefined;
+        if (next.tradeData?.sellTokenContract) next.tradeData.sellTokenContract = undefined as any;
+        if (next.tradeData?.buyTokenContract) next.tradeData.buyTokenContract = undefined as any;
       }
 
-      dbg('wagmiChain:post-apply', {
-        network: next.network,
-        tradeData: next.tradeData,
-      });
       return next;
     }, 'watcher:wagmiChain');
 
     prevWagmiChainRef.current = nextWagmi;
     prevTokensRef.current = { sell: undefined, buy: undefined };
-  }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
+  }, [isConnected, wagmiChainId, setExchangeContext, contextState?.network?.chainId]);
 
-  /* --------------- context/app chain watcher (UI/local) ---------------- */
-
+  /* --------------- context/app chain watcher (UI/local) ----------------
+     ONLY acts when wallet is disconnected. Ignores invalid (0/undefined).
+  ---------------------------------------------------------------------- */
   useEffect(() => {
-    // prefer appChainId, fall back to contextState.network?.chainId (may be already hydrated from storage)
-    const ctxChain =
-      (typeof appChainId === 'number' ? appChainId : contextState?.network?.chainId);
-
-    dbg('effect:ctxChain', { appChainId, ctxChainId: contextState?.network?.chainId });
-
     if (!contextState) return;
-    if (ctxChain == null) return; // nothing to do yet
 
-    // First run: record only, do not clear tokens
+    // If wallet is connected, do NOT let UI/app chain fight the wallet
+    if (isConnected) {
+      // Just update the ref to avoid treating later transitions as "changes"
+      if (isValidChainId(appChainId)) prevCtxChainRef.current = appChainId!;
+      return;
+    }
+
+    // Wallet disconnected → UI/app controls chain
+    const ctxChain = isValidChainId(appChainId)
+      ? appChainId!
+      : (isValidChainId(contextState?.network?.chainId) ? contextState!.network!.chainId! : undefined);
+
+    if (!isValidChainId(ctxChain)) return;
+
     if (isFirstCtxRunRef.current) {
       isFirstCtxRunRef.current = false;
       prevCtxChainRef.current = ctxChain;
-      dbg('ctxChain:init-skip', { ctxChain });
+      // Ensure context uses the appChain on first hydration while disconnected (no token clears)
+      setExchangeContext((prevCtx) => {
+        if (prevCtx.network?.chainId === ctxChain) return prevCtx;
+        const next = structuredClone(prevCtx);
+        next.network = resolveNetworkElement(ctxChain, next.network);
+        return next;
+      }, 'watcher:contextChain:firstSync');
       return;
     }
 
     const prevCtxChain = prevCtxChainRef.current ?? ctxChain;
-    if (ctxChain === prevCtxChain) {
-      dbg('ctxChain: no change');
-      return;
-    }
-
-    // Treat as "local" change only when wallet is disconnected, or when it disagrees with wallet
-    const isLocalChange = !isConnected || (wagmiChainId != null && ctxChain !== wagmiChainId);
-    if (!isLocalChange) {
-      // Wallet owns the chain; just record and bail
-      prevCtxChainRef.current = ctxChain;
-      dbg('ctxChain: remote (wallet) change → skip local apply', { ctxChain, wagmiChainId });
-      return;
-    }
-
-    dbg('ctxChain:apply', { prevCtxChain, ctxChain });
+    if (ctxChain === prevCtxChain) return;
 
     setExchangeContext((prevCtx) => {
-      const next = structuredClone(prevCtx);
+      const currentCtxChain = prevCtx.network?.chainId;
+      if (currentCtxChain === ctxChain) return prevCtx;
 
-      const currentCtxChain = next.network?.chainId;
+      const next = structuredClone(prevCtx);
       next.network = resolveNetworkElement(ctxChain, next.network);
 
-      // Only clear tokens when the effective chain actually changes
       if (currentCtxChain !== ctxChain) {
-        next.tradeData.sellTokenContract = undefined;
-        next.tradeData.buyTokenContract = undefined;
+        if (next.tradeData?.sellTokenContract) next.tradeData.sellTokenContract = undefined as any;
+        if (next.tradeData?.buyTokenContract) next.tradeData.buyTokenContract = undefined as any;
       }
 
-      dbg('ctxChain:post-apply', {
-        network: next.network,
-        tradeData: next.tradeData,
-      });
       return next;
     }, 'watcher:contextChain');
 
     prevCtxChainRef.current = ctxChain;
     prevTokensRef.current = { sell: undefined, buy: undefined };
-  }, [appChainId, contextState, isConnected, wagmiChainId, setExchangeContext]);
+  }, [isConnected, appChainId, setExchangeContext, contextState?.network?.chainId]);
 
   /* ------------------- account watcher (balances/addr) ------------------ */
-
   useEffect(() => {
-    dbg('effect:account', { address, accountStatus, isConnected });
-
     if (!contextState) return;
 
     const prev = prevAccountRef.current;
@@ -246,62 +202,50 @@ export function useProviderWatchers({
       const next = structuredClone(prevCtx);
 
       if (nextSlice.address && isConnected) {
-        // Wallet connected → hydrate connectedAccount with real address
-        const current = next.accounts.connectedAccount ?? ({} as WalletAccount);
+        const current = next.accounts?.connectedAccount ?? ({} as WalletAccount);
+        next.accounts = next.accounts ?? ({} as any);
         next.accounts.connectedAccount = {
           ...current,
           address: nextSlice.address as Address,
         };
       } else {
-        // Wallet disconnected → clear connectedAccount
+        next.accounts = next.accounts ?? ({} as any);
         next.accounts.connectedAccount = undefined as any;
       }
 
-      // When account changes, clear cached balances on selected tokens
-      if (next.tradeData.sellTokenContract) next.tradeData.sellTokenContract.balance = 0n;
-      if (next.tradeData.buyTokenContract) next.tradeData.buyTokenContract.balance = 0n;
-
-      dbg('account:apply', {
-        connectedAccount: next.accounts.connectedAccount
-          ? { address: next.accounts.connectedAccount.address }
-          : undefined,
-        tradeData: next.tradeData,
-      });
+      // Clear cached balances on selected tokens (guarded)
+      if (next.tradeData?.sellTokenContract) next.tradeData.sellTokenContract.balance = 0n;
+      if (next.tradeData?.buyTokenContract) next.tradeData.buyTokenContract.balance = 0n;
 
       return next;
     }, 'watcher:account');
 
     prevAccountRef.current = nextSlice;
-  }, [address, accountStatus, isConnected, contextState, setExchangeContext]);
+  }, [address, accountStatus, isConnected, setExchangeContext, contextState?.tradeData]);
 
   /* ---------- tokens watcher (dedupe + auto-close selection UI) --------- */
-
   useEffect(() => {
-    dbg('effect:tokens');
-
     if (!contextState) return;
 
-    const sellAddr = lower(contextState.tradeData.sellTokenContract?.address);
-    const buyAddr = lower(contextState.tradeData.buyTokenContract?.address);
+    const sellAddr = lower(contextState?.tradeData?.sellTokenContract?.address);
+    const buyAddr  = lower(contextState?.tradeData?.buyTokenContract?.address);
 
     const prev = prevTokensRef.current;
     const nextSlice = { sell: sellAddr, buy: buyAddr };
-    if (shallowEqual(prev, nextSlice)) {
-      dbg('tokens:no-change', {});
-      return;
-    }
+    if (shallowEqual(prev, nextSlice)) return;
 
-    // A) Duplicate prevention
+    // A) Duplicate prevention (same token on both sides)
     if (sellAddr && buyAddr && sellAddr === buyAddr) {
       setExchangeContext((prevCtx) => {
         const next = structuredClone(prevCtx);
-        next.tradeData.buyTokenContract = undefined;
+        if (!next.tradeData) next.tradeData = {} as any;
+        next.tradeData.buyTokenContract = undefined as any;
         return next;
       }, 'watcher:tokens:dedupe');
     }
 
     // B) Auto-close selection overlay → switch to TRADING when a token is committed
-    const root = contextState.settings?.mainPanelNode as MainPanelNode | undefined;
+    const root = contextState?.settings?.mainPanelNode as MainPanelNode | undefined;
     const selectOpen = root
       ? anyVisible(root, [
           SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,
@@ -309,25 +253,25 @@ export function useProviderWatchers({
         ])
       : false;
 
-    dbg('tokens:state', { sellAddr, buyAddr, selectOpen });
-
     if ((sellAddr || buyAddr) && selectOpen && root) {
       setExchangeContext((prevCtx) => {
         const next = structuredClone(prevCtx);
-        next.settings.mainPanelNode = setOverlayVisible(
-          next.settings.mainPanelNode as MainPanelNode,
-          SP_COIN_DISPLAY.TRADING_STATION_PANEL
-        );
+        if (next.settings?.mainPanelNode) {
+          next.settings.mainPanelNode = setOverlayVisible(
+            next.settings.mainPanelNode as MainPanelNode,
+            SP_COIN_DISPLAY.TRADING_STATION_PANEL
+          );
+        }
         return next;
       }, 'watcher:tokens:autoClose');
     }
 
     prevTokensRef.current = nextSlice;
   }, [
-    contextState,
-    contextState?.tradeData.sellTokenContract?.address,
-    contextState?.tradeData.buyTokenContract?.address,
-    contextState?.settings?.mainPanelNode, // re-run when panel array changes
     setExchangeContext,
+    contextState?.tradeData?.sellTokenContract?.address,
+    contextState?.tradeData?.buyTokenContract?.address,
+    contextState?.settings?.mainPanelNode,
+    contextState,
   ]);
 }

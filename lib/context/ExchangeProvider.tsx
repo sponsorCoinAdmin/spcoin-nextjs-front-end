@@ -4,7 +4,7 @@
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
-import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
+import { saveLocalExchangeContext } from '@/lib/context/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
@@ -20,12 +20,10 @@ import {
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
-// NOTE: The constant is exported as `defaultMainPanelNode`; we alias it locally to keep your identifier.
-import { defaultMainPanelNode as defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-
 import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { loadInitialPanelNodeDefaults } from '../structure/exchangeContext/defaults/loadInitialPanelNodeDefaults';
 
 /* ---------------------------- Types & Context API --------------------------- */
 
@@ -55,6 +53,10 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 
 /* --------------------------------- Helpers -------------------------------- */
 
+const log = (...args: any[]) => console.log('[ExchangeProvider]', ...args);
+const warn = (...args: any[]) => console.warn('[ExchangeProvider]', ...args);
+const error = (...args: any[]) => console.error('[ExchangeProvider]', ...args);
+
 // Always return a *number* for chainId (0 == "unset")
 const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   connected: !!n?.connected,
@@ -67,8 +69,10 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
 });
 
 // Flat-array guard (children may exist in-memory but are not persisted)
+// ✅ Important: require NON-EMPTY array, otherwise we’ll seed defaults
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
+  x.length > 0 &&
   x.every(
     (n) =>
       n &&
@@ -101,6 +105,15 @@ const normalizeForPersistence = (panels: PanelNode[]): MainPanelNode =>
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
+const samplePanels = (arr: PanelNode[] | undefined, limit = 6) =>
+  Array.isArray(arr)
+    ? arr.slice(0, limit).map((n) => ({
+        panel: n.panel,
+        name: n.name,
+        visible: n.visible,
+      }))
+    : arr;
+
 /* --------------------------------- Provider -------------------------------- */
 
 export function ExchangeProvider({ children }: { children: React.ReactNode }) {
@@ -112,18 +125,30 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
-  // Persist + update (mirror to localStorage every change)
+  // Persist + update (mirror to localStorage on change)
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
-    _hookName = 'unknown'
+    hookName = 'unknown'
   ) => {
     setContextState((prev) => {
-      if (!prev) return prev;
+      if (!prev) {
+        warn('setExchangeContext called before init — ignoring. hook:', hookName);
+        return prev;
+      }
       const nextBase = updater(prev);
-      if (!nextBase) return prev;
+      if (!nextBase) {
+        warn('Updater returned falsy; keeping previous state. hook:', hookName);
+        return prev;
+      }
+
+      // ⬇️ Compare first; persist only when changed
+      const changed = stringifyBigInt(prev) !== stringifyBigInt(nextBase);
+      if (!changed) {
+        log('no state change after updater (hook:', hookName, ')');
+        return prev;
+      }
 
       try {
-        // Normalize panels to FLAT before persisting
         const normalized = clone(nextBase);
         if (Array.isArray(normalized?.settings?.mainPanelNode)) {
           normalized.settings.mainPanelNode = normalizeForPersistence(
@@ -131,11 +156,20 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
           );
         }
         saveLocalExchangeContext(normalized);
-      } catch {
-        /* ignore persist errors */
+        log(
+          'persisted state (hook:',
+          hookName,
+          ') mainPanelNode size =',
+          Array.isArray(normalized?.settings?.mainPanelNode)
+            ? normalized.settings.mainPanelNode.length
+            : 'N/A'
+        );
+      } catch (e) {
+        error('persist failed (hook:', hookName, ')', e);
       }
 
-      return stringifyBigInt(prev) === stringifyBigInt(nextBase) ? prev : nextBase;
+      log('state updated (hook:', hookName, ')');
+      return nextBase;
     });
   };
 
@@ -145,16 +179,46 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     hasInitializedRef.current = true;
 
     (async () => {
-      const base = await initExchangeContext(wagmiChainId, isConnected, address);
+      log('init start', {
+        wagmiChainId,
+        isConnected,
+        address,
+      });
+
+      let base: any;
+      try {
+        base = await initExchangeContext(wagmiChainId, isConnected, address);
+      } catch (e) {
+        error('initExchangeContext threw', e);
+        base = {};
+      }
+
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // Accept only FLAT arrays; otherwise fall back to defaults
+      log('post-init: storedPanels shape', {
+        isArray: Array.isArray(storedPanels),
+        length: Array.isArray(storedPanels) ? storedPanels.length : undefined,
+        passesGuard: isMainPanels(storedPanels),
+        sample: samplePanels(storedPanels as any),
+      });
+
+      // Accept only NON-EMPTY FLAT arrays; otherwise fall back to defaults
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
         flatPanels = ensurePanelNamesInMemory(storedPanels);
+        log('using stored panels', {
+          count: flatPanels.length,
+          sample: samplePanels(flatPanels),
+        });
       } else {
-        flatPanels = ensurePanelNamesInMemory(clone(defaultMainPanels as unknown as PanelNode[]));
+        const seeded = loadInitialPanelNodeDefaults();
+        flatPanels = ensurePanelNamesInMemory(clone(seeded as unknown as PanelNode[]));
+        log('seeding defaults (no/empty storedPanels)', {
+          count: flatPanels.length,
+          visibleTrue: flatPanels.filter((p) => p.visible).map((p) => p.name),
+          sample: samplePanels(flatPanels),
+        });
       }
 
       // 🔧 Reconcile network against current Wagmi *before* persisting (kills the flicker)
@@ -171,14 +235,22 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       try {
         saveLocalExchangeContext(base);
-      } catch {
-        /* ignore persist errors */
+        log('persisted initial state', {
+          persistedCount: (base as any).settings?.mainPanelNode?.length,
+        });
+      } catch (e) {
+        error('persist initial state failed', e);
       }
 
       // Keep in-memory version with ensured names; children (if any) can exist only in memory
       (base as any).settings.mainPanelNode = flatPanels;
+      log('in-memory state prepared', {
+        inMemoryCount: (base as any).settings?.mainPanelNode?.length,
+        visibleTrue: flatPanels.filter((p) => p.visible).map((p) => p.name),
+      });
 
       setContextState(base as ExchangeContextTypeOnly);
+      log('context initialized');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -220,11 +292,15 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         connected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
 
       const noChange = net.connected === connected && net.chainId === desiredChainId;
-      if (noChange) return prev;
+      if (noChange) {
+        log('network sync: no change');
+        return prev;
+      }
 
       net.connected = connected;
       net.chainId = desiredChainId;
       next.network = net;
+      log('network sync: applied', { connected, chainId: desiredChainId });
       return next;
     }, 'provider:syncNetworkAndWallet');
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
@@ -236,14 +312,21 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
     setExchangeContext((prev) => {
       const prevApp = prev.network?.appChainId ?? 0;
-      if (prevApp === currentAppId) return prev;
+      if (prevApp === currentAppId) {
+        log('appChain hydrate: no change', { appChainId: currentAppId });
+        return prev;
+      }
       const next = clone(prev);
       next.network = deriveNetworkFromApp(currentAppId, next.network);
+      log('appChain hydrate: applied', { prevApp, nextApp: currentAppId });
       return next;
     }, 'provider:hydrateFromAppChain');
   }, [contextState?.network?.appChainId, contextState, setExchangeContext]);
 
-  if (!contextState) return null;
+  if (!contextState) {
+    log('render gate: contextState not ready yet');
+    return null;
+  }
 
   return (
     <ExchangeContextState.Provider

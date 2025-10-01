@@ -25,7 +25,7 @@ const PAGES_KEY = 'test_exchangeContext_pages';
 const SHOW_SPONSOR_ROW = false;
 
 // ────────────────────────────────────────────────────────────────────────────
-// Pretty console helpers
+// Pretty helpers (used for the window.__dumpPanels dev helper)
 function flatForConsole(flat?: PanelNode[]) {
   if (!Array.isArray(flat)) return flat;
   return flat.map((n) => ({
@@ -104,21 +104,15 @@ export default function ExchangeContextTab() {
   // Add `name` string to every top-level node (and its direct children)
   const treeWithNames = useMemo(() => addNamesShallow(treeForDisplay), [treeForDisplay]);
 
-  // Console dump (original + derived)
+  // Dev helper on window without console output
   useEffect(() => {
     const flat = (exchangeContext as any)?.settings?.mainPanelNode as PanelNode[] | undefined;
-    console.groupCollapsed('%c[ExchangeContextTab] Panel State Dump', 'color:#0bf');
-    console.log('Flat mainPanelNode:', flatForConsole(flat));
-    console.log('Virtual tree (derived):', virtualForConsole(treeWithNames));
-    console.log('Orphans (in state, not in schema):', orphans.map((id) => `${SP[id]} (#${id})`));
-    console.log('Missing (in schema, not in state):', missing.map((id) => `${SP[id]} (#${id})`));
     (window as any).__dumpPanels = () => ({
       flat: flatForConsole(flat),
       virtual: virtualForConsole(treeWithNames),
       orphans: orphans.map((id) => `${SP[id]} (#${id})`),
       missing: missing.map((id) => `${SP[id]} (#${id})`),
     });
-    console.groupEnd();
   }, [exchangeContext, treeWithNames, orphans, missing]);
 
   // Show/Hide GUI toggle — hydrate synchronously
@@ -150,29 +144,12 @@ export default function ExchangeContextTab() {
     [exchangeContext, treeWithNames]
   );
 
-  // 🔍 Keep detailed click-debugging; do not change toggle logic
+  // Clean onTogglePath handler (no console)
   const onTogglePathLogged = useCallback(
     (path: string) => {
-      console.log('[TreeView] toggle START');
-      console.log('  raw path:', path);
-      const parts = path.split('.');
-      console.log('  raw parts:', parts);
-
-      const before = (ui as any)?.exp?.[path];
-      console.log('  ui.exp BEFORE (has key?):', !!before, 'value:', before);
-
       togglePath(path);
-
-      setTimeout(() => {
-        const after = (ui as any)?.exp?.[path];
-        console.log('  ui.exp AFTER (raw key):', after);
-
-        const sampleKeys = Object.keys((ui as any)?.exp ?? {}).slice(0, 20);
-        console.log('  ui.exp keys sample:', sampleKeys);
-        console.log('[TreeView] toggle END');
-      }, 0);
     },
-    [togglePath, ui]
+    [togglePath]
   );
 
   return (

@@ -1,62 +1,45 @@
 // File: lib/context/helpers/loadLocalExchangeContext.ts
-'use client';
-
 import { ExchangeContext } from '@/lib/structure';
-import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { CHAIN_ID } from '@/lib/structure';            // ⬅️ use enum (barrel re-exports ./enums/networkIds)
-import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
+import { EXCHANGE_CONTEXT_STORAGE_KEY } from './storageKeys';
 
-const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
-const debugLog = createDebugLogger('ExchangeHelpers/load', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
 
-export function loadLocalExchangeContext(): ExchangeContext | null {
+/**
+ * Load ExchangeContext from localStorage.
+ * - No seeding here.
+ * - Returns `undefined` if nothing/invalid.
+ * - Does not mutate panels (provider owns seeding).
+ */
+export function loadLocalExchangeContext(): ExchangeContext | undefined {
+  if (typeof window === 'undefined' || !window.localStorage) return undefined;
+
   try {
-    const serializedContext = localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(EXCHANGE_CONTEXT_STORAGE_KEY);
+    if (DEBUG_ENABLED) debugLog.log('LOAD', { has: !!raw, len: raw?.length ?? 0, key: EXCHANGE_CONTEXT_STORAGE_KEY });
 
-    if (!serializedContext) {
-      debugLog.warn(`⚠️ NO LOADED EXCHANGE CONTEXT FOUND FOR KEY\n${STORAGE_KEY}`);
-      return null;
+    if (!raw) return undefined;
+
+    // If you have a deserializeWithBigInt, you can swap JSON.parse for it.
+    const parsed = JSON.parse(raw) as ExchangeContext;
+
+    if (DEBUG_ENABLED) {
+      const panels = (parsed as any)?.settings?.mainPanelNode;
+      debugLog.log('PARSED', {
+        hasSettings: !!(parsed as any)?.settings,
+        hasPanels: Array.isArray(panels),
+        count: Array.isArray(panels) ? panels.length : undefined,
+        sample: Array.isArray(panels)
+          ? panels.slice(0, 3).map((p: any) => ({ panel: p.panel, name: p.name, visible: p.visible }))
+          : undefined,
+      });
     }
 
-    debugLog.log('🔓 LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(serialized)\n:', serializedContext);
-
-    let parsed: any;
-    try {
-      parsed = deserializeWithBigInt(serializedContext);
-    } catch (parseError) {
-      debugLog.error(
-        `❌ Failed to deserializeWithBigInt: ${
-          parseError instanceof Error ? parseError.message : String(parseError)
-        }`
-      );
-      console.error(parseError);
-      return null;
-    }
-
-    debugLog.log('✅ PARSED LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:', parsed);
-
-    try {
-      const prettyPrinted = JSON.stringify(
-        parsed,
-        (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
-        2
-      );
-      debugLog.log('✅ (PRETTY PRINT) LOADED EXCHANGE CONTEXT FROM LOCALSTORAGE(parsed)\n:', prettyPrinted);
-    } catch (stringifyError) {
-      debugLog.warn('⚠️ Failed to pretty-print parsed ExchangeContext:', stringifyError);
-    }
-
-    const raw = Number(parsed?.network?.chainId);
-    const chainId = Number.isFinite(raw) ? raw : CHAIN_ID.ETHEREUM;  // ⬅️ fallback to mainnet
-
-    debugLog.log('🔧 sanitizeExchangeContext with chainId:', chainId);
-    return sanitizeExchangeContext(parsed, chainId);
-  } catch (error) {
-    debugLog.error(`⛔ Failed to load exchangeContext: ${error instanceof Error ? error.message : String(error)}`);
-    console.error(error);
-    return null;
+    return parsed;
+  } catch (err) {
+    debugLog.error('❌ LOAD error', err);
+    return undefined;
   }
 }

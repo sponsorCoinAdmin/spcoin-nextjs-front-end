@@ -7,7 +7,7 @@ import {
 } from '@/lib/structure';
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
-import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 function clone<T>(o: T): T {

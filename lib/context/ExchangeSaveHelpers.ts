@@ -1,10 +1,9 @@
 // File: lib/context/ExchangeSaveHelpers.ts
-
 import { ExchangeContext } from '@/lib/structure';
 import { serializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { EXCHANGE_CONTEXT_STORAGE_KEY } from './helpers/storageKeys';
 
-const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
@@ -20,7 +19,7 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
 
   try {
     if (DEBUG_ENABLED) {
-      debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
+      debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${EXCHANGE_CONTEXT_STORAGE_KEY}`);
     }
 
     // Mirror exactly: do not mutate or normalize anything
@@ -44,9 +43,20 @@ export const saveLocalExchangeContext = (contextData: ExchangeContext): void => 
       }
     }
 
-    window.localStorage.setItem(STORAGE_KEY, serializedContext);
+    window.localStorage.setItem(EXCHANGE_CONTEXT_STORAGE_KEY, serializedContext);
     if (DEBUG_ENABLED) debugLog.log('✅ exchangeContext successfully saved');
   } catch (err) {
     debugLog.error('❌ Failed to save exchangeContext to localStorage', err);
+  }
+};
+
+/** Optional convenience for manual wipe during testing */
+export const clearLocalExchangeContext = (reason = 'manual'): void => {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    window.localStorage.removeItem(EXCHANGE_CONTEXT_STORAGE_KEY);
+    if (DEBUG_ENABLED) debugLog.log('🧹 Cleared local exchangeContext', { reason });
+  } catch (err) {
+    debugLog.error('❌ Failed to clear exchangeContext', err);
   }
 };

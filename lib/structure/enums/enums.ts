@@ -42,6 +42,8 @@ export enum STATUS {
   SUCCESS,
   WARNING_HARDHAT,
   INFO,
+  ERROR,
+  MISSING,
 }
 
 export enum TRADE_DIRECTION {

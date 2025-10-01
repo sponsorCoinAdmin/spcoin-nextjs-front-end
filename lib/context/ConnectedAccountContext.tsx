@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAccount } from 'wagmi';
-import { WalletAccount } from '@/lib/structure';
+import { STATUS, WalletAccount } from '@/lib/structure';
 
 const ConnectedAccountContext = createContext<WalletAccount | undefined>(undefined);
 
@@ -42,7 +42,7 @@ export const ConnectedAccountProvider = ({ children }: { children: ReactNode }) 
           name: '',
           symbol: '',
           website: '',
-          status: 'Missing',
+          status: STATUS.MISSING,
           balance: 0n,
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
         };

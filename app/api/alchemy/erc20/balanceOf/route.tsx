@@ -8,6 +8,5 @@ export async function GET(req: Request) {
 
   const wagmiBalance = await getWagmiBalanceOfRec(tokenAddress)
 
-  console.log(`wagmiBalance+${JSON.stringify(wagmiBalance)}`)
   return new Response(JSON.stringify(wagmiBalance))
 }

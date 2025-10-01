@@ -1,3 +1,4 @@
+// File: app/(menu)/Test/Tabs/ExchangeContext/FSMTraceTab.tsx
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -11,18 +12,21 @@ export default function FSMTraceTab() {
   const { setState } = usePageState();
   const [panelKey, setPanelKey] = useState(0); // force rerender after clears (match bottom buttons’ effect)
 
-  const updateExchangePage = useCallback((updates: any) => {
-    setState((prev: any) => ({
-      ...prev,
-      page: {
-        ...prev?.page,
-        exchangePage: {
-          ...(prev?.page?.exchangePage ?? {}),
-          ...updates,
+  const updateExchangePage = useCallback(
+    (updates: any) => {
+      setState((prev: any) => ({
+        ...prev,
+        page: {
+          ...prev?.page,
+          exchangePage: {
+            ...(prev?.page?.exchangePage ?? {}),
+            ...updates,
+          },
         },
-      },
-    }));
-  }, [setState]);
+      }));
+    },
+    [setState]
+  );
 
   const hideFSMTrace = useCallback(() => {
     updateExchangePage({ showFSMTracePanel: false });
@@ -33,9 +37,8 @@ export default function FSMTraceTab() {
     try {
       localStorage.removeItem('latestFSMHeader');
       localStorage.removeItem('latestFSMHeaderLines');
-      console.log('[FSMTraceTab] 🧹 Cleared FSM header from localStorage');
-    } catch (e) {
-      console.warn('[FSMTraceTab] Failed to clear FSM header', e);
+    } catch {
+      /* ignore */
     } finally {
       setPanelKey((k) => k + 1); // refresh panel like the originals would
     }
@@ -45,9 +48,8 @@ export default function FSMTraceTab() {
     try {
       localStorage.removeItem('latestFSMTrace');
       localStorage.removeItem('latestFSMTraceLines');
-      console.log('[FSMTraceTab] 🧹 Cleared FSM trace from localStorage');
-    } catch (e) {
-      console.warn('[FSMTraceTab] Failed to clear FSM trace', e);
+    } catch {
+      /* ignore */
     } finally {
       setPanelKey((k) => k + 1); // refresh panel like the originals would
     }
