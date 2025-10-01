@@ -4,7 +4,6 @@
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
-import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
@@ -20,12 +19,11 @@ import {
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
-// NOTE: The constant is exported as `defaultMainPanelNode`; we alias it locally to keep your identifier.
-import { defaultMainPanelNode as defaultMainPanels } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-
 import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import { loadInitialPanelNodeDefaults } from '@/lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { saveLocalExchangeContext } from './helpers/ExchangeSaveHelpers';
 
 /* ---------------------------- Types & Context API --------------------------- */
 
@@ -67,8 +65,10 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
 });
 
 // Flat-array guard (children may exist in-memory but are not persisted)
+// ✅ Important: require NON-EMPTY array (empty means "seed defaults")
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
+  x.length > 0 &&
   x.every(
     (n) =>
       n &&
@@ -112,7 +112,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   const [apiErrorMessage, setApiErrorMessage] = useState<ErrorMessage | undefined>();
   const hasInitializedRef = useRef(false);
 
-  // Persist + update (mirror to localStorage every change)
+  // Persist + update (mirror to localStorage only when changed)
   const setExchangeContext = (
     updater: (prev: ExchangeContextTypeOnly) => ExchangeContextTypeOnly,
     _hookName = 'unknown'
@@ -121,6 +121,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       if (!prev) return prev;
       const nextBase = updater(prev);
       if (!nextBase) return prev;
+
+      // Compare first; persist only when changed
+      const changed = stringifyBigInt(prev) !== stringifyBigInt(nextBase);
+      if (!changed) return prev;
 
       try {
         // Normalize panels to FLAT before persisting
@@ -135,7 +139,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         /* ignore persist errors */
       }
 
-      return stringifyBigInt(prev) === stringifyBigInt(nextBase) ? prev : nextBase;
+      return nextBase;
     });
   };
 
@@ -149,12 +153,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // Accept only FLAT arrays; otherwise fall back to defaults
+      // Accept only NON-EMPTY FLAT arrays; otherwise seed defaults
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
         flatPanels = ensurePanelNamesInMemory(storedPanels);
       } else {
-        flatPanels = ensurePanelNamesInMemory(clone(defaultMainPanels as unknown as PanelNode[]));
+        const seed = loadInitialPanelNodeDefaults();
+        flatPanels = ensurePanelNamesInMemory(clone(seed as unknown as PanelNode[]));
       }
 
       // 🔧 Reconcile network against current Wagmi *before* persisting (kills the flicker)

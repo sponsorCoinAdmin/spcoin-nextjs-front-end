@@ -3,7 +3,7 @@
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
 import { WalletAccount, ExchangeContext, STATUS } from '@/lib/structure';
-import { Address } from 'viem';
+import { Address, isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -12,87 +12,104 @@ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_WRAPPER === 'tr
 const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
 
 /**
- * Initializes the ExchangeContext by hydrating from localStorage and optionally
- * augmenting it with connected wallet metadata if `address` is provided.
- *
- * Important:
- * - This function does **not** create or mutate any panel state
- *   (`settings.mainPanelNode`, `settings.panelChildren`, or `settings.ui.nonMainVisible`).
- *   Panel state is initialized and persisted exclusively by the ExchangeProvider.
+ * NOTE (contract with ExchangeProvider):
+ * - Hydrates ExchangeContext from localStorage (if present) and sanitizes it for the given chainId.
+ * - May enrich `accounts.connectedAccount` with metadata for a connected wallet.
+ * - Does NOT create or mutate any panel state (`settings.mainPanelNode`, etc.). Panel state is owned by the Provider.
  */
+
 export async function initExchangeContext(
   chainId: number,
   isConnected: boolean,
   address?: `0x${string}`
 ): Promise<ExchangeContext> {
-  const effectiveChainId = chainId ?? 1;
+  const effectiveChainId = typeof chainId === 'number' && chainId > 0 ? chainId : 1;
 
-  debugLog.log('🔍 Loading stored ExchangeContext...');
+  // 1) Load & sanitize stored context
+  debugLog.log('🔍 Loading stored ExchangeContext…');
   const stored = loadLocalExchangeContext();
-
   debugLog.log(`🔗 Stored network.chainId = ${stored?.network?.chainId}`);
+
   const sanitized = sanitizeExchangeContext(stored, effectiveChainId);
   debugLog.log(`🧪 sanitizeExchangeContext → network.chainId = ${sanitized.network?.chainId}`);
   debugLog.log(`📥 Final network.chainId before hydration: ${sanitized.network?.chainId}`);
 
-  // 🔐 Wallet metadata enrichment (does not affect panel storage)
-  if (isConnected && address) {
+  // 2) Optionally enrich with wallet metadata (client-only; no panel changes)
+  if (isConnected && address && isProbablyClient() && isAddress(address)) {
     try {
-      const res = await fetch(`/assets/accounts/${address}/wallet.json`);
-      const metadata = res.ok ? (await res.json()) as Partial<WalletAccount> & { balance?: string | number } : null;
-
-      if (metadata) {
-        // Normalize balance to bigint safely
-        const rawBalance = metadata.balance ?? 0;
-        let balance: bigint = 0n;
-        try {
-          balance = BigInt(typeof rawBalance === 'string' ? rawBalance : String(rawBalance));
-        } catch {
-          balance = 0n;
-        }
-
-        const merged: WalletAccount = {
-          name: metadata.name ?? '',
-          symbol: metadata.symbol ?? '',
-          type: metadata.type ?? 'ERC20_WALLET',
-          website: metadata.website ?? '',
-          description: metadata.description ?? '',
-          status: STATUS.INFO,
-          address: address as Address,
-          logoURL: metadata.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
-          balance,
-        };
-        sanitized.accounts.connectedAccount = merged;
-      } else {
-        const fallback: WalletAccount = {
-          address: address as Address,
-          type: 'ERC20_WALLET',
-          name: '',
-          symbol: '',
-          website: '',
-          status: STATUS.MESSAGE_ERROR,
-          description: `Account ${address} not registered on this site`,
-          logoURL: '/assets/miscellaneous/SkullAndBones.png',
-          balance: 0n,
-        };
-        sanitized.accounts.connectedAccount = fallback;
-      }
+      const meta = await loadWalletMetadata(address);
+      sanitized.accounts.connectedAccount = meta;
     } catch (err) {
-      debugLog.error('⛔ Failed to load wallet.json:', err);
-      const fallback: WalletAccount = {
-        address: address as Address,
-        type: 'ERC20_WALLET',
-        name: '',
-        symbol: '',
-        website: '',
-        status: STATUS.MESSAGE_ERROR,
-        description: `Account ${address} metadata could not be loaded`,
-        logoURL: '/assets/miscellaneous/SkullAndBones.png',
-        balance: 0n,
-      };
-      sanitized.accounts.connectedAccount = fallback;
+      debugLog.error('⛔ Wallet metadata load failed; falling back.', err);
+      sanitized.accounts.connectedAccount = makeWalletFallback(address, STATUS.MESSAGE_ERROR, `Account ${address} metadata could not be loaded`);
     }
   }
 
   return sanitized;
+}
+
+/* ────────────────────────────── helpers ────────────────────────────── */
+
+function isProbablyClient() {
+  return typeof window !== 'undefined' && typeof document !== 'undefined';
+}
+
+function toBigIntSafe(value: unknown): bigint {
+  try {
+    if (typeof value === 'bigint') return value;
+    if (typeof value === 'number' && Number.isFinite(value)) return BigInt(Math.trunc(value));
+    if (typeof value === 'string') {
+      // Accept decimal or hex strings
+      const trimmed = value.trim();
+      if (/^0x[0-9a-fA-F]+$/.test(trimmed)) return BigInt(trimmed);
+      if (/^-?\d+$/.test(trimmed)) return BigInt(trimmed);
+    }
+  } catch {
+    /* ignore */
+  }
+  return 0n;
+}
+
+function makeWalletFallback(addr: Address, status: STATUS, description: string): WalletAccount {
+  return {
+    address: addr,
+    type: 'ERC20_WALLET',
+    name: '',
+    symbol: '',
+    website: '',
+    status,
+    description,
+    logoURL: '/assets/miscellaneous/SkullAndBones.png',
+    balance: 0n,
+  };
+}
+
+async function loadWalletMetadata(addr: Address): Promise<WalletAccount> {
+  // Local, static metadata (don’t block the app if it fails)
+  const res = await fetch(`/assets/accounts/${addr}/wallet.json`).catch(() => undefined);
+  if (!res || !res.ok) {
+    return makeWalletFallback(addr, STATUS.MESSAGE_ERROR, `Account ${addr} not registered on this site`);
+  }
+
+  let json: Partial<WalletAccount> & { balance?: string | number | bigint } = {};
+  try {
+    json = (await res.json()) ?? {};
+  } catch {
+    // non-JSON / parse error → fallback
+    return makeWalletFallback(addr, STATUS.MESSAGE_ERROR, `Account ${addr} metadata could not be parsed`);
+  }
+
+  const balance = toBigIntSafe(json.balance);
+
+  return {
+    address: addr,
+    type: json.type ?? 'ERC20_WALLET',
+    name: json.name ?? '',
+    symbol: json.symbol ?? '',
+    website: json.website ?? '',
+    status: STATUS.INFO,
+    description: json.description ?? '',
+    logoURL: json.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
+    balance,
+  };
 }

@@ -1,52 +1,55 @@
-// File: lib/context/ExchangeSaveHelpers.ts
-
+// File: lib/context/helpers/ExchangeSaveHelpers.ts
 import { ExchangeContext } from '@/lib/structure';
-import { serializeWithBigInt } from '@/lib/utils/jsonBigInt';
+import { serializeWithBigInt, deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { EXCHANGE_CONTEXT_STORAGE_KEY } from './storageKeys';
 
-const STORAGE_KEY = 'exchangeContext';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_HELPER === 'true';
 const debugLog = createDebugLogger('ExchangeSaveHelpers', DEBUG_ENABLED, LOG_TIME);
 
-/**
- * Save the provided ExchangeContext to localStorage
- * - Mirrors state exactly (no seeding, no stripping, no normalization)
- * - BigInt-safe serialization
- * - No-ops on the server / SSR
- */
+/** Save: exact mirror, BigInt-safe, no-ops on SSR */
 export const saveLocalExchangeContext = (contextData: ExchangeContext): void => {
   if (typeof window === 'undefined' || !window.localStorage) return;
-
   try {
+    const serialized = serializeWithBigInt(contextData);
     if (DEBUG_ENABLED) {
-      debugLog.log(`📦 Saving exchangeContext to localStorage under key: ${STORAGE_KEY}`);
-    }
-
-    // Mirror exactly: do not mutate or normalize anything
-    const safeContext: ExchangeContext = contextData;
-
-    const serializedContext = serializeWithBigInt(safeContext);
-
-    if (DEBUG_ENABLED) {
-      debugLog.log('🔓 SAVING EXCHANGE CONTEXT TO LOCALSTORAGE (serialized)\n:', serializedContext);
-
-      // Pretty log (for humans) — BigInt -> string
+      debugLog.log(`📦 saving → ${EXCHANGE_CONTEXT_STORAGE_KEY}`);
       try {
-        const prettyPrinted = JSON.stringify(
-          safeContext,
-          (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
-          2
+        debugLog.log(
+          'pretty:',
+          JSON.stringify(contextData, (_k, v) => (typeof v === 'bigint' ? v.toString() : v), 2)
         );
-        debugLog.log('✅ (PRETTY PRINT) SAVED EXCHANGE CONTEXT TO LOCALSTORAGE (parsed)\n:', prettyPrinted);
-      } catch (prettyError) {
-        debugLog.warn('⚠️ Failed to pretty-print exchangeContext', prettyError);
-      }
+      } catch {}
     }
-
-    window.localStorage.setItem(STORAGE_KEY, serializedContext);
-    if (DEBUG_ENABLED) debugLog.log('✅ exchangeContext successfully saved');
+    window.localStorage.setItem(EXCHANGE_CONTEXT_STORAGE_KEY, serialized);
   } catch (err) {
-    debugLog.error('❌ Failed to save exchangeContext to localStorage', err);
+    debugLog.error('❌ save failed', err);
+  }
+};
+
+/** Load: returns undefined if empty/bad; BigInt-safe; no-ops on SSR */
+export const loadLocalExchangeContext = (): ExchangeContext | undefined => {
+  if (typeof window === 'undefined' || !window.localStorage) return undefined;
+  try {
+    const raw = window.localStorage.getItem(EXCHANGE_CONTEXT_STORAGE_KEY);
+    if (!raw) return undefined;
+    const parsed = deserializeWithBigInt(raw) as ExchangeContext;
+    if (DEBUG_ENABLED) debugLog.log('📥 loaded exchangeContext from localStorage');
+    return parsed;
+  } catch (err) {
+    debugLog.error('❌ load failed; ignoring stored value', err);
+    return undefined;
+  }
+};
+
+/** Optional convenience for manual wipe during testing */
+export const clearLocalExchangeContext = (reason = 'manual'): void => {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    window.localStorage.removeItem(EXCHANGE_CONTEXT_STORAGE_KEY);
+    if (DEBUG_ENABLED) debugLog.log('🧹 cleared local exchangeContext', { reason });
+  } catch (err) {
+    debugLog.error('❌ clear failed', err);
   }
 };

@@ -4,7 +4,7 @@
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
-import { saveLocalExchangeContext } from '@/lib/context/ExchangeSaveHelpers';
+import { saveLocalExchangeContext } from '@/lib/context/helpers/ExchangeSaveHelpers';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
 import { useProviderWatchers } from '@/lib/context/providers/Exchange/useProviderWatchers';
