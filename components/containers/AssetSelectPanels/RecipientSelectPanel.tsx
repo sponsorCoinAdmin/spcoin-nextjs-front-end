@@ -13,8 +13,13 @@ import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectio
 
 /** Wrapper does ONLY visibility gating (no hooks after the conditional). */
 export default function RecipientSelectPanel() {
-  const { isVisible } = usePanelTree();
-  const active = isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+  const { activeMainOverlay, isVisible } = usePanelTree();
+
+  // Prefer radio-group active overlay; fall back to legacy visibility flag
+  const active =
+    activeMainOverlay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST ||
+    isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+
   if (!active) return null;
   return <RecipientSelectPanelInner />;
 }
@@ -34,12 +39,9 @@ function RecipientSelectPanelInner() {
   );
 
   // Close → back to Trading
-  const closeForProvider = useCallback(
-    (_fromUser: boolean) => {
-      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-    },
-    [openPanel]
-  );
+  const closeForProvider = useCallback(() => {
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  }, [openPanel]);
 
   // Provider emits (TokenContract | WalletAccount); this panel only accepts WalletAccount
   const onAssetChosen = useCallback(
@@ -51,9 +53,10 @@ function RecipientSelectPanelInner() {
     [commitRecipient]
   );
 
+  // 🔧 AssetSelectBag does not include `chainId`; keep it only in instanceId
   const initialPanelBag: AssetSelectBag = useMemo(
-    () => ({ type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST, chainId }),
-    [chainId]
+    () => ({ type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST }),
+    []
   );
 
   return (

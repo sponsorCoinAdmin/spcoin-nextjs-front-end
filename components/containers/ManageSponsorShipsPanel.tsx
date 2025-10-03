@@ -1,7 +1,7 @@
 // File: components/containers/ManageSponsorShipsPanel.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
@@ -13,10 +13,13 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('ManageSponsorShipsPanel', DEBUG_ENABLED, LOG_TIME);
 
 type Props = {
-  /** Panel-tree controlled visibility, like ErrorMessagePanel's `isActive` */
-  showPanel: boolean;
-  tokenContract: TokenContract | undefined;
-  /** Placeholder to keep compatibility with callers */
+  /**
+   * Optional external override. If omitted, visibility is driven by the panel tree.
+   * Prefer omitting this so the component self-gates like other radio overlays.
+   */
+  showPanel?: boolean;
+  tokenContract?: TokenContract;
+  /** Kept for backward compatibility (currently unused) */
   callBackSetter?: (tc: TokenContract) => any;
   /** Optional external close hook */
   onClose?: () => void;
@@ -25,34 +28,41 @@ type Props = {
 export default function ManageSponsorShipsPanel({
   showPanel,
   tokenContract,
-  callBackSetter,
   onClose,
 }: Props) {
-  const { openPanel, closePanel } = usePanelTree();
+  const { isVisible, openPanel, closePanel } = usePanelTree();
 
-  debugLog.log('🛠️ ManageSponsorShipsPanel render; showPanel=', showPanel);
+  // Derive active state from panel tree unless an explicit prop is provided.
+  const isActive = useMemo(
+    () => (typeof showPanel === 'boolean'
+      ? showPanel
+      : isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)),
+    [showPanel, isVisible]
+  );
+
+  debugLog.log('🛠️ ManageSponsorShipsPanel render; active =', isActive);
 
   useEffect(() => {
-    if (!showPanel) return;
-    debugLog.log('🎯 ManageSponsorShipsPanel active; token:', tokenContract?.symbol ?? '(none)');
-  }, [showPanel, tokenContract]);
+    if (!isActive) return;
+    debugLog.log(
+      '🎯 ManageSponsorShipsPanel active; token:',
+      tokenContract?.symbol ?? '(none)'
+    );
+  }, [isActive, tokenContract]);
 
-  if (!showPanel) {
+  if (!isActive) {
     debugLog.log('⏭️ ManageSponsorShipsPanel → not active, skipping render');
     return null;
   }
 
   const handleClose = () => {
-    debugLog.log('✅ Close ManageSponsorShipsPanel → back to TRADING_STATION_PANEL, re-show launcher');
+    debugLog.log('✅ Close ManageSponsorShipsPanel');
 
-    // ❗ Correct pair for Manage flow:
-    //   - Close the RATE_CONFIG panel we opened
-    //   - Re-open the launcher button (so "Manage Sponsorships" button is visible again)
+    // Close this radio overlay. Do NOT force-open Trading Station — allow “no active overlay”.
     closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
-    // Keep Trading station visible (safety / idempotent)
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    // Re-show the launcher button so users can reopen the panel.
+    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
     onClose?.();
   };

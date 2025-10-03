@@ -17,7 +17,14 @@ import { useVirtualPanelTree } from './hooks/useVirtualPanelTree';
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
-import type { VirtualPanelNode } from './structure/types/virtualPanel';
+
+// ✅ Local, structural type compatible with both shapes (with/without `name`)
+type NamedVirtualNode = {
+  id: number;
+  visible: boolean;
+  children: NamedVirtualNode[];
+  name?: string; // optional so nodes from useVirtualPanelTree are assignable
+};
 
 const PAGES_KEY = 'test_exchangeContext_pages';
 
@@ -39,12 +46,12 @@ function flatForConsole(flat?: PanelNode[]) {
       : undefined,
   }));
 }
-function virtualForConsole(nodes: VirtualPanelNode[]) {
-  const walk = (ns: VirtualPanelNode[]): any[] =>
+function virtualForConsole(nodes: NamedVirtualNode[]) {
+  const walk = (ns: NamedVirtualNode[]): any[] =>
     ns.map((n) => ({
       id: `${SP[n.id] ?? 'UNKNOWN'} (#${n.id})`,
       visible: n.visible,
-      children: walk(n.children),
+      children: walk(n.children ?? []),
     }));
   return walk(nodes);
 }
@@ -72,13 +79,14 @@ function writePagesState(patch: PagesState) {
 
 // ✅ Decorate each node with a human-readable name (shown when expanded).
 //    This does NOT change paths or expansion logic (still arrays).
-function addNamesShallow(nodes: VirtualPanelNode[]): VirtualPanelNode[] {
+function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
   return nodes.map((n) => ({
     ...n,
-    // add a readable name field
-    name: SP[n.id] ?? String(n.id),
-    // keep children shape, but also decorate their names (one level is enough for current use)
-    children: n.children?.map((c) => ({ ...c, name: SP[c.id] ?? String(c.id) })) ?? n.children,
+    name: n.name ?? (SP[n.id] ?? String(n.id)),
+    children: (n.children ?? []).map((c) => ({
+      ...c,
+      name: c.name ?? (SP[c.id] ?? String(c.id)),
+    })),
   }));
 }
 
@@ -97,12 +105,20 @@ export default function ExchangeContextTab() {
 
   // Filter sponsor row visually (doesn't touch keys/paths)
   const treeForDisplay = useMemo(
-    () => (SHOW_SPONSOR_ROW ? tree : tree.filter((n) => n.id !== SP.SPONSOR_SELECT_PANEL_LIST)),
+    () =>
+      (SHOW_SPONSOR_ROW
+        ? (tree as unknown as NamedVirtualNode[])
+        : (tree as unknown as NamedVirtualNode[]).filter(
+            (n) => n.id !== SP.SPONSOR_SELECT_PANEL_LIST
+          )),
     [tree]
   );
 
   // Add `name` string to every top-level node (and its direct children)
-  const treeWithNames = useMemo(() => addNamesShallow(treeForDisplay), [treeForDisplay]);
+  const treeWithNames = useMemo<NamedVirtualNode[]>(
+    () => addNamesShallow(treeForDisplay),
+    [treeForDisplay]
+  );
 
   // Console dump (original + derived)
   useEffect(() => {

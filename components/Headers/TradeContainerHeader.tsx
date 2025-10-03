@@ -4,7 +4,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
-import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
@@ -12,10 +11,6 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ConnectButton from '../Buttons/Connect/ConnectButton';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-
-interface Props {
-  closePanelCallback: () => void;
-}
 
 function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
   switch (d) {
@@ -42,13 +37,13 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
   }
 }
 
-const TradeContainerHeader = ({ closePanelCallback }: Props) => {
+const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible } = usePanelTree();
+  const { isVisible, openPanel } = usePanelTree();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   // Derive the "current" display from the tree
-   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
+  const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
     // Include sponsorships panel so it can set the header correctly
     if (isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
 
@@ -57,7 +52,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
     if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
     if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
-    // ✅ Add this line for Agent panel
+    // Agent list
     if (isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
 
     if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL)) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
@@ -72,6 +67,11 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
+  // Close any non-trading overlay → return to Trading Station
+  const onCloseOverlay = useCallback(() => {
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  }, [openPanel]);
+
   return (
     <div
       id="TradeContainerHeader"
@@ -85,12 +85,6 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
         onDoubleClick={true ? () => exchangeContextDump(exchangeContext) : undefined}
         className={styles.leftLogo}
       >
-        {/* <Image
-          src={spCoin_png}
-          className={styles.logoImg}
-          alt="SponsorCoin Logo"
-          style={{ height: 'auto', width: 'auto' }}
-        /> */}
         <ConnectButton
           showName={false}
           showSymbol={false}
@@ -120,7 +114,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
             type="button"
             aria-label="Close"
             title="Close"
-            onClick={closePanelCallback}
+            onClick={onCloseOverlay}
             className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
                        hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
           >

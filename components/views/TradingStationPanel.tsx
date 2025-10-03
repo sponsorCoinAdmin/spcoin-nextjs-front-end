@@ -22,16 +22,22 @@ const debugLog = createDebugLogger('TradingStationPanel', DEBUG_ENABLED, LOG_TIM
 
 export default function TradingStationPanel() {
   const { isVisible } = usePanelTree();
+
+  // Gate this panel by panel-tree visibility so it behaves like a radio overlay.
+  // Using isVisible (not activeMainOverlay) allows support for "no active overlay" if enabled.
   const isActive = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
   debugLog.log(`🛠️ TradingStationPanel → tradingStationVisible=${isActive}`);
-
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();
+
+  // Don’t mount anything when this overlay isn’t active
+  if (!isActive) return null;
+
   const priceResponse = isLoadingPrice ? undefined : (priceData as any);
 
   return (
-    <div id="TradingStationPanel" className={isActive ? '' : 'hidden'}>
-      {/* Panels are now visibility-gated inside these wrappers */}
+    <div id="TradingStationPanel">
+      {/* Child controls/panels self-gate via their own enum visibility */}
       <SellAssetPanel />
       <BuyAssetPanel />
 

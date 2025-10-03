@@ -11,21 +11,13 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_ERROR_MESSAGE_PANEL === 'true';
 const debugLog = createDebugLogger('ErrorMessagePanel', DEBUG_ENABLED, LOG_TIME);
 
-interface ErrorMessagePanelProps {
-  /** Whether this panel should be visible (parent controls via panel tree) */
-  isActive: boolean;
-  /** @deprecated Previously used to close parent; no longer needed. */
-  closePanelCallback?: () => void;
-}
-
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { openPanel } = usePanelTree();
 
   const onDismiss = () => {
-    debugLog.log('✅ Dismiss ErrorMessagePanel → openPanel(TRADING_STATION_PANEL) & clear error');
+    debugLog.log('✅ Dismiss → openPanel(TRADING_STATION_PANEL) & clear error');
     setErrorMessage(undefined);
-    // Return to Trading Station overlay
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   };
 
@@ -87,11 +79,24 @@ function ErrorMessagePanelInner() {
   );
 }
 
-export default function ErrorMessagePanel({ isActive }: ErrorMessagePanelProps) {
-  debugLog.log('🛠️ ErrorMessagePanel render; isActive=', isActive);
-  if (!isActive) {
+/**
+ * Visibility is fully controlled by the panel tree:
+ * - Show when this panel is the active radio overlay, OR
+ * - (fallback) when legacy visibility flag says it’s visible.
+ */
+export default function ErrorMessagePanel() {
+  const { activeMainOverlay, isVisible } = usePanelTree();
+
+  const computedActive =
+    activeMainOverlay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL ||
+    isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+
+  debugLog.log('🛠️ ErrorMessagePanel render; active=', computedActive);
+
+  if (!computedActive) {
     debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');
     return null;
   }
+
   return <ErrorMessagePanelInner />;
 }
