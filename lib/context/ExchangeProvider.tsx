@@ -21,6 +21,7 @@ import {
 
 import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { loadInitialPanelNodeDefaults } from '@/lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults';
+import { PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { saveLocalExchangeContext } from './helpers/ExchangeSaveHelpers';
@@ -64,8 +65,7 @@ const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
   url: n?.url ?? '',
 });
 
-// Flat-array guard (children may exist in-memory but are not persisted)
-// ✅ Important: require NON-EMPTY array (empty means "seed defaults")
+// ✅ require NON-EMPTY array (empty means "seed defaults")
 const isMainPanels = (x: any): x is PanelNode[] =>
   Array.isArray(x) &&
   x.length > 0 &&
@@ -77,7 +77,6 @@ const isMainPanels = (x: any): x is PanelNode[] =>
       typeof (n as any).visible === 'boolean'
   );
 
-// Ensure each node has a stable name; keep structure in memory
 const ensurePanelName = (n: PanelNode): PanelNode => ({
   panel: n.panel,
   name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
@@ -86,7 +85,6 @@ const ensurePanelName = (n: PanelNode): PanelNode => ({
   children: Array.isArray(n.children) ? n.children.map(ensurePanelName) : undefined,
 });
 
-// Normalize an array for use in memory (names ensured; children allowed in memory)
 const ensurePanelNamesInMemory = (panels: PanelNode[]): PanelNode[] => panels.map(ensurePanelName);
 
 // Normalize for persistence: strip children and ensure names → MainPanelNode
@@ -95,11 +93,23 @@ const normalizeForPersistence = (panels: PanelNode[]): MainPanelNode =>
     panel: n.panel,
     name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
     visible: !!n.visible,
-    // children intentionally omitted (flat persistence)
   }));
 
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
+
+/** ✅ Migration: append any panels defined in the registry that are missing from stored state. */
+const ensureRegistryPanelsPresent = (flat: PanelNode[]): PanelNode[] => {
+  const present = new Set(flat.map((n) => n.panel));
+  const additions: PanelNode[] = PANEL_DEFS
+    .filter((d) => !present.has(d.id))
+    .map((d) => ({
+      panel: d.id,
+      name: SP_COIN_DISPLAY[d.id] ?? String(d.id),
+      visible: !!d.defaultVisible,
+    }));
+  return additions.length ? [...flat, ...additions] : flat;
+};
 
 /* --------------------------------- Provider -------------------------------- */
 
@@ -122,12 +132,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const nextBase = updater(prev);
       if (!nextBase) return prev;
 
-      // Compare first; persist only when changed
       const changed = stringifyBigInt(prev) !== stringifyBigInt(nextBase);
       if (!changed) return prev;
 
       try {
-        // Normalize panels to FLAT before persisting
         const normalized = clone(nextBase);
         if (Array.isArray(normalized?.settings?.mainPanelNode)) {
           normalized.settings.mainPanelNode = normalizeForPersistence(
@@ -138,12 +146,11 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       } catch {
         /* ignore persist errors */
       }
-
       return nextBase;
     });
   };
 
-  // Initial hydrate + normalize (mainPanelNode only) + ⚡ immediate network reconcile
+  // Initial hydrate + normalize + migrate panels + immediate network reconcile
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
@@ -153,22 +160,26 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.mainPanelNode;
 
-      // Accept only NON-EMPTY FLAT arrays; otherwise seed defaults
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
         flatPanels = ensurePanelNamesInMemory(storedPanels);
       } else {
+        // Seed from defaults (flat, no children). This pulls from PANEL_DEFS,
+        // so new overlays like MANAGE_SPONSORSHIPS_PANEL are part of the seed.
         const seed = loadInitialPanelNodeDefaults();
         flatPanels = ensurePanelNamesInMemory(clone(seed as unknown as PanelNode[]));
       }
 
-      // 🔧 Reconcile network against current Wagmi *before* persisting (kills the flicker)
+      // ✅ Make sure any new registry entries (e.g. MANAGE_SPONSORSHIPS_PANEL as overlay) are present
+      flatPanels = ensureRegistryPanelsPresent(flatPanels);
+
+      // Reconcile network against current Wagmi (prevents initial flicker)
       const net = ensureNetwork((base as any).network);
       net.connected = !!isConnected;
-      net.chainId = isConnected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
+      net.chainId = isConnected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0;
       (base as any).network = net;
 
-      // Persist FLAT panels (strip children) but keep in-memory array with names (children allowed in memory)
+      // Persist flat version; keep in-memory with names
       (base as any).settings = {
         ...settingsAny,
         mainPanelNode: normalizeForPersistence(flatPanels),
@@ -180,9 +191,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         /* ignore persist errors */
       }
 
-      // Keep in-memory version with ensured names; children (if any) can exist only in memory
       (base as any).settings.mainPanelNode = flatPanels;
-
       setContextState(base as ExchangeContextTypeOnly);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -201,7 +210,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setAppChainId,
   } = useProviderSetters(setExchangeContext);
 
-  // Pass wagmiChainId so watchers can log/compare transitions cleanly
+  // Watchers (wallet/network + appChain hydration)
   useProviderWatchers({
     contextState,
     setExchangeContext,
@@ -212,7 +221,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     accountStatus,
   });
 
-  // Wallet/network sync for any subsequent changes
+  // Wallet/network sync for subsequent changes
   useEffect(() => {
     if (!contextState) return;
 
@@ -222,7 +231,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       const connected = !!isConnected;
       const desiredChainId =
-        connected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0; // 0 == unset
+        connected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0;
 
       const noChange = net.connected === connected && net.chainId === desiredChainId;
       if (noChange) return prev;

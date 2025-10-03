@@ -6,22 +6,19 @@ import styles from '@/styles/Exchange.module.css';
 import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import ManageSponsorShipsPanel from '../containers/ManageSponsorShipsPanel';
 
 type Props = {
-  tokenContract: TokenContract | undefined;
+  tokenContract: TokenContract | undefined; // kept for API compatibility (unused here)
 };
 
-const ManageSponsorsButton = ({ tokenContract }: Props) => {
+const ManageSponsorsButton = ({ tokenContract: _tokenContract }: Props) => {
   const { isVisible, openPanel, closePanel } = usePanelTree();
   const busyRef = useRef(false);
 
   // Launcher button visibility (button enum)
   const showButton = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
-  // Sponsorship configuration panel visibility (real panel enum)
-  const showPanel = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-
+  // Open the Manage Sponsorships overlay (rendered centrally by MainTradingPanel)
   const openDialog = useCallback(() => {
     if (busyRef.current) return;
     busyRef.current = true;
@@ -30,7 +27,7 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
       if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON)) {
         closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
       }
-      // Show the sponsorship configuration panel
+      // Show the centralized Manage panel
       if (!isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)) {
         openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
       }
@@ -39,45 +36,27 @@ const ManageSponsorsButton = ({ tokenContract }: Props) => {
     }
   }, [isVisible, openPanel, closePanel]);
 
-  // Placeholder until upstream logic consumes this callback
-  const junkManageSponsorshipCallback = useCallback((tc: TokenContract) => {
-    return null;
-  }, []);
+  // No local <ManageSponsorShipsPanel /> here anymore — MainTradingPanel owns the rendering.
 
-  return (
-    <>
-      <ManageSponsorShipsPanel
-        showPanel={showPanel}
-        tokenContract={tokenContract}
-        callBackSetter={junkManageSponsorshipCallback}
-        // If/when the panel exposes onClose, wire it like this:
-        // onClose={() => {
-        //   closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-        //   openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
-        // }}
-      />
-
-      {showButton ? (
-        <div
-          id="manageSponsorshipsDiv"
-          className={styles.manageSponsorshipsDiv}
-          role="button"
-          tabIndex={0}
-          aria-label="Manage Sponsorships"
-          onClick={openDialog}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              openDialog();
-            }
-          }}
-        >
-          <div className={styles.centerTop}>Manage</div>
-          <div className={styles.centerBottom}>Sponsorships</div>
-        </div>
-      ) : null}
-    </>
-  );
+  return showButton ? (
+    <div
+      id="manageSponsorshipsDiv"
+      className={styles.manageSponsorshipsDiv}
+      role="button"
+      tabIndex={0}
+      aria-label="Manage Sponsorships"
+      onClick={openDialog}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDialog();
+        }
+      }}
+    >
+      <div className={styles.centerTop}>Manage</div>
+      <div className={styles.centerBottom}>Sponsorships</div>
+    </div>
+  ) : null;
 };
 
 export default ManageSponsorsButton;

@@ -4,7 +4,8 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+// ✅ Pull the radio group from the registry so new overlays (like MANAGE_SPONSORSHIPS_PANEL) are included
+import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -56,7 +57,7 @@ function toMap(list: PanelEntry[]): Record<number, boolean> {
 /** Ensure at most one visible in the radio group; keep first visible or TRADING if needed. */
 function reconcileRadio(list: PanelEntry[], radioIds: SP_COIN_DISPLAY[]): PanelEntry[] {
   const visible = radioIds.filter((id) => list.find((e) => e.panel === id && e.visible));
-  if (visible.length <= 1) return list; // already fine (0 or 1)
+  if (visible.length <= 1) return list; // already fine
   const keep = visible[0] ?? TRADING;
   return list.map((e) =>
     radioIds.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
@@ -84,18 +85,15 @@ export function usePanelTree() {
     [exchangeContext]
   );
 
-  // Keep the radio set limited to ids that exist in the flat list
+  // ✅ Use the full registry-defined radio set; intersect with current list only for reconciliation
   const radioRootIds = useMemo<SP_COIN_DISPLAY[]>(
-    () =>
-      list
-        .map((e) => e.panel)
-        .filter((id): id is SP_COIN_DISPLAY => MAIN_OVERLAY_GROUP.includes(id)),
-    [list]
+    () => MAIN_OVERLAY_GROUP.slice(),
+    []
   );
 
   // One-time reconciliation if multiple radio overlays are visible
   useEffect(() => {
-    if (!list.length || !radioRootIds.length) return;
+    if (!list.length) return;
     const vis = radioRootIds.filter((id) => list.find((e) => e.panel === id && e.visible));
     if (vis.length <= 1) return;
 
@@ -109,7 +107,7 @@ export function usePanelTree() {
       'usePanelTree:reconcile'
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioRootIds.join('|'), list.length]);
+  }, [list.length, setExchangeContext]);
 
   /* ------------------------------- queries ------------------------------- */
 
@@ -121,7 +119,6 @@ export function usePanelTree() {
     [list]
   );
 
-  // Children are no longer modeled; return [] for compatibility.
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
   /* ------------------------------- actions ------------------------------- */
@@ -134,16 +131,24 @@ export function usePanelTree() {
         (prev) => {
           const flat = readFlatList(prev);
 
-          // Radio overlays: exclusive selection among radio roots that exist
           if (radioRootIds.includes(panel)) {
-            const next = flat.map((e) =>
-              radioRootIds.includes(e.panel) ? { ...e, visible: e.panel === panel } : e
-            );
-            debugLog.log('open:radio', { panel });
-            return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: next } };
+            // ✅ Radio overlays: exclusive selection.
+            // Also ensure target exists in the flat list; if missing, append it as visible.
+            let found = false;
+            const next = flat.map((e) => {
+              if (radioRootIds.includes(e.panel)) {
+                const v = e.panel === panel;
+                if (v) found = true;
+                return { ...e, visible: v };
+              }
+              return e;
+            });
+            const withTarget = found ? next : [...next, { panel, visible: true }];
+            debugLog.log('open:radio', { panel, appended: !found });
+            return { ...prev, settings: { ...(prev as any).settings, mainPanelNode: withTarget } };
           }
 
-          // Non-radio: simply set this one to visible (idempotent)
+          // Non-radio: just set visible (idempotent + upsert)
           const next = setVisible(flat, panel, true);
           if (next === flat) {
             debugLog.log('open:non-radio-noop', { panel });
@@ -183,13 +188,13 @@ export function usePanelTree() {
   /* ------------------------------- derived -------------------------------- */
 
   const activeMainOverlay = useMemo<SP_COIN_DISPLAY>(() => {
+    // First visible overlay wins; fallback to Trading if none
     for (const id of radioRootIds) {
       if (list.find((e) => e.panel === id)?.visible) return id;
     }
     return TRADING;
   }, [list, radioRootIds]);
 
-  // Use the updated enum names from your recent config (scroll panels)
   const isTokenScrollVisible = useMemo(
     () =>
       isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL) ||

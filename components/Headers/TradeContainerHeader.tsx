@@ -34,6 +34,8 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
       return 'Sponsor Coin Exchange';
     case SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST:
+      return 'Select a Sponsor';
+    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL:
       return 'Manage Sponsorships';
     default:
       return 'Main Panel Header';
@@ -53,6 +55,7 @@ const TradeContainerHeader = ({ closePanelCallback }: Props) => {
     if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
     if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST))  return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
     if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
 
     // ✅ Add this line for Agent panel
     if (isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;

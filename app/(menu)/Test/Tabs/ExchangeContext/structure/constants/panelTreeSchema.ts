@@ -11,8 +11,10 @@ export const ROOTS: SPCD[] = [
   SPCD.SELL_SELECT_PANEL_LIST,
   SPCD.RECIPIENT_SELECT_PANEL_LIST,
   SPCD.AGENT_SELECT_PANEL_LIST,
+  // ✅ Show Manage Sponsorships as its own radio overlay
+  SPCD.MANAGE_SPONSORSHIPS_PANEL,
   SPCD.ERROR_MESSAGE_PANEL,
-  SPCD.SPONSOR_SELECT_PANEL_LIST,
+  SPCD.SPONSOR_SELECT_PANEL_LIST, // legacy
 ];
 
 // Show Trading’s inline panels + controls
@@ -22,7 +24,7 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
     SPCD.BUY_SELECT_PANEL,
     SPCD.ADD_SPONSORSHIP_PANEL,
 
-    // ✅ add controls so they appear in the Test tree
+    // controls
     SPCD.SWAP_ARROW_BUTTON,
     SPCD.PRICE_BUTTON,
     SPCD.FEE_DISCLOSURE,
@@ -46,20 +48,23 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.RECIPIENT_SELECT_PANEL_LIST]: 'list',
   [SPCD.AGENT_SELECT_PANEL_LIST]: 'list',
 
+  // ✅ radio overlay kind for Manage Sponsorships
+  [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
+
   [SPCD.ADD_SPONSORSHIP_BUTTON]: 'button',
   [SPCD.MANAGE_SPONSORSHIPS_BUTTON]: 'button',
 
-  // ✅ mark controls so the Test UI can style/treat them distinctly if desired
+  // controls
   [SPCD.SWAP_ARROW_BUTTON]: 'control',
   [SPCD.PRICE_BUTTON]: 'control',
   [SPCD.FEE_DISCLOSURE]: 'control',
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
-  [SPCD.SPONSOR_SELECT_PANEL_LIST]: 'panel',
+  [SPCD.SPONSOR_SELECT_PANEL_LIST]: 'panel', // legacy
 };
 
-// Optional grouping unchanged…
+// Optional grouping
 export const GROUPS = {
   TOKEN_SELECT_LISTS: [SPCD.BUY_SELECT_PANEL_LIST, SPCD.SELL_SELECT_PANEL_LIST] as SPCD[],
   MODALS_AND_LISTS: [
@@ -67,6 +72,7 @@ export const GROUPS = {
     SPCD.SELL_SELECT_PANEL_LIST,
     SPCD.RECIPIENT_SELECT_PANEL_LIST,
     SPCD.AGENT_SELECT_PANEL_LIST,
+    SPCD.MANAGE_SPONSORSHIPS_PANEL, // ✅ include here too
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],
 };

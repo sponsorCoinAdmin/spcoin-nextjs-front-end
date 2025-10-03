@@ -25,9 +25,10 @@ const debugLog = createDebugLogger('MainTradingPanel', DEBUG_ENABLED, LOG_TIME);
 export default function MainTradingPanel() {
   const { isVisible, openPanel } = usePanelTree();
 
-  const isTradingStationVisible = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  const isErrorMessagePanel     = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
-  const isSponsorshipsPanel     = isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
+  const isTradingStationVisible  = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  const isErrorMessagePanel      = isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+  // ✅ new panel visibility
+  const isManageSponsorshipsPanel = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
 
   // “Close overlays” = switch main overlay back to TRADING
   const closePanelCallback = useCallback(() => {
@@ -51,11 +52,10 @@ export default function MainTradingPanel() {
         {/* Error panel */}
         <ErrorMessagePanel isActive={isErrorMessagePanel} />
 
-        {/* Sponsorships config overlay (uses panel-tree visibility internally) */}
+        {/* Manage Sponsorships overlay (visibility controlled by panel-tree) */}
         <ManageSponsorShipsPanel
-          showPanel={isSponsorshipsPanel}
+          showPanel={isManageSponsorshipsPanel}
           tokenContract={undefined}
-          callBackSetter={() => null}
         />
       </div>
     </div>

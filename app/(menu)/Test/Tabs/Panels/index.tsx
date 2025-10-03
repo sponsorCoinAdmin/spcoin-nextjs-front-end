@@ -18,20 +18,30 @@ export default function PanelsTab() {
   // Panels we want to inspect/control in this tab
   const KNOWN_PANELS: SP_COIN_DISPLAY[] = useMemo(
     () => [
-      SP_COIN_DISPLAY.TRADING_STATION_PANEL,     // main overlay (radio group)
+      // Main overlays (radio group)
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+
+      // Lists / modals
       SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,
       SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST,
       SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST,
       SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,
+
+      // Others
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+
+      // legacy (keep if you still need to poke it)
       SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST,
     ],
     []
   );
 
-  // Treat Trading Station as the only "main overlay" we expose here
+  // Treat both Trading Station and Manage Sponsorships as "main overlays"
   const isMainOverlay = useCallback(
-    (p: SP_COIN_DISPLAY) => p === SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+    (p: SP_COIN_DISPLAY) =>
+      p === SP_COIN_DISPLAY.TRADING_STATION_PANEL ||
+      p === SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
     []
   );
 
@@ -54,7 +64,7 @@ export default function PanelsTab() {
 
   // Toggle helper that respects main overlay semantics
   const togglePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, reason?: string) => {
+    (panel: SP_COIN_DISPLAY, _reason?: string) => {
       if (isMainOverlay(panel)) {
         // main overlays can't be "closed"; make it the active one
         openPanel(panel);
@@ -67,7 +77,7 @@ export default function PanelsTab() {
   );
 
   // "Open only" behavior for this tab
-  // - If main overlay: activate Trading Station and leave others as-is
+  // - If main overlay: activate it and leave others as-is
   // - If non-main: open target and close all other KNOWN_PANELS that are non-main
   const openOnlyHere = useCallback(
     (panel: SP_COIN_DISPLAY) => {
@@ -99,7 +109,7 @@ export default function PanelsTab() {
 
   return (
     <div className="space-y-4">
-      {/* Header row: reduced top buffer by half (-mt-3 ≈ -12px) */}
+      {/* Header row */}
       <div className="grid grid-cols-3 items-center -mt-3">
         <div /> {/* spacer keeps the title perfectly centered */}
         <h2 className="text-xl font-semibold text-center">Panels</h2>
@@ -122,6 +132,10 @@ export default function PanelsTab() {
         <QuickAction
           label="Open Trading Station only"
           onClick={() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL)}
+        />
+        <QuickAction
+          label="Open Manage Sponsorships only"
+          onClick={() => openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)}
         />
         <QuickAction
           label="Toggle Buy Select"
@@ -155,7 +169,7 @@ export default function PanelsTab() {
                 <span className="font-mono text-xs opacity-70">#{n.panel}</span>
                 <span>{SP_COIN_DISPLAY[n.panel]}</span>
                 <span className={pill(n.visible)}>{n.visible ? 'visible' : 'hidden'}</span>
-                {n.panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL && (
+                {isMainOverlay(n.panel) && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300">
                     main
                   </span>

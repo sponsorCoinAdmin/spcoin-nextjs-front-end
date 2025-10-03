@@ -12,17 +12,39 @@ type PanelDef = {
   children?: SP[];          // Test tree schema children
 };
 
+// Group all Trading Station children in one place (virtual tree only)
+const TRADING_CHILDREN: SP[] = [
+  SP.SELL_SELECT_PANEL,
+  SP.BUY_SELECT_PANEL,
+  SP.ADD_SPONSORSHIP_PANEL,
+  SP.SWAP_ARROW_BUTTON,
+  SP.PRICE_BUTTON,
+  SP.FEE_DISCLOSURE,
+  SP.AFFILIATE_FEE,
+  // ⛔️ REMOVED: SP.MANAGE_SPONSORSHIPS_PANEL (now a top-level overlay)
+];
+
 // ── Define panels ONCE here. To add a new main overlay: add { id, kind, overlay:true }.
 export const PANEL_DEFS: PanelDef[] = [
   // Main overlays (radio group)
-  { id: SP.TRADING_STATION_PANEL,       kind: 'root',  overlay: true,  defaultVisible: true  },
+  {
+    id: SP.TRADING_STATION_PANEL,
+    kind: 'root',
+    overlay: true,
+    defaultVisible: true,
+    children: TRADING_CHILDREN,
+  },
   { id: SP.BUY_SELECT_PANEL_LIST,       kind: 'list',  overlay: true,  defaultVisible: true  },
   { id: SP.SELL_SELECT_PANEL_LIST,      kind: 'list',  overlay: true,  defaultVisible: true  },
   { id: SP.RECIPIENT_SELECT_PANEL_LIST, kind: 'list',  overlay: true,  defaultVisible: false },
   { id: SP.AGENT_SELECT_PANEL_LIST,     kind: 'list',  overlay: true,  defaultVisible: false },
   { id: SP.ERROR_MESSAGE_PANEL,         kind: 'panel', overlay: true,  defaultVisible: false },
-  { id: SP.SPONSOR_SELECT_PANEL_LIST,   kind: 'panel', overlay: true,  defaultVisible: false }, // legacy
-  { id: SP.MANAGE_SPONSORSHIPS_PANEL,   kind: 'panel', overlay: true,  defaultVisible: false }, // ← new/added
+
+  // ✅ Promote Manage Sponsorships to a top-level overlay (part of the radio group)
+  { id: SP.MANAGE_SPONSORSHIPS_PANEL,   kind: 'panel', overlay: true,  defaultVisible: false },
+
+  // Legacy overlay kept for compatibility
+  { id: SP.SPONSOR_SELECT_PANEL_LIST,   kind: 'list',  overlay: true,  defaultVisible: false },
 
   // Trading subtree (non-radio)
   { id: SP.SELL_SELECT_PANEL,           kind: 'panel', defaultVisible: true,  children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
@@ -49,12 +71,10 @@ export const CHILDREN: Partial<Record<SP, SP[]>> = PANEL_DEFS.reduce((acc, d) =>
 export const KINDS: Partial<Record<SP, PanelKind>> =
   PANEL_DEFS.reduce((acc, d) => { acc[d.id] = d.kind; return acc; }, {} as Partial<Record<SP, PanelKind>>);
 
-// ── Derived: default seed for settings.mainPanelNode
+// ── Derived: default seed for settings.mainPanelNode (⚠️ flat; no children)
 const nameOf = (id: SP) => (SP as any)[id] ?? String(id);
-const buildSubtree = (id: SP): PanelNode => ({
+export const defaultMainPanelNode: MainPanelNode = PANEL_DEFS.map(({ id, defaultVisible }) => ({
   panel: id,
   name: nameOf(id),
-  visible: !!PANEL_DEFS.find(d => d.id === id)?.defaultVisible,
-  children: (CHILDREN[id] ?? []).map(buildSubtree),
-});
-export const defaultMainPanelNode: MainPanelNode = ROOTS.map((rootId) => buildSubtree(rootId));
+  visible: !!defaultVisible,
+}));
