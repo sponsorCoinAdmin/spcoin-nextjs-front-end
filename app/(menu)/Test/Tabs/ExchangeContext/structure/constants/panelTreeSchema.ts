@@ -4,21 +4,25 @@ import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure/exchangeContext/enums/s
 export type PanelKind = 'panel' | 'button' | 'list' | 'control';
 export const schemaVersion = 'v1';
 
-// Roots (top-level siblings in the virtual tree)
+// ✅ Single root: MAIN_TRADING_PANEL
 export const ROOTS: SPCD[] = [
-  SPCD.TRADING_STATION_PANEL,
-  SPCD.BUY_SELECT_PANEL_LIST,
-  SPCD.SELL_SELECT_PANEL_LIST,
-  SPCD.RECIPIENT_SELECT_PANEL_LIST,
-  SPCD.AGENT_SELECT_PANEL_LIST,
-  // ✅ Show Manage Sponsorships as its own radio overlay
-  SPCD.MANAGE_SPONSORSHIPS_PANEL,
-  SPCD.ERROR_MESSAGE_PANEL,
-  SPCD.SPONSOR_SELECT_PANEL_LIST, // legacy
+  SPCD.MAIN_TRADING_PANEL,
 ];
 
 // Show Trading’s inline panels + controls
 export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
+  // MAIN_TRADING_PANEL contains the radio overlays
+  [SPCD.MAIN_TRADING_PANEL]: [
+    SPCD.TRADING_STATION_PANEL,
+    SPCD.BUY_SELECT_PANEL_LIST,
+    SPCD.SELL_SELECT_PANEL_LIST,
+    SPCD.RECIPIENT_SELECT_PANEL_LIST,
+    SPCD.AGENT_SELECT_PANEL_LIST,
+    SPCD.ERROR_MESSAGE_PANEL,
+    SPCD.MANAGE_SPONSORSHIPS_PANEL,
+    // (Optional legacy) SPCD.SPONSOR_SELECT_PANEL_LIST,
+  ],
+
   [SPCD.TRADING_STATION_PANEL]: [
     SPCD.SELL_SELECT_PANEL,
     SPCD.BUY_SELECT_PANEL,
@@ -36,6 +40,8 @@ export const CHILDREN: Partial<Record<SPCD, SPCD[]>> = {
 };
 
 export const KINDS: Partial<Record<SPCD, PanelKind>> = {
+  [SPCD.MAIN_TRADING_PANEL]: 'panel',
+
   [SPCD.TRADING_STATION_PANEL]: 'panel',
 
   [SPCD.SELL_SELECT_PANEL]: 'panel',
@@ -48,7 +54,6 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.RECIPIENT_SELECT_PANEL_LIST]: 'list',
   [SPCD.AGENT_SELECT_PANEL_LIST]: 'list',
 
-  // ✅ radio overlay kind for Manage Sponsorships
   [SPCD.MANAGE_SPONSORSHIPS_PANEL]: 'panel',
 
   [SPCD.ADD_SPONSORSHIP_BUTTON]: 'button',
@@ -61,7 +66,7 @@ export const KINDS: Partial<Record<SPCD, PanelKind>> = {
   [SPCD.AFFILIATE_FEE]: 'control',
 
   [SPCD.ERROR_MESSAGE_PANEL]: 'panel',
-  [SPCD.SPONSOR_SELECT_PANEL_LIST]: 'panel', // legacy
+  // [SPCD.SPONSOR_SELECT_PANEL_LIST]: 'panel', // legacy if you still want to show it
 };
 
 // Optional grouping
@@ -72,7 +77,7 @@ export const GROUPS = {
     SPCD.SELL_SELECT_PANEL_LIST,
     SPCD.RECIPIENT_SELECT_PANEL_LIST,
     SPCD.AGENT_SELECT_PANEL_LIST,
-    SPCD.MANAGE_SPONSORSHIPS_PANEL, // ✅ include here too
+    SPCD.MANAGE_SPONSORSHIPS_PANEL,
     SPCD.ERROR_MESSAGE_PANEL,
   ] as SPCD[],
 };
