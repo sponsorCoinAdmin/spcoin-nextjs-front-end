@@ -1,37 +1,116 @@
-// File: components/panes/MainTradingPanel.tsx
+// File: components/containers/ManageSponsorshipsPanel.tsx
 'use client';
 
-import styles from '@/styles/Exchange.module.css';
+import React, { useEffect } from 'react';
+import { TokenContract } from '@/lib/structure';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SPONSOR_SELECT_PANEL_LIST === 'true';
+const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
 
-import {
-  TokenSelectPanel,
-  RecipientSelectPanel,
-  AgentSelectPanel,
-} from '../containers/AssetSelectPanels';
-import ManageSponsorShipsPanel from '@/components/containers/ManageSponsorShipsPanel';
-import { TradingStationPanel, ErrorMessagePanel } from '../views';
+type Props = {
+  /** Optional: show token context if parent has one available */
+  tokenContract?: TokenContract;
+  /** Optional: external close hook */
+  onClose?: () => void;
+};
 
-export default function MainTradingPanel() {
+export default function ManageSponsorshipsPanel({ tokenContract, onClose }: Props) {
+  const { isVisible, openPanel, closePanel } = usePanelTree();
+
+  // Self-gated visibility (no prop drilling)
+  const isActive = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+
+  debugLog.log('🛠️ ManageSponsorshipsPanel render; active =', isActive);
+
+  useEffect(() => {
+    if (!isActive) return;
+    debugLog.log(
+      '🎯 ManageSponsorshipsPanel active; token:',
+      tokenContract?.symbol ?? '(none)'
+    );
+  }, [isActive, tokenContract]);
+
+  if (!isActive) {
+    debugLog.log('⏭️ ManageSponsorshipsPanel → not active, skipping render');
+    return null;
+  }
+
+  const handleClose = () => {
+    debugLog.log('✅ Close ManageSponsorshipsPanel');
+
+    // Close this overlay
+    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+
+    // Re-show the launcher button so users can reopen the panel
+    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+
+    onClose?.();
+  };
+
   return (
-    <div id="MainPage_ID">
-      <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        {/* Header (no close callback) */}
-        <TradeContainerHeader />
+    <section
+      id="ManageSponsorshipsPanel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ManageSponsorshipsPanelHeader"
+      className="flex flex-col w-full rounded-[15px] overflow-hidden
+                 border border-slate-500/30 bg-slate-900/30 text-slate-100"
+    >
+      <header
+        id="ManageSponsorshipsPanelHeader"
+        className="flex items-center justify-between px-4 py-3
+                   bg-slate-800/50 border-b border-slate-600/30"
+      >
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">Manage Sponsorships</h3>
+          {tokenContract?.symbol ? (
+            <span className="text-xs opacity-80">for {tokenContract.symbol}</span>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          aria-label="Close panel"
+          onClick={handleClose}
+          className="h-7 w-7 inline-flex items-center justify-center rounded
+                     border border-slate-400/30 text-slate-200
+                     hover:text-white hover:border-slate-300 transition-colors"
+        >
+          ×
+        </button>
+      </header>
 
-        {/* Each child gates itself via the panel tree */}
-        <TradingStationPanel />
-        <ManageSponsorShipsPanel />
+      <div className="p-4 flex flex-col gap-4">
+        <div className="text-sm opacity-90">
+          Configure sponsorships for this token. (Placeholder content)
+        </div>
 
-        {/* Non-radio overlays self-gate internally */}
-        <TokenSelectPanel />
-        <RecipientSelectPanel />
-        <AgentSelectPanel />
+        <div className="rounded-lg border border-slate-500/30 p-3">
+          <div className="text-sm font-medium mb-1">Selected token</div>
+          <div className="text-xs opacity-80 break-all">
+            {tokenContract
+              ? `${tokenContract.name ?? 'Token'} (${tokenContract.symbol ?? '—'}) on chain ${
+                  tokenContract.chainId ?? '—'
+                }`
+              : 'No token selected'}
+          </div>
+        </div>
 
-        {/* Error panel self-gates as well */}
-        <ErrorMessagePanel />
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-3 py-1.5 rounded-md bg-slate-700/80 hover:bg-slate-700 text-white text-sm
+                       transition-colors"
+          >
+            Done
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

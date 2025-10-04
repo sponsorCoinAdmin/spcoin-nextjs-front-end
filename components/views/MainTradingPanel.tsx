@@ -12,17 +12,16 @@ import {
   RecipientSelectPanel,
   AgentSelectPanel,
 } from '../containers/AssetSelectPanels';
-import ManageSponsorShipsPanel from '@/components/containers/ManageSponsorShipsPanel';
 
-// ✅ New: gate this whole container by MAIN_TRADING_PANEL visibility
+// ✅ Gate this whole container by MAIN_TRADING_PANEL visibility
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import ManageSponsorshipsPanel from '../containers/ManageSponsorShipsPanel';
 
 export default function MainTradingPanel() {
   const { isVisible } = usePanelTree();
   const isActive = isVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
 
-  // Hide the entire main trading container unless MAIN_TRADING_PANEL is active
   if (!isActive) return null;
 
   return (
@@ -30,7 +29,8 @@ export default function MainTradingPanel() {
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
         <TradeContainerHeader />
         <TradingStationPanel />
-        <ManageSponsorShipsPanel />
+        {/* Visibility is now self-managed inside the panel */}
+        <ManageSponsorshipsPanel />
         <TokenSelectPanel />
         <RecipientSelectPanel />
         <AgentSelectPanel />
