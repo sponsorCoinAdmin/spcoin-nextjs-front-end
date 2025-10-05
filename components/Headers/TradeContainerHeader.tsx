@@ -31,12 +31,10 @@ const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
   const { isVisible, openPanel } = usePanelTree();
 
-  // ❗️Call hooks first (consistent order every render)
+  // Keep hooks unconditional for stable order
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // Compute visibility + title after hooks are declared
-  const showHeader = isVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
-
+  // Derive the "current" display from visibility (no self-gating here)
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
     if (isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST))     return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
     if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST))        return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
@@ -57,9 +55,6 @@ const TradeContainerHeader = () => {
   const onCloseOverlay = useCallback(() => {
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [openPanel]);
-
-  // ✅ Gate AFTER hooks are set up (prevents hook-count mismatch)
-  if (!showHeader) return null;
 
   return (
     <div

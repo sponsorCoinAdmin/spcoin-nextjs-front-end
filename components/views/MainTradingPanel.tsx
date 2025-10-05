@@ -1,4 +1,4 @@
-// File: components/panes/MainTradingPanel.tsx
+// File: components/views/MainTradingPanel.tsx
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
@@ -16,7 +16,12 @@ import {
 // ✅ Gate this whole container by MAIN_TRADING_PANEL visibility
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import ManageSponsorshipsPanel from '../containers/ManageSponsorShipsPanel';
+
+// ✅ Fixed camel-case + path after rename
+import ManageSponsorshipsPanel from '@/components/containers/ManageSponsorshipsPanel';
+
+// ✅ Phase 0: centralize visibility gating with a tiny wrapper
+import PanelGate from '@/components/utility/PanelGate';
 
 export default function MainTradingPanel() {
   const { isVisible } = usePanelTree();
@@ -27,9 +32,13 @@ export default function MainTradingPanel() {
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        <TradeContainerHeader />
+        {/* Gate header visibility here (component stays dumb/presentational) */}
+        <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
+          <TradeContainerHeader />
+        </PanelGate>
+
         <TradingStationPanel />
-        {/* Visibility is now self-managed inside the panel */}
+        {/* Visibility is self-managed inside the panel */}
         <ManageSponsorshipsPanel />
         <TokenSelectPanel />
         <RecipientSelectPanel />
