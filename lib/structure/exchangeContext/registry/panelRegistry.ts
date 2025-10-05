@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/registry/panelRegistry.ts
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
 
@@ -23,30 +23,33 @@ const TRADING_CHILDREN: SP[] = [
   SP.PRICE_BUTTON,
   SP.FEE_DISCLOSURE,
   SP.AFFILIATE_FEE,
-  // ⛔️ Not here: SP.MANAGE_SPONSORSHIPS_PANEL (it’s a top-level overlay)
 ];
 
-// MAIN_TRADING_PANEL’s children = all radio overlays (top-level modals)
+// MAIN_TRADING_PANEL’s children = header (non-radio) + all radio overlays
 const MAIN_TRADING_CHILDREN: SP[] = [
-  SP.TRADING_STATION_PANEL,
+  SP.TRADE_CONTAINER_HEADER,     // ✅ non-radio, independent visibility
+  SP.TRADING_STATION_PANEL,      // ⬇︎ radio overlays
   SP.BUY_SELECT_PANEL_LIST,
   SP.SELL_SELECT_PANEL_LIST,
   SP.RECIPIENT_SELECT_PANEL_LIST,
   SP.AGENT_SELECT_PANEL_LIST,
   SP.ERROR_MESSAGE_PANEL,
   SP.MANAGE_SPONSORSHIPS_PANEL,
-  // (legacy, if you want it shown): SP.SPONSOR_SELECT_PANEL_LIST,
+  // (legacy) SP.SPONSOR_SELECT_PANEL_LIST,
 ];
 
 // ── Define panels ONCE here. To add a new main overlay: add { id, kind, overlay:true }.
-export const PANEL_DEFS: PanelDef[] = [
-  // 🚀 Top-level gate (NOT a radio overlay)
+export const PANEL_DEFS = [
+  // Root representing the whole trading area
   {
     id: SP.MAIN_TRADING_PANEL,
     kind: 'root',
     defaultVisible: true,
     children: MAIN_TRADING_CHILDREN,
   },
+
+  // ✅ Trade container header (NOT a radio overlay)
+  { id: SP.TRADE_CONTAINER_HEADER, kind: 'panel', defaultVisible: true },
 
   // Main overlays (radio group)
   {
@@ -67,17 +70,17 @@ export const PANEL_DEFS: PanelDef[] = [
   { id: SP.SPONSOR_SELECT_PANEL_LIST,   kind: 'list',  overlay: true,  defaultVisible: false },
 
   // Trading subtree (non-radio)
-  { id: SP.SELL_SELECT_PANEL,           kind: 'panel', defaultVisible: true,  children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
-  { id: SP.BUY_SELECT_PANEL,            kind: 'panel', defaultVisible: true,  children: [SP.ADD_SPONSORSHIP_BUTTON] },
-  { id: SP.ADD_SPONSORSHIP_PANEL,       kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
-  { id: SP.CONFIG_SPONSORSHIP_PANEL,    kind: 'panel', defaultVisible: false },
+  { id: SP.SELL_SELECT_PANEL,        kind: 'panel',  defaultVisible: true,  children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
+  { id: SP.BUY_SELECT_PANEL,         kind: 'panel',  defaultVisible: true,  children: [SP.ADD_SPONSORSHIP_BUTTON] },
+  { id: SP.ADD_SPONSORSHIP_PANEL,    kind: 'panel',  defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
+  { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel',  defaultVisible: false },
 
   // Buttons
-  { id: SP.ADD_SPONSORSHIP_BUTTON,      kind: 'button', defaultVisible: false },
-  { id: SP.MANAGE_SPONSORSHIPS_BUTTON,  kind: 'button', defaultVisible: false },
-];
+  { id: SP.ADD_SPONSORSHIP_BUTTON,     kind: 'button', defaultVisible: false },
+  { id: SP.MANAGE_SPONSORSHIPS_BUTTON, kind: 'button', defaultVisible: false },
+] as const;
 
-// ── Derived: radio group used by the real app (exclude MAIN_TRADING_PANEL)
+// ── Derived: radio group used by the real app (excludes header automatically)
 export const MAIN_OVERLAY_GROUP: SP[] = PANEL_DEFS
   .filter((d) => d.overlay === true)
   .map((d) => d.id);
@@ -99,10 +102,10 @@ export const KINDS: Partial<Record<SP, PanelKind>> =
     return acc;
   }, {});
 
-// ── Derived: default seed for settings.mainPanelNode (⚠️ flat; no children)
+// ── Derived: default seed for settings.spCoinPanelTree (flat; persisted)
 const nameOf = (id: SP) => (SP as any)[id] ?? String(id);
 
-export const defaultMainPanelNode: MainPanelNode =
+export const defaultSpCoinPanelTree: SpCoinPanelTree =
   PANEL_DEFS.map<PanelNode>(({ id, defaultVisible }) => ({
     panel: id,
     name: nameOf(id),

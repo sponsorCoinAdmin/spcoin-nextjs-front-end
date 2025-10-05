@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults.ts
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 /**
@@ -18,7 +18,7 @@ const DEFAULT_VISIBLE = new Set<SP>([
   SP.FEE_DISCLOSURE,
 ]);
 
-export function loadInitialPanelNodeDefaults(): MainPanelNode {
+export function loadInitialPanelNodeDefaults(): SpCoinPanelTree {
   const nameOf = (id: SP) => (SP as any)[id] ?? String(id);
 
   // Seed a flat array of {panel, name, visible}. Children are derived virtually in the Test UI.

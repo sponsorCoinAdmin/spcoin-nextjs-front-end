@@ -38,7 +38,7 @@ function toMap(list: PanelEntry[]): Record<number, boolean> {
 }
 
 function writeFlat(prevCtx: any, next: PanelEntry[]) {
-  return { ...prevCtx, settings: { ...(prevCtx?.settings ?? {}), mainPanelNode: next } };
+  return { ...prevCtx, settings: { ...(prevCtx?.settings ?? {}), spCoinPanelTree: next } };
 }
 
 function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEntry[] {
@@ -50,7 +50,7 @@ function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEn
 export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const list = useMemo<PanelEntry[]>(() => flatten((exchangeContext as any)?.settings?.mainPanelNode), [exchangeContext]);
+  const list = useMemo<PanelEntry[]>(() => flatten((exchangeContext as any)?.settings?.spCoinPanelTree), [exchangeContext]);
   const map  = useMemo(() => toMap(list), [list]);
 
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
@@ -62,7 +62,7 @@ export function usePanelTree() {
     const keep = visible[0];
     debugLog.log('reconcile overlays → keep', keep);
     setExchangeContext(prev => {
-      const flat = flatten((prev as any)?.settings?.mainPanelNode);
+      const flat = flatten((prev as any)?.settings?.spCoinPanelTree);
       const next = flat.map(e =>
         overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
       );
@@ -86,7 +86,7 @@ export function usePanelTree() {
     (panel: SP_COIN_DISPLAY) => {
       debugLog.log('open', panel);
       setExchangeContext(prev => {
-        const flat0 = flatten((prev as any)?.settings?.mainPanelNode);
+        const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
         let flat = ensurePanelPresent(flat0, panel);
 
         if (overlays.includes(panel)) {
@@ -114,7 +114,7 @@ export function usePanelTree() {
     (panel: SP_COIN_DISPLAY) => {
       debugLog.log('close', panel);
       setExchangeContext(prev => {
-        const flat = flatten((prev as any)?.settings?.mainPanelNode);
+        const flat = flatten((prev as any)?.settings?.spCoinPanelTree);
 
         if (overlays.includes(panel)) {
           // If we're closing an ACTIVE overlay → allow "none selected"

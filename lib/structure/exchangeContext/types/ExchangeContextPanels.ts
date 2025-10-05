@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/types/ExchangeContextPanels.ts
 
-import type { MainPanelNode } from './PanelNode';
+import type { SpCoinPanelTree } from './PanelNode';
 
 /**
  * Minimal extension you can merge into your ExchangeContext shape.
@@ -11,5 +11,5 @@ export interface ExchangeContextWithPanels {
    * Root of the visible panel tree for the app.
    * If null, the UI should initialize it from defaults or storage.
    */
-  mainPanelNode: MainPanelNode | null;
+  spCoinPanelTree: SpCoinPanelTree | null;
 }

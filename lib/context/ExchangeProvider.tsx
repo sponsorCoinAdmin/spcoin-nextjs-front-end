@@ -19,7 +19,7 @@ import {
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 
-import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { loadInitialPanelNodeDefaults } from '@/lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults';
 import { PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
@@ -87,8 +87,8 @@ const ensurePanelName = (n: PanelNode): PanelNode => ({
 
 const ensurePanelNamesInMemory = (panels: PanelNode[]): PanelNode[] => panels.map(ensurePanelName);
 
-// Normalize for persistence: strip children and ensure names → MainPanelNode
-const normalizeForPersistence = (panels: PanelNode[]): MainPanelNode =>
+// Normalize for persistence: strip children and ensure names → SpCoinPanelTree
+const normalizeForPersistence = (panels: PanelNode[]): SpCoinPanelTree =>
   panels.map((n) => ({
     panel: n.panel,
     name: n.name || (SP_COIN_DISPLAY[n.panel] ?? String(n.panel)),
@@ -137,9 +137,9 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const normalized = clone(nextBase);
-        if (Array.isArray(normalized?.settings?.mainPanelNode)) {
-          normalized.settings.mainPanelNode = normalizeForPersistence(
-            normalized.settings.mainPanelNode as unknown as PanelNode[]
+        if (Array.isArray(normalized?.settings?.spCoinPanelTree)) {
+          normalized.settings.spCoinPanelTree = normalizeForPersistence(
+            normalized.settings.spCoinPanelTree as unknown as PanelNode[]
           );
         }
         saveLocalExchangeContext(normalized);
@@ -158,7 +158,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const base = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (base as any).settings ?? {};
-      const storedPanels = settingsAny.mainPanelNode;
+      const storedPanels = settingsAny.spCoinPanelTree;
 
       let flatPanels: PanelNode[];
       if (isMainPanels(storedPanels)) {
@@ -182,7 +182,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       // Persist flat version; keep in-memory with names
       (base as any).settings = {
         ...settingsAny,
-        mainPanelNode: normalizeForPersistence(flatPanels),
+        spCoinPanelTree: normalizeForPersistence(flatPanels),
       };
 
       try {
@@ -191,7 +191,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         /* ignore persist errors */
       }
 
-      (base as any).settings.mainPanelNode = flatPanels;
+      (base as any).settings.spCoinPanelTree = flatPanels;
       setContextState(base as ExchangeContextTypeOnly);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -30,7 +30,7 @@ const nameForVirtual = (v: any): string => {
 };
 
 // Arrays that should show "[idx] PANEL_NAME" for their virtual children
-const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children', 'mainPanelNode']);
+const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children', 'spCoinPanelTree']);
 
 const Branch: React.FC<BranchProps> = ({
   label,
@@ -48,9 +48,9 @@ const Branch: React.FC<BranchProps> = ({
   const isObject = value !== null && typeof value === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
-  // dot-path classifiers for *virtual* panel nodes (now includes mainPanelNode)
+  // dot-path classifiers for *virtual* panel nodes (now includes spCoinPanelTree)
   const isPanelArrayItem =
-    (/\.(spCoinPanelTree|children|mainPanelNode)\.\d+$/.test(path)) &&
+    (/\.(spCoinPanelTree|children|spCoinPanelTree)\.\d+$/.test(path)) &&
     looksLikeVirtualPanelNode(value);
 
   // Treat any array labeled exactly "children" as a pure container (no row rendered)
@@ -170,7 +170,7 @@ const Branch: React.FC<BranchProps> = ({
             let childLabel = isArray ? `[${k}]` : k;
 
             // ✅ Append enum/name for arrays that contain virtual panel nodes,
-            //    including top-level "mainPanelNode"
+            //    including top-level "spCoinPanelTree"
             if (
               isArray &&
               PANEL_ARRAY_LABELS.has(label) &&

@@ -7,7 +7,7 @@ import {
   TRADE_DIRECTION,
   API_TRADING_PROVIDER, // provider enum
 } from '@/lib/structure';
-import { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.
@@ -64,7 +64,7 @@ export type Accounts = {
 /**
  * ✅ Settings for view/panel management and API provider choice.
  * - `apiTradingProvider` selects the quote/route provider (e.g., 0x, 1inch).
- * - `mainPanelNode` persists the full panel tree (new visibility model).
+ * - `spCoinPanelTree` persists the full panel tree (new visibility model).
  */
 export type Settings = {
   /** Which backend to use for trading operations */
@@ -74,7 +74,7 @@ export type Settings = {
    * New visibility model: full panel tree persisted in settings.
    * Always present after hydration (provider seeds it from defaults).
    */
-  mainPanelNode: MainPanelNode;
+  spCoinPanelTree: SpCoinPanelTree;
 };
 
 /** (Legacy alias – kept only if you still import it elsewhere) */

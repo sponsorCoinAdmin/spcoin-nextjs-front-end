@@ -16,8 +16,8 @@ import {
   SP_COIN_DISPLAY,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
-import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
-import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
+import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -42,9 +42,9 @@ function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
-/** Build a default MainPanelNode and exclude CONFIG_SPONSORSHIP_PANEL from children */
-function buildDefaultMainPanelNode(): MainPanelNode {
-  const root = clone(defaultMainPanelNode) as MainPanelNode;
+/** Build a default SpCoinPanelTree and exclude CONFIG_SPONSORSHIP_PANEL from children */
+function buildDefaultSpCoinPanelTree(): SpCoinPanelTree {
+  const root = clone(defaultSpCoinPanelTree) as SpCoinPanelTree;
   root.children = (root.children ?? []).filter(
     (ch) => ch?.panel !== SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
   );
@@ -78,8 +78,8 @@ const getInitialContext = (chain: number | string | { id: number } | undefined):
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      // ✅ satisfy required Settings.mainPanelNode with a full tree root
-      mainPanelNode: buildDefaultMainPanelNode(),
+      // ✅ satisfy required Settings.spCoinPanelTree with a full tree root
+      spCoinPanelTree: buildDefaultSpCoinPanelTree(),
     },
     errorMessage: undefined,
     apiErrorMessage: undefined,

@@ -2,7 +2,7 @@
 
 import { TradeData, ExchangeContext } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
-import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 /** Legacy guards — we only use them to decide whether to preserve or drop. */
 function isPanelNodeArray(x: unknown): x is PanelNode[] {
@@ -15,7 +15,7 @@ function isPanelNodeArray(x: unknown): x is PanelNode[] {
       Array.isArray((n as any).children ?? [])
   );
 }
-function isMainPanelNode(x: unknown): x is MainPanelNode {
+function isSpCoinPanelTree(x: unknown): x is SpCoinPanelTree {
   return !!x &&
     typeof x === 'object' &&
     typeof (x as any).panel === 'number' &&
@@ -26,7 +26,7 @@ function isMainPanelNode(x: unknown): x is MainPanelNode {
 /**
  * Safely merges a raw (possibly partial or malformed) ExchangeContext object with defaults.
  * IMPORTANT:
- * - Do NOT seed/overwrite `settings.mainPanelNode` here. If present, preserve it as-is.
+ * - Do NOT seed/overwrite `settings.spCoinPanelTree` here. If present, preserve it as-is.
  *   Provider/init code is responsible for seeding/migrating defaults.
  */
 export const sanitizeExchangeContext = (
@@ -36,11 +36,11 @@ export const sanitizeExchangeContext = (
   const defaultContext = getInitialContext(chainId);
 
   if (!raw) {
-    // No raw context → return defaults (which already include settings.mainPanelNode).
+    // No raw context → return defaults (which already include settings.spCoinPanelTree).
     return { ...defaultContext };
   }
 
-  // ----- SETTINGS: shallow merge defaults <- raw.settings; preserve mainPanelNode if present.
+  // ----- SETTINGS: shallow merge defaults <- raw.settings; preserve spCoinPanelTree if present.
   const prevSettings: any = (raw as any).settings ?? {};
   const sanitizedSettings: any = {
     ...defaultContext.settings,
@@ -48,12 +48,12 @@ export const sanitizeExchangeContext = (
   };
 
  // Preserve persisted panel state if it looks like either the new tree or the old array
-  const mpn = prevSettings.mainPanelNode;
-  if (isMainPanelNode(mpn) || isPanelNodeArray(mpn)) {
-    sanitizedSettings.mainPanelNode = mpn;
+  const mpn = prevSettings.spCoinPanelTree;
+  if (isSpCoinPanelTree(mpn) || isPanelNodeArray(mpn)) {
+    sanitizedSettings.spCoinPanelTree = mpn;
   } else if (typeof mpn !== 'undefined') {
     // Malformed → drop; provider will seed/migrate later
-    delete sanitizedSettings.mainPanelNode;
+    delete sanitizedSettings.spCoinPanelTree;
   }
 
   // ----- NETWORK

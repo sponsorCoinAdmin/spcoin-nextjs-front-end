@@ -7,7 +7,7 @@ import type {
   ExchangeContext as ExchangeContextTypeOnly,
   WalletAccount,
 } from '@/lib/structure';
-import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { resolveNetworkElement } from '@/lib/context/helpers/NetworkHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
@@ -31,13 +31,13 @@ function clone<T>(o: T): T {
 
 /* ----------------------- Flat panel visibility helpers ---------------------- */
 
-/** Any of the given IDs visible within the FLAT mainPanelNode array? */
-function anyVisible(panels: MainPanelNode, ids: SP_COIN_DISPLAY[]): boolean {
+/** Any of the given IDs visible within the FLAT spCoinPanelTree array? */
+function anyVisible(panels: SpCoinPanelTree, ids: SP_COIN_DISPLAY[]): boolean {
   return panels.some((n) => ids.includes(n.panel as SP_COIN_DISPLAY) && !!n.visible);
 }
 
 /** Radio-toggle across MAIN_OVERLAY_GROUP in the FLAT array, enabling only targetId. */
-function setOverlayVisible(panels: MainPanelNode, targetId: SP_COIN_DISPLAY): MainPanelNode {
+function setOverlayVisible(panels: SpCoinPanelTree, targetId: SP_COIN_DISPLAY): SpCoinPanelTree {
   const next = clone(panels);
   for (const n of next) {
     if (MAIN_OVERLAY_GROUP.includes(n.panel as SP_COIN_DISPLAY)) {
@@ -301,7 +301,7 @@ export function useProviderWatchers({
     }
 
     // B) Auto-close selection overlay → switch to TRADING when a token is committed
-    const root = contextState.settings?.mainPanelNode as MainPanelNode | undefined;
+    const root = contextState.settings?.spCoinPanelTree as SpCoinPanelTree | undefined;
     const selectOpen = root
       ? anyVisible(root, [
           SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,
@@ -314,8 +314,8 @@ export function useProviderWatchers({
     if ((sellAddr || buyAddr) && selectOpen && root) {
       setExchangeContext((prevCtx) => {
         const next = structuredClone(prevCtx);
-        next.settings.mainPanelNode = setOverlayVisible(
-          next.settings.mainPanelNode as MainPanelNode,
+        next.settings.spCoinPanelTree = setOverlayVisible(
+          next.settings.spCoinPanelTree as SpCoinPanelTree,
           SP_COIN_DISPLAY.TRADING_STATION_PANEL
         );
         return next;
@@ -327,7 +327,7 @@ export function useProviderWatchers({
     contextState,
     contextState?.tradeData.sellTokenContract?.address,
     contextState?.tradeData.buyTokenContract?.address,
-    contextState?.settings?.mainPanelNode, // re-run when panel array changes
+    contextState?.settings?.spCoinPanelTree, // re-run when panel array changes
     setExchangeContext,
   ]);
 }

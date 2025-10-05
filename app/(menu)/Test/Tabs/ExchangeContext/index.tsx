@@ -122,9 +122,9 @@ export default function ExchangeContextTab() {
 
   // Console dump (original + derived)
   useEffect(() => {
-    const flat = (exchangeContext as any)?.settings?.mainPanelNode as PanelNode[] | undefined;
+    const flat = (exchangeContext as any)?.settings?.spCoinPanelTree as PanelNode[] | undefined;
     console.groupCollapsed('%c[ExchangeContextTab] Panel State Dump', 'color:#0bf');
-    console.log('Flat mainPanelNode:', flatForConsole(flat));
+    console.log('Flat spCoinPanelTree:', flatForConsole(flat));
     console.log('Virtual tree (derived):', virtualForConsole(treeWithNames));
     console.log('Orphans (in state, not in schema):', orphans.map((id) => `${SP[id]} (#${id})`));
     console.log('Missing (in schema, not in state):', missing.map((id) => `${SP[id]} (#${id})`));
@@ -157,11 +157,11 @@ export default function ExchangeContextTab() {
 
   const onToggleShowGui = useCallback(() => setShowGui((prev) => !prev), []);
 
-  // Use ARRAY for mainPanelNode so paths are numeric (no changes to logic)
+  // Use ARRAY for spCoinPanelTree so paths are numeric (no changes to logic)
   const settingsObj = useMemo(
     () => ({
       apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
-      mainPanelNode: treeWithNames, // array; each node now has a `name` field
+      spCoinPanelTree: treeWithNames, // array; each node now has a `name` field
     }),
     [exchangeContext, treeWithNames]
   );

@@ -1,6 +1,6 @@
 // File: lib/context/exchangeContext/helpers/panelNames.ts
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import type { PanelNode, MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 export function withPanelNames<M extends Record<string, unknown> = Record<string, unknown>>(
   node: PanelNode<M>
@@ -14,7 +14,7 @@ export function withPanelNames<M extends Record<string, unknown> = Record<string
 }
 
 export function ensurePanelNames<M extends Record<string, unknown> = Record<string, unknown>>(
-  root: MainPanelNode<M>
-): MainPanelNode<M> {
+  root: SpCoinPanelTree<M>
+): SpCoinPanelTree<M> {
   return withPanelNames(root);
 }

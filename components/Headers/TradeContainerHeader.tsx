@@ -14,75 +14,63 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
   switch (d) {
-    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST:
-      return 'Select Sponsors Agent';
-    case SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST:
-      return 'Select a Token to Buy';
-    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:
-      return 'Error Message Panel';
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST:
-      return 'Select Recipient to Sponsor';
-    case SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST:
-      return 'Select a Token to Sell';
-    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL:
-      return 'Sponsor Rate Configuration';
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:
-      return 'Sponsor Coin Exchange';
-    case SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST:
-      return 'Select a Sponsor';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL:
-      return 'Manage Sponsorships';
-    default:
-      return 'Main Panel Header';
+    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST:     return 'Select Sponsors Agent';
+    case SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST:       return 'Select a Token to Buy';
+    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL:         return 'Error Message Panel';
+    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST: return 'Select Recipient to Sponsor';
+    case SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST:      return 'Select a Token to Sell';
+    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL:    return 'Sponsor Rate Configuration';
+    case SP_COIN_DISPLAY.TRADING_STATION_PANEL:       return 'Sponsor Coin Exchange';
+    case SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST:   return 'Select a Sponsor';
+    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL:   return 'Manage Sponsorships';
+    default:                                          return 'Main Panel Header';
   }
 }
 
 const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
   const { isVisible, openPanel } = usePanelTree();
+
+  // ❗️Call hooks first (consistent order every render)
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // Derive the "current" display from the tree
+  // Compute visibility + title after hooks are declared
+  const showHeader = isVisible(SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER);
+
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    // Include sponsorships panel so it can set the header correctly
-    if (isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
-
-    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST))  return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL)) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-
-    // Agent list
-    if (isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST)) return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
-
-    if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL)) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL)) return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-
+    if (isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST))     return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST))        return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST))         return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL))     return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST))       return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
+    if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL))           return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
+    if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL))         return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
     return SP_COIN_DISPLAY.UNDEFINED;
   }, [isVisible]);
 
   const title = getTitleFromDisplay(currentDisplay);
   const isTradingVisible = currentDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
 
-  const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
-  const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
-
-  // Close any non-trading overlay → return to Trading Station
+  const onOpenConfig   = useCallback(() => setIsConfigOpen(true), []);
+  const onCloseConfig  = useCallback(() => setIsConfigOpen(false), []);
   const onCloseOverlay = useCallback(() => {
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [openPanel]);
+
+  // ✅ Gate AFTER hooks are set up (prevents hook-count mismatch)
+  if (!showHeader) return null;
 
   return (
     <div
       id="TradeContainerHeader"
       className="h-[60px] flex justify-between items-center w-full px-2.5 box-border shrink-0"
     >
-      {/* Controlled config dialog */}
       <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
 
       <div
         id="SponsorCoinLogo.png"
-        onDoubleClick={true ? () => exchangeContextDump(exchangeContext) : undefined}
+        onDoubleClick={() => exchangeContextDump(exchangeContext)}
         className={styles.leftLogo}
       >
         <ConnectButton

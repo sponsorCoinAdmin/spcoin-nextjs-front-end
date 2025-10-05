@@ -7,12 +7,12 @@ import { filterPaths, loadExCtxMap, saveExCtxMap } from '../utils/exCtxMapStorag
 
 /** Path classifiers (dot-style) */
 function isPanelArrayItemPath(path: string): boolean {
-  // ...mainPanelNode.<index> OR ...children.<index>
-  return /\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path);
+  // ...spCoinPanelTree.<index> OR ...children.<index>
+  return /\.spCoinPanelTree\.\d+$/.test(path) || /\.children\.\d+$/.test(path);
 }
 function isChildrenContainerPath(path: string): boolean {
-  // ...mainPanelNode.<index>.children
-  return /\.mainPanelNode\.\d+\.children$/.test(path);
+  // ...spCoinPanelTree.<index>.children
+  return /\.spCoinPanelTree\.\d+\.children$/.test(path);
 }
 
 /** Treat arrays as branch nodes (not just plain objects) */
@@ -23,9 +23,9 @@ function isBranchNode(val: any): boolean {
 /**
  * Discover ALL expandable branch paths so exCtxMap stays in sync with the UI:
  *  - rest.settings
- *  - rest.settings.mainPanelNode (array)
- *  - every panel item:                      rest.settings.mainPanelNode.N
- *  - every children container:              rest.settings.mainPanelNode.N.children
+ *  - rest.settings.spCoinPanelTree (array)
+ *  - every panel item:                      rest.settings.spCoinPanelTree.N
+ *  - every children container:              rest.settings.spCoinPanelTree.N.children
  *  - nested children recursively:           …children.M, …children.M.children, …
  *  - everything else under rest.*
  */
@@ -37,20 +37,20 @@ function discoverNonPanelPaths(exchangeContext: any): Set<string> {
     found.add(path);
   };
 
-  // Include settings + mainPanelNode group line
+  // Include settings + spCoinPanelTree group line
   const settings = (exchangeContext ?? {}).settings;
   if (isBranchNode(settings)) {
     add('rest.settings', settings);
 
-    const main = (settings as any).mainPanelNode;
+    const main = (settings as any).spCoinPanelTree;
     if (Array.isArray(main)) {
-      add('rest.settings.mainPanelNode', main);
+      add('rest.settings.spCoinPanelTree', main);
 
-      // Traverse mainPanelNode recursively (include panel items AND their children containers)
+      // Traverse spCoinPanelTree recursively (include panel items AND their children containers)
       const walkPanels = (arr: any[], basePath: string) => {
         for (let i = 0; i < arr.length; i++) {
           const item = arr[i];
-          const itemPath = `${basePath}.${i}`; // e.g., rest.settings.mainPanelNode.0
+          const itemPath = `${basePath}.${i}`; // e.g., rest.settings.spCoinPanelTree.0
           add(itemPath, item);                  // include panel item as expandable node
 
           const children = item?.children;
@@ -63,7 +63,7 @@ function discoverNonPanelPaths(exchangeContext: any): Set<string> {
         }
       };
 
-      walkPanels(main, 'rest.settings.mainPanelNode');
+      walkPanels(main, 'rest.settings.spCoinPanelTree');
     }
   }
 
@@ -123,7 +123,7 @@ export function useExpandCollapse(exchangeContext: any, _expandedInit: boolean) 
   useEffect(() => {
     const defaults: Record<string, boolean> = {
       'rest.settings': true,
-      'rest.settings.mainPanelNode': true,
+      'rest.settings.spCoinPanelTree': true,
     };
 
     const stored = loadExCtxMap();

@@ -9,16 +9,16 @@ export function useSeedMainPanelsOnFirstRun() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   useEffect(() => {
-    const hasList = Array.isArray((exchangeContext as any)?.settings?.mainPanelNode);
+    const hasList = Array.isArray((exchangeContext as any)?.settings?.spCoinPanelTree);
     if (hasList) return; // respect existing state
 
     const seed = loadInitialPanelNodeDefaults();
     setExchangeContext(
       (prev) => ({
         ...prev,
-        settings: { ...(prev as any)?.settings, mainPanelNode: seed },
+        settings: { ...(prev as any)?.settings, spCoinPanelTree: seed },
       }),
-      'seed:mainPanelNode:first-run'
+      'seed:spCoinPanelTree:first-run'
     );
   }, [exchangeContext, setExchangeContext]);
 }

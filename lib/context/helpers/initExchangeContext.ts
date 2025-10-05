@@ -15,7 +15,7 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  * NOTE (contract with ExchangeProvider):
  * - Hydrates ExchangeContext from localStorage (if present) and sanitizes it for the given chainId.
  * - May enrich `accounts.connectedAccount` with metadata for a connected wallet.
- * - Does NOT create or mutate any panel state (`settings.mainPanelNode`, etc.). Panel state is owned by the Provider.
+ * - Does NOT create or mutate any panel state (`settings.spCoinPanelTree`, etc.). Panel state is owned by the Provider.
  */
 
 export async function initExchangeContext(

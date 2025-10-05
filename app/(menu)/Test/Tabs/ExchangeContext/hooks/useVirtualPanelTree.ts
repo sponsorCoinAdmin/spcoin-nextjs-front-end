@@ -16,7 +16,7 @@ export type VirtualPanelNode = {
 };
 
 export function useVirtualPanelTree(ctx: ExchangeContext | undefined) {
-  const flat = (ctx as any)?.settings?.mainPanelNode as
+  const flat = (ctx as any)?.settings?.spCoinPanelTree as
     | { panel: SP; visible: boolean }[]
     | undefined;
 

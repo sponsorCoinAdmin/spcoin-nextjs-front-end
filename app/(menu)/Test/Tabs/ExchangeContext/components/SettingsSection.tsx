@@ -43,7 +43,7 @@ const SettingsSection: React.FC<Props> = ({
               </div>
 
               <Row
-                text="mainPanelNode"
+                text="spCoinPanelTree"
                 depth={2}
                 open={ui.main}
                 clickable

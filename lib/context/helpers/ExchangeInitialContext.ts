@@ -7,15 +7,15 @@ import {
 } from '@/lib/structure';
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';
-import { defaultMainPanelNode } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
-import type { MainPanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
-const buildDefaultMainPanelNode = (): MainPanelNode => {
-  const root = clone(defaultMainPanelNode);
+const buildDefaultSpCoinPanelTree = (): SpCoinPanelTree => {
+  const root = clone(defaultSpCoinPanelTree);
   // no filtering needed; keep shallow children as-is
   return root;
 };
@@ -30,7 +30,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     },
     settings: {
       apiTradingProvider: API_TRADING_PROVIDER.API_0X,
-      mainPanelNode: buildDefaultMainPanelNode(), // ✅ a MainPanelNode, not an array
+      spCoinPanelTree: buildDefaultSpCoinPanelTree(), // ✅ a SpCoinPanelTree, not an array
     },
     accounts: {
       connectedAccount: undefined,
