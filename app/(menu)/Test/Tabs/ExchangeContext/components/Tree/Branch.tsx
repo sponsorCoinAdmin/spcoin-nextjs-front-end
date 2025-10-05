@@ -29,6 +29,9 @@ const nameForVirtual = (v: any): string => {
   return typeof mapped === 'string' ? mapped : String(v.id);
 };
 
+// Arrays that should show "[idx] PANEL_NAME" for their virtual children
+const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children', 'mainPanelNode']);
+
 const Branch: React.FC<BranchProps> = ({
   label,
   value,
@@ -45,28 +48,24 @@ const Branch: React.FC<BranchProps> = ({
   const isObject = value !== null && typeof value === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
-  // dot-path classifiers for *virtual* panel nodes
+  // dot-path classifiers for *virtual* panel nodes (now includes mainPanelNode)
   const isPanelArrayItem =
-    (/\.mainPanelNode\.\d+$/.test(path) || /\.children\.\d+$/.test(path)) &&
+    (/\.(spCoinPanelTree|children|mainPanelNode)\.\d+$/.test(path)) &&
     looksLikeVirtualPanelNode(value);
 
   // Treat any array labeled exactly "children" as a pure container (no row rendered)
   const isChildrenContainer = isArray && label === 'children';
 
-  // helper: set expansion open if currently closed
   const ensureOpen = (p: string) => {
     if (!exp[p]) togglePath(p);
   };
 
-  // Track visible changes for panel rows (helps catch "parent closed" side-effect)
   const lastVisibleRef = useRef<boolean | undefined>(undefined);
   useEffect(() => {
     if (isPanelArrayItem) {
       const vis = !!(value as any)?.visible;
       if (lastVisibleRef.current !== vis) {
         lastVisibleRef.current = vis;
-
-        // If a panel becomes visible, auto-expand its own row and its children container
         if (vis) {
           ensureOpen(path);
           ensureOpen(`${path}.children`);
@@ -87,10 +86,8 @@ const Branch: React.FC<BranchProps> = ({
     let expanded = false;
     if (hasEntries) {
       if (isPanelArrayItem) {
-        // Panel nodes expand ONLY when they are visible.
         expanded = (value as any)?.visible === true;
       } else if (isChildrenContainer) {
-        // Children containers never render their own row; we always render their items.
         expanded = true;
       } else {
         expanded = !!exp[path];
@@ -99,10 +96,8 @@ const Branch: React.FC<BranchProps> = ({
 
     const onRowClick = () => {
       if (isPanelArrayItem) {
-        const panelId = (value as any).id as number; // virtual id
+        const panelId = (value as any).id as number;
         const currentlyVisible = !!(value as any).visible;
-
-        // Toggle by visibility (source of truth)
         if (!currentlyVisible) {
           openPanel(panelId);
           ensureOpen(path);
@@ -115,10 +110,13 @@ const Branch: React.FC<BranchProps> = ({
       }
     };
 
-    const keys = isArray ? (value as any[]).map((_, i) => String(i)) : Object.keys(value as object);
+    // Hide "name" inside virtual panel node bodies (avoid duplication)
+    const isVirtualNode = looksLikeVirtualPanelNode(value);
+    const keys = isArray
+      ? (value as any[]).map((_, i) => String(i))
+      : Object.keys(value as object).filter((k) => !(isVirtualNode && k === 'name'));
 
-    // If this is a "children" container, DO NOT render a row for it.
-    // Render its items directly at the same depth (no "[-] children" or "[+] children" row).
+    // "children" container renders items directly (no own row)
     if (isChildrenContainer) {
       return (
         <>
@@ -156,9 +154,8 @@ const Branch: React.FC<BranchProps> = ({
       <>
         <Row
           text={label}
-          path={path} // for Row logs (debug only)
+          path={path}
           depth={depth}
-          // For panel nodes, the "open" marker mirrors *visibility* only.
           open={hasEntries ? (isPanelArrayItem ? ((value as any)?.visible === true) : expanded) : undefined}
           clickable={isPanelArrayItem || hasEntries}
           onClick={onRowClick}
@@ -172,10 +169,11 @@ const Branch: React.FC<BranchProps> = ({
             // Minimal label to keep layout intact
             let childLabel = isArray ? `[${k}]` : k;
 
-            // If listing panel nodes under mainPanelNode/children, append enum/name
+            // ✅ Append enum/name for arrays that contain virtual panel nodes,
+            //    including top-level "mainPanelNode"
             if (
               isArray &&
-              (label === 'mainPanelNode' || label === 'children') &&
+              PANEL_ARRAY_LABELS.has(label) &&
               looksLikeVirtualPanelNode(childVal)
             ) {
               const displayName = nameForVirtual(childVal);
