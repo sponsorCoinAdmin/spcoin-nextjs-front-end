@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import Row from './Row';
 import { quoteIfString } from '../../utils/object';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 type BranchProps = {
@@ -18,19 +18,26 @@ type BranchProps = {
   dense?: boolean;
 };
 
-// This page renders VIRTUAL nodes: { id, name, visible, children }
-const looksLikeVirtualPanelNode = (v: any) =>
-  v && typeof v.id === 'number' && 'visible' in v;
+// Support BOTH shapes: virtual registry nodes { id } and persisted nodes { panel }
+const panelIdOf = (v: any): number | undefined =>
+  v && typeof v === 'object'
+    ? (typeof v.id === 'number' ? (v.id as number)
+      : (typeof v.panel === 'number' ? (v.panel as number) : undefined))
+    : undefined;
 
-const nameForVirtual = (v: any): string => {
-  if (!looksLikeVirtualPanelNode(v)) return '';
+const looksLikePanelNode = (v: any) =>
+  v && typeof v === 'object' && typeof panelIdOf(v) === 'number' && 'visible' in v;
+
+const nameForPanel = (v: any): string => {
+  if (!looksLikePanelNode(v)) return '';
   if (typeof v.name === 'string' && v.name.length > 0) return v.name;
-  const mapped = (SP_COIN_DISPLAY as any)?.[v.id];
-  return typeof mapped === 'string' ? mapped : String(v.id);
+  const pid = panelIdOf(v)!;
+  const mapped = (SP_COIN_DISPLAY as any)?.[pid];
+  return typeof mapped === 'string' ? mapped : String(pid);
 };
 
-// Arrays that should show "[idx] PANEL_NAME" for their virtual children
-const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children', 'spCoinPanelTree']);
+// Arrays that should show "[idx] PANEL_NAME" for their panel-node children
+const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children']);
 
 const Branch: React.FC<BranchProps> = ({
   label,
@@ -48,10 +55,9 @@ const Branch: React.FC<BranchProps> = ({
   const isObject = value !== null && typeof value === 'object' && !isArray;
   const isBranch = isArray || isObject;
 
-  // dot-path classifiers for *virtual* panel nodes (now includes spCoinPanelTree)
+  // dot-path classifier for panel nodes (works for both shapes)
   const isPanelArrayItem =
-    (/\.(spCoinPanelTree|children|spCoinPanelTree)\.\d+$/.test(path)) &&
-    looksLikeVirtualPanelNode(value);
+    /\.(spCoinPanelTree|children)\.\d+$/.test(path) && looksLikePanelNode(value);
 
   // Treat any array labeled exactly "children" as a pure container (no row rendered)
   const isChildrenContainer = isArray && label === 'children';
@@ -96,25 +102,27 @@ const Branch: React.FC<BranchProps> = ({
 
     const onRowClick = () => {
       if (isPanelArrayItem) {
-        const panelId = (value as any).id as number;
-        const currentlyVisible = !!(value as any).visible;
-        if (!currentlyVisible) {
-          openPanel(panelId);
-          ensureOpen(path);
-          ensureOpen(`${path}.children`);
-        } else {
-          closePanel(panelId);
+        const pid = panelIdOf(value);
+        if (typeof pid === 'number') {
+          const currentlyVisible = !!(value as any).visible;
+          if (!currentlyVisible) {
+            openPanel(pid);
+            ensureOpen(path);
+            ensureOpen(`${path}.children`);
+          } else {
+            closePanel(pid);
+          }
+          return;
         }
-      } else if (hasEntries) {
-        togglePath(path);
       }
+      if (hasEntries) togglePath(path);
     };
 
-    // Hide "name" inside virtual panel node bodies (avoid duplication)
-    const isVirtualNode = looksLikeVirtualPanelNode(value);
+    // Hide "name" inside panel node bodies (avoid duplication)
+    const isPanelNode = looksLikePanelNode(value);
     const keys = isArray
       ? (value as any[]).map((_, i) => String(i))
-      : Object.keys(value as object).filter((k) => !(isVirtualNode && k === 'name'));
+      : Object.keys(value as object).filter((k) => !(isPanelNode && k === 'name'));
 
     // "children" container renders items directly (no own row)
     if (isChildrenContainer) {
@@ -125,10 +133,10 @@ const Branch: React.FC<BranchProps> = ({
               const childPath = `${path}.${k}`;
               const childVal = (value as any[])[Number(k)];
 
-              // Label: show index and enum/name if it's a virtual panel node
+              // Label: show index and enum/name if it's a panel node
               let childLabel = `[${k}]`;
-              if (looksLikeVirtualPanelNode(childVal)) {
-                const displayName = nameForVirtual(childVal);
+              if (looksLikePanelNode(childVal)) {
+                const displayName = nameForPanel(childVal);
                 childLabel = `[${k}] ${displayName}`;
               }
 
@@ -169,14 +177,14 @@ const Branch: React.FC<BranchProps> = ({
             // Minimal label to keep layout intact
             let childLabel = isArray ? `[${k}]` : k;
 
-            // ✅ Append enum/name for arrays that contain virtual panel nodes,
-            //    including top-level "spCoinPanelTree"
+            // Append enum/name for arrays that contain panel nodes,
+            // including top-level "spCoinPanelTree" and "children"
             if (
               isArray &&
               PANEL_ARRAY_LABELS.has(label) &&
-              looksLikeVirtualPanelNode(childVal)
+              looksLikePanelNode(childVal)
             ) {
-              const displayName = nameForVirtual(childVal);
+              const displayName = nameForPanel(childVal);
               childLabel = `[${k}] ${displayName}`;
             }
 

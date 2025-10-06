@@ -10,9 +10,11 @@ import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 export default function TokenSelectPanel() {
-  const { activeMainOverlay, isVisible, openPanel } = usePanelTree();
+  const { activeMainOverlay, isVisible } = usePanelTree();
+  const { toTrading } = usePanelTransitions();
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
@@ -44,8 +46,8 @@ export default function TokenSelectPanel() {
 
   // When the provider asks to close, we take the user back to Trading Station.
   const closeForProvider = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [openPanel]);
+    toTrading();
+  }, [toTrading]);
 
   // Provider emits (TokenContract | WalletAccount); we only care about tokens here.
   const onAssetChosen = useCallback(

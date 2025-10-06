@@ -15,7 +15,7 @@ import {
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -37,8 +37,8 @@ function TokenSelectDropDown({ containerType }: Props) {
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
 
-  // Panel-tree controls
-  const { openPanel } = usePanelTree();
+  // Declarative overlay transitions
+  const { openBuyList, openSellList } = usePanelTransitions();
 
   // ✅ When opening the selector, map root → the correct *_PANEL_LIST
   const targetTokenSelectPanel: SP_COIN_DISPLAY = isSellRoot
@@ -80,10 +80,9 @@ function TokenSelectDropDown({ containerType }: Props) {
       `📂 Opening TokenSelectPanel: ${SP_COIN_DISPLAY[targetTokenSelectPanel]} (mapped from ${SP_COIN_DISPLAY[containerType]})`
     );
 
-    // If your openPanel doesn’t take options, remove the 2nd arg.
-    // @ts-expect-error openPanel may accept options in your app; safe to drop if not used.
-    openPanel(targetTokenSelectPanel, { group: 'MAIN_OVERLAY_GROUP', exclusive: true });
-  }, [targetTokenSelectPanel, containerType, openPanel]);
+    // Declarative overlay call
+    isSellRoot ? openSellList() : openBuyList();
+  }, [targetTokenSelectPanel, containerType, isSellRoot, openBuyList, openSellList]);
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>

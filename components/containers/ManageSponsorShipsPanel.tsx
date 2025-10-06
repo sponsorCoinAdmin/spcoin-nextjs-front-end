@@ -6,6 +6,7 @@ import { TokenContract } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -20,7 +21,8 @@ type Props = {
 };
 
 export default function ManageSponsorshipsPanel({ tokenContract, onClose }: Props) {
-  const { isVisible, openPanel, closePanel } = usePanelTree();
+  const { isVisible, openPanel } = usePanelTree();
+  const { toTrading } = usePanelTransitions();
 
   // Self-gated visibility (no prop drilling)
   const isActive = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
@@ -43,8 +45,8 @@ export default function ManageSponsorshipsPanel({ tokenContract, onClose }: Prop
   const handleClose = () => {
     debugLog.log('✅ Close ManageSponsorshipsPanel');
 
-    // Close this overlay
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+    // Go back to Trading overlay (radio group)
+    toTrading();
 
     // Re-show the launcher button so users can reopen the panel
     openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);

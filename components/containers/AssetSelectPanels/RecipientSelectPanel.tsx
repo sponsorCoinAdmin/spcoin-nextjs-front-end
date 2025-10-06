@@ -10,6 +10,7 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 /** Wrapper does ONLY visibility gating (no hooks after the conditional). */
 export default function RecipientSelectPanel() {
@@ -26,7 +27,7 @@ export default function RecipientSelectPanel() {
 
 /** All hooks live in the inner component so the hook order is stable. */
 function RecipientSelectPanelInner() {
-  const { openPanel } = usePanelTree();
+  const { toTrading } = usePanelTransitions();
   const { exchangeContext } = useExchangeContext();
   const { commitRecipient } = useSelectionCommit();
 
@@ -40,8 +41,8 @@ function RecipientSelectPanelInner() {
 
   // Close → back to Trading
   const closeForProvider = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [openPanel]);
+    toTrading();
+  }, [toTrading]);
 
   // Provider emits (TokenContract | WalletAccount); this panel only accepts WalletAccount
   const onAssetChosen = useCallback(

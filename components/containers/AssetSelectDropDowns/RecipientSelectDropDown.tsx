@@ -1,12 +1,13 @@
+// File: components/containers/RecipientSelectDropDown.tsx
 'use client';
 
 import React, { useCallback, useRef } from 'react';
-import { WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
+import { WalletAccount } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';
 import { defaultMissingImage } from '@/lib/network/utils';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -19,7 +20,7 @@ interface Props {
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   const hasErroredRef = useRef(false);
-  const { openPanel } = usePanelTree();
+  const { openRecipientList } = usePanelTransitions();
 
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
@@ -40,8 +41,8 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
 
   const showRecipientSelectPanel = useCallback(() => {
     debugLog.log('📂 Opening Recipient dialog');
-    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
-  }, [openPanel]);
+    openRecipientList();
+  }, [openRecipientList]);
 
   return (
     <div className="flex items-center cursor-pointer" onClick={showRecipientSelectPanel}>

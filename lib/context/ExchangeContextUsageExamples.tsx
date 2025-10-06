@@ -1,5 +1,4 @@
 // File: lib/context/ExchangeContextUsageExamples.tsx
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -33,14 +32,14 @@ export default function ExchangeContextUsageExamples() {
   const sellTokenAddress = useSellTokenAddress();
   const buyTokenAddress = useBuyTokenAddress();
 
-  // ⬇️ Updated panel-tree API
   const { isVisible, openPanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
 
-  // Prefer showing which token scroll is open; otherwise show the active main overlay label
   const activePanelLabel = useMemo(() => {
     if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) return 'SELL_SELECT_PANEL_LIST';
     if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST)) return 'BUY_SELECT_PANEL_LIST';
-    return SP_COIN_DISPLAY[activeMainOverlay] ?? 'NONE';
+    return activeMainOverlay != null
+      ? SP_COIN_DISPLAY[activeMainOverlay]
+      : 'NONE';
   }, [isVisible, activeMainOverlay]);
 
   return (
@@ -170,7 +169,7 @@ export default function ExchangeContextUsageExamples() {
           Clear Errors
         </button>
 
-        {/* 🔧 Panel-tree test controls (new API) */}
+        {/* Panel-tree test controls */}
         <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)}>
           Open SELL panel
         </button>

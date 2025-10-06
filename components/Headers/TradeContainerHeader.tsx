@@ -11,6 +11,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ConnectButton from '../Buttons/Connect/ConnectButton';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
   switch (d) {
@@ -29,7 +30,8 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
 
 const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible, openPanel } = usePanelTree();
+  const { isVisible } = usePanelTree();
+  const { toTrading } = usePanelTransitions();
 
   // Keep hooks unconditional for stable order
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -53,8 +55,8 @@ const TradeContainerHeader = () => {
   const onOpenConfig   = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig  = useCallback(() => setIsConfigOpen(false), []);
   const onCloseOverlay = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [openPanel]);
+    toTrading();
+  }, [toTrading]);
 
   return (
     <div

@@ -1,11 +1,12 @@
 // File: app/(menu)/Test/Tabs/Panels/index.tsx
+
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/constants/spCoinDisplay';
+import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 const pill = (on?: boolean) =>
   `px-2 py-0.5 rounded-full text-xs ${
@@ -38,7 +39,6 @@ export default function PanelsTab() {
     []
   );
 
-  // Treat anything in the registry's overlay group as a main (radio) overlay
   const isMainOverlay = useCallback(
     (p: SP_COIN_DISPLAY) => MAIN_OVERLAY_GROUP.includes(p),
     []
@@ -68,12 +68,9 @@ export default function PanelsTab() {
   const togglePanel = useCallback(
     (panel: SP_COIN_DISPLAY, _reason?: string) => {
       if (isMainOverlay(panel)) {
-        // If it's already active → close it (result can be "none")
-        // Otherwise open it (radio behavior handled by the hook)
         isVisible(panel) ? closePanel(panel) : openPanel(panel);
         return;
       }
-      // Non-radio: simple toggle
       isVisible(panel) ? closePanel(panel) : openPanel(panel);
     },
     [isMainOverlay, isVisible, openPanel, closePanel]

@@ -12,6 +12,7 @@ import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 /** Wrapper component: only checks visibility and returns null. No other hooks/logic here. */
 export default function AgentSelectPanel() {
@@ -23,7 +24,7 @@ export default function AgentSelectPanel() {
 
 /** Inner component: all hooks live here; no early returns. */
 function AgentSelectPanelInner() {
-  const { openPanel } = usePanelTree();
+  const { toTrading } = usePanelTransitions();
   const { exchangeContext } = useExchangeContext();
   const { commitAgent } = useSelectionCommit();
 
@@ -37,9 +38,9 @@ function AgentSelectPanelInner() {
 
   const closeForProvider = useCallback(
     (_fromUser: boolean) => {
-      openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+      toTrading();
     },
-    [openPanel]
+    [toTrading]
   );
 
   // Provider emits (TokenContract | WalletAccount); only accept WalletAccount for agent picker

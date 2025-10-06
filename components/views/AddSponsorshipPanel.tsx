@@ -18,6 +18,7 @@ import ConfigSponsorshipPanel from '../containers/ConfigSponsorshipPanel';
 import { useExchangeContext } from '@/lib/context';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const DEBUG =
   process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_TRADING_PANEL === 'true' ||
@@ -25,7 +26,13 @@ const DEBUG =
 
 const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { isVisible, openPanel, closePanel } = usePanelTree();
+  const { isVisible, openPanel } = usePanelTree();
+  const {
+    startAddSponsorship,
+    openConfigSponsorship,
+    closeConfigSponsorship,
+    closeAddSponsorship,
+  } = usePanelTransitions();
 
   const recipientWallet: WalletAccount | undefined =
     exchangeContext.accounts.recipientAccount;
@@ -36,13 +43,12 @@ const AddSponsorShipPanel: React.FC = () => {
     const parentId = SP_TREE.ADD_SPONSORSHIP_PANEL;
     const cfgId = SP_TREE.CONFIG_SPONSORSHIP_PANEL;
 
-    if (!isVisible(parentId)) openPanel(parentId);
-    if (isVisible(cfgId)) {
-      closePanel(cfgId);
-    } else {
-      openPanel(cfgId);
-    }
-  }, [isVisible, openPanel, closePanel]);
+    // Ensure parent open
+    if (!isVisible(parentId)) startAddSponsorship();
+
+    // Toggle config panel
+    isVisible(cfgId) ? closeConfigSponsorship() : openConfigSponsorship();
+  }, [isVisible, startAddSponsorship, closeConfigSponsorship, openConfigSponsorship]);
 
   const clearRecipient = useCallback(() => {
     setExchangeContext(
@@ -53,9 +59,13 @@ const AddSponsorShipPanel: React.FC = () => {
       },
       'AddSponsorShipPanel:clearRecipient'
     );
-    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
+
+    // Close the Add Sponsorship flow (panel + nested config)
+    closeAddSponsorship();
+
+    // Ensure the launcher button is visible again
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
-  }, [setExchangeContext, closePanel, openPanel]);
+  }, [setExchangeContext, closeAddSponsorship, openPanel]);
 
   useEffect(() => {
     const website = recipientWallet?.website?.trim();
@@ -149,7 +159,7 @@ const AddSponsorShipPanel: React.FC = () => {
             href={`Recipient?url=${recipientWallet.website}`}
             className="
               absolute top-[47px] left-[10px]
-              min-w-[50px] h-[10px]
+              min-w:[50px] h-[10px]
               text-[#94a3b8] text-[25px]
               pr-2 flex items-center justify-start gap-1
               cursor-pointer hover:text-[orange] transition-colors duration-200
@@ -162,7 +172,7 @@ const AddSponsorShipPanel: React.FC = () => {
             href={defaultStaticFileUrl}
             className="
               absolute top-[57px] left-[10px]
-              min-w-[50px] h-[10px]
+              min-w:[50px] h-[10px]
               text-[#94a3b8] text-[25px]
               pr-2 flex items-center justify-start gap-1
               cursor-pointer hover:text-[orange] transition-colors duration-200
@@ -182,6 +192,7 @@ const AddSponsorShipPanel: React.FC = () => {
             text-white bg-[#243056]
           "
         >
+          {/* Note: This dropdown now uses openRecipientList via transitions */}
           <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
 

@@ -7,12 +7,14 @@ import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const MIN_STEP = 2; // matches prior code
 const MAX_STEP = 10;
 
 const ConfigSponsorshipPanel: React.FC = () => {
-  const { isVisible, closePanel } = usePanelTree();
+  const { isVisible } = usePanelTree();
+  const { closeConfigSponsorship } = usePanelTransitions();
 
   // "step" from 2..10 where displayed percentages are step*10 and (100 - step*10)
   const [step, setStep] = useState<number>(5);
@@ -57,7 +59,7 @@ const ConfigSponsorshipPanel: React.FC = () => {
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}
-          onClick={() => closePanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)}
+          onClick={closeConfigSponsorship}
         >
           X
         </div>
