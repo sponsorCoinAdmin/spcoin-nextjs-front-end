@@ -18,10 +18,10 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 // ✅ Fixed camel-case + path after rename
-import ManageSponsorshipsPanel from '@/components/containers/ManageSponsorshipsPanel';
 
 // ✅ Phase 0: centralize visibility gating with a tiny wrapper
 import PanelGate from '@/components/utility/PanelGate';
+import ManageSponsorshipsPanel from '../containers/ManageSponsorShipsPanel';
 
 export default function MainTradingPanel() {
   const { isVisible } = usePanelTree();

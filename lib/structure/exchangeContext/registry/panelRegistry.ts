@@ -9,7 +9,7 @@ type PanelDef = {
   kind: PanelKind;
   overlay?: boolean;        // main radio overlay?
   defaultVisible?: boolean; // seed state
-  children?: SP[];          // Test tree / virtual schema children
+  children?: SP[];          // test tree / virtual schema children
 };
 
 // ───────────────── Virtual grouping helpers ─────────────────
@@ -39,7 +39,7 @@ const MAIN_TRADING_CHILDREN: SP[] = [
 ];
 
 // ── Define panels ONCE here. To add a new main overlay: add { id, kind, overlay:true }.
-export const PANEL_DEFS = [
+export const PANEL_DEFS: readonly PanelDef[] = [
   // Root representing the whole trading area
   {
     id: SP.MAIN_TRADING_PANEL,
@@ -56,11 +56,12 @@ export const PANEL_DEFS = [
     id: SP.TRADING_STATION_PANEL,
     kind: 'root',
     overlay: true,
-    defaultVisible: true,
+    defaultVisible: true,   // ← the only overlay seeded as visible
     children: TRADING_CHILDREN,
   },
-  { id: SP.BUY_SELECT_PANEL_LIST,       kind: 'list',  overlay: true,  defaultVisible: false  },
-  { id: SP.SELL_SELECT_PANEL_LIST,      kind: 'list',  overlay: true,  defaultVisible: false  },
+  // Set the other overlays to false to prevent startup flicker
+  { id: SP.BUY_SELECT_PANEL_LIST,       kind: 'list',  overlay: true,  defaultVisible: false },
+  { id: SP.SELL_SELECT_PANEL_LIST,      kind: 'list',  overlay: true,  defaultVisible: false },
   { id: SP.RECIPIENT_SELECT_PANEL_LIST, kind: 'list',  overlay: true,  defaultVisible: false },
   { id: SP.AGENT_SELECT_PANEL_LIST,     kind: 'list',  overlay: true,  defaultVisible: false },
   { id: SP.ERROR_MESSAGE_PANEL,         kind: 'panel', overlay: true,  defaultVisible: false },

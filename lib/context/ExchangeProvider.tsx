@@ -21,7 +21,7 @@ import {
 
 import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { loadInitialPanelNodeDefaults } from '@/lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults';
-import { PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { PANEL_DEFS, MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { saveLocalExchangeContext } from './helpers/ExchangeSaveHelpers';
@@ -53,6 +53,9 @@ export type ExchangeContextType = {
 export const ExchangeContextState = createContext<ExchangeContextType | null>(null);
 
 /* --------------------------------- Helpers -------------------------------- */
+
+// 🔁 Bump when we change panel persistence/migration behavior
+const PANEL_SCHEMA_VERSION = 2;
 
 // Always return a *number* for chainId (0 == "unset")
 const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
@@ -98,7 +101,7 @@ const normalizeForPersistence = (panels: PanelNode[]): SpCoinPanelTree =>
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
-/** ✅ Migration: append any panels defined in the registry that are missing from stored state. */
+/** Append any panels defined in the registry missing from stored state. Idempotent. */
 const ensureRegistryPanelsPresent = (flat: PanelNode[]): PanelNode[] => {
   const present = new Set(flat.map((n) => n.panel));
   const additions: PanelNode[] = PANEL_DEFS
@@ -109,6 +112,20 @@ const ensureRegistryPanelsPresent = (flat: PanelNode[]): PanelNode[] => {
       visible: !!d.defaultVisible,
     }));
   return additions.length ? [...flat, ...additions] : flat;
+};
+
+/** Ensure exactly zero-or-one overlays are visible; prefer TRADING_STATION_PANEL if multiple. */
+const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
+  const isOverlay = (id: number) => MAIN_OVERLAY_GROUP.includes(id as SP_COIN_DISPLAY);
+  const visible = flat.filter((n) => isOverlay(n.panel) && n.visible);
+  if (visible.length <= 1) return flat;
+
+  const preferred =
+    visible.find((n) => n.panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL) ?? visible[0];
+
+  return flat.map((n) =>
+    isOverlay(n.panel) ? { ...n, visible: n.panel === preferred.panel } : n
+  );
 };
 
 /* --------------------------------- Provider -------------------------------- */
@@ -137,11 +154,21 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const normalized = clone(nextBase);
+
+        // Always persist flat panel list
         if (Array.isArray(normalized?.settings?.spCoinPanelTree)) {
           normalized.settings.spCoinPanelTree = normalizeForPersistence(
             normalized.settings.spCoinPanelTree as unknown as PanelNode[]
           );
         }
+
+        // NOTE: Avoid TS 2353 by assigning the version via bracket syntax on an any-typed object.
+        (normalized as any).settings = {
+          ...(normalized as any).settings,
+          // do not add version here to avoid "excess property" check on object literal
+        };
+        (normalized as any).settings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
+
         saveLocalExchangeContext(normalized);
       } catch {
         /* ignore persist errors */
@@ -161,29 +188,36 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const storedPanels = settingsAny.spCoinPanelTree;
 
       let flatPanels: PanelNode[];
+
       if (isMainPanels(storedPanels)) {
-        flatPanels = ensurePanelNamesInMemory(storedPanels);
+        // Take stored panels, then migrate to current behavior
+        let next = storedPanels.map(ensurePanelName);
+        next = ensureRegistryPanelsPresent(next);
+        next = reconcileOverlayVisibility(next);
+        flatPanels = next;
       } else {
-        // Seed from defaults (flat, no children). This pulls from PANEL_DEFS,
-        // so new overlays like MANAGE_SPONSORSHIPS_PANEL are part of the seed.
+        // Seed from defaults (flat, no children) then reconcile overlays
         const seed = loadInitialPanelNodeDefaults();
-        flatPanels = ensurePanelNamesInMemory(clone(seed as unknown as PanelNode[]));
+        flatPanels = reconcileOverlayVisibility(
+          ensurePanelNamesInMemory(clone(seed as unknown as PanelNode[]))
+        );
       }
 
-      // ✅ Make sure any new registry entries (e.g. MANAGE_SPONSORSHIPS_PANEL as overlay) are present
-      flatPanels = ensureRegistryPanelsPresent(flatPanels);
+      // Build settings object without the version first…
+      const nextSettings: any = {
+        ...settingsAny,
+        spCoinPanelTree: normalizeForPersistence(flatPanels),
+      };
+      // …then assign version after to avoid TS "excess property" check.
+      nextSettings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
 
       // Reconcile network against current Wagmi (prevents initial flicker)
       const net = ensureNetwork((base as any).network);
       net.connected = !!isConnected;
       net.chainId = isConnected && typeof wagmiChainId === 'number' ? (wagmiChainId as number) : 0;
-      (base as any).network = net;
 
-      // Persist flat version; keep in-memory with names
-      (base as any).settings = {
-        ...settingsAny,
-        spCoinPanelTree: normalizeForPersistence(flatPanels),
-      };
+      (base as any).network = net;
+      (base as any).settings = nextSettings;
 
       try {
         saveLocalExchangeContext(base);
@@ -191,6 +225,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         /* ignore persist errors */
       }
 
+      // Keep in-memory copy with names for runtime usage
       (base as any).settings.spCoinPanelTree = flatPanels;
       setContextState(base as ExchangeContextTypeOnly);
     })();
