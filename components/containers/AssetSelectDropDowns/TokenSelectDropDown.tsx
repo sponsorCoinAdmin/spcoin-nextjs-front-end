@@ -33,19 +33,12 @@ function TokenSelectDropDown({ containerType }: Props) {
   const sellHook = useSellTokenContract();
   const buyHook  = useBuyTokenContract();
 
-  // ✅ Use the *root* panel to decide which token state to read
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
 
-  // Declarative overlay transitions
-  const { openBuyList, openSellList } = usePanelTransitions();
+  // Transitions
+  const { openSellList, openBuyList } = usePanelTransitions();
 
-  // ✅ When opening the selector, map root → the correct *_PANEL_LIST
-  const targetTokenSelectPanel: SP_COIN_DISPLAY = isSellRoot
-    ? SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST
-    : SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
-
-  // Resolve logo with safe fallback
   const logoURL = useMemo(() => {
     const raw = tokenContract?.logoURL?.trim();
     if (raw && raw.length > 0) {
@@ -76,13 +69,14 @@ function TokenSelectDropDown({ containerType }: Props) {
   const openTokenSelectPanel = useCallback(() => {
     clearFSMTraceFromMemory();
 
-    debugLog.log(
-      `📂 Opening TokenSelectPanel: ${SP_COIN_DISPLAY[targetTokenSelectPanel]} (mapped from ${SP_COIN_DISPLAY[containerType]})`
-    );
-
-    // Declarative overlay call
-    isSellRoot ? openSellList() : openBuyList();
-  }, [targetTokenSelectPanel, containerType, isSellRoot, openBuyList, openSellList]);
+    if (isSellRoot) {
+      debugLog.log('📂 Opening SELL Token Select (transition)');
+      openSellList();
+    } else {
+      debugLog.log('📂 Opening BUY Token Select (transition)');
+      openBuyList();
+    }
+  }, [isSellRoot, openSellList, openBuyList]);
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>

@@ -16,7 +16,6 @@ import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePane
 export default function RecipientSelectPanel() {
   const { activeMainOverlay, isVisible } = usePanelTree();
 
-  // Prefer radio-group active overlay; fall back to legacy visibility flag
   const active =
     activeMainOverlay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST ||
     isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
@@ -27,9 +26,9 @@ export default function RecipientSelectPanel() {
 
 /** All hooks live in the inner component so the hook order is stable. */
 function RecipientSelectPanelInner() {
-  const { toTrading } = usePanelTransitions();
   const { exchangeContext } = useExchangeContext();
   const { commitRecipient } = useSelectionCommit();
+  const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
@@ -39,22 +38,19 @@ function RecipientSelectPanelInner() {
     [chainId]
   );
 
-  // Close → back to Trading
   const closeForProvider = useCallback(() => {
     toTrading();
   }, [toTrading]);
 
-  // Provider emits (TokenContract | WalletAccount); this panel only accepts WalletAccount
   const onAssetChosen = useCallback(
     (asset: TokenContract | WalletAccount) => {
       const looksLikeToken = typeof (asset as any)?.decimals === 'number';
-      if (looksLikeToken) return; // ignore tokens here
-      commitRecipient(asset as WalletAccount); // commits + navigates inside the hook
+      if (looksLikeToken) return;
+      commitRecipient(asset as WalletAccount);
     },
     [commitRecipient]
   );
 
-  // 🔧 AssetSelectBag does not include `chainId`; keep it only in instanceId
   const initialPanelBag: AssetSelectBag = useMemo(
     () => ({ type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST }),
     []

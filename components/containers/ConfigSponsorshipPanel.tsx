@@ -22,7 +22,6 @@ const ConfigSponsorshipPanel: React.FC = () => {
   const recipientPct = useMemo(() => step * 10, [step]);
   const sponsorPct = useMemo(() => 100 - step * 10, [step]);
 
-  // Only render when this panel is visible
   const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
   if (!selfVisible) return null;
 
@@ -30,17 +29,14 @@ const ConfigSponsorshipPanel: React.FC = () => {
     <div
       id="SponsorRateConfig_ID"
       className="bg-[#1f2639] text-[#94a3b8] border-0 h-[57px] rounded-b-[12px]"
-      // minimal: ensure a positioning context
-    >      
+    >
       <div className={`${styles.inputs} relative`}>
         <div id="recipient-config" />
 
-        {/*this is a Tailwind Line Divider */}
         <div className="  absolute -top-[7px] left-[11px] right-[11px]  h-px bg-[#94a3b8] opacity-20 " />
 
         <div className={styles.rewardRatio}>Staking Reward Ratio:</div>
 
-        {/* Info icon (kept as-is) */}
         <Image
           src={info_png}
           className={styles.infoImg}
@@ -55,7 +51,6 @@ const ConfigSponsorshipPanel: React.FC = () => {
           <div id="sponsorRatio">{sponsorPct}%</div>
         </div>
 
-        {/* Close just hides this non-main panel (no overlay switch) */}
         <div
           id="closeSponsorConfig"
           className={styles.closeSponsorConfig}

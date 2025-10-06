@@ -14,14 +14,14 @@ import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePane
 
 export default function TokenSelectPanel() {
   const { activeMainOverlay, isVisible } = usePanelTree();
-  const { toTrading } = usePanelTransitions();
+
   const { exchangeContext } = useExchangeContext();
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
   const { commitToken } = useSelectionCommit();
+  const { toTrading } = usePanelTransitions();
 
   // Gate rendering strictly by the *active* radio overlay.
-  // (Fallback to visibility check if no active overlay is set.)
   const activeType: SP_COIN_DISPLAY | null = useMemo(() => {
     if (activeMainOverlay === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST) {
       return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
@@ -44,12 +44,11 @@ export default function TokenSelectPanel() {
     return `TOKEN_SELECT_${label}_${chainId}`;
   }, [activeType, chainId]);
 
-  // When the provider asks to close, we take the user back to Trading Station.
+  // When the provider asks to close, navigate via transition.
   const closeForProvider = useCallback(() => {
     toTrading();
   }, [toTrading]);
 
-  // Provider emits (TokenContract | WalletAccount); we only care about tokens here.
   const onAssetChosen = useCallback(
     (asset: TokenContract | WalletAccount) => {
       if (!activeType) return;
@@ -58,13 +57,11 @@ export default function TokenSelectPanel() {
 
       const side =
         activeType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? 'sell' : 'buy';
-      // This hook will commit and navigate back appropriately.
       commitToken(asset as TokenContract, side);
     },
     [activeType, commitToken]
   );
 
-  // Only render when one of the token-list overlays is the active overlay
   if (!activeType) return null;
 
   return (

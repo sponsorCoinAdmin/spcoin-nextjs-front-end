@@ -1,4 +1,4 @@
-// File: components/containers/RecipientSelectDropDown.tsx
+// File: components/containers/AssetSelectDropDowns/RecipientSelectDropDown.tsx
 'use client';
 
 import React, { useCallback, useRef } from 'react';
@@ -20,8 +20,8 @@ interface Props {
 
 const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   const hasErroredRef = useRef(false);
-  const { openRecipientList } = usePanelTransitions();
 
+  const { openRecipientList } = usePanelTransitions();
   const logoSrc = useAssetLogoURL(recipientAccount?.address || '', 'wallet');
 
   const handleLogoError = useCallback(
@@ -40,7 +40,7 @@ const RecipientSelectDropDown: React.FC<Props> = ({ recipientAccount }) => {
   );
 
   const showRecipientSelectPanel = useCallback(() => {
-    debugLog.log('📂 Opening Recipient dialog');
+    debugLog.log('📂 Opening Recipient dialog (transition)');
     openRecipientList();
   }, [openRecipientList]);
 

@@ -54,9 +54,7 @@ const TradeContainerHeader = () => {
 
   const onOpenConfig   = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig  = useCallback(() => setIsConfigOpen(false), []);
-  const onCloseOverlay = useCallback(() => {
-    toTrading();
-  }, [toTrading]);
+  const onCloseOverlay = useCallback(() => { toTrading(); }, [toTrading]);
 
   return (
     <div

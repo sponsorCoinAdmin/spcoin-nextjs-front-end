@@ -26,13 +26,8 @@ const DEBUG =
 
 const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { isVisible, openPanel } = usePanelTree();
-  const {
-    startAddSponsorship,
-    openConfigSponsorship,
-    closeConfigSponsorship,
-    closeAddSponsorship,
-  } = usePanelTransitions();
+  const { isVisible, openPanel, closePanel } = usePanelTree();
+  const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
   const recipientWallet: WalletAccount | undefined =
     exchangeContext.accounts.recipientAccount;
@@ -40,15 +35,13 @@ const AddSponsorShipPanel: React.FC = () => {
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   const toggleSponsorRateConfig = useCallback(() => {
-    const parentId = SP_TREE.ADD_SPONSORSHIP_PANEL;
     const cfgId = SP_TREE.CONFIG_SPONSORSHIP_PANEL;
-
-    // Ensure parent open
-    if (!isVisible(parentId)) startAddSponsorship();
-
-    // Toggle config panel
-    isVisible(cfgId) ? closeConfigSponsorship() : openConfigSponsorship();
-  }, [isVisible, startAddSponsorship, closeConfigSponsorship, openConfigSponsorship]);
+    if (isVisible(cfgId)) {
+      closeConfigSponsorship();
+    } else {
+      openConfigSponsorship();
+    }
+  }, [isVisible, openConfigSponsorship, closeConfigSponsorship]);
 
   const clearRecipient = useCallback(() => {
     setExchangeContext(
@@ -59,13 +52,10 @@ const AddSponsorShipPanel: React.FC = () => {
       },
       'AddSponsorShipPanel:clearRecipient'
     );
-
-    // Close the Add Sponsorship flow (panel + nested config)
-    closeAddSponsorship();
-
-    // Ensure the launcher button is visible again
+    // Keep the existing button re-show logic as-is (transitions do not cover buttons)
+    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
-  }, [setExchangeContext, closeAddSponsorship, openPanel]);
+  }, [setExchangeContext, closePanel, openPanel]);
 
   useEffect(() => {
     const website = recipientWallet?.website?.trim();
@@ -78,13 +68,10 @@ const AddSponsorShipPanel: React.FC = () => {
       .catch(() => setSiteExists(false));
   }, [recipientWallet?.website]);
 
-  // 🔍 Compute all relevant booleans once (so logs don't call isVisible repeatedly)
   const vis = useMemo(() => {
     const showPanel = isVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
-    // The two names that often get mixed up – log both:
     const addBtnRecipient = isVisible(SP_TREE.ADD_SPONSORSHIP_BUTTON);
     const addBtnSponsorship = isVisible(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
-
     const trading = isVisible(SP_TREE.TRADING_STATION_PANEL);
     const buyList = isVisible(SP_TREE.BUY_SELECT_PANEL_LIST);
     const sellList = isVisible(SP_TREE.SELL_SELECT_PANEL_LIST);
@@ -101,33 +88,7 @@ const AddSponsorShipPanel: React.FC = () => {
     };
   }, [isVisible]);
 
-  // 🧾 Visibility rule: only the ADD_SPONSORSHIP_PANEL flag controls this panel
   const selfVisible = vis.showPanel;
-
-  // 🧪 Debug: enum identity + panel states (runs every render since vis changes cause rerender)
-  if (DEBUG) {
-    // eslint-disable-next-line no-console
-    console.log('[AddSponsorShipPanel] Enum identity check:', {
-      same_ENUM_OBJECT: SP_TREE === (SP_GENERIC as any),
-      ADD_SPONSORSHIP_BUTTON_equal:
-        SP_TREE.ADD_SPONSORSHIP_BUTTON === SP_GENERIC.ADD_SPONSORSHIP_BUTTON,
-      RECIPIENT_SELECT_PANEL_equal:
-        SP_TREE.ADD_SPONSORSHIP_PANEL === SP_GENERIC.ADD_SPONSORSHIP_PANEL,
-      MANAGE_SPONSORSHIPS_BUTTON_equal:
-        SP_TREE.MANAGE_SPONSORSHIPS_BUTTON === SP_GENERIC.MANAGE_SPONSORSHIPS_BUTTON,
-    });
-    // eslint-disable-next-line no-console
-    console.table({
-      ADD_SPONSORSHIP_PANEL: vis.showPanel,
-      ADD_SPONSORSHIP_BUTTON: vis.addBtnRecipient,
-      MANAGE_SPONSORSHIPS_BUTTON: vis.addBtnSponsorship,
-      CONFIG_SPONSORSHIP_PANEL: vis.configPanel,
-      TRADING_STATION_PANEL: vis.trading,
-      BUY_SELECT_PANEL_LIST: vis.buyList,
-      SELL_SELECT_PANEL_LIST: vis.sellList,
-      selfVisible,
-    });
-  }
 
   if (!selfVisible) return null;
 
@@ -159,7 +120,7 @@ const AddSponsorShipPanel: React.FC = () => {
             href={`Recipient?url=${recipientWallet.website}`}
             className="
               absolute top-[47px] left-[10px]
-              min-w:[50px] h-[10px]
+              min-w-[50px] h-[10px]
               text-[#94a3b8] text-[25px]
               pr-2 flex items-center justify-start gap-1
               cursor-pointer hover:text-[orange] transition-colors duration-200
@@ -172,7 +133,7 @@ const AddSponsorShipPanel: React.FC = () => {
             href={defaultStaticFileUrl}
             className="
               absolute top-[57px] left-[10px]
-              min-w:[50px] h-[10px]
+              min-w-[50px] h-[10px]
               text-[#94a3b8] text-[25px]
               pr-2 flex items-center justify-start gap-1
               cursor-pointer hover:text-[orange] transition-colors duration-200
@@ -192,7 +153,6 @@ const AddSponsorShipPanel: React.FC = () => {
             text-white bg-[#243056]
           "
         >
-          {/* Note: This dropdown now uses openRecipientList via transitions */}
           <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
 

@@ -24,9 +24,9 @@ export default function AgentSelectPanel() {
 
 /** Inner component: all hooks live here; no early returns. */
 function AgentSelectPanelInner() {
-  const { toTrading } = usePanelTransitions();
   const { exchangeContext } = useExchangeContext();
   const { commitAgent } = useSelectionCommit();
+  const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
   const containerType = SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
@@ -36,19 +36,15 @@ function AgentSelectPanelInner() {
     [containerType, chainId]
   );
 
-  const closeForProvider = useCallback(
-    (_fromUser: boolean) => {
-      toTrading();
-    },
-    [toTrading]
-  );
+  const closeForProvider = useCallback((_fromUser: boolean) => {
+    toTrading();
+  }, [toTrading]);
 
-  // Provider emits (TokenContract | WalletAccount); only accept WalletAccount for agent picker
   const onAssetChosen = useCallback(
     (asset: TokenContract | WalletAccount) => {
       const looksLikeToken = typeof (asset as any)?.decimals === 'number';
       if (looksLikeToken) return;
-      commitAgent(asset as WalletAccount); // handles context + navigation
+      commitAgent(asset as WalletAccount);
     },
     [commitAgent]
   );
