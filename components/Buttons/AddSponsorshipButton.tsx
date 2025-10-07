@@ -1,69 +1,65 @@
 // File: components/buttons/AddSponsorshipButton.tsx
 'use client';
 
-import { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import styles from '@/styles/Exchange.module.css';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+
+import { useBuyTokenContract } from '@/lib/context/hooks';
+import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
-const AddSponsorshipButton = () => {
+/**
+ * Lives only in the BUY panel.
+ * Visibility rule: show iff the BUY token is an SpCoin.
+ * We update the panel-tree enum once per token/visibility change using a ref guard,
+ * mirroring ManageSponsorsButton's behavior.
+ */
+export default function AddSponsorshipButton() {
+  const [buyToken] = useBuyTokenContract();
   const { isVisible, openPanel, closePanel } = usePanelTree();
-  const busyRef = useRef(false);
 
-  // Only render when this button is meant to be visible.
-  if (!isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON)) return null;
+  // Stable identity key for the BUY token
+  const addr = buyToken?.address?.toLowerCase() ?? '';
 
-  const openRecipientSelect = useCallback(() => {
-    if (busyRef.current) return;
-    busyRef.current = true;
+  // Apply visibility once per token change (no dependency on isVisible/buttonOn)
+  const appliedRef = useRef<{ addr: string; visible: boolean } | null>(null);
+  useEffect(() => {
+    const shouldShow = buyToken ? isSpCoin(buyToken) : false;
+    const prev = appliedRef.current;
+    const next = { addr, visible: shouldShow };
+    const changed = !prev || prev.addr !== next.addr || prev.visible !== next.visible;
+    if (!changed) return;
 
-    try {
-      // 1) Hide the config button if it's still visible.
-      if (isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON)) {
-        closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
-      }
-
-      // 2) Show the inline recipient config panel (idempotent guard).
-      if (!isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL)) {
-        openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
-      }
-
-      // (Optional) Keep Trading Station visible if your UX expects it on screen.
-      // This does not enforce radio behavior; it simply ensures visibility.
-      if (!isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL)) {
-        openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-      }
-
-      // Debug trace (safe to keep)
-      console.log('[AddSponsorshipButton] toggled:', {
-        hidConfigButton: true,
-        showedRecipientPanel: true,
-        ensuredTradingVisible: true,
-      });
-    } finally {
-      busyRef.current = false;
+    if (shouldShow) {
+      openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+    } else {
+      closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
     }
-  }, [isVisible, openPanel, closePanel]);
+
+    appliedRef.current = next;
+  }, [addr]);
+
+  const onOpenInline = useCallback(() => {
+    // Hide launcher, open inline panel (mirrors Manage's click behavior)
+    closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+    openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
+  }, [openPanel, closePanel]);
+
+  // Render only when launcher enum is on
+  if (!isVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON)) return null;
 
   return (
     <div
+      id="addSponsorshipDiv"
+      className={styles.addSponsorshipDiv}
       role="button"
       tabIndex={0}
       aria-label="Add Sponsorship"
-      aria-pressed="false"
-      className={styles.addSponsorshipDiv}
-      onClick={openRecipientSelect}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openRecipientSelect();
-        }
-      }}
+      onClick={onOpenInline}
     >
       <div className={styles.centerTop}>Add</div>
       <div className={styles.centerBottom}>Sponsorship</div>
     </div>
   );
-};
-
-export default AddSponsorshipButton;
+}

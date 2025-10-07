@@ -33,12 +33,14 @@ function TokenSelectDropDown({ containerType }: Props) {
   const sellHook = useSellTokenContract();
   const buyHook  = useBuyTokenContract();
 
+  // ✅ Use the *root* panel to decide which token state to read
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
 
-  // Transitions
+  // Transition helpers
   const { openSellList, openBuyList } = usePanelTransitions();
 
+  // Resolve logo with safe fallback
   const logoURL = useMemo(() => {
     const raw = tokenContract?.logoURL?.trim();
     if (raw && raw.length > 0) {
@@ -69,13 +71,11 @@ function TokenSelectDropDown({ containerType }: Props) {
   const openTokenSelectPanel = useCallback(() => {
     clearFSMTraceFromMemory();
 
-    if (isSellRoot) {
-      debugLog.log('📂 Opening SELL Token Select (transition)');
-      openSellList();
-    } else {
-      debugLog.log('📂 Opening BUY Token Select (transition)');
-      openBuyList();
-    }
+    const target = isSellRoot ? 'SELL' : 'BUY';
+    debugLog.log(`📂 Opening TokenSelectPanel via transition: ${target}_SELECT_PANEL_LIST`);
+
+    // Use named transition (radio behavior handled internally)
+    isSellRoot ? openSellList() : openBuyList();
   }, [isSellRoot, openSellList, openBuyList]);
 
   return (

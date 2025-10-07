@@ -20,10 +20,6 @@ import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
-const DEBUG =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_RECIPIENT_TRADING_PANEL === 'true' ||
-  process.env.NEXT_PUBLIC_DEBUG_LOG_PANELS === 'true';
-
 const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { isVisible, openPanel, closePanel } = usePanelTree();
@@ -198,21 +194,6 @@ const AddSponsorShipPanel: React.FC = () => {
       </div>
 
       <ConfigSponsorshipPanel />
-
-      {DEBUG && (
-        <div className="mt-2 p-2 text-xs bg-black/30 rounded">
-          <div>
-            <b>Debug:</b>{' '}
-            ADD_SPONSORSHIP_PANEL={String(vis.showPanel)} |{' '}
-            ADD_SPONSORSHIP_BUTTON={String(vis.addBtnRecipient)} |{' '}
-            MANAGE_SPONSORSHIPS_BUTTON={String(vis.addBtnSponsorship)} |{' '}
-            CONFIG_SPONSORSHIP_PANEL={String(vis.configPanel)} |{' '}
-            BUY_SELECT_PANEL_LIST={String(vis.buyList)} |{' '}
-            SELL_SELECT_PANEL_LIST={String(vis.sellList)} |{' '}
-            selfVisible={String(selfVisible)}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

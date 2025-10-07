@@ -34,9 +34,6 @@ import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
 
-import { useConfigButtonVisibility } from '@/lib/hooks/trade/useConfigButtonVisibility';
-
-// (optional) only needed if you still hide Add while inline panel is open
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
@@ -60,10 +57,7 @@ function TradeAssetPanelInner() {
   const isBuy  = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL;
   const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL;
 
-  // ✅ Explicitly select the token for THIS side for button visibility logic
-  const tokenContractForSide = isSell ? sellTokenContract : buyTokenContract;
-
-  // Token selection state (used for amounts/decimals/etc.)
+  // selection state
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
     containerType: containerTypeRoot,
     sellTokenContract,
@@ -76,19 +70,10 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   });
 
-  // ✅ Feed the side-specific token into the visibility hook
-  const { showManageBtn, showRecipientBtn } = useConfigButtonVisibility({
-    isSell,
-    isBuy,
-    tokenContract: tokenContractForSide,
-  });
-
-  // (optional) if you still want to hide Add when inline panel is open
+  // BUY-side: gate recipient button strictly by panel tree visibility (no isSpCoin logic here)
   const { isVisible } = usePanelTree();
-  const isRecipientPanelOpen = isVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
-  const showRecipientBtnFinal = showRecipientBtn && !isRecipientPanelOpen;
 
-  // Amount input state
+  // amount input
   const [inputValue, setInputValue] = useState('0');
   const debouncedSell = useDebounce(sellAmount, 600);
   const debouncedBuy  = useDebounce(buyAmount, 600);
@@ -255,9 +240,11 @@ function TradeAssetPanelInner() {
         Balance: {formattedBalance}
       </div>
 
-      {/* ✅ Correct buttons per side */}
-      {showManageBtn && <ManageSponsorsButton tokenContract={tokenContractForSide} />}
-      {showRecipientBtnFinal && <AddSponsorshipButton />}
+      {/* SELL panel: render manage button; its own component governs visibility */}
+      {isSell && <ManageSponsorsButton />}
+
+      {/* BUY panel: recipient gating via panel-tree */}
+      {isBuy && <AddSponsorshipButton />}
     </div>
   );
 }
