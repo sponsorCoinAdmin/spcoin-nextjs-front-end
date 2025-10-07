@@ -13,7 +13,7 @@ import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import FeeDisclosure from '../containers/FeeDisclosure';
 import AddSponsorShipPanel from './AddSponsorshipPanel';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -21,11 +21,8 @@ const DEBUG_ENABLED =
 const debugLog = createDebugLogger('TradingStationPanel', DEBUG_ENABLED, LOG_TIME);
 
 export default function TradingStationPanel() {
-  const { isVisible } = usePanelTree();
-
-  // Gate this panel by panel-tree visibility so it behaves like a radio overlay.
-  // Using isVisible (not activeMainOverlay) allows support for "no active overlay" if enabled.
-  const isActive = isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+  // ✅ Subscribe to just the overlay we render under
+  const isActive = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
 
   debugLog.log(`🛠️ TradingStationPanel → tradingStationVisible=${isActive}`);
   const { isLoading: isLoadingPrice, data: priceData } = usePriceAPI();

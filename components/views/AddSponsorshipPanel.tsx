@@ -1,7 +1,7 @@
 // File: components/AddSponsorShipPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
@@ -9,21 +9,24 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 
-// 🔒 Panel-tree enum (what the tree uses internally)
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-// 🧪 Optional: generic barrel import to sanity-check enum identity at runtime
-import { SP_COIN_DISPLAY as SP_GENERIC } from '@/lib/structure';
 
 import ConfigSponsorshipPanel from '../containers/ConfigSponsorshipPanel';
 import { useExchangeContext } from '@/lib/context';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
 const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const { isVisible, openPanel, closePanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
+
+  // ✅ Subscribe narrowly to the booleans we render on
+  const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
+  const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
+  const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
   const recipientWallet: WalletAccount | undefined =
     exchangeContext.accounts.recipientAccount;
@@ -31,13 +34,12 @@ const AddSponsorShipPanel: React.FC = () => {
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   const toggleSponsorRateConfig = useCallback(() => {
-    const cfgId = SP_TREE.CONFIG_SPONSORSHIP_PANEL;
-    if (isVisible(cfgId)) {
+    if (configVisible) {
       closeConfigSponsorship();
     } else {
       openConfigSponsorship();
     }
-  }, [isVisible, openConfigSponsorship, closeConfigSponsorship]);
+  }, [configVisible, openConfigSponsorship, closeConfigSponsorship]);
 
   const clearRecipient = useCallback(() => {
     setExchangeContext(
@@ -48,11 +50,19 @@ const AddSponsorShipPanel: React.FC = () => {
       },
       'AddSponsorShipPanel:clearRecipient'
     );
-    // Keep the existing button re-show logic as-is (transitions do not cover buttons)
+    // Hide inline panel, re-show launcher
     closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
+  // 🔧 Ensure Trading Station is visible whenever inline Add panel is visible
+  useEffect(() => {
+    if (addVisible && !tradingVisible) {
+      openPanel(SP_TREE.TRADING_STATION_PANEL);
+    }
+  }, [addVisible, tradingVisible, openPanel]);
+
+  // Website HEAD probe (optional)
   useEffect(() => {
     const website = recipientWallet?.website?.trim();
     if (!website || website === 'N/A') {
@@ -64,29 +74,7 @@ const AddSponsorShipPanel: React.FC = () => {
       .catch(() => setSiteExists(false));
   }, [recipientWallet?.website]);
 
-  const vis = useMemo(() => {
-    const showPanel = isVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
-    const addBtnRecipient = isVisible(SP_TREE.ADD_SPONSORSHIP_BUTTON);
-    const addBtnSponsorship = isVisible(SP_TREE.MANAGE_SPONSORSHIPS_BUTTON);
-    const trading = isVisible(SP_TREE.TRADING_STATION_PANEL);
-    const buyList = isVisible(SP_TREE.BUY_SELECT_PANEL_LIST);
-    const sellList = isVisible(SP_TREE.SELL_SELECT_PANEL_LIST);
-    const configPanel = isVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
-
-    return {
-      showPanel,
-      addBtnRecipient,
-      addBtnSponsorship,
-      trading,
-      buyList,
-      sellList,
-      configPanel,
-    };
-  }, [isVisible]);
-
-  const selfVisible = vis.showPanel;
-
-  if (!selfVisible) return null;
+  if (!addVisible) return null;
 
   const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
   const sitekey = recipientWallet?.address?.trim()

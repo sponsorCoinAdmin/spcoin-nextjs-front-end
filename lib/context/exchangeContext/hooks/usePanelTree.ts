@@ -1,11 +1,12 @@
 // File: lib/context/exchangeContext/hooks/usePanelTree.ts
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
@@ -45,6 +46,17 @@ function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEn
   return list.some(e => e.panel === panel) ? list : [...list, { panel, visible: false }];
 }
 
+function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number, boolean>) {
+  // publish changes to the lightweight panelStore so subscribers only re-render for affected panels
+  const ids = new Set<number>([...Object.keys(prevMap), ...Object.keys(nextMap)].map(Number));
+  ids.forEach((idNum) => {
+    const id = idNum as SP_COIN_DISPLAY;
+    const prev = !!prevMap[idNum];
+    const next = !!nextMap[idNum];
+    if (prev !== next) panelStore.setVisible(id, next);
+  });
+}
+
 /* --------------------------------- hook --------------------------------- */
 
 export function usePanelTree() {
@@ -55,17 +67,29 @@ export function usePanelTree() {
 
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
 
-  // If multiple overlays somehow visible, collapse to the first
+  // Sync panelStore with current map (covers initial load and any external migrations)
+  const prevMapRef = useRef<Record<number, boolean> | null>(null);
+  useEffect(() => {
+    const prev = prevMapRef.current ?? {};
+    diffAndPublish(prev, map);
+    prevMapRef.current = map;
+  }, [map]);
+
+  // If multiple overlays somehow visible, collapse to the first (and publish)
   useEffect(() => {
     const visible = overlays.filter(id => !!map[id]);
     if (visible.length <= 1) return;
     const keep = visible[0];
     debugLog.log('reconcile overlays → keep', keep);
     setExchangeContext(prev => {
-      const flat = flatten((prev as any)?.settings?.spCoinPanelTree);
-      const next = flat.map(e =>
+      const flatPrev = flatten((prev as any)?.settings?.spCoinPanelTree);
+      const next = flatPrev.map(e =>
         overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
       );
+      // publish diffs to panelStore immediately
+      const prevMap = toMap(flatPrev);
+      const nextMap = toMap(next);
+      diffAndPublish(prevMap, nextMap);
       return writeFlat(prev, next);
     }, 'usePanelTree:reconcile');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,9 +97,10 @@ export function usePanelTree() {
 
   /* ------------------------------- queries ------------------------------- */
 
+  // Stable reference; reads from panelStore snapshot (Phase 7)
   const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => !!map[panel],
-    [map]
+    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
+    []
   );
 
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
@@ -97,6 +122,9 @@ export function usePanelTree() {
             else acc.push({ panel: id, visible: id === panel });
             return acc;
           }, [...flat]);
+          const prevMap = toMap(flat0);
+          const nextMap = toMap(flat);
+          diffAndPublish(prevMap, nextMap);
           return writeFlat(prev, flat);
         }
 
@@ -104,6 +132,10 @@ export function usePanelTree() {
         const i = flat.findIndex(e => e.panel === panel);
         if (i >= 0) flat[i] = { ...flat[i], visible: true };
         else flat.push({ panel, visible: true });
+
+        const prevMap = toMap(flat0);
+        const nextMap = toMap(flat);
+        diffAndPublish(prevMap, nextMap);
         return writeFlat(prev, flat);
       }, 'usePanelTree:open');
     },
@@ -114,30 +146,39 @@ export function usePanelTree() {
     (panel: SP_COIN_DISPLAY) => {
       debugLog.log('close', panel);
       setExchangeContext(prev => {
-        const flat = flatten((prev as any)?.settings?.spCoinPanelTree);
+        const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
 
         if (overlays.includes(panel)) {
           // If we're closing an ACTIVE overlay → allow "none selected"
-          const isActive = !!flat.find(e => e.panel === panel && e.visible);
+          const isActive = !!flat0.find(e => e.panel === panel && e.visible);
           if (isActive) {
             const next = overlays.reduce((acc, id) => {
               const idx = acc.findIndex(e => e.panel === id);
               if (idx >= 0) acc[idx] = { ...acc[idx], visible: false };
               else acc.push({ panel: id, visible: false });
               return acc;
-            }, [...flat]);
+            }, [...flat0]);
+            const prevMap = toMap(flat0);
+            const nextMap = toMap(next);
+            diffAndPublish(prevMap, nextMap);
             return writeFlat(prev, next);
           }
           // If overlay exists but isn't active, just ensure it is false
-          const i = flat.findIndex(e => e.panel === panel);
-          if (i >= 0 && flat[i].visible) flat[i] = { ...flat[i], visible: false };
-          return writeFlat(prev, flat);
+          const i = flat0.findIndex(e => e.panel === panel);
+          if (i >= 0 && flat0[i].visible) flat0[i] = { ...flat0[i], visible: false };
+          const prevMap = toMap(flat0);
+          const nextMap = toMap(flat0);
+          diffAndPublish(prevMap, nextMap);
+          return writeFlat(prev, flat0);
         }
 
         // non-radio: mark false if present
-        const i = flat.findIndex(e => e.panel === panel);
-        if (i >= 0 && flat[i].visible) flat[i] = { ...flat[i], visible: false };
-        return writeFlat(prev, flat);
+        const i = flat0.findIndex(e => e.panel === panel);
+        if (i >= 0 && flat0[i].visible) flat0[i] = { ...flat0[i], visible: false };
+        const prevMap = toMap(flat0);
+        const nextMap = toMap(flat0);
+        diffAndPublish(prevMap, nextMap);
+        return writeFlat(prev, flat0);
       }, 'usePanelTree:close');
     },
     [setExchangeContext, overlays]
@@ -145,22 +186,21 @@ export function usePanelTree() {
 
   /* ------------------------------- derived -------------------------------- */
 
-  // Return null when no overlay is selected
+  // Return null when no overlay is selected (computed from context map)
   const activeMainOverlay = useMemo<SP_COIN_DISPLAY | null>(() => {
     for (const id of overlays) if (map[id]) return id;
     return null;
   }, [map, overlays]);
 
+  // Use context map for this aggregate; independent of isVisible's stable ref
   const isTokenScrollVisible = useMemo(
-    () =>
-      isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL) ||
-      isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL),
-    [isVisible]
+    () => map[SP_COIN_DISPLAY.BUY_SELECT_PANEL] || map[SP_COIN_DISPLAY.SELL_SELECT_PANEL],
+    [map]
   );
 
   return {
-    activeMainOverlay,       // now SP_COIN_DISPLAY | null
-    isVisible,
+    activeMainOverlay,       // SP_COIN_DISPLAY | null
+    isVisible,               // stable ref (panelStore-backed)
     isTokenScrollVisible,
     getPanelChildren,
     openPanel,
