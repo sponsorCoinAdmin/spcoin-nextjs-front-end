@@ -71,10 +71,16 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.SPONSOR_SELECT_PANEL_LIST,   kind: 'list',  overlay: true,  defaultVisible: false },
 
   // Trading subtree (non-radio)
-  { id: SP.SELL_SELECT_PANEL,        kind: 'panel',  defaultVisible: true,  children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
-  { id: SP.BUY_SELECT_PANEL,         kind: 'panel',  defaultVisible: true,  children: [SP.ADD_SPONSORSHIP_BUTTON] },
-  { id: SP.ADD_SPONSORSHIP_PANEL,    kind: 'panel',  defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
-  { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel',  defaultVisible: false },
+  { id: SP.SELL_SELECT_PANEL,        kind: 'panel',   defaultVisible: true,  children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
+  { id: SP.BUY_SELECT_PANEL,         kind: 'panel',   defaultVisible: true,  children: [SP.ADD_SPONSORSHIP_BUTTON] },
+  { id: SP.ADD_SPONSORSHIP_PANEL,    kind: 'panel',   defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
+  { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel',   defaultVisible: false },
+
+  // Inline controls & disclosures (the missing ones)
+  { id: SP.SWAP_ARROW_BUTTON,        kind: 'control', defaultVisible: true  },
+  { id: SP.PRICE_BUTTON,             kind: 'control', defaultVisible: true  },
+  { id: SP.FEE_DISCLOSURE,           kind: 'panel',   defaultVisible: true  },
+  { id: SP.AFFILIATE_FEE,            kind: 'panel',   defaultVisible: false },
 
   // Buttons
   { id: SP.ADD_SPONSORSHIP_BUTTON,     kind: 'button', defaultVisible: false },

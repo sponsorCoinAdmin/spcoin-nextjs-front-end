@@ -10,8 +10,8 @@ import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ConnectButton from '../Buttons/Connect/ConnectButton';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
   switch (d) {
@@ -30,27 +30,45 @@ function getTitleFromDisplay(d: SP_COIN_DISPLAY): string {
 
 const TradeContainerHeader = () => {
   const { exchangeContext } = useExchangeContext();
-  const { isVisible } = usePanelTree();
   const { toTrading } = usePanelTransitions();
 
-  // Keep hooks unconditional for stable order
+  // Local state (keep hooks unconditional)
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
-  // Derive the "current" display from visibility (no self-gating here)
+  // Phase 7: subscribe narrowly to each relevant panel flag
+  const sponsorListVis   = usePanelVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST);
+  const sellListVis      = usePanelVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST);
+  const buyListVis       = usePanelVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST);
+  const recipientListVis = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+  const managePanelVis   = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+  const agentListVis     = usePanelVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
+  const errorVis         = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+  const tradingVis       = usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+
+  // Determine current display in priority order
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    if (isVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST))     return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST))        return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST))         return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST))   return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL))     return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST))       return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
-    if (isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL))           return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
-    if (isVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL))         return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+    if (sponsorListVis)   return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
+    if (sellListVis)      return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
+    if (buyListVis)       return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
+    if (recipientListVis) return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
+    if (managePanelVis)   return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
+    if (agentListVis)     return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
+    if (errorVis)         return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
+    if (tradingVis)       return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
     return SP_COIN_DISPLAY.UNDEFINED;
-  }, [isVisible]);
+  }, [
+    sponsorListVis,
+    sellListVis,
+    buyListVis,
+    recipientListVis,
+    managePanelVis,
+    agentListVis,
+    errorVis,
+    tradingVis,
+  ]);
 
   const title = getTitleFromDisplay(currentDisplay);
-  const isTradingVisible = currentDisplay === SP_COIN_DISPLAY.TRADING_STATION_PANEL;
+  const isTradingVisible = tradingVis;
 
   const onOpenConfig   = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig  = useCallback(() => setIsConfigOpen(false), []);

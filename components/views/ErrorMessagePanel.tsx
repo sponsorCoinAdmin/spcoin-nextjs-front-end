@@ -1,7 +1,9 @@
 // File: components/containers/ErrorMessagePanel.tsx
 'use client';
 
+import { useCallback } from 'react';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useErrorMessage } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
@@ -15,11 +17,11 @@ function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { openPanel } = usePanelTree();
 
-  const onDismiss = () => {
+  const onDismiss = useCallback(() => {
     debugLog.log('✅ Dismiss → openPanel(TRADING_STATION_PANEL) & clear error');
     setErrorMessage(undefined);
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  };
+  }, [setErrorMessage, openPanel]);
 
   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);
 
@@ -80,23 +82,15 @@ function ErrorMessagePanelInner() {
 }
 
 /**
- * Visibility is fully controlled by the panel tree:
- * - Show when this panel is the active radio overlay, OR
- * - (fallback) when legacy visibility flag says it’s visible.
+ * Phase 7 subscription:
+ * - Re-render this component only when ERROR_MESSAGE_PANEL visibility changes.
+ * - Avoids reading the entire tree or active overlay each render.
  */
 export default function ErrorMessagePanel() {
-  const { activeMainOverlay, isVisible } = usePanelTree();
+  const visible = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
 
-  const computedActive =
-    activeMainOverlay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL ||
-    isVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
-
-  debugLog.log('🛠️ ErrorMessagePanel render; active=', computedActive);
-
-  if (!computedActive) {
-    debugLog.log('⏭️ ErrorMessagePanel → not active, skipping render');
-    return null;
-  }
+  debugLog.log('🛠️ ErrorMessagePanel render; visible=', visible);
+  if (!visible) return null;
 
   return <ErrorMessagePanelInner />;
 }

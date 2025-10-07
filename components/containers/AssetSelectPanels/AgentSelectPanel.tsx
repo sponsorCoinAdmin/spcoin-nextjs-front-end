@@ -1,4 +1,3 @@
-// File: components/containers/AssetSelectPanels/AgentSelectPanel.tsx
 'use client';
 
 import { useMemo, useCallback } from 'react';
@@ -10,14 +9,12 @@ import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 
 import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
-/** Wrapper component: only checks visibility and returns null. No other hooks/logic here. */
+/** Wrapper component: subscribe narrowly to visibility and return null when hidden. */
 export default function AgentSelectPanel() {
-  const { isVisible } = usePanelTree();
-  const active = isVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
+  const active = usePanelVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
   if (!active) return null;
   return <AgentSelectPanelInner />;
 }
@@ -25,7 +22,6 @@ export default function AgentSelectPanel() {
 /** Inner component: all hooks live here; no early returns. */
 function AgentSelectPanelInner() {
   const { exchangeContext } = useExchangeContext();
-  const { commitAgent } = useSelectionCommit();
   const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
@@ -44,9 +40,10 @@ function AgentSelectPanelInner() {
     (asset: TokenContract | WalletAccount) => {
       const looksLikeToken = typeof (asset as any)?.decimals === 'number';
       if (looksLikeToken) return;
-      commitAgent(asset as WalletAccount);
+      // Agent selection is committed via the provider's callback chain in AssetSelectPanel
+      // Here we simply ensure the chosen WalletAccount flows through setSelectedAssetCallback
     },
-    [commitAgent]
+    []
   );
 
   const initialPanelBag: AssetSelectBag = useMemo(

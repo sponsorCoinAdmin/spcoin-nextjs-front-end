@@ -2,8 +2,8 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 type Props = {
   panel: SP_COIN_DISPLAY;
@@ -11,7 +11,8 @@ type Props = {
 };
 
 export default function PanelGate({ panel, children }: Props) {
-  const { isVisible } = usePanelTree();
-  if (!isVisible(panel)) return null;
+  // Subscribe narrowly to just this panel's visibility
+  const visible = usePanelVisible(panel);
+  if (!visible) return null;
   return <>{children}</>;
 }

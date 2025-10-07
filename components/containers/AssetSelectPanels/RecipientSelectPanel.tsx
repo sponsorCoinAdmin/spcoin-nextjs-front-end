@@ -7,35 +7,30 @@ import AssetSelectPanel from './AssetSelectPanel';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { AssetSelectProvider } from '@/lib/context';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 import { useSelectionCommit } from '@/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
-/** Wrapper does ONLY visibility gating (no hooks after the conditional). */
+/** Wrapper: only visibility gating; no hooks after the conditional. */
 export default function RecipientSelectPanel() {
-  const { activeMainOverlay, isVisible } = usePanelTree();
-
-  const active =
-    activeMainOverlay === SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST ||
-    isVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
-
-  if (!active) return null;
+  const visible = usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+  if (!visible) return null;
   return <RecipientSelectPanelInner />;
 }
 
-/** All hooks live in the inner component so the hook order is stable. */
+/** Inner: stable hooks only, no early returns. */
 function RecipientSelectPanelInner() {
   const { exchangeContext } = useExchangeContext();
   const { commitRecipient } = useSelectionCommit();
   const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
+  const containerType = SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
 
   const instanceId = useMemo(
-    () =>
-      `RECIPIENT_SELECT_${SP_COIN_DISPLAY[SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST]}_${chainId}`,
-    [chainId]
+    () => `RECIPIENT_SELECT_${SP_COIN_DISPLAY[containerType]}_${chainId}`,
+    [containerType, chainId]
   );
 
   const closeForProvider = useCallback(() => {
@@ -45,15 +40,15 @@ function RecipientSelectPanelInner() {
   const onAssetChosen = useCallback(
     (asset: TokenContract | WalletAccount) => {
       const looksLikeToken = typeof (asset as any)?.decimals === 'number';
-      if (looksLikeToken) return;
+      if (looksLikeToken) return; // recipients are wallet accounts, not tokens
       commitRecipient(asset as WalletAccount);
     },
     [commitRecipient]
   );
 
   const initialPanelBag: AssetSelectBag = useMemo(
-    () => ({ type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST }),
-    []
+    () => ({ type: containerType, chainId }),
+    [containerType, chainId]
   );
 
   return (
@@ -62,7 +57,7 @@ function RecipientSelectPanelInner() {
         key={instanceId}
         closePanelCallback={closeForProvider}
         setSelectedAssetCallback={onAssetChosen}
-        containerType={SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST}
+        containerType={containerType}
         initialPanelBag={initialPanelBag}
       >
         <AssetSelectPanel />

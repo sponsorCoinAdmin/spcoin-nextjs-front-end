@@ -1,4 +1,3 @@
-// File: lib/context/ExchangeProvider.tsx
 'use client';
 
 import React, { createContext, useEffect, useRef, useState } from 'react';
@@ -22,9 +21,11 @@ import {
 import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { loadInitialPanelNodeDefaults } from '@/lib/structure/exchangeContext/defaults/loadInitialPanelNodeDefaults';
 import { PANEL_DEFS, MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree'; // 👈 keep
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { saveLocalExchangeContext } from './helpers/ExchangeSaveHelpers';
+import { validateAndRepairPanels } from '@/lib/structure/exchangeContext/safety/validatePanelState';
 
 /* ---------------------------- Types & Context API --------------------------- */
 
@@ -56,6 +57,9 @@ export const ExchangeContextState = createContext<ExchangeContextType | null>(nu
 
 // 🔁 Bump when we change panel persistence/migration behavior
 const PANEL_SCHEMA_VERSION = 2;
+
+// single warning gate for Phase 8 repairs
+let _panelRepairWarned = false;
 
 // Always return a *number* for chainId (0 == "unset")
 const ensureNetwork = (n?: Partial<NetworkElement>): NetworkElement => ({
@@ -101,18 +105,148 @@ const normalizeForPersistence = (panels: PanelNode[]): SpCoinPanelTree =>
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
-/** Append any panels defined in the registry missing from stored state. Idempotent. */
-const ensureRegistryPanelsPresent = (flat: PanelNode[]): PanelNode[] => {
-  const present = new Set(flat.map((n) => n.panel));
-  const additions: PanelNode[] = PANEL_DEFS
-    .filter((d) => !present.has(d.id))
-    .map((d) => ({
-      panel: d.id,
-      name: SP_COIN_DISPLAY[d.id] ?? String(d.id),
-      visible: !!d.defaultVisible,
-    }));
-  return additions.length ? [...flat, ...additions] : flat;
-};
+/** ─────────────────────── NEW canonical defaults/repair ────────────────────── **/
+
+type FlatPanel = { panel: number; name?: string; visible?: boolean };
+type DefaultsNode = { panel: number; name?: string; visible?: boolean; children?: DefaultsNode[] };
+
+// Flatten authored default tree exactly as written (includes widgets)
+function flattenDefaults(nodes: DefaultsNode[]): FlatPanel[] {
+  const out: FlatPanel[] = [];
+  const walk = (arr: DefaultsNode[]) => {
+    for (const n of arr) {
+      out.push({ panel: n.panel, name: n.name, visible: !!n.visible });
+      if (n.children?.length) walk(n.children);
+    }
+  };
+  walk(nodes);
+  return out;
+}
+
+// Panels that must **not** be persisted/seeded
+const NON_PERSISTED = new Set<number>([SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST]);
+
+// Panels expected on cold boot and their required default visibility
+const MUST_INCLUDE_ON_BOOT: Array<[number, boolean]> = [
+  [SP_COIN_DISPLAY.MAIN_TRADING_PANEL, true],
+  [SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER, true],
+  [SP_COIN_DISPLAY.TRADING_STATION_PANEL, true],
+  [SP_COIN_DISPLAY.SELL_SELECT_PANEL, true],
+  [SP_COIN_DISPLAY.BUY_SELECT_PANEL, true],
+  // widgets:
+  [SP_COIN_DISPLAY.SWAP_ARROW_BUTTON, true],
+  [SP_COIN_DISPLAY.PRICE_BUTTON, true],
+  [SP_COIN_DISPLAY.FEE_DISCLOSURE, true],
+  // track but default-off:
+  [SP_COIN_DISPLAY.AFFILIATE_FEE, false],
+];
+
+/**
+ * Canonical panel repair:
+ * - Start from authored defaults (widgets included)
+ * - Exclude NON_PERSISTED panels
+ * - Merge persisted visibility where present
+ * - Stable, dup-free order (defaults first)
+ */
+function repairPanels(
+  persisted: FlatPanel[] | undefined
+): { panels: PanelNode[]; notes: string[] } {
+  const notes: string[] = [];
+
+  const defaults = flattenDefaults(defaultSpCoinPanelTree).filter(
+    (p) => !NON_PERSISTED.has(p.panel)
+  );
+
+  // Seed map from defaults
+  const byId = new Map<number, PanelNode>();
+  for (const p of defaults) {
+    byId.set(p.panel, {
+      panel: p.panel,
+      name: p.name || (SP_COIN_DISPLAY[p.panel] ?? String(p.panel)),
+      visible: !!p.visible,
+    });
+  }
+
+  // Merge persisted (preserve users' visibility; drop transient)
+  if (Array.isArray(persisted)) {
+    for (const p of persisted) {
+      const id = p?.panel;
+      if (!Number.isFinite(id)) continue;
+      if (NON_PERSISTED.has(id)) {
+        notes.push(`Removed non-persisted panel ${SP_COIN_DISPLAY[id] ?? id}`);
+        continue;
+      }
+      const prev = byId.get(id);
+      if (prev) {
+        if (typeof p.visible === 'boolean' && p.visible !== prev.visible) {
+          prev.visible = p.visible;
+          notes.push(`Preserved visibility for ${SP_COIN_DISPLAY[id] ?? id}`);
+        }
+        if (p.name && p.name !== prev.name) prev.name = p.name;
+      } else {
+        // unknown/custom panel — keep it
+        byId.set(id, {
+          panel: id,
+          name: p.name || (SP_COIN_DISPLAY[id] ?? String(id)),
+          visible: !!p.visible,
+        });
+        notes.push(`Added custom/persisted panel ${SP_COIN_DISPLAY[id] ?? id}`);
+      }
+    }
+  }
+
+  // Ensure required panels exist with required vis (unless persisted already set)
+  for (const [id, vis] of MUST_INCLUDE_ON_BOOT) {
+    const r = byId.get(id);
+    if (!r) {
+      byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
+      notes.push(`Added missing required panel ${SP_COIN_DISPLAY[id] ?? id}`);
+    } else if (typeof r.visible !== 'boolean') {
+      r.visible = vis;
+    }
+  }
+
+  // Stable order: defaults first, then extras (unknown/custom)
+  const defaultOrder = defaults.map((d) => d.panel);
+  const extras = [...byId.keys()].filter((id) => !defaultOrder.includes(id));
+  const orderedIds = [...defaultOrder, ...extras];
+
+  return { panels: orderedIds.map((id) => byId.get(id)!), notes };
+}
+
+/** NEW: ensure a set of required panels exist (apply vis only when absent) */
+function ensureRequiredPanels(panels: PanelNode[], required: Array<[number, boolean]>): {
+  panels: PanelNode[];
+  added: string[];
+} {
+  const byId = new Map(panels.map(p => [p.panel, { ...p }]));
+  const added: string[] = [];
+  for (const [id, vis] of required) {
+    if (!byId.has(id)) {
+      byId.set(id, {
+        panel: id,
+        name: SP_COIN_DISPLAY[id] ?? String(id),
+        visible: vis,
+      });
+      added.push(SP_COIN_DISPLAY[id] ?? String(id));
+    }
+  }
+  return { panels: [...byId.values()], added };
+}
+
+/** NEW: drop non-persisted panels (e.g., SPONSOR_SELECT_PANEL_LIST) */
+function dropNonPersisted(panels: PanelNode[]): { panels: PanelNode[]; dropped: string[] } {
+  const kept: PanelNode[] = [];
+  const dropped: string[] = [];
+  for (const p of panels) {
+    if (NON_PERSISTED.has(p.panel)) {
+      dropped.push(SP_COIN_DISPLAY[p.panel] ?? String(p.panel));
+    } else {
+      kept.push(p);
+    }
+  }
+  return { panels: kept, dropped };
+}
 
 /** Ensure exactly zero-or-one overlays are visible; prefer TRADING_STATION_PANEL if multiple. */
 const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
@@ -123,9 +257,7 @@ const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
   const preferred =
     visible.find((n) => n.panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL) ?? visible[0];
 
-  return flat.map((n) =>
-    isOverlay(n.panel) ? { ...n, visible: n.panel === preferred.panel } : n
-  );
+  return flat.map((n) => (isOverlay(n.panel) ? { ...n, visible: n.panel === preferred.panel } : n));
 };
 
 /* --------------------------------- Provider -------------------------------- */
@@ -156,16 +288,15 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         const normalized = clone(nextBase);
 
         // Always persist flat panel list
-        if (Array.isArray(normalized?.settings?.spCoinPanelTree)) {
-          normalized.settings.spCoinPanelTree = normalizeForPersistence(
-            normalized.settings.spCoinPanelTree as unknown as PanelNode[]
+        if (Array.isArray((normalized as any)?.settings?.spCoinPanelTree)) {
+          (normalized as any).settings.spCoinPanelTree = normalizeForPersistence(
+            (normalized as any).settings.spCoinPanelTree as unknown as PanelNode[]
           );
         }
 
-        // NOTE: Avoid TS 2353 by assigning the version via bracket syntax on an any-typed object.
+        // Assign version without tripping TS excess-property checks
         (normalized as any).settings = {
           ...(normalized as any).settings,
-          // do not add version here to avoid "excess property" check on object literal
         };
         (normalized as any).settings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
 
@@ -185,22 +316,39 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const base = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (base as any).settings ?? {};
-      const storedPanels = settingsAny.spCoinPanelTree;
+      const storedPanels = settingsAny.spCoinPanelTree as PanelNode[] | undefined;
 
-      let flatPanels: PanelNode[];
+      // 1) Canonical repair starting from *authored defaults* (includes widgets)
+      const { panels: repairedFromPersist, notes } = repairPanels(
+        isMainPanels(storedPanels) ? storedPanels : undefined
+      );
 
-      if (isMainPanels(storedPanels)) {
-        // Take stored panels, then migrate to current behavior
-        let next = storedPanels.map(ensurePanelName);
-        next = ensureRegistryPanelsPresent(next);
-        next = reconcileOverlayVisibility(next);
-        flatPanels = next;
-      } else {
-        // Seed from defaults (flat, no children) then reconcile overlays
-        const seed = loadInitialPanelNodeDefaults();
-        flatPanels = reconcileOverlayVisibility(
-          ensurePanelNamesInMemory(clone(seed as unknown as PanelNode[]))
-        );
+      // 2) Phase-8 safety validation still runs (idempotent)
+      const { panels: validatedPanels, repaired: didRepair, reasons } = validateAndRepairPanels(
+        repairedFromPersist.map(ensurePanelName)
+      );
+
+      // 3) Post-validator enforcement:
+      //    3a) Drop any non-persisted panels validator may have added
+      const { panels: noTransient, dropped } = dropNonPersisted(validatedPanels);
+
+      //    3b) Re-ensure required defaults in case validator removed unknown IDs (widgets)
+      const { panels: ensured, added } = ensureRequiredPanels(noTransient, MUST_INCLUDE_ON_BOOT);
+
+      //    3c) Reconcile overlays LAST
+      const flatPanels = reconcileOverlayVisibility(ensured);
+
+      // 4) One-time warning line (kept for your previous log watchers)
+      const combinedReasons = [
+        ...notes,
+        ...(didRepair ? reasons : []),
+        ...(dropped.length ? [`Removed non-persisted: ${dropped.join(', ')}`] : []),
+        ...(added.length ? [`Re-added required defaults: ${added.join(', ')}`] : []),
+      ];
+      if (combinedReasons.length && !_panelRepairWarned) {
+        // eslint-disable-next-line no-console
+        console.warn('[PanelState] Repaired persisted panel state:', combinedReasons);
+        _panelRepairWarned = true;
       }
 
       // Build settings object without the version first…
@@ -226,7 +374,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Keep in-memory copy with names for runtime usage
-      (base as any).settings.spCoinPanelTree = flatPanels;
+      (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
       setContextState(base as ExchangeContextTypeOnly);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

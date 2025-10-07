@@ -1,7 +1,7 @@
 // File: components/Buttons/BuySellSwapArrowButton.tsx
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ArrowDown } from 'lucide-react';
 import {
@@ -12,8 +12,8 @@ import {
 import { mutate } from 'swr';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 
-// ⬇️ Visibility control
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+// ⬇️ Phase 7: subscribe narrowly to this panel's visibility
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 /** Normalize mixed numeric inputs to a decimal string. */
@@ -64,28 +64,25 @@ function coerceShiftedAmount(original: unknown, shifted: string): bigint | strin
     try {
       return BigInt(shifted);
     } catch {
-      // fall back to string if BigInt fails
+      /* fall back to string if BigInt fails */
     }
   }
   return shifted;
 }
 
 const BuySellSwapArrowButton = () => {
-  // ✅ Always call hooks in the same order — no early return before these.
-  const { isVisible } = usePanelTree();
+  // ✅ Always call hooks in the same order — no early returns before hooks
+  const show = usePanelVisible(SP_TREE.SWAP_ARROW_BUTTON);
   const { exchangeContext } = useExchangeContext();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
   const { swrKey } = usePriceAPI();
 
-  // Now it’s safe to branch based on visibility
-  const show = isVisible(SP_TREE.SWAP_ARROW_BUTTON);
-  if (!show) return null;
-
-  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+  // Define callbacks (hooks) unconditionally
+  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     e.preventDefault();
 
-    const trade = exchangeContext?.tradeData;
+    const trade = exchangeContext?.tradeData as any;
     const sell = trade?.sellTokenContract ?? undefined;
     const buy = trade?.buyTokenContract ?? undefined;
 
@@ -107,7 +104,7 @@ const BuySellSwapArrowButton = () => {
       const amtOut = coerceShiftedAmount(originalAmt, str);
 
       (nextSell as any).amount = amtOut; // keep the amount on SELL after swap
-      delete (nextBuy as any)?.amount; // avoid stale amount on BUY
+      if (nextBuy) delete (nextBuy as any).amount; // avoid stale amount on BUY
     } else {
       // one side missing → don't carry amounts to avoid stale values
       if (nextSell) delete (nextSell as any).amount;
@@ -119,7 +116,10 @@ const BuySellSwapArrowButton = () => {
 
     // Revalidate pricing after state is queued
     if (swrKey) queueMicrotask(() => mutate(swrKey));
-  };
+  }, [exchangeContext?.tradeData, setSellTokenContract, setBuyTokenContract, swrKey]);
+
+  // Now it's safe to return conditionally
+  if (!show) return null;
 
   return (
     <div id="BuySellSwapArrowButton" className={styles.switchButton}>

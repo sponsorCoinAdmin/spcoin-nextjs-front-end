@@ -3,10 +3,10 @@
 
 import React, { useEffect } from 'react';
 import { TokenContract } from '@/lib/structure';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -21,11 +21,9 @@ type Props = {
 };
 
 export default function ManageSponsorshipsPanel({ tokenContract, onClose }: Props) {
-  const { isVisible } = usePanelTree();
+  // ✅ Phase 7: subscribe to just this panel's visibility (no broad context reads)
+  const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const { closeManageSponsorships } = usePanelTransitions();
-
-  // Self-gated visibility (no prop drilling)
-  const isActive = isVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
 
   debugLog.log('🛠️ ManageSponsorshipsPanel render; active =', isActive);
 

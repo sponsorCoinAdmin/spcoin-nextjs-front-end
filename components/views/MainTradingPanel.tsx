@@ -13,32 +13,29 @@ import {
   AgentSelectPanel,
 } from '../containers/AssetSelectPanels';
 
-// ✅ Gate this whole container by MAIN_TRADING_PANEL visibility
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
-// ✅ Fixed camel-case + path after rename
-
-// ✅ Phase 0: centralize visibility gating with a tiny wrapper
+// Phase 7: subscription-based gating
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import PanelGate from '@/components/utility/PanelGate';
 import ManageSponsorshipsPanel from '../containers/ManageSponsorShipsPanel';
 
 export default function MainTradingPanel() {
-  const { isVisible } = usePanelTree();
-  const isActive = isVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
+  // 🔔 Subscribe narrowly to MAIN_TRADING_PANEL visibility
+  const isActive = usePanelVisible(SP_COIN_DISPLAY.MAIN_TRADING_PANEL);
 
   if (!isActive) return null;
 
   return (
     <div id="MainPage_ID">
       <div id="mainTradingPanel" className={styles.mainTradingPanel}>
-        {/* Gate header visibility here (component stays dumb/presentational) */}
+        {/* Header visibility via PanelGate (make sure PanelGate uses usePanelVisible under the hood) */}
         <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
           <TradeContainerHeader />
         </PanelGate>
 
+        {/* Self-gated children */}
         <TradingStationPanel />
-        {/* Visibility is self-managed inside the panel */}
         <ManageSponsorshipsPanel />
         <TokenSelectPanel />
         <RecipientSelectPanel />

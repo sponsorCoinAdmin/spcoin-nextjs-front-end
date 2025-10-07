@@ -4,13 +4,15 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import { MAIN_OVERLAY_GROUP, PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
 const debugLog = createDebugLogger('usePanelTree', DEBUG_ENABLED, LOG_TIME);
+
+const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
@@ -21,15 +23,18 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
   const out: PanelEntry[] = [];
   const walk = (ns: any[]) => {
     for (const n of ns) {
-      if (n && typeof n === 'object' && typeof n.panel === 'number') {
-        out.push({ panel: n.panel as SP_COIN_DISPLAY, visible: !!n.visible });
-        if (Array.isArray(n.children) && n.children.length) walk(n.children);
+      const id = typeof n?.panel === 'number' ? (n.panel as number) : NaN;
+      if (!Number.isFinite(id) || !KNOWN.has(id)) {
+        if (DEBUG_ENABLED) debugLog.warn('dropping unknown panel id during flatten()', n?.panel);
+        continue;
       }
+      out.push({ panel: id as SP_COIN_DISPLAY, visible: !!n.visible });
+      if (Array.isArray(n.children) && n.children.length) walk(n.children);
     }
   };
   walk(nodes);
   const seen = new Set<number>();
-  return out.filter(e => (seen.has(e.panel) ? false : (seen.add(e.panel), true)));
+  return out.filter((e) => (seen.has(e.panel) ? false : (seen.add(e.panel), true)));
 }
 
 function toMap(list: PanelEntry[]): Record<number, boolean> {
@@ -43,7 +48,7 @@ function writeFlat(prevCtx: any, next: PanelEntry[]) {
 }
 
 function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEntry[] {
-  return list.some(e => e.panel === panel) ? list : [...list, { panel, visible: false }];
+  return list.some((e) => e.panel === panel) ? list : [...list, { panel, visible: false }];
 }
 
 function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number, boolean>) {
@@ -63,7 +68,7 @@ export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const list = useMemo<PanelEntry[]>(() => flatten((exchangeContext as any)?.settings?.spCoinPanelTree), [exchangeContext]);
-  const map  = useMemo(() => toMap(list), [list]);
+  const map = useMemo(() => toMap(list), [list]);
 
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
 
@@ -77,15 +82,13 @@ export function usePanelTree() {
 
   // If multiple overlays somehow visible, collapse to the first (and publish)
   useEffect(() => {
-    const visible = overlays.filter(id => !!map[id]);
+    const visible = overlays.filter((id) => !!map[id]);
     if (visible.length <= 1) return;
     const keep = visible[0];
     debugLog.log('reconcile overlays → keep', keep);
-    setExchangeContext(prev => {
+    setExchangeContext((prev) => {
       const flatPrev = flatten((prev as any)?.settings?.spCoinPanelTree);
-      const next = flatPrev.map(e =>
-        overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
-      );
+      const next = flatPrev.map((e) => (overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e));
       // publish diffs to panelStore immediately
       const prevMap = toMap(flatPrev);
       const nextMap = toMap(next);
@@ -98,10 +101,7 @@ export function usePanelTree() {
   /* ------------------------------- queries ------------------------------- */
 
   // Stable reference; reads from panelStore snapshot (Phase 7)
-  const isVisible = useCallback(
-    (panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel),
-    []
-  );
+  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
 
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
@@ -109,15 +109,19 @@ export function usePanelTree() {
 
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY) => {
+      if (!KNOWN.has(panel)) {
+        if (DEBUG_ENABLED) debugLog.warn('openPanel ignored unknown id', panel);
+        return;
+      }
       debugLog.log('open', panel);
-      setExchangeContext(prev => {
+      setExchangeContext((prev) => {
         const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
         let flat = ensurePanelPresent(flat0, panel);
 
         if (overlays.includes(panel)) {
           // radio: set ONLY this overlay to visible, others to false
           flat = overlays.reduce((acc, id) => {
-            const idx = acc.findIndex(e => e.panel === id);
+            const idx = acc.findIndex((e) => e.panel === id);
             if (idx >= 0) acc[idx] = { ...acc[idx], visible: id === panel };
             else acc.push({ panel: id, visible: id === panel });
             return acc;
@@ -129,14 +133,14 @@ export function usePanelTree() {
         }
 
         // non-radio: simple visible=true
-        const i = flat.findIndex(e => e.panel === panel);
-        if (i >= 0) flat[i] = { ...flat[i], visible: true };
-        else flat.push({ panel, visible: true });
-
         const prevMap = toMap(flat0);
-        const nextMap = toMap(flat);
+        const nextFlat = [...flat];
+        const i = nextFlat.findIndex((e) => e.panel === panel);
+        if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: true };
+        else nextFlat.push({ panel, visible: true });
+        const nextMap = toMap(nextFlat);
         diffAndPublish(prevMap, nextMap);
-        return writeFlat(prev, flat);
+        return writeFlat(prev, nextFlat);
       }, 'usePanelTree:open');
     },
     [setExchangeContext, overlays]
@@ -144,41 +148,45 @@ export function usePanelTree() {
 
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY) => {
+      if (!KNOWN.has(panel)) {
+        if (DEBUG_ENABLED) debugLog.warn('closePanel ignored unknown id', panel);
+        return;
+      }
       debugLog.log('close', panel);
-      setExchangeContext(prev => {
+      setExchangeContext((prev) => {
         const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
 
         if (overlays.includes(panel)) {
           // If we're closing an ACTIVE overlay → allow "none selected"
-          const isActive = !!flat0.find(e => e.panel === panel && e.visible);
+          const isActive = !!flat0.find((e) => e.panel === panel && e.visible);
           if (isActive) {
+            const prevMap = toMap(flat0);
             const next = overlays.reduce((acc, id) => {
-              const idx = acc.findIndex(e => e.panel === id);
+              const idx = acc.findIndex((e) => e.panel === id);
               if (idx >= 0) acc[idx] = { ...acc[idx], visible: false };
               else acc.push({ panel: id, visible: false });
               return acc;
             }, [...flat0]);
-            const prevMap = toMap(flat0);
             const nextMap = toMap(next);
             diffAndPublish(prevMap, nextMap);
             return writeFlat(prev, next);
           }
-          // If overlay exists but isn't active, just ensure it is false
-          const i = flat0.findIndex(e => e.panel === panel);
-          if (i >= 0 && flat0[i].visible) flat0[i] = { ...flat0[i], visible: false };
+          // If overlay exists but isn't active, just ensure it is false (usually no-op)
           const prevMap = toMap(flat0);
-          const nextMap = toMap(flat0);
+          const nextFlat = flat0.map((e) => (e.panel === panel ? { ...e, visible: false } : e));
+          const nextMap = toMap(nextFlat);
           diffAndPublish(prevMap, nextMap);
-          return writeFlat(prev, flat0);
+          return writeFlat(prev, nextFlat);
         }
 
         // non-radio: mark false if present
-        const i = flat0.findIndex(e => e.panel === panel);
-        if (i >= 0 && flat0[i].visible) flat0[i] = { ...flat0[i], visible: false };
         const prevMap = toMap(flat0);
-        const nextMap = toMap(flat0);
+        const nextFlat = [...flat0];
+        const i = nextFlat.findIndex((e) => e.panel === panel);
+        if (i >= 0 && nextFlat[i].visible) nextFlat[i] = { ...nextFlat[i], visible: false };
+        const nextMap = toMap(nextFlat);
         diffAndPublish(prevMap, nextMap);
-        return writeFlat(prev, flat0);
+        return writeFlat(prev, nextFlat);
       }, 'usePanelTree:close');
     },
     [setExchangeContext, overlays]
@@ -199,8 +207,8 @@ export function usePanelTree() {
   );
 
   return {
-    activeMainOverlay,       // SP_COIN_DISPLAY | null
-    isVisible,               // stable ref (panelStore-backed)
+    activeMainOverlay, // SP_COIN_DISPLAY | null
+    isVisible, // stable ref (panelStore-backed)
     isTokenScrollVisible,
     getPanelChildren,
     openPanel,
