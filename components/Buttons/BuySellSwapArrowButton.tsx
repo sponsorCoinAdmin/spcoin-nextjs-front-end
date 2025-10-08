@@ -11,12 +11,9 @@ import {
 } from '@/lib/context/hooks';
 import { mutate } from 'swr';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
-
-// ⬇️ Phase 7: subscribe narrowly to this panel's visibility
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
-/** Normalize mixed numeric inputs to a decimal string. */
 function toDecimalString(v: unknown): string {
   if (typeof v === 'bigint') return v.toString();
   if (typeof v === 'number') return Number.isFinite(v) ? String(v) : '0';
@@ -24,7 +21,6 @@ function toDecimalString(v: unknown): string {
   return '0';
 }
 
-/** Shift the decimal point of a decimal string by `shift` places. */
 function shiftDecimal(value: string, shift: number): string {
   if (value === '0' || value === '-0') return '0';
 
@@ -38,15 +34,12 @@ function shiftDecimal(value: string, shift: number): string {
   const whole = wholeRaw.replace(/^0+(?!$)/, '');
   const frac = fracRaw;
   const digits = (whole + frac).replace(/^0+$/, '0');
-
   const pointIndex = whole.length;
   const newPointIndex = pointIndex + shift;
 
   if (newPointIndex >= digits.length) {
-    const zeros = newPointIndex - digits.length;
-    return sign + digits + '0'.repeat(zeros);
+    return sign + digits + '0'.repeat(newPointIndex - digits.length);
   }
-
   if (newPointIndex <= 0) {
     const zeros = -newPointIndex;
     const tail = digits.replace(/^0+/, '');
@@ -58,43 +51,32 @@ function shiftDecimal(value: string, shift: number): string {
   return right ? sign + left + '.' + right : sign + left;
 }
 
-/** If original was bigint and shifted is integer (no '.'), return bigint; else keep string. */
 function coerceShiftedAmount(original: unknown, shifted: string): bigint | string {
   if (typeof original === 'bigint' && !shifted.includes('.')) {
-    try {
-      return BigInt(shifted);
-    } catch {
-      /* fall back to string if BigInt fails */
-    }
+    try { return BigInt(shifted); } catch {}
   }
   return shifted;
 }
 
 const BuySellSwapArrowButton = () => {
-  // ✅ Always call hooks in the same order — no early returns before hooks
-  const show = usePanelVisible(SP_TREE.SWAP_ARROW_BUTTON);
+  const show = usePanelVisible(SP.SWAP_ARROW_BUTTON);
   const { exchangeContext } = useExchangeContext();
   const [, setSellTokenContract] = useSellTokenContract();
   const [, setBuyTokenContract] = useBuyTokenContract();
   const { swrKey } = usePriceAPI();
 
-  // Define callbacks (hooks) unconditionally
   const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     e.preventDefault();
 
     const trade = exchangeContext?.tradeData as any;
     const sell = trade?.sellTokenContract ?? undefined;
     const buy = trade?.buyTokenContract ?? undefined;
-
-    // If both are missing, nothing to swap.
     if (!sell && !buy) return;
 
-    // Prepare flipped objects (works even if one side is undefined)
     const nextSell = buy ? { ...buy } : undefined;
     const nextBuy = sell ? { ...sell } : undefined;
 
     if (sell && buy) {
-      // both exist → scale the previous SELL amount into the new SELL token's decimals
       const sellDecimals = sell.decimals ?? 0;
       const buyDecimals = buy.decimals ?? 0;
       const originalAmt = (sell as any).amount ?? 0n;
@@ -103,10 +85,9 @@ const BuySellSwapArrowButton = () => {
       const str = shiftDecimal(toDecimalString(originalAmt), shift);
       const amtOut = coerceShiftedAmount(originalAmt, str);
 
-      (nextSell as any).amount = amtOut; // keep the amount on SELL after swap
-      if (nextBuy) delete (nextBuy as any).amount; // avoid stale amount on BUY
+      (nextSell as any).amount = amtOut;
+      if (nextBuy) delete (nextBuy as any).amount;
     } else {
-      // one side missing → don't carry amounts to avoid stale values
       if (nextSell) delete (nextSell as any).amount;
       if (nextBuy) delete (nextBuy as any).amount;
     }
@@ -114,11 +95,9 @@ const BuySellSwapArrowButton = () => {
     setSellTokenContract(nextSell as any);
     setBuyTokenContract(nextBuy as any);
 
-    // Revalidate pricing after state is queued
     if (swrKey) queueMicrotask(() => mutate(swrKey));
   }, [exchangeContext?.tradeData, setSellTokenContract, setBuyTokenContract, swrKey]);
 
-  // Now it's safe to return conditionally
   if (!show) return null;
 
   return (

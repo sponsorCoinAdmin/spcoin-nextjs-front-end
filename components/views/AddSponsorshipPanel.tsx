@@ -1,4 +1,4 @@
-// File: components/AddSponsorShipPanel.tsx
+// File: components/views/AddSponsorshipPanel.tsx
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
