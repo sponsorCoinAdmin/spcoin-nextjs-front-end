@@ -11,7 +11,6 @@ type Props = {
 };
 
 export default function PanelGate({ panel, children }: Props) {
-  // Subscribe narrowly to just this panel's visibility
   const visible = usePanelVisible(panel);
   if (!visible) return null;
   return <>{children}</>;

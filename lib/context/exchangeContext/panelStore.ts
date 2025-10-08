@@ -62,7 +62,8 @@ class PanelStore {
   private emitNow(id: PanelId) {
     const set = this.listeners.get(id);
     if (!set) return;
-    [...set].forEach((fn) => fn());
+    // iterate directly to avoid temporary array allocation
+    for (const fn of set) fn();
   }
 }
 

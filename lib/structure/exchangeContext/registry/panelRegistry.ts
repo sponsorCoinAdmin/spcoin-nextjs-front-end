@@ -1,7 +1,6 @@
 // File: lib/structure/exchangeContext/registry/panelRegistry.ts
+
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
-import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
 
@@ -64,7 +63,8 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_SPONSORSHIPS_BUTTON, kind: 'button', defaultVisible: false },
 ] as const;
 
-export const MAIN_OVERLAY_GROUP: SP[] = PANEL_DEFS.filter((d) => d.overlay === true).map((d) => d.id);
+export const MAIN_OVERLAY_GROUP: readonly SP[] =
+  PANEL_DEFS.filter((d) => d.overlay === true).map((d) => d.id) as readonly SP[];
 
 export const ROOTS: SP[] = [SP.MAIN_TRADING_PANEL];
 
@@ -78,5 +78,5 @@ export const KINDS: Partial<Record<SP, PanelKind>> = PANEL_DEFS.reduce((acc, d) 
   return acc;
 }, {} as Partial<Record<SP, PanelKind>>);
 
-// Keep API-compat: re-export the canonical default tree (single source of truth)
-export { defaultSpCoinPanelTree };
+// Re-export canonical default tree (SSoT)
+export { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';

@@ -1,4 +1,4 @@
-import { useExchangeContext } from './base';
+import { useExchangeContext } from '@/lib/context/hooks';
 import type { WalletAccount } from '@/lib/structure';
 
 export const useRecipientAccount = (): [WalletAccount | undefined, (w: WalletAccount | undefined) => void] => {

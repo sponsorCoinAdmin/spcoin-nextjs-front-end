@@ -1,4 +1,4 @@
-import { useExchangeContext } from './base';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { resolveNetworkElement } from '../../helpers/NetworkHelpers';
 
 export const useNetwork = () => {

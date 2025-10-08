@@ -4,19 +4,23 @@
 import React, { useMemo } from 'react';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useBuyTokenContract } from '@/lib/context/hooks';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { formatUnits } from 'ethers';
 
 type Props = { priceResponse: PriceResponse | undefined };
 
-// Parse once; fallback to 0 if unset/invalid
 const AFFILIATE_FEE = Number(process.env.NEXT_PUBLIC_AFFILIATE_FEE ?? '0') || 0;
 
 const AffiliateFee = ({ priceResponse }: Props) => {
+  // gate rendering on the panel's visibility
+  const show = usePanelVisible(SP.AFFILIATE_FEE);
   const [buyTokenContract] = useBuyTokenContract();
   const decimals = buyTokenContract?.decimals ?? 18;
   const symbol = buyTokenContract?.symbol ?? '';
 
   const text = useMemo(() => {
+    if (!show) return null;
     const gross = priceResponse?.grossBuyAmount;
     if (!gross) return null;
 
@@ -30,10 +34,9 @@ const AffiliateFee = ({ priceResponse }: Props) => {
     } catch {
       return null;
     }
-  }, [priceResponse?.grossBuyAmount, decimals, symbol]);
+  }, [show, priceResponse?.grossBuyAmount, decimals, symbol]);
 
   if (!text) return null;
-
   return <div id="AffiliateFee" className="text-slate-400">{text}</div>;
 };
 

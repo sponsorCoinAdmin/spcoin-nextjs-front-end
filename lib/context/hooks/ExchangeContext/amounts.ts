@@ -1,4 +1,4 @@
-import { useExchangeContext } from './base';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 export const useSellAmount = (): [bigint, (amt: bigint) => void] => {
   const { exchangeContext, setSellAmount } = useExchangeContext();

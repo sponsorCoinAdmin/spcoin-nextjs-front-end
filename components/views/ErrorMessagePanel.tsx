@@ -5,20 +5,13 @@ import { useCallback } from 'react';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useErrorMessage } from '@/lib/context/hooks';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-
-const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_ERROR_MESSAGE_PANEL === 'true';
-const debugLog = createDebugLogger('ErrorMessagePanel', DEBUG_ENABLED, LOG_TIME);
 
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
   const { openPanel } = usePanelTree();
 
   const onDismiss = useCallback(() => {
-    debugLog.log('✅ Dismiss → openPanel(TRADING_STATION_PANEL) & clear error');
     setErrorMessage(undefined);
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [setErrorMessage, openPanel]);
@@ -81,16 +74,8 @@ function ErrorMessagePanelInner() {
   );
 }
 
-/**
- * Phase 7 subscription:
- * - Re-render this component only when ERROR_MESSAGE_PANEL visibility changes.
- * - Avoids reading the entire tree or active overlay each render.
- */
 export default function ErrorMessagePanel() {
   const visible = usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
-
-  debugLog.log('🛠️ ErrorMessagePanel render; visible=', visible);
   if (!visible) return null;
-
   return <ErrorMessagePanelInner />;
 }

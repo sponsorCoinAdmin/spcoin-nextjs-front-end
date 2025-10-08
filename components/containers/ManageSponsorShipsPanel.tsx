@@ -1,47 +1,24 @@
 // File: components/containers/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { TokenContract } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
-const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_SPONSOR_SELECT_PANEL_LIST === 'true';
-const debugLog = createDebugLogger('ManageSponsorshipsPanel', DEBUG_ENABLED, LOG_TIME);
-
 type Props = {
-  /** Optional: show token context if parent has one available */
   tokenContract?: TokenContract;
-  /** Optional: external close hook */
   onClose?: () => void;
 };
 
 export default function ManageSponsorshipsPanel({ tokenContract, onClose }: Props) {
-  // ✅ Phase 7: subscribe to just this panel's visibility (no broad context reads)
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
   const { closeManageSponsorships } = usePanelTransitions();
 
-  debugLog.log('🛠️ ManageSponsorshipsPanel render; active =', isActive);
-
-  useEffect(() => {
-    if (!isActive) return;
-    debugLog.log(
-      '🎯 ManageSponsorshipsPanel active; token:',
-      tokenContract?.symbol ?? '(none)'
-    );
-  }, [isActive, tokenContract]);
-
-  if (!isActive) {
-    debugLog.log('⏭️ ManageSponsorshipsPanel → not active, skipping render');
-    return null;
-  }
+  if (!isActive) return null;
 
   const handleClose = () => {
-    debugLog.log('✅ Close ManageSponsorshipsPanel via transition');
     closeManageSponsorships();
     onClose?.();
   };

@@ -57,7 +57,6 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 }
 
 function usePriceAPI() {
-  const { exchangeContext } = useExchangeContext(); // ✅ must call first
   const tradeData = useTradeData();
   const chainId = useAppChainId();
   const { address: userAddress } = useAccount();

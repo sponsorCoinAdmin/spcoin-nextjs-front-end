@@ -5,7 +5,7 @@ import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
-import { useProviderSetters } from '@/lib/context/providers/Exchange/useProviderSetters';
+import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/hooks/useProviderSetters';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
 import {
@@ -20,13 +20,18 @@ import {
 
 import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
-import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
+import {
+  defaultSpCoinPanelTree,
+  flattenPanelTree,
+  NON_PERSISTED_PANELS,
+  MUST_INCLUDE_ON_BOOT,
+} from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { saveLocalExchangeContext } from './helpers/ExchangeSaveHelpers';
 import { validateAndRepairPanels } from '@/lib/structure/exchangeContext/safety/validatePanelState';
 
-// ⬇️ post-mount only: safe place to open the default overlay
+// post-mount only: open the default overlay safely
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 /* ---------------------------- Types & Context API --------------------------- */
@@ -99,39 +104,12 @@ const normalizeForPersistence = (panels: PanelNode[]): SpCoinPanelTree =>
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
-type FlatPanel = { panel: number; name?: string; visible?: boolean };
-type DefaultsNode = { panel: number; name?: string; visible?: boolean; children?: DefaultsNode[] };
-
-function flattenDefaults(nodes: DefaultsNode[]): FlatPanel[] {
-  const out: FlatPanel[] = [];
-  const walk = (arr: DefaultsNode[]) => {
-    for (const n of arr) {
-      out.push({ panel: n.panel, name: n.name, visible: !!n.visible });
-      if (n.children?.length) walk(n.children);
-    }
-  };
-  walk(nodes);
-  return out;
-}
-
-const NON_PERSISTED = new Set<number>([SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST]);
-
-const MUST_INCLUDE_ON_BOOT: Array<[number, boolean]> = [
-  [SP_COIN_DISPLAY.MAIN_TRADING_PANEL, true],
-  [SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER, true],
-  [SP_COIN_DISPLAY.TRADING_STATION_PANEL, true],
-  [SP_COIN_DISPLAY.SELL_SELECT_PANEL, true],
-  [SP_COIN_DISPLAY.BUY_SELECT_PANEL, true],
-  [SP_COIN_DISPLAY.SWAP_ARROW_BUTTON, true],
-  [SP_COIN_DISPLAY.PRICE_BUTTON, true],
-  [SP_COIN_DISPLAY.FEE_DISCLOSURE, true],
-  [SP_COIN_DISPLAY.AFFILIATE_FEE, false],
-];
-
-function repairPanels(persisted: FlatPanel[] | undefined): PanelNode[] {
-  const defaults = flattenDefaults(defaultSpCoinPanelTree).filter(
-    (p) => !NON_PERSISTED.has(p.panel)
+/** Start from authored defaults, merge persisted, enforce required and order. */
+function repairPanels(persisted: Array<{ panel: number; name?: string; visible?: boolean }> | undefined): PanelNode[] {
+  const defaults = flattenPanelTree(defaultSpCoinPanelTree).filter(
+    (p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY)
   );
+
   const byId = new Map<number, PanelNode>();
   for (const p of defaults) {
     byId.set(p.panel, {
@@ -140,10 +118,11 @@ function repairPanels(persisted: FlatPanel[] | undefined): PanelNode[] {
       visible: !!p.visible,
     });
   }
+
   if (Array.isArray(persisted)) {
     for (const p of persisted) {
       const id = p?.panel;
-      if (!Number.isFinite(id) || NON_PERSISTED.has(id)) continue;
+      if (!Number.isFinite(id) || NON_PERSISTED_PANELS.has(id as SP_COIN_DISPLAY)) continue;
       const prev = byId.get(id);
       if (prev) {
         if (typeof p.visible === 'boolean') prev.visible = p.visible;
@@ -157,20 +136,27 @@ function repairPanels(persisted: FlatPanel[] | undefined): PanelNode[] {
       }
     }
   }
+
   for (const [id, vis] of MUST_INCLUDE_ON_BOOT) {
     if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
   }
+
   const defaultOrder = defaults.map((d) => d.panel);
   const extras = [...byId.keys()].filter((id) => !defaultOrder.includes(id));
   const orderedIds = [...defaultOrder, ...extras];
   return orderedIds.map((id) => byId.get(id)!);
 }
 
+/** Drop non-persisted items (safety no-op if they’re already excluded). */
 function dropNonPersisted(panels: PanelNode[]) {
-  return panels.filter((p) => !NON_PERSISTED.has(p.panel));
+  return panels.filter((p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY));
 }
 
-function ensureRequiredPanels(panels: PanelNode[], required: Array<[number, boolean]>) {
+/** Ensure required panels exist; apply default visibility only when absent. */
+function ensureRequiredPanels(
+  panels: PanelNode[],
+  required: ReadonlyArray<readonly [number, boolean]>
+) {
   const byId = new Map(panels.map((p) => [p.panel, { ...p }]));
   for (const [id, vis] of required) {
     if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
@@ -178,6 +164,7 @@ function ensureRequiredPanels(panels: PanelNode[], required: Array<[number, bool
   return [...byId.values()];
 }
 
+/** Zero/one visible overlay; prefer TRADING_STATION_PANEL if multiple. */
 const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
   const isOverlay = (id: number) => MAIN_OVERLAY_GROUP.includes(id as SP_COIN_DISPLAY);
   const visible = flat.filter((n) => isOverlay(n.panel) && n.visible);
@@ -195,7 +182,6 @@ function PanelBootstrap() {
   useEffect(() => {
     if (did.current) return;
     did.current = true;
-    // Schedule to next microtask to be extra sure it's post-render.
     queueMicrotask(() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL));
   }, [openPanel]);
   return null;
@@ -237,6 +223,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // initial hydrate + normalize + migrate panels + immediate network reconcile
   useEffect(() => {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;

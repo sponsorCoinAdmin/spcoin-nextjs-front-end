@@ -8,22 +8,20 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
-
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 import ConfigSponsorshipPanel from '../containers/ConfigSponsorshipPanel';
-import { useExchangeContext } from '@/lib/context';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+import { useExchangeContext } from '@/lib/context/hooks';
 
 const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { openPanel, closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
-  // ✅ Subscribe narrowly to the booleans we render on
   const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
@@ -34,49 +32,51 @@ const AddSponsorShipPanel: React.FC = () => {
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
   const toggleSponsorRateConfig = useCallback(() => {
-    if (configVisible) {
-      closeConfigSponsorship();
-    } else {
-      openConfigSponsorship();
-    }
+    if (configVisible) closeConfigSponsorship();
+    else openConfigSponsorship();
   }, [configVisible, openConfigSponsorship, closeConfigSponsorship]);
 
   const clearRecipient = useCallback(() => {
     setExchangeContext(
       (prev) => {
         const next: any = structuredClone(prev);
+        if (!next.accounts.recipientAccount) return prev;
         next.accounts.recipientAccount = undefined;
         return next;
       },
       'AddSponsorShipPanel:clearRecipient'
     );
-    // Hide inline panel, re-show launcher
     closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
-  // 🔧 Ensure Trading Station is visible whenever inline Add panel is visible
+  // Ensure Trading Station is visible whenever inline Add panel is visible
   useEffect(() => {
     if (addVisible && !tradingVisible) {
       openPanel(SP_TREE.TRADING_STATION_PANEL);
     }
   }, [addVisible, tradingVisible, openPanel]);
 
-  // Website HEAD probe (optional)
+  // Website HEAD probe (abort-safe)
   useEffect(() => {
     const website = recipientWallet?.website?.trim();
+    const ac = new AbortController();
+
     if (!website || website === 'N/A') {
       setSiteExists(false);
-      return;
+      return () => ac.abort();
     }
-    fetch(website, { method: 'HEAD', mode: 'no-cors' })
+
+    fetch(website, { method: 'HEAD', mode: 'no-cors', signal: ac.signal })
       .then(() => setSiteExists(true))
       .catch(() => setSiteExists(false));
+
+    return () => ac.abort();
   }, [recipientWallet?.website]);
 
   if (!addVisible) return null;
 
-  const baseURL: string = getPublicFileUrl(`assets/accounts/site-info.html`);
+  const baseURL = getPublicFileUrl('assets/accounts/site-info.html');
   const sitekey = recipientWallet?.address?.trim()
     ? `siteKey=${recipientWallet.address.trim()}`
     : '';

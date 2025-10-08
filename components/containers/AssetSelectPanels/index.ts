@@ -1,5 +1,4 @@
-// File: components/containers/AssetSelectPanel/index.ts
-
+// File: components/containers/AssetSelectPanels/index.ts
 export { default as AssetSelectPanel } from './AssetSelectPanel';
 export { default as BaseSelectPanel } from './BaseSelectPanel';
 export { default as TokenSelectPanel } from './TokenSelectPanel';

@@ -12,7 +12,7 @@ type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
 /* ------------------------------ helpers ------------------------------ */
 
-const schedule = (fn: () => void) => setTimeout(fn, 0); // post-commit, avoids render-phase updates
+const schedule = (fn: () => void) => setTimeout(fn, 0); // post-commit scheduling
 
 function flatten(nodes: any[] | undefined): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
@@ -75,7 +75,7 @@ export function usePanelTree() {
     prevMapRef.current = map;
   }, [map]);
 
-  // If multiple overlays somehow visible, collapse to the first (and publish)
+  // If multiple overlays visible, collapse to the first (and publish)
   useEffect(() => {
     const visible = overlays.filter((id) => !!map[id]);
     if (visible.length <= 1) return;
