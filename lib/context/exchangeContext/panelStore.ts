@@ -9,16 +9,15 @@ class PanelStore {
   private state = new Map<PanelId, boolean>();
   private listeners = new Map<PanelId, Set<Listener>>();
 
+  // Batch/deferral
+  private pending = new Set<PanelId>();
+  private scheduled = false;
+
   // --- read ---
-  isVisible = (id: PanelId): boolean => {
-    return this.state.get(id) ?? false;
-  };
+  isVisible = (id: PanelId): boolean => this.state.get(id) ?? false;
+  getPanelSnapshot = (id: PanelId): boolean => this.state.get(id) ?? false;
 
-  getPanelSnapshot = (id: PanelId): boolean => {
-    return this.state.get(id) ?? false;
-  };
-
-  // Useful for debugging / tooling
+  // Useful for tooling
   getAll = (): Map<PanelId, boolean> => new Map(this.state);
 
   // --- write ---
@@ -26,7 +25,7 @@ class PanelStore {
     const prev = this.state.get(id) ?? false;
     if (prev === visible) return;
     this.state.set(id, visible);
-    this.emit(id);
+    this.queueEmit(id);
   };
 
   openPanel = (id: PanelId) => this.setVisible(id, true);
@@ -46,10 +45,23 @@ class PanelStore {
     };
   };
 
-  private emit(id: PanelId) {
+  // ─────────── internals ───────────
+  private queueEmit(id: PanelId) {
+    this.pending.add(id);
+    if (this.scheduled) return;
+    this.scheduled = true;
+    // Use a macrotask to ensure commit phase has finished before notifying subscribers.
+    setTimeout(() => {
+      this.scheduled = false;
+      const toNotify = Array.from(this.pending);
+      this.pending.clear();
+      for (const pid of toNotify) this.emitNow(pid);
+    }, 0);
+  }
+
+  private emitNow(id: PanelId) {
     const set = this.listeners.get(id);
     if (!set) return;
-    // copy to avoid mutation during iteration
     [...set].forEach((fn) => fn());
   }
 }
