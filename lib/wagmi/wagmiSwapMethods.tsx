@@ -1,12 +1,13 @@
-import { useBalance, useAppChainId, useReadContract, useWriteContract } from 'wagmi'
+import { useBalance, useReadContract, useWriteContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 // import { erc20ABI } from 'viem'
 // import erc20ABI from '@/resources/data/ABIs/erc20ABI.json'
 import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
-import { TokenContract, ContractRecs } from '@/lib/structure'
-import { BURN_ADDRESS, getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import { TokenContract, ContractRecs, BURN_ADDRESS } from '@/lib/structure'
+import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
+import { useAppChainId } from '../context/hooks'
 
 const useWagmiERC20TokenDecimalRec = (contractAddress:Address | undefined) => {
   const wagmiDecimalsRec = useReadContract({
@@ -76,7 +77,7 @@ const useWagmiERC20TokenTotalSupply = (contractAddress:Address | undefined) => {
 }
 
 const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): TokenContract|undefined => {
-  const chainId = useAppChainId();
+  const [ chainId ] = useAppChainId();
   const name = useWagmiERC20TokenName(TOKEN_CONTRACT_ADDRESS);
   const symbol = useWagmiERC20TokenSymbol(TOKEN_CONTRACT_ADDRESS);
   const decimals = useWagmiERC20TokenDecimals(TOKEN_CONTRACT_ADDRESS);
@@ -102,7 +103,7 @@ const useErc20TokenContract = (TOKEN_CONTRACT_ADDRESS:Address | undefined): Toke
 
 const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined):TokenContract|undefined => {
   const useBalanceNetworkObj      = useBalance( { address: ACTIVE_NETWORK_ADDRESS} );
-  const chainId:number            = useAppChainId();
+  const [ chainId ]               = useAppChainId();
   const symbol:string|undefined   = useBalanceNetworkObj?.data?.symbol;
   const decimals:number|undefined = useBalanceNetworkObj?.data?.decimals;
   const name                      = getBlockChainName(chainId);

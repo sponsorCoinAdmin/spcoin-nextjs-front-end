@@ -57,8 +57,8 @@ function TokenSelectPanelInner({ activeType }: { activeType: SP_COIN_DISPLAY }) 
   );
 
   const initialPanelBag: AssetSelectBag = useMemo(
-    () => ({ type: activeType, chainId }),
-    [activeType, chainId]
+    () => ({ type: SP_COIN_DISPLAY.UNDEFINED, chainId }),
+    [chainId]
   );
 
   return (

@@ -1,7 +1,6 @@
 // File: lib/context/helpers/loadLocalExchangeContext.ts
 
-import { ExchangeContext } from '@/lib/structure';
-import { ETHEREUM } from '@/lib/structure';
+import { CHAIN_ID, ExchangeContext } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -44,7 +43,7 @@ export function loadLocalExchangeContext(): ExchangeContext | null {
       debugLog.warn('⚠️ Failed to pretty-print parsed ExchangeContext:', stringifyError);
     }
 
-    const chainId = parsed.network?.chainId ?? ETHEREUM;
+    const chainId = parsed.network?.chainId ?? CHAIN_ID.ETHEREUM;
 
     const sanitized = sanitizeExchangeContext(parsed, chainId);
 

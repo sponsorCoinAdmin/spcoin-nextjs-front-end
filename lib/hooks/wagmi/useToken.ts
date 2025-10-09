@@ -1,18 +1,20 @@
 // File: lib/hooks/wagmi/useToken.ts
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { Address, isAddress } from 'viem';
-import { usePublicClient, useAccount, useAppChainId } from 'wagmi';
+import { usePublicClient, useAccount } from 'wagmi';
 import { TokenContract } from '@/lib/structure/types';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
+import { useAppChainId } from '@/lib/context/hooks';
 
 export function useToken(tokenAddress?: Address): TokenContract | undefined {
   const [token, setToken] = useState<TokenContract | undefined>();
   const publicClient = usePublicClient();
   const { address: userAddress } = useAccount();
-  const chainId = useAppChainId();
+
+  // ✅ Only take the chainId value from the tuple
+  const [chainId] = useAppChainId();
 
   useEffect(() => {
     if (!tokenAddress || !isAddress(tokenAddress) || !publicClient) {
@@ -20,7 +22,7 @@ export function useToken(tokenAddress?: Address): TokenContract | undefined {
       return;
     }
 
-    const fetch = async () => {
+    const fetchToken = async () => {
       try {
         const result = await resolveContract(tokenAddress, chainId, publicClient, userAddress);
         setToken(result);
@@ -30,7 +32,7 @@ export function useToken(tokenAddress?: Address): TokenContract | undefined {
       }
     };
 
-    fetch();
+    fetchToken();
   }, [tokenAddress, chainId, publicClient, userAddress]);
 
   return token;

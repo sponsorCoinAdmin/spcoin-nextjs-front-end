@@ -1,12 +1,13 @@
 'use client';
 
 import { useRef } from 'react';
-import { UseConnectReturnType, UseSwitchChainReturnType } from 'wagmi';
+import type { Connector } from 'wagmi';
+import type { UseConnectReturnType, UseSwitchChainReturnType } from 'wagmi';
 
 type WalletActionsArgs = {
   allowWalletModal: boolean;
-  connectors: ReturnType<UseConnectReturnType['connectors']>;
-  connectAsync: UseConnectReturnType['connectAsync'];
+  connectors: readonly Connector[]; // ✅ array of Connector, not ReturnType<...>
+  connectAsync: UseConnectReturnType['connectAsync']; // ✅ property type directly
   disconnect: () => void;
   switchChainAsync: UseSwitchChainReturnType['switchChainAsync'];
   closeDropdown: () => void;
@@ -26,13 +27,11 @@ export function useWalletActions({
     if (isBusyRef.current) return;
     isBusyRef.current = true;
     try {
+      // Prefer id match, then name fuzzy match
       const mm =
-        connectors.find((c: any) => c.id === 'metaMask') ||
+        connectors.find((c) => c.id === 'metaMask') ??
         connectors.find(
-          (c: any) =>
-            c.type === 'injected' &&
-            typeof c.name === 'string' &&
-            c.name.toLowerCase().includes('metamask')
+          (c) => typeof c.name === 'string' && c.name.toLowerCase().includes('metamask')
         );
 
       if (mm) {

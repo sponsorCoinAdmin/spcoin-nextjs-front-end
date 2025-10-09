@@ -1,5 +1,3 @@
-// File: lib/structure/exchangeContext/registry/panelRegistry.ts
-
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
@@ -65,6 +63,12 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
 export const MAIN_OVERLAY_GROUP: readonly SP[] =
   PANEL_DEFS.filter((d) => d.overlay === true).map((d) => d.id) as readonly SP[];
+
+// ✅ Panels that should never show an index in the inspector
+export const NON_INDEXED_PANELS = new Set<SP>([
+  SP.MAIN_TRADING_PANEL,
+  SP.TRADE_CONTAINER_HEADER,
+]);
 
 export const ROOTS: SP[] = [SP.MAIN_TRADING_PANEL];
 

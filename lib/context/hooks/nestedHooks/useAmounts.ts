@@ -1,6 +1,6 @@
 'use client';
 
-import { useExchangeContext } from '@/lib/context/hooks/ExchangeContext/useExchangeContext';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 

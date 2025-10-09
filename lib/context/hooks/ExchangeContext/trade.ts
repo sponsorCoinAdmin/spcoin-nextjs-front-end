@@ -1,4 +1,4 @@
-import { useExchangeContext } from './base';
+import { useExchangeContext } from '@/lib/context/hooks';
 import { TRADE_DIRECTION } from '@/lib/structure';
 
 export const useTradeDirection = (): [TRADE_DIRECTION | undefined, (v: TRADE_DIRECTION) => void] => {

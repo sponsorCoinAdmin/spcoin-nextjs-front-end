@@ -1,4 +1,4 @@
-import { useExchangeContext } from './base';
+import { useExchangeContext } from '@/lib/context/hooks';
 import type { TokenContract } from '@/lib/structure';
 
 export const useSellTokenContract = (): [TokenContract | undefined, (c: TokenContract | undefined) => void] => {

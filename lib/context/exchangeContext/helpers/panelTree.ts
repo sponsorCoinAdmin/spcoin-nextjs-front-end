@@ -10,7 +10,7 @@ export function flattenPanels<M extends Record<string, unknown> = Record<string,
   const out: PanelNode<M>[] = [];
   const walk = (n: PanelNode<M>) => {
     out.push(n);
-    n.children.forEach(walk);
+    for (const child of n.children ?? []) walk(child);
   };
   walk(root);
   return out;
@@ -25,7 +25,7 @@ export function findNode<M extends Record<string, unknown> = Record<string, unkn
   while (q.length) {
     const n = q.shift()!;
     if (n.panel === panel) return n;
-    q.push(...n.children);
+    for (const child of n.children ?? []) q.push(child);
   }
   return undefined;
 }
@@ -38,8 +38,13 @@ export function toggleVisibility<M extends Record<string, unknown> = Record<stri
 ): PanelNode<M> {
   const recur = (n: PanelNode<M>): PanelNode<M> => {
     const hit = n.panel === panel;
-    const visible = force !== undefined ? (hit ? force : n.visible) : (hit ? !n.visible : n.visible);
-    return { ...n, visible, children: n.children.map(recur) };
+    const visible =
+      force !== undefined ? (hit ? force : n.visible) : (hit ? !n.visible : n.visible);
+    return {
+      ...n,
+      visible,
+      children: (n.children ?? []).map(recur),
+    };
   };
   return recur(root);
 }
@@ -48,7 +53,7 @@ export function toggleVisibility<M extends Record<string, unknown> = Record<stri
 export function openOnly<M extends Record<string, unknown> = Record<string, unknown>>(
   root: PanelNode<M>,
   panel: SP_COIN_DISPLAY,
-  group?: SP_COIN_DISPLAY[]
+  group?: readonly SP_COIN_DISPLAY[]
 ): PanelNode<M> {
   let next = root;
   if (group?.length) {

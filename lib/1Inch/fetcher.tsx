@@ -2,18 +2,18 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { TRADE_DIRECTION, HARDHAT, STATUS } from '@/lib/structure';
+import { STATUS, CHAIN_ID } from '@/lib/structure';
 import useSWR from 'swr';
 import {
   useApiErrorMessage,
   useBuyAmount,
   useErrorMessage,
-  useExchangeContext,
   useSellAmount,
   useTradeData,
 } from '@/lib/context/hooks';
 import { Address } from 'viem';
-import { useAccount, useAppChainId } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useAppChainId } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
@@ -58,14 +58,13 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 
 function usePriceAPI() {
   const tradeData = useTradeData();
-  const chainId = useAppChainId();
+  const [chainId] = useAppChainId(); // ✅ destructure the tuple
   const { address: userAddress } = useAccount();
   const [errorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount] = useSellAmount();
 
-  // ✅ Always call hooks — use default fallback for optional data
   const rawSellTokenAddress = tradeData?.sellTokenContract?.address ?? ZERO_ADDRESS;
   const rawBuyTokenAddress = tradeData?.buyTokenContract?.address ?? ZERO_ADDRESS;
 
@@ -83,7 +82,7 @@ function usePriceAPI() {
     mappedSellTokenAddress !== mappedBuyTokenAddress &&
     sellAmount > 0n &&
     !!userAddress &&
-    chainId !== HARDHAT;
+    chainId !== CHAIN_ID.HARDHAT;
 
   const swrKey = shouldFetch
     ? [
@@ -112,14 +111,18 @@ function usePriceAPI() {
     onSuccess: (data) => {
       debugLog.log(`[1inch SUCCESS]`, data);
       if (data?.toTokenAmount) {
-        setBuyAmount(BigInt(data.toTokenAmount));
+        try {
+          setBuyAmount(BigInt(data.toTokenAmount));
+        } catch {
+          // ignore parse errors
+        }
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
         source: '1inchFetcher',
-        errCode: error.code ?? 500,
+        errCode: error?.code ?? 500,
         msg: error,
       });
     },

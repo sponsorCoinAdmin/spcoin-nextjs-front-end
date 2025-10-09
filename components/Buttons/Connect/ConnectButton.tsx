@@ -9,10 +9,10 @@ import { useAppChainId } from '@/lib/context/hooks';
 import ConnectMainButton from './ConnectMainButton';
 import ConnectDropDown from './ConnectDropDown';
 
-import DropdownPortal from './DropdownPortal';
+import DropDownPortal from './DropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
 import { useWalletActions } from './hooks/useWalletActions';
-import { useDropdownPortal } from './hooks/useDropdownPortal';
+import { useDropDownPortal } from './hooks/useDropDownPortal';
 import { usePersistentState } from './hooks/usePersistentState'; // optional
 
 export type ConnectButtonProps = {
@@ -37,7 +37,7 @@ export default function ConnectButton({
   allowWalletModal = true,
 }: ConnectButtonProps) {
   // portal/open/position
-  const { open, toggle, close, anchorRef, portalRef, pos } = useDropdownPortal();
+  const { open, toggle, close, anchorRef, portalRef, pos } = useDropDownPortal();
 
   // network sets
   const { allOptions, mainnetOptions, testnetOptions, findById } = useNetworkOptions();
@@ -150,7 +150,7 @@ export default function ConnectButton({
             </div>
 
             {open && (
-              <DropdownPortal top={pos?.top} left={pos?.left} portalRef={portalRef}>
+              <DropDownPortal top={pos?.top} left={pos?.left} portalRef={portalRef}>
                 <ConnectDropDown
                   isConnected={!!isConnected}
                   address={address}
@@ -178,7 +178,7 @@ export default function ConnectButton({
                   showTestNets={showTestNets}
                   onToggleShowTestNets={() => setShowTestNets((v) => !v)}
                 />
-              </DropdownPortal>
+              </DropDownPortal>
             )}
           </div>
         );

@@ -1,4 +1,3 @@
-// File: app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -6,6 +5,10 @@ import Row from './Row';
 import { quoteIfString } from '../../utils/object';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import {
+  MAIN_OVERLAY_GROUP,
+  NON_INDEXED_PANELS,
+} from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 // ✅ Env flags (default to true so current UI is unchanged unless you set them to 'false')
 const SHOW_IDS = process.env.NEXT_PUBLIC_TREE_SHOW_IDS !== 'false';
@@ -35,6 +38,26 @@ const nameForVirtual = (v: any): string => {
 
 // Arrays that should show "[idx] PANEL_NAME" for their virtual children
 const PANEL_ARRAY_LABELS = new Set(['spCoinPanelTree', 'children', 'spCoinPanelTree']);
+
+/** Format child labels with “non-indexed” and overlay-relative indexing rules. */
+function formatChildLabel(
+  childVal: any,
+  defaultIndex: string
+): string {
+  if (!looksLikeVirtualPanelNode(childVal)) return `[${defaultIndex}]`;
+  const id = (childVal as any).id as number;
+  const displayName = nameForVirtual(childVal);
+
+  // 1) Never index these
+  if (NON_INDEXED_PANELS.has(id as any)) return displayName;
+
+  // 2) For overlays (including TRADING_STATION_PANEL), index by overlay order
+  const overlayPos = (MAIN_OVERLAY_GROUP as unknown as number[]).indexOf(id);
+  if (overlayPos >= 0) return `[${overlayPos}] ${displayName}`;
+
+  // 3) Fallback to the raw array index
+  return `[${defaultIndex}] ${displayName}`;
+}
 
 const Branch: React.FC<BranchProps> = ({
   label,
@@ -136,12 +159,10 @@ const Branch: React.FC<BranchProps> = ({
               const childPath = `${path}.${k}`;
               const childVal = (value as any[])[Number(k)];
 
-              // Label: show index and enum/name if it's a virtual panel node
-              let childLabel = `[${k}]`;
-              if (looksLikeVirtualPanelNode(childVal)) {
-                const displayName = nameForVirtual(childVal);
-                childLabel = `[${k}] ${displayName}`;
-              }
+              // Label: use smart formatter for virtual panel nodes
+              const childLabel = looksLikeVirtualPanelNode(childVal)
+                ? formatChildLabel(childVal, k)
+                : `[${k}]`;
 
               return (
                 <Branch
@@ -180,15 +201,14 @@ const Branch: React.FC<BranchProps> = ({
             // Minimal label to keep layout intact
             let childLabel = isArray ? `[${k}]` : k;
 
-            // ✅ Append enum/name for arrays that contain virtual panel nodes,
-            //    including top-level "spCoinPanelTree"
+            // ✅ Append enum/name with smart indexing for arrays of virtual panel nodes,
+            //    including top-level "spCoinPanelTree" and any "children" arrays.
             if (
               isArray &&
               PANEL_ARRAY_LABELS.has(label) &&
               looksLikeVirtualPanelNode(childVal)
             ) {
-              const displayName = nameForVirtual(childVal);
-              childLabel = `[${k}] ${displayName}`;
+              childLabel = formatChildLabel(childVal, k);
             }
 
             return (

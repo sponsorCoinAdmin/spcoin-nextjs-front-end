@@ -7,7 +7,7 @@ const h2Class = "mt-8 text-[20px] font-bold";
 
 export default function WhitePaper() {
   return (
-    <main className="prose max-w-none p-8 bg-white min-h-screen" style={{ color: '#000' }}>
+    <main className="prose prose-slate max-w-none p-8 bg-white min-h-screen text-[#000]">
       <div className="text-center mb-10">
         <h1 className="text-[30px] font-bold">SponsorCoin: A Peer-To-Peer Electronic Sponsorship System</h1>
         <h2 className="text-[20px] font-bold mt-4">SponsorCoin: A Peer-to-Peer Electronic Sponsorship System</h2>
@@ -15,7 +15,7 @@ export default function WhitePaper() {
         <h2 className="text-[20px] font-bold mt-2">April 2022</h2>
       </div>
 
-      <div style={{ marginLeft: '45px', marginRight: '45px' }}>
+      <div className="mx-[45px]">
         <p><b>Abstract:</b>A purely peer-to-peer version of sponsorship crypto would allow online payments to be sent directly from one party to another without going through a financial institution.  Financial Institutions while claiming to be secure are one of the least secure parties due partially to “Bail in Legal Tender Laws” and total disregard for privacy utilizing KYC, “Know Your Client” and other protocol tracking implementations.  We propose a solution where the free-market economy can donate sponsorCoin crypto coins while maintaining complete custody of any sponsorCoins obtained. This donation is an ongoing sponsorship implementation utilizing proof of stake and is only revoked when the coins are either unsponsored to be removed from the sponsor’s wallet and returned to the market, or the sponsor reallocates the coins to a new sponsor.  Newly allocated proof of stake coins will have a portion of these coins distributed to the sponsored recipient’s wallet with the remaining coins deposited in the sponsor’s wallet.  The recipient’s coins may further have a portion of the reward distributed to an agent responsible for establishing the sponsorship relationship. The proof of stake coin rewards allocated back to the parties involved shall have no allocated sponsorship. These coins may be freely traded back into the market or re-sponsored by the new owner/sponsor. All sponsorCoin transactions and relationships are recorded on the SponsorCoin network and are immutable. SponsorCoins are considered to be staked only if a recipient is assigned to the to the coins by the owner. The owner maintains full control of the coins and any sponsored relationships.  SponsorCoin rewards are only generated for coins which are staked, that is they have a sponsorship relationship setup by the owner/sponsor. If no sponsored recipient is provided, no rewards will be generated.   SponsorCoins are proposed to have an annual ten to twenty percent inflation with a delegated allocation of no less than 20% of the rewards delegated to the recipient/agent party and the remaining allocated to the sponsor.</p>
       </div>
 
@@ -31,9 +31,13 @@ export default function WhitePaper() {
 
       <p><b>Sample SponsorCoin Recipient Page:</b></p>
       <div className="text-center mb-10">
-      <h1 className="text-[30px] font-bold">Swap For Sick Kids Hospital SponsorCoins Here</h1>
-      <img src="/assets/docs/whitePaper/RecipientPage.png" alt="Recipient Page" style={{ width: '600px', margin: '20px auto' }} />
-      <h2 className={h2Class}>Image 1 (Recipient Page)</h2>
+        <h1 className="text-[30px] font-bold">Swap For Sick Kids Hospital SponsorCoins Here</h1>
+        <img
+          src="/assets/docs/whitePaper/RecipientPage.png"
+          alt="Recipient Page"
+          className="w-[600px] mx-auto my-[20px]"
+        />
+        <h2 className={h2Class}>Image 1 (Recipient Page)</h2>
       </div>
 
       <p>Upon Loading this page, the gear configurator above can be allowed to connect to a wallet such as Metamask.</p>
@@ -44,7 +48,11 @@ export default function WhitePaper() {
       <p><b>Sample SponsorCoin Wallet Management Application:</b></p>
       <div className="text-center mb-10">
         <h1 className="text-[30px] font-bold">Sample Sponsor Coin Management App</h1>
-        <img src="/assets/docs/whitePaper/ManagementApp.png" alt="Management App" style={{ width: '600px', margin: '20px auto' }} />
+        <img
+          src="/assets/docs/whitePaper/ManagementApp.png"
+          alt="Management App"
+          className="w-[600px] mx-auto my-[20px]"
+        />
         <h2 className={h2Class}>Image 2 (Management App)</h2>
       </div>
       <p>The Buy button executes a contract to buy directly from an exchange through a third-party app like Metamask.</p>
@@ -65,12 +73,13 @@ export default function WhitePaper() {
 
       <p><b>Example:</b>  If a sponsor allocates two percent (2%) from the ten percent (10%) to a given recipient, then the remaining eight percent (8%) shall be deposited in the sponsor’s wallet.</p>
       <p>Proof of stake proposed allocation rules:</p>
-      <div style={{ marginLeft: '20px' }}>        •	The annual proof of stake inflation is assumed to be set at ten percent (10%)<br/>
-        •	The minimum of sponsor is to be two percent (2%)<br/>
-        •	The proportion of coins allocated to the recipient cannot be larger than the annual proof of stake distribution, in this case ten percent (10%).<br/>
-        •	The sponsor’s wallet address and the recipient’s wallet address cannot be the same, that is you cannot sponsor yourself to collect staking rewards.<br/>
-        •	The sponsors proof of stake is calculated as (10% - Recipients) percent allocation.<br/>
-        •	If you do allocate a sponsor for your sponsorCoins, that is the coins are unallocated, then no proof-of-stake distribution shall be awarded for either the sponsor or recipient and the sponsorCoins shall not be distributed from the sponsorCoin foundation.<br/>
+      <div className="ml-5">
+        •	The annual proof of stake inflation is assumed to be set at ten percent (10%)<br />
+        •	The minimum of sponsor is to be two percent (2%)<br />
+        •	The proportion of coins allocated to the recipient cannot be larger than the annual proof of stake distribution, in this case ten percent (10%).<br />
+        •	The sponsor’s wallet address and the recipient’s wallet address cannot be the same, that is you cannot sponsor yourself to collect staking rewards.<br />
+        •	The sponsors proof of stake is calculated as (10% - Recipients) percent allocation.<br />
+        •	If you do allocate a sponsor for your sponsorCoins, that is the coins are unallocated, then no proof-of-stake distribution shall be awarded for either the sponsor or recipient and the sponsorCoins shall not be distributed from the sponsorCoin foundation.<br />
       </div>
 
       <h2 className={h2Class}>Wallets</h2>
@@ -83,26 +92,26 @@ export default function WhitePaper() {
       <p>The incentive for sponsorCoin market participation is built on a symbiotic relationship between the sponsor and recipient.  There have always been cause for charity, but the benefits of sponsorCoin far outweighs traditional markets.</p>
       <p><b>The Recipient:</b> Traditionally the recipient has always had to constantly solicit funds for its cause. This has always been a constant and expensive way of doing business with a great deal of accounting and fees required for fund raisers.  This money could be better used for the cause at hand Accounting is simplified by tallying the sponsorCoins while mitigating administration expenses.  Because there is no direct out of pocket money from the sponsor, the contributions may be considerably higher through higher sponsorCoin accumulations</p>
       <p><b>The Sponsor:</b> This is the first known program where the sponsor never directly funds a cause and hence there is no direct alleviation of capitol from the sponsor.  All that is required is that the sponsor purchase coins from of a recipient’s site. That is it! For as long as the sponsor holds the coins for a given recipient, the recipient’s cause will consistently be funded through proof-of-stake sharing with the sponsor will also receive sponsor coins as an additional incentive.
-</p>
+      </p>
 
       <h2 className={h2Class}>Risk</h2>
       <p>There is no inherent risk to either party outside of negligent management practices and/or poor security. This is not however protocol risk, but rather in house risk. The protocol itself is reliant on the internet and the Level 1 host security as well as the actual sponsorCoin contracts.  As in any market, there are market risks when venturing into any market driven protocol based on demand and supply.</p>
       <p><b>In House Security</b>
-Hacking has always been a problem, not just in the Crypto market but also for the computer market in general.  Properly managed in house security implies proper security such as offline cold storage or paper wallets. Wallets which are online should have proper key management security.  Another form of contention involves third party exchanges since this involves handing over your keys.  As is well known in the industry, “Not your Keys, Not your Coins”.  So it is always advise to keep your keys in house.
-</p>
+        Hacking has always been a problem, not just in the Crypto market but also for the computer market in general.  Properly managed in house security implies proper security such as offline cold storage or paper wallets. Wallets which are online should have proper key management security.  Another form of contention involves third party exchanges since this involves handing over your keys.  As is well known in the industry, “Not your Keys, Not your Coins”.  So it is always advise to keep your keys in house.
+      </p>
       <p><b>Reliance Risks:</b> SponsorCoin like all cryptos is reliant on internet access.  Without the internet, for the most part, you are left with nothing.  Likewise, Level 2 crypto tokens are totally reliant on level 1 protocols such as Ethereum to be constantly available.  Should either of these reliance factors fail, the system fails and there is much worse ramifications than just the sponsorCoin token.</p>
       <p><b>SponsorCoin Protocol Contract Risks:</b> SponsorCoins protocol contracts are fully audited so that risks are alleviated.  Additionally, the sponsorCoin foundation will maintain a constant offline supply of sponsorCoins to prevent unauthorized access.
-</p>
+      </p>
       <p><b>Sponsor Market Risks:</b> The sponsorCoin Foundation does not guarantee or set the price of sponsorCoins.  SponsorCoins are freely traded in the crypto market and like any free market the price is set on supply and demand.  This implies that if sponsorCoin is purchased as a speculation as opposed to a sponsorship, then there is always risk of loss. The primary purpose of sponsorCoin is to facilitate a new way of sponsoring causes in a free market.  One cause may attract more interest than another, implying that the value of sponsorCoin is determined through a conglomerate of sponsors.
-</p>
-      <p><b>Recipient Market Risks:</b> There is no risk of loss as a sponsored recipient since no upfront cash is required to purchase any coins.  The only effort required by the recipient is the setup of the sponsorCoin page.  Other fees such as marketing your page are outside of sponsorCoins domain and totally the recipient’s risk.  The sponsorCoin cannot assure the success of any sponsorCoin project. 
-</p>
+      </p>
+      <p><b>Recipient Market Risks:</b> There is no risk of loss as a sponsored recipient since no upfront cash is required to purchase any coins.  The only effort required by the recipient is the setup of the sponsorCoin page.  Other fees such as marketing your page are outside of sponsorCoins domain and totally the recipient’s risk.  The sponsorCoin cannot assure the success of any sponsorCoin project.
+      </p>
 
       <h2 className={h2Class}>Privacy</h2>
       <p><b>Sponsor Privacy:</b> This version of sponsorCoin is not a privacy coin as it is a level 2 solution and the sponsor’s address can be tracked back to the Sponsor’s wallet from the recipient’s wallet transaction.  As the saying goes, true charity is given anonymously. What the sponsor can do is ensure that the wallet doing the donations has no associated person or corporation attached to it through KYC.
-</p>
+      </p>
       <p><b>Recipient Market Risks:</b> Since the recipient’s page is public to a known cause, generally little or no privacy can be expected here.  However, if a recipient’s wallet is unknown with no associated KYC then like the sponsor it is remotely possible, but this would be a black whole charity as there would be no assurance that the sponsors cause is actually being funded.
-</p>
+      </p>
 
       <h2 className={h2Class}>Market Innovations and Implementations</h2>
       <p>At the time of this writing, the blockchain cryptography revolution is young with the first blockchain Bitcoin being just over eleven years old.  In todays rapidly changing world, the crypto market represents the greatest opportunity since the invention of the internet.  The opportunities are always greatest in the latest societal evolutionary advancements.  We are in the mist of such a revolution.</p>

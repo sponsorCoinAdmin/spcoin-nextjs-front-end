@@ -1,5 +1,4 @@
 // File: lib/network/initialize/defaultNetworkSettings.tsx
-
 'use client';
 
 import defaultEthereumSettings from '@/resources/data/networks/ethereum/initialize/defaultNetworkSettings.json';
@@ -42,13 +41,22 @@ function clone<T>(o: T): T {
   return typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 }
 
-/** Build a default SpCoinPanelTree and exclude CONFIG_SPONSORSHIP_PANEL from children */
+/** Build a default SpCoinPanelTree and exclude CONFIG_SPONSORSHIP_PANEL anywhere in the tree */
 function buildDefaultSpCoinPanelTree(): SpCoinPanelTree {
-  const root = clone(defaultSpCoinPanelTree) as SpCoinPanelTree;
-  root.children = (root.children ?? []).filter(
-    (ch) => ch?.panel !== SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
-  );
-  return root;
+  const tree = clone(defaultSpCoinPanelTree) as SpCoinPanelTree;
+
+  const prune = (nodes: any[]): any[] =>
+    nodes
+      .filter((n) => n && typeof n.panel === 'number' && n.panel !== SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)
+      .map((n) => {
+        if (Array.isArray(n.children) && n.children.length) {
+          const kids = prune(n.children);
+          return kids.length ? { ...n, children: kids } : { ...n, children: undefined };
+        }
+        return n;
+      });
+
+  return prune(tree) as SpCoinPanelTree;
 }
 
 const initialContext = () => {
