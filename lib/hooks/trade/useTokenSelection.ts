@@ -35,7 +35,7 @@ export function useTokenSelection({
   setBuyAmount,
 }: Params) {
   const tokenContract =
-    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST ? sellTokenContract : buyTokenContract;
+    containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL ? sellTokenContract : buyTokenContract;
 
   const tokenAddr = useMemo(() => lower(tokenContract?.address), [tokenContract?.address]);
   const tokenDecimals = tokenContract?.decimals ?? 18;
@@ -61,7 +61,7 @@ export function useTokenSelection({
     if (wasDefined && !isDefined) {
       setLocalTokenContract(undefined as any);
       setLocalAmount(0n);
-      if (containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST) {
+      if (containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL) {
         if (sellAmount !== 0n) setSellAmount(0n);
       } else {
         if (buyAmount !== 0n) setBuyAmount(0n);

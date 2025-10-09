@@ -24,7 +24,7 @@ function flatten(nodes: PanelNode[] | undefined, out: PanelNode[] = []): PanelNo
 /**
  * Seed panels from the authored default tree, then append any registry-defined
  * panels that are *missing*. Never overwrite the tree’s visibilities.
- * Excludes SP.SPONSOR_SELECT_PANEL_LIST (never persist).
+ * Excludes SP.SPONSOR_LIST_SELECT_PANEL (never persist).
  */
 export function loadInitialPanelNodeDefaults(): SpCoinPanelTree {
   // 1) start from your authored tree (authoritative defaults)
@@ -35,7 +35,7 @@ export function loadInitialPanelNodeDefaults(): SpCoinPanelTree {
   const toAppend: PanelNode[] = [];
   for (const def of PANEL_DEFS) {
     const id = def.id as SP;
-    if (id === SP.SPONSOR_SELECT_PANEL_LIST) continue; // never persist
+    if (id === SP.SPONSOR_LIST_SELECT_PANEL) continue; // never persist
     if (!present.has(id)) {
       toAppend.push({
         panel: id,

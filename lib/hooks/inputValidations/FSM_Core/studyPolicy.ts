@@ -45,7 +45,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // BUY token list (full token pipeline)
-  [SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST]: {
+  [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,
@@ -56,7 +56,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // SELL token list (full token pipeline)
-  [SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST]: {
+  [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,
@@ -67,7 +67,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // RECIPIENT selection (WalletAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST]: {
+  [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,
@@ -78,7 +78,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // AGENT selection (WalletAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST]: {
+  [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,
@@ -89,7 +89,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   },
 
   // SPONSOR selection (WalletAccount-like → bypass token-only checks)
-  [SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST]: {
+  [SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL]: {
     [StudyId.VALIDATE_ADDRESS]: true,
     [StudyId.TEST_DUPLICATE_INPUT]: true,
     [StudyId.VALIDATE_PREVIEW]: true,
@@ -107,7 +107,7 @@ const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
 /** Resolve a single env override flag for (panel, study). */
 function envOverride(panel: SP_COIN_DISPLAY, study: StudyId, current: boolean | undefined) {
   // Key shape: NEXT_PUBLIC_FSM_{PANEL_ENUM_NAME}_{STUDY_ID}_ENABLED
-  // Example: NEXT_PUBLIC_FSM_RECIPIENT_SELECT_PANEL_LIST_VALIDATE_EXISTS_ON_CHAIN_ENABLED=false
+  // Example: NEXT_PUBLIC_FSM_RECIPIENT_LIST_SELECT_PANEL_VALIDATE_EXISTS_ON_CHAIN_ENABLED=false
   const panelName = SP_COIN_DISPLAY[panel]; // enum → name
   const key = `NEXT_PUBLIC_FSM_${panelName}_${study}_ENABLED`;
   const raw = process.env[key as keyof NodeJS.ProcessEnv];

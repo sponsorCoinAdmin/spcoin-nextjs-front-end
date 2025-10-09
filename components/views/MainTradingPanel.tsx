@@ -9,8 +9,8 @@ import ErrorMessagePanel from '@/components/views/ErrorMessagePanel';
 import ManageSponsorshipsPanel from '@/components/containers/ManageSponsorShipsPanel';
 
 import {
-  TokenSelectPanel,
-  RecipientSelectPanel,
+  TokenListSelectPanel,
+  RecipientListSelectPanel,
   AgentSelectPanel,
 } from '@/components/containers/AssetSelectPanels';
 
@@ -28,8 +28,8 @@ export default function MainTradingPanel() {
 
           <TradingStationPanel />
           <ManageSponsorshipsPanel />
-          <TokenSelectPanel />
-          <RecipientSelectPanel />
+          <TokenListSelectPanel />
+          <RecipientListSelectPanel />
           <AgentSelectPanel />
           <ErrorMessagePanel />
         </div>

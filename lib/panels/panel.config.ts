@@ -29,14 +29,14 @@ export const PANELS: readonly PanelDef[] = [
 
   // Main overlays (radio group: mainOverlay)
   { id: SP.TRADING_STATION_PANEL,       kind: 'panel', parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
-  { id: SP.BUY_SELECT_PANEL_LIST,       kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
-  { id: SP.SELL_SELECT_PANEL_LIST,      kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
-  { id: SP.RECIPIENT_SELECT_PANEL_LIST, kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
-  { id: SP.AGENT_SELECT_PANEL_LIST,     kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
+  { id: SP.BUY_LIST_SELECT_PANEL,       kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
+  { id: SP.SELL_LIST_SELECT_PANEL,      kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: true },
+  { id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
+  { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
   { id: SP.ERROR_MESSAGE_PANEL,         kind: 'panel', parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
   { id: SP.MANAGE_SPONSORSHIPS_PANEL,   kind: 'panel', parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
   // legacy (kept so old states don’t break)
-  { id: SP.SPONSOR_SELECT_PANEL_LIST,   kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
+  { id: SP.SPONSOR_LIST_SELECT_PANEL,   kind: 'list',  parent: SP.MAIN_TRADING_PANEL, group: 'mainOverlay', defaultVisible: false },
 
   // Trading view subtree (non-radio)
   { id: SP.SELL_SELECT_PANEL,           kind: 'panel',   parent: SP.TRADING_STATION_PANEL, defaultVisible: true },

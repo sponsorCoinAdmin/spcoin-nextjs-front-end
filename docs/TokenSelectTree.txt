@@ -12,10 +12,10 @@
         │                 │     │     └── <TradeAssetPanel> (SELL)
         │                 │     │           ├── <input /> ← user edits amount
         │                 │     │           ├── <TokenSelectDropDown>
-        │                 │     │           │     └── onClick → setSpCoinDisplay(SELL_SELECT_PANEL_LIST)
+        │                 │     │           │     └── onClick → setSpCoinDisplay(SELL_LIST_SELECT_PANEL)
         │                 │     │           ├── isContainerVisible → <TokenSelectScrollPanel>
-        │                 │     │           │     └── <TokenSelectPanel>
-        │                 │     │           │           └── <AssetSelectPanel>
+        │                 │     │           │     └── <TokenListSelectPanel>
+        │                 │     │           │           └── <AssetListSelectPanel>
         │                 │     │           │                 └── <AddressSelect> (SELL)
         │                 │     │           │                       ├── <HexAddressInput>
         │                 │     │           │                       ├── <RenderAssetPreview>
@@ -31,10 +31,10 @@
         │                 │           └── <TradeAssetPanel> (BUY)
         │                 │                 ├── <input /> ← user edits amount
         │                 │                 ├── <TokenSelectDropDown>
-        │                 │                 │     └── onClick → setSpCoinDisplay(BUY_SELECT_PANEL_LIST)
+        │                 │                 │     └── onClick → setSpCoinDisplay(BUY_LIST_SELECT_PANEL)
         │                 │                 ├── isContainerVisible → <TokenSelectScrollPanel>
-        │                 │                 │     └── <TokenSelectPanel>
-        │                 │                 │           └── <AssetSelectPanel>
+        │                 │                 │     └── <TokenListSelectPanel>
+        │                 │                 │           └── <AssetListSelectPanel>
         │                 │                 │                 └── <AddressSelect> (BUY)
         │                 │                 │                       ├── <HexAddressInput>
         │                 │                 │                       ├── <RenderAssetPreview>
@@ -45,9 +45,9 @@
         │                 │                 ├── Balance: {formattedBalance}
         │                 │                 ├── {buySellText}
         │                 │                 └── <AddSponsorshipButton /> ← if isSpCoin
-        │                 │                       ├── onClick → setSpCoinDisplay(RECIPIENT_SELECT_PANEL_LIST)
+        │                 │                       ├── onClick → setSpCoinDisplay(RECIPIENT_LIST_SELECT_PANEL)
         │                 │                       └── isContainerVisible → <RecipientSelectScrollPanel>
-        │                 │                             └── <RecipientSelectPanel>
+        │                 │                             └── <RecipientListSelectPanel>
         │                 │                                   └── <AddressSelect> (Recipient)
         │                 │                                         ├── <HexAddressInput>
         │                 │                                         ├── <RenderAssetPreview>

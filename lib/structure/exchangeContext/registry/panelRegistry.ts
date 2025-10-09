@@ -25,10 +25,10 @@ const TRADING_CHILDREN: SP[] = [
 const MAIN_TRADING_CHILDREN: SP[] = [
   SP.TRADE_CONTAINER_HEADER,
   SP.TRADING_STATION_PANEL,
-  SP.BUY_SELECT_PANEL_LIST,
-  SP.SELL_SELECT_PANEL_LIST,
-  SP.RECIPIENT_SELECT_PANEL_LIST,
-  SP.AGENT_SELECT_PANEL_LIST,
+  SP.BUY_LIST_SELECT_PANEL,
+  SP.SELL_LIST_SELECT_PANEL,
+  SP.RECIPIENT_LIST_SELECT_PANEL,
+  SP.AGENT_LIST_SELECT_PANEL,
   SP.ERROR_MESSAGE_PANEL,
   SP.MANAGE_SPONSORSHIPS_PANEL,
 ];
@@ -38,14 +38,14 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.TRADE_CONTAINER_HEADER, kind: 'panel', defaultVisible: true },
 
   { id: SP.TRADING_STATION_PANEL, kind: 'root', overlay: true, defaultVisible: true, children: TRADING_CHILDREN },
-  { id: SP.BUY_SELECT_PANEL_LIST, kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.SELL_SELECT_PANEL_LIST, kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.RECIPIENT_SELECT_PANEL_LIST, kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.AGENT_SELECT_PANEL_LIST, kind: 'list', overlay: true, defaultVisible: false },
+  { id: SP.BUY_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
+  { id: SP.SELL_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
+  { id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
+  { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list', overlay: true, defaultVisible: false },
   { id: SP.ERROR_MESSAGE_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
 
-  { id: SP.SPONSOR_SELECT_PANEL_LIST, kind: 'list', overlay: true, defaultVisible: false }, // legacy
+  { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy
 
   { id: SP.SELL_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
   { id: SP.BUY_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.ADD_SPONSORSHIP_BUTTON] },

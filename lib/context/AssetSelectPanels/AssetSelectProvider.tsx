@@ -27,7 +27,9 @@ const debugLog = createDebugLogger('AssetSelectProvider', DEBUG_ENABLED, LOG_TIM
 
 type Props = {
   children: ReactNode;
-  closePanelCallback: (fromUser: boolean) => void;
+
+  /** Allow callers to omit the `fromUser` flag. */
+  closePanelCallback: (fromUser?: boolean) => void;
 
   /**
    * New, clearer name: the selected asset can be a TokenContract OR a WalletAccount.
@@ -74,10 +76,11 @@ export const AssetSelectProvider = ({
   const { resetPreview, showErrorPreview, showAssetPreview } = useAssetSelectDisplay();
 
   // Peer token address is used only for token panels to block duplicates
-  const peerAddress = useMemo(
-    () => (isTokenSelectBag(panelBag) ? (panelBag.peerAddress as Address | undefined) : undefined),
-    [panelBag],
-  );
+  const peerAddress = useMemo<Address | undefined>(() => {
+    return panelBag && isTokenSelectBag(panelBag)
+      ? (panelBag.peerAddress as Address | undefined)
+      : undefined;
+  }, [panelBag]);
 
   // Wire FSM <-> provider, handle terminal transitions and preview sync
   const {
@@ -162,7 +165,7 @@ export const AssetSelectProvider = ({
       // Parent bridges exposed to children (legacy name preserved)
       closePanelCallback: () => fireClosePanel(true),
       setTradingTokenCallback: (a: TokenContract | WalletAccount) => fireSetTradingToken(a),
-      // If you also want to expose the new name on context (only if your context type allows it):
+      // Optionally expose the new name too if your context type permits:
       // setSelectedAssetCallback: (a: TokenContract | WalletAccount) => fireSetTradingToken(a),
 
       // Panel bag
@@ -176,9 +179,7 @@ export const AssetSelectProvider = ({
     }),
     [
       inputState,
-      setInputState,
       validatedAssetNarrow,
-      setValidatedAssetNarrow,
       manualEntry,
       validHexInput,
       debouncedHexInput,

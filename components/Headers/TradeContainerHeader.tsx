@@ -15,14 +15,14 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 
 function titleFor(display: SP_COIN_DISPLAY): string {
   switch (display) {
-    case SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST: return 'Select Sponsors Agent';
-    case SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST: return 'Select a Token to Buy';
+    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL: return 'Select Sponsors Agent';
+    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL: return 'Select a Token to Buy';
     case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL: return 'Error Message Panel';
-    case SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST: return 'Select Recipient to Sponsor';
-    case SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST: return 'Select a Token to Sell';
+    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL: return 'Select Recipient to Sponsor';
+    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL: return 'Select a Token to Sell';
     case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return 'Sponsor Coin Exchange';
-    case SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST: return 'Select a Sponsor';
+    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
     case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Manage Sponsorships';
     default: return 'Main Panel Header';
   }
@@ -36,23 +36,23 @@ export default function TradeContainerHeader() {
 
   // Subscribe narrowly
   const vis = {
-    sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST),
-    sell: usePanelVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST),
-    buy: usePanelVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST),
-    recipient: usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST),
+    sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
+    sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+    buy: usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+    recipient: usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL),
     manage: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL),
-    agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST),
+    agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL),
     error: usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL),
     trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
   };
 
   const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST;
-    if (vis.sell) return SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
-    if (vis.buy) return SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST;
-    if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
+    if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
+    if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
+    if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
+    if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
     if (vis.manage) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-    if (vis.agent) return SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
+    if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
     if (vis.error) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
     if (vis.trading) return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
     return SP_COIN_DISPLAY.UNDEFINED;

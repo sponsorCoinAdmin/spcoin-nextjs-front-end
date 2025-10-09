@@ -6,19 +6,19 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 // ---- Panel-specific bags ----
 export type TokenSelectBag = {
   type:
-    | SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST
-    | SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST;
+    | SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL
+    | SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
   /** Opposite side’s committed address */
   peerAddress?: string | Address;
 };
 
 export type RecipientSelectBag = {
-  type: SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST;
+  type: SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
   defaultRecipient?: string;
 };
 
 export type AgentSelectBag = {
-  type: SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST;
+  type: SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
   defaultAgentId?: string;
 };
 
@@ -47,5 +47,5 @@ export type AssetSelectBag =
 // ---- Type guard helpers ----
 export const isTokenSelectBag = (b?: AssetSelectBag): b is TokenSelectBag =>
   !!b &&
-  (b.type === SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST ||
-    b.type === SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST);
+  (b.type === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
+    b.type === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);

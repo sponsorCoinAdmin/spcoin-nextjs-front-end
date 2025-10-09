@@ -208,8 +208,8 @@ export function useProviderWatchers({
     const root = contextState.settings?.spCoinPanelTree as SpCoinPanelTree | undefined;
     const selectOpen = root
       ? anyVisible(root, [
-          SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST,
-          SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST,
+          SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
+          SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
         ])
       : false;
 

@@ -72,7 +72,7 @@ function TokenSelectDropDown({ containerType }: Props) {
     clearFSMTraceFromMemory();
 
     const target = isSellRoot ? 'SELL' : 'BUY';
-    debugLog.log(`📂 Opening TokenSelectPanel via transition: ${target}_SELECT_PANEL_LIST`);
+    debugLog.log(`📂 Opening TokenListSelectPanel via transition: ${target}_SELECT_PANEL_LIST`);
 
     // Use named transition (radio behavior handled internally)
     isSellRoot ? openSellList() : openBuyList();

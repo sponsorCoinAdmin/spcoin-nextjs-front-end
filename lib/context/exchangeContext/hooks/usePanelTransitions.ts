@@ -36,30 +36,30 @@ export function usePanelTransitions() {
 
   const openBuyList = useCallback(() => {
     perf.start();
-    openPanel(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST);
+    openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     perf.end('openBuyList');
-    _emit(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST, 'open');
+    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open');
   }, [openPanel, perf]);
 
   const openSellList = useCallback(() => {
     perf.start();
-    openPanel(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST);
+    openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     perf.end('openSellList');
-    _emit(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST, 'open');
+    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open');
   }, [openPanel, perf]);
 
   const openRecipientList = useCallback(() => {
     perf.start();
-    openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST);
+    openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
     perf.end('openRecipientList');
-    _emit(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST, 'open');
+    _emit(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'open');
   }, [openPanel, perf]);
 
   const openAgentList = useCallback(() => {
     perf.start();
-    openPanel(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST);
+    openPanel(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
     perf.end('openAgentList');
-    _emit(SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST, 'open');
+    _emit(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL, 'open');
   }, [openPanel, perf]);
 
   const showErrorOverlay = useCallback(() => {

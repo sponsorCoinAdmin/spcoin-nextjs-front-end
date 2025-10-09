@@ -109,7 +109,7 @@ export default function ExchangeContextTab() {
       (SHOW_SPONSOR_ROW
         ? (tree as unknown as NamedVirtualNode[])
         : (tree as unknown as NamedVirtualNode[]).filter(
-            (n) => n.id !== SP.SPONSOR_SELECT_PANEL_LIST
+            (n) => n.id !== SP.SPONSOR_LIST_SELECT_PANEL
           )),
     [tree]
   );

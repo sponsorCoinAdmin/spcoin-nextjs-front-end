@@ -219,7 +219,7 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
   ];
 
   // Panels that should never be persisted/seeded
-  const neverPersist: number[] = [SP.SPONSOR_SELECT_PANEL_LIST];
+  const neverPersist: number[] = [SP.SPONSOR_LIST_SELECT_PANEL];
 
   const missing = mustIncludeOnBoot.filter(([id]) => !byId.has(id)).map(([id]) => id);
   const wrongVisibility = mustIncludeOnBoot

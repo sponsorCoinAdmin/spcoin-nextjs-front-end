@@ -16,7 +16,7 @@ const node = (panel: SP, visible: boolean, children?: PanelNode[]): PanelNode =>
 
 /** Panels that should never be persisted/seeded (transient/ephemeral). */
 export const NON_PERSISTED_PANELS = new Set<SP>([
-  SP.SPONSOR_SELECT_PANEL_LIST,
+  SP.SPONSOR_LIST_SELECT_PANEL,
 ]);
 
 /** Panels expected on cold boot and their required default visibility. */
@@ -36,7 +36,7 @@ export const MUST_INCLUDE_ON_BOOT: ReadonlyArray<readonly [SP, boolean]> = [
 
 /**
  * Canonical authored tree (persistable structure).
- * Note: SPONSOR_SELECT_PANEL_LIST is intentionally excluded.
+ * Note: SPONSOR_LIST_SELECT_PANEL is intentionally excluded.
  */
 export const defaultSpCoinPanelTree: SpCoinPanelTree = [
   node(SP.MAIN_TRADING_PANEL, true, [
@@ -48,10 +48,10 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     ]),
 
     // Radio overlays:
-    node(SP.BUY_SELECT_PANEL_LIST, false),
-    node(SP.SELL_SELECT_PANEL_LIST, false),
-    node(SP.RECIPIENT_SELECT_PANEL_LIST, false),
-    node(SP.AGENT_SELECT_PANEL_LIST, false),
+    node(SP.BUY_LIST_SELECT_PANEL, false),
+    node(SP.SELL_LIST_SELECT_PANEL, false),
+    node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
+    node(SP.AGENT_LIST_SELECT_PANEL, false),
     node(SP.ERROR_MESSAGE_PANEL, false),
     node(SP.MANAGE_SPONSORSHIPS_PANEL, false),
 

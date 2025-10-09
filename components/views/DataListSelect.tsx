@@ -46,7 +46,15 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
   const [loadingWallets, setLoadingWallets] = useState(false);
   const [logoTokenList, setLogoTokenList] = useState<any[]>([]);
 
-  const { handleHexInputChange, setManualEntry, setInputState, manualEntry } = useAssetSelectContext();
+  // ⬇️ Also get the provider callback here so we can publish the full object.
+  const {
+    handleHexInputChange,
+    setManualEntry,
+    setInputState,
+    manualEntry,
+    setTradingTokenCallback,
+  } = useAssetSelectContext();
+
   const [chainId] = useAppChainId();
 
   const isAccountsFeed =
@@ -87,11 +95,34 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
       const addr = pendingPickRef.current;
       pendingPickRef.current = null;
       setEnforceProgrammatic(false);
+
+      // Reset FSM input and feed the address as before
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
       const accepted = handleHexInputChange(addr, false);
       debugLog.log?.(`[pick ${addr.slice(0, 6)}…] programmatic commit accepted=${accepted}`);
+
+      // NEW: also publish the full WalletAccount to the provider (for account feeds)
+      if (isAccountsFeed) {
+        const picked = wallets.find(
+          (w) => w.address.toLowerCase() === addr.toLowerCase()
+        );
+        if (picked) {
+          setTradingTokenCallback(picked);
+          debugLog.log?.('📤 Published WalletAccount to provider (programmatic):', {
+            name: picked.name,
+            address: picked.address,
+          });
+        }
+      }
     }
-  }, [programmaticReady, handleHexInputChange, setInputState]);
+  }, [
+    programmaticReady,
+    handleHexInputChange,
+    setInputState,
+    isAccountsFeed,
+    wallets,
+    setTradingTokenCallback,
+  ]);
 
   // Resolve token list for current chain
   const dataFeedList = useMemo(() => {
@@ -146,16 +177,40 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
       const trace = `[pick ${address.slice(0, 6)}…]`;
       debugLog.log?.(`${trace} programmaticReady=${programmaticReady}`);
 
+      // If not ready, defer the commit after manualEntry constraint resolves
       if (!programmaticReady) {
         pendingPickRef.current = address;
         setEnforceProgrammatic(true);
         return;
       }
+
+      // Immediate commit path
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
       const accepted = handleHexInputChange(address, false);
       debugLog.log?.(`${trace} handleHexInputChange accepted=${accepted}`);
+
+      // NEW: also publish the full WalletAccount to the provider (for account feeds)
+      if (isAccountsFeed) {
+        const picked = wallets.find(
+          (w) => w.address.toLowerCase() === address.toLowerCase()
+        );
+        if (picked) {
+          setTradingTokenCallback(picked);
+          debugLog.log?.('📤 Published WalletAccount to provider (immediate):', {
+            name: picked.name,
+            address: picked.address,
+          });
+        }
+      }
     },
-    [programmaticReady, setInputState, handleHexInputChange]
+    [
+      programmaticReady,
+      setInputState,
+      handleHexInputChange,
+      isAccountsFeed,
+      wallets,
+      setTradingTokenCallback,
+    ]
   );
 
   const wrapperClass =

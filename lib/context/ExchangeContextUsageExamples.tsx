@@ -35,8 +35,8 @@ export default function ExchangeContextUsageExamples() {
   const { isVisible, openPanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
 
   const activePanelLabel = useMemo(() => {
-    if (isVisible(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)) return 'SELL_SELECT_PANEL_LIST';
-    if (isVisible(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST)) return 'BUY_SELECT_PANEL_LIST';
+    if (isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL)) return 'SELL_LIST_SELECT_PANEL';
+    if (isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)) return 'BUY_LIST_SELECT_PANEL';
     return activeMainOverlay != null
       ? SP_COIN_DISPLAY[activeMainOverlay]
       : 'NONE';
@@ -170,13 +170,13 @@ export default function ExchangeContextUsageExamples() {
         </button>
 
         {/* Panel-tree test controls */}
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_SELECT_PANEL_LIST)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL)}>
           Open SELL panel
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.BUY_SELECT_PANEL_LIST)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)}>
           Open BUY panel
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)}>
           Open RECIPIENT panel
         </button>
         <button onClick={() => openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)}>

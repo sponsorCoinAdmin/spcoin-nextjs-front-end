@@ -22,7 +22,7 @@ const AddSponsorShipPanel: React.FC = () => {
   const { openPanel, closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
 
-  const addVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
+  const isVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
@@ -52,10 +52,10 @@ const AddSponsorShipPanel: React.FC = () => {
 
   // Ensure Trading Station is visible whenever inline Add panel is visible
   useEffect(() => {
-    if (addVisible && !tradingVisible) {
+    if (isVisible && !tradingVisible) {
       openPanel(SP_TREE.TRADING_STATION_PANEL);
     }
-  }, [addVisible, tradingVisible, openPanel]);
+  }, [isVisible, tradingVisible, openPanel]);
 
   // Website HEAD probe (abort-safe)
   useEffect(() => {
@@ -74,7 +74,7 @@ const AddSponsorShipPanel: React.FC = () => {
     return () => ac.abort();
   }, [recipientWallet?.website]);
 
-  if (!addVisible) return null;
+  if (!isVisible) return null;
 
   const baseURL = getPublicFileUrl('assets/accounts/site-info.html');
   const sitekey = recipientWallet?.address?.trim()

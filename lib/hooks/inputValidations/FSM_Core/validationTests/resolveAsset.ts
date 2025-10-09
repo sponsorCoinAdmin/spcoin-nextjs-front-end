@@ -12,9 +12,8 @@ const log = createDebugLogger('resolveAsset(FSM_Core)', DEBUG_ENABLED, false);
 
 // Panels that should resolve to WalletAccount, not TokenContract
 const ACCOUNT_LIKE_PANELS = new Set<SP_COIN_DISPLAY>([
-  SP_COIN_DISPLAY.RECIPIENT_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.AGENT_SELECT_PANEL_LIST,
-  SP_COIN_DISPLAY.SPONSOR_SELECT_PANEL_LIST,
+  SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
+  SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,  SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
 ]);
 
 export async function resolveAsset(params: ValidateFSMInput): Promise<ValidateFSMOutput> {
