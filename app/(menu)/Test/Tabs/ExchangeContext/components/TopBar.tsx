@@ -9,13 +9,30 @@ const buttonClasses =
 type Props = {
   expanded: boolean;
   onToggleExpand: () => void;
-  onToggleGui: () => void;     // ← NEW
-  showGui: boolean;            // ← NEW
+  onToggleGui: () => void;
+  showGui: boolean;
   onLog: () => void;
   onClose: () => void;
+
+  /** NEW: controls the left panel (Exchange) visibility */
+  onToggleExchange?: () => void;
+  showExchange?: boolean;
 };
 
-const TopBar: React.FC<Props> = ({ expanded, onToggleExpand, onToggleGui, showGui, onLog, onClose }) => {
+const TopBar: React.FC<Props> = ({
+  expanded,
+  onToggleExpand,
+  onToggleGui,
+  showGui,
+  onLog,
+  onClose,
+  onToggleExchange,
+  showExchange,
+}) => {
+  // Safe fallbacks so this file doesn't break callers until they wire the new props.
+  const handleToggleExchange = onToggleExchange ?? (() => {});
+  const isExchangeVisible = showExchange ?? true;
+
   return (
     <div className="relative w-full -mt-[15px]">
       <div className="flex flex-wrap items-center justify-center gap-4 py-2">
@@ -23,7 +40,11 @@ const TopBar: React.FC<Props> = ({ expanded, onToggleExpand, onToggleGui, showGu
           {expanded ? 'Collapse Context' : 'Expand Context'}
         </button>
 
-        {/* ← NEW middle button with identical style */}
+        {/* NEW: Hide/Show Exchange Context (left panel) */}
+        <button onClick={handleToggleExchange} className={buttonClasses}>
+          {isExchangeVisible ? 'Hide Context' : 'Show Context'}
+        </button>
+
         <button onClick={onToggleGui} className={buttonClasses}>
           {showGui ? 'Hide GUI' : 'Show GUI'}
         </button>

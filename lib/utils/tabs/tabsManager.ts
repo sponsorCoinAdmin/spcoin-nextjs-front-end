@@ -11,6 +11,11 @@ export const STORAGE_KEY = 'header_open_tabs';
 /* Snapshot registry */
 const ALL_TAB_META = Object.values(TAB_REGISTRY) as TabMeta[];
 
+/* Narrow type for known paths and a type guard to satisfy TS */
+type KnownPath = keyof typeof PATH_TO_ID;
+const isKnownPath = (href: string): href is KnownPath =>
+  Object.prototype.hasOwnProperty.call(PATH_TO_ID, href);
+
 /* ─────────────────────────────────────────────────────────────
    STORAGE USES HREFs (paths), not TabIds — matches the header
 ────────────────────────────────────────────────────────────── */
@@ -20,10 +25,15 @@ function readHrefsFromStorage(): string[] {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
     if (!Array.isArray(parsed)) return [];
-    const knownPaths = new Set(ALL_TAB_META.map(t => t.path));
+
+    // Make the set explicitly Set<string> so TS doesn't narrow to the literal union
+    const knownPathsArr: string[] = ALL_TAB_META.map(t => t.path as string);
+    const knownPaths: Set<string> = new Set(knownPathsArr);
+
     const cleaned = (parsed as unknown[]).filter(
-      (p): p is string => typeof p === 'string' && knownPaths.has(p)
+      (p): p is string => typeof p === 'string' && knownPaths.has(p as string)
     );
+
     return Array.from(new Set(cleaned));
   } catch {
     return [];
@@ -39,11 +49,11 @@ function writeHrefsToStorage(hrefs: string[]) {
 /* Notify header to refresh immediately */
 function dispatchAdd(href: string) {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href } }));
+  window.dispatchEvent(new CustomEvent<{ href: string }>('header:add-tab', { detail: { href } }));
 }
 function dispatchRemove(href: string) {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent('header:remove-tab', { detail: { href } }));
+  window.dispatchEvent(new CustomEvent<{ href: string }>('header:remove-tab', { detail: { href } }));
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -93,19 +103,28 @@ export function closeTab(
 }
 
 /* Convenience: open/close by href directly */
-export function openTabByHref(href: string, opts?: { navigate?: boolean; router?: { push: (href: string) => void } }) {
-  const id = PATH_TO_ID[href];
-  if (id) openTab(id, opts);
+export function openTabByHref(
+  href: string,
+  opts?: { navigate?: boolean; router?: { push: (href: string) => void } }
+) {
+  if (isKnownPath(href)) {
+    const id = PATH_TO_ID[href];
+    if (id) openTab(id, opts);
+  }
 }
 export function closeTabByHref(href: string, opts?: Parameters<typeof closeTab>[1]) {
-  const id = PATH_TO_ID[href];
-  if (id) closeTab(id, opts);
+  if (isKnownPath(href)) {
+    const id = PATH_TO_ID[href];
+    if (id) closeTab(id, opts);
+  }
 }
 
 /* Reads */
 export function listOpenTabs(): TabId[] {
   const hrefs = readHrefsFromStorage();
-  const ids: TabId[] = hrefs.map(h => PATH_TO_ID[h]).filter(Boolean) as TabId[];
+  const ids: TabId[] = hrefs
+    .map(h => (isKnownPath(h) ? PATH_TO_ID[h] : undefined))
+    .filter(Boolean) as TabId[];
   return ids;
 }
 export function listOpenTabHrefs(): string[] {
@@ -124,12 +143,12 @@ export function useTabs() {
 
   useEffect(() => {
     const onAdd = (e: Event) => {
-      const href = (e as CustomEvent).detail?.href as string | undefined;
+      const href = (e as CustomEvent<{ href?: string }>).detail?.href;
       if (!href) return;
       setHrefs(prev => (prev.includes(href) ? prev : [...prev, href]));
     };
     const onRemove = (e: Event) => {
-      const href = (e as CustomEvent).detail?.href as string | undefined;
+      const href = (e as CustomEvent<{ href?: string }>).detail?.href;
       if (!href) return;
       setHrefs(prev => prev.filter(x => x !== href));
     };

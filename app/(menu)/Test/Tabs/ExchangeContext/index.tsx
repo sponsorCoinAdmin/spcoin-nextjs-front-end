@@ -56,7 +56,7 @@ function virtualForConsole(nodes: NamedVirtualNode[]) {
   return walk(nodes);
 }
 
-type PagesState = { showGui?: boolean; expanded?: boolean };
+type PagesState = { showGui?: boolean; expanded?: boolean; showExchange?: boolean };
 
 function readPagesState(): PagesState {
   try {
@@ -137,8 +137,17 @@ export default function ExchangeContextTab() {
     console.groupEnd();
   }, [exchangeContext, treeWithNames, orphans, missing]);
 
-  // Show/Hide GUI toggle — hydrate synchronously
-  const [showGui, setShowGui] = useState<boolean>(() => !!readPagesState().showGui);
+  // Show/Hide GUI (right pane) — hydrate synchronously
+  const [showGui, setShowGui] = useState<boolean>(() => {
+    const s = readPagesState();
+    return typeof s.showGui === 'boolean' ? s.showGui : true;
+  });
+
+  // NEW: Show/Hide Exchange (left pane) — hydrate synchronously
+  const [showExchange, setShowExchange] = useState<boolean>(() => {
+    const s = readPagesState();
+    return typeof s.showExchange === 'boolean' ? s.showExchange : true;
+  });
 
   // Hydrate expand state on mount
   useEffect(() => {
@@ -150,12 +159,13 @@ export default function ExchangeContextTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist both states
+  // Persist view states
   useEffect(() => {
-    writePagesState({ showGui, expanded: expandContext });
-  }, [showGui, expandContext]);
+    writePagesState({ showGui, expanded: expandContext, showExchange });
+  }, [showGui, expandContext, showExchange]);
 
   const onToggleShowGui = useCallback(() => setShowGui((prev) => !prev), []);
+  const onToggleExchange = useCallback(() => setShowExchange((prev) => !prev), []);
 
   // Use ARRAY for spCoinPanelTree so paths are numeric (no changes to logic)
   const settingsObj = useMemo(
@@ -191,6 +201,27 @@ export default function ExchangeContextTab() {
     [togglePath, ui]
   );
 
+  // Layout classes depending on panel visibility
+  const containerClass = useMemo(() => {
+    // If neither pane shows, keep structure but no gap
+    if (!showGui && !showExchange) return 'px-4';
+    // If both show, use a two-column flex with gap
+    if (showGui && showExchange) return 'px-4 flex gap-4';
+    // If one shows, let it take full width
+    return 'px-4';
+  }, [showGui, showExchange]);
+
+  const leftPaneClass = useMemo(() => {
+    if (!showExchange) return 'hidden';
+    // If both visible, split; else full width
+    return showGui ? 'flex-1' : 'w-full';
+  }, [showGui, showExchange]);
+
+  const rightPaneClass = useMemo(() => {
+    if (!showGui) return 'hidden';
+    return showExchange ? 'flex-1 border-l border-slate-700' : 'w-full';
+  }, [showGui, showExchange]);
+
   return (
     <div className="space-y-4">
       <TopBar
@@ -205,11 +236,14 @@ export default function ExchangeContextTab() {
         showGui={showGui}
         onLog={logContext}
         onClose={hideContext}
+        /* NEW: wire Hide/Show Exchange to left panel */
+        onToggleExchange={onToggleExchange}
+        showExchange={showExchange}
       />
 
-      <div className={`px-4 ${showGui ? 'flex gap-4' : ''}`}>
-        {/* LEFT PANE */}
-        <div className={`${showGui ? 'flex-1' : 'w-full'}`}>
+      <div className={containerClass}>
+        {/* LEFT PANE (Exchange tree) */}
+        <div className={leftPaneClass}>
           <Row text="Exchange Context" depth={0} open />
 
           {/* Settings (virtual tree as ARRAY; nodes include `name` string) */}
@@ -238,14 +272,14 @@ export default function ExchangeContextTab() {
           ))}
         </div>
 
-        {/* RIGHT PANE */}
-        {showGui && (
-          <div className="flex-1 border-l border-slate-700">
+        {/* RIGHT PANE (GUI/Price) */}
+        <div className={rightPaneClass}>
+          {showGui && (
             <div className="h-full min-h-[240px] pt-[48px]">
               <PriceView />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
