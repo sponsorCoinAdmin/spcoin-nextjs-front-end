@@ -3,8 +3,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useExchangeContext } from '@/lib/context/hooks';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
@@ -14,14 +12,9 @@ import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
 import { labelForPath, getTabById, PATH_TO_ID } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, listOpenTabs } from '@/lib/utils/tabs/tabsManager';
 
-const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
-const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
-
 const NON_NAV_HOVER = '__non_nav_hover__';
 
 export default function Header() {
-  const { exchangeContext } = useExchangeContext(); // (unused, retained per original)
   const pathname = usePathname();
   const router = useRouter();
 
@@ -37,39 +30,28 @@ export default function Header() {
     try {
       const ids = listOpenTabs(); // TabId[]
       const hrefs = ids.map((id) => getTabById(id).path);
-      console.log('[Header] hydrate → ids:', ids, 'hrefs:', hrefs);
       setOpenTabs(hrefs);
-    } catch (e) {
-      console.warn('[Header] hydrate failed', e);
-      debugLog.warn?.('Failed to hydrate open tabs', e as Error);
-    }
+    } catch {}
   }, []);
 
   /** Listen to add/remove events dispatched by tabsManager. */
   useEffect(() => {
     const onAdd = (e: Event) => {
       const href = (e as CustomEvent).detail?.href as string | undefined;
-      console.log('[Header] event header:add-tab', href);
       if (!href) return;
       setOpenTabs((prev) => (prev.includes(href) ? prev : [...prev, href]));
-      debugLog.log?.(`Opened dynamic tab: ${href}`);
     };
     const onRemove = (e: Event) => {
       const href = (e as CustomEvent).detail?.href as string | undefined;
-      console.log('[Header] event header:remove-tab', href);
       if (!href) return;
       setOpenTabs((prev) => prev.filter((h) => h !== href));
-      debugLog.log?.(`Closed dynamic tab: ${href}`);
     };
 
     window.addEventListener('header:add-tab', onAdd as EventListener);
     window.addEventListener('header:remove-tab', onRemove as EventListener);
-    console.log('[Header] listeners attached');
-
     return () => {
       window.removeEventListener('header:add-tab', onAdd as EventListener);
       window.removeEventListener('header:remove-tab', onRemove as EventListener);
-      console.log('[Header] listeners detached');
     };
   }, []);
 
@@ -77,13 +59,11 @@ export default function Header() {
   const closeTab = useCallback(
     (href: string) => {
       const currentId = PATH_TO_ID[href];
-      console.log('[Header] closeTab CLICK', { href, currentId, pathname, willNavigate: pathname === href });
       closeTabByHref(href, {
         navigate: true,
         router,
-        currentId, // lets manager know if we're closing the active tab
+        currentId,
       });
-      // Local state will be updated via 'header:remove-tab' dispatched by the manager
     },
     [router, pathname]
   );
@@ -154,14 +134,16 @@ export default function Header() {
                       {labelForPath(href)}
                     </Link>
 
-                    {/* Show the close X ONLY on hover; make it red and bold */}
+                    {/* Show the close X ONLY on hover; light orange + bold */}
                     <button
                       type="button"
                       aria-label={`Close ${labelForPath(href)}`}
                       className={[
-                        'absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 leading-none select-none',
-                        isHovered ? 'text-red-600 font-bold' : 'hidden',
+                        'absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 leading-none select-none z-10',
+                        isHovered ? 'inline-block' : 'hidden',
+                        '!text-orange-400 hover:!text-orange-300 focus:!text-orange-300 font-extrabold',
                       ].join(' ')}
+                      style={{ color: '#fb923c' }}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -201,3 +183,4 @@ export default function Header() {
     </header>
   );
 }
+*
