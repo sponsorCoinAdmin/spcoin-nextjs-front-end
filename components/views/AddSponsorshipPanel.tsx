@@ -80,7 +80,7 @@ const AddSponsorShipPanel: React.FC = () => {
   const sitekey = recipientWallet?.address?.trim()
     ? `siteKey=${recipientWallet.address.trim()}`
     : '';
-  const defaultStaticFileUrl = `Recipient?url=${baseURL}?${sitekey}`;
+  const defaultStaticFileUrl = `RecipientSite?url=${baseURL}?${sitekey}`;
 
   return (
     <div
@@ -101,7 +101,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
         {recipientWallet && siteExists ? (
           <Link
-            href={`Recipient?url=${recipientWallet.website}`}
+            href={`RecipientSite?url=${recipientWallet.website}`}
             className="
               absolute top-[47px] left-[10px]
               min-w-[50px] h-[10px]
