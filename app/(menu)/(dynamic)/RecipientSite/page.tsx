@@ -4,17 +4,35 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+const TAB_STORAGE_KEY = 'header_open_tabs';
+const RECIPIENT_TAB_HREF = '/RecipientSite';
+
+// ✅ Ensure the header shows the tab even on direct navigation / page refresh
+function ensureHeaderTab() {
+  try {
+    const raw = sessionStorage.getItem(TAB_STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    const next = Array.isArray(arr) ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF])) : [RECIPIENT_TAB_HREF];
+    sessionStorage.setItem(TAB_STORAGE_KEY, JSON.stringify(next));
+  } catch {}
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } }));
+  }
+}
+
 export default function Recipient() {
   const searchParams = useSearchParams();
   const urlParam = searchParams.get('url');
 
-  // Default help page URL
+  useEffect(() => {
+    ensureHeaderTab();
+  }, []);
+
   const defaultHelpPage =
     typeof window !== 'undefined'
       ? `${window.location.origin}/websites/spcoin/page/recipient-page-doc.html`
       : '';
 
-  // State management for the iframe
   const [remoteUrl, setRemoteUrl] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
     return sessionStorage.getItem('iframeUrl') || defaultHelpPage;
@@ -22,15 +40,12 @@ export default function Recipient() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingError, setLoadingError] = useState<boolean>(false);
 
-  // Reference for parent container
   const parentContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Handle URL updates and persist state
   useEffect(() => {
     if (!urlParam && typeof window === 'undefined') return;
 
     if (urlParam) {
-      // Ensure URL starts with https:// or http://
       const formattedUrl =
         urlParam.startsWith('https://') || urlParam.startsWith('http://')
           ? urlParam
@@ -41,7 +56,6 @@ export default function Recipient() {
       setLoading(true);
       setLoadingError(false);
     } else if (!sessionStorage.getItem('iframeUrl')) {
-      // If no previous state, reload the default help page
       const withTs = `${defaultHelpPage}?timestamp=${Date.now()}`;
       setRemoteUrl(withTs);
       sessionStorage.setItem('iframeUrl', defaultHelpPage);
@@ -55,7 +69,6 @@ export default function Recipient() {
 
   return (
     <div>
-      {/* Iframe Container */}
       <div ref={parentContainerRef} className="relative">
         {loadingError ? (
           <p className="text-red-600">

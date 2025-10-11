@@ -17,6 +17,22 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { useExchangeContext } from '@/lib/context/hooks';
 
+const TAB_STORAGE_KEY = 'header_open_tabs';
+const RECIPIENT_TAB_HREF = '/RecipientSite';
+
+// 🔔 Helper: open/persist the RecipientSite tab in the header
+function openRecipientSiteTab() {
+  try {
+    const raw = sessionStorage.getItem(TAB_STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    const next = Array.isArray(arr) ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF])) : [RECIPIENT_TAB_HREF];
+    sessionStorage.setItem(TAB_STORAGE_KEY, JSON.stringify(next));
+  } catch {}
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } }));
+  }
+}
+
 const AddSponsorShipPanel: React.FC = () => {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { openPanel, closePanel } = usePanelTree();
@@ -26,8 +42,7 @@ const AddSponsorShipPanel: React.FC = () => {
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
 
-  const recipientWallet: WalletAccount | undefined =
-    exchangeContext.accounts.recipientAccount;
+  const recipientWallet: WalletAccount | undefined = exchangeContext.accounts.recipientAccount;
 
   const [siteExists, setSiteExists] = useState<boolean>(false);
 
@@ -50,14 +65,12 @@ const AddSponsorShipPanel: React.FC = () => {
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
-  // Ensure Trading Station is visible whenever inline Add panel is visible
   useEffect(() => {
     if (isVisible && !tradingVisible) {
       openPanel(SP_TREE.TRADING_STATION_PANEL);
     }
   }, [isVisible, tradingVisible, openPanel]);
 
-  // Website HEAD probe (abort-safe)
   useEffect(() => {
     const website = recipientWallet?.website?.trim();
     const ac = new AbortController();
@@ -77,10 +90,8 @@ const AddSponsorShipPanel: React.FC = () => {
   if (!isVisible) return null;
 
   const baseURL = getPublicFileUrl('assets/accounts/site-info.html');
-  const sitekey = recipientWallet?.address?.trim()
-    ? `siteKey=${recipientWallet.address.trim()}`
-    : '';
-  const defaultStaticFileUrl = `RecipientSite?url=${baseURL}?${sitekey}`;
+  const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : '';
+  const defaultStaticFileUrl = `/RecipientSite?url=${baseURL}?${sitekey}`; // ⬅️ ensure leading slash
 
   return (
     <div
@@ -101,7 +112,8 @@ const AddSponsorShipPanel: React.FC = () => {
 
         {recipientWallet && siteExists ? (
           <Link
-            href={`RecipientSite?url=${recipientWallet.website}`}
+            href={`/RecipientSite?url=${encodeURIComponent(recipientWallet.website!)}`}
+            onClick={openRecipientSiteTab}
             className="
               absolute top-[47px] left-[10px]
               min-w-[50px] h-[10px]
@@ -115,6 +127,7 @@ const AddSponsorShipPanel: React.FC = () => {
         ) : (
           <Link
             href={defaultStaticFileUrl}
+            onClick={openRecipientSiteTab}
             className="
               absolute top-[57px] left-[10px]
               min-w-[50px] h-[10px]

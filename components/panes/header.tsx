@@ -10,73 +10,66 @@ import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
+import { labelForPath, getTabById } from '@/lib/utils/tabs/registry';
+import { listOpenTabs, closeTabByHref } from '@/lib/utils/tabs/tabsManager';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_HEADER === 'true';
 const debugLog = createDebugLogger('Header', DEBUG_ENABLED, LOG_TIME);
 
 const NON_NAV_HOVER = '__non_nav_hover__';
-const STORAGE_KEY = 'header_open_tabs';
-
-const STATIC_LABELS: Record<string, string> = {
-  '/WhitePaper': 'White Paper',
-  '/SpCoinAPI': 'Sponsor Coin API',
-  '/SponsorMe': 'Sponsor Me',
-  '/ManageAccounts': 'Manage Accounts',
-  '/CreateAgent': 'Create Agent',
-};
 
 export default function Header() {
   const { exchangeContext } = useExchangeContext(); // (unused, retained per original)
   const pathname = usePathname();
 
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const [openTabs, setOpenTabs] = useState<string[]>([]);
+  const [openTabs, setOpenTabs] = useState<string[]>([]); // hrefs (paths)
 
-  // Feature flags (unchanged)
   const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
   const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
   const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
 
-  // Load persisted tabs
+  /* hydrate from tabsManager (keeps storage logic out of header) */
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) setOpenTabs(arr.filter((h) => typeof h === 'string'));
-      }
+      const ids = listOpenTabs(); // TabId[]
+      const hrefs = ids.map(id => getTabById(id).path);
+      setOpenTabs(hrefs);
     } catch {}
   }, []);
 
-  // Persist on change
+  /* respond to external add/remove events dispatched by tabsManager */
   useEffect(() => {
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(openTabs));
-    } catch {}
-  }, [openTabs]);
-
-  // Open tab event from pages (e.g., SponsorCoin)
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { href?: string } | undefined;
-      const href = detail?.href;
+    const onAdd = (e: Event) => {
+      const href = (e as CustomEvent).detail?.href as string | undefined;
       if (!href) return;
-      setOpenTabs((prev) => (prev.includes(href) ? prev : [...prev, href]));
+      setOpenTabs(prev => (prev.includes(href) ? prev : [...prev, href]));
       debugLog.log?.(`Opened dynamic tab: ${href}`);
     };
-    window.addEventListener('header:add-tab', handler as EventListener);
-    return () => window.removeEventListener('header:add-tab', handler as EventListener);
+    const onRemove = (e: Event) => {
+      const href = (e as CustomEvent).detail?.href as string | undefined;
+      if (!href) return;
+      setOpenTabs(prev => prev.filter(h => h !== href));
+      debugLog.log?.(`Closed dynamic tab: ${href}`);
+    };
+
+    window.addEventListener('header:add-tab', onAdd as EventListener);
+    window.addEventListener('header:remove-tab', onRemove as EventListener);
+    return () => {
+      window.removeEventListener('header:add-tab', onAdd as EventListener);
+      window.removeEventListener('header:remove-tab', onRemove as EventListener);
+    };
   }, []);
 
+  /* Header-local close just delegates to manager */
   const closeTab = useCallback((href: string) => {
-    setOpenTabs((prev) => prev.filter((h) => h !== href));
+    closeTabByHref(href);
   }, []);
 
-  // Shared button style/logic — identical to “Exchange”
   const linkClass = (href: string) => {
     const isHovered = hoveredTab === href;
-    const isActive = pathname === href && hoveredTab === null; // suppress active when something else is hovered
+    const isActive = pathname === href && hoveredTab === null;
     return `
       px-4 py-2 rounded font-medium transition cursor-pointer
       ${isHovered || isActive ? 'bg-[#222a3a] text-[#5981F3]' : 'text-white/90 hover:bg-[#222a3a] hover:text-[#5981F3]'}
@@ -89,16 +82,9 @@ export default function Header() {
   return (
     <header className="text-white border-b border-[#21273a] py-4 bg-[#77808e] px-[15px] lg:px-[33px]">
       <div className="flex flex-row justify-between items-center w-full">
-        {/* Left: logo + primary nav + dynamic tabs (no static launcher buttons) */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <Image
-            src={spCoin_png}
-            alt="Sponsor Coin Logo"
-            priority
-            className="h-8 w-auto"
-          />
+          <Image src={spCoin_png} alt="Sponsor Coin Logo" priority className="h-8 w-auto" />
 
-          {/* Primary nav buttons */}
           {SPCOIN_LINK && (
             <Link
               href="/SponsorCoin"
@@ -132,30 +118,26 @@ export default function Header() {
             </Link>
           )}
 
-          {/* Dynamic tabs rendered as identical buttons with a small close “×” */}
           {openTabs.length > 0 && (
             <div className="flex items-center gap-2">
-              {openTabs.map((href) => (
+              {openTabs.map(href => (
                 <div
                   key={`tab-${href}`}
                   className="relative"
                   onMouseEnter={onMouseEnter(href)}
                   onMouseLeave={onMouseLeave}
                 >
-                  {/* Make it look exactly like other buttons; add right padding for the close button */}
                   <Link href={href} className={`${linkClass(href)} pr-7`}>
-                    {STATIC_LABELS[href] ?? href}
+                    {labelForPath(href)}
                   </Link>
-
-                  {/* Close button positioned inside the same “button” area */}
                   <button
-                    aria-label={`Close ${STATIC_LABELS[href] ?? href}`}
+                    aria-label={`Close ${labelForPath(href)}`}
                     className="
                       absolute right-1 top-1/2 -translate-y-1/2
                       h-5 w-5 rounded-full text-white/85
                       hover:bg-white/10 leading-none
                     "
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       e.stopPropagation();
                       closeTab(href);
@@ -169,16 +151,15 @@ export default function Header() {
           )}
         </div>
 
-        {/* Right: wallet */}
         <div className="flex items-center gap-2.5">
           <div
             id="WalletConnectWrapper"
             className="relative z-[1000]"
             onMouseEnter={() => setHoveredTab(NON_NAV_HOVER)}
             onMouseLeave={() => setHoveredTab(null)}
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            onMouseDownCapture={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
+            onPointerDownCapture={e => e.stopPropagation()}
+            onMouseDownCapture={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <ConnectButton
               showName={false}
@@ -194,4 +175,3 @@ export default function Header() {
     </header>
   );
 }
-
