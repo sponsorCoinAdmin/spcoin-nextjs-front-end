@@ -6,7 +6,7 @@ import styles from '@/styles/Exchange.module.css';
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
 import ErrorMessagePanel from '@/components/views/ErrorMessagePanel';
-import ManageSponsorshipsPanel from '@/components/containers/ManageSponsorShipsPanel';
+import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
 import {
   TokenListSelectPanel,

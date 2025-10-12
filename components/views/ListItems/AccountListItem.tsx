@@ -4,17 +4,20 @@
 import React from 'react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import type { WalletAccount } from '@/lib/structure';
+import type { FEED_TYPE, WalletAccount } from '@/lib/structure';
 import BaseListRow from './BaseListRow';
 
 type AccountListItemProps = {
   account: WalletAccount;
-  onPick: (address: string) => void; // wired to avatar click
+  role:string;
+  onPick: (address: string
+  ) => void; // wired to avatar click
 };
 
 const AccountListItem = React.memo(function AccountListItem({
   account,
   onPick,
+  role,
 }: AccountListItemProps) {
   const logo =
     account.logoURL ||

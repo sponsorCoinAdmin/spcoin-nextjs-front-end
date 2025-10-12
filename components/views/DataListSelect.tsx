@@ -1,216 +1,98 @@
 // File: components/views/DataListSelect.tsx
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { FEED_TYPE, WalletAccount } from '@/lib/structure';
-import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
-import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
-import baseTokenList from '@/resources/data/networks/base/tokenList.json';
-import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
-import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
-import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
-import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
-import type { Address } from 'viem';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
-import agentJsonList from '@/resources/data/agents/agentJsonList.json';
-import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
-import { InputState } from '@/lib/structure/assetSelection';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { FEED_TYPE, WalletAccount, InputState } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
 import { useAppChainId } from '@/lib/context/hooks';
-import { getLogoURL } from '@/lib/network/utils';
 import { useAssetSelectContext } from '@/lib/context';
-
-const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATA_LIST === 'true';
-const debugLog = createDebugLogger('DataListSelect', DEBUG_ENABLED, LOG_TIME);
-
-// Small lookup instead of a switch
-const TOKEN_LISTS: Record<number, any[]> = {
-  [CHAIN_ID.ETHEREUM]: ethereumTokenList as any[],
-  [CHAIN_ID.BASE]: baseTokenList as any[],
-  [CHAIN_ID.POLYGON]: polygonTokenList as any[],
-  [CHAIN_ID.HARDHAT]: hardhatTokenList as any[],
-  [CHAIN_ID.SEPOLIA]: sepoliaTokenList as any[],
-};
-
+import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
+import { fetchAndBuildDataList } from '@/lib/utils/feeds/assetSelect';
 interface DataListProps<T> {
-  dataFeedType: FEED_TYPE.TOKEN_LIST | FEED_TYPE.RECIPIENT_ACCOUNTS | FEED_TYPE.AGENT_ACCOUNTS;
+  dataFeedType: FEED_TYPE;
 }
 
 export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
-  const [isClient, setIsClient] = useState(false);
+  // Accounts
   const [wallets, setWallets] = useState<WalletAccount[]>([]);
   const [loadingWallets, setLoadingWallets] = useState(false);
-  const [logoTokenList, setLogoTokenList] = useState<any[]>([]);
 
-  // ⬇️ Also get the provider callback here so we can publish the full object.
-  const {
-    handleHexInputChange,
-    setManualEntry,
-    setInputState,
-    manualEntry,
-    setTradingTokenCallback,
-  } = useAssetSelectContext();
+  // Tokens
+  const [tokens, setTokens] = useState<any[]>([]);
 
+  const { handleHexInputChange, setManualEntry, setInputState, manualEntry, setTradingTokenCallback } =
+    useAssetSelectContext();
   const [chainId] = useAppChainId();
-
-  const isAccountsFeed =
-    dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS;
 
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
   const programmaticReady = useEnsureBoolWhen([manualEntry, setManualEntry], false, enforceProgrammatic);
 
-  useEffect(() => setIsClient(true), []);
-
-  // Load account feeds (recipients/agents)
-  useEffect(() => {
-    if (!isAccountsFeed) return;
-
-    setLoadingWallets(true);
-    const jsonList = dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ? recipientJsonList : agentJsonList;
-
-    loadAccounts(jsonList)
-      .then((accounts) => {
-        setWallets(
-          accounts.map((account) => ({
-            ...account,
-            name: account.name || 'N/A',
-            symbol: account.symbol || 'N/A',
-            logoURL: account.logoURL || `/assets/accounts/${account.address}/logo.png`,
-            address: (account.address as Address) || BURN_ADDRESS,
-          }))
-        );
-      })
-      .catch((err) => debugLog.error('Failed to load accounts', err))
-      .finally(() => setLoadingWallets(false));
-  }, [dataFeedType, isAccountsFeed]);
-
-  // Commit programmatic pick once manual-entry enforcement relaxes
-  useEffect(() => {
-    if (programmaticReady && pendingPickRef.current) {
-      const addr = pendingPickRef.current;
-      pendingPickRef.current = null;
-      setEnforceProgrammatic(false);
-
-      // Reset FSM input and feed the address as before
-      setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
-      const accepted = handleHexInputChange(addr, false);
-      debugLog.log?.(`[pick ${addr.slice(0, 6)}…] programmatic commit accepted=${accepted}`);
-
-      // NEW: also publish the full WalletAccount to the provider (for account feeds)
-      if (isAccountsFeed) {
-        const picked = wallets.find(
-          (w) => w.address.toLowerCase() === addr.toLowerCase()
-        );
-        if (picked) {
-          setTradingTokenCallback(picked);
-          debugLog.log?.('📤 Published WalletAccount to provider (programmatic):', {
-            name: picked.name,
-            address: picked.address,
-          });
-        }
-      }
-    }
-  }, [
-    programmaticReady,
-    handleHexInputChange,
-    setInputState,
-    isAccountsFeed,
-    wallets,
-    setTradingTokenCallback,
-  ]);
-
-  // Resolve token list for current chain
-  const dataFeedList = useMemo(() => {
-    const list = isClient && dataFeedType === FEED_TYPE.TOKEN_LIST ? TOKEN_LISTS[Number(chainId)] ?? [] : [];
-    debugLog.log?.('dataFeedList resolved', {
-      chainId,
-      type: dataFeedType,
-      count: Array.isArray(list) ? list.length : 0,
-    });
-    return list;
-  }, [chainId, isClient, dataFeedType]);
-
-  // Resolve logo URLs asynchronously for current chain
+  // Fetch + build once per dependency set
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      if (!isClient || dataFeedType !== FEED_TYPE.TOKEN_LIST) {
-        setLogoTokenList([]);
-        return;
-      }
+      // Only show the loading spinner for account feeds.
+      const isAccountFeed =
+        dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS;
+      if (isAccountFeed) setLoadingWallets(true);
 
       try {
-        const resolved = await Promise.all(
-          dataFeedList.map(async (token: any) => {
-            try {
-              const logoURL = await getLogoURL(Number(chainId), token.address as Address, dataFeedType);
-              return { ...token, logoURL };
-            } catch (e) {
-              if (DEBUG_ENABLED) debugLog.warn('getLogoURL failed for token', token.address, e);
-              return {
-                ...token,
-                logoURL: `/assets/blockchains/${chainId}/contracts/${token.address}/logo.png`,
-              };
-            }
-          })
-        );
-        if (!cancelled) setLogoTokenList(resolved);
-      } catch (e) {
-        if (DEBUG_ENABLED) debugLog.error('Failed resolving token logos', e);
-        if (!cancelled) setLogoTokenList(dataFeedList);
+        const { wallets: w, tokens: t } = await fetchAndBuildDataList(dataFeedType, Number(chainId));
+        if (cancelled) return;
+
+        if (w) setWallets(w);
+        if (t) setTokens(t);
+        if (!w && !t) {
+          // unknown feed type: clear both for safety
+          setWallets([]);
+          setTokens([]);
+        }
+      } finally {
+        if (!cancelled && isAccountFeed) setLoadingWallets(false);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [isClient, dataFeedType, dataFeedList, chainId]);
+  }, [dataFeedType, chainId]);
+
+  // Commit deferred pick once allowed
+  useEffect(() => {
+    if (!programmaticReady || !pendingPickRef.current) return;
+    const addr = pendingPickRef.current;
+    pendingPickRef.current = null;
+    setEnforceProgrammatic(false);
+
+    setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
+    handleHexInputChange(addr, false);
+
+    if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) {
+      const picked = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
+      if (picked) setTradingTokenCallback(picked);
+    }
+  }, [programmaticReady, handleHexInputChange, setInputState, dataFeedType, wallets, setTradingTokenCallback]);
 
   const handlePickAddress = useCallback(
     (address: string) => {
-      const trace = `[pick ${address.slice(0, 6)}…]`;
-      debugLog.log?.(`${trace} programmaticReady=${programmaticReady}`);
-
-      // If not ready, defer the commit after manualEntry constraint resolves
       if (!programmaticReady) {
         pendingPickRef.current = address;
         setEnforceProgrammatic(true);
         return;
       }
 
-      // Immediate commit path
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
-      const accepted = handleHexInputChange(address, false);
-      debugLog.log?.(`${trace} handleHexInputChange accepted=${accepted}`);
+      handleHexInputChange(address, false);
 
-      // NEW: also publish the full WalletAccount to the provider (for account feeds)
-      if (isAccountsFeed) {
-        const picked = wallets.find(
-          (w) => w.address.toLowerCase() === address.toLowerCase()
-        );
-        if (picked) {
-          setTradingTokenCallback(picked);
-          debugLog.log?.('📤 Published WalletAccount to provider (immediate):', {
-            name: picked.name,
-            address: picked.address,
-          });
-        }
+      if (dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS) {
+        const picked = wallets.find((w) => w.address.toLowerCase() === address.toLowerCase());
+        if (picked) setTradingTokenCallback(picked);
       }
     },
-    [
-      programmaticReady,
-      setInputState,
-      handleHexInputChange,
-      isAccountsFeed,
-      wallets,
-      setTradingTokenCallback,
-    ]
+    [programmaticReady, setInputState, handleHexInputChange, dataFeedType, wallets, setTradingTokenCallback]
   );
 
   const wrapperClass =
@@ -222,8 +104,6 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
     </div>
   );
 
-  if (!isClient) return renderEmptyState('Loading data...');
-
   return (
     <>
       <style jsx>{`
@@ -232,18 +112,23 @@ export default function DataListSelect<T>({ dataFeedType }: DataListProps<T>) {
       `}</style>
 
       <div id="DataListWrapper" className={wrapperClass}>
-        {isAccountsFeed ? (
+        {dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS ? (
           loadingWallets
             ? renderEmptyState('Loading accounts...')
             : wallets.length === 0
               ? renderEmptyState('No accounts available.')
               : wallets.map((wallet) => (
-                  <AccountListItem key={wallet.address} account={wallet} onPick={handlePickAddress} />
+                  <AccountListItem
+                    key={wallet.address}
+                    account={wallet}
+                    onPick={handlePickAddress}
+                    role={dataFeedType === FEED_TYPE.AGENT_ACCOUNTS ? 'agent' : 'recipient'}
+                  />
                 ))
-        ) : logoTokenList.length === 0 ? (
+        ) : tokens.length === 0 ? (
           renderEmptyState('No tokens available.')
         ) : (
-          logoTokenList.map((token: any) => (
+          tokens.map((token: any) => (
             <TokenListItem
               key={token.address}
               name={token.name}

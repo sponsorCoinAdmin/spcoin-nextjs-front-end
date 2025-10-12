@@ -131,8 +131,7 @@ export default function ManageAccountsPage() {
                 placeholder="0x..."
                 value={accountKey}
                 readOnly
-                className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
-                style={{ width: '46ch' }}
+                className="w-[46ch] max-w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
               />
             </div>
           </div>
@@ -143,8 +142,7 @@ export default function ManageAccountsPage() {
                 <input
                   type="text"
                   placeholder="Enter amount"
-                  className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
-                  style={{ width: '46ch' }}
+                  className="w-[46ch] max-w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
                   readOnly
                 />
               </div>
@@ -183,7 +181,7 @@ export default function ManageAccountsPage() {
                 <td colSpan={2}></td>
                 <td className="py-2 font-semibold text-white">{getTotal(recipientData)}</td>
                 <td className="text-right">
-                    <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">Claim All</button>
+                  <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">Claim All</button>
                 </td>
               </tr>
             </tbody>
@@ -221,7 +219,7 @@ export default function ManageAccountsPage() {
                 <td colSpan={2}></td>
                 <td className="py-2 font-semibold text-white">{getTotal(sponsorData)}</td>
                 <td className="text-right">
-                    <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">Claim All</button>
+                  <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">Claim All</button>
                 </td>
               </tr>
             </tbody>
@@ -229,7 +227,7 @@ export default function ManageAccountsPage() {
         </div>
       )}
 
-            {(selectedRole === 'agent' || selectedRole === 'totalSummary') && (
+      {(selectedRole === 'agent' || selectedRole === 'totalSummary') && (
         <div className="mb-6 group bg-[#1A1D2E] hover:bg-[rgb(79,86,101)] p-4 rounded">
           <h2 className={headerStyle}>Manage Agent Accounts</h2>
           <table className="w-full text-sm text-left border-collapse">
@@ -259,7 +257,7 @@ export default function ManageAccountsPage() {
                 <td colSpan={2}></td>
                 <td className="py-2 font-semibold text-white">{getTotal(agentData)}</td>
                 <td className="text-right">
-                    <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">Claim All</button>
+                  <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">Claim All</button>
                 </td>
               </tr>
             </tbody>

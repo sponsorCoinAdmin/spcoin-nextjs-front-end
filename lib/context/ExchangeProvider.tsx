@@ -286,18 +286,59 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     }, 'provider:syncNetworkAndWallet');
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
 
-  // Hydrate name/symbol/logo/url from APP chain selection
+  /** SINGLE source of truth on appChainId change:
+   *  - Refresh display fields (name/symbol/url/logoURL) from registry + template
+   *  - Clear chain-scoped contracts
+   *  We detect the change with a ref so we aren't comparing inside the setter.
+   */
+  const prevAppChainIdRef = useRef<number | undefined>(undefined);
   useEffect(() => {
-    if (!contextState) return;
-    const currentAppId = contextState.network?.appChainId ?? 0;
-    setExchangeContext((prev) => {
-      const prevApp = prev.network?.appChainId ?? 0;
-      if (prevApp === currentAppId) return prev;
-      const next = clone(prev);
-      next.network = deriveNetworkFromApp(currentAppId, next.network);
-      return next;
-    }, 'provider:hydrateFromAppChain');
-  }, [contextState?.network?.appChainId, contextState, setExchangeContext]);
+    const appId = contextState?.network?.appChainId;
+    if (appId === undefined) return;
+
+    // On first hydrate just set the baseline; optionally normalize the logo (below).
+    if (prevAppChainIdRef.current === undefined) {
+      prevAppChainIdRef.current = appId;
+      return;
+    }
+
+    if (prevAppChainIdRef.current !== appId) {
+      // Update display fields atomically
+      setExchangeContext((prev) => {
+        const next = clone(prev);
+        const derived = deriveNetworkFromApp(appId, undefined as any);
+        next.network = {
+          ...next.network,
+          appChainId: appId,
+          name: derived?.name ?? '',
+          symbol: derived?.symbol ?? '',
+          url: derived?.url ?? '',
+          logoURL: `/assets/blockchains/${appId}/info/network.png`,
+        };
+        return next;
+      }, 'provider:onAppChainChange-refreshDisplay');
+
+      // Clear chain-scoped contracts
+      setSellTokenContract(undefined);
+      setBuyTokenContract(undefined);
+
+      prevAppChainIdRef.current = appId;
+    }
+  }, [contextState?.network?.appChainId, setExchangeContext, setSellTokenContract, setBuyTokenContract]);
+
+  /** Safety net: if logoURL ever drifts from the template for the current appId, fix it. */
+  useEffect(() => {
+    const appId = contextState?.network?.appChainId ?? 0;
+    if (!appId) return;
+    const expected = `/assets/blockchains/${appId}/info/network.png`;
+    if (contextState?.network?.logoURL !== expected) {
+      setExchangeContext((prev) => {
+        const next = clone(prev);
+        next.network = { ...next.network, logoURL: expected };
+        return next;
+      }, 'provider:normalizeLogoURL');
+    }
+  }, [contextState?.network?.appChainId, contextState?.network?.logoURL, setExchangeContext]);
 
   if (!contextState) return null;
 

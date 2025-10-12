@@ -23,7 +23,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return 'Sponsor Coin Exchange';
     case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Manage Sponsorships';
+    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Manage Sponsorship Account Rewards';
     default: return 'Main Panel Header';
   }
 }
