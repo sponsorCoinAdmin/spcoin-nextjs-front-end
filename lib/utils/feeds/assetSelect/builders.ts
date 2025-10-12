@@ -1,31 +1,38 @@
 // File: lib/utils/feeds/assetSelect/builders.ts
 'use client';
 
-import { FEED_TYPE, WalletAccount, BURN_ADDRESS } from '@/lib/structure';
 import type { Address } from 'viem';
+import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
+import { FEED_TYPE, WalletAccount } from '@/lib/structure';
 import { getLogoURL } from '@/lib/network/utils';
+import type { BuiltToken } from './types';
 
-export function buildWalletObj(raw: WalletAccount): WalletAccount {
-  const address = (raw.address as Address) || (BURN_ADDRESS as Address);
+/** Normalize a sparse account JSON entry into a WalletAccount */
+export function buildWalletObj(a: any): WalletAccount {
+  const address = (a?.address as Address) || (BURN_ADDRESS as Address);
   return {
-    ...raw,
     address,
-    name: raw.name || 'N/A',
-    symbol: raw.symbol || 'N/A',
-    // Always derive; do not trust JSON-provided logos
+    name: a?.name ?? 'N/A',
+    symbol: a?.symbol ?? 'N/A',
+    // Always derive; do NOT rely on JSON-provided logoURL
     logoURL: `/assets/accounts/${address}/logo.png`,
-  };
+  } as WalletAccount;
 }
 
-export async function buildTokenObj(raw: any, chainId: number): Promise<any> {
-  const address = raw.address as Address;
+/** Normalize a token JSON entry into a BuiltToken (async to resolve logos) */
+export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken> {
+  const address = String(t?.address ?? '').toLowerCase();
+  let logoURL: string;
   try {
-    const logoURL = await getLogoURL(chainId, address, FEED_TYPE.TOKEN_LIST);
-    return { ...raw, logoURL };
+    logoURL = await getLogoURL(chainId, address as any, FEED_TYPE.TOKEN_LIST);
   } catch {
-    return {
-      ...raw,
-      logoURL: `/assets/blockchains/${chainId}/contracts/${address}/logo.png`,
-    };
+    logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
   }
+  return {
+    ...t,
+    address,
+    name: t?.name ?? 'Unknown',
+    symbol: t?.symbol ?? '—',
+    logoURL,
+  } as BuiltToken;
 }
