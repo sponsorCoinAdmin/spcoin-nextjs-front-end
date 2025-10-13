@@ -34,20 +34,16 @@
   gap: 20px;
 }
 
-
-
 .dropdown {
   float: left;
   overflow: hidden;
-}
 
-.dropdown {
-  font-size: 16px;  
+  font-size: 16px;
   border: none;
   outline: none;
   color: white;
   padding: 14px 16px;
-  background-color: yellow;
+  background-color: yellow; /* intentional? */
   font-family: inherit;
   margin: 0;
 }

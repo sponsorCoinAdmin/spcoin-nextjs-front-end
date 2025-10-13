@@ -67,3 +67,34 @@ footer {
   border-radius: 0.375rem;
   cursor: pointer;
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Manage Sponsorships table overrides
+   - Ensures TR background colors are visible (zebra striping)
+   - Scoped only to #msTable to avoid side effects
+   ────────────────────────────────────────────────────────────── */
+
+/* Allow row backgrounds to show through by clearing TD backgrounds */
+#msTable tbody td {
+  background: transparent !important;
+}
+
+/* Ensure row backgrounds actually paint across cells */
+#msTable {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* Zebra striping for body rows */
+#msTable tbody tr:nth-child(odd) {
+  background-color: rgba(56, 78, 126, 0.35) !important; /* stripe A */
+}
+#msTable tbody tr:nth-child(even) {
+  background-color: rgba(21, 27, 46, 0.30) !important;  /* stripe B */
+}
+
+/* (Optional) Keep the dark header you liked */
+#msTable thead tr,
+#msTable thead th {
+  background-color: #2b2b2b !important;
+}

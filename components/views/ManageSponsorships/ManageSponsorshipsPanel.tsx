@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import cog_png from '@/public/assets/miscellaneous/cog.png';
+
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -26,17 +28,27 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
 
-  // 'all' = special list view; other modes = show only that module
-  const [mode, setMode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
+  const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
 
-  const btn =
-    'px-3 py-1.5 text-sm font-medium rounded bg-[#243056] text-[#5981F3] hover:bg-[#5981F3] hover:text-[#0f172a] transition-colors';
+  const iconBtn =
+    'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
 
-  const cell = 'px-3 py-2 text-sm align-middle';
-  const th   = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-  const row  = 'border-b border-slate-800';
+  // Fixed row height (40px)
+  const rowH = 'h-[40px]';
 
-  const openOnly = (id: SP_COIN_DISPLAY, nextMode: typeof mode) => {
+  // Inner wrappers handle background + spacing; full height & vertical centering
+  const tdInner = `${rowH} w-full px-3 text-sm align-middle flex items-center`;
+  const tdInnerCenter = `${tdInner} justify-center`;
+
+  // Alternating row colors on the inner wrappers
+  const rowA = 'bg-[rgba(56,78,126,0.35)]';           // Sponsors / Agents
+  const rowB = 'bg-[rgba(156,163,175,0.25)]';          // ✅ light grey: Recipients / Total (gray-400 @ 25%)
+
+  const th =
+    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const rowBorder = 'border-b border-slate-800';
+
+  const openOnly = (id: SP_COIN_DISPLAY) => {
     try {
       [
         SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
@@ -44,7 +56,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
       ].forEach((pid) => (pid === id ? openPanel(pid) : closePanel(pid)));
     } catch {}
-    setMode(nextMode);
   };
 
   useEffect(() => {
@@ -53,7 +64,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   if (!isActive) return null;
 
-  // Visibility helpers (modules stay mounted, but hidden when not active)
   const recipientsHidden = !(vRecipients && mode === 'recipients');
   const agentsHidden = !(vAgents && mode === 'agents');
   const sponsorsHidden = !(vSponsors && mode === 'sponsors');
@@ -73,83 +83,177 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         </AssetSelectDisplayProvider>
       </div>
 
-      {/* "All" mode: table with 5 rows x 4 columns.
-          Row 1 = header. Rows 2-4 = action buttons in first column.
-          Row 5 = placeholder (empty first column, or repurpose later). */}
       {mode === 'all' && (
-        <div className="mb-6 overflow-x-auto rounded-xl border border-slate-800/60">
-          <table className="min-w-full border-collapse">
-            <thead className="bg-slate-900/40">
-              <tr className={row}>
+        <div id="msWrapper" className="mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
+          <table id="msTable" className="min-w-full border-collapse">
+            <thead>
+              <tr className="border-b border-black">
                 <th scope="col" className={th}>Account</th>
-                <th scope="col" className={th}>Staked Coins</th>
-                <th scope="col" className={th}>Rewards</th>
-                <th scope="col" className={th}>Reconfigure</th>
+                <th scope="col" className={`${th} text-center`}>Staked Coins</th>
+                <th scope="col" className={`${th} text-center`}>Pending Coins</th>
+                <th scope="col" className={`${th} text-center`}>Rewards</th>
+                <th scope="col" className={`${th} text-center`}>Config</th>
               </tr>
             </thead>
             <tbody>
-              {/* Sponsors */}
-              <tr className={row}>
-                <td className={cell}>
-                  <button
-                    type="button"
-                    className={btn}
-                    onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'sponsors')}
-                    aria-label="Open Sponsors panel"
-                  >
-                    Sponsors
-                  </button>
+              {/* Row 1: Sponsors (A) */}
+              <tr className={`${rowBorder}`}>
+                <td className="p-0"><div className={`${rowA} ${tdInner}`}>Sponsors</div></td>
+                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>
+                    <button type="button" className="ms-claim--orange" aria-label="Claim Sponsors rewards">Claim</button>
+                  </div>
                 </td>
-                <td className={cell}>0</td>
-                <td className={cell}>0</td>
-                <td className={cell}></td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>
+                    <button
+                      type="button"
+                      className={iconBtn}
+                      onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)}
+                      aria-label="Open Sponsors reconfigure"
+                      title="Reconfigure Sponsors"
+                    >
+                      <span className="cog-white-mask cog-rot" aria-hidden />
+                    </button>
+                  </div>
+                </td>
               </tr>
 
-              {/* Agents */}
-              <tr className={row}>
-                <td className={cell}>
-                  <button
-                    type="button"
-                    className={btn}
-                    onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'agents')}
-                    aria-label="Open Agents panel"
-                  >
-                    Agents
-                  </button>
+              {/* Row 2: Recipients (B) — light grey */}
+              <tr className={`${rowBorder}`}>
+                <td className="p-0"><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
+                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>
+                    <button type="button" className="ms-claim--green" aria-label="Claim Recipients rewards">Claim</button>
+                  </div>
                 </td>
-                <td className={cell}>0</td>
-                <td className={cell}>0</td>
-                <td className={cell}></td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>
+                    <button
+                      type="button"
+                      className={iconBtn}
+                      onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)}
+                      aria-label="Open Recipients reconfigure"
+                      title="Reconfigure Recipients"
+                    >
+                      <span className="cog-white-mask cog-rot" aria-hidden />
+                    </button>
+                  </div>
+                </td>
               </tr>
 
-              {/* Recipients */}
-              <tr className={row}>
-                <td className={cell}>
-                  <button
-                    type="button"
-                    className={btn}
-                    onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'recipients')}
-                    aria-label="Open Recipients panel"
-                  >
-                    Recipients
-                  </button>
+              {/* Row 3: Agents (A) */}
+              <tr className={`${rowBorder}`}>
+                <td className="p-0"><div className={`${rowA} ${tdInner}`}>Agents</div></td>
+                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>
+                    <button type="button" className="ms-claim--orange" aria-label="Claim Agents rewards">Claim</button>
+                  </div>
                 </td>
-                <td className={cell}>0</td>
-                <td className={cell}>0</td>
-                <td className={cell}></td>
+                <td className="p-0">
+                  <div className={`${rowA} ${tdInnerCenter}`}>
+                    <button
+                      type="button"
+                      className={iconBtn}
+                      onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
+                      aria-label="Open Agents reconfigure"
+                      title="Reconfigure Agents"
+                    >
+                      <span className="cog-white-mask cog-rot" aria-hidden />
+                    </button>
+                  </div>
+                </td>
               </tr>
 
-              {/* Extra row (placeholder) */}
-              <tr className={row}>
-                <td className={cell}>
-                  Total
+              {/* Row 4: Total (B, light grey, no cog) */}
+              <tr className={`${rowBorder}`}>
+                <td className="p-0"><div className={`${rowB} ${tdInner}`}>Total</div></td>
+                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className="p-0">
+                  <div className={`${rowB} ${tdInnerCenter}`}>
+                    <button type="button" className="ms-claim--green" aria-label="Claim Total rewards">Claim</button>
+                  </div>
                 </td>
-                <td className={cell}>0</td>
-                <td className={cell}>0</td>
-                <td className={cell}></td>
+                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`} /></td>
               </tr>
             </tbody>
           </table>
+
+          <style jsx>{`
+            #msWrapper {
+              border-color: #000 !important;
+              margin-top: -18px !important;
+            }
+            #msTable thead tr,
+            #msTable thead th {
+              background-color: #2b2b2b !important;
+            }
+            #msTable thead tr {
+              border-bottom: 1px solid #000 !important;
+            }
+            #msTable tbody td {
+              padding: 0 !important;
+            }
+
+            /* ORANGE claim buttons */
+            #msTable .ms-claim--orange {
+              background-color: #f97316 !important;
+              color: #0f172a !important;
+              padding: 0.375rem 0.75rem;
+              font-size: 0.875rem;
+              font-weight: 500;
+              border-radius: 0.375rem;
+              transition: background-color 0.2s ease;
+            }
+            #msTable .ms-claim--orange:hover {
+              background-color: #fb923c !important;
+              color: #ffffff !important;
+            }
+
+            /* GREEN claim buttons */
+            #msTable .ms-claim--green {
+              background-color: #16a34a !important;
+              color: #ffffff !important;
+              padding: 0.375rem 0.75rem;
+              font-size: 0.875rem;
+              font-weight: 500;
+              border-radius: 0.375rem;
+              transition: background-color 0.2s ease;
+            }
+            #msTable .ms-claim--green:hover {
+              background-color: #22c55e !important;
+              color: #0f172a !important;
+            }
+
+            /* White cog via PNG mask */
+            #msTable .cog-white-mask {
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              background-color: #ffffff;
+              -webkit-mask-image: url(${cog_png.src});
+              mask-image: url(${cog_png.src});
+              -webkit-mask-repeat: no-repeat;
+              mask-repeat: no-repeat;
+              -webkit-mask-position: center;
+              mask-position: center;
+              -webkit-mask-size: contain;
+              mask-size: contain;
+            }
+            #msTable .cog-rot {
+              transition: transform 0.3s ease;
+            }
+            #msTable .cog-rot:hover {
+              transform: rotate(360deg);
+            }
+          `}</style>
         </div>
       )}
 
