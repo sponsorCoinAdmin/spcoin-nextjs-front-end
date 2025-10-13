@@ -1,4 +1,4 @@
-// FILE: lib\structure\exchangeContext\registry\panelRegistry.ts
+// File: lib/structure/exchangeContext/registry/panelRegistry.ts
 
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
@@ -32,11 +32,9 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.RECIPIENT_LIST_SELECT_PANEL,
   SP.AGENT_LIST_SELECT_PANEL,
   SP.ERROR_MESSAGE_PANEL,
-  SP.MANAGE_SPONSORSHIPS_PANEL,
-];
 
-// ✅ New: Children that live under MANAGE_SPONSORSHIPS_PANEL
-const MANAGE_SPONSORSHIPS_CHILDREN: SP[] = [
+  // ✅ Treat these as top-level overlays (siblings), not children of MANAGE_SPONSORSHIPS_PANEL
+  SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.MANAGE_RECIPIENTS_PANEL,
   SP.MANAGE_AGENTS_PANEL,
   SP.MANAGE_SPONSORS_PANEL,
@@ -53,11 +51,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list', overlay: true, defaultVisible: false },
   { id: SP.ERROR_MESSAGE_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
 
-  // 🔧 Manage overlay with its nested children (not overlays)
-  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false, children: MANAGE_SPONSORSHIPS_CHILDREN },
-  { id: SP.MANAGE_RECIPIENTS_PANEL,   kind: 'panel', defaultVisible: false },
-  { id: SP.MANAGE_AGENTS_PANEL,       kind: 'panel', defaultVisible: false },
-  { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', defaultVisible: false },
+  // ✅ All four manage screens are overlays (radio group members)
+  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.MANAGE_RECIPIENTS_PANEL,   kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.MANAGE_AGENTS_PANEL,       kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },
 
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy
 

@@ -8,6 +8,11 @@ import TradingStationPanel from '@/components/views/TradingStationPanel';
 import ErrorMessagePanel from '@/components/views/ErrorMessagePanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
+// 👇 Add these three
+import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
+import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
+import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors';
+
 import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
@@ -27,7 +32,25 @@ export default function MainTradingPanel() {
           </PanelGate>
 
           <TradingStationPanel />
-          <ManageSponsorshipsPanel />
+
+          {/* Top-level overlay panels (radio group). All must be mounted behind PanelGate. */}
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
+            <ManageSponsorshipsPanel />
+          </PanelGate>
+
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}>
+            <ManageRecipients />
+          </PanelGate>
+
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}>
+            <ManageAgents />
+          </PanelGate>
+
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}>
+            <ManageSponsors />
+          </PanelGate>
+
+          {/* Existing select/aux overlays */}
           <TokenListSelectPanel />
           <RecipientListSelectPanel />
           <AgentSelectPanel />

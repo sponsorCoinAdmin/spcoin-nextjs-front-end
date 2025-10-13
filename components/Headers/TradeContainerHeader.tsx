@@ -12,6 +12,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree'; // ⬅️ add
 
 function titleFor(display: SP_COIN_DISPLAY): string {
   switch (display) {
@@ -24,6 +25,10 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return 'Sponsor Coin Exchange';
     case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
     case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Manage Sponsorship Account Rewards';
+    // Titles for manage sub-overlays
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Manage Recipient Rewards';
+    case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Manage Agent Rewards';
+    case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Manage Sponsor Rewards';
     default: return 'Main Panel Header';
   }
 }
@@ -31,6 +36,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
 export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
   const { toTrading } = usePanelTransitions();
+  const { openPanel } = usePanelTree(); // ⬅️ use openPanel for redirect-on-close
 
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
@@ -41,6 +47,9 @@ export default function TradeContainerHeader() {
     buy: usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
     recipient: usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL),
     manage: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL),
+    manageRecipients: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
+    manageAgents: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
+    manageSponsors: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL),
     agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL),
     error: usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL),
     trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
@@ -51,6 +60,9 @@ export default function TradeContainerHeader() {
     if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
     if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
     if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
+    if (vis.manageRecipients) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
+    if (vis.manageAgents) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
+    if (vis.manageSponsors) return SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL;
     if (vis.manage) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
     if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
     if (vis.error) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
@@ -62,7 +74,20 @@ export default function TradeContainerHeader() {
 
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
-  const onCloseOverlay = useCallback(() => { toTrading(); }, [toTrading]);
+
+  // ✅ New behavior: if closing from a Manage sub-panel, return to MANAGE_SPONSORSHIPS_PANEL
+  const onCloseOverlay = useCallback(() => {
+    if (
+      currentDisplay === SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL ||
+      currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL
+    ) {
+      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL); // radio behavior will auto-close others
+      return;
+    }
+    // otherwise operate as usual
+    toTrading();
+  }, [currentDisplay, openPanel, toTrading]);
 
   return (
     <div

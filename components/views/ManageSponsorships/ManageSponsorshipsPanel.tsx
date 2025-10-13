@@ -26,16 +26,15 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
 
-  // modes: 'all' = special list view (no modules shown), otherwise show only chosen module
+  // 'all' = special list view; other modes = show only that module
   const [mode, setMode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
-
-  // Show modules ONLY when their specific mode is active AND visible in global state
-  const showRecipients = vRecipients && mode === 'recipients';
-  const showAgents = vAgents && mode === 'agents';
-  const showSponsors = vSponsors && mode === 'sponsors';
 
   const btn =
     'px-3 py-1.5 text-sm font-medium rounded bg-[#243056] text-[#5981F3] hover:bg-[#5981F3] hover:text-[#0f172a] transition-colors';
+
+  const cell = 'px-3 py-2 text-sm align-middle';
+  const th   = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const row  = 'border-b border-slate-800';
 
   const openOnly = (id: SP_COIN_DISPLAY, nextMode: typeof mode) => {
     try {
@@ -48,40 +47,19 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     setMode(nextMode);
   };
 
-  // "All" behavior: close all subpanels and render the 3-row button list
-  const openAll = () => {
-    try {
-      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-      closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
-    } catch {}
-    setMode('all');
-  };
-
   useEffect(() => {
-    // optional safety to ensure container is open
-    // openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!isActive) return;
+  }, [isActive]);
 
   if (!isActive) return null;
 
+  // Visibility helpers (modules stay mounted, but hidden when not active)
+  const recipientsHidden = !(vRecipients && mode === 'recipients');
+  const agentsHidden = !(vAgents && mode === 'agents');
+  const sponsorsHidden = !(vSponsors && mode === 'sponsors');
+
   return (
     <>
-      {/* Button bar (radio-like) */}
-      <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
-        <button className={btn} onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'recipients')}>
-          Recipients
-        </button>
-        <button className={btn} onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'agents')}>
-          Agents
-        </button>
-        <button className={btn} onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'sponsors')}>
-          Sponsors
-        </button>
-        <button className={btn} onClick={openAll}>All</button>
-      </div>
-
       {/* Address selector */}
       <div className="mb-6">
         <AssetSelectDisplayProvider>
@@ -95,46 +73,96 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         </AssetSelectDisplayProvider>
       </div>
 
-      {/* "All" mode: show three rows of buttons with SAME style & behavior */}
+      {/* "All" mode: table with 5 rows x 4 columns.
+          Row 1 = header. Rows 2-4 = action buttons in first column.
+          Row 5 = placeholder (empty first column, or repurpose later). */}
       {mode === 'all' && (
-        <div className="space-y-3 mb-6">
-          <div>
-            <button
-              type="button"
-              className={btn}
-              onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'sponsors')}
-              aria-label="Open Sponsors panel"
-            >
-              Sponsors
-            </button>
-          </div>
-          <div>
-            <button
-              type="button"
-              className={btn}
-              onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'agents')}
-              aria-label="Open Agents panel"
-            >
-              Agents
-            </button>
-          </div>
-          <div>
-            <button
-              type="button"
-              className={btn}
-              onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'recipients')}
-              aria-label="Open Recipients panel"
-            >
-              Recipients
-            </button>
-          </div>
+        <div className="mb-6 overflow-x-auto rounded-xl border border-slate-800/60">
+          <table className="min-w-full border-collapse">
+            <thead className="bg-slate-900/40">
+              <tr className={row}>
+                <th scope="col" className={th}>Account</th>
+                <th scope="col" className={th}>Staked Coins</th>
+                <th scope="col" className={th}>Rewards</th>
+                <th scope="col" className={th}>Reconfigure</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Sponsors */}
+              <tr className={row}>
+                <td className={cell}>
+                  <button
+                    type="button"
+                    className={btn}
+                    onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'sponsors')}
+                    aria-label="Open Sponsors panel"
+                  >
+                    Sponsors
+                  </button>
+                </td>
+                <td className={cell}>0</td>
+                <td className={cell}>0</td>
+                <td className={cell}></td>
+              </tr>
+
+              {/* Agents */}
+              <tr className={row}>
+                <td className={cell}>
+                  <button
+                    type="button"
+                    className={btn}
+                    onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'agents')}
+                    aria-label="Open Agents panel"
+                  >
+                    Agents
+                  </button>
+                </td>
+                <td className={cell}>0</td>
+                <td className={cell}>0</td>
+                <td className={cell}></td>
+              </tr>
+
+              {/* Recipients */}
+              <tr className={row}>
+                <td className={cell}>
+                  <button
+                    type="button"
+                    className={btn}
+                    onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'recipients')}
+                    aria-label="Open Recipients panel"
+                  >
+                    Recipients
+                  </button>
+                </td>
+                <td className={cell}>0</td>
+                <td className={cell}>0</td>
+                <td className={cell}></td>
+              </tr>
+
+              {/* Extra row (placeholder) */}
+              <tr className={row}>
+                <td className={cell}>
+                  Total
+                </td>
+                <td className={cell}>0</td>
+                <td className={cell}>0</td>
+                <td className={cell}></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
 
-      {/* Show modules ONLY when their specific mode is active */}
-      {showRecipients && <ManageRecipients />}
-      {showSponsors && <ManageSponsors />}
-      {showAgents && <ManageAgents />}
+      {/* Keep modules mounted; switch visibility with CSS to preserve Suspense tree */}
+      <div className={sponsorsHidden ? 'hidden' : ''}>
+        <ManageSponsors />
+      </div>
+      <div className={agentsHidden ? 'hidden' : ''}>
+        <ManageAgents />
+      </div>
+      <div className={recipientsHidden ? 'hidden' : ''}>
+        <ManageRecipients />
+      </div>
     </>
   );
 }
