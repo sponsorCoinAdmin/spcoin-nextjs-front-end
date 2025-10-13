@@ -204,7 +204,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
             /* ORANGE claim buttons */
             #msTable .ms-claim--orange {
-              background-color: #f97316 !important;
+              background-color: #ec8840ff !important;
               color: #0f172a !important;
               padding: 0.375rem 0.75rem;
               font-size: 0.875rem;
@@ -213,13 +213,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
               transition: background-color 0.2s ease;
             }
             #msTable .ms-claim--orange:hover {
-              background-color: #fb923c !important;
+              background-color: #c7610fff !important;
               color: #ffffff !important;
             }
 
             /* GREEN claim buttons */
             #msTable .ms-claim--green {
-              background-color: #16a34a !important;
+              background-color: #147f3bff !important;
               color: #ffffff !important;
               padding: 0.375rem 0.75rem;
               font-size: 0.875rem;
