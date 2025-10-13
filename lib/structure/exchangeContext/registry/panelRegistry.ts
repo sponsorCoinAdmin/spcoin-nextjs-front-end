@@ -1,3 +1,5 @@
+// FILE: lib\structure\exchangeContext\registry\panelRegistry.ts
+
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
@@ -33,6 +35,13 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.MANAGE_SPONSORSHIPS_PANEL,
 ];
 
+// ✅ New: Children that live under MANAGE_SPONSORSHIPS_PANEL
+const MANAGE_SPONSORSHIPS_CHILDREN: SP[] = [
+  SP.MANAGE_RECIPIENTS_PANEL,
+  SP.MANAGE_AGENTS_PANEL,
+  SP.MANAGE_SPONSORS_PANEL,
+];
+
 export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MAIN_TRADING_PANEL, kind: 'root', defaultVisible: true, children: MAIN_TRADING_CHILDREN },
   { id: SP.TRADE_CONTAINER_HEADER, kind: 'panel', defaultVisible: true },
@@ -43,21 +52,26 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
   { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list', overlay: true, defaultVisible: false },
   { id: SP.ERROR_MESSAGE_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
-  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
+
+  // 🔧 Manage overlay with its nested children (not overlays)
+  { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false, children: MANAGE_SPONSORSHIPS_CHILDREN },
+  { id: SP.MANAGE_RECIPIENTS_PANEL,   kind: 'panel', defaultVisible: false },
+  { id: SP.MANAGE_AGENTS_PANEL,       kind: 'panel', defaultVisible: false },
+  { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', defaultVisible: false },
 
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy
 
   { id: SP.SELL_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
-  { id: SP.BUY_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.ADD_SPONSORSHIP_BUTTON] },
-  { id: SP.ADD_SPONSORSHIP_PANEL, kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
-  { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel', defaultVisible: false },
+  { id: SP.BUY_SELECT_PANEL,  kind: 'panel', defaultVisible: true, children: [SP.ADD_SPONSORSHIP_BUTTON] },
+  { id: SP.ADD_SPONSORSHIP_PANEL,     kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
+  { id: SP.CONFIG_SPONSORSHIP_PANEL,  kind: 'panel', defaultVisible: false },
 
   { id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true },
-  { id: SP.PRICE_BUTTON, kind: 'control', defaultVisible: true },
-  { id: SP.FEE_DISCLOSURE, kind: 'panel', defaultVisible: true },
-  { id: SP.AFFILIATE_FEE, kind: 'panel', defaultVisible: false },
+  { id: SP.PRICE_BUTTON,      kind: 'control', defaultVisible: true },
+  { id: SP.FEE_DISCLOSURE,    kind: 'panel',   defaultVisible: true },
+  { id: SP.AFFILIATE_FEE,     kind: 'panel',   defaultVisible: false },
 
-  { id: SP.ADD_SPONSORSHIP_BUTTON, kind: 'button', defaultVisible: false },
+  { id: SP.ADD_SPONSORSHIP_BUTTON,    kind: 'button', defaultVisible: false },
   { id: SP.MANAGE_SPONSORSHIPS_BUTTON, kind: 'button', defaultVisible: false },
 ] as const;
 

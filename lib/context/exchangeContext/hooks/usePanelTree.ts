@@ -1,4 +1,3 @@
-// File: lib/context/exchangeContext/hooks/usePanelTree.ts
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -25,6 +24,7 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
       if (Array.isArray(n.children) && n.children.length) walk(n.children);
     }
   };
+  // ✅ Fix: use the correct variable name (`nodes`) instead of `ns`
   walk(nodes);
   const seen = new Set<number>();
   return out.filter((e) => (seen.has(e.panel) ? false : (seen.add(e.panel), true)));

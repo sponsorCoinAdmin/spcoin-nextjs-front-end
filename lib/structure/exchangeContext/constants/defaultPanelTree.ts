@@ -53,7 +53,13 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
     node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
     node(SP.AGENT_LIST_SELECT_PANEL, false),
     node(SP.ERROR_MESSAGE_PANEL, false),
-    node(SP.MANAGE_SPONSORSHIPS_PANEL, false),
+
+    // 🔧 Manage overlay with nested children
+    node(SP.MANAGE_SPONSORSHIPS_PANEL, false, [
+      node(SP.MANAGE_RECIPIENTS_PANEL, false),
+      node(SP.MANAGE_AGENTS_PANEL, false),
+      node(SP.MANAGE_SPONSORS_PANEL, false),
+    ]),
 
     // Inline/aux panels
     node(SP.ADD_SPONSORSHIP_PANEL, false),

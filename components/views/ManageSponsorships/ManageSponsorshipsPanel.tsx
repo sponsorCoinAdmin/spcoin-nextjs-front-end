@@ -1,3 +1,4 @@
+// File: components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -25,12 +26,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
 
+  // modes: 'all' = special list view (no modules shown), otherwise show only chosen module
   const [mode, setMode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
-  const anyPanelVisible = vRecipients || vAgents || vSponsors;
 
-  const showRecipients = vRecipients || (!anyPanelVisible && (mode === 'all' || mode === 'recipients'));
-  const showAgents = vAgents || (!anyPanelVisible && (mode === 'all' || mode === 'agents'));
-  const showSponsors = vSponsors || (!anyPanelVisible && (mode === 'all' || mode === 'sponsors'));
+  // Show modules ONLY when their specific mode is active AND visible in global state
+  const showRecipients = vRecipients && mode === 'recipients';
+  const showAgents = vAgents && mode === 'agents';
+  const showSponsors = vSponsors && mode === 'sponsors';
 
   const btn =
     'px-3 py-1.5 text-sm font-medium rounded bg-[#243056] text-[#5981F3] hover:bg-[#5981F3] hover:text-[#0f172a] transition-colors';
@@ -45,20 +47,20 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     } catch {}
     setMode(nextMode);
   };
+
+  // "All" behavior: close all subpanels and render the 3-row button list
   const openAll = () => {
     try {
-      openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-      openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
+      closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
+      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
     } catch {}
     setMode('all');
   };
 
   useEffect(() => {
-    if (!anyPanelVisible) {
-      // Using local fallback visibility; wire subpanels into defaults to drive globally.
-      // console.info('[ManageSponsorshipsPanel] Local fallback visibility active.');
-    }
+    // optional safety to ensure container is open
+    // openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,7 +68,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   return (
     <>
-      {/* Button bar */}
+      {/* Button bar (radio-like) */}
       <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
         <button className={btn} onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'recipients')}>
           Recipients
@@ -93,6 +95,43 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
         </AssetSelectDisplayProvider>
       </div>
 
+      {/* "All" mode: show three rows of buttons with SAME style & behavior */}
+      {mode === 'all' && (
+        <div className="space-y-3 mb-6">
+          <div>
+            <button
+              type="button"
+              className={btn}
+              onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'sponsors')}
+              aria-label="Open Sponsors panel"
+            >
+              Sponsors
+            </button>
+          </div>
+          <div>
+            <button
+              type="button"
+              className={btn}
+              onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'agents')}
+              aria-label="Open Agents panel"
+            >
+              Agents
+            </button>
+          </div>
+          <div>
+            <button
+              type="button"
+              className={btn}
+              onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'recipients')}
+              aria-label="Open Recipients panel"
+            >
+              Recipients
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show modules ONLY when their specific mode is active */}
       {showRecipients && <ManageRecipients />}
       {showSponsors && <ManageSponsors />}
       {showAgents && <ManageAgents />}
