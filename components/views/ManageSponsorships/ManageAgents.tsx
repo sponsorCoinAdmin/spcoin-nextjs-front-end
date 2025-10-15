@@ -1,62 +1,347 @@
+// File: components/views/ManageSponsorships/ManageAgents.tsx
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-export default function ManageAgents() {
-  const headerStyle =
-    'text-xl font-semibold mb-2 text-[#5981F3] group-hover:text-[#000000] transition-colors';
+import type { WalletAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import AddressSelect from '@/components/views/AddressSelect';
+import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
+import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 
-  const rows = [
-    { sponsor: '0xa11cd3f27afcb23781234baca23423451234abcd', recipient: '0xbb22e91a2334bd23cd2331cf234cdf234adf2233', rate: '70%', pending: 102_384.32 },
-    { sponsor: '0xb227dfe78459acdee42345cd923ff122ed453bcd', recipient: '0xcc88aabe442344abcdaa2348dbfee11234bd1234', rate: '50%', pending: 88_324.18 },
-    { sponsor: '0xc34bbcd239adfcc4321d543bbde123423123efabc', recipient: '0xdd99ff2345aabbcd234234cd234abcd234234fff', rate: '80%', pending: 120_958.44 },
-    { sponsor: '0xd45623abcdf234aabff1233abcdf234abcd234fff', recipient: '0xeeaabbccddeeff112233445566778899aabbccdd', rate: '65%', pending: 75_682.0 },
-    { sponsor: '0xe51123abcd234bbffccdde123ff34234bbcd3344', recipient: '0xff00112233445566778899aabbccddeeff112233', rate: '60%', pending: 90_345.76 },
-  ];
+// Enrichment + builder
+import { loadAccounts } from '@/lib/spCoin/loadAccounts';
+import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
 
-  const getTotal = (data: typeof rows) =>
-    data.reduce((acc, curr) => acc + curr.pending, 0)
-        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Local JSON (addresses only)
+import rawAgents from './agents.json';
+
+// ✅ ToDo overlay
+import ToDo from '@/lib/utils/components/ToDo';
+
+type Props = { onClose?: () => void };
+
+function shortAddr(addr: string, left = 6, right = 4) {
+  const a = String(addr);
+  return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
+}
+
+export default function ManageAgents({ onClose }: Props) {
+  const { openPanel, closePanel } = usePanelTree();
+
+  // panel mode (kept for parity)
+  const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
+
+  // ▶ ToDo toggle (initialized to true)
+  const [showToDo, setShowToDo] = useState<boolean>(true);
+
+  const [wallets, setWallets] = useState<WalletAccount[]>([]);
+
+  // Enrich + normalize addresses -> WalletAccount (with names if available)
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const enriched = await loadAccounts(rawAgents as any);
+        const built = enriched.map(buildWalletObj).map((w) => ({
+          ...w,
+          name: w.name && w.name !== 'N/A' ? w.name : shortAddr(w.address),
+          symbol: w.symbol ?? 'N/A',
+        }));
+        if (alive) setWallets(built);
+      } catch {
+        const fallback = (Array.isArray(rawAgents) ? rawAgents : []).map((a: any) => {
+          const w = buildWalletObj(a);
+          return { ...w, name: shortAddr(w.address) };
+        });
+        if (alive) setWallets(fallback);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const th =
+    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const cell = 'px-3 text-sm align-middle';
+  const cellCenter = `${cell} text-center`;
+  const rowH = 'h-[77px]'; // fixed row height
+
+  const iconBtn =
+    'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
+
+  // zebra backgrounds on inner wrappers
+  const zebraA = 'bg-[rgba(56,78,126,0.35)]';   // A rows
+  const zebraB = 'bg-[rgba(156,163,175,0.25)]'; // B rows (light gray)
+
+  const openOnly = (id: SP_COIN_DISPLAY) => {
+    try {
+      [
+        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
+        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+        SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+      ].forEach((pid) => (pid === id ? openPanel(pid) : closePanel(pid)));
+    } catch {}
+  };
 
   return (
-    <div className="mb-6 group bg-[#1A1D2E] hover:bg-[rgb(79,86,101)] p-4 rounded">
-      <h2 className={headerStyle}>Manage Agent Accounts</h2>
-      <table className="w-full text-sm text-left border-collapse">
-        <thead className="text-white border-b border-gray-600">
-          <tr>
-            <th>Sponsor</th>
-            <th>Recipient</th>
-            <th>Agent Rate</th>
-            <th>Pending Amount (10% Agent)</th>
-            <th className="text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ sponsor, recipient, rate, pending }, idx) => (
-            <tr key={idx} className="border-b border-gray-700">
-              <td className="pr-4 truncate">{sponsor}</td>
-              <td className="pr-4 truncate">{recipient}</td>
-              <td className="pr-4">{rate}</td>
-              <td className="pr-4">{pending.toLocaleString()}</td>
-              <td className="text-right">
-                <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">
-                  Claim
-                </button>
-              </td>
-            </tr>
-          ))}
-          <tr className="border-t border-gray-600">
-            <td className="py-2 font-semibold text-white">Total Pending Rewards</td>
-            <td colSpan={2}></td>
-            <td className="py-2 font-semibold text-white">{getTotal(rows)}</td>
-            <td className="text-right">
-              <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">
-                Claim All
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <>
+      {/* Address selector */}
+      <div className="mb-6">
+        <AssetSelectDisplayProvider>
+          <AssetSelectProvider
+            containerType={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
+            closePanelCallback={() => onClose?.()}
+            setSelectedAssetCallback={() => {}}
+          >
+            <AddressSelect />
+          </AssetSelectProvider>
+        </AssetSelectDisplayProvider>
+      </div>
+
+      {mode === 'all' && (
+        <div
+          id="maWrapper"
+          className="mb-6 -mt-[10px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+        >
+          <table id="maTable" className="min-w-full border-collapse">
+            <thead>
+              <tr className="border-b border-black">
+                {/* ⬇️ Combined column */}
+                <th scope="col" className={th}>Name</th>
+                <th scope="col" className={`${th} text-center`}>Staked Coins</th>
+                <th scope="col" className={`${th} text-center`}>Pending Coins</th>
+                <th scope="col" className={`${th} text-center`}>Rewards</th>
+                <th scope="col" className={`${th} text-center`}>Config</th>
+              </tr>
+            </thead>
+            <tbody>
+              {wallets.map((w, i) => {
+                const zebra = i % 2 === 0 ? zebraA : zebraB;
+                const claimClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
+
+                return (
+                  <tr key={w.address}>
+                    {/* Name column (Avatar + label stacked) */}
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center`}
+                      >
+                        <Image
+                          src={w.logoURL || '/assets/miscellaneous/placeholder.png'}
+                          alt={`${w.name ?? 'Wallet'} logo`}
+                          width={53}
+                          height={53}
+                          className="h-[53px] w-[53px] object-contain rounded"
+                        />
+                        <div className="mt-1 text-xs text-slate-200 max-w-[130px] truncate text-center">
+                          {w.name || shortAddr(w.address)}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Staked Coins */}
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
+                    </td>
+
+                    {/* Pending Coins */}
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
+                    </td>
+
+                    {/* Rewards (Claim) */}
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        <button
+                          type="button"
+                          className={claimClass}
+                          aria-label={`Claim rewards for ${w.address}`}
+                        >
+                          Claim
+                        </button>
+                      </div>
+                    </td>
+
+                    {/* Config (Cog) */}
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        <button
+                          type="button"
+                          className={iconBtn}
+                          onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
+                          aria-label="Open Agents reconfigure"
+                          title="Reconfigure Agent"
+                        >
+                          <span className="cog-white-mask cog-rot" aria-hidden />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* ⬇️ Extra Total row (slightly smaller than before); uses next zebra color + alternating Claim color */}
+              {(() => {
+                const isA = wallets.length % 2 === 0;
+                const zebra = isA ? zebraA : zebraB;
+                const claimClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
+                return (
+                  <tr>
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}
+                      >
+                        {/* Smaller than previous (was text-2xl md:text-3xl) */}
+                        <span className="text-xl md:text-2xl font-bold tracking-wide">
+                          Total
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
+                    </td>
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        0
+                      </div>
+                    </td>
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        <button
+                          type="button"
+                          className={claimClass}
+                          aria-label="Claim Total rewards"
+                        >
+                          Claim
+                        </button>
+                      </div>
+                    </td>
+                    <td className="p-0">
+                      <div
+                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
+                      >
+                        {/* Intentionally blank (no cog) */}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })()}
+            </tbody>
+          </table>
+
+          {/* Styles: hide scrollbar, header styling, claim buttons, white cog */}
+          <style jsx>{`
+            #maWrapper {
+              border-color: #000 !important;
+              -ms-overflow-style: none;  /* IE/Edge */
+              scrollbar-width: none;     /* Firefox */
+            }
+            #maWrapper::-webkit-scrollbar {
+              display: none;             /* Chrome/Safari/Opera */
+            }
+
+            #maTable thead tr,
+            #maTable thead th {
+              background-color: #2b2b2b !important;
+            }
+            #maTable thead tr {
+              border-bottom: 1px solid #000 !important;
+            }
+            #maTable tbody td {
+              padding: 0 !important;
+            }
+
+            /* ORANGE claim buttons */
+            #maTable .ms-claim--orange {
+              background-color: #ec8840ff !important;
+              color: #0f172a !important;
+              padding: 0.375rem 0.75rem;
+              font-size: 0.875rem;
+              font-weight: 500;
+              border-radius: 0.375rem;
+              transition: background-color 0.2s ease;
+            }
+            #maTable .ms-claim--orange:hover {
+              background-color: #c7610fff !important;
+              color: #ffffff !important;
+            }
+
+            /* GREEN claim buttons */
+            #maTable .ms-claim--green {
+              background-color: #147f3bff !important;
+              color: #ffffff !important;
+              padding: 0.375rem 0.75rem;
+              font-size: 0.875rem;
+              font-weight: 500;
+              border-radius: 0.375rem;
+              transition: background-color 0.2s ease;
+            }
+            #maTable .ms-claim--green:hover {
+              background-color: #22c55e !important;
+              color: #0f172a !important;
+            }
+
+            /* White cog via PNG mask */
+            #maTable .cog-white-mask {
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              background-color: #ffffff;
+              -webkit-mask-image: url(${cog_png.src});
+              mask-image: url(${cog_png.src});
+              -webkit-mask-repeat: no-repeat;
+              mask-repeat: no-repeat;
+              -webkit-mask-position: center;
+              mask-position: center;
+              -webkit-mask-size: contain;
+              mask-size: contain;
+            }
+            #maTable .cog-rot {
+              transition: transform 0.3s ease;
+            }
+            #maTable .cog-rot:hover {
+              transform: rotate(360deg);
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* 🔴 ToDo overlay (red text, click to dismiss) */}
+      {showToDo && (
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={() => setShowToDo(false)}
+        />
+      )}
+    </>
   );
 }

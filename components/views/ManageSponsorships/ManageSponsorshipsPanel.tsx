@@ -16,6 +16,9 @@ import ManageRecipients from './ManageRecipients';
 import ManageSponsors from './ManageSponsors';
 import ManageAgents from './ManageAgents';
 
+// ✅ ToDo overlay
+import ToDo from '@/lib/utils/components/ToDo';
+
 type Props = { onClose?: () => void };
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
@@ -30,6 +33,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
 
+  // ▶ ToDo toggle (initialized to true)
+  const [showToDo, setShowToDo] = useState<boolean>(true);
+
   const iconBtn =
     'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
 
@@ -42,7 +48,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   // Alternating row colors on the inner wrappers
   const rowA = 'bg-[rgba(56,78,126,0.35)]';           // Sponsors / Agents
-  const rowB = 'bg-[rgba(156,163,175,0.25)]';          // ✅ light grey: Recipients / Total (gray-400 @ 25%)
+  const rowB = 'bg-[rgba(156,163,175,0.25)]';          // light grey: Recipients / Total
 
   const th =
     'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
@@ -121,7 +127,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </td>
               </tr>
 
-              {/* Row 2: Recipients (B) — light grey */}
+              {/* Row 2: Recipients (B) */}
               <tr className={`${rowBorder}`}>
                 <td className="p-0"><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
                 <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
@@ -171,7 +177,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 </td>
               </tr>
 
-              {/* Row 4: Total (B, light grey, no cog) */}
+              {/* Row 4: Total (B, no cog) */}
               <tr className={`${rowBorder}`}>
                 <td className="p-0"><div className={`${rowB} ${tdInner}`}>Total</div></td>
                 <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
@@ -267,6 +273,18 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       <div className={recipientsHidden ? 'hidden' : ''}>
         <ManageRecipients />
       </div>
+
+      {/* 🔴 ToDo overlay (click the red text to dismiss) */}
+      {showToDo && (
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={() => setShowToDo(false)}
+        />
+      )}
     </>
   );
 }

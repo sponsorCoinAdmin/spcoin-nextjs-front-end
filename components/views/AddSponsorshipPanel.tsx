@@ -17,6 +17,9 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { useExchangeContext } from '@/lib/context/hooks';
 
+// ✅ ToDo overlay
+import ToDo from '@/lib/utils/components/ToDo';
+
 const TAB_STORAGE_KEY = 'header_open_tabs';
 const RECIPIENT_TAB_HREF = '/RecipientSite';
 
@@ -45,6 +48,9 @@ const AddSponsorShipPanel: React.FC = () => {
   const recipientWallet: WalletAccount | undefined = exchangeContext.accounts.recipientAccount;
 
   const [siteExists, setSiteExists] = useState<boolean>(false);
+
+  // ▶ ToDo toggle (initialized to true)
+  const [showToDo, setShowToDo] = useState<boolean>(true);
 
   const toggleSponsorRateConfig = useCallback(() => {
     if (configVisible) closeConfigSponsorship();
@@ -195,6 +201,18 @@ const AddSponsorShipPanel: React.FC = () => {
       </div>
 
       <ConfigSponsorshipPanel />
+
+      {/* 🔴 ToDo overlay (red text, click to dismiss) */}
+      {!showToDo && (
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={() => setShowToDo(false)}
+        />
+      )}
     </div>
   );
 };

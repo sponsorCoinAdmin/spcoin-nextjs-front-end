@@ -1,7 +1,7 @@
 // File: components/views/DataListSelect.tsx
 'use client';
 
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { FEED_TYPE, WalletAccount, InputState } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
@@ -19,28 +19,20 @@ type FeedData = {
 };
 
 type Props<T> = {
-  /** Data already fetched + normalized by the parent (via useFeedData). */
+  /** SSOT: pre-populated, normalized data. No internal mirroring. */
   feedData: FeedData;
-  /** Optional loading flag the parent can set for account feeds. */
+  /** Optional loading flag (useful while upstream normalizes accounts). */
   loading?: boolean;
-  /** The active feed type so we know how to render & which role to tag. */
+  /** Which feed we’re rendering, to wire selection behavior. */
   feedType: FEED_TYPE;
 };
 
 export default function DataListSelect<T>({ feedData, loading = false, feedType }: Props<T>) {
-  // Local copies of lists (kept so we can use the same interaction logic as before)
-  const [wallets, setWallets] = useState<WalletAccount[]>(feedData.wallets ?? []);
-  const [tokens, setTokens] = useState<any[]>(feedData.tokens ?? []);
+  // 💡 SSOT: use props directly; do not copy to local state
+  const wallets = useMemo<WalletAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
+  const tokens = useMemo(() => feedData.tokens ?? [], [feedData.tokens]);
 
-  // Keep in sync if parent refreshes feedData
-  useEffect(() => {
-    setWallets(feedData.wallets ?? []);
-  }, [feedData.wallets]);
-  useEffect(() => {
-    setTokens(feedData.tokens ?? []);
-  }, [feedData.tokens]);
-
-  // FSM / selection bridge
+  // FSM / selection bridge (unchanged)
   const {
     handleHexInputChange,
     setManualEntry,
@@ -51,13 +43,14 @@ export default function DataListSelect<T>({ feedData, loading = false, feedType 
 
   const pendingPickRef = useRef<string | null>(null);
   const [enforceProgrammatic, setEnforceProgrammatic] = useState(false);
+
   const programmaticReady = useEnsureBoolWhen(
     [manualEntry, setManualEntry],
     false,
     enforceProgrammatic
   );
 
-  // Commit deferred pick once allowed
+  // Commit deferred pick once allowed (unchanged)
   useEffect(() => {
     if (!programmaticReady || !pendingPickRef.current) return;
 
@@ -136,8 +129,8 @@ export default function DataListSelect<T>({ feedData, loading = false, feedType 
           loading
             ? renderEmptyState('Loading accounts...')
             : wallets.length === 0
-            ? renderEmptyState('No accounts available.')
-            : wallets.map((wallet) => (
+              ? renderEmptyState('No accounts available.')
+              : wallets.map((wallet) => (
                 <AccountListItem
                   key={wallet.address}
                   account={wallet}
@@ -145,6 +138,8 @@ export default function DataListSelect<T>({ feedData, loading = false, feedType 
                   role={feedType === FEED_TYPE.AGENT_ACCOUNTS ? 'agent' : 'recipient'}
                 />
               ))
+        ) : loading ? (
+          renderEmptyState('Loading tokens...')
         ) : tokens.length === 0 ? (
           renderEmptyState('No tokens available.')
         ) : (
