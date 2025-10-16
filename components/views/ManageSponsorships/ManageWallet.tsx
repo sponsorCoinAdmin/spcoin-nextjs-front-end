@@ -9,18 +9,11 @@ import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDis
 import AddressSelect from '@/components/views/AddressSelect';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 type Props = {
-  wallet?: WalletAccount; // <-- allow undefined (parent may not have one yet)
+  wallet?: WalletAccount;
   onClose?: () => void;
-  setWalletCallBack?: (wallet?: WalletAccount) => void;
 };
-
-function shortAddr(addr: string, left = 6, right = 4) {
-  const a = String(addr);
-  return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
-}
 
 function addressToText(addr: unknown): string {
   if (addr == null) return 'N/A';
@@ -34,68 +27,60 @@ function addressToText(addr: unknown): string {
   return String(addr);
 }
 
-export default function ManageWallet({ wallet, onClose, setWalletCallBack }: Props) {
-  if (!wallet) return null; // nothing selected yet
+export default function ManageWallet({ wallet, onClose }: Props) {
+  if (!wallet) return null;
 
+  const addrText = addressToText(wallet.address);
   const prettyBalance =
     typeof wallet.balance === 'bigint' ? wallet.balance.toString() : String(wallet.balance ?? '0');
 
   return (
     <>
-      <div className='mb-6'>
+      <div className="mb-6">
         <AssetSelectDisplayProvider>
           <AssetSelectProvider
-            // ⬇️ Use the main radio panel id for this flow
             containerType={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            <AddressSelect />
+            {/* Prefill with the wallet address */}
+            <AddressSelect defaultAddress={String(wallet.address)} />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>
 
-      <div className='rounded-xl border border-black/60 bg-slate-800/50 p-4 text-slate-100'>
-        <div className='flex items-center gap-4'>
+      <div className="rounded-xl border border-black/60 bg-slate-800/50 p-4 text-slate-100">
+        <div className="flex items-center gap-4">
           <Image
             src={wallet.logoURL || '/assets/miscellaneous/placeholder.png'}
             alt={`${wallet.name ?? 'Wallet'} logo`}
             width={56}
             height={56}
-            className='h-14 w-14 rounded object-contain'
+            className="h-14 w-14 rounded object-contain"
           />
-          <div className='flex-1 min-w-0'>
-            <div className='text-lg font-semibold truncate'>
-              {wallet.name || shortAddr(addressToText(wallet.address))}
+          <div className="flex-1 min-w-0">
+            {/* Title: Symbol (⬆ ~20%) */}
+            <div className="font-semibold truncate text-[1.35rem]">
+              {wallet.symbol ?? 'N/A'}
             </div>
-            <div className='text-xs text-slate-300 break-all'>
-              {addressToText(wallet.address)}
+            {/* Subline: Name (⬆ ~20%) */}
+            <div className="text-slate-300 truncate text-[0.9rem]">
+              {wallet.name || '—'}
             </div>
+            {/* ⛔ Removed: address beside the icon */}
           </div>
-
-          <button
-            type='button'
-            className='inline-flex h-9 w-9 items-center justify-center rounded hover:opacity-80 focus:outline-none'
-            onClick={() => setWalletCallBack?.(wallet)}
-            aria-label='Configure this wallet'
-            title='Configure this wallet'
-          >
-            <span className='cog-white-mask cog-rot' aria-hidden />
-          </button>
         </div>
 
-        <div className='mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2'>
-          <InfoRow label='Symbol' value={wallet.symbol ?? 'N/A'} />
-          <InfoRow label='Type' value={wallet.type ?? 'N/A'} />
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InfoRow
-            label='Website'
+            label="Website"
             value={
               wallet.website ? (
                 <a
                   href={wallet.website}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200'
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all"
                 >
                   {wallet.website}
                 </a>
@@ -104,39 +89,19 @@ export default function ManageWallet({ wallet, onClose, setWalletCallBack }: Pro
               )
             }
           />
-          <InfoRow label='Status' value={String(wallet.status ?? 'N/A')} />
-          <InfoRow label='Balance' value={prettyBalance} />
-          <InfoRow label='Description' value={wallet.description || '—'} />
+          <InfoRow label="Balance" value={prettyBalance} />
+          <InfoRow label="Description" value={wallet.description || '—'} />
         </div>
       </div>
-
-      <style jsx>{`
-        .cog-white-mask {
-          display: inline-block;
-          width: 20px;
-          height: 20px;
-          background-color: #ffffff;
-          -webkit-mask-image: url(${cog_png.src});
-          mask-image: url(${cog_png.src});
-          -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-          -webkit-mask-position: center;
-          mask-position: center;
-          -webkit-mask-size: contain;
-          mask-size: contain;
-        }
-        .cog-rot { transition: transform 0.3s ease; }
-        .cog-rot:hover { transform: rotate(360deg); }
-      `}</style>
     </>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className='rounded-lg border border-slate-600/50 bg-slate-900/40 p-3'>
-      <div className='text-xs uppercase tracking-wide text-slate-400'>{label}</div>
-      <div className='mt-1 text-sm text-slate-100 break-all'>{value}</div>
+    <div className="rounded-lg border border-slate-600/50 bg-slate-900/40 p-3">
+      <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="mt-1 text-sm text-slate-100 break-all">{value}</div>
     </div>
   );
 }

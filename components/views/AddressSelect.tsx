@@ -1,7 +1,7 @@
 // File: components/shared/AddressSelect.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import HexAddressInput from '@/components/shared/utils/HexAddressInput';
 import RenderAssetPreview from '@/components/views/sharedPreviews/RenderAssetPreview';
 import ErrorAssetPreview from '@/components/views/sharedPreviews/ErrorAssetPreview';
@@ -17,7 +17,12 @@ const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
 
 debugLog.log('✅ [AddressSelect] component file loaded');
 
-export default function AddressSelect() {
+type Props = {
+  /** Optional default address to prefill into the input on mount or when it changes */
+  defaultAddress?: string;
+};
+
+export default function AddressSelect({ defaultAddress }: Props) {
   const {
     instanceId,
     manualEntry,
@@ -44,6 +49,32 @@ export default function AddressSelect() {
     setEnforceManualTrue(true);
     requestAnimationFrame(() => setEnforceManualTrue(false));
   };
+
+  // ─────────────────────────────────────────────────────────────
+  // Prefill input from defaultAddress (BigInt-safe; only when provided)
+  // Runs on mount and whenever defaultAddress changes.
+  // Avoids loops by checking against current validHexInput.
+  // ─────────────────────────────────────────────────────────────
+  const lastAppliedRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const next = (defaultAddress ?? '').trim();
+    if (!next) return;
+
+    if (lastAppliedRef.current === next && validHexInput === next) return;
+
+    debugLog.log?.(
+      `🧩 Applying defaultAddress "${next.slice(0, 8)}…"; current validHexInput="${validHexInput}"`
+    );
+
+    // Mark as manual so UI stays in "manual entry" mode
+    setManualEntry(true);
+    // Kick FSM so downstream consumers re-evaluate
+    setInputState(InputState.EMPTY_INPUT, 'AddressSelect (Default Address)');
+    // Push value into context (not user-typed, but OK to pass true for simplicity)
+    handleHexInputChange(next, true);
+
+    lastAppliedRef.current = next;
+  }, [defaultAddress, validHexInput, setManualEntry, setInputState, handleHexInputChange]);
 
   return (
     <div id="AddressSelectDiv" className="flex flex-col gap-[4px] p-0">

@@ -35,7 +35,7 @@ export default function ManageAgent({ onClose }: Props) {
     <>
       <ManageWallet wallet={agentWallet} />
 
-      {showToDo && (
+      {!showToDo && (
         <ToDo
           show
           message="ToDo"
