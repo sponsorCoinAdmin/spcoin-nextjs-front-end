@@ -44,7 +44,6 @@ export const PlusMarker: React.FC<MarkerProps> = ({
     onMouseDown={(e) => e.stopPropagation()}
     onClick={(e) => {
       e.stopPropagation();
-      console.log('[Marker][+]', { path, label });
       onClick?.();
     }}
   >

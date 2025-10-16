@@ -7,6 +7,7 @@ import { useAccount, useChainId as useWagmiChainId } from 'wagmi';
 import { initExchangeContext } from '@/lib/context/helpers/initExchangeContext';
 import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/hooks/useProviderSetters';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
+import { reconcilePanelState } from '@/lib/context/exchangeContext/helpers/panelReconcile';
 
 import {
   ExchangeContext as ExchangeContextTypeOnly,
@@ -177,13 +178,19 @@ const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
 /* ----------------------- Post-mount bootstrap (safe) ------------------------ */
 
 function PanelBootstrap() {
-  const { openPanel } = usePanelTree();
+  const { activeMainOverlay, openPanel } = usePanelTree();
   const did = useRef(false);
+
   useEffect(() => {
     if (did.current) return;
     did.current = true;
-    queueMicrotask(() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL));
-  }, [openPanel]);
+
+    // Only pick a default if nothing is selected (rare), so we never override a persisted choice
+    if (activeMainOverlay == null) {
+      queueMicrotask(() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL));
+    }
+  }, [activeMainOverlay, openPanel]);
+
   return null;
 }
 
@@ -218,7 +225,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         (normalized as any).settings = { ...(normalized as any).settings };
         (normalized as any).settings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
         saveLocalExchangeContext(normalized);
-      } catch {}
+      } catch { }
       return nextBase;
     });
   };
@@ -237,9 +244,21 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const ensured = ensureRequiredPanels(dropNonPersisted(validated), MUST_INCLUDE_ON_BOOT);
       const flatPanels = reconcileOverlayVisibility(ensured);
 
+      const radioTopLevel: any[] =
+        (settingsAny.mainPanelNode as any[]) ?? []; // if you keep mainPanelNode persisted
+
+      reconcilePanelState(
+        flatPanels as any,
+        radioTopLevel as any,
+        SP_COIN_DISPLAY.TRADING_STATION_PANEL
+      );
+
+      // Persist both, now coherent
       const nextSettings: any = {
         ...settingsAny,
         spCoinPanelTree: normalizeForPersistence(flatPanels),
+        mainPanelNode: radioTopLevel,              // <-- keep in sync
+        spCoinPanelSchemaVersion: 3,               // bump schema to force migration
       };
       nextSettings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
 
@@ -250,7 +269,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      try { saveLocalExchangeContext(base); } catch {}
+      try { saveLocalExchangeContext(base); } catch { }
 
       (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
       setContextState(base as ExchangeContextTypeOnly);
@@ -285,6 +304,55 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       return next;
     }, 'provider:syncNetworkAndWallet');
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
+
+  /* 🔐 Authoritative sync of connectedAccount from Wagmi */
+  const lastAppliedAddrRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!contextState) return;
+
+    const nextAddr = isConnected ? (address ?? undefined) : undefined;
+
+    // no change
+    if (lastAppliedAddrRef.current === nextAddr &&
+        contextState.accounts?.connectedAccount?.address === nextAddr) {
+      return;
+    }
+
+    setExchangeContext((prev) => {
+      const next = clone(prev);
+      (next as any).accounts = (next as any).accounts ?? {};
+      if (nextAddr) {
+        // normalize to checksum/lowercase if you prefer; here we keep as-provided
+        (next as any).accounts.connectedAccount = {
+          ...((next as any).accounts.connectedAccount ?? {}),
+          address: nextAddr,
+        };
+      } else {
+        (next as any).accounts.connectedAccount = undefined;
+      }
+      return next;
+    }, 'provider:syncConnectedAccount');
+
+    lastAppliedAddrRef.current = nextAddr;
+  }, [contextState, isConnected, address, setExchangeContext]);
+
+  // 🩹 Repair after rehydrate (in case storage clobbers a live connection)
+  useEffect(() => {
+    if (!contextState) return;
+    if (isConnected && address && !contextState.accounts?.connectedAccount?.address) {
+      setExchangeContext((prev) => {
+        const next = clone(prev);
+        (next as any).accounts = (next as any).accounts ?? {};
+        (next as any).accounts.connectedAccount = {
+          ...((next as any).accounts.connectedAccount ?? {}),
+          address,
+        };
+        return next;
+      }, 'provider:rehydrateRepairConnectedAccount');
+      lastAppliedAddrRef.current = address;
+    }
+  }, [contextState, isConnected, address, setExchangeContext]);
 
   /** SINGLE source of truth on appChainId change:
    *  - Refresh display fields (name/symbol/url/logoURL) from registry + template

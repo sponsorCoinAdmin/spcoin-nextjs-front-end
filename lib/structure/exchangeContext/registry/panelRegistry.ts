@@ -30,7 +30,7 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.BUY_LIST_SELECT_PANEL,
   SP.SELL_LIST_SELECT_PANEL,
   SP.RECIPIENT_LIST_SELECT_PANEL,
-  SP.AGENT_LIST_SELECT_PANEL,
+  SP.AGENT_LIST_SELECT_PANEL, // ✅ restored
   SP.ERROR_MESSAGE_PANEL,
 
   // ✅ Treat these as top-level overlays (siblings), not children of MANAGE_SPONSORSHIPS_PANEL
@@ -38,6 +38,7 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.MANAGE_RECIPIENTS_PANEL,
   SP.MANAGE_AGENTS_PANEL,
   SP.MANAGE_SPONSORS_PANEL,
+  SP.MANAGE_AGENT_PANEL, // single-agent panel in main radio overlays
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -45,17 +46,19 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.TRADE_CONTAINER_HEADER, kind: 'panel', defaultVisible: true },
 
   { id: SP.TRADING_STATION_PANEL, kind: 'root', overlay: true, defaultVisible: true, children: TRADING_CHILDREN },
-  { id: SP.BUY_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.SELL_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list', overlay: true, defaultVisible: false },
-  { id: SP.ERROR_MESSAGE_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
 
-  // ✅ All four manage screens are overlays (radio group members)
+  { id: SP.BUY_LIST_SELECT_PANEL,      kind: 'list',  overlay: true, defaultVisible: false },
+  { id: SP.SELL_LIST_SELECT_PANEL,     kind: 'list',  overlay: true, defaultVisible: false },
+  { id: SP.RECIPIENT_LIST_SELECT_PANEL,kind: 'list',  overlay: true, defaultVisible: false },
+  { id: SP.AGENT_LIST_SELECT_PANEL,    kind: 'list',  overlay: true, defaultVisible: false }, // ✅ restored
+  { id: SP.ERROR_MESSAGE_PANEL,        kind: 'panel', overlay: true, defaultVisible: false },
+
+  // ✅ All manage screens are overlays (radio group members)
   { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_RECIPIENTS_PANEL,   kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_AGENTS_PANEL,       kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.MANAGE_AGENT_PANEL,        kind: 'panel', overlay: true, defaultVisible: false },
 
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy
 
@@ -69,10 +72,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.FEE_DISCLOSURE,    kind: 'panel',   defaultVisible: true },
   { id: SP.AFFILIATE_FEE,     kind: 'panel',   defaultVisible: false },
 
-  { id: SP.ADD_SPONSORSHIP_BUTTON,    kind: 'button', defaultVisible: false },
+  { id: SP.ADD_SPONSORSHIP_BUTTON,     kind: 'button', defaultVisible: false },
   { id: SP.MANAGE_SPONSORSHIPS_BUTTON, kind: 'button', defaultVisible: false },
 ] as const;
 
+// Main radio group = every overlay panel
 export const MAIN_OVERLAY_GROUP: readonly SP[] =
   PANEL_DEFS.filter((d) => d.overlay === true).map((d) => d.id) as readonly SP[];
 

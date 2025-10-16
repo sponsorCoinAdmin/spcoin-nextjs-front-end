@@ -36,7 +36,7 @@ type PanelPolicy = Readonly<Partial<Record<StudyId, boolean>>>;
  *   specify panels you care about. Any missing entry defaults to `false`.
  * - You can override any cell at runtime via env:
  *   NEXT_PUBLIC_FSM_{PANEL_ENUM_NAME}_{STUDY_ID}_ENABLED = 'true' | 'false'
- *   e.g. NEXT_PUBLIC_FSM_AGENT_SELECT_PANEL_LIST_VALIDATE_EXISTS_ON_CHAIN_ENABLED=false
+ *   e.g. NEXT_PUBLIC_FSM_AGENT_LIST_SELECT_PANEL_VALIDATE_EXISTS_ON_CHAIN_ENABLED=false
  */
 const DEFAULT_POLICY: Partial<Record<SP_COIN_DISPLAY, PanelPolicy>> = {
   // Trading station doesn’t run the selection FSM (keep all off)

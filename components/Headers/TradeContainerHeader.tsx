@@ -1,93 +1,25 @@
 // File: components/Headers/TradeContainerHeader.tsx
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
-import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree'; // ⬅️ add
-
-function titleFor(display: SP_COIN_DISPLAY): string {
-  switch (display) {
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL: return 'Select Sponsors Agent';
-    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL: return 'Select a Token to Buy';
-    case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL: return 'Error Message Panel';
-    case SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL: return 'Select Recipient to Sponsor';
-    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL: return 'Select a Token to Sell';
-    case SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL: return 'Sponsor Rate Configuration';
-    case SP_COIN_DISPLAY.TRADING_STATION_PANEL: return 'Sponsor Coin Exchange';
-    case SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL: return 'Select a Sponsor';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL: return 'Manage Sponsorship Account Rewards';
-    // Titles for manage sub-overlays
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Manage Recipient Rewards';
-    case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Manage Agent Rewards';
-    case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Manage Sponsor Rewards';
-    default: return 'Main Panel Header';
-  }
-}
+import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 
 export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
-  const { toTrading } = usePanelTransitions();
-  const { openPanel } = usePanelTree(); // ⬅️ use openPanel for redirect-on-close
-
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
-
-  // Subscribe narrowly
-  const vis = {
-    sponsor: usePanelVisible(SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL),
-    sell: usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
-    buy: usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
-    recipient: usePanelVisible(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL),
-    manage: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL),
-    manageRecipients: usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL),
-    manageAgents: usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL),
-    manageSponsors: usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL),
-    agent: usePanelVisible(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL),
-    error: usePanelVisible(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL),
-    trading: usePanelVisible(SP_COIN_DISPLAY.TRADING_STATION_PANEL),
-  };
-
-  const currentDisplay: SP_COIN_DISPLAY = useMemo(() => {
-    if (vis.sponsor) return SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL;
-    if (vis.sell) return SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
-    if (vis.buy) return SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
-    if (vis.recipient) return SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL;
-    if (vis.manageRecipients) return SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL;
-    if (vis.manageAgents) return SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL;
-    if (vis.manageSponsors) return SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL;
-    if (vis.manage) return SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL;
-    if (vis.agent) return SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL;
-    if (vis.error) return SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL;
-    if (vis.trading) return SP_COIN_DISPLAY.TRADING_STATION_PANEL;
-    return SP_COIN_DISPLAY.UNDEFINED;
-  }, [vis]);
-
-  const title = titleFor(currentDisplay);
-
-  const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
-  const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
-
-  // ✅ New behavior: if closing from a Manage sub-panel, return to MANAGE_SPONSORSHIPS_PANEL
-  const onCloseOverlay = useCallback(() => {
-    if (
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL ||
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL ||
-      currentDisplay === SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL
-    ) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL); // radio behavior will auto-close others
-      return;
-    }
-    // otherwise operate as usual
-    toTrading();
-  }, [currentDisplay, openPanel, toTrading]);
+  const {
+    title,
+    isConfigOpen,
+    onOpenConfig,
+    onCloseConfig,
+    onClose,
+    isTrading,
+  } = useHeaderController();
 
   return (
     <div
@@ -116,7 +48,7 @@ export default function TradeContainerHeader() {
       </h4>
 
       <div className={styles.rightSideControl}>
-        {vis.trading ? (
+        {isTrading ? (
           <Image
             src={cog_png}
             alt="Open settings"
@@ -131,7 +63,7 @@ export default function TradeContainerHeader() {
             type="button"
             aria-label="Close"
             title="Close"
-            onClick={onCloseOverlay}
+            onClick={onClose}
             className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
                        hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
           >

@@ -1,7 +1,7 @@
 // File: lib/structure/exchangeContext/constants/spCoinDisplay.ts
-import { SP_COIN_DISPLAY } from "../enums/spCoinDisplay";
+import { SP_COIN_DISPLAY } from '../enums/spCoinDisplay';
 
-// ✅ MAIN_TRADING_PANEL is *not* part of the radio group
+// ✅ MAIN_TRADING_PANEL is now part of the radio group (as requested)
 export const MAIN_OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
   SP_COIN_DISPLAY.TRADING_STATION_PANEL,
   SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
@@ -9,6 +9,14 @@ export const MAIN_OVERLAY_GROUP: SP_COIN_DISPLAY[] = [
   SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
   SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
-  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, // ← add to radio group
-  SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,  // legacy
+
+  // Manage overlays (top-level radio siblings)
+  SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+  SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
+  SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+  SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+  SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+
+  // Legacy list (kept for compatibility)
+  SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL,
 ];

@@ -38,21 +38,22 @@ export const defaultSpCoinPanelTree: SpCoinPanelTree = [
 
     node(SP.TRADING_STATION_PANEL, true, [
       node(SP.SELL_SELECT_PANEL, true, [node(SP.MANAGE_SPONSORSHIPS_BUTTON, false)]),
-      node(SP.BUY_SELECT_PANEL, true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
+      node(SP.BUY_SELECT_PANEL,  true, [node(SP.ADD_SPONSORSHIP_BUTTON, false)]),
     ]),
 
     // Radio overlays (top-level siblings)
     node(SP.BUY_LIST_SELECT_PANEL, false),
     node(SP.SELL_LIST_SELECT_PANEL, false),
     node(SP.RECIPIENT_LIST_SELECT_PANEL, false),
-    node(SP.AGENT_LIST_SELECT_PANEL, false),
+    node(SP.AGENT_LIST_SELECT_PANEL, false),   // ✅ restored
     node(SP.ERROR_MESSAGE_PANEL, false),
 
-    // ✅ Manage overlays are now top-level radio overlays (NOT children)
+    // ✅ Manage overlays are top-level radio overlays (NOT children)
     node(SP.MANAGE_SPONSORSHIPS_PANEL, false),
     node(SP.MANAGE_RECIPIENTS_PANEL, false),
     node(SP.MANAGE_AGENTS_PANEL, false),
     node(SP.MANAGE_SPONSORS_PANEL, false),
+    node(SP.MANAGE_AGENT_PANEL, false),
 
     // Inline/aux panels
     node(SP.ADD_SPONSORSHIP_PANEL, false),

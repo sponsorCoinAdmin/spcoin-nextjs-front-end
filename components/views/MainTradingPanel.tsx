@@ -8,10 +8,12 @@ import TradingStationPanel from '@/components/views/TradingStationPanel';
 import ErrorMessagePanel from '@/components/views/ErrorMessagePanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
-// 👇 Add these three
+// Existing manage panels
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
 import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors';
+// ✅ Add this:
+import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
 
 import {
   TokenListSelectPanel,
@@ -48,6 +50,11 @@ export default function MainTradingPanel() {
 
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}>
             <ManageSponsors />
+          </PanelGate>
+
+          {/* ✅ Single-agent detail overlay */}
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}>
+            <ManageAgent />
           </PanelGate>
 
           {/* Existing select/aux overlays */}
