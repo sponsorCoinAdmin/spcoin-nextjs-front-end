@@ -1,13 +1,19 @@
 // File: components/views/ManageSponsorships/ManageAgent.tsx
 'use client';
 
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useState, useMemo } from 'react';
+import Image from 'next/image';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import {
+  useRegisterHeaderLeft,
+  useRegisterHeaderTitle,
+  useRegisterDetailCloser,
+} from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import ToDo from '@/lib/utils/components/ToDo'; // ⬅️ add ToDo
+import ToDo from '@/lib/utils/components/ToDo';
+import { defaultMissingImage } from '@/lib/network/utils';
 
 type Props = { onClose?: () => void };
 
@@ -15,14 +21,44 @@ export default function ManageAgent({ onClose }: Props) {
   const { closePanel, openPanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
-  // Pull wallet from global context (selected via ManageAgents)
   const agentWallet = ctx?.exchangeContext?.accounts?.agentAccount;
+  const logoURL = agentWallet?.logoURL;
 
-  // ── ToDo overlay state + helper ───────────────────────────────
+  useRegisterHeaderTitle(
+    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+    `Agent ${agentWallet?.name ?? 'N/A'}`
+  );
+
+  const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
+
+  // File: components/views/ManageSponsorships/ManageAgent.tsx
+  // …imports unchanged…
+
+  // Replace the left-element registration with this (Option A still: no crop, square)
+  useRegisterHeaderLeft(
+    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+    useMemo(
+      () =>
+        () => (
+          <div className="relative h-10 w-10 shrink-0 m-0 -ml-2.5">
+            <Image
+              src={resolvedLogo}
+              alt="Agent Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        ),
+      [resolvedLogo]
+    )
+  );
+
+
+
   const [showToDo, setShowToDo] = useState<boolean>(true);
   const showToDoOverlay = useCallback(() => setShowToDo(true), []);
 
-  // Header close: bounce back to the list overlay
   const handleClose = useCallback(() => {
     openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
     closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
@@ -34,7 +70,6 @@ export default function ManageAgent({ onClose }: Props) {
   return (
     <>
       <ManageWallet wallet={agentWallet} />
-
       {!showToDo && (
         <ToDo
           show

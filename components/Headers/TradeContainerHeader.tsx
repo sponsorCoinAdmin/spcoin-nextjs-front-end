@@ -1,7 +1,6 @@
 // File: components/Headers/TradeContainerHeader.tsx
 'use client';
 
-import styles from '@/styles/Exchange.module.css';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigPanel from '@/components/views/Config/ConfigPanel';
@@ -9,11 +8,13 @@ import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
 import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import CloseButton from '@/components/Buttons/CloseButton';
 
 export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
   const {
     title,
+    leftElement,
     isConfigOpen,
     onOpenConfig,
     onCloseConfig,
@@ -24,51 +25,54 @@ export default function TradeContainerHeader() {
   return (
     <div
       id="TradeContainerHeader"
-      className="h-[60px] flex justify-between items-center w-full px-2.5 box-border shrink-0"
+      className="grid grid-cols-[auto_1fr_auto] items-center w-full box-border h-[50px] min-h-[50px] py-0 px-2.5 shrink-0 my-[3px]"
     >
       <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
 
+      {/* Left */}
       <div
         id="SponsorCoinLogo.png"
         onDoubleClick={() => exchangeContextDump(exchangeContext)}
-        className={styles.leftLogo}
+        className="flex items-center my-0"
       >
-        <ConnectButton
-          showName={false}
-          showSymbol={false}
-          showChevron={false}
-          showConnect={false}
-          showDisconnect={false}
-          showHoverBg={false}
-        />
+        {leftElement ?? (
+          <ConnectButton
+            showName={false}
+            showSymbol={false}
+            showChevron={false}
+            showConnect={false}
+            showDisconnect={false}
+            showHoverBg={false}
+          />
+        )}
       </div>
 
-      <h4 id="TradeContainerHeaderTitle" className={styles.center}>
+      {/* Center title */}
+      <h4 className="justify-self-center m-0 leading-none text-base font-semibold select-none text-center">
         {title}
       </h4>
 
-      <div className={styles.rightSideControl}>
+      {/* Right */}
+      <div className="flex items-center justify-end my-0">
         {isTrading ? (
           <Image
             src={cog_png}
             alt="Open settings"
             title="Open settings"
             onClick={onOpenConfig}
-            className="absolute top-3 right-3 h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
+            className="h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
             priority
           />
         ) : (
-          <button
-            id="closeSelectionPanelButton"
-            type="button"
-            aria-label="Close"
-            title="Close"
-            onClick={onClose}
-            className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
-                       hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
-          >
-            ×
-          </button>
+          <CloseButton
+            closeCallback={onClose}
+            className="
+              absolute top-2 right-[27px] h-10 w-10 rounded-full
+              bg-[#243056] text-[#5981F3] flex items-center justify-center
+              leading-none transition-colors text-3xl
+              hover:bg-[#5981F3] hover:text-[#243056]
+            "
+          />
         )}
       </div>
     </div>

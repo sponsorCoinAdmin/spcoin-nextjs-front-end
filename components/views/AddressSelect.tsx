@@ -18,11 +18,11 @@ const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
 debugLog.log('✅ [AddressSelect] component file loaded');
 
 type Props = {
-  /** Optional default address to prefill into the input on mount or when it changes */
   defaultAddress?: string;
+  bypassDefaultFsm?: boolean;
 };
 
-export default function AddressSelect({ defaultAddress }: Props) {
+export default function AddressSelect({ defaultAddress, bypassDefaultFsm = false }: Props) {
   const {
     instanceId,
     manualEntry,

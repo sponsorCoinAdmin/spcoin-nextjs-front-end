@@ -6,9 +6,9 @@ import Image from 'next/image';
 
 import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-import AddressSelect from '@/components/views/AddressSelect';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import AddressSelect from '../AddressSelect';
 
 type Props = {
   wallet?: WalletAccount;
@@ -44,7 +44,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
             setSelectedAssetCallback={() => {}}
           >
             {/* Prefill with the wallet address */}
-            <AddressSelect defaultAddress={String(wallet.address)} />
+            <AddressSelect defaultAddress={String(wallet.address)} bypassDefaultFsm={false} />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>

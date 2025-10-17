@@ -7,7 +7,6 @@ import React, {
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 // ⬇️ keep your registry working as a fallback
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
 export type TradeHeaderAPI = {
   setTitle: (title?: string) => void;

@@ -1,6 +1,7 @@
 // File: lib/context/exchangeContext/hooks/useHeaderController.ts
 'use client';
 
+import React from 'react';
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -22,6 +23,38 @@ export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void)
       if (set && set.size === 0) detailClosers.delete(panel);
     };
   }, [panel, fn]);
+}
+
+/** Title overrides (per panel) registered by screens like ManageAgent */
+const headerTitleOverrides = new Map<number, string>();
+export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
+  useEffect(() => {
+    if (title === undefined) return;
+    headerTitleOverrides.set(panel, title);
+    return () => {
+      if (headerTitleOverrides.get(panel) === title) {
+        headerTitleOverrides.delete(panel);
+      }
+    };
+  }, [panel, title]);
+}
+
+/** Left-element (component) overrides (per panel) */
+type LeftFactory = () => React.ReactNode;
+const headerLeftOverrides = new Map<number, LeftFactory>();
+
+/** Register a custom left-side component for a specific panel header */
+export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFactory) {
+  useEffect(() => {
+    if (!factory) return;
+    headerLeftOverrides.set(panel, factory);
+    return () => {
+      // Cleanup only if the same factory is still set (avoid clobbering others)
+      if (headerLeftOverrides.get(panel) === factory) {
+        headerLeftOverrides.delete(panel);
+      }
+    };
+  }, [panel, factory]);
 }
 
 function titleFor(display: SP_COIN_DISPLAY): string {
@@ -96,7 +129,14 @@ export function useHeaderController() {
     return SP_COIN_DISPLAY.UNDEFINED;
   }, [vis]);
 
-  const title = titleFor(currentDisplay);
+  // Prefer a registered override title; fallback to default
+  const overrideTitle = headerTitleOverrides.get(currentDisplay);
+  const title = overrideTitle ?? titleFor(currentDisplay);
+
+  // Resolve optional left-side element (component) for the current display
+  const leftElementFactory = headerLeftOverrides.get(currentDisplay);
+  const leftElement = leftElementFactory ? leftElementFactory() : null;
+
   const onOpenConfig = useCallback(() => setIsConfigOpen(true), []);
   const onCloseConfig = useCallback(() => setIsConfigOpen(false), []);
 
@@ -117,12 +157,6 @@ export function useHeaderController() {
     openPanel(list);
   }, [openPanel, closePanel]);
 
-  /** Close button behavior:
-   *  - DETAIL → its LIST (via openOnlyManageList)
-   *  - LIST   → hub
-   *  - else   → trading
-   *  - If a detail closer is registered, run it first and return.
-   */
   const onClose = useCallback(() => {
     // Run any registered detail closer first
     if (
@@ -138,7 +172,6 @@ export function useHeaderController() {
     }
 
     switch (currentDisplay) {
-      // DETAIL → LIST (explicitly force list; avoid hub fallback)
       case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL:
         openOnlyManageList(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
         return;
@@ -149,7 +182,6 @@ export function useHeaderController() {
         openOnlyManageList(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
         return;
 
-      // LIST → HUB
       case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL:
@@ -164,6 +196,7 @@ export function useHeaderController() {
 
   return {
     title,
+    leftElement,      // ⬅️ expose the optional left-side component
     isConfigOpen,
     onOpenConfig,
     onCloseConfig,
