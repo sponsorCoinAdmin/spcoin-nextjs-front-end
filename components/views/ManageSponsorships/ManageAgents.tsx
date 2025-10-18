@@ -5,7 +5,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import type { WalletAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController_OLD_25-10-17';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
