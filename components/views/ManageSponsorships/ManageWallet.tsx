@@ -44,7 +44,9 @@ export default function ManageWallet({ wallet, onClose }: Props) {
             setSelectedAssetCallback={() => {}}
           >
             {/* Prefill with the wallet address */}
-            <AddressSelect defaultAddress={String(wallet.address)} bypassDefaultFsm={false} />
+            {/* <AddressSelect defaultAddress={String(wallet.address)} bypassDefaultFsm={true} /> */}
+
+            <AddressSelect defaultAddress={String(wallet.address)}  />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>
