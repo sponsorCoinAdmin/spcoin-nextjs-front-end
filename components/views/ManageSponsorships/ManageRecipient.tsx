@@ -27,25 +27,20 @@ export default function ManageRecipients({ onClose }: Props) {
   const { openPanel, closePanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
-  // Local UI state (selection mirrors ManageAgents)
   const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
-  // Track detail panel visibility (recipient detail)
   const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
 
-  // Clear selection if the detail panel closes (e.g., header close)
   useEffect(() => {
     if (!detailOpen) setSelectedWallet(undefined);
   }, [detailOpen]);
 
-  // Allow header close to say “exit detail → list”
   useRegisterDetailCloser(
     SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
     () => setWalletCallBack(undefined)
   );
 
-  // Resolve recipients once (same enrichment pattern as Agents)
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -70,26 +65,36 @@ export default function ManageRecipients({ onClose }: Props) {
     return () => { alive = false; };
   }, []);
 
-  // ✅ Callback: update ExchangeContext.accounts.recipientAccount and toggle MANAGE_RECIPIENT_PANEL
+  // Open ONLY the recipient detail panel (close others first)
+  const openRecipientDetail = () => {
+    try {
+      [
+        SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+        SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, // list panel
+        SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+      ].forEach(closePanel);
+    } catch {}
+    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+  };
+
+  // ✅ Set context + open detail
   const setWalletCallBack = (w?: WalletAccount) => {
     setSelectedWallet(w);
 
     ctx?.setExchangeContext(
-      (prev) => {
-        const next = { ...prev, accounts: { ...prev.accounts, recipientAccount: w } };
-        return next;
-      },
+      (prev) => ({ ...prev, accounts: { ...prev.accounts, recipientAccount: w } }),
       'ManageRecipients:setRecipientAccount'
     );
 
     if (w) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+      openRecipientDetail();
     } else {
       closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
     }
   };
 
-  // Always render the shared list; the detail panel renders elsewhere
   return (
     <ManageWalletList
       walletList={walletList}

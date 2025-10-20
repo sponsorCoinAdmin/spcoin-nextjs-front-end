@@ -1,7 +1,7 @@
 // File: lib/context/AssetSelectPanels/hooks/useFSMBridge.ts
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Address } from 'viem';
 
 import { FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
@@ -36,6 +36,9 @@ type BridgeParams = {
 
   // (optional) external reset injection
   resetHexInputExternal?: (() => void) | undefined;
+
+  // ⬇️ NEW: per-instance bypass
+  bypassFSM?: boolean;
 };
 
 export function useFSMBridge(params: BridgeParams) {
@@ -53,6 +56,7 @@ export function useFSMBridge(params: BridgeParams) {
     showAssetPreview,
     showErrorPreview,
     resetHexInputExternal,
+    bypassFSM = false,
   } = params;
 
   const manualEntryRef = useRef(manualEntry);
@@ -78,13 +82,19 @@ export function useFSMBridge(params: BridgeParams) {
     setTradingTokenCallback: fireSetTradingToken,
     peerAddress,
     manualEntry: manualEntryRef.current,
+    bypassFSM, // ⬅️ pass down
   });
 
   // Terminal transition guard (StrictMode-friendly)
   const didHandleTerminalRef = useRef(false);
 
-  // Handle terminal states
+  // Handle terminal states — muted while bypassing
   useEffect(() => {
+    if (bypassFSM) {
+      didHandleTerminalRef.current = false;
+      return;
+    }
+
     if (inputState === InputState.UPDATE_VALIDATED_ASSET) {
       if (didHandleTerminalRef.current) return;
       didHandleTerminalRef.current = true;
@@ -117,10 +127,12 @@ export function useFSMBridge(params: BridgeParams) {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputState, validatedAsset]);
+  }, [inputState, validatedAsset, bypassFSM]);
 
-  // UI preview bridge
+  // UI preview bridge — muted while bypassing
   useEffect(() => {
+    if (bypassFSM) return;
+
     switch (inputState) {
       case InputState.EMPTY_INPUT:
         resetPreview();
@@ -136,9 +148,9 @@ export function useFSMBridge(params: BridgeParams) {
         break;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputState, validatedAsset]);
+  }, [inputState, validatedAsset, bypassFSM]);
 
-  // Debug helpers (keep signatures compatible with old provider)
+  // Debug helpers
   const dumpInputFeed = useCallback(
     (header?: string) => {
       if (!DEBUG_ENABLED) return;

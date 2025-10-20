@@ -15,7 +15,6 @@ import { useAppPublicClient } from '@/lib/hooks/useAppPublicClient';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useHexInput } from '@/lib/hooks/useHexInput';
 
-// ⬇️ unified runner (return-only; no side-effects for asset)
 import { startFSM } from '../helpers/fsm/startFSM';
 import { logStateChanges } from '../helpers/logStateChanges';
 import { InputState } from '@/lib/structure/assetSelection';
@@ -29,14 +28,12 @@ interface UseFSMStateManagerParams {
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   instanceId: string;
-
-  /** Opposite side’s committed address (BUY panel gets SELL’s, SELL panel gets BUY’s) */
   peerAddress?: string;
-
-  /** Whether current input was typed manually (true) vs chosen from list (false) */
   manualEntry?: boolean;
 
-  // Centralized commits happen in this hook
+  // ⬇️ NEW: per-instance bypass (prop-driven)
+  bypassFSM?: boolean;
+
   setValidatedAsset: (asset: WalletAccount | TokenContract | undefined) => void;
   closePanelCallback: (fromUser: boolean) => void;
   setTradingTokenCallback: (token: any) => void;
@@ -49,12 +46,12 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     instanceId,
     peerAddress,
     manualEntry,
+    bypassFSM = false,
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
   } = params;
 
-  // Own the input feed here
   const {
     validHexInput,
     debouncedHexInput,
@@ -68,12 +65,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
 
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
 
-  /**
-   * Wrapped setter (no hard blocks).
-   * - Logs state transitions with instanceId.
-   * - Soft-warns if someone tries to force EMPTY_INPUT while debounced input is non-empty,
-   *   but DOES NOT block (to avoid interfering with input).
-   */
   const setInputStateWrapped = useCallback(
     (next: InputState, source = 'useFSMStateManager') =>
       setInputState(prev => {
@@ -81,7 +72,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
 
         if (
           next === InputState.EMPTY_INPUT &&
-          debouncedHexInput && // non-empty
+          debouncedHexInput &&
           source !== 'useFSMStateManager'
         ) {
           debugLog.warn(
@@ -98,22 +89,16 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   );
 
   const prevDebouncedInputRef = useRef<string | undefined>(undefined);
-  const manualEntryRef = useRef<boolean>(manualEntry ?? false); // ref-backed to avoid races
+  const manualEntryRef = useRef<boolean>(manualEntry ?? false);
 
-  // keep the ref synced with latest prop
   useEffect(() => {
     manualEntryRef.current = manualEntry ?? false;
   }, [manualEntry]);
 
   const { address: accountAddress } = useAccount();
-
-  // ✅ Canonical chain id from app context
   const [chainId] = useAppChainId();
-
-  // ✅ Public client **pinned** to the app chain (fixes accidental cross-chain reads)
   const publicClient = useAppPublicClient();
 
-  // Optional: tiny debug to confirm pinning at runtime
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log(
@@ -121,7 +106,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     );
   }, [publicClient, chainId, instanceId]);
 
-  // Log select param changes (dev aid)
   const prevParamsRef = useRef<UseFSMStateManagerParams | null>(null);
   useEffect(() => {
     logStateChanges(
@@ -133,6 +117,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
         'instanceId',
         'peerAddress',
         'manualEntry',
+        'bypassFSM',
         'setValidatedAsset',
         'closePanelCallback',
         'setTradingTokenCallback',
@@ -146,16 +131,13 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     instanceId,
     peerAddress,
     manualEntry,
+    bypassFSM,
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
   ]);
 
-  /**
-   * Allow a fresh FSM run if something reset us to EMPTY_INPUT
-   * while the debounced input is still non-empty.
-   * This clears the "unchanged input" guard inside startFSM.
-   */
+  // Allow a fresh run if we got reset to EMPTY_INPUT but still have input
   useEffect(() => {
     if (inputState === InputState.EMPTY_INPUT && debouncedHexInput) {
       prevDebouncedInputRef.current = undefined;
@@ -165,34 +147,45 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     }
   }, [inputState, debouncedHexInput, instanceId]);
 
-  // FSM runner
+  // ⛔ BYPASS HANDLER: when bypass turns on, keep state calm and skip runner
   useEffect(() => {
+    if (!bypassFSM) return;
+    debugLog.warn(`⏭️ [${instanceId}] FSM BYPASS ACTIVE — skipping startFSM runner`);
+    // ensure we don't sit in a terminal state
+    if (inputState !== InputState.EMPTY_INPUT) {
+      setInputStateWrapped(InputState.EMPTY_INPUT, 'bypass-init');
+    }
+    // also clear the “unchanged input” guard so if bypass turns off later, it can run
+    prevDebouncedInputRef.current = undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bypassFSM]);
+
+  // FSM runner (disabled when bypassFSM)
+  useEffect(() => {
+    if (bypassFSM) return;
+
     let cancelled = false;
 
     (async () => {
       const result = await startFSM({
         debouncedHexInput,
         prevDebouncedInputRef,
-        publicClient,          // ✅ pinned to app chainId via useAppPublicClient
-        chainId,               // ✅ canonical app chain id
+        publicClient,
+        chainId,
         accountAddress,
         containerType,
         feedType,
-        peerAddress,                         // → runner
-        manualEntry: manualEntryRef.current, // → freshest value
-        // precheck details from input hook
+        peerAddress,
+        manualEntry: manualEntryRef.current,
         isValid,
         failedHexInput,
-        // keep closePanelCallback (validators may need it)
         closePanelCallback,
       });
 
       if (cancelled || result === null) return;
 
-      // Authoritative state commit
       setInputStateWrapped(result.finalState, 'post-run');
 
-      // Provide asset to host; only "commit" trading token on commit states
       if ('asset' in result && result.asset) {
         try {
           setValidatedAsset(result.asset);
@@ -212,6 +205,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
       cancelled = true;
     };
   }, [
+    bypassFSM,
     debouncedHexInput,
     containerType,
     feedType,
@@ -231,7 +225,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     inputState,
     setInputState: setInputStateWrapped,
 
-    // expose input feed
     validHexInput,
     debouncedHexInput,
     failedHexInput,

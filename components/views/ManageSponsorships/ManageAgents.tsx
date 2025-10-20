@@ -11,7 +11,7 @@ import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
 import rawAgents from './agents.json';
 import ManageWalletList from './ManageWalletList';
-import { ExchangeContextState } from '@/lib/context/ExchangeProvider'; // ⬅️ access context setter
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = { onClose?: () => void };
 
@@ -28,7 +28,7 @@ export default function ManageAgents({ onClose }: Props) {
   const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
-  // Track store detail panel visibility
+  // Track detail panel visibility
   const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
 
   // If detail panel is closed (via header X, etc.), clear local selection
@@ -69,7 +69,6 @@ export default function ManageAgents({ onClose }: Props) {
   const setWalletCallBack = (w?: WalletAccount) => {
     setSelectedWallet(w);
 
-    // write to global context
     ctx?.setExchangeContext((prev) => {
       const next = { ...prev, accounts: { ...prev.accounts, agentAccount: w } };
       return next;
@@ -82,13 +81,13 @@ export default function ManageAgents({ onClose }: Props) {
     }
   };
 
-  // Always render the list (detail handled elsewhere)
+  // Always render the shared list (detail handled elsewhere)
   return (
     <ManageWalletList
       walletList={walletList}
       setWalletCallBack={setWalletCallBack}
       onClose={onClose}
+      containerType={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
     />
   );
 }
-

@@ -8,20 +8,25 @@ import TradingStationPanel from '@/components/views/TradingStationPanel';
 import ErrorMessagePanel from '@/components/views/ErrorMessagePanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
-// Existing manage panels
+// List panels
 import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
 import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
 import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors';
-// ✅ Add this:
+
+// Detail panels (must be mounted for openPanel to work)
 import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
+import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
+import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
 
 import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
   AgentSelectPanel,
+  // If you have a SponsorListSelectPanel, import and render it here too.
+  // SponsorListSelectPanel,
 } from '@/components/containers/AssetSelectPanels';
 
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import PanelGate from '@/components/utility/PanelGate';
 
 export default function MainTradingPanel() {
@@ -35,32 +40,40 @@ export default function MainTradingPanel() {
 
           <TradingStationPanel />
 
-          {/* Top-level overlay panels (radio group). All must be mounted behind PanelGate. */}
+          {/* Top-level overlay panels (radio group) */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}>
             <ManageSponsorshipsPanel />
           </PanelGate>
 
+          {/* List views */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL}>
             <ManageRecipients />
           </PanelGate>
-
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL}>
             <ManageAgents />
           </PanelGate>
-
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL}>
             <ManageSponsors />
           </PanelGate>
 
-          {/* ✅ Single-agent detail overlay */}
+          {/* Detail views — these were missing */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}>
             <ManageAgent />
           </PanelGate>
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL}>
+            <ManageRecipient />
+          </PanelGate>
+          <PanelGate panel={SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL}>
+            <ManageSponsor />
+          </PanelGate>
 
-          {/* Existing select/aux overlays */}
+          {/* Select / aux overlays */}
           <TokenListSelectPanel />
           <RecipientListSelectPanel />
           <AgentSelectPanel />
+          {/* If you have a dedicated SponsorListSelectPanel, render it too */}
+          {/* <SponsorListSelectPanel /> */}
+
           <ErrorMessagePanel />
         </div>
       </div>

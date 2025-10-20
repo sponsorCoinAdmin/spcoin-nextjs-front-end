@@ -27,16 +27,8 @@ const debugLog = createDebugLogger('AssetSelectProvider', DEBUG_ENABLED, LOG_TIM
 
 type Props = {
   children: ReactNode;
-
-  /** Allow callers to omit the `fromUser` flag. */
   closePanelCallback: (fromUser?: boolean) => void;
-
-  /**
-   * New, clearer name: the selected asset can be a TokenContract OR a WalletAccount.
-   * (We still expose `setTradingTokenCallback` in context for backwards compatibility.)
-   */
   setSelectedAssetCallback: (asset: TokenContract | WalletAccount) => void;
-
   containerType: SP_COIN_DISPLAY;
   initialPanelBag?: AssetSelectBag;
 };
@@ -48,15 +40,15 @@ export const AssetSelectProvider = ({
   containerType,
   initialPanelBag,
 }: Props) => {
-  // Instance identity + feed selection
   const instanceId = useInstanceId(containerType);
   const feedType = useFeedType(containerType);
 
-  // Panel bag state (with logging)
   const { panelBag, setPanelBag } = usePanelBag(initialPanelBag, containerType);
 
   // Local UI state
   const [manualEntry, setManualEntry] = useState(false);
+  const [bypassFSM, setBypassFSM] = useState(false); // ⬅️ per-instance runner bypass
+
   const {
     validatedAsset,
     setValidatedAsset,
@@ -64,25 +56,20 @@ export const AssetSelectProvider = ({
     setValidatedAssetNarrow,
   } = useValidatedAsset<TokenContract | WalletAccount>();
 
-  // Parent callback wrappers (stable + debug-safe)
-  // NOTE: useProviderCallbacks currently expects `{ setTradingTokenCallback }`.
-  // We pass our renamed prop under that key to avoid touching the hook.
   const { fireClosePanel, fireSetTradingToken } = useProviderCallbacks(
     { closePanelCallback, setTradingTokenCallback: setSelectedAssetCallback },
     instanceId,
   );
 
-  // Display bridge (previews)
   const { resetPreview, showErrorPreview, showAssetPreview } = useAssetSelectDisplay();
 
-  // Peer token address is used only for token panels to block duplicates
   const peerAddress = useMemo<Address | undefined>(() => {
     return panelBag && isTokenSelectBag(panelBag)
       ? (panelBag.peerAddress as Address | undefined)
       : undefined;
   }, [panelBag]);
 
-  // Wire FSM <-> provider, handle terminal transitions and preview sync
+  // Bridge (now receives bypassFSM)
   const {
     inputState,
     setInputState,
@@ -110,9 +97,9 @@ export const AssetSelectProvider = ({
     showAssetPreview,
     showErrorPreview,
     resetHexInputExternal: undefined,
+    bypassFSM, // ⬅️ pass down
   });
 
-  // Mount log (one-time)
   const mountedRef = useRef(false);
   if (!mountedRef.current) {
     mountedRef.current = true;
@@ -123,7 +110,6 @@ export const AssetSelectProvider = ({
     );
   }
 
-  // Context value (stable shape)
   const ctxValue = useMemo(
     () => ({
       // FSM state + controls
@@ -137,6 +123,10 @@ export const AssetSelectProvider = ({
       // Local flags
       manualEntry,
       setManualEntry,
+
+      // 🔧 Bypass control exposed to children (e.g., AddressSelect)
+      bypassFSM,
+      setBypassFSM,
 
       // Token-only helpers (legacy naming preserved)
       setValidatedToken: (t?: TokenContract) => setValidatedAssetNarrow(t),
@@ -165,14 +155,12 @@ export const AssetSelectProvider = ({
       // Parent bridges exposed to children (legacy name preserved)
       closePanelCallback: () => fireClosePanel(true),
       setTradingTokenCallback: (a: TokenContract | WalletAccount) => fireSetTradingToken(a),
-      // Optionally expose the new name too if your context type permits:
-      // setSelectedAssetCallback: (a: TokenContract | WalletAccount) => fireSetTradingToken(a),
 
       // Panel bag
       panelBag,
       setPanelBag,
 
-      // Preview controls (if children need them)
+      // Preview controls
       showErrorPreview,
       showAssetPreview,
       resetPreview,
@@ -181,6 +169,7 @@ export const AssetSelectProvider = ({
       inputState,
       validatedAssetNarrow,
       manualEntry,
+      bypassFSM,
       validHexInput,
       debouncedHexInput,
       failedHexInput,

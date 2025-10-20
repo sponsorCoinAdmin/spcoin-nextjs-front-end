@@ -1,26 +1,19 @@
 // File: components/views/ManageSponsorships/ManageSponsors.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
-
+import React, { useEffect, useState, useContext } from 'react';
 import type { WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import AddressSelect from '@/components/views/AddressSelect';
-import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
-import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
 
-// Enrichment + builder
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
-
-// Local JSON (addresses only) — sponsors
 import rawSponsors from './sponsors.json';
 
-// ✅ ToDo overlay
-import ToDo from '@/lib/utils/components/ToDo';
+import ManageWalletList from './ManageWalletList';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = { onClose?: () => void };
 
@@ -31,33 +24,46 @@ function shortAddr(addr: string, left = 6, right = 4) {
 
 export default function ManageSponsors({ onClose }: Props) {
   const { openPanel, closePanel } = usePanelTree();
+  const ctx = useContext(ExchangeContextState);
 
-  // panel mode (kept for parity)
-  const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
+  // Local UI state (selection kept for future detail view wiring)
+  const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
+  const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
-  // ▶ ToDo toggle (initialized to true)
-  const [showToDo, setShowToDo] = useState<boolean>(true);
+  // Track sponsor detail panel visibility
+  const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
 
-  const [wallets, setWallets] = useState<WalletAccount[]>([]);
+  // If detail panel is closed (via header X, etc.), clear local selection
+  useEffect(() => {
+    if (!detailOpen) setSelectedWallet(undefined);
+  }, [detailOpen]);
 
-  // Enrich + normalize addresses -> WalletAccount (with names if available)
+  // Allow header close to signal "exit detail → list"
+  useRegisterDetailCloser(
+    SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+    () => setWalletCallBack(undefined)
+  );
+
+  // Resolve wallets once (mirror ManageAgents)
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const enriched = await loadAccounts(rawSponsors as any);
-        const built = enriched.map(buildWalletObj).map((w) => ({
-          ...w,
-          name: w.name && w.name !== 'N/A' ? w.name : shortAddr(w.address),
-          symbol: w.symbol ?? 'N/A',
-        }));
-        if (alive) setWallets(built);
+        const built = enriched
+          .map(buildWalletObj)
+          .map((w) => ({
+            ...w,
+            name: w.name && w.name !== 'N/A' ? w.name : shortAddr((w as any).address),
+            symbol: w.symbol ?? 'N/A',
+          })) as WalletAccount[];
+        if (alive) setWalletList(built);
       } catch {
         const fallback = (Array.isArray(rawSponsors) ? rawSponsors : []).map((a: any) => {
           const w = buildWalletObj(a);
-          return { ...w, name: shortAddr(w.address) };
+          return { ...(w as any), name: shortAddr((w as any).address) } as WalletAccount;
         });
-        if (alive) setWallets(fallback);
+        if (alive) setWalletList(fallback);
       }
     })();
     return () => {
@@ -65,286 +71,33 @@ export default function ManageSponsors({ onClose }: Props) {
     };
   }, []);
 
-  const th =
-    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-  const cell = 'px-3 text-sm align-middle';
-  const cellCenter = `${cell} text-center`;
-  const rowH = 'h-[77px]'; // fixed row height (match other panels)
+  // ✅ Callback: update ExchangeContext.accounts.sponsorAccount and toggle MANAGE_SPONSOR_PANEL
+  const setWalletCallBack = (w?: WalletAccount) => {
+    setSelectedWallet(w);
 
-  const iconBtn =
-    'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
+    // write to global context (mirror ManageAgents, but for sponsorAccount)
+    ctx?.setExchangeContext(
+      (prev) => {
+        const next = { ...prev, accounts: { ...prev.accounts, sponsorAccount: w } };
+        return next;
+      },
+      'ManageSponsors:setSponsorAccount'
+    );
 
-  // zebra backgrounds on inner wrappers
-  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
-  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
-
-  const openOnly = (id: SP_COIN_DISPLAY) => {
-    try {
-      [
-        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
-        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-        SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
-      ].forEach((pid) => (pid === id ? openPanel(pid) : closePanel(pid)));
-    } catch {}
+    if (w) {
+      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+    } else {
+      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+    }
   };
 
+  // Always render the shared list (detail panel renders elsewhere)
   return (
-    <>
-      {/* Address selector */}
-      <div className="mb-6">
-        <AssetSelectDisplayProvider>
-          <AssetSelectProvider
-            containerType={
-              // If your enum is SPONSOR_LIST_SELECT_PANEL use that; otherwise reuse AGENT/RECIPIENT as needed.
-              (SP_COIN_DISPLAY as any).SPONSOR_LIST_SELECT_PANEL ??
-              SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL
-            }
-            closePanelCallback={() => onClose?.()}
-            setSelectedAssetCallback={() => {}}
-          >
-            <AddressSelect />
-          </AssetSelectProvider>
-        </AssetSelectDisplayProvider>
-      </div>
-
-      {mode === 'all' && (
-        <div
-          id="msWrapperSponsors"
-          className="mb-6 -mt-[10px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
-        >
-          <table id="msTableSponsors" className="min-w-full border-collapse">
-            <thead>
-              <tr className="border-b border-black">
-                {/* ⬇️ Combined column to match unified style */}
-                <th scope="col" className={th}>Name</th>
-                <th scope="col" className={`${th} text-center`}>Staked Coins</th>
-                <th scope="col" className={`${th} text-center`}>Pending Coins</th>
-                <th scope="col" className={`${th} text-center`}>Rewards</th>
-                <th scope="col" className={`${th} text-center`}>Config</th>
-              </tr>
-            </thead>
-            <tbody>
-              {wallets.map((w, i) => {
-                const zebra = i % 2 === 0 ? zebraA : zebraB;
-                const claimClass = i % 2 === 0 ? 'ms-claim--orange' : 'ms-claim--green';
-
-                return (
-                  <tr key={w.address}>
-                    {/* Name column (Avatar + label stacked) */}
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cell} ${rowH} flex flex-col items-center justify-center`}
-                      >
-                        <Image
-                          src={w.logoURL || '/assets/miscellaneous/placeholder.png'}
-                          alt={`${w.name ?? 'Wallet'} logo`}
-                          width={53}
-                          height={53}
-                          className="h-[53px] w-[53px] object-contain rounded"
-                        />
-                        <div className="mt-1 text-xs text-slate-200 max-w-[130px] truncate text-center">
-                          {w.name || shortAddr(w.address)}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Staked Coins */}
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        0
-                      </div>
-                    </td>
-
-                    {/* Pending Coins */}
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        0
-                      </div>
-                    </td>
-
-                    {/* Rewards (Claim) */}
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        <button
-                          type="button"
-                          className={claimClass}
-                          aria-label={`Claim rewards for ${w.address}`}
-                        >
-                          Claim
-                        </button>
-                      </div>
-                    </td>
-
-                    {/* Config (Cog) */}
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        <button
-                          type="button"
-                          className={iconBtn}
-                          onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)}
-                          aria-label="Open Sponsors reconfigure"
-                          title="Reconfigure Sponsor"
-                        >
-                          <span className="cog-white-mask cog-rot" aria-hidden />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {/* ⬇️ Extra Total row (slightly larger label); uses next zebra color + alternating Claim color */}
-              {(() => {
-                const isA = wallets.length % 2 === 0;
-                const zebra = isA ? zebraA : zebraB;
-                const claimClass = isA ? 'ms-claim--orange' : 'ms-claim--green';
-                return (
-                  <tr>
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cell} ${rowH} flex items-center justify-center`}
-                      >
-                        <span className="text-xl md:text-2xl font-bold tracking-wide">
-                          Total
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        0
-                      </div>
-                    </td>
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        0
-                      </div>
-                    </td>
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        <button
-                          type="button"
-                          className={claimClass}
-                          aria-label="Claim Total rewards"
-                        >
-                          Claim
-                        </button>
-                      </div>
-                    </td>
-                    <td className="p-0">
-                      <div
-                        className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}
-                      >
-                        {/* Intentionally blank (no cog) */}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })()}
-            </tbody>
-          </table>
-
-          {/* Styles: hide scrollbar, header styling, claim buttons, white cog */}
-          <style jsx>{`
-            #msWrapperSponsors {
-              border-color: #000 !important;
-              -ms-overflow-style: none;  /* IE/Edge */
-              scrollbar-width: none;     /* Firefox */
-            }
-            #msWrapperSponsors::-webkit-scrollbar {
-              display: none;             /* Chrome/Safari/Opera */
-            }
-
-            #msTableSponsors thead tr,
-            #msTableSponsors thead th {
-              background-color: #2b2b2b !important;
-            }
-            #msTableSponsors thead tr {
-              border-bottom: 1px solid #000 !important;
-            }
-            #msTableSponsors tbody td {
-              padding: 0 !important;
-            }
-
-            /* ORANGE claim buttons */
-            #msTableSponsors .ms-claim--orange {
-              background-color: #ec8840ff !important;
-              color: #0f172a !important;
-              padding: 0.375rem 0.75rem;
-              font-size: 0.875rem;
-              font-weight: 500;
-              border-radius: 0.375rem;
-              transition: background-color 0.2s ease;
-            }
-            #msTableSponsors .ms-claim--orange:hover {
-              background-color: #c7610fff !important;
-              color: #ffffff !important;
-            }
-
-            /* GREEN claim buttons */
-            #msTableSponsors .ms-claim--green {
-              background-color: #147f3bff !important;
-              color: #ffffff !important;
-              padding: 0.375rem 0.75rem;
-              font-size: 0.875rem;
-              font-weight: 500;
-              border-radius: 0.375rem;
-              transition: background-color 0.2s ease;
-            }
-            #msTableSponsors .ms-claim--green:hover {
-              background-color: #22c55e !important;
-              color: #0f172a !important;
-            }
-
-            /* White cog via PNG mask */
-            #msTableSponsors .cog-white-mask {
-              display: inline-block;
-              width: 20px;
-              height: 20px; /* fixed (was a comma) */
-              background-color: #ffffff; /* color of the cog */
-              -webkit-mask-image: url(${cog_png.src});
-              mask-image: url(${cog_png.src});
-              -webkit-mask-repeat: no-repeat;
-              mask-repeat: no-repeat;
-              -webkit-mask-position: center;
-              mask-position: center;
-              -webkit-mask-size: contain;
-              mask-size: contain;
-            }
-            #msTableSponsors .cog-rot {
-              transition: transform 0.3s ease;
-            }
-            #msTableSponsors .cog-rot:hover {
-              transform: rotate(360deg);
-            }
-          `}</style>
-        </div>
-      )}
-
-      {/* 🔴 ToDo overlay (red text, click to dismiss) */}
-      {showToDo && (
-        <ToDo
-          show
-          message="ToDo"
-          opacity={0.5}
-          color="#ff1a1a"
-          zIndex={2000}
-          onDismiss={() => setShowToDo(false)}
-        />
-      )}
-    </>
+    <ManageWalletList
+      walletList={walletList}
+      setWalletCallBack={setWalletCallBack}
+      containerType={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
+      onClose={onClose}
+    />
   );
 }

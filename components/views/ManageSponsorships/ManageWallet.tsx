@@ -2,7 +2,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 
 import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
@@ -26,16 +25,32 @@ function addressToText(addr: unknown): string {
   }
   return String(addr);
 }
+const fallback = (v: unknown) => {
+  const s = (v ?? '').toString().trim();
+  return s || 'N/A';
+};
 
 export default function ManageWallet({ wallet, onClose }: Props) {
   if (!wallet) return null;
 
-  const addrText = addressToText(wallet.address);
-  const prettyBalance =
-    typeof wallet.balance === 'bigint' ? wallet.balance.toString() : String(wallet.balance ?? '0');
+  const address = addressToText(wallet.address);
+  const name = fallback(wallet.name);
+  const symbol = fallback(wallet.symbol);
+  const description = fallback(wallet.description);
+  const logoURL = (wallet.logoURL ?? '').toString().trim();
+  const website = (wallet.website ?? '').toString().trim();
+  const stakedBalance = 0;
+  const pendingBalance = 0;
+
+  const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const cell = 'px-3 py-3 text-sm align-middle';
+  const zebraA = 'bg-[rgba(56,78,126,0.35)]';
+  const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
   return (
-    <>
+    // ⬇️ wrap table + button in a container; we’ll scope styles to this id
+    <div id="msWallet">
+      {/* Address selector (prefilled, FSM bypass) */}
       <div className="mb-6">
         <AssetSelectDisplayProvider>
           <AssetSelectProvider
@@ -43,67 +58,134 @@ export default function ManageWallet({ wallet, onClose }: Props) {
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            {/* Prefill with the wallet address */}
-            {/* <AddressSelect defaultAddress={String(wallet.address)} bypassDefaultFsm={true} /> */}
-
-            <AddressSelect defaultAddress={String(wallet.address)}  />
+            <AddressSelect defaultAddress={String(wallet.address)} bypassDefaultFsm />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>
 
-      <div className="rounded-xl border border-black/60 bg-slate-800/50 p-4 text-slate-100">
-        <div className="flex items-center gap-4">
-          <Image
-            src={wallet.logoURL || '/assets/miscellaneous/placeholder.png'}
-            alt={`${wallet.name ?? 'Wallet'} logo`}
-            width={56}
-            height={56}
-            className="h-14 w-14 rounded object-contain"
-          />
-          <div className="flex-1 min-w-0">
-            {/* Title: Symbol (⬆ ~20%) */}
-            <div className="font-semibold truncate text-[1.35rem]">
-              {wallet.symbol ?? 'N/A'}
-            </div>
-            {/* Subline: Name (⬆ ~20%) */}
-            <div className="text-slate-300 truncate text-[0.9rem]">
-              {wallet.name || '—'}
-            </div>
-            {/* ⛔ Removed: address beside the icon */}
-          </div>
-        </div>
+      <div
+        id="msWrapperWalletKV"
+        className="mb-4 overflow-x-auto overflow-y-auto rounded-xl border border-black"
+      >
+        <table id="msTableWalletKV" className="min-w-full border-collapse">
+          <thead>
+            <tr className="border-b border-black">
+              <th scope="col" className={th}>Name</th>
+              <th scope="col" className={th}>value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* address first */}
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>address:</td>
+              <td className={`${zebraA} ${cell}`}>
+                <span className="font-mono break-all">{fallback(address)}</span>
+              </td>
+            </tr>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <InfoRow
-            label="Website"
-            value={
-              wallet.website ? (
-                <a
-                  href={wallet.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all"
-                >
-                  {wallet.website}
-                </a>
-              ) : (
-                'N/A'
-              )
-            }
-          />
-          <InfoRow label="Balance" value={prettyBalance} />
-          <InfoRow label="Description" value={wallet.description || '—'} />
-        </div>
+            {/* logoURL (URL only) */}
+            <tr className="border-b border-black">
+              <td className={`${zebraB} ${cell}`}>logoURL:</td>
+              <td className={`${zebraB} ${cell}`}>
+                {logoURL ? <span className="break-all text-xs text-slate-200">{logoURL}</span> : 'N/A'}
+              </td>
+            </tr>
+
+            {/* Name */}
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>Name</td>
+              <td className={`${zebraA} ${cell}`}>{name}</td>
+            </tr>
+
+            {/* Symbol */}
+            <tr className="border-b border-black">
+              <td className={`${zebraB} ${cell}`}>Symbol</td>
+              <td className={`${zebraB} ${cell}`}>{symbol}</td>
+            </tr>
+
+            {/* stakedBalance */}
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>stakedBalance</td>
+              <td className={`${zebraA} ${cell}`}>{stakedBalance}</td>
+            </tr>
+
+            {/* pendingBalance */}
+            <tr className="border-b border-black">
+              <td className={`${zebraB} ${cell}`}>pendingBalance</td>
+              <td className={`${zebraB} ${cell}`}>{pendingBalance}</td>
+            </tr>
+
+            {/* webSite */}
+            <tr className="border-b border-black">
+              <td className={`${zebraA} ${cell}`}>webSite</td>
+              <td className={`${zebraA} ${cell}`}>
+                {website ? (
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-slate-400/60 underline-offset-2 hover:decoration-slate-200 break-all"
+                  >
+                    {website}
+                  </a>
+                ) : (
+                  'N/A'
+                )}
+              </td>
+            </tr>
+
+            {/* description */}
+            <tr>
+              <td className={`${zebraB} ${cell}`}>description:</td>
+              <td className={`${zebraB} ${cell}`}>{description}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </>
-  );
-}
 
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-slate-600/50 bg-slate-900/40 p-3">
-      <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
-      <div className="mt-1 text-sm text-slate-100 break-all">{value}</div>
+      {/* Claim Rewards button under the table — use container-scoped selector like ManageSponsors */}
+      <div className="mb-6 flex items-center justify-start">
+        <button type="button" className="ms-claim--green" aria-label="Claim Rewards">
+          Claim Rewards
+        </button>
+      </div>
+
+      {/* Styles (container-scoped, with !important), mirroring ManageSponsors strategy */}
+      <style jsx>{`
+        #msWrapperWalletKV {
+          border-color: #000 !important;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        #msWrapperWalletKV::-webkit-scrollbar {
+          display: none;
+        }
+        #msTableWalletKV thead tr,
+        #msTableWalletKV thead th {
+          background-color: #2b2b2b !important;
+        }
+        #msTableWalletKV thead tr {
+          border-bottom: 1px solid #000 !important;
+        }
+        #msTableWalletKV tbody td {
+          padding: 0.75rem 0.75rem !important;
+        }
+
+        /* 🔑 MATCHED STRATEGY: scope to a container id (higher specificity) */
+        #msWallet .ms-claim--green {
+          background-color: #147f3bff !important;
+          color: #ffffff !important;
+          padding: 0.375rem 0.75rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          border-radius: 0.375rem;
+          transition: background-color 0.2s ease;
+        }
+        #msWallet .ms-claim--green:hover {
+          background-color: #22c55e !important;
+          color: #0f172a !important;
+        }
+      `}</style>
     </div>
   );
 }
