@@ -3,7 +3,6 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { usePanelControls } from './hooks/usePanelControls';
 import { useExpandCollapse } from './hooks/useExpandCollapse';
 import { useExchangePageState } from './hooks/useExchangePageState';
 import TopBar from './components/TopBar';
@@ -14,46 +13,51 @@ import PriceView from '@/app/(menu)/Exchange/Price';
 
 // Virtual tree builder (page-local)
 import { useVirtualPanelTree } from './hooks/useVirtualPanelTree';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
+// Panel registry
+import PanelGate from '@/components/utility/PanelGate';
 
-// ✅ Local, structural type compatible with both shapes (with/without `name`)
+// List views
+import ManageRecipients from '@/components/views/ManageSponsorships/ManageRecipients';
+import ManageAgents from '@/components/views/ManageSponsorships/ManageAgents';
+import ManageSponsors from '@/components/views/ManageSponsorships/ManageSponsors';
+import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
+
+// Detail views
+import ManageAgent from '@/components/views/ManageSponsorships/ManageAgent';
+import ManageRecipient from '@/components/views/ManageSponsorships/ManageRecipient';
+import ManageSponsor from '@/components/views/ManageSponsorships/ManageSponsor';
+
+// Select / aux overlays
+import {
+  TokenListSelectPanel,
+  RecipientListSelectPanel,
+  AgentSelectPanel,
+} from '@/components/containers/AssetSelectPanels';
+
+// Core header/panel components (registered here so they’re visible in the tree)
+import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
+import TradingStationPanel from '@/components/views/TradingStationPanel';
+
 type NamedVirtualNode = {
   id: number;
   visible: boolean;
   children: NamedVirtualNode[];
-  name?: string; // optional so nodes from useVirtualPanelTree are assignable
+  name?: string;
 };
 
 const PAGES_KEY = 'test_exchangeContext_pages';
 
-// Show SPONSOR row at top-level? (purely visual)
-const SHOW_SPONSOR_ROW = false;
-
-// ────────────────────────────────────────────────────────────────────────────
-// Pretty console helpers
-function flatForConsole(flat?: PanelNode[]) {
-  if (!Array.isArray(flat)) return flat;
-  return flat.map((n) => ({
-    id: `${SP[n.panel] ?? 'UNKNOWN'} (#${n.panel})`,
-    visible: !!n.visible,
-    children: Array.isArray(n.children)
-      ? n.children.map((c) => ({
-          id: `${SP[c.panel] ?? 'UNKNOWN'} (#${c.panel})`,
-          visible: !!c.visible,
-        }))
-      : undefined,
+function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
+  return nodes.map((n) => ({
+    ...n,
+    name: n.name ?? (SP[n.id] ?? String(n.id)),
+    children: (n.children ?? []).map((c) => ({
+      ...c,
+      name: c.name ?? (SP[c.id] ?? String(c.id)),
+    })),
   }));
-}
-function virtualForConsole(nodes: NamedVirtualNode[]) {
-  const walk = (ns: NamedVirtualNode[]): any[] =>
-    ns.map((n) => ({
-      id: `${SP[n.id] ?? 'UNKNOWN'} (#${n.id})`,
-      visible: n.visible,
-      children: walk(n.children ?? []),
-    }));
-  return walk(nodes);
 }
 
 type PagesState = { showGui?: boolean; expanded?: boolean; showExchange?: boolean };
@@ -77,79 +81,28 @@ function writePagesState(patch: PagesState) {
   }
 }
 
-// ✅ Decorate each node with a human-readable name (shown when expanded).
-//    This does NOT change paths or expansion logic (still arrays).
-function addNamesShallow(nodes: NamedVirtualNode[]): NamedVirtualNode[] {
-  return nodes.map((n) => ({
-    ...n,
-    name: n.name ?? (SP[n.id] ?? String(n.id)),
-    children: (n.children ?? []).map((c) => ({
-      ...c,
-      name: c.name ?? (SP[c.id] ?? String(c.id)),
-    })),
-  }));
-}
-
 export default function ExchangeContextTab() {
   const { exchangeContext } = useExchangeContext();
   const { expandContext, setExpandContext, hideContext, logContext } = useExchangePageState();
-  // kept if you later re-add panel toggles
-  const { isVisible, onTogglePanel } = usePanelControls();
-  const { ui, toggleAll, togglePath, restRaw } = useExpandCollapse(
-    exchangeContext,
-    expandContext
-  );
+  const { ui, toggleAll, togglePath, restRaw } = useExpandCollapse(exchangeContext, expandContext);
 
-  // Build the virtual, display-only tree from the flat persisted state
-  const { tree, orphans, missing } = useVirtualPanelTree(exchangeContext);
-
-  // Filter sponsor row visually (doesn't touch keys/paths)
-  const treeForDisplay = useMemo(
-    () =>
-      (SHOW_SPONSOR_ROW
-        ? (tree as unknown as NamedVirtualNode[])
-        : (tree as unknown as NamedVirtualNode[]).filter(
-            (n) => n.id !== SP.SPONSOR_LIST_SELECT_PANEL
-          )),
+  // Build the virtual (display-only) tree from the builder
+  const { tree } = useVirtualPanelTree(exchangeContext);
+  const treeWithNames = useMemo<NamedVirtualNode[]>(
+    () => addNamesShallow(tree as unknown as NamedVirtualNode[]),
     [tree]
   );
 
-  // Add `name` string to every top-level node (and its direct children)
-  const treeWithNames = useMemo<NamedVirtualNode[]>(
-    () => addNamesShallow(treeForDisplay),
-    [treeForDisplay]
-  );
-
-  // Console dump (original + derived)
-  useEffect(() => {
-    const flat = (exchangeContext as any)?.settings?.spCoinPanelTree as PanelNode[] | undefined;
-    console.groupCollapsed('%c[ExchangeContextTab] Panel State Dump', 'color:#0bf');
-    console.log('Flat spCoinPanelTree:', flatForConsole(flat));
-    console.log('Virtual tree (derived):', virtualForConsole(treeWithNames));
-    console.log('Orphans (in state, not in schema):', orphans.map((id) => `${SP[id]} (#${id})`));
-    console.log('Missing (in schema, not in state):', missing.map((id) => `${SP[id]} (#${id})`));
-    (window as any).__dumpPanels = () => ({
-      flat: flatForConsole(flat),
-      virtual: virtualForConsole(treeWithNames),
-      orphans: orphans.map((id) => `${SP[id]} (#${id})`),
-      missing: missing.map((id) => `${SP[id]} (#${id})`),
-    });
-    console.groupEnd();
-  }, [exchangeContext, treeWithNames, orphans, missing]);
-
-  // Show/Hide GUI (right pane) — hydrate synchronously
   const [showGui, setShowGui] = useState<boolean>(() => {
     const s = readPagesState();
     return typeof s.showGui === 'boolean' ? s.showGui : true;
   });
-
-  // NEW: Show/Hide Exchange (left pane) — hydrate synchronously
   const [showExchange, setShowExchange] = useState<boolean>(() => {
     const s = readPagesState();
     return typeof s.showExchange === 'boolean' ? s.showExchange : true;
   });
 
-  // Hydrate expand state on mount
+  // Restore initial expand state
   useEffect(() => {
     const { expanded } = readPagesState();
     if (typeof expanded === 'boolean') {
@@ -159,61 +112,23 @@ export default function ExchangeContextTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist view states
+  // Persist UI prefs
   useEffect(() => {
     writePagesState({ showGui, expanded: expandContext, showExchange });
   }, [showGui, expandContext, showExchange]);
 
   const onToggleShowGui = useCallback(() => setShowGui((prev) => !prev), []);
   const onToggleExchange = useCallback(() => setShowExchange((prev) => !prev), []);
+  const onTogglePath = useCallback((path: string) => togglePath(path), [togglePath]);
 
-  // Use ARRAY for spCoinPanelTree so paths are numeric (no changes to logic)
-  const settingsObj = useMemo(
-    () => ({
-      apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
-      spCoinPanelTree: treeWithNames, // array; each node now has a `name` field
-    }),
-    [exchangeContext, treeWithNames]
-  );
-
-  // 🔍 Keep detailed click-debugging; do not change toggle logic
-  const onTogglePathLogged = useCallback(
-    (path: string) => {
-      console.log('[TreeView] toggle START');
-      console.log('  raw path:', path);
-      const parts = path.split('.');
-      console.log('  raw parts:', parts);
-
-      const before = (ui as any)?.exp?.[path];
-      console.log('  ui.exp BEFORE (has key?):', !!before, 'value:', before);
-
-      togglePath(path);
-
-      setTimeout(() => {
-        const after = (ui as any)?.exp?.[path];
-        console.log('  ui.exp AFTER (raw key):', after);
-
-        const sampleKeys = Object.keys((ui as any)?.exp ?? {}).slice(0, 20);
-        console.log('  ui.exp keys sample:', sampleKeys);
-        console.log('[TreeView] toggle END');
-      }, 0);
-    },
-    [togglePath, ui]
-  );
-
-  // Layout classes depending on panel visibility
   const containerClass = useMemo(() => {
-    // If neither pane shows, keep structure but no gap
     if (!showGui && !showExchange) return 'px-4';
-    // If both show, use a two-column flex with gap
     if (showGui && showExchange) return 'px-4 flex gap-4';
-    // If one shows, let it take full width
     return 'px-4';
   }, [showGui, showExchange]);
 
   const leftPaneClass = useMemo(() => {
     if (!showExchange) return 'hidden';
-    // If both visible, split; else full width
     return showGui ? 'flex-1' : 'w-full';
   }, [showGui, showExchange]);
 
@@ -221,6 +136,14 @@ export default function ExchangeContextTab() {
     if (!showGui) return 'hidden';
     return showExchange ? 'flex-1 border-l border-slate-700' : 'w-full';
   }, [showGui, showExchange]);
+
+  const settingsObj = useMemo(
+    () => ({
+      apiTradingProvider: (exchangeContext as any)?.settings?.apiTradingProvider,
+      spCoinPanelTree: treeWithNames,
+    }),
+    [exchangeContext, treeWithNames]
+  );
 
   return (
     <div className="space-y-4">
@@ -236,7 +159,6 @@ export default function ExchangeContextTab() {
         showGui={showGui}
         onLog={logContext}
         onClose={hideContext}
-        /* NEW: wire Hide/Show Exchange to left panel */
         onToggleExchange={onToggleExchange}
         showExchange={showExchange}
       />
@@ -251,7 +173,7 @@ export default function ExchangeContextTab() {
             label="settings"
             value={settingsObj}
             exp={ui.exp}
-            onTogglePath={onTogglePathLogged}
+            onTogglePath={onTogglePath}
             enumRegistry={enumRegistry}
             dense
             rootDepth={1}
@@ -264,7 +186,7 @@ export default function ExchangeContextTab() {
               label={k}
               value={(restRaw as any)[k]}
               exp={ui.exp}
-              onTogglePath={onTogglePathLogged}
+              onTogglePath={onTogglePath}
               enumRegistry={enumRegistry}
               dense
               rootDepth={1}
@@ -281,6 +203,60 @@ export default function ExchangeContextTab() {
           )}
         </div>
       </div>
+
+      {/* ─────────────────────────────────────────────────────────────── */}
+      {/* 🔐 PANEL REGISTRY (kept hidden so panels appear in the tree)   */}
+      {/* ─────────────────────────────────────────────────────────────── */}
+      <PanelGate panel={SP.MAIN_TRADING_PANEL}>
+        <div className="hidden">
+          {/* Core header + trading station so they also appear in this page’s tree */}
+          <PanelGate panel={SP.TRADE_CONTAINER_HEADER}>
+            <TradeContainerHeader />
+          </PanelGate>
+          <PanelGate panel={SP.TRADING_STATION_PANEL}>
+            <TradingStationPanel />
+          </PanelGate>
+
+          {/* Token/address selectors + hub/error */}
+          <PanelGate panel={SP.BUY_LIST_SELECT_PANEL}>
+            <TokenListSelectPanel />
+          </PanelGate>
+          <PanelGate panel={SP.SELL_LIST_SELECT_PANEL}>
+            <TokenListSelectPanel />
+          </PanelGate>
+          <PanelGate panel={SP.RECIPIENT_LIST_SELECT_PANEL}>
+            <RecipientListSelectPanel />
+          </PanelGate>
+          <PanelGate panel={SP.AGENT_LIST_SELECT_PANEL}>
+            <AgentSelectPanel />
+          </PanelGate>
+
+          {/* Manage LIST views */}
+          <PanelGate panel={SP.MANAGE_SPONSORSHIPS_PANEL}>
+            <ManageSponsorshipsPanel />
+          </PanelGate>
+          <PanelGate panel={SP.MANAGE_RECIPIENTS_PANEL}>
+            <ManageRecipients />
+          </PanelGate>
+          <PanelGate panel={SP.MANAGE_AGENTS_PANEL}>
+            <ManageAgents />
+          </PanelGate>
+          <PanelGate panel={SP.MANAGE_SPONSORS_PANEL}>
+            <ManageSponsors />
+          </PanelGate>
+
+          {/* Manage DETAIL views */}
+          <PanelGate panel={SP.MANAGE_AGENT_PANEL}>
+            <ManageAgent />
+          </PanelGate>
+          <PanelGate panel={SP.MANAGE_RECIPIENT_PANEL}>
+            <ManageRecipient />
+          </PanelGate>
+          <PanelGate panel={SP.MANAGE_SPONSOR_PANEL}>
+            <ManageSponsor />
+          </PanelGate>
+        </div>
+      </PanelGate>
     </div>
   );
 }

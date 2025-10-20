@@ -6,7 +6,7 @@ import CustomConnectButton from './CustomConnectButton';
 import ExchangeButton from './ExchangeButton';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 type Props = { isLoadingPrice: boolean };
 

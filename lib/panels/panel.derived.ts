@@ -1,6 +1,6 @@
 // File: lib/panels/panel.derived.ts
 import { PANELS, PanelDef, GroupId } from './panel.config';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 /** Enum label fallback helper */
 const enumName = (id: SP) => (SP as any)[id] ?? String(id);

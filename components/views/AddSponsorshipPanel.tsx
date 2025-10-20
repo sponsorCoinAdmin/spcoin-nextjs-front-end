@@ -8,7 +8,7 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 import ConfigSponsorshipPanel from '../containers/ConfigSponsorshipPanel';
 import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';

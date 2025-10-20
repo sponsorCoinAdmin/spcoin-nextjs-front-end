@@ -7,7 +7,7 @@ import type { WalletAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
@@ -15,6 +15,7 @@ import rawRecipients from './recipients.json';
 
 import ManageWalletList from './ManageWalletList';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 type Props = { onClose?: () => void };
 
@@ -73,6 +74,7 @@ export default function ManageRecipients({ onClose }: Props) {
   // ✅ Callback: update ExchangeContext.accounts.recipientAccount and toggle MANAGE_RECIPIENT_PANEL
   const setWalletCallBack = (w?: WalletAccount) => {
     setSelectedWallet(w);
+    alert(`ManageRecipients setWalletCallBack wallet = ${stringifyBigInt(w)}`)
 
     ctx?.setExchangeContext(
       (prev) => {
@@ -83,6 +85,7 @@ export default function ManageRecipients({ onClose }: Props) {
     );
 
     if (w) {
+      alert("OpenPanel called)")
       openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
     } else {
       closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);

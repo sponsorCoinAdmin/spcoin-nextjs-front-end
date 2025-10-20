@@ -9,7 +9,7 @@ import {
   useRegisterHeaderTitle,
   useRegisterDetailCloser,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';

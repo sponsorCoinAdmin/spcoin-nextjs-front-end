@@ -1,6 +1,6 @@
 // File: app/(menu)/Test/Tabs/ExchangeContext/structure/types/virtualPanel.ts
 
-import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 
 export type VirtualPanelNode = {
   id: SPCD;                  // enum id

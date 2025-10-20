@@ -1,5 +1,5 @@
 // File: app/(menu)/Test/Tabs/ExchangeContext/structure/derived/buildVirtualTree.ts
-import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SPCD } from '@/lib/structure';
 import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { ROOTS, CHILDREN } from '../constants/panelTreeSchema';
 import type { VirtualPanelNode } from '../types/virtualPanel';

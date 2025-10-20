@@ -4,7 +4,7 @@
 import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { defaultSpCoinPanelTree } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';
 import { PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 // Flatten the nested default tree into a flat {panel, name, visible}[] list.
 function flatten(nodes: PanelNode[] | undefined, out: PanelNode[] = []): PanelNode[] {

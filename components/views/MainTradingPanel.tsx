@@ -26,7 +26,7 @@ import {
   // SponsorListSelectPanel,
 } from '@/components/containers/AssetSelectPanels';
 
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 
 export default function MainTradingPanel() {

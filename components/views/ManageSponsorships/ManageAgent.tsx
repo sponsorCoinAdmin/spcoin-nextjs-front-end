@@ -9,11 +9,12 @@ import {
   useRegisterHeaderTitle,
   useRegisterDetailCloser,
 } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';ManageAgents
 import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/network/utils';
+import ManageAgents from './ManageAgents';
 
 type Props = { onClose?: () => void };
 

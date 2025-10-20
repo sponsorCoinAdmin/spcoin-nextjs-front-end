@@ -5,7 +5,7 @@ import React from 'react';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 const FeeDisclosure = () => {
   const show = usePanelVisible(SP.FEE_DISCLOSURE);

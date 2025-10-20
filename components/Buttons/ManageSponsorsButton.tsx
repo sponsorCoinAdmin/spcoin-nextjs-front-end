@@ -9,7 +9,7 @@ import { isSpCoin } from '@/lib/spCoin/coreUtils';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
  * SELL-only launcher. Phase 7: scoped re-render using usePanelVisible, stable actions from usePanelTree.

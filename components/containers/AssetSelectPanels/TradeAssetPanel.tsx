@@ -35,7 +35,7 @@ import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);

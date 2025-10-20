@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/safety/validatePanelState.ts
 
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import type { PanelNode } from '@/lib/structure/exchangeContext/types/PanelNode';
 import { PANEL_DEFS, MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { NON_PERSISTED_PANELS } from '@/lib/structure/exchangeContext/constants/defaultPanelTree';

@@ -1,106 +1,73 @@
-// File: components/views/ManageSponsorships/ManageRecipients.tsx
+// File: components/views/ManageSponsorships/ManageRecipient.tsx
 'use client';
 
-import React, { useEffect, useState, useContext } from 'react';
-import type { WalletAccount } from '@/lib/structure';
-
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
-
-import { loadAccounts } from '@/lib/spCoin/loadAccounts';
-import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';
-import rawRecipients from './recipients.json';
-
-import ManageWalletList from './ManageWalletList';
+import {
+  useRegisterDetailCloser,
+  useRegisterHeaderLeft,
+  useRegisterHeaderTitle,
+} from '@/lib/context/exchangeContext/hooks/useHeaderController';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import ToDo from '@/lib/utils/components/ToDo';
+import { defaultMissingImage } from '@/lib/network/utils';
 
 type Props = { onClose?: () => void };
 
-function shortAddr(addr: string, left = 6, right = 4) {
-  const a = String(addr);
-  return a.length > left + right ? `${a.slice(0, left)}…${a.slice(-right)}` : a;
-}
-
-export default function ManageRecipients({ onClose }: Props) {
-  const { openPanel, closePanel } = usePanelTree();
+export default function ManageRecipient({ onClose }: Props) {
+  const { closePanel, openPanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
-  const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
-  const [walletList, setWalletList] = useState<WalletAccount[]>([]);
+  const recipientWallet = ctx?.exchangeContext?.accounts?.recipientAccount;
+  const logoURL = recipientWallet?.logoURL;
+  const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
-  const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
-
-  useEffect(() => {
-    if (!detailOpen) setSelectedWallet(undefined);
-  }, [detailOpen]);
-
-  useRegisterDetailCloser(
+  // Title + left header avatar for the RECIPIENT detail panel
+  useRegisterHeaderTitle(
     SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-    () => setWalletCallBack(undefined)
+    `Recipient ${recipientWallet?.name ?? 'N/A'}`
   );
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const enriched = await loadAccounts(rawRecipients as any);
-        const built = enriched
-          .map(buildWalletObj)
-          .map((w) => ({
-            ...w,
-            name: w.name && w.name !== 'N/A' ? w.name : shortAddr((w as any).address),
-            symbol: w.symbol ?? 'N/A',
-          })) as WalletAccount[];
-        if (alive) setWalletList(built);
-      } catch {
-        const fallback = (Array.isArray(rawRecipients) ? rawRecipients : []).map((a: any) => {
-          const w = buildWalletObj(a);
-          return { ...(w as any), name: shortAddr((w as any).address) } as WalletAccount;
-        });
-        if (alive) setWalletList(fallback);
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
+  useRegisterHeaderLeft(
+    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+    useMemo(
+      () =>
+        () => (
+          <div className="relative h-10 w-10 shrink-0 m-0 -ml-2.5">
+            <Image src={resolvedLogo} alt="Recipient Logo" fill className="object-contain" priority />
+          </div>
+        ),
+      [resolvedLogo]
+    )
+  );
 
-  // Open ONLY the recipient detail panel (close others first)
-  const openRecipientDetail = () => {
-    try {
-      [
-        SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
-        SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, // list panel
-        SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
-        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-      ].forEach(closePanel);
-    } catch {}
-    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
-  };
+  const [showToDo, setShowToDo] = useState<boolean>(true);
 
-  // ✅ Set context + open detail
-  const setWalletCallBack = (w?: WalletAccount) => {
-    setSelectedWallet(w);
+  const handleClose = useCallback(() => {
+    // Go back to the list panel when the header X is clicked
+    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
+    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+    onClose?.();
+  }, [openPanel, closePanel, onClose]);
 
-    ctx?.setExchangeContext(
-      (prev) => ({ ...prev, accounts: { ...prev.accounts, recipientAccount: w } }),
-      'ManageRecipients:setRecipientAccount'
-    );
-
-    if (w) {
-      openRecipientDetail();
-    } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
-    }
-  };
+  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, handleClose);
 
   return (
-    <ManageWalletList
-      walletList={walletList}
-      setWalletCallBack={setWalletCallBack}
-      onClose={onClose}
-      containerType={SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL}
-    />
+    <>
+      <ManageWallet wallet={recipientWallet} />
+      {!showToDo && (
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={() => setShowToDo(false)}
+        />
+      )}
+    </>
   );
 }

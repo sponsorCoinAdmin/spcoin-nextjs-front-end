@@ -1,7 +1,7 @@
 // File: lib/context/exchangeContext/helpers/ExchangeSaveHelpers.ts
 import { ExchangeContext } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 
 const STORAGE_KEY = 'exchangeContext';

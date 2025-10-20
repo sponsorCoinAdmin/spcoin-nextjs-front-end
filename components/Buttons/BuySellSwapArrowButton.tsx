@@ -12,7 +12,7 @@ import {
 import { mutate } from 'swr';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 function toDecimalString(v: unknown): string {
   if (typeof v === 'bigint') return v.toString();

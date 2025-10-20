@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import Row from './Row';
 import { quoteIfString } from '../../utils/object';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import {
   MAIN_OVERLAY_GROUP,

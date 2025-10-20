@@ -8,7 +8,7 @@ import { useBuyTokenContract } from '@/lib/context/hooks';
 import { isSpCoin } from '@/lib/spCoin/coreUtils';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
  * BUY-only launcher. Phase 7: scoped re-render via usePanelVisible + stable actions via usePanelTree.

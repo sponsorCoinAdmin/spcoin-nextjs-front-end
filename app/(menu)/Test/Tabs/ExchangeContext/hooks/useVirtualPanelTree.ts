@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import type { ExchangeContext } from '@/lib/structure';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import {
   ROOTS,
   CHILDREN,

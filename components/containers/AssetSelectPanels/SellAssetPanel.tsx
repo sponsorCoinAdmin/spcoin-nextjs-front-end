@@ -5,7 +5,7 @@ import React from 'react';
 import TradeAssetPanel from './TradeAssetPanel';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { SP_COIN_DISPLAY as SP_ROOT } from '@/lib/structure';
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 export default function SellAssetPanel() {
   const { isVisible } = usePanelTree();

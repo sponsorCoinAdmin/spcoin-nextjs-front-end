@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import PriceResponse from '@/lib/0X/typesV1';
 import { useBuyTokenContract } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 import { formatUnits } from 'ethers';
 
 type Props = { priceResponse: PriceResponse | undefined };

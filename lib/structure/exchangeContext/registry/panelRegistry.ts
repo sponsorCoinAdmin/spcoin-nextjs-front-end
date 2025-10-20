@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/registry/panelRegistry.ts
 
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
 export type PanelKind = 'root' | 'panel' | 'button' | 'list' | 'control';
 
@@ -33,12 +33,14 @@ const MAIN_TRADING_CHILDREN: SP[] = [
   SP.AGENT_LIST_SELECT_PANEL, // ✅ restored
   SP.ERROR_MESSAGE_PANEL,
 
-  // ✅ Treat these as top-level overlays (siblings), not children of MANAGE_SPONSORSHIPS_PANEL
+  // ✅ Treat these as top-level overlays (siblings)
   SP.MANAGE_SPONSORSHIPS_PANEL,
   SP.MANAGE_RECIPIENTS_PANEL,
   SP.MANAGE_AGENTS_PANEL,
   SP.MANAGE_SPONSORS_PANEL,
-  SP.MANAGE_AGENT_PANEL, // single-agent panel in main radio overlays
+  SP.MANAGE_AGENT_PANEL,       // detail
+  SP.MANAGE_RECIPIENT_PANEL,   // detail
+  SP.MANAGE_SPONSOR_PANEL,     // ✅ detail (added)
 ];
 
 export const PANEL_DEFS: readonly PanelDef[] = [
@@ -47,11 +49,11 @@ export const PANEL_DEFS: readonly PanelDef[] = [
 
   { id: SP.TRADING_STATION_PANEL, kind: 'root', overlay: true, defaultVisible: true, children: TRADING_CHILDREN },
 
-  { id: SP.BUY_LIST_SELECT_PANEL,      kind: 'list',  overlay: true, defaultVisible: false },
-  { id: SP.SELL_LIST_SELECT_PANEL,     kind: 'list',  overlay: true, defaultVisible: false },
-  { id: SP.RECIPIENT_LIST_SELECT_PANEL,kind: 'list',  overlay: true, defaultVisible: false },
-  { id: SP.AGENT_LIST_SELECT_PANEL,    kind: 'list',  overlay: true, defaultVisible: false }, // ✅ restored
-  { id: SP.ERROR_MESSAGE_PANEL,        kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.BUY_LIST_SELECT_PANEL,       kind: 'list',  overlay: true, defaultVisible: false },
+  { id: SP.SELL_LIST_SELECT_PANEL,      kind: 'list',  overlay: true, defaultVisible: false },
+  { id: SP.RECIPIENT_LIST_SELECT_PANEL, kind: 'list',  overlay: true, defaultVisible: false },
+  { id: SP.AGENT_LIST_SELECT_PANEL,     kind: 'list',  overlay: true, defaultVisible: false }, // ✅ restored
+  { id: SP.ERROR_MESSAGE_PANEL,         kind: 'panel', overlay: true, defaultVisible: false },
 
   // ✅ All manage screens are overlays (radio group members)
   { id: SP.MANAGE_SPONSORSHIPS_PANEL, kind: 'panel', overlay: true, defaultVisible: false },
@@ -59,13 +61,15 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.MANAGE_AGENTS_PANEL,       kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_SPONSORS_PANEL,     kind: 'panel', overlay: true, defaultVisible: false },
   { id: SP.MANAGE_AGENT_PANEL,        kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.MANAGE_RECIPIENT_PANEL,    kind: 'panel', overlay: true, defaultVisible: false },
+  { id: SP.MANAGE_SPONSOR_PANEL,      kind: 'panel', overlay: true, defaultVisible: false }, // ✅ added
 
   { id: SP.SPONSOR_LIST_SELECT_PANEL, kind: 'list', overlay: true, defaultVisible: false }, // legacy
 
   { id: SP.SELL_SELECT_PANEL, kind: 'panel', defaultVisible: true, children: [SP.MANAGE_SPONSORSHIPS_BUTTON] },
   { id: SP.BUY_SELECT_PANEL,  kind: 'panel', defaultVisible: true, children: [SP.ADD_SPONSORSHIP_BUTTON] },
-  { id: SP.ADD_SPONSORSHIP_PANEL,     kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
-  { id: SP.CONFIG_SPONSORSHIP_PANEL,  kind: 'panel', defaultVisible: false },
+  { id: SP.ADD_SPONSORSHIP_PANEL,    kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
+  { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel', defaultVisible: false },
 
   { id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true },
   { id: SP.PRICE_BUTTON,      kind: 'control', defaultVisible: true },
