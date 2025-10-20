@@ -69,7 +69,6 @@ export default function ManageAgents({ onClose }: Props) {
   // ✅ Callback: update ExchangeContext.accounts.agentAccount and toggle MANAGE_AGENT_PANEL
   const setWalletCallBack = (w?: WalletAccount) => {
     setSelectedWallet(w);
-    alert(`ManageAgents setWalletCallBack wallet = ${stringifyBigInt(w)}`)
 
     ctx?.setExchangeContext((prev) => {
       const next = { ...prev, accounts: { ...prev.accounts, agentAccount: w } };

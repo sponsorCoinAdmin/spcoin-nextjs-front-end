@@ -74,7 +74,6 @@ export default function ManageRecipients({ onClose }: Props) {
   // ✅ Callback: update ExchangeContext.accounts.recipientAccount and toggle MANAGE_RECIPIENT_PANEL
   const setWalletCallBack = (w?: WalletAccount) => {
     setSelectedWallet(w);
-    alert(`ManageRecipients setWalletCallBack wallet = ${stringifyBigInt(w)}`)
 
     ctx?.setExchangeContext(
       (prev) => {
@@ -85,7 +84,6 @@ export default function ManageRecipients({ onClose }: Props) {
     );
 
     if (w) {
-      alert("OpenPanel called)")
       openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
     } else {
       closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
