@@ -105,8 +105,89 @@ const normalizeForPersistence = (panels: PanelNode[]): SpCoinPanelTree =>
 const clone = <T,>(o: T): T =>
   typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o));
 
+/* ---------- Debug helpers to show the actual boolean that changed ---------- */
+
+type FlatPanelLite = { panel: number; name?: string; visible?: boolean };
+
+const panelName = (id: number) => SP_COIN_DISPLAY[id] ?? String(id);
+
+function makeVisMap(panels?: FlatPanelLite[]) {
+  const m: Record<number, boolean> = {};
+  if (!Array.isArray(panels)) return m;
+  for (const p of panels) {
+    if (typeof p?.panel === 'number') m[p.panel] = !!p.visible;
+  }
+  return m;
+}
+
+function diffPanelVisibility(prev?: FlatPanelLite[], next?: FlatPanelLite[]) {
+  const a = makeVisMap(prev);
+  const b = makeVisMap(next);
+  const ids = new Set<number>([...Object.keys(a), ...Object.keys(b)].map(Number));
+  const changes: Array<{ id: number; before: boolean | undefined; after: boolean | undefined }> = [];
+  ids.forEach((id) => {
+    const before = a[id];
+    const after = b[id];
+    if (before !== after) changes.push({ id, before, after });
+  });
+  return changes;
+}
+
+/** Build a readable value for debugging (visible panels joined by dots). */
+function visiblePanelsValue(panels?: FlatPanelLite[]) {
+  if (!Array.isArray(panels)) return '(none)';
+  const names = panels.filter((p) => !!p?.visible).map((p) => p?.name || panelName(p.panel));
+  return names.length ? names.join('.') : '(none)';
+}
+
+/** Debug helper: alert + console.log when saving to local storage, including diffs. */
+function saveExchangeToLocalWithDiff(
+  prevCtx: ExchangeContextTypeOnly | undefined,
+  nextCtx: ExchangeContextTypeOnly,
+  entityName = 'ExchangeContext.settings.spCoinPanelTree'
+) {
+  try {
+    const prevPanels = (prevCtx as any)?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined;
+    const nextPanels = (nextCtx as any)?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined;
+
+    const changes = diffPanelVisibility(prevPanels, nextPanels);
+    const visibleNow = visiblePanelsValue(nextPanels);
+
+    const changeLine =
+      changes.length === 0
+        ? '(no panel visibility changes)'
+        : changes
+            .map(
+              (c) =>
+                `${panelName(c.id)} ${String(c.before)} → ${String(c.after)}`
+            )
+            .join(', ');
+
+    const msgStr =
+      `ExchangeContext Local Storage Update\n` +
+      `${entityName}: ${changeLine}\n` +
+      `Visible now: ${visibleNow}.`;
+
+    // 1) Alert for immediate visibility
+    // eslint-disable-next-line no-alert
+    alert(msgStr);
+
+    // 2) Console for traceability
+    // eslint-disable-next-line no-console
+    console.log(msgStr);
+
+    // Persist
+    saveLocalExchangeContext(nextCtx);
+  } catch {
+    // Fallback: still persist
+    saveLocalExchangeContext(nextCtx);
+  }
+}
+
 /** Start from authored defaults, merge persisted, enforce required and order. */
-function repairPanels(persisted: Array<{ panel: number; name?: string; visible?: boolean }> | undefined): PanelNode[] {
+function repairPanels(
+  persisted: Array<{ panel: number; name?: string; visible?: boolean }> | undefined
+): PanelNode[] {
   const defaults = flattenPanelTree(defaultSpCoinPanelTree).filter(
     (p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY)
   );
@@ -211,9 +292,15 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setContextState((prev) => {
       if (!prev) return prev;
+
+      // Snapshot BEFORE applying updater to detect in-place mutations
+      const prevStr = stringifyBigInt(prev);
+
       const nextBase = updater(prev);
       if (!nextBase) return prev;
-      if (stringifyBigInt(prev) === stringifyBigInt(nextBase)) return prev;
+
+      const nextStr = stringifyBigInt(nextBase);
+      if (prevStr === nextStr) return prev; // true no-op, skip persistence
 
       try {
         const normalized = clone(nextBase);
@@ -224,8 +311,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         }
         (normalized as any).settings = { ...(normalized as any).settings };
         (normalized as any).settings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
-        saveLocalExchangeContext(normalized);
-      } catch { }
+
+        // debug + persist WITH DIFF of panel visibility
+        saveExchangeToLocalWithDiff(prev, normalized, 'ExchangeContext.settings.spCoinPanelTree');
+      } catch {
+        try { saveLocalExchangeContext(nextBase); } catch {}
+      }
+
       return nextBase;
     });
   };
@@ -257,8 +349,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const nextSettings: any = {
         ...settingsAny,
         spCoinPanelTree: normalizeForPersistence(flatPanels),
-        mainPanelNode: radioTopLevel,              // <-- keep in sync
-        spCoinPanelSchemaVersion: 3,               // bump schema to force migration
+        mainPanelNode: radioTopLevel,
+        spCoinPanelSchemaVersion: 3,
       };
       nextSettings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
 
@@ -269,7 +361,12 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      try { saveLocalExchangeContext(base); } catch { }
+      // debug + persist on boot (no previous ctx yet)
+      try {
+        saveExchangeToLocalWithDiff(undefined, base, 'ExchangeContext.settings.spCoinPanelTree');
+      } catch {
+        saveLocalExchangeContext(base);
+      }
 
       (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
       setContextState(base as ExchangeContextTypeOnly);
@@ -313,9 +410,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
     const nextAddr = isConnected ? (address ?? undefined) : undefined;
 
-    // no change
-    if (lastAppliedAddrRef.current === nextAddr &&
-        contextState.accounts?.connectedAccount?.address === nextAddr) {
+    if (
+      lastAppliedAddrRef.current === nextAddr &&
+      contextState.accounts?.connectedAccount?.address === nextAddr
+    ) {
       return;
     }
 
@@ -323,7 +421,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       const next = clone(prev);
       (next as any).accounts = (next as any).accounts ?? {};
       if (nextAddr) {
-        // normalize to checksum/lowercase if you prefer; here we keep as-provided
         (next as any).accounts.connectedAccount = {
           ...((next as any).accounts.connectedAccount ?? {}),
           address: nextAddr,
@@ -354,24 +451,18 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [contextState, isConnected, address, setExchangeContext]);
 
-  /** SINGLE source of truth on appChainId change:
-   *  - Refresh display fields (name/symbol/url/logoURL) from registry + template
-   *  - Clear chain-scoped contracts
-   *  We detect the change with a ref so we aren't comparing inside the setter.
-   */
+  /** SINGLE source of truth on appChainId change */
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
   useEffect(() => {
     const appId = contextState?.network?.appChainId;
     if (appId === undefined) return;
 
-    // On first hydrate just set the baseline; optionally normalize the logo (below).
     if (prevAppChainIdRef.current === undefined) {
       prevAppChainIdRef.current = appId;
       return;
     }
 
     if (prevAppChainIdRef.current !== appId) {
-      // Update display fields atomically
       setExchangeContext((prev) => {
         const next = clone(prev);
         const derived = deriveNetworkFromApp(appId, undefined as any);
@@ -386,7 +477,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         return next;
       }, 'provider:onAppChainChange-refreshDisplay');
 
-      // Clear chain-scoped contracts
       setSellTokenContract(undefined);
       setBuyTokenContract(undefined);
 
@@ -433,7 +523,6 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      {/* Post-mount only; avoids any state/store updates during Provider render */}
       <PanelBootstrap />
       {children}
     </ExchangeContextState.Provider>
