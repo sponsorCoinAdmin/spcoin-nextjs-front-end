@@ -31,9 +31,15 @@ import {
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { saveLocalExchangeContext } from './helpers/ExchangeSaveHelpers';
 import { validateAndRepairPanels } from '@/lib/structure/exchangeContext/safety/validatePanelState';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // post-mount only: open the default overlay safely
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+
+/* ---------------------------- Debug logger toggle --------------------------- */
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true';
+const debugLog = createDebugLogger('ExchangeProvider', DEBUG_ENABLED, LOG_TIME);
 
 /* ---------------------------- Types & Context API --------------------------- */
 
@@ -140,121 +146,55 @@ function visiblePanelsValue(panels?: FlatPanelLite[]) {
   return names.length ? names.join('.') : '(none)';
 }
 
-/** Debug helper: alert + console.log when saving to local storage, including diffs. */
-function saveExchangeToLocalWithDiff(
+/**
+ * Persist helper that only uses the verbose diff+alert path when
+ * NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_PROVIDER === 'true'.
+ */
+function persistWithOptDiff(
   prevCtx: ExchangeContextTypeOnly | undefined,
   nextCtx: ExchangeContextTypeOnly,
   entityName = 'ExchangeContext.settings.spCoinPanelTree'
 ) {
   try {
-    const prevPanels = (prevCtx as any)?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined;
-    const nextPanels = (nextCtx as any)?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined;
+    if (DEBUG_ENABLED) {
+      // Build the diff message
+      const prevPanels = (prevCtx as any)?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined;
+      const nextPanels = (nextCtx as any)?.settings?.spCoinPanelTree as FlatPanelLite[] | undefined;
 
-    const changes = diffPanelVisibility(prevPanels, nextPanels);
-    const visibleNow = visiblePanelsValue(nextPanels);
+      const changes = diffPanelVisibility(prevPanels, nextPanels);
+      const visibleNow = visiblePanelsValue(nextPanels);
 
-    const changeLine =
-      changes.length === 0
-        ? '(no panel visibility changes)'
-        : changes
-            .map(
-              (c) =>
-                `${panelName(c.id)} ${String(c.before)} → ${String(c.after)}`
-            )
-            .join(', ');
+      const changeLine =
+        changes.length === 0
+          ? '(no panel visibility changes)'
+          : changes
+              .map((c) => `${panelName(c.id)} ${String(c.before)} → ${String(c.after)}`)
+              .join(', ');
 
-    const msgStr =
-      `ExchangeContext Local Storage Update\n` +
-      `${entityName}: ${changeLine}\n` +
-      `Visible now: ${visibleNow}.`;
+      const msgStr =
+        `ExchangeContext Local Storage Update\n` +
+        `${entityName}: ${changeLine}\n` +
+        `Visible now: ${visibleNow}.`;
 
-    // 1) Alert for immediate visibility
-    // eslint-disable-next-line no-alert
-    alert(msgStr);
+      // 1) Alert for immediate visibility (debug only)
+      // eslint-disable-next-line no-alert
+      alert(msgStr);
 
-    // 2) Console for traceability
-    // eslint-disable-next-line no-console
-    console.log(msgStr);
+      // 2) Console for traceability (debug only)
+      // eslint-disable-next-line no-console
+      console.log(msgStr);
 
-    // Persist
-    saveLocalExchangeContext(nextCtx);
-  } catch {
-    // Fallback: still persist
-    saveLocalExchangeContext(nextCtx);
-  }
-}
-
-/** Start from authored defaults, merge persisted, enforce required and order. */
-function repairPanels(
-  persisted: Array<{ panel: number; name?: string; visible?: boolean }> | undefined
-): PanelNode[] {
-  const defaults = flattenPanelTree(defaultSpCoinPanelTree).filter(
-    (p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY)
-  );
-
-  const byId = new Map<number, PanelNode>();
-  for (const p of defaults) {
-    byId.set(p.panel, {
-      panel: p.panel,
-      name: p.name || (SP_COIN_DISPLAY[p.panel] ?? String(p.panel)),
-      visible: !!p.visible,
-    });
-  }
-
-  if (Array.isArray(persisted)) {
-    for (const p of persisted) {
-      const id = p?.panel;
-      if (!Number.isFinite(id) || NON_PERSISTED_PANELS.has(id as SP_COIN_DISPLAY)) continue;
-      const prev = byId.get(id);
-      if (prev) {
-        if (typeof p.visible === 'boolean') prev.visible = p.visible;
-        if (p.name && p.name !== prev.name) prev.name = p.name;
-      } else {
-        byId.set(id, {
-          panel: id,
-          name: p.name || (SP_COIN_DISPLAY[id] ?? String(id)),
-          visible: !!p.visible,
-        });
-      }
+      debugLog.log?.('🧾 Persist (with diff)\n' + msgStr);
     }
+
+    // Always persist to localStorage (silent when DEBUG off)
+    saveLocalExchangeContext(nextCtx);
+  } catch (err) {
+    debugLog.error?.('❌ persistWithOptDiff failed:', err);
+    // Best effort: still attempt to persist
+    try { saveLocalExchangeContext(nextCtx); } catch {}
   }
-
-  for (const [id, vis] of MUST_INCLUDE_ON_BOOT) {
-    if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
-  }
-
-  const defaultOrder = defaults.map((d) => d.panel);
-  const extras = [...byId.keys()].filter((id) => !defaultOrder.includes(id));
-  const orderedIds = [...defaultOrder, ...extras];
-  return orderedIds.map((id) => byId.get(id)!);
 }
-
-/** Drop non-persisted items (safety no-op if they’re already excluded). */
-function dropNonPersisted(panels: PanelNode[]) {
-  return panels.filter((p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY));
-}
-
-/** Ensure required panels exist; apply default visibility only when absent. */
-function ensureRequiredPanels(
-  panels: PanelNode[],
-  required: ReadonlyArray<readonly [number, boolean]>
-) {
-  const byId = new Map(panels.map((p) => [p.panel, { ...p }]));
-  for (const [id, vis] of required) {
-    if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
-  }
-  return [...byId.values()];
-}
-
-/** Zero/one visible overlay; prefer TRADING_STATION_PANEL if multiple. */
-const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
-  const isOverlay = (id: number) => MAIN_OVERLAY_GROUP.includes(id as SP_COIN_DISPLAY);
-  const visible = flat.filter((n) => isOverlay(n.panel) && n.visible);
-  if (visible.length <= 1) return flat;
-  const preferred =
-    visible.find((n) => n.panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL) ?? visible[0];
-  return flat.map((n) => (isOverlay(n.panel) ? { ...n, visible: n.panel === preferred.panel } : n));
-};
 
 /* ----------------------- Post-mount bootstrap (safe) ------------------------ */
 
@@ -312,9 +252,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         (normalized as any).settings = { ...(normalized as any).settings };
         (normalized as any).settings['spCoinPanelSchemaVersion'] = PANEL_SCHEMA_VERSION;
 
-        // debug + persist WITH DIFF of panel visibility
-        saveExchangeToLocalWithDiff(prev, normalized, 'ExchangeContext.settings.spCoinPanelTree');
-      } catch {
+        // Persist (diff path only when DEBUG is enabled)
+        persistWithOptDiff(prev, normalized, 'ExchangeContext.settings.spCoinPanelTree');
+      } catch (err) {
+        debugLog.warn?.('⚠️ setExchangeContext persist path failed, falling back. Reason:', err);
         try { saveLocalExchangeContext(nextBase); } catch {}
       }
 
@@ -327,6 +268,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     if (hasInitializedRef.current) return;
     hasInitializedRef.current = true;
     (async () => {
+      debugLog.log?.('🚀 initExchangeContext boot start');
       const base = await initExchangeContext(wagmiChainId, isConnected, address);
       const settingsAny = (base as any).settings ?? {};
       const storedPanels = settingsAny.spCoinPanelTree as PanelNode[] | undefined;
@@ -361,15 +303,17 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (base as any).network = net;
       (base as any).settings = nextSettings;
 
-      // debug + persist on boot (no previous ctx yet)
+      // Persist on boot (diff path only when DEBUG is enabled)
       try {
-        saveExchangeToLocalWithDiff(undefined, base, 'ExchangeContext.settings.spCoinPanelTree');
-      } catch {
+        persistWithOptDiff(undefined, base, 'ExchangeContext.settings.spCoinPanelTree');
+      } catch (err) {
+        debugLog.warn?.('⚠️ boot persist path failed, falling back. Reason:', err);
         saveLocalExchangeContext(base);
       }
 
       (base as any).settings.spCoinPanelTree = ensurePanelNamesInMemory(flatPanels);
       setContextState(base as ExchangeContextTypeOnly);
+      debugLog.log?.('✅ initExchangeContext boot complete');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -528,3 +472,76 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     </ExchangeContextState.Provider>
   );
 }
+
+/* --------------------------------- Utilities -------------------------------- */
+/** Start from authored defaults, merge persisted, enforce required and order. */
+function repairPanels(
+  persisted: Array<{ panel: number; name?: string; visible?: boolean }> | undefined
+): PanelNode[] {
+  const defaults = flattenPanelTree(defaultSpCoinPanelTree).filter(
+    (p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY)
+  );
+
+  const byId = new Map<number, PanelNode>();
+  for (const p of defaults) {
+    byId.set(p.panel, {
+      panel: p.panel,
+      name: p.name || (SP_COIN_DISPLAY[p.panel] ?? String(p.panel)),
+      visible: !!p.visible,
+    });
+  }
+
+  if (Array.isArray(persisted)) {
+    for (const p of persisted) {
+      const id = p?.panel;
+      if (!Number.isFinite(id) || NON_PERSISTED_PANELS.has(id as SP_COIN_DISPLAY)) continue;
+      const prev = byId.get(id);
+      if (prev) {
+        if (typeof p.visible === 'boolean') prev.visible = p.visible;
+        if (p.name && p.name !== prev.name) prev.name = p.name;
+      } else {
+        byId.set(id, {
+          panel: id,
+          name: p.name || (SP_COIN_DISPLAY[id] ?? String(id)),
+          visible: !!p.visible,
+        });
+      }
+    }
+  }
+
+  for (const [id, vis] of MUST_INCLUDE_ON_BOOT) {
+    if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
+  }
+
+  const defaultOrder = defaults.map((d) => d.panel);
+  const extras = [...byId.keys()].filter((id) => !defaultOrder.includes(id));
+  const orderedIds = [...defaultOrder, ...extras];
+  return orderedIds.map((id) => byId.get(id)!);
+}
+
+/** Drop non-persisted items (safety no-op if they’re already excluded). */
+function dropNonPersisted(panels: PanelNode[]) {
+  return panels.filter((p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY));
+}
+
+/** Ensure required panels exist; apply default visibility only when absent. */
+function ensureRequiredPanels(
+  panels: PanelNode[],
+  required: ReadonlyArray<readonly [number, boolean]>
+) {
+  const byId = new Map(panels.map((p) => [p.panel, { ...p }]));
+  for (const [id, vis] of required) {
+    if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
+  }
+  return [...byId.values()];
+}
+
+/** Zero/one visible overlay; prefer TRADING_STATION_PANEL if multiple. */
+const reconcileOverlayVisibility = (flat: PanelNode[]): PanelNode[] => {
+  const isOverlay = (id: number) => MAIN_OVERLAY_GROUP.includes(id as SP_COIN_DISPLAY);
+  const visible = flat.filter((n) => isOverlay(n.panel) && n.visible);
+  if (visible.length <= 1) return flat;
+  const preferred =
+    visible.find((n) => n.panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL) ?? visible[0];
+  return flat.map((n) => (isOverlay(n.panel) ? { ...n, visible: n.panel === preferred.panel } : n));
+};

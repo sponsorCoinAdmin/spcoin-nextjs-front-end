@@ -77,7 +77,8 @@ export function saveLocalExchangeContext(ctx: ExchangeContext) {
     const out: any =
       typeof structuredClone === 'function'
         ? structuredClone(ctx)
-        : JSON.parse(stringifyBigInt(ctx))
+        : JSON.parse(stringifyBigInt(ctx));
+
     // Settings container
     out.settings = { ...(out.settings ?? {}) };
 
