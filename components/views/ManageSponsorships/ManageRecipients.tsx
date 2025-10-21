@@ -15,7 +15,6 @@ import rawRecipients from './recipients.json';
 
 import ManageWalletList from './ManageWalletList';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 type Props = { onClose?: () => void };
 
@@ -46,9 +45,20 @@ export default function ManageRecipients({ onClose }: Props) {
     () => setWalletCallBack(undefined)
   );
 
-  // Resolve recipients once (same enrichment pattern as Agents)
+  // Resolve recipients once (same enrichment pattern as Agents) and store in ExchangeContext.accounts.recipientAccounts
   useEffect(() => {
     let alive = true;
+
+    const isSameList = (a: WalletAccount[], b: WalletAccount[]) => {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        const ax = (a[i]?.address ?? '').toLowerCase();
+        const bx = (b[i]?.address ?? '').toLowerCase();
+        if (ax !== bx) return false;
+      }
+      return true;
+    };
+
     (async () => {
       try {
         const enriched = await loadAccounts(rawRecipients as any);
@@ -59,16 +69,52 @@ export default function ManageRecipients({ onClose }: Props) {
             name: w.name && w.name !== 'N/A' ? w.name : shortAddr((w as any).address),
             symbol: w.symbol ?? 'N/A',
           })) as WalletAccount[];
-        if (alive) setWalletList(built);
+
+        if (!alive) return;
+
+        setWalletList(built);
+
+        // Store in ExchangeContext.accounts.recipientAccounts if changed
+        ctx?.setExchangeContext((prev) => {
+          const current = prev?.accounts?.recipientAccounts ?? [];
+          if (isSameList(current, built)) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              recipientAccounts: built,
+            },
+          };
+        }, 'ManageRecipients:loadRecipientAccounts');
       } catch {
         const fallback = (Array.isArray(rawRecipients) ? rawRecipients : []).map((a: any) => {
           const w = buildWalletObj(a);
           return { ...(w as any), name: shortAddr((w as any).address) } as WalletAccount;
         });
-        if (alive) setWalletList(fallback);
+
+        if (!alive) return;
+
+        setWalletList(fallback);
+
+        // Fallback write to context
+        ctx?.setExchangeContext((prev) => {
+          const current = prev?.accounts?.recipientAccounts ?? [];
+          if (isSameList(current, fallback)) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              recipientAccounts: fallback,
+            },
+          };
+        }, 'ManageRecipients:loadRecipientAccounts(fallback)');
       }
     })();
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ✅ Callback: update ExchangeContext.accounts.recipientAccount and toggle MANAGE_RECIPIENT_PANEL

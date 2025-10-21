@@ -39,14 +39,22 @@ export default function ManageSponsors({ onClose }: Props) {
   }, [detailOpen]);
 
   // Allow header close to signal "exit detail → list"
-  useRegisterDetailCloser(
-    SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-    () => setWalletCallBack(undefined)
-  );
+  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, () => setWalletCallBack(undefined));
 
-  // Resolve wallets once (mirror ManageAgents)
+  // Resolve wallets once (mirror ManageAgents) and store in ExchangeContext.accounts.sponsorAccounts
   useEffect(() => {
     let alive = true;
+
+    const isSameList = (a: WalletAccount[], b: WalletAccount[]) => {
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        const ax = (a[i]?.address ?? '').toLowerCase();
+        const bx = (b[i]?.address ?? '').toLowerCase();
+        if (ax !== bx) return false;
+      }
+      return true;
+    };
+
     (async () => {
       try {
         const enriched = await loadAccounts(rawSponsors as any);
@@ -57,18 +65,52 @@ export default function ManageSponsors({ onClose }: Props) {
             name: w.name && w.name !== 'N/A' ? w.name : shortAddr((w as any).address),
             symbol: w.symbol ?? 'N/A',
           })) as WalletAccount[];
-        if (alive) setWalletList(built);
+
+        if (!alive) return;
+
+        setWalletList(built);
+
+        // Write sponsors array into ExchangeContext if changed
+        ctx?.setExchangeContext((prev) => {
+          const current = prev?.accounts?.sponsorAccounts ?? [];
+          if (isSameList(current, built)) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              sponsorAccounts: built,
+            },
+          };
+        }, 'ManageSponsors:loadSponsorAccounts');
       } catch {
         const fallback = (Array.isArray(rawSponsors) ? rawSponsors : []).map((a: any) => {
           const w = buildWalletObj(a);
           return { ...(w as any), name: shortAddr((w as any).address) } as WalletAccount;
         });
-        if (alive) setWalletList(fallback);
+
+        if (!alive) return;
+
+        setWalletList(fallback);
+
+        // Fallback write to context
+        ctx?.setExchangeContext((prev) => {
+          const current = prev?.accounts?.sponsorAccounts ?? [];
+          if (isSameList(current, fallback)) return prev;
+          return {
+            ...prev,
+            accounts: {
+              ...prev.accounts,
+              sponsorAccounts: fallback,
+            },
+          };
+        }, 'ManageSponsors:loadSponsorAccounts(fallback)');
       }
     })();
+
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ✅ Callback: update ExchangeContext.accounts.sponsorAccount and toggle MANAGE_SPONSOR_PANEL
@@ -96,7 +138,7 @@ export default function ManageSponsors({ onClose }: Props) {
     <ManageWalletList
       walletList={walletList}
       setWalletCallBack={setWalletCallBack}
-      containerType={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
+      containerType={SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL}
       onClose={onClose}
     />
   );
