@@ -6,7 +6,7 @@ import type { WalletAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import { SP_COIN_DISPLAY } from '@/lib/structure/exchangeContext/enums/spCoinDisplay';
+import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
 
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 import { buildWalletObj } from '@/lib/utils/feeds/assetSelect/builders';

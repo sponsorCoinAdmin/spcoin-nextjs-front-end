@@ -24,6 +24,15 @@ export interface WalletAccount {
   balance: bigint;
 }
 
+/** Who to claim rewards for */
+export enum AccountType {
+  SPONSOR = 'SPONSOR',
+  RECIPIENT = 'RECIPIENT',
+  AGENT = 'AGENT',
+  ALL = 'ALL',
+}
+
+
 /**
  * Useful for inputs where the raw string may still be in flight before validation.
  */

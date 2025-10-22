@@ -1,10 +1,10 @@
 // File: components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
@@ -18,6 +18,7 @@ import ManageAgents from './ManageAgents';
 
 // ✅ ToDo overlay
 import ToDo from '@/lib/utils/components/ToDo';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = { onClose?: () => void };
 
@@ -74,6 +75,25 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const agentsHidden = !(vAgents && mode === 'agents');
   const sponsorsHidden = !(vSponsors && mode === 'sponsors');
 
+  const ctx = useContext(ExchangeContextState);
+
+  /** Alert-only placeholder per request */
+  const claimRewards = useCallback((accountType: AccountType) => {
+    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    // eslint-disable-next-line no-alert
+    alert(
+      [
+        'ToDo: (Not Yet Implemented)',
+        `Claim ${accountType.toString()} Rewards`,
+        `For account: ${connected ? connected.address : '(none connected)'}`,
+      ].join('\n')
+    );
+  }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
+
+  // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
+  const defaultAddr =
+    String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
+
   return (
     <>
       {/* Address selector */}
@@ -84,7 +104,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            <AddressSelect />
+            <AddressSelect defaultAddress={defaultAddr} bypassDefaultFsm />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>
@@ -109,7 +129,14 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
                 <td className="p-0">
                   <div className={`${rowA} ${tdInnerCenter}`}>
-                    <button type="button" className="ms-claim--orange" aria-label="Claim Sponsors rewards">Claim</button>
+                    <button
+                      type="button"
+                      className="ms-claim--orange"
+                      aria-label="Claim Sponsors rewards"
+                      onClick={() => claimRewards(AccountType.SPONSOR)}
+                    >
+                      Claim
+                    </button>
                   </div>
                 </td>
                 <td className="p-0">
@@ -134,7 +161,14 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
                 <td className="p-0">
                   <div className={`${rowB} ${tdInnerCenter}`}>
-                    <button type="button" className="ms-claim--green" aria-label="Claim Recipients rewards">Claim</button>
+                    <button
+                      type="button"
+                      className="ms-claim--green"
+                      aria-label="Claim Recipients rewards"
+                      onClick={() => claimRewards(AccountType.RECIPIENT)}
+                    >
+                      Claim
+                    </button>
                   </div>
                 </td>
                 <td className="p-0">
@@ -159,7 +193,14 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
                 <td className="p-0">
                   <div className={`${rowA} ${tdInnerCenter}`}>
-                    <button type="button" className="ms-claim--orange" aria-label="Claim Agents rewards">Claim</button>
+                    <button
+                      type="button"
+                      className="ms-claim--orange"
+                      aria-label="Claim Agents rewards"
+                      onClick={() => claimRewards(AccountType.AGENT)}
+                    >
+                      Claim
+                    </button>
                   </div>
                 </td>
                 <td className="p-0">
@@ -184,7 +225,14 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
                 <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
                 <td className="p-0">
                   <div className={`${rowB} ${tdInnerCenter}`}>
-                    <button type="button" className="ms-claim--green" aria-label="Claim Total rewards">Claim</button>
+                    <button
+                      type="button"
+                      className="ms-claim--green"
+                      aria-label="Claim Total rewards"
+                      onClick={() => claimRewards(AccountType.ALL)}
+                    >
+                      Claim
+                    </button>
                   </div>
                 </td>
                 <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`} /></td>

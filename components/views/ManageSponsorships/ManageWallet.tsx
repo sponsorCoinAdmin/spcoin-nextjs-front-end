@@ -1,13 +1,14 @@
 // File: components/views/ManageSponsorships/ManageWallet.tsx
 'use client';
 
-import React from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import type { WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import AddressSelect from '../AddressSelect';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = {
   wallet?: WalletAccount;
@@ -33,6 +34,21 @@ const fallback = (v: unknown) => {
 export default function ManageWallet({ wallet, onClose }: Props) {
   if (!wallet) return null;
 
+  const ctx = useContext(ExchangeContextState);
+
+  // Derive a best-effort AccountType from wallet metadata; default to AGENT
+  const accountType: AccountType = useMemo(() => {
+    const t = (wallet as any)?.type?.toString().toLowerCase?.() ?? '';
+    if (t.includes('recipient')) return AccountType.RECIPIENT;
+    if (t.includes('sponsor')) return AccountType.SPONSOR;
+    if (t.includes('agent')) return AccountType.AGENT;
+    // heuristics on name/symbol as a fallback
+    const n = (wallet as any)?.name?.toString().toLowerCase?.() ?? '';
+    if (n.includes('recipient')) return AccountType.RECIPIENT;
+    if (n.includes('sponsor')) return AccountType.SPONSOR;
+    return AccountType.AGENT;
+  }, [wallet]);
+
   const address = addressToText(wallet.address);
   const name = fallback(wallet.name);
   const symbol = fallback(wallet.symbol);
@@ -41,6 +57,25 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const website = (wallet.website ?? '').toString().trim();
   const stakedBalance = 0;
   const pendingBalance = 0;
+
+  // 🔔 Exact same message structure as in ManageWalletList
+  const claimRewards = useCallback(
+    (type: AccountType) => {
+      const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+
+      // eslint-disable-next-line no-alert
+      alert(
+        [
+          'ToDo:(Not Yet Implemented)',
+          `Claim ${type.toString()} Rewards`,
+          `From: ${name.toString()}`,
+          `From Account: ${address.toString()}`,
+          `For account: ${connected ? connected.address : '(none connected)'}`,
+        ].join('\n')
+      );
+    },
+    [ctx?.exchangeContext?.accounts?.connectedAccount, name, address]
+  );
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
@@ -65,7 +100,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
 
       <div
         id="msWrapperWalletKV"
-        className="mb-4 overflow-x-auto overflow-y-auto rounded-xl border border-black"
+        className="mb-4 -mt-[20px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
       >
         <table id="msTableWalletKV" className="min-w-full border-collapse">
           <thead>
@@ -143,9 +178,14 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         </table>
       </div>
 
-      {/* Claim Rewards button under the table — use container-scoped selector like ManageSponsors */}
+      {/* Claim Rewards button under the table — same message/behavior as list view */}
       <div className="mb-6 flex items-center justify-start">
-        <button type="button" className="ms-claim--green" aria-label="Claim Rewards">
+        <button
+          type="button"
+          className="ms-claim--green"
+          aria-label="Claim Rewards"
+          onClick={() => claimRewards(accountType)}
+        >
           Claim Rewards
         </button>
       </div>

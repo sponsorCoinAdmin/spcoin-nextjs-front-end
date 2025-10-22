@@ -1,16 +1,17 @@
 // File: components/views/ManageSponsorships/ManageWalletList.tsx
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, useContext } from 'react';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import type { WalletAccount } from '@/lib/structure';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
 import AddressSelect from '@/components/views/AddressSelect';
 import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import ToDo from '@/lib/utils/components/ToDo';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 type Props = {
   walletList: WalletAccount[];
@@ -32,6 +33,17 @@ export default function ManageWalletList({
   onClose,
   containerType,
 }: Props) {
+  const ctx = useContext(ExchangeContextState);
+
+  // 🔎 Mandatory account type derived from containerType (enum label text)
+  const accountType: AccountType = useMemo(() => {
+    const key = (SP_COIN_DISPLAY as any)[containerType] as string | undefined;
+    const upper = (key ?? '').toUpperCase();
+    if (upper.includes('RECIPIENT')) return AccountType.RECIPIENT;
+    if (upper.includes('SPONSOR')) return AccountType.SPONSOR;
+    return AccountType.AGENT;
+  }, [containerType]);
+
   const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
   const [showToDo, setShowToDo] = useState<boolean>(true);
 
@@ -43,6 +55,39 @@ export default function ManageWalletList({
     if (upper.includes('SPONSOR')) return { roleLabel: 'Sponsor', idPrefix: 'ms' };
     return { roleLabel: 'Agent', idPrefix: 'ma' };
   }, [containerType]);
+
+  // 🛎️ Alert-only placeholder per request — includes account row context
+  const claimRewards = useCallback(
+    (type: AccountType, accountId: number) => {
+      const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+
+      const isTotal = accountId < 0 || accountId >= walletList.length;
+      const row = isTotal ? undefined : walletList[accountId];
+
+      const rowName = row?.name ?? (row?.address ? shortAddr(String((row as any).address)) : 'N/A');
+      // Some lists may store address under different keys; try common fallbacks
+      const rowAccount =
+        (row as any)?.account ??
+        (row as any)?.address ??
+        (row as any)?.hex ??
+        (row as any)?.bech32 ??
+        (row as any)?.value ??
+        (row as any)?.id ??
+        'N/A';
+
+      // eslint-disable-next-line no-alert
+      alert(
+        [
+          'ToDo:(Not Yet Implemented)',
+          `Claim ${type.toString()} Rewards`,
+          isTotal ? 'From: Total' : `From: ${String(rowName)}`,
+          isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,
+          `For account: ${connected ? connected.address : '(none connected)'}`,
+        ].join('\n')
+      );
+    },
+    [ctx?.exchangeContext?.accounts?.connectedAccount, walletList]
+  );
 
   // Scoped ids to avoid CSS collisions across pages
   const wrapperId = `${idPrefix}Wrapper`;
@@ -77,7 +122,7 @@ export default function ManageWalletList({
       {mode === 'all' && (
         <div
           id={wrapperId}
-          className="mb-6 -mt-[10px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
+          className="mb-6 -mt-[20px] overflow-x-auto overflow-y-auto rounded-xl border border-black"
         >
           <table id={tableId} className="min-w-full border-collapse">
             <thead>
@@ -140,6 +185,7 @@ export default function ManageWalletList({
                           type="button"
                           className={claimClass}
                           aria-label={`Claim rewards for ${addressText}`}
+                          onClick={() => claimRewards(accountType, i)}
                         >
                           Claim
                         </button>
@@ -194,7 +240,12 @@ export default function ManageWalletList({
                     </td>
                     <td className="p-0">
                       <div className={`${zebra} ${cellCenter} ${rowH} flex items-center justify-center`}>
-                        <button type="button" className={claimClass} aria-label="Claim Total rewards">
+                        <button
+                          type="button"
+                          className={claimClass}
+                          aria-label="Claim Total rewards"
+                          onClick={() => claimRewards(accountType, -1)}
+                        >
                           Claim
                         </button>
                       </div>
