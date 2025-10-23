@@ -21,14 +21,14 @@ import type {
   AssetSelectBag as UnionBag,
   TokenSelectBag,
   RecipientSelectBag,
-  AgentSelectBag,
+  // AgentSelectBag, // ❌ removed (AGENT_LIST_SELECT_PANEL deprecated)
   ErrorMessageBag,
   SimplePanelBag,
 } from '@/lib/context/structure/types/panelBag';
 
 type Props = {
   panel: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE;
+  feedType: FEED_TYPE; // kept in props for API stability, even though provider derives feedType internally
   instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: WalletAccount | TokenContract) => void;
@@ -48,10 +48,7 @@ function makeInitialPanelBag(
       const bag: RecipientSelectBag = { type: panel };
       return bag;
     }
-    case SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL: {
-      const bag: AgentSelectBag = { type: panel };
-      return bag;
-    }
+    // ❌ Removed: AGENT_LIST_SELECT_PANEL (per app changes to drop this panel)
     case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL: {
       // ✅ ErrorMessageBag requires `message`
       const bag: ErrorMessageBag = { type: panel, message: '' };
@@ -95,7 +92,8 @@ function PanelListSelectWrapperInner({
   peerAddress,
   onCommit,
 }: Props) {
-  const { exchangeContext } = useExchangeContext();
+  // ⬇️ Pull state + setter; we will update tradeData directly here
+  const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { toTrading } = usePanelTransitions();
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
@@ -113,12 +111,30 @@ function PanelListSelectWrapperInner({
     toTrading();
   }, [toTrading]);
 
+  // ✅ Route selection directly to ExchangeContext.tradeData.{buy|sell}TokenContract
   const handleCommit = useCallback(
     (asset: WalletAccount | TokenContract) => {
-      onCommit(asset);
+      if (
+        panel === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
+        panel === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL
+      ) {
+        setExchangeContext?.((prev) => {
+          const prevTD = prev?.tradeData ?? ({} as any);
+          const nextTD =
+            panel === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL
+              ? { ...prevTD, buyTokenContract: asset }
+              : { ...prevTD, sellTokenContract: asset };
+          return { ...prev, tradeData: nextTD } as typeof prev;
+        });
+      }
+
+      // Allow external observers (toast/analytics/etc.) without writing globals
+      onCommit?.(asset);
+
+      // Close back to trading
       toTrading();
     },
-    [onCommit, toTrading]
+    [panel, setExchangeContext, onCommit, toTrading]
   );
 
   return (

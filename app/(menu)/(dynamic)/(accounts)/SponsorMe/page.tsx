@@ -1,7 +1,9 @@
+// File: app/(menu)/CreateRecipientAccount/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 interface RecipientFormData {
   email: string;
@@ -15,12 +17,27 @@ interface RecipientFormData {
 }
 
 export default function CreateRecipientAccountPage() {
+  // ⬇️ Connected account → Public Key (read-only)
+  const ctx = useContext(ExchangeContextState);
+  const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+
+  const [publicKey, setPublicKey] = useState<string>('');
+  useEffect(() => {
+    setPublicKey(connected?.address ? String(connected.address) : '');
+  }, [connected?.address]);
+
+  // Pre-populate all editable fields with red "ToDo:"
   const [formData, setFormData] = useState<RecipientFormData>({
-    email: '',
-    website: '',
-    logoAvatar: '',
-    recipientAddress: '',
+    email: 'ToDo:',
+    website: 'ToDo:',
+    logoAvatar: 'ToDo:',
+    recipientAddress: 'ToDo:',
+    firstName: 'ToDo:',
+    lastName: 'ToDo:',
+    phone: 'ToDo:',
+    address: 'ToDo:',
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
@@ -46,11 +63,32 @@ export default function CreateRecipientAccountPage() {
     router.push('/');
   };
 
+  // Red text only, white border, same background (like previous page)
+  const todoInputClasses =
+    'w-full p-2 bg-[#1A1D2E] rounded border border-white text-[#ff1a1a] focus:outline-none focus:ring-0';
+
   return (
     <main className="max-w-3xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">Create a Sponsor Me (Recipient) Account</h1>
+      <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">
+        Create a Sponsor Me (Recipient) Account
+      </h1>
+
+      {/* Public Key (read-only, populated from connected account like ManageAccounts) */}
+      <div className="mb-6 flex items-center gap-4">
+        <label className="w-56 text-right">Public Key</label>
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="0x..."
+            value={publicKey}
+            readOnly
+            className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
+          />
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Required Fields */}
+        {/* Required & Optional Fields (pre-populated with red "ToDo:") */}
         {[
           { label: 'Email Address *', name: 'email' },
           { label: 'Website *', name: 'website' },
@@ -72,7 +110,7 @@ export default function CreateRecipientAccountPage() {
                 name={name}
                 value={(formData as any)[name] || ''}
                 onChange={handleChange}
-                className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600"
+                className={todoInputClasses}
               />
               {errors[name] && (
                 <p className="text-red-500 text-sm mt-1">{errors[name]}</p>

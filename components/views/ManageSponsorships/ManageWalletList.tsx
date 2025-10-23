@@ -49,7 +49,7 @@ export default function ManageWalletList({
 
   // Derive role label + id prefix from the enum member name (robust to build differences)
   const { roleLabel, idPrefix } = useMemo(() => {
-    const key = (SP_COIN_DISPLAY as any)[containerType] as string | undefined; // e.g., "AGENT_LIST_SELECT_PANEL"
+    const key = (SP_COIN_DISPLAY as any)[containerType] as string | undefined; // e.g., "MANAGE_AGENTS_PANEL"
     const upper = (key ?? '').toUpperCase();
     if (upper.includes('RECIPIENT')) return { roleLabel: 'Recipient', idPrefix: 'mr' };
     if (upper.includes('SPONSOR')) return { roleLabel: 'Sponsor', idPrefix: 'ms' };
@@ -105,16 +105,24 @@ export default function ManageWalletList({
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
+  // 🔗 Connected address for AddressSelect default, and stable instance id for display scope
+  const connectedAddress = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
+  const chainId = ctx?.exchangeContext?.network?.chainId ?? 1;
+  const instanceId = useMemo(
+    () => `${idPrefix.toUpperCase()}_${(SP_COIN_DISPLAY as any)[containerType]}_${chainId}`,
+    [idPrefix, containerType, chainId]
+  );
+
   return (
     <>
       <div className="mb-6">
-        <AssetSelectDisplayProvider>
+        <AssetSelectDisplayProvider instanceId={instanceId}>
           <AssetSelectProvider
             containerType={containerType}
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            <AddressSelect />
+            <AddressSelect defaultAddress={connectedAddress} bypassDefaultFsm />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>

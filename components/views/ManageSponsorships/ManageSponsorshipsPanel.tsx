@@ -99,8 +99,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       {/* Address selector */}
       <div className="mb-6">
         <AssetSelectDisplayProvider>
+          {/*
+            ⛳️ NOTE: AGENT_LIST_SELECT_PANEL was removed from the app.
+            We scope this provider to MANAGE_SPONSORSHIPS_PANEL instead.
+            AddressSelect uses `bypassDefaultFsm`, so behavior is unchanged.
+          */}
           <AssetSelectProvider
-            containerType={SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL}
+            containerType={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >

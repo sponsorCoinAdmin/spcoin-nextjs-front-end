@@ -82,12 +82,19 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const zebraA = 'bg-[rgba(56,78,126,0.35)]';
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
+  // ⬇️ Build a stable instance id for the AddressSelect display provider
+  const chainId = ctx?.exchangeContext?.network?.chainId ?? 1;
+  const instanceId = useMemo(
+    () => `MANAGE_WALLET_${SP_COIN_DISPLAY[SP_COIN_DISPLAY.MANAGE_AGENT_PANEL]}_${chainId}`,
+    [chainId]
+  );
+
   return (
     // ⬇️ wrap table + button in a container; we’ll scope styles to this id
     <div id="msWallet">
       {/* Address selector (prefilled, FSM bypass) */}
       <div className="mb-6">
-        <AssetSelectDisplayProvider>
+        <AssetSelectDisplayProvider instanceId={instanceId}>
           <AssetSelectProvider
             containerType={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}
             closePanelCallback={() => onClose?.()}

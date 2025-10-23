@@ -2,8 +2,9 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Address, formatUnits, parseUnits } from 'viem';
+import { Address, formatUnits, parseUnits, isAddress } from 'viem';
 import { clsx } from 'clsx';
+import { useAccount } from 'wagmi';
 
 import {
   useApiProvider,
@@ -35,14 +36,17 @@ import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
 import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
 
+// Simple console logger (always on)
+const clog = (...args: any[]) => console.log('[TradeAssetPanel]', ...args);
+
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
   const { exchangeContext } = useExchangeContext();
+  const wagmiAcc = useAccount(); // ✅ best source of the connected address
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -57,6 +61,16 @@ function TradeAssetPanelInner() {
   const isBuy  = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL;
   const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL;
 
+  // 🔎 Hydration + mount check
+  useEffect(() => {
+    clog('mounted', {
+      hasWindow: typeof window !== 'undefined',
+      containerTypeRoot,
+      apiProvider,
+      exchangeChainId: exchangeContext?.network?.chainId,
+    });
+  }, [apiProvider, exchangeContext?.network?.chainId, containerTypeRoot]);
+
   // selection state
   const { tokenContract, tokenAddr, tokenDecimals } = useTokenSelection({
     containerType: containerTypeRoot,
@@ -70,8 +84,24 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   });
 
-  // BUY-side: gate recipient button strictly by panel tree visibility (no isSpCoin logic here)
-  const { isVisible } = usePanelTree();
+  // 🔎 Sanity log on selection change
+  useEffect(() => {
+    const symbol =
+      (tokenContract as any)?.symbol ??
+      (tokenContract as any)?.name ??
+      '(unknown)';
+    clog('token selection changed', {
+      symbol,
+      tokenAddr,
+      tokenDecimals,
+      tokenContractAddress: (tokenContract as any)?.address,
+      isBuy,
+      isSell,
+    });
+  }, [tokenAddr, tokenDecimals, tokenContract, isBuy, isSell]);
+
+  // BUY-side UI gating via panel tree (unchanged)
+  usePanelTree();
 
   // amount input
   const [inputValue, setInputValue] = useState('0');
@@ -111,6 +141,13 @@ function TradeAssetPanelInner() {
     if (lastDebouncedRef.current === debouncedForPanel) return;
     lastDebouncedRef.current = debouncedForPanel ?? null;
 
+    clog('dispatch spcoin:debouncedAmount', {
+      amount: debouncedForPanel?.toString(),
+      containerType: containerTypeRoot,
+      tradeDirection,
+      token: tokenAddr || undefined,
+    });
+
     window.dispatchEvent(
       new CustomEvent('spcoin:debouncedAmount', {
         detail: {
@@ -137,6 +174,14 @@ function TradeAssetPanelInner() {
       const bi = parseUnits(formatted, tokenDecimals);
       setLocalAmount(bi);
 
+      clog('onChangeAmount', {
+        input: value,
+        normalized,
+        parsed: bi.toString(),
+        isSell,
+        tradeDirectionBefore: tradeDirection,
+      });
+
       if (isSell) {
         if (tradeDirection !== TRADE_DIRECTION.SELL_EXACT_OUT)
           setTradeDirection(TRADE_DIRECTION.SELL_EXACT_OUT);
@@ -148,6 +193,7 @@ function TradeAssetPanelInner() {
       }
     } catch (e) {
       debugLog.warn('parseUnits failed', e);
+      clog('parseUnits failed', e);
     }
   };
 
@@ -160,19 +206,108 @@ function TradeAssetPanelInner() {
         : `You Exactly Receive:`);
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
+
+  // -------- OWNER RESOLUTION (NEW) --------
+  // 1) wagmi
+  const wagmiOwner = (wagmiAcc?.address ?? undefined) as Address | undefined;
+
+  // 2) exchangeContext fallbacks
+  const ctxOwner =
+    ((exchangeContext as any)?.account?.address as Address | undefined) ??
+    ((exchangeContext as any)?.wallet?.address as Address | undefined) ??
+    ((exchangeContext as any)?.address as Address | undefined);
+
+  // 3) window.ethereum.selectedAddress / eth_accounts
+  const [providerOwner, setProviderOwner] = useState<Address | undefined>(undefined);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const eth = (window as any)?.ethereum;
+    const sel = eth?.selectedAddress as Address | undefined;
+    if (sel && isAddress(sel)) {
+      setProviderOwner(sel);
+      return;
+    }
+    // Try eth_accounts if selectedAddress is empty
+    (async () => {
+      try {
+        if (!eth?.request) return;
+        const accounts: string[] = await eth.request({ method: 'eth_accounts' });
+        if (accounts?.[0] && isAddress(accounts[0])) {
+          setProviderOwner(accounts[0] as Address);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  const owner: Address | undefined = wagmiOwner ?? ctxOwner ?? providerOwner;
+
+  // Log where the owner came from
+  useEffect(() => {
+    clog('owner resolution', {
+      wagmiOwner,
+      ctxOwner,
+      providerOwner,
+      chosenOwner: owner,
+      ownerIsValid: owner ? isAddress(owner) : false,
+      wagmiStatus: wagmiAcc?.status,
+    });
+  }, [wagmiOwner, ctxOwner, providerOwner, owner, wagmiAcc?.status]);
+
+  // -------- BALANCE HOOK CALL --------
+  useEffect(() => {
+    const symbol =
+      (tokenContract as any)?.symbol ??
+      (tokenContract as any)?.name ??
+      '(unknown)';
+    clog('pre useBalanceSSOT params', {
+      chainId,
+      tokenAddress: tokenAddr,
+      decimalsHint: tokenDecimals,
+      owner: owner ?? null,
+      symbol,
+      enabled: Boolean(tokenAddr && owner),
+    });
+  }, [chainId, tokenAddr, tokenDecimals, owner, tokenContract]);
+
   const {
     formatted: liveFormattedBalance,
     isLoading: balanceLoading,
     error: balanceError,
   } = useBalanceSSOT({
     chainId,
-    tokenAddress: tokenContract?.address as Address | undefined,
-    tokenDecimals,
-    containerType: containerTypeRoot,
+    tokenAddress: (tokenAddr || undefined) as Address | undefined,
+    owner,                            // ✅ REQUIRED; previously null in your logs
+    decimalsHint: tokenDecimals,
+    enabled: Boolean(tokenAddr && owner),
   });
 
+  // 🔎 Log the hook outputs
+  useEffect(() => {
+    clog('useBalanceSSOT state', {
+      balanceLoading,
+      balanceError: !!balanceError,
+      liveFormattedBalance,
+      tokenAddr,
+      tokenDecimals,
+      chainId,
+      owner,
+    });
+    if (balanceError) {
+      console.error('[TradeAssetPanel] useBalanceSSOT error detail:', balanceError);
+    }
+  }, [balanceLoading, balanceError, liveFormattedBalance, tokenAddr, tokenDecimals, chainId, owner]);
+
+  // Friendlier display when wallet isn’t connected
   const formattedBalance =
-    balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
+    !owner
+      ? 'Connect wallet'
+      : balanceError
+        ? '—'
+        : balanceLoading
+          ? '…'
+          : liveFormattedBalance ?? '0.0';
 
   const isInputDisabled =
     !tokenAddr || (apiProvider === API_TRADING_PROVIDER.API_0X && isBuy);

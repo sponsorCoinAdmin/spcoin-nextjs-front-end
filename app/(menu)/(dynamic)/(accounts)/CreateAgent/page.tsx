@@ -1,7 +1,9 @@
+// File: app/(menu)/CreateAgentAccount/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 
 interface AgentFormData {
   email: string;
@@ -15,15 +17,31 @@ interface AgentFormData {
 }
 
 export default function CreateAgentAccountPage() {
+  // ⬇️ Pull connected account → for Public Key
+  const ctx = useContext(ExchangeContextState);
+  const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+
+  const [publicKey, setPublicKey] = useState<string>('');
+  useEffect(() => {
+    setPublicKey(connected?.address ? String(connected.address) : '');
+  }, [connected?.address]);
+
+  // Pre-populate all editable fields with "ToDo:" (red text via class below)
   const [formData, setFormData] = useState<AgentFormData>({
-    email: '',
-    website: '',
-    logoAvatar: '',
-    agentAddress: '',
+    email: 'ToDo:',
+    website: 'ToDo:',
+    logoAvatar: 'ToDo:',
+    agentAddress: 'ToDo:',
+    firstName: 'ToDo:',
+    lastName: 'ToDo:',
+    phone: 'ToDo:',
+    address: 'ToDo:',
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
+  // Keep your existing validation intact (now "ToDo:" passes non-empty checks)
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.email) newErrors.email = 'Email is required';
@@ -46,11 +64,30 @@ export default function CreateAgentAccountPage() {
     router.push('/');
   };
 
+  // Red text only, white border, same background
+  const todoInputClasses =
+    'w-full p-2 bg-[#1A1D2E] rounded border border-white text-[#ff1a1a] focus:outline-none focus:ring-0';
+
   return (
     <main className="max-w-3xl mx-auto p-6 text-white">
       <h1 className="text-2xl font-bold mb-6 text-[#E5B94F]">Create an Agent Account</h1>
+
+      {/* Public Key (read-only, populated from connected account like ManageAccounts) */}
+      <div className="mb-6 flex items-center gap-4">
+        <label className="w-56 text-right">Public Key</label>
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="0x..."
+            value={publicKey}
+            readOnly
+            className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600 text-white"
+          />
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Required Fields */}
+        {/* Required & Optional Fields (pre-populated with red "ToDo:") */}
         {[
           { label: 'Email Address *', name: 'email' },
           { label: 'Website *', name: 'website' },
@@ -72,7 +109,7 @@ export default function CreateAgentAccountPage() {
                 name={name}
                 value={(formData as any)[name] || ''}
                 onChange={handleChange}
-                className="w-full p-2 bg-[#1A1D2E] rounded border border-gray-600"
+                className={todoInputClasses}
               />
               {errors[name] && (
                 <p className="text-red-500 text-sm mt-1">{errors[name]}</p>
