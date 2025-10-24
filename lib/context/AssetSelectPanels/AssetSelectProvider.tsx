@@ -14,7 +14,7 @@ import { useInstanceId } from './hooks/useInstanceId';
 import { useFeedType } from './hooks/useFeedType';
 import { usePanelBag } from './hooks/usePanelBag';
 import { useValidatedAsset } from './hooks/useValidatedAsset';
-import { useProviderCallbacks } from './hooks/useProviderCallbacks';
+// ⬇️ REMOVED: global callback bridge
 import { useFSMBridge } from './hooks/useFSMBridge';
 
 const LOG_TIME = false;
@@ -86,7 +86,7 @@ export const AssetSelectProvider = ({
         initialPanelBag ? JSON.stringify(initialPanelBag) : '—'
       }`
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // mount-only
 
   // State change logs (gated)
@@ -105,7 +105,7 @@ export const AssetSelectProvider = ({
     setValidatedAssetNarrow,
   } = useValidatedAsset<TokenContract | WalletAccount>();
 
-  // Wrap parent callback with a thin trace + gated raw log layer
+  // Parent commit callback with trace
   const tracedSetSelectedAssetCallback = useCallback(
     (asset: TokenContract | WalletAccount) => {
       rawLog('[AssetSelectProvider] setSelectedAssetCallback(IN)', {
@@ -149,9 +149,19 @@ export const AssetSelectProvider = ({
     [setSelectedAssetCallback, instanceId, containerType, feedType]
   );
 
-  const { fireClosePanel, fireSetTradingToken } = useProviderCallbacks(
-    { closePanelCallback, setTradingTokenCallback: tracedSetSelectedAssetCallback },
-    instanceId,
+  // ⬇️ REPLACEMENT for the removed global bridge: thin local “fire*” wrappers.
+  const fireClosePanel = useCallback(
+    (fromUser?: boolean) => {
+      closePanelCallback(fromUser);
+    },
+    [closePanelCallback]
+  );
+
+  const fireSetTradingToken = useCallback(
+    (asset: TokenContract | WalletAccount) => {
+      tracedSetSelectedAssetCallback(asset);
+    },
+    [tracedSetSelectedAssetCallback]
   );
 
   const { resetPreview, showErrorPreview, showAssetPreview } = useAssetSelectDisplay();
@@ -238,7 +248,7 @@ export const AssetSelectProvider = ({
     }
   }, [debouncedHexInput, manualEntry, bypassFSM, instanceId]);
 
-  // Wrap fireSetTradingToken behind context method for outward logging
+  // Context-facing wrappers (same names for compatibility)
   const setTradingTokenCallbackCtx = useCallback(
     (a: TokenContract | WalletAccount) => {
       rawLog('[AssetSelectProvider] ctx.setTradingTokenCallback → fireSetTradingToken(IN)', {
@@ -299,7 +309,7 @@ export const AssetSelectProvider = ({
       feedType,
       instanceId,
 
-      // Parent bridges exposed to children (legacy name preserved) — wrapped with extra logs
+      // Parent bridges exposed to children (legacy name preserved) — now direct
       closePanelCallback: closePanelCallbackCtx,
       setTradingTokenCallback: setTradingTokenCallbackCtx,
 

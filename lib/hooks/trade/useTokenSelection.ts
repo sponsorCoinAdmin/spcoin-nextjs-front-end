@@ -9,9 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('useTokenSelection', DEBUG, false);
 
-// 🔎 Env-gated deep trace for balance/token selection
-// Set NEXT_PUBLIC_TRACE_BALANCE=true to enable.
-// TODO(TRACE_CLEANUP): remove when done debugging.
+// Set NEXT_PUBLIC_TRACE_BALANCE=true to enable deep traces.
 const TRACE_BALANCE = process.env.NEXT_PUBLIC_TRACE_BALANCE === 'true';
 
 const lower = (addr?: string | Address) => (addr ? (addr as string).toLowerCase() : '');
@@ -39,11 +37,18 @@ export function useTokenSelection({
   setSellAmount,
   setBuyAmount,
 }: Params) {
+  // ✅ Determine panel role correctly (supports SELECT and LIST variants)
+  const isSellPanel =
+    containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL ||
+    containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL;
+  const chosenFrom = isSellPanel ? 'SELL' : 'BUY';
+
   // 🔎 READ store snapshot
   if (TRACE_BALANCE) {
     // eslint-disable-next-line no-console
     console.log('[TRACE][useTokenSelection] READ store', {
       fromContainer: SP_COIN_DISPLAY[containerType],
+      branchChosen: chosenFrom,
       sellAddr: sellTokenContract?.address,
       sellSym: sellTokenContract?.symbol,
       sellDec: sellTokenContract?.decimals,
@@ -53,11 +58,33 @@ export function useTokenSelection({
     });
   }
 
-  const tokenContract =
-    containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL ? sellTokenContract : buyTokenContract;
+  // ✅ Use the correct source by panel role
+  const tokenContract = isSellPanel ? sellTokenContract : buyTokenContract;
 
   const tokenAddr = useMemo(() => lower(tokenContract?.address), [tokenContract?.address]);
   const tokenDecimals = tokenContract?.decimals ?? 18;
+
+  // Extra: log the branch decision & chosen contract when it changes
+  const prevChosenRef = useRef<string | null>(null);
+  useEffect(() => {
+    const curr = `${chosenFrom}:${tokenContract?.address ?? '(none)'}`;
+    if (prevChosenRef.current !== curr) {
+      debugLog.log?.(
+        `🔀 branch=${chosenFrom} • selected=${tokenContract?.symbol ?? '(?)'} @ ${tokenContract?.address ?? '(none)'}`
+      );
+      if (TRACE_BALANCE) {
+        // eslint-disable-next-line no-console
+        console.log('[TRACE][useTokenSelection] CHOSEN', {
+          fromContainer: SP_COIN_DISPLAY[containerType],
+          branchChosen: chosenFrom,
+          addr: tokenContract?.address,
+          sym: tokenContract?.symbol,
+          dec: tokenContract?.decimals,
+        });
+      }
+      prevChosenRef.current = curr;
+    }
+  }, [chosenFrom, containerType, tokenContract]);
 
   // Mirror address changes into local state
   const prevAddrRef = useRef<string>('');
@@ -67,7 +94,7 @@ export function useTokenSelection({
     prevAddrRef.current = tokenAddr || '';
 
     if (tokenAddr) {
-      debugLog.log(`📦 Loaded token for ${SP_COIN_DISPLAY[containerType]}:`, tokenAddr);
+      debugLog.log(`📦 Loaded token for ${SP_COIN_DISPLAY[containerType]} (${chosenFrom}):`, tokenAddr);
       if (TRACE_BALANCE) {
         // eslint-disable-next-line no-console
         console.log('[TRACE][useTokenSelection] setLocalTokenContract <-', {
@@ -75,11 +102,12 @@ export function useTokenSelection({
           sym: tokenContract?.symbol,
           dec: tokenContract?.decimals,
           fromContainer: SP_COIN_DISPLAY[containerType],
+          branchChosen: chosenFrom,
         });
       }
       setLocalTokenContract(tokenContract as any);
     }
-  }, [tokenAddr, containerType, setLocalTokenContract, tokenContract]);
+  }, [tokenAddr, containerType, chosenFrom, setLocalTokenContract, tokenContract]);
 
   // Zero state when cleared
   const wasDefinedRef = useRef<boolean>(Boolean(tokenAddr));
@@ -89,20 +117,39 @@ export function useTokenSelection({
     if (wasDefined && !isDefined) {
       setLocalTokenContract(undefined as any);
       setLocalAmount(0n);
-      if (containerType === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL) {
+      if (isSellPanel) {
         if (sellAmount !== 0n) setSellAmount(0n);
       } else {
         if (buyAmount !== 0n) setBuyAmount(0n);
       }
+      if (TRACE_BALANCE) {
+        // eslint-disable-next-line no-console
+        console.log('[TRACE][useTokenSelection] CLEARED', {
+          fromContainer: SP_COIN_DISPLAY[containerType],
+          branchChosen: chosenFrom,
+        });
+      }
     }
     wasDefinedRef.current = isDefined;
-  }, [tokenAddr, containerType, setLocalTokenContract, setLocalAmount, sellAmount, buyAmount, setSellAmount, setBuyAmount]);
+  }, [
+    tokenAddr,
+    containerType,
+    chosenFrom,
+    isSellPanel,
+    setLocalTokenContract,
+    setLocalAmount,
+    sellAmount,
+    buyAmount,
+    setSellAmount,
+    setBuyAmount,
+  ]);
 
   // 🔎 RETURN snapshot
   if (TRACE_BALANCE) {
     // eslint-disable-next-line no-console
     console.log('[TRACE][useTokenSelection] RETURN', {
       fromContainer: SP_COIN_DISPLAY[containerType],
+      branchChosen: chosenFrom,
       tokenAddr,
       tokenDecimals,
       tokenContractAddr: tokenContract?.address,
