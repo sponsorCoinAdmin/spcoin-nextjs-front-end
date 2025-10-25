@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Address, formatUnits, parseUnits } from 'viem';
+import { Address, formatUnits, parseUnits, isAddress } from 'viem';
 import { clsx } from 'clsx';
 import { useAccount } from 'wagmi';
 
@@ -43,7 +43,7 @@ const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
   const { exchangeContext } = useExchangeContext();
-  const { address } = useAccount(); // owner for balances
+  const { address: wagmiOwner } = useAccount();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -71,7 +71,7 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   });
 
-  // BUY-side: keep tree hookup (even if result isn’t used)
+  // (kept for any UI gating you may do elsewhere)
   usePanelTree();
 
   // amount input
@@ -154,29 +154,33 @@ function TradeAssetPanelInner() {
 
   const buySellText = isSell
     ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-        ? `You Pay ± ${slippage.percentageString}`
+        ? `You Pay ± ${slippage?.percentageString ?? '0%'}`
         : `You Exactly Pay:`)
     : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-        ? `You Receive ± ${slippage.percentageString}`
+        ? `You Receive ± ${slippage?.percentageString ?? '0%'}`
         : `You Exactly Receive:`);
 
+  // --- Balance (minimal) ---
   const chainId = exchangeContext?.network?.chainId ?? 1;
+  const tokenAddress = (tokenContract?.address && isAddress(tokenContract.address))
+    ? (tokenContract.address as Address)
+    : undefined;
+  const owner = wagmiOwner as Address | undefined;
 
-  // ✅ useFormattedBalance expects: { chainId, tokenAddress, owner?, decimalsHint?, enabled? }
-  const {
-    formatted: liveFormattedBalance,
-    isLoading: balanceLoading,
-    error: balanceError,
-  } = useFormattedBalance({
-    chainId,
-    tokenAddress: tokenContract?.address as Address | undefined,
-    owner: (address ?? undefined) as Address | undefined,
-    decimalsHint: tokenDecimals,
-    enabled: Boolean(tokenAddr && address),
-  });
+  const { formatted: liveFormattedBalance, isLoading: balanceLoading, error: balanceError } =
+    useFormattedBalance({
+      chainId,
+      tokenAddress,
+      owner,
+      decimalsHint: tokenDecimals,
+      enabled: Boolean(tokenAddress && owner),
+    });
 
   const formattedBalance =
-    balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
+    !owner ? 'Connect wallet' :
+    balanceError ? '—' :
+    balanceLoading ? '…' :
+    (liveFormattedBalance ?? '0.0');
 
   const isInputDisabled =
     !tokenAddr || (apiProvider === API_TRADING_PROVIDER.API_0X && isBuy);
