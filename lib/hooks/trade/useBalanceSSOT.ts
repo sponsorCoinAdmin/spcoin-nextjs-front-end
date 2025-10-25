@@ -1,15 +1,15 @@
+// File: lib/hooks/trade/useBalanceSSOT.ts
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Address, PublicClient } from 'viem';
 import { createPublicClient, http, isAddress, formatUnits, erc20Abi } from 'viem';
 import { mainnet, polygon, arbitrum, base, optimism } from 'viem/chains';
-
-const TRACE_BALANCE = process.env.NEXT_PUBLIC_TRACE_BALANCE === 'true';
-
+export const USE_BALANCE_SSOT_BUILD = 'useBalanceSSOT@2025-10-24-1';
+console.log('[useBalanceSSOT] MODULE_LOADED', USE_BALANCE_SSOT_BUILD);
 type Params = {
   chainId: number;
-  tokenAddress?: Address;  // ERC20; if undefined ⇒ native
+  tokenAddress?: Address;     // ERC20; if undefined ⇒ native
   owner?: Address;
   decimalsHint?: number;
   enabled?: boolean;
@@ -29,19 +29,22 @@ function pickRpcUrl(chain: any): string {
   return pub ?? def ?? '';
 }
 
-const CLIENT_CACHE = new Map<number, any>();
-
+const CLIENT_CACHE = new Map<number, PublicClient & { __rpcUrl?: string }>();
 function getPublicClient(chainId: number): PublicClient & { __rpcUrl?: string } {
-  if (CLIENT_CACHE.has(chainId)) return CLIENT_CACHE.get(chainId);
+  const cached = CLIENT_CACHE.get(chainId);
+  if (cached) return cached;
   const chain = CHAIN_MAP[chainId] ?? mainnet;
   const rpcUrl = pickRpcUrl(chain);
-  const client = createPublicClient({ chain, transport: rpcUrl ? http(rpcUrl) : http() }) as PublicClient & { __rpcUrl?: string };
+  const client = createPublicClient({
+    chain,
+    transport: rpcUrl ? http(rpcUrl) : http(),
+  }) as PublicClient & { __rpcUrl?: string };
   client.__rpcUrl = rpcUrl || '(viem http() default)';
   CLIENT_CACHE.set(chainId, client);
   return client;
 }
 
-/** simple in-flight caches keyed by primitives to dedupe duplicate calls */
+/** in-flight caches keyed by primitives to dedupe duplicate calls */
 const inflightDecimals = new Map<string, Promise<number>>();
 const inflightBalances = new Map<string, Promise<bigint>>();
 
@@ -57,47 +60,78 @@ export function useBalanceSSOT({
   const [isLoading, setLoading] = useState<boolean>(false);
   const [error, setError]       = useState<Error | null>(null);
 
+  // 🧠 remember last committed values to skip redundant setState
+  const lastRawRef = useRef<bigint | null>(null);
+  const lastFmtRef = useRef<string>('0');
+
   const client = useMemo(() => {
     try {
       return getPublicClient(chainId);
     } catch (e) {
-      if (TRACE_BALANCE) console.error('[TRACE][useBalanceSSOT] client error', e);
+      console.error('[useBalanceSSOT] client error', e);
       return null;
     }
-  }, [chainId]); // 👈 stable by chainId only
+  }, [chainId]);
 
-  // 🔑 stable key: only based on primitives; if key doesn’t change, skip all network work
+  // 🔑 stable key based on primitives (chain/token/owner)
   const queryKey = useMemo(() => {
     if (!chainId || !owner) return '';
     const t = tokenAddress ? tokenAddress.toLowerCase() : 'NATIVE';
     return `${chainId}:${t}:${owner.toLowerCase()}`;
   }, [chainId, tokenAddress, owner]);
 
-  // Remember the last “effective” key we fetched (including decimals used + rpc)
+  // Remember the last effective fetch (includes resolved decimals + rpc)
   const lastKeyRef = useRef<string>('');
 
   useEffect(() => {
     let cancelled = false;
 
+    console.log('[useBalanceSSOT] EFFECT_RUN', {
+      enabled, chainId, tokenAddress, owner, decimalsHint, queryKey,
+    });
+
     async function run() {
-      if (!enabled || !client) return;
+      if (!enabled || !client) {
+        if (!enabled) console.log('[useBalanceSSOT] SKIP_DISABLED');
+        if (!client)  console.log('[useBalanceSSOT] SKIP_NO_CLIENT');
+        return;
+      }
 
       if (!owner || !isAddress(owner)) {
-        console.warn('[useBalanceSSOT] SKIP — owner missing/invalid', { owner });
-        setBalance(null); setFmt('0'); setLoading(false); setError(null);
+        console.warn('[useBalanceSSOT] EARLY_EXIT_INVALID_OWNER', { owner });
+        if (lastRawRef.current !== null || lastFmtRef.current !== '0') {
+          lastRawRef.current = null;
+          lastFmtRef.current = '0';
+          setBalance(null);
+          setFmt('0');
+        }
+        setLoading(false);
+        setError(null);
         return;
       }
 
       if (!queryKey) return;
 
-      // 🧯 If inputs didn’t change, do nothing (prevents unchanged panel refetch)
-      if (lastKeyRef.current.startsWith(queryKey + '|')) return;
+      // 🧯 If inputs didn’t change, do nothing (prevents unchanged panel re-fetch)
+      if (lastKeyRef.current.startsWith(queryKey + '|')) {
+        console.log('[useBalanceSSOT] SKIP_UNCHANGED_KEY', {
+          queryKey,
+          lastEffectiveKey: lastKeyRef.current,
+        });
+        return;
+      }
 
       try {
+        console.log('[useBalanceSSOT] FETCH_START', {
+          queryKey,
+          hintDecimals: decimalsHint,
+          rpcUrl: (client as any).__rpcUrl,
+        });
+
         setLoading(true);
         setError(null);
 
-        // 1) determine decimals (hint → cached → on-chain)
+        // Resolve decimals (hint → cached → on-chain)
         let decimals = typeof decimalsHint === 'number' ? decimalsHint : 18;
 
         if (tokenAddress && isAddress(tokenAddress) && typeof decimalsHint !== 'number') {
@@ -115,7 +149,7 @@ export function useBalanceSSOT({
           try {
             const d = await decPromise;
             if (typeof d === 'number') decimals = d;
-            if (TRACE_BALANCE) console.log('[useBalanceSSOT] decimals()', { tokenAddress, decimals });
+            console.log('[useBalanceSSOT] decimals()', { tokenAddress, decimals });
           } catch (decErr) {
             console.warn('[useBalanceSSOT] decimals() failed, using hint/fallback', { tokenAddress, hint: decimalsHint, decErr });
           } finally {
@@ -123,18 +157,13 @@ export function useBalanceSSOT({
           }
         }
 
-        // 2) fetch balance (ERC20 or native), with in-flight dedupe
+        // Fetch balance with in-flight dedupe
         let raw: bigint = 0n;
 
         if (tokenAddress && isAddress(tokenAddress)) {
-          const balPromiseKey = queryKey; // includes owner+token+chain
+          const balPromiseKey = queryKey; // chain + token + owner
           let balPromise = inflightBalances.get(balPromiseKey);
           if (!balPromise) {
-            if (TRACE_BALANCE) {
-              console.log('[useBalanceSSOT] balanceOf params', {
-                chainId, tokenAddress, owner, rpcUrl: (client as any).__rpcUrl,
-              });
-            }
             balPromise = client.readContract({
               address: tokenAddress,
               abi: erc20Abi,
@@ -144,44 +173,57 @@ export function useBalanceSSOT({
             inflightBalances.set(balPromiseKey, balPromise);
           }
 
-          raw = await balPromise;
-          inflightBalances.delete(balPromiseKey);
-
-          if (TRACE_BALANCE) {
+          try {
+            raw = await balPromise;
             console.log('[useBalanceSSOT] balanceOf result', {
               chainId, tokenAddress, owner, raw: raw.toString(), decimals,
             });
+          } finally {
+            inflightBalances.delete(balPromiseKey);
           }
         } else {
           // native
-          if (TRACE_BALANCE) {
-            console.log('[useBalanceSSOT] native getBalance params', {
-              chainId, owner, rpcUrl: (client as any).__rpcUrl,
-            });
-          }
           raw = await client.getBalance({ address: owner });
           decimals = 18;
-
-          if (TRACE_BALANCE) {
-            console.log('[useBalanceSSOT] native getBalance result', {
-              chainId, owner, raw: raw.toString(), decimals,
-            });
-          }
+          console.log('[useBalanceSSOT] native getBalance result', {
+            chainId, owner, raw: raw.toString(), decimals,
+          });
         }
 
         if (cancelled) return;
 
         const fmt = formatUnits(raw, decimals);
-        setBalance(raw);
-        setFmt(fmt);
 
-        // 🔐 remember the full effective key so the same inputs won’t refetch
+        // ✅ Only commit state if it actually changed
+        const rawChanged = lastRawRef.current === null || raw !== lastRawRef.current;
+        const fmtChanged = fmt !== lastFmtRef.current;
+
+        if (rawChanged || fmtChanged) {
+          lastRawRef.current = raw;
+          lastFmtRef.current = fmt;
+          setBalance(raw);
+          setFmt(fmt);
+          console.log('[useBalanceSSOT] SET_STATE_CHANGED', { fmt, raw: raw.toString() });
+        } else {
+          console.log('[useBalanceSSOT] SET_STATE_SKIPPED_SAME_VALUE', { fmt, raw: raw.toString() });
+        }
+
+        // 🔐 remember full effective key so identical inputs won’t refetch
         lastKeyRef.current = `${queryKey}|${decimals}|${(client as any).__rpcUrl}`;
+
+        console.log('[useBalanceSSOT] FETCH_DONE', {
+          effectiveKey: lastKeyRef.current,
+          formatted: fmt,
+        });
       } catch (e: any) {
         if (cancelled) return;
         setError(e);
-        setBalance(null);
-        setFmt('0');
+        if (lastRawRef.current !== null || lastFmtRef.current !== '0') {
+          lastRawRef.current = null;
+          lastFmtRef.current = '0';
+          setBalance(null);
+          setFmt('0');
+        }
         console.error('[useBalanceSSOT] ERROR', e);
       } finally {
         if (!cancelled) setLoading(false);
@@ -190,7 +232,6 @@ export function useBalanceSSOT({
 
     run();
     return () => { cancelled = true; };
-  // 👇 Only primitives & hint/enabled; DO NOT include `client` object
   }, [enabled, chainId, tokenAddress, owner, decimalsHint, queryKey]);
 
   return { balance, formatted, isLoading, error };
