@@ -42,7 +42,7 @@ const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
 
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
-  const { exchangeContext } = useExchangeContext();
+  const { exchangeContext, setSellBalance, setBuyBalance } = useExchangeContext(); // ⬅️ grab balance setters
   const { address } = useAccount(); // owner for balances
 
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -177,6 +177,51 @@ function TradeAssetPanelInner() {
 
   const formattedBalance =
     balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
+
+  // 🔁 Push live balance into ExchangeContext (only when stable / non-loading / no error)
+  const prevPushedBalanceRef = useRef<bigint | undefined>(undefined);
+  useEffect(() => {
+    if (!tokenAddr || !address) return;
+    if (balanceLoading || balanceError) return;
+    if (liveFormattedBalance == null || tokenDecimals == null) return;
+
+    let parsed: bigint | undefined;
+    try {
+      parsed = parseUnits(liveFormattedBalance, tokenDecimals);
+    } catch {
+      // formatted can be "—" or "…" or other; ignore silently
+      return;
+    }
+
+    if (prevPushedBalanceRef.current === parsed) return; // avoid spam
+    prevPushedBalanceRef.current = parsed;
+
+    debugLog.log('balance sync', {
+      side: isSell ? 'SELL' : 'BUY',
+      tokenAddr: tokenAddr,
+      liveFormattedBalance,
+      parsed: String(parsed),
+      prevBal: exchangeContext?.tradeData?.[isSell ? 'sellTokenContract' : 'buyTokenContract']?.balance?.toString?.(),
+    });
+
+    if (isSell) {
+      setSellBalance?.(parsed);
+    } else {
+      setBuyBalance?.(parsed);
+    }
+  }, [
+    address,
+    tokenAddr,
+    tokenDecimals,
+    liveFormattedBalance,
+    balanceLoading,
+    balanceError,
+    isSell,
+    setSellBalance,
+    setBuyBalance,
+    exchangeContext?.tradeData?.buyTokenContract?.balance,
+    exchangeContext?.tradeData?.sellTokenContract?.balance,
+  ]);
 
   const isInputDisabled =
     !tokenAddr || (apiProvider === API_TRADING_PROVIDER.API_0X && isBuy);

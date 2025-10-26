@@ -52,6 +52,8 @@ export type ExchangeContextType = {
 
   setSellAmount: (amount: bigint) => void;
   setBuyAmount: (amount: bigint) => void;
+  setSellBalance: (balance: bigint) => void;  // ✅ ADDED
+  setBuyBalance: (balance: bigint) => void;   // ✅ ADDED
   setSellTokenContract: (contract: TokenContract | undefined) => void;
   setBuyTokenContract: (contract: TokenContract | undefined) => void;
   setTradeDirection: (type: TRADE_DIRECTION) => void;
@@ -322,6 +324,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     setRecipientAccount,
     setSellAmount,
     setBuyAmount,
+    setSellBalance,        // ✅ ADDED
+    setBuyBalance,         // ✅ ADDED
     setSellTokenContract,
     setBuyTokenContract,
     setTradeDirection,
@@ -455,6 +459,8 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setExchangeContext,
         setSellAmount,
         setBuyAmount,
+        setSellBalance,       // ✅ ADDED
+        setBuyBalance,        // ✅ ADDED
         setSellTokenContract,
         setBuyTokenContract,
         setTradeDirection,

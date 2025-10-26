@@ -1,7 +1,7 @@
-import { BASE, TokenContract } from '@/lib/structure'
+import { CHAIN_ID, TokenContract } from '@/lib/structure'
  
 const defaultSellToken: TokenContract = {
-  chainId: BASE,
+  chainId: CHAIN_ID.BASE,
   symbol: 'BRETT',
   name: 'Bret Meme Coin',
   address: '0x532f27101965dd16442e59d40670faf5ebb142e4',
@@ -12,7 +12,7 @@ const defaultSellToken: TokenContract = {
 };
 
 const defaultBuyToken: TokenContract = {
-  chainId: BASE,
+  chainId: CHAIN_ID.BASE,
   symbol: 'SpCoin',
   name: 'Sponsor Coin',
   address: '0xc2816250c07ae56c1583e5f2b0e67f7d7f42d562', // lowercased
