@@ -7,9 +7,6 @@ type Props = {
 
 const PlaceOrder = ({
     sendTransaction }:Props) => {
-    function setErrorMessage(msg: Error): void {
-        throw new Error('Function not implemented.');
-    }
 
     const placeOrder = async () => {
         console.log(`placing order transaction sendTransaction = ${sendTransaction}`);

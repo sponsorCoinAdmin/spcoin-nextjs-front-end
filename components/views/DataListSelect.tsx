@@ -2,24 +2,27 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
-import type { WalletAccount} from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
 import { FEED_TYPE, InputState } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
 import { useAssetSelectContext } from '@/lib/context';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
 
-type FeedData = {
-  wallets?: WalletAccount[];
-  tokens?: Array<{
-    address: string;
-    name?: string;
-    symbol?: string;
-    logoURL?: string;
-  }>;
+// Normalize the token feed so TokenListItem always receives strict strings
+export type TokenFeedItem = {
+  address: `0x${string}` | string;
+  name?: string | null;
+  symbol?: string | null;
+  logoURL?: string | null;
 };
 
-type Props<T> = {
+type FeedData = {
+  wallets?: WalletAccount[];
+  tokens?: TokenFeedItem[];
+};
+
+type Props = {
   /** SSOT: pre-populated, normalized data. No internal mirroring. */
   feedData: FeedData;
   /** Optional loading flag (useful while upstream normalizes accounts). */
@@ -28,10 +31,10 @@ type Props<T> = {
   feedType: FEED_TYPE;
 };
 
-export default function DataListSelect<T>({ feedData, loading = false, feedType }: Props<T>) {
+export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
   // 💡 SSOT: use props directly; do not copy to local state
   const wallets = useMemo<WalletAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
-  const tokens = useMemo(() => feedData.tokens ?? [], [feedData.tokens]);
+  const tokens = useMemo<TokenFeedItem[]>(() => feedData.tokens ?? [], [feedData.tokens]);
 
   // FSM / selection bridge (unchanged)
   const {
@@ -130,8 +133,8 @@ export default function DataListSelect<T>({ feedData, loading = false, feedType 
           loading
             ? renderEmptyState('Loading accounts...')
             : wallets.length === 0
-              ? renderEmptyState('No accounts available.')
-              : wallets.map((wallet) => (
+            ? renderEmptyState('No accounts available.')
+            : wallets.map((wallet) => (
                 <AccountListItem
                   key={wallet.address}
                   account={wallet}
@@ -144,16 +147,23 @@ export default function DataListSelect<T>({ feedData, loading = false, feedType 
         ) : tokens.length === 0 ? (
           renderEmptyState('No tokens available.')
         ) : (
-          tokens.map((token: any) => (
-            <TokenListItem
-              key={token.address}
-              name={token.name}
-              symbol={token.symbol}
-              address={token.address}
-              logoURL={token.logoURL}
-              confirmAssetCallback={handlePickAddress}
-            />
-          ))
+          tokens.map((token) => {
+            // Ensure TokenListItem receives required string props
+            const safeName: string =
+              token.name ?? token.symbol ?? (typeof token.address === 'string' ? token.address : String(token.address));
+            const safeSymbol: string = token.symbol ?? '';
+
+            return (
+              <TokenListItem
+                key={token.address}
+                name={safeName}
+                symbol={safeSymbol}
+                address={token.address as `0x${string}` | string}
+                logoURL={token.logoURL ?? undefined}
+                confirmAssetCallback={handlePickAddress}
+              />
+            );
+          })
         )}
       </div>
     </>

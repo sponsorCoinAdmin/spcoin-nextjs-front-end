@@ -2,8 +2,8 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
-import type { WalletAccount, TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { WalletAccount, TokenContract , FEED_TYPE} from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
