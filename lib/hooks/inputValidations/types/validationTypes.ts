@@ -1,6 +1,6 @@
 // File: lib/hooks/inputValidations/types/validationTypes.ts
 
-import { TokenContract, WalletAccount } from '@/lib/structure';
+import type { TokenContract, WalletAccount } from '@/lib/structure';
 
 export type AgentAccount = WalletAccount;
 export type SponsorAccount = WalletAccount;

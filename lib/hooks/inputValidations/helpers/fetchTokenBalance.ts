@@ -1,6 +1,7 @@
 // File: lib/hooks/inputValidations/helpers/fetchTokenBalance.ts
 
-import { PublicClient, erc20Abi, Address } from 'viem';
+import type { PublicClient, Address } from 'viem';
+import { erc20Abi } from 'viem';
 import { getValidationDebugLogger } from './debugLogInstance';
 
 const log = getValidationDebugLogger('fetchTokenBalance');

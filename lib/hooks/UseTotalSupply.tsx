@@ -1,5 +1,6 @@
 import React from 'react';
-import { Address, erc20Abi } from 'viem';
+import type { Address} from 'viem';
+import { erc20Abi } from 'viem';
 import { useReadContract } from 'wagmi';
 
 type Props = {

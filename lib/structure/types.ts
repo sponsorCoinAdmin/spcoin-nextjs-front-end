@@ -1,13 +1,13 @@
 // File: lib/structure/types.ts
 
-import { Address } from 'viem';
-import { UseReadContractReturnType } from 'wagmi';
-import {
+import type { Address } from 'viem';
+import type { UseReadContractReturnType } from 'wagmi';
+import type {
   STATUS,
   TRADE_DIRECTION,
   API_TRADING_PROVIDER, // provider enum
 } from '@/lib/structure';
-import { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type { SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 
 /**
  * Represents a generic wallet/account entity that can appear in selectors/panels.

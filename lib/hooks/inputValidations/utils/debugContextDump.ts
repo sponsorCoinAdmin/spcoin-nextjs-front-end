@@ -1,7 +1,7 @@
 // File: lib/hooks/inputValidations/utils/debugContextDump.ts
 
-import { TokenContract } from '@/lib/structure';
-import { InputState } from '@/lib/structure/assetSelection';
+import type { TokenContract } from '@/lib/structure';
+import type { InputState } from '@/lib/structure/assetSelection';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

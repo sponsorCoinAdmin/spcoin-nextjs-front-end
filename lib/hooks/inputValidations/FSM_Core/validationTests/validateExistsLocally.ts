@@ -1,7 +1,7 @@
 // File: lib/hooks/inputValidations/tests/validateExistsLocally.ts
 
 import { InputState } from '@/lib/structure/assetSelection';
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME:boolean = false;

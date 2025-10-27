@@ -1,7 +1,7 @@
 // File: lib/context/hooks/nestedHooks/useErrorMessages.ts
 
 import { useExchangeContext } from '@/lib/context/hooks';
-import { ErrorMessage } from '@/lib/structure';
+import type { ErrorMessage } from '@/lib/structure';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 
 /**

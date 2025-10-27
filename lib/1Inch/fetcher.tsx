@@ -11,7 +11,7 @@ import {
   useSellAmount,
   useTradeData,
  useAppChainId } from '@/lib/context/hooks';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';

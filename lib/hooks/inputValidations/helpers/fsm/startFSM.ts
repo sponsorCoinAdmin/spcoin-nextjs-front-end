@@ -1,19 +1,21 @@
 // File: lib/hooks/inputValidations/helpers/startFSM.ts
 'use client';
 
-import { MutableRefObject } from 'react';
-import {
+import type { MutableRefObject } from 'react';
+import type {
   SP_COIN_DISPLAY,
-  FEED_TYPE,
   WalletAccount,
-  TokenContract,
+  TokenContract} from '@/lib/structure';
+import {
+  FEED_TYPE
 } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 import { validateFSMCore } from '../../validateFSMCore';
 import type { ValidateFSMInput } from '../../FSM_Core/types/validateFSMTypes';
 
-import { Address, zeroAddress } from 'viem';
+import type { Address} from 'viem';
+import { zeroAddress } from 'viem';
 import { isTriggerFSMState } from '../../FSM_Core/fSMInputStates';
 import { runFSM } from './runFSM';
 import { createTraceSink } from './internals/sinks';

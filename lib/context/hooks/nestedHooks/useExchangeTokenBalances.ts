@@ -2,7 +2,8 @@
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';
-import { Address, erc20Abi } from 'viem';
+import type { Address} from 'viem';
+import { erc20Abi } from 'viem';
 import { usePublicClient } from 'wagmi';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

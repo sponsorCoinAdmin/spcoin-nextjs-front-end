@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -32,8 +32,7 @@ export function useHexInput(initialValue: string = '', debounceDelay: number = 2
     return _isValidHexString(rawInput);
   }, []);
 
-const handleHexInputChange = useCallback(
-  (rawInput: string) => {
+  const handleHexInputChange = useCallback((rawInput: string) => {
     const trimmedInput = rawInput.trim();
     const ok = _isValidHexString(trimmedInput);
 
@@ -53,9 +52,7 @@ const handleHexInputChange = useCallback(
     }
 
     return ok;
-  },
-  []
-);
+  }, []);
 
   const resetHexInput = useCallback(() => {
     debugLog.log('🔄 Resetting hex input state');
@@ -65,8 +62,12 @@ const handleHexInputChange = useCallback(
     setIsValid(true);
   }, []);
 
-  const debouncedHexInput =
-    debounceDelay === 0 ? validHexInput : useDebounce(validHexInput, debounceDelay);
+  // ✅ Always call the hook; when delay <= 0, debounce is effectively disabled.
+  const effectiveDelay = useMemo(
+    () => (Number.isFinite(debounceDelay) && debounceDelay > 0 ? debounceDelay : 0),
+    [debounceDelay]
+  );
+  const debouncedHexInput = useDebounce(validHexInput, effectiveDelay);
 
   return {
     validHexInput,

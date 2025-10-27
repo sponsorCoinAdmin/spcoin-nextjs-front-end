@@ -4,7 +4,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 
 import { InputState } from '@/lib/structure/assetSelection';
-import { ValidateFSMOutput, ValidateFSMInput } from './FSM_Core/types/validateFSMTypes';
+import type { ValidateFSMOutput, ValidateFSMInput } from './FSM_Core/types/validateFSMTypes';
 import { closeSelectPanel } from './FSM_Core/validationTests/closeSelectPanel';
 import { resolveAsset } from './FSM_Core/validationTests/resolveAsset';
 import { updateValidated } from './FSM_Core/validationTests/updateValidated';

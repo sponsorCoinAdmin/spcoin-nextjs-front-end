@@ -3,7 +3,8 @@
 
 import type { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
-import { FEED_TYPE, WalletAccount } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
+import { FEED_TYPE } from '@/lib/structure';
 import { getLogoURL } from '@/lib/network/utils';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 

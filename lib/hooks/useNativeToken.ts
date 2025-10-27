@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TokenContract as MappedTokenContract } from '@/lib/structure';
+import type { TokenContract as MappedTokenContract } from '@/lib/structure';
 import { useAppChainId } from 'wagmi';
 
 export function useNativeToken(): MappedTokenContract | undefined {

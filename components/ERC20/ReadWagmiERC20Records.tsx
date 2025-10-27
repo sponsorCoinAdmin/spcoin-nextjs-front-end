@@ -1,7 +1,7 @@
 // File: components/ERC20/ReadWagmiERC20Records.tsx
 
 import React from 'react'
-import { Address } from 'viem'
+import type { Address } from 'viem'
 import { useWagmiERC20TokenRecords, formatDecimals } from '@/lib/hooks/wagmi/wagmiERC20ClientRead'
 
 type Props = {

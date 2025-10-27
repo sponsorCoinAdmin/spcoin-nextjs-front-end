@@ -2,7 +2,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import { TokenContract, WalletAccount, SP_COIN_DISPLAY } from '@/lib/structure';
+import type { TokenContract, WalletAccount} from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { useSellTokenContract, useBuyTokenContract , useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

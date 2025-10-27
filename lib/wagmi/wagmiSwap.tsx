@@ -2,9 +2,11 @@
 
 import { useBalance, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
-import { Address, formatUnits , erc20Abi } from 'viem'
+import type { Address} from 'viem';
+import { formatUnits , erc20Abi } from 'viem'
 
-import { TokenContract, ContractRecs, BURN_ADDRESS } from '@/lib/structure'
+import type { TokenContract, ContractRecs} from '@/lib/structure';
+import { BURN_ADDRESS } from '@/lib/structure'
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
 import { useAppChainId } from '../context/hooks'
 

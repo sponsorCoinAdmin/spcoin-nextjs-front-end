@@ -1,20 +1,29 @@
-import React from 'react'
-import { Address } from 'viem'
-import { useWagmiERC20TokenTotalSupply  } from '@/lib/hooks/wagmi/wagmiERC20ClientRead'
+// File: components/ERC20/ReadWagmiERC20ContractTotalSupply.tsx
+'use client';
+
+import React from 'react';
+import type { Address } from 'viem';
+import { useWagmiERC20TokenTotalSupply } from '@/lib/hooks/wagmi/wagmiERC20ClientRead';
 
 type Props = {
-  TOKEN_CONTRACT_ADDRESS:Address|undefined
-}
+  TOKEN_CONTRACT_ADDRESS?: Address;
+};
 
-const contractTotalSupply = ({ TOKEN_CONTRACT_ADDRESS}: Props) => {
-  const totalSupply    = useWagmiERC20TokenTotalSupply(TOKEN_CONTRACT_ADDRESS)
+export default function ReadWagmiERC20ContractTotalSupply({ TOKEN_CONTRACT_ADDRESS }: Props) {
+  // Call the hook unconditionally (it tolerates undefined)
+  const totalSupply = useWagmiERC20TokenTotalSupply(TOKEN_CONTRACT_ADDRESS);
+
+  if (!TOKEN_CONTRACT_ADDRESS) {
+    return <span>Token address is missing.</span>;
+  }
+
   return (
     <>
-      <hr className="border-top: 3px dashed #bbb"/>
-      <h2>Reading Wagmi Token TotalSupply for Contract({TOKEN_CONTRACT_ADDRESS})</h2>
-      Token TotalSupply   : {totalSupply?.toString()} <br/>
+      <hr className="border-t-4 border-dashed border-gray-400 my-4" />
+      <h2 className="text-lg font-semibold">
+        Reading Wagmi Token Total Supply for Contract ({TOKEN_CONTRACT_ADDRESS})
+      </h2>
+      <div>Token Total Supply: {totalSupply?.toString() ?? '—'}</div>
     </>
-  )
+  );
 }
-
-export default contractTotalSupply

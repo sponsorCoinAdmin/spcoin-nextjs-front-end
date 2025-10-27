@@ -2,8 +2,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { ExchangeContext } from '@/lib/structure';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
+import type { ExchangeContext , SP_COIN_DISPLAY as SP } from '@/lib/structure';
+
 import {
   ROOTS,
   CHILDREN,

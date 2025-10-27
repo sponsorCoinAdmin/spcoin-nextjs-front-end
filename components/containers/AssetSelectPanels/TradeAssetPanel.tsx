@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Address, formatUnits, parseUnits } from 'viem';
+import type { Address} from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { clsx } from 'clsx';
 import { useAccount } from 'wagmi';
 

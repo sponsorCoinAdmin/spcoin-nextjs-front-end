@@ -43,8 +43,8 @@ export default function ConnectButton({
   const { allOptions, mainnetOptions, testnetOptions, findById } = useNetworkOptions();
 
   // wagmi
-  const { switchChainAsync, isPending } = useSwitchChain();
-  const { disconnect } = useDisconnect();
+  const { switchChainAsync } = useSwitchChain();
+  const { disconnect } = useDisconnect(); 
   const { connectAsync } = useConnect();
   const connectors = useConnectors();
   const walletChainId = useChainId();
@@ -130,7 +130,6 @@ export default function ConnectButton({
           <div ref={anchorRef} className="relative m-0 p-0 inline-flex items-center">
             <div className={trimClass}>
               <ConnectMainButton
-                isConnected={!!isConnected}
                 currentId={typeof currentId === 'number' ? currentId : undefined}
                 label={
                   !isConnected && showConnect
@@ -152,11 +151,9 @@ export default function ConnectButton({
             {open && (
               <DropDownPortal top={pos?.top} left={pos?.left} portalRef={portalRef}>
                 <ConnectDropDown
-                  isConnected={!!isConnected}
                   address={address}
                   truncatedAddress={truncatedAddress}
                   currentId={typeof currentId === 'number' ? currentId : undefined}
-                  isPending={isPending}
                   showHoverBg={showHoverBg}
                   showConnectRow={showConnectRowInDropdown}
                   showDisconnectRow={showDisconnectRowInDropdown}

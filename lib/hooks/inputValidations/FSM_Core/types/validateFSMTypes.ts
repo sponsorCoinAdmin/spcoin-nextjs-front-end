@@ -1,8 +1,8 @@
 // File: lib/hooks/inputValidations/FSM_Core/types/validateFSMTypes.ts
 
-import { Address, PublicClient } from 'viem';
-import { FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
-import { InputState } from '@/lib/structure/assetSelection';
+import type { Address, PublicClient } from 'viem';
+import type { FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
+import type { InputState } from '@/lib/structure/assetSelection';
 
 export type AnyAsset = TokenContract | WalletAccount;
 

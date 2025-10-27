@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useReadContracts, useAppChainId } from 'wagmi';
-import { isAddress, Address, erc20Abi } from 'viem';
-import { TokenContract } from '@/lib/structure';
+import type { Address} from 'viem';
+import { isAddress, erc20Abi } from 'viem';
+import type { TokenContract } from '@/lib/structure';
 
 // ---------------------------------------------
 // 🧩 Hook: useErc20TokenContract (Wagmi v2.5+)

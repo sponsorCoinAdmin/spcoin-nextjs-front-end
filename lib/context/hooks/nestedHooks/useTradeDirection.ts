@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { TRADE_DIRECTION, TradeData } from '@/lib/structure';
+import type { TradeData } from '@/lib/structure';
+import { TRADE_DIRECTION } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 

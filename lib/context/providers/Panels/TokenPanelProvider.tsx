@@ -1,9 +1,11 @@
 // File: lib/context/TradePanelProviders/TokenPanelProvider.tsx
 'use client';
 
-import React, { useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
+import type { ReactNode} from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Address } from 'viem';
-import { SP_COIN_DISPLAY, FEED_TYPE, TokenContract } from '@/lib/structure';
+import type { TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import { TokenPanelContext } from '../../../../app/(menu)/Test/Tabs/ExchangeContext/hooks/useTokenPanelContext';
 import { InputState } from '@/lib/structure/assetSelection';
 import { useSellTokenContract, useBuyTokenContract } from '@/lib/context/hooks';

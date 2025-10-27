@@ -1,7 +1,8 @@
 'use client';
 
 import { useWriteContract } from 'wagmi';
-import { erc20Abi , Address } from 'viem';
+import type { Address } from 'viem';
+import { erc20Abi  } from 'viem';
 
 
 export function useApprove() {

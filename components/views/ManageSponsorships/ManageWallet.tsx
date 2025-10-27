@@ -32,8 +32,7 @@ const fallback = (v: unknown) => {
 };
 
 export default function ManageWallet({ wallet, onClose }: Props) {
-  if (!wallet) return null;
-
+  // ✅ Hooks must run on every render (even when wallet is undefined)
   const ctx = useContext(ExchangeContextState);
 
   // Derive a best-effort AccountType from wallet metadata; default to AGENT
@@ -42,19 +41,18 @@ export default function ManageWallet({ wallet, onClose }: Props) {
     if (t.includes('recipient')) return AccountType.RECIPIENT;
     if (t.includes('sponsor')) return AccountType.SPONSOR;
     if (t.includes('agent')) return AccountType.AGENT;
-    // heuristics on name/symbol as a fallback
     const n = (wallet as any)?.name?.toString().toLowerCase?.() ?? '';
     if (n.includes('recipient')) return AccountType.RECIPIENT;
     if (n.includes('sponsor')) return AccountType.SPONSOR;
     return AccountType.AGENT;
   }, [wallet]);
 
-  const address = addressToText(wallet.address);
-  const name = fallback(wallet.name);
-  const symbol = fallback(wallet.symbol);
-  const description = fallback(wallet.description);
-  const logoURL = (wallet.logoURL ?? '').toString().trim();
-  const website = (wallet.website ?? '').toString().trim();
+  const address = addressToText(wallet?.address);
+  const name = fallback(wallet?.name);
+  const symbol = fallback(wallet?.symbol);
+  const description = fallback(wallet?.description);
+  const logoURL = (wallet?.logoURL ?? '').toString().trim();
+  const website = (wallet?.website ?? '').toString().trim();
   const stakedBalance = 0;
   const pendingBalance = 0;
 
@@ -89,6 +87,9 @@ export default function ManageWallet({ wallet, onClose }: Props) {
     [chainId]
   );
 
+  // After hooks have run, you can short-circuit rendering if no wallet
+  if (!wallet) return null;
+
   return (
     // ⬇️ wrap table + button in a container; we’ll scope styles to this id
     <div id="msWallet">
@@ -100,7 +101,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
             closePanelCallback={() => onClose?.()}
             setSelectedAssetCallback={() => {}}
           >
-            <AddressSelect defaultAddress={String(wallet.address)} bypassDefaultFsm />
+            <AddressSelect defaultAddress={String(wallet?.address ?? '')} bypassDefaultFsm />
           </AssetSelectProvider>
         </AssetSelectDisplayProvider>
       </div>

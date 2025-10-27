@@ -1,6 +1,6 @@
 // File: lib/context/ExchangeSanitizeHelpers.ts
 
-import { TradeData, ExchangeContext } from '@/lib/structure';
+import type { TradeData, ExchangeContext } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
 import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
 

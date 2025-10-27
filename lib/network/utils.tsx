@@ -2,12 +2,13 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import type { Address } from 'viem';
-import {
+import type {
   ExchangeContext,
-  FEED_TYPE,
   TokenContract,
   TradeData,
-  WalletAccount,
+  WalletAccount} from '@/lib/structure';
+import {
+  FEED_TYPE
 } from '@/lib/structure';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';

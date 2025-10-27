@@ -3,7 +3,7 @@
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

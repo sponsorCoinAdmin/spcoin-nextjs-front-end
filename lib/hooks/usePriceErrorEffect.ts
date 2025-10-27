@@ -6,7 +6,8 @@ import { useEffect } from 'react';
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useErrorMessage } from '@/lib/context/hooks';
-import { STATUS, ERROR_CODES, ErrorMessage } from '@/lib/structure';
+import type { ErrorMessage } from '@/lib/structure';
+import { STATUS, ERROR_CODES } from '@/lib/structure';
 
 export function usePriceErrorEffect() {
   const { error: priceError } = usePriceAPI();

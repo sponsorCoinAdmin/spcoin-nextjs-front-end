@@ -1,6 +1,6 @@
 // File: lib/structure/exchangeContext/types/PanelNode.ts
 
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
  * Panel node (may still have children for ephemeral/nested UI).

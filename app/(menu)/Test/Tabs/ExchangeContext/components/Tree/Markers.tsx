@@ -3,8 +3,6 @@
 
 import React from 'react';
 
-const DBG = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true';
-
 type MarkerProps = {
   onClick?: () => void;
   title?: string;
@@ -30,8 +28,8 @@ export const PlusMarker: React.FC<MarkerProps> = ({
   onClick,
   title = 'Expand',
   className = '',
-  path,
-  label,
+  path: _path,   // unused debug-only metadata
+  label: _label, // unused debug-only metadata
   ariaExpanded,
   ariaControls,
 }) => (
@@ -55,8 +53,8 @@ export const MinusMarker: React.FC<MarkerProps> = ({
   onClick,
   title = 'Collapse',
   className = '',
-  path,
-  label,
+  path: _path,   // unused debug-only metadata
+  label: _label, // unused debug-only metadata
   ariaExpanded,
   ariaControls,
 }) => (
@@ -69,7 +67,6 @@ export const MinusMarker: React.FC<MarkerProps> = ({
     onMouseDown={(e) => e.stopPropagation()}
     onClick={(e) => {
       e.stopPropagation();
-      if (DBG) console.debug('[Marker][-]', { path, label });
       onClick?.();
     }}
   >

@@ -1,7 +1,8 @@
 // File: lib/utils/publicERC20/resolveContract.ts
-import { Address, isAddress } from 'viem';
-import { TokenContract } from '@/lib/structure/types';
-import { createPublicClient } from 'viem';
+import type { Address} from 'viem';
+import { isAddress } from 'viem';
+import type { TokenContract } from '@/lib/structure/types';
+import type { createPublicClient } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 

@@ -1,7 +1,7 @@
 // File: components/views/ListItems/BaseListRow.tsx
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
 import { defaultMissingImage } from '@/lib/network/utils';
@@ -18,7 +18,7 @@ type BaseListRowProps = {
   subtitleClassName?: string;              // ← caller controls symbol style
 };
 
-const BaseListRow = React.memo(function BaseListRow({
+function BaseListRow({
   avatarSrc,
   title,
   subtitle,
@@ -69,6 +69,6 @@ const BaseListRow = React.memo(function BaseListRow({
       </button>
     </div>
   );
-});
+}
 
-export default BaseListRow;
+export default memo(BaseListRow);

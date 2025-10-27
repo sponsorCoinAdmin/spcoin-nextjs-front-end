@@ -1,8 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { STATUS, WalletAccount } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
+import { STATUS } from '@/lib/structure';
 
 const ConnectedAccountContext = createContext<WalletAccount | undefined>(undefined);
 

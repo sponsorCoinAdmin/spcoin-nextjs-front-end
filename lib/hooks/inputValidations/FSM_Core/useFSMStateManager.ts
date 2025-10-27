@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
+import type {
   FEED_TYPE,
   SP_COIN_DISPLAY,
   WalletAccount,

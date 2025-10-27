@@ -5,7 +5,6 @@ import React, { useEffect, useState, useContext } from 'react';
 import type { WalletAccount } from '@/lib/structure';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -27,23 +26,11 @@ export default function ManageRecipients({ onClose }: Props) {
   const { openPanel, closePanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
-  // Local UI state (selection mirrors ManageAgents)
-  const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
+  // Local list state
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
-  // Track detail panel visibility (recipient detail)
-  const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
-
-  // Clear selection if the detail panel closes (e.g., header close)
-  useEffect(() => {
-    if (!detailOpen) setSelectedWallet(undefined);
-  }, [detailOpen]);
-
   // Allow header close to say “exit detail → list”
-  useRegisterDetailCloser(
-    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-    () => setWalletCallBack(undefined)
-  );
+  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, () => setWalletCallBack(undefined));
 
   // Resolve recipients once (same enrichment pattern as Agents) and store in ExchangeContext.accounts.recipientAccounts
   useEffect(() => {
@@ -119,8 +106,6 @@ export default function ManageRecipients({ onClose }: Props) {
 
   // ✅ Callback: update ExchangeContext.accounts.recipientAccount and toggle MANAGE_RECIPIENT_PANEL
   const setWalletCallBack = (w?: WalletAccount) => {
-    setSelectedWallet(w);
-
     ctx?.setExchangeContext(
       (prev) => {
         const next = { ...prev, accounts: { ...prev.accounts, recipientAccount: w } };

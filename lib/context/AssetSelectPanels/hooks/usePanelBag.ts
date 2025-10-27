@@ -1,9 +1,10 @@
 // File: lib/context/AssetSelectPanels/hooks/usePanelBag.ts
 'use client';
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
+import type { Dispatch, SetStateAction} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

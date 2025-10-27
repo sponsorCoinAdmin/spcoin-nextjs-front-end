@@ -1,5 +1,5 @@
 import { useExchangeContext } from '@/lib/context/hooks';
-import { TRADE_DIRECTION } from '@/lib/structure';
+import type { TRADE_DIRECTION } from '@/lib/structure';
 
 export const useTradeDirection = (): [TRADE_DIRECTION | undefined, (v: TRADE_DIRECTION) => void] => {
   const { exchangeContext, setTradeDirection } = useExchangeContext();

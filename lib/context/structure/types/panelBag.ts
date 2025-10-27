@@ -1,6 +1,6 @@
 // File: lib/context/ScrollSelectPanels/structure/types/panelBag.ts
 
-import { Address } from 'viem';
+import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 // ---- Panel-specific bags ----

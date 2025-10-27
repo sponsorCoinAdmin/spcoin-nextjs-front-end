@@ -6,12 +6,13 @@ import defaultPolygonSettings  from '@/resources/data/networks/polygon/initializ
 import defaultHardHatSettings  from '@/resources/data/networks/hardhat/initialize/defaultNetworkSettings.json';
 import defaultSepoliaSettings  from '@/resources/data/networks/sepolia/initialize/defaultNetworkSettings.json';
 
-import {
+import type {
   TradeData,
-  TRADE_DIRECTION,
   ExchangeContext,
   NetworkElement,
-  WalletAccount,
+  WalletAccount} from '@/lib/structure';
+import {
+  TRADE_DIRECTION,
   SP_COIN_DISPLAY,
   API_TRADING_PROVIDER,
 } from '@/lib/structure';

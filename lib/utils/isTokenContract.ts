@@ -1,4 +1,4 @@
-import { TokenContract } from '@/lib/structure';
+import type { TokenContract } from '@/lib/structure';
 
 /**
  * Type guard to determine if an object is a valid TokenContract.

@@ -2,12 +2,8 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import {
-  SP_COIN_DISPLAY,
-  FEED_TYPE,
-  type WalletAccount,
-  type TokenContract,
-} from '@/lib/structure';
+import { FEED_TYPE, SP_COIN_DISPLAY } from '@/lib/structure';
+import type { WalletAccount, TokenContract } from '@/lib/structure';
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
@@ -28,7 +24,7 @@ import type {
 
 type Props = {
   panel: SP_COIN_DISPLAY;
-  feedType: FEED_TYPE; // kept in props for API stability, even though provider derives feedType internally
+  feedType: FEED_TYPE; // kept for API stability; not used internally
   instancePrefix: string;
   peerAddress?: `0x${string}`;
   onCommit: (asset: WalletAccount | TokenContract) => void;
@@ -50,7 +46,6 @@ function makeInitialPanelBag(
     }
     // ❌ Removed: AGENT_LIST_SELECT_PANEL (per app changes to drop this panel)
     case SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL: {
-      // ✅ ErrorMessageBag requires `message`
       const bag: ErrorMessageBag = { type: panel, message: '' };
       return bag;
     }
@@ -67,7 +62,7 @@ function makeInitialPanelBag(
 
 export default function PanelListSelectWrapper({
   panel,
-  feedType,
+  feedType: _feedType, // unused on purpose
   instancePrefix,
   peerAddress,
   onCommit,
@@ -77,7 +72,7 @@ export default function PanelListSelectWrapper({
   return (
     <PanelListSelectWrapperInner
       panel={panel}
-      feedType={feedType}
+      feedType={_feedType}
       instancePrefix={instancePrefix}
       peerAddress={peerAddress}
       onCommit={onCommit}
@@ -87,12 +82,11 @@ export default function PanelListSelectWrapper({
 
 function PanelListSelectWrapperInner({
   panel,
-  feedType,
+  feedType: _feedType, // unused on purpose
   instancePrefix,
   peerAddress,
   onCommit,
 }: Props) {
-  // ⬇️ Pull state + setter; we will update tradeData directly here
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { toTrading } = usePanelTransitions();
 
@@ -128,10 +122,7 @@ function PanelListSelectWrapperInner({
         });
       }
 
-      // Allow external observers (toast/analytics/etc.) without writing globals
       onCommit?.(asset);
-
-      // Close back to trading
       toTrading();
     },
     [panel, setExchangeContext, onCommit, toTrading]

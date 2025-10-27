@@ -1,4 +1,5 @@
-import { CHAIN_ID, TokenContract } from '@/lib/structure'
+import type { TokenContract } from '@/lib/structure';
+import { CHAIN_ID } from '@/lib/structure'
  
 const defaultSellToken: TokenContract = {
   chainId: CHAIN_ID.BASE,

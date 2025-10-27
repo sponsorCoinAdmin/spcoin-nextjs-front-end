@@ -7,7 +7,7 @@ import type {
   ValidateFSMOutput,
 } from '../../FSM_Core/types/validateFSMTypes';
 import type { WalletAccount, TokenContract } from '@/lib/structure';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 
 type RunFSMArgs = {
   initialState: InputState;

@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure';
+import type { SP_COIN_DISPLAY, TokenContract } from '@/lib/structure';
 
 export interface TokenPanelContextType {
   localTokenContract?: TokenContract;

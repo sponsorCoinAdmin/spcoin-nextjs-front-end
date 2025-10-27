@@ -1,9 +1,10 @@
-import {
-  API_TRADING_PROVIDER,
-  TRADE_DIRECTION,
+import type {
   WalletAccount,
   NetworkElement,
-  ExchangeContext,
+  ExchangeContext} from '@/lib/structure';
+import {
+  API_TRADING_PROVIDER,
+  TRADE_DIRECTION
 } from '@/lib/structure';
 
 import { getDefaultNetworkSettings } from '@/lib/network/defaults';

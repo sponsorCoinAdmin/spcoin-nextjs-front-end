@@ -3,7 +3,7 @@ import { isAddress, type Address } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
 const log = createDebugLogger('validateTokenAsset(FSM_Core)', DEBUG_ENABLED, false);

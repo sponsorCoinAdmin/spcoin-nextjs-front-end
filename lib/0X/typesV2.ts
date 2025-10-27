@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import type { Address } from "viem";
 
 // https://docs.0x.org/0x-api-swap/api-references/get-swap-v1-quote#response
 export interface PriceResponse_Permit2 {

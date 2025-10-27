@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import type { WalletAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 
@@ -26,22 +25,13 @@ export default function ManageSponsors({ onClose }: Props) {
   const { openPanel, closePanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
-  // Local UI state (selection kept for future detail view wiring)
-  const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
+  // Local list state
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
-
-  // Track sponsor detail panel visibility
-  const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
-
-  // If detail panel is closed (via header X, etc.), clear local selection
-  useEffect(() => {
-    if (!detailOpen) setSelectedWallet(undefined);
-  }, [detailOpen]);
 
   // Allow header close to signal "exit detail → list"
   useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, () => setWalletCallBack(undefined));
 
-  // Resolve wallets once (mirror ManageAgents) and store in ExchangeContext.accounts.sponsorAccounts
+  // Resolve wallets once and store in ExchangeContext.accounts.sponsorAccounts
   useEffect(() => {
     let alive = true;
 
@@ -115,9 +105,6 @@ export default function ManageSponsors({ onClose }: Props) {
 
   // ✅ Callback: update ExchangeContext.accounts.sponsorAccount and toggle MANAGE_SPONSOR_PANEL
   const setWalletCallBack = (w?: WalletAccount) => {
-    setSelectedWallet(w);
-
-    // write to global context (mirror ManageAgents, but for sponsorAccount)
     ctx?.setExchangeContext(
       (prev) => {
         const next = { ...prev, accounts: { ...prev.accounts, sponsorAccount: w } };

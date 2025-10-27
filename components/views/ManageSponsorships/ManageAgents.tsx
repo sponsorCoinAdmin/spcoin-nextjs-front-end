@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import type { WalletAccount } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { useRegisterDetailCloser } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
@@ -24,17 +23,8 @@ export default function ManageAgents({ onClose }: Props) {
   const { openPanel, closePanel } = usePanelTree();
   const ctx = useContext(ExchangeContextState);
 
-  // Local UI state (selection kept for future detail view wiring)
-  const [selectedWallet, setSelectedWallet] = useState<WalletAccount | undefined>(undefined);
+  // Local UI state
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
-
-  // Track detail panel visibility
-  const detailOpen = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
-
-  // If detail panel is closed (via header X, etc.), clear local selection
-  useEffect(() => {
-    if (!detailOpen) setSelectedWallet(undefined);
-  }, [detailOpen]);
 
   // Allow header close to signal "exit detail → list"
   useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, () => setWalletCallBack(undefined));
@@ -65,7 +55,7 @@ export default function ManageAgents({ onClose }: Props) {
         if (!alive) return;
         setWalletList(built);
 
-        // ⬇️ Store agents array into ExchangeContext on load
+        // Store agents array into ExchangeContext on load
         ctx?.setExchangeContext((prev) => {
           const current = prev?.accounts?.agentAccounts ?? [];
           if (isSameAgentList(current, built)) return prev;
@@ -86,7 +76,7 @@ export default function ManageAgents({ onClose }: Props) {
         if (!alive) return;
         setWalletList(fallback);
 
-        // ⬇️ Store fallback list as well
+        // Store fallback list as well
         ctx?.setExchangeContext((prev) => {
           const current = prev?.accounts?.agentAccounts ?? [];
           if (isSameAgentList(current, fallback)) return prev;
@@ -106,10 +96,8 @@ export default function ManageAgents({ onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ Callback: update selected agent and toggle MANAGE_AGENT_PANEL
+  // Callback: update selected agent and toggle MANAGE_AGENT_PANEL
   const setWalletCallBack = (w?: WalletAccount) => {
-    setSelectedWallet(w);
-
     ctx?.setExchangeContext((prev) => {
       const next = { ...prev, accounts: { ...prev.accounts, agentAccount: w } };
       return next;

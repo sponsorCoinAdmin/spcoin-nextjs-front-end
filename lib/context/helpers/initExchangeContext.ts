@@ -1,8 +1,10 @@
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import { WalletAccount, ExchangeContext, STATUS , SP_COIN_DISPLAY as SP } from '@/lib/structure';
+import type { WalletAccount, ExchangeContext} from '@/lib/structure';
+import { STATUS , SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-import { Address, isAddress } from 'viem';
+import type { Address} from 'viem';
+import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

@@ -4,7 +4,7 @@
 import React from 'react';
 import Row from './Tree/Row';
 import MainPanelsList from './MainPanelsList';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
 import { quoteIfString } from '../utils/object';
 
 type UIState = { ctx: boolean; settings: boolean; main: boolean; exp: Record<string, boolean> };

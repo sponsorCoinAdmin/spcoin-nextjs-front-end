@@ -1,6 +1,6 @@
 'use client';
 
-import { ExchangeContext } from '@/lib/structure';
+import type { ExchangeContext } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';

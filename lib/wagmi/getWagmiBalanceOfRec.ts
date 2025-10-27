@@ -1,4 +1,5 @@
-import { Address, getAddress, formatUnits , erc20Abi } from 'viem'
+import type { Address} from 'viem';
+import { getAddress, formatUnits , erc20Abi } from 'viem'
 import { getBalance, readContract } from '@wagmi/core'
 
 import { wagmiServerConfig } from './wagmiServerConfig' // ✅ Server-safe config

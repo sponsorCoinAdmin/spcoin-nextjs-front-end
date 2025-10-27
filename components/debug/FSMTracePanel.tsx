@@ -2,7 +2,7 @@
 
 'use client';
 
-import { InputState } from '@/lib/structure/assetSelection';
+import type { InputState } from '@/lib/structure/assetSelection';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEffect, useState } from 'react';
 

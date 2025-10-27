@@ -2,13 +2,13 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import {
+import type {
   SP_COIN_DISPLAY,
   FEED_TYPE,
   TokenContract,
   WalletAccount,
 } from '@/lib/structure';
-import { InputState } from '@/lib/structure/assetSelection';
+import type { InputState } from '@/lib/structure/assetSelection';
 
 // If you still use this elsewhere, keep it imported. Not needed for types below now.
 // import { ValidatedAsset } from '@/lib/hooks/inputValidations/types/validationTypes';

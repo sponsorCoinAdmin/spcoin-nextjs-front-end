@@ -8,11 +8,9 @@ type NetOpt = { id: number; name: string; symbol: string; logo?: string };
 
 type Props = {
   // existing props
-  isConnected: boolean;
   address?: string;
   truncatedAddress?: string;
   currentId?: number;
-  isPending?: boolean;
   showHoverBg?: boolean;
   showConnectRow?: boolean;
   showDisconnectRow?: boolean;
@@ -29,11 +27,9 @@ type Props = {
 };
 
 export default function ConnectDropdown({
-  isConnected,
   address,
   truncatedAddress,
   currentId,
-  isPending,
   showHoverBg,
   showConnectRow,
   showDisconnectRow,

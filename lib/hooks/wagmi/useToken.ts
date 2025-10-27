@@ -2,9 +2,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Address, isAddress } from 'viem';
+import type { Address} from 'viem';
+import { isAddress } from 'viem';
 import { usePublicClient, useAccount } from 'wagmi';
-import { TokenContract } from '@/lib/structure/types';
+import type { TokenContract } from '@/lib/structure/types';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
 import { useAppChainId } from '@/lib/context/hooks';
 

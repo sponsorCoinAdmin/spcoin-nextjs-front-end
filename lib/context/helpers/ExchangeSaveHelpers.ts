@@ -1,7 +1,7 @@
 // File: lib/context/exchangeContext/helpers/ExchangeSaveHelpers.ts
-import { ExchangeContext } from '@/lib/structure';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { ExchangeContext } from '@/lib/structure';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { MAIN_OVERLAY_GROUP } from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
@@ -14,7 +14,7 @@ type FlatPanel = { panel: SP_COIN_DISPLAY; visible: boolean; name?: string };
 
 /* ───────────────────────────── helpers ───────────────────────────── */
 
-const nameOf = (id: number) => (SP_COIN_DISPLAY as any)[id] ?? String(id);
+const nameOf = (id: number): string => (SP_COIN_DISPLAY as any)[id] ?? String(id);
 
 function toFlat(list: any[] | undefined): FlatPanel[] {
   if (!Array.isArray(list)) return [];
@@ -29,7 +29,7 @@ function toFlat(list: any[] | undefined): FlatPanel[] {
 
 function visibleList(flat: FlatPanel[]): string {
   const names = flat.filter((p) => p.visible).map((p) => p.name ?? nameOf(p.panel));
-  return names.length ? names.join('.') + '.' : '(none)';
+  return names.length ? `${names.join('.')}.` : '(none)';
 }
 
 /** Compare visibility vs. previous storage for a concise diff. */
@@ -47,7 +47,10 @@ function diffVisibility(prev: FlatPanel[], next: FlatPanel[]): string {
 }
 
 /** Ensure exactly one MAIN_OVERLAY_GROUP panel is visible; if none, pick TRADING_STATION_PANEL. */
-function normalizeOverlayVisibility(flat: FlatPanel[], fallback: SP_COIN_DISPLAY) {
+function normalizeOverlayVisibility(
+  flat: FlatPanel[],
+  fallback: SP_COIN_DISPLAY
+): SP_COIN_DISPLAY {
   const current = flat.find((p) => MAIN_OVERLAY_GROUP.includes(p.panel) && p.visible)?.panel;
   const chosen = current ?? fallback;
   for (const p of flat) {
@@ -58,7 +61,7 @@ function normalizeOverlayVisibility(flat: FlatPanel[], fallback: SP_COIN_DISPLAY
 
 /* ───────────────────────────── main API ───────────────────────────── */
 
-export function saveLocalExchangeContext(ctx: ExchangeContext) {
+export function saveLocalExchangeContext(ctx: ExchangeContext): void {
   try {
     // Snapshot previous saved panels (for diff)
     let prevSavedPanels: FlatPanel[] = [];
@@ -93,13 +96,12 @@ export function saveLocalExchangeContext(ctx: ExchangeContext) {
       ? out.settings.spCoinPanelTree
       : [];
 
-    const flatTree: FlatPanel[] = toFlat(rawTree)
+    const flatTree: FlatPanel[] = toFlat(rawTree).filter(
       // Never persist these
-      .filter(
-        (n) =>
-          n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL &&
-          n.panel !== SP_COIN_DISPLAY.UNDEFINED
-      );
+      (n) =>
+        n.panel !== SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL &&
+        n.panel !== SP_COIN_DISPLAY.UNDEFINED
+    );
 
     // Pre-normalize visibility picture (for logging)
     const preNormalizeVisible = visibleList(flatTree);
@@ -136,10 +138,9 @@ export function saveLocalExchangeContext(ctx: ExchangeContext) {
       const roundTrip = localStorage.getItem(STORAGE_KEY);
       const landedPanels = toFlat((roundTrip && JSON.parse(roundTrip))?.settings?.spCoinPanelTree);
       debugLog.log(
-        [
-          '✅ Read-back verification',
-          `• Visible panels persisted: ${visibleList(landedPanels)}`,
-        ].join('\n')
+        ['✅ Read-back verification', `• Visible panels persisted: ${visibleList(landedPanels)}`].join(
+          '\n'
+        )
       );
     } catch {
       debugLog.warn('⚠️ Unable to parse read-back verification payload.');

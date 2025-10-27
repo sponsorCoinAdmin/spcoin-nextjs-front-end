@@ -1,6 +1,6 @@
 // File: lib/context/exchangeContext/panelStore.ts
 
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
 export type PanelId = SP_COIN_DISPLAY;
 export type Listener = () => void;

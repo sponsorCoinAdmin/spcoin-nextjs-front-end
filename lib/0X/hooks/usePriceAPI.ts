@@ -5,7 +5,8 @@ import { stringify } from 'qs';
 import useSWR from 'swr';
 import { isAddress, type Address } from 'viem';
 
-import { PriceRequestParams, TRADE_DIRECTION, STATUS } from '@/lib/structure';
+import type { PriceRequestParams} from '@/lib/structure';
+import { TRADE_DIRECTION, STATUS } from '@/lib/structure';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 
 import {
@@ -18,7 +19,7 @@ import {
   useAppChainId, // returns [number, setter]
 } from '@/lib/context/hooks';
 
-import PriceResponse from '@/lib/0X/typesV1';
+import type PriceResponse from '@/lib/0X/typesV1';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

@@ -2,7 +2,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { WalletAccount, AccountAddress } from "../structure/types";
+import type { WalletAccount, AccountAddress } from "../structure/types";
 
 /**
  * Reads account file list from JSON and loads corresponding account data.

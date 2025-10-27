@@ -3,8 +3,8 @@
 // Note: This module is isomorphic (no "use client").
 // Only the localStorage sink uses browser APIs and is lazy-loaded.
 
-import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
-import { InputState } from '@/lib/structure/assetSelection';
+import type { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import type { InputState } from '@/lib/structure/assetSelection';
 
 /** Args passed when a trace session starts. */
 export type TraceStartArgs = {

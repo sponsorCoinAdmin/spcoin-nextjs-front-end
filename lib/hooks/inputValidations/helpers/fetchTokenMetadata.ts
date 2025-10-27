@@ -1,7 +1,8 @@
 // File: lib/hooks/inputValidations/helpers/fetchTokenMetadata.ts
 
-import { Address, PublicClient , erc20Abi } from 'viem';
-import { TokenMetadata } from '../types/validationTypes';
+import type { Address, PublicClient } from 'viem';
+import { erc20Abi } from 'viem';
+import type { TokenMetadata } from '../types/validationTypes';
 
 
 /**

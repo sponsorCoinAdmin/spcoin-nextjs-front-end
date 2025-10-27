@@ -1,7 +1,7 @@
 // File: lib/hooks/inputValidations/helpers/fsmStorage.ts
 'use client';
 
-import { InputState } from '@/lib/structure/assetSelection';
+import type { InputState } from '@/lib/structure/assetSelection';
 
 export const LOCAL_TRACE_KEY = 'latestFSMTrace';
 export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';

@@ -3,7 +3,6 @@
 import React from 'react';
 
 type Props = {
-  isConnected: boolean;
   currentId?: number;
   label?: string;
   showChevron?: boolean;
@@ -22,7 +21,6 @@ type Props = {
 };
 
 export default function ConnectMainButton({
-  isConnected,
   currentId,
   label,
   showChevron = true,

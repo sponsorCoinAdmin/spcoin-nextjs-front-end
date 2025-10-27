@@ -1,10 +1,10 @@
 'use client'
 
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils'
-import { ExchangeContext, TokenContract } from '@/lib/structure'
+import type { ExchangeContext, TokenContract } from '@/lib/structure'
 import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec'
 import { isAddress } from 'ethers'
-import { Address } from 'viem'
+import type { Address } from 'viem'
 
 /**
  * Alert-style dump of full exchange context.

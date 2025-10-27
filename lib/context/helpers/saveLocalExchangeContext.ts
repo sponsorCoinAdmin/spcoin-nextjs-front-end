@@ -1,4 +1,5 @@
-import { CHAIN_ID, ExchangeContext } from '@/lib/structure';
+import type { ExchangeContext } from '@/lib/structure';
+import { CHAIN_ID } from '@/lib/structure';
 import { deserializeWithBigInt } from '@/lib/utils/jsonBigInt';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';

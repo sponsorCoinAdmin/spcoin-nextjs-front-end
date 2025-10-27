@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';

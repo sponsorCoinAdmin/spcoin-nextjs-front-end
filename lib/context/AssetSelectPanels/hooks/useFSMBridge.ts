@@ -2,9 +2,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { Address } from 'viem';
+import type { Address } from 'viem';
 
-import { FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
+import type { FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
 import { dumpFSMContext, dumpInputFeedContext } from '@/lib/hooks/inputValidations/utils/debugContextDump';

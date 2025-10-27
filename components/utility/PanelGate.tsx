@@ -1,8 +1,8 @@
 // File: components/utility/PanelGate.tsx
 'use client';
 
-import { ReactNode } from 'react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { ReactNode } from 'react';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 type Props = {

@@ -1,7 +1,7 @@
 // File: lib/utils/feeds/assetSelect/types.ts
 'use client';
 
-import { FEED_TYPE, WalletAccount } from '@/lib/structure';
+import type { FEED_TYPE, WalletAccount } from '@/lib/structure';
 
 /** Normalized token shape consumed by the list UI */
 export type BuiltToken = {

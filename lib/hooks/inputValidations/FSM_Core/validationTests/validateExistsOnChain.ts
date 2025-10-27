@@ -5,7 +5,7 @@ import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { FEED_TYPE, NATIVE_TOKEN_ADDRESS, SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { isStudyEnabled, StudyId } from '../studyPolicy';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';

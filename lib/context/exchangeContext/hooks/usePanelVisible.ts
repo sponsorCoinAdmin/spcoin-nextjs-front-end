@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import type { SP_COIN_DISPLAY } from '@/lib/structure';
 
 /**
  * Subscribe to a single panel's visibility.

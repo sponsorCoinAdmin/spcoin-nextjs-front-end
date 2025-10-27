@@ -7,7 +7,7 @@ import { clsx } from 'clsx';
 
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-import { WalletAccount } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 

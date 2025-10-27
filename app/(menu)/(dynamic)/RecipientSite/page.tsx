@@ -14,7 +14,10 @@ function ensureHeaderTab() {
     const arr = raw ? JSON.parse(raw) : [];
     const next = Array.isArray(arr) ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF])) : [RECIPIENT_TAB_HREF];
     sessionStorage.setItem(TAB_STORAGE_KEY, JSON.stringify(next));
-  } catch {}
+    // eslint-disable-next-line no-empty
+  } catch {
+    /* no-op: sessionStorage may be unavailable (e.g., in private mode) */
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } }));
   }

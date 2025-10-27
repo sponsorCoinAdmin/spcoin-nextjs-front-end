@@ -9,13 +9,14 @@ import { useProviderSetters } from '@/lib/context/hooks/ExchangeContext/hooks/us
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 import { reconcilePanelState } from '@/lib/context/exchangeContext/helpers/panelReconcile';
 
-import {
+import type {
   ExchangeContext as ExchangeContextTypeOnly,
   TRADE_DIRECTION,
   TokenContract,
   ErrorMessage,
   WalletAccount,
-  NetworkElement,
+  NetworkElement} from '@/lib/structure';
+import {
   SP_COIN_DISPLAY,
 } from '@/lib/structure';
 

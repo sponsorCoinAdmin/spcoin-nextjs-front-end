@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react';
-import { FEED_TYPE, WalletAccount, InputState } from '@/lib/structure';
+import type { WalletAccount} from '@/lib/structure';
+import { FEED_TYPE, InputState } from '@/lib/structure';
 import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
 import { useAssetSelectContext } from '@/lib/context';

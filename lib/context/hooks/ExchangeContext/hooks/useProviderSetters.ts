@@ -1,7 +1,11 @@
 // File: lib/context/hooks/ExchangeContext/hooks/useProviderSetters.ts
-import type { TRADE_DIRECTION, TokenContract, WalletAccount } from '@/lib/structure';
-import type { ExchangeContext as ExchangeContextTypeOnly } from '@/lib/structure';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
+import {
+  SP_COIN_DISPLAY as SP,
+  type ExchangeContext as ExchangeContextTypeOnly,
+  type TRADE_DIRECTION,
+  type TokenContract,
+  type WalletAccount,
+} from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type SetExchange = (
@@ -10,7 +14,8 @@ type SetExchange = (
 ) => void;
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = (process.env.NEXT_PUBLIC_DEBUG_LOG_PROVIDER_SETTERS ?? 'false') === 'true';
+const DEBUG_ENABLED =
+  (process.env.NEXT_PUBLIC_DEBUG_LOG_PROVIDER_SETTERS ?? 'false') === 'true';
 const log = createDebugLogger('useProviderSetters', DEBUG_ENABLED, LOG_TIME);
 
 /* ----------------------- helpers: safe comparisons & logs ----------------------- */
@@ -132,7 +137,7 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
 
   // Thin wrappers (keep public API)
   const setSellAmount = (amount: bigint) => setAmount(amount, SP.SELL_SELECT_PANEL);
-  const setBuyAmount  = (amount: bigint) => setAmount(amount, SP.BUY_SELECT_PANEL);
+  const setBuyAmount = (amount: bigint) => setAmount(amount, SP.BUY_SELECT_PANEL);
 
   /* Balances (generic + wrappers) */
   const setBalance = (amount: bigint, panelType: SP.BUY_SELECT_PANEL | SP.SELL_SELECT_PANEL) =>
@@ -177,7 +182,7 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
 
   // Thin wrappers (keep public API)
   const setSellBalance = (amount: bigint) => setBalance(amount, SP.SELL_SELECT_PANEL);
-  const setBuyBalance  = (amount: bigint) => setBalance(amount, SP.BUY_SELECT_PANEL);
+  const setBuyBalance = (amount: bigint) => setBalance(amount, SP.BUY_SELECT_PANEL);
 
   /**
    * Token contract setters (unchanged logic, but keep the improved diff handling)
@@ -207,8 +212,14 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
         next: summarizeToken(contract),
         changed: {
           address: String((curr?.address ?? '') !== (contract?.address ?? '')),
-          balance: String(curr?.balance?.toString?.() ?? '') + ' → ' + String(contract?.balance?.toString?.() ?? ''),
-          amount: String(curr?.amount?.toString?.() ?? '') + ' → ' + String(contract?.amount?.toString?.() ?? ''),
+          balance:
+            String(curr?.balance?.toString?.() ?? '') +
+            ' → ' +
+            String(contract?.balance?.toString?.() ?? ''),
+          amount:
+            String(curr?.amount?.toString?.() ?? '') +
+            ' → ' +
+            String(contract?.amount?.toString?.() ?? ''),
         },
       });
 
@@ -240,8 +251,14 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
         next: summarizeToken(contract),
         changed: {
           address: String((curr?.address ?? '') !== (contract?.address ?? '')),
-          balance: String(curr?.balance?.toString?.() ?? '') + ' → ' + String(contract?.balance?.toString?.() ?? ''),
-          amount: String(curr?.amount?.toString?.() ?? '') + ' → ' + String(contract?.amount?.toString?.() ?? ''),
+          balance:
+            String(curr?.balance?.toString?.() ?? '') +
+            ' → ' +
+            String(contract?.balance?.toString?.() ?? ''),
+          amount:
+            String(curr?.amount?.toString?.() ?? '') +
+            ' → ' +
+            String(contract?.amount?.toString?.() ?? ''),
         },
       });
 
@@ -255,7 +272,10 @@ export function useProviderSetters(setExchangeContext: SetExchange) {
         return p;
       }
       const next = structuredClone(p);
-      log.log?.('[setTradeDirection] write', { prev: p.tradeData.tradeDirection, next: type });
+      log.log?.('[setTradeDirection] write', {
+        prev: p.tradeData.tradeDirection,
+        next: type,
+      });
       next.tradeData.tradeDirection = type;
       return next;
     }, 'setTradeDirection');

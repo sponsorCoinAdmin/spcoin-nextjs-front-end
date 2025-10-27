@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
-import { WalletAccount } from '@/lib/structure/types';
+import type { WalletAccount } from '@/lib/structure/types';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
 import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
 

@@ -3,7 +3,7 @@ import { isAddress } from 'viem';
 import { InputState } from '@/lib/structure/assetSelection';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { isStudyEnabled, StudyId } from '../studyPolicy';
 import { validateTokenAsset } from './validateTokenAsset';
 

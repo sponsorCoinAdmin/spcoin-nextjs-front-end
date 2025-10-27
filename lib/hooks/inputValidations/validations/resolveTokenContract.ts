@@ -1,9 +1,11 @@
 // File: lib/hooks/inputValidations/validations/resolveTokenContract.ts
 
-import { isAddress, Address, PublicClient } from 'viem';
+import type { Address, PublicClient } from 'viem';
+import { isAddress } from 'viem';
 import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
-import { TokenContract, FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
+import type { TokenContract} from '@/lib/structure';
+import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
 

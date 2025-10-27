@@ -1,7 +1,7 @@
 // File: app/(test)/recipients/WalletsClient.tsx
 'use client';
 
-import { WalletAccount } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
 import { defaultMissingImage } from '@/lib/network/utils';
 
 type Props = { wallets: WalletAccount[] };

@@ -1,12 +1,15 @@
 // File: lib/context/AssetSelectPanels/AssetSelectProvider.tsx
 'use client';
 
-import React, { ReactNode, useMemo, useRef, useState, useCallback, useEffect } from 'react';
-import { Address } from 'viem';
+import type { ReactNode} from 'react';
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import type { Address } from 'viem';
 
 import { AssetSelectContext } from './useAssetSelectContext';
-import { SP_COIN_DISPLAY, FEED_TYPE, TokenContract, WalletAccount } from '@/lib/structure';
-import { AssetSelectBag, isTokenSelectBag } from '@/lib/context/structure/types/panelBag';
+import type { TokenContract, WalletAccount } from '@/lib/structure';
+import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
+import type { AssetSelectBag} from '@/lib/context/structure/types/panelBag';
+import { isTokenSelectBag } from '@/lib/context/structure/types/panelBag';
 import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

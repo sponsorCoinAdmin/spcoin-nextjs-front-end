@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useCallback, useRef, useMemo, useEffect } from 'react';
-import { WalletAccount } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
 import { ChevronDown } from 'lucide-react';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAssetLogoURL, markLogoAsBroken } from '@/lib/hooks/useAssetLogoURL';

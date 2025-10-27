@@ -1,11 +1,11 @@
 // File: lib/hooks/inputValidations/tests/validateResolvedAsset.ts
 
-import { Address } from 'viem';
+import type { Address } from 'viem';
 import { FEED_TYPE } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
+import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { getLogoURL, defaultMissingImage } from'@/lib/network/utils';
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';

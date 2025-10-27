@@ -1,7 +1,7 @@
 // File: components/views/ListItems/AccountListItem.tsx
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import type { WalletAccount } from '@/lib/structure';
@@ -9,16 +9,11 @@ import BaseListRow from './BaseListRow';
 
 type AccountListItemProps = {
   account: WalletAccount;
-  role:string;
-  onPick: (address: string
-  ) => void; // wired to avatar click
+  role: string; // may be passed by parent; unused locally
+  onPick: (address: string) => void; // wired to avatar click
 };
 
-const AccountListItem = React.memo(function AccountListItem({
-  account,
-  onPick,
-  role,
-}: AccountListItemProps) {
+function AccountListItem({ account, onPick, role: _role }: AccountListItemProps) {
   const logo =
     account.logoURL ||
     (account.address ? `/assets/accounts/${account.address}/logo.png` : '') ||
@@ -38,6 +33,6 @@ const AccountListItem = React.memo(function AccountListItem({
       }}
     />
   );
-});
+}
 
-export default AccountListItem;
+export default memo(AccountListItem);
