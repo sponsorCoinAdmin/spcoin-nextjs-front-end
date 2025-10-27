@@ -10,7 +10,7 @@ alias kp3000="killport 3000"
 alias runfe="cdfe; clear; clear; npm run dev 2>&1 | tee run.out"
 alias rundev="runfe"
 alias runprod="npm run build && npm start"
-alias rlint="npm run lint -- --fix"
+alias rlint="npm run lint -- --fix | tee -a lint.out"
 
 # NPM SETUP
 alias npmclean="clear; cdfe; rm -rf node_modules package-lock.json .next"

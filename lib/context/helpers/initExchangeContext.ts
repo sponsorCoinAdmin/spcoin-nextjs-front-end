@@ -1,7 +1,7 @@
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import { WalletAccount, ExchangeContext, STATUS } from '@/lib/structure';
-import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
+import { WalletAccount, ExchangeContext, STATUS , SP_COIN_DISPLAY as SP } from '@/lib/structure';
+
 import { Address, isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 

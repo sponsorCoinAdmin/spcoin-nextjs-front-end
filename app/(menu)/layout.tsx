@@ -2,7 +2,6 @@
 
 import type { Metadata } from 'next'
 import '@/app/globals.css'
-import Footer from '@/components/panes/footer'
 import Header from '@/components/panes/header'
 import SpCoinProviders from '@/components/Wrappers/SpCoinProviders'
 

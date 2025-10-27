@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
-import type { Connector } from 'wagmi';
-import type { UseConnectReturnType, UseSwitchChainReturnType } from 'wagmi';
+import type { Connector , UseConnectReturnType, UseSwitchChainReturnType } from 'wagmi';
+
 
 type WalletActionsArgs = {
   allowWalletModal: boolean;

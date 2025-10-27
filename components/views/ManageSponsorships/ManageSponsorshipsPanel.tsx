@@ -1,7 +1,7 @@
 // File: components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
@@ -23,8 +23,8 @@ import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 type Props = { onClose?: () => void };
 
 export default function ManageSponsorshipsPanel({ onClose }: Props) {
+  // ⬇️ All hooks must be called unconditionally (before any early returns)
   const isActive = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-
   const vRecipients = usePanelVisible(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
@@ -33,49 +33,26 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const { openPanel, closePanel } = usePanelTree();
 
   const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
-
-  // ▶ ToDo toggle (initialized to true)
   const [showToDo, setShowToDo] = useState<boolean>(true);
 
-  const iconBtn =
-    'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
+  // Exchange context (must not be after an early return)
+  const ctx = useContext(ExchangeContextState);
 
-  // Fixed row height (40px)
-  const rowH = 'h-[40px]';
+  // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
+  const defaultAddr = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
 
-  // Inner wrappers handle background + spacing; full height & vertical centering
-  const tdInner = `${rowH} w-full px-3 text-sm align-middle flex items-center`;
-  const tdInnerCenter = `${tdInner} justify-center`;
-
-  // Alternating row colors on the inner wrappers
-  const rowA = 'bg-[rgba(56,78,126,0.35)]';           // Sponsors / Agents
-  const rowB = 'bg-[rgba(156,163,175,0.25)]';          // light grey: Recipients / Total
-
-  const th =
-    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
-  const rowBorder = 'border-b border-slate-800';
-
-  const openOnly = (id: SP_COIN_DISPLAY) => {
+  // Open only the requested panel; close the alternatives
+  const openOnly = useCallback((id: SP_COIN_DISPLAY) => {
     try {
       [
         SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
         SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
         SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
       ].forEach((pid) => (pid === id ? openPanel(pid) : closePanel(pid)));
-    } catch {}
-  };
-
-  useEffect(() => {
-    if (!isActive) return;
-  }, [isActive]);
-
-  if (!isActive) return null;
-
-  const recipientsHidden = !(vRecipients && mode === 'recipients');
-  const agentsHidden = !(vAgents && mode === 'agents');
-  const sponsorsHidden = !(vSponsors && mode === 'sponsors');
-
-  const ctx = useContext(ExchangeContextState);
+    } catch {
+      /* no-op: panel tree may not be ready */
+    }
+  }, [openPanel, closePanel]);
 
   /** Alert-only placeholder per request */
   const claimRewards = useCallback((accountType: AccountType) => {
@@ -90,20 +67,32 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     );
   }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
 
-  // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
-  const defaultAddr =
-    String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
+  // ✅ Early return happens only after all hooks have been called
+  if (!isActive) return null;
+
+  // Visibility flags for sub-panels
+  const recipientsHidden = !(vRecipients && mode === 'recipients');
+  const agentsHidden = !(vAgents && mode === 'agents');
+  const sponsorsHidden = !(vSponsors && mode === 'sponsors');
+
+  // UI classes
+  const iconBtn =
+    'inline-flex h-8 w-8 items-center justify-center rounded hover:opacity-80 focus:outline-none';
+  const rowH = 'h-[40px]';
+  const tdInner = `${rowH} w-full px-3 text-sm align-middle flex items-center`;
+  const tdInnerCenter = `${tdInner} justify-center`;
+  const rowA = 'bg-[rgba(56,78,126,0.35)]';   // Sponsors / Agents
+  const rowB = 'bg-[rgba(156,163,175,0.25)]'; // Recipients / Total
+  const th =
+    'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+  const rowBorder = 'border-b border-slate-800';
 
   return (
     <>
       {/* Address selector */}
       <div className="mb-6">
         <AssetSelectDisplayProvider>
-          {/*
-            ⛳️ NOTE: AGENT_LIST_SELECT_PANEL was removed from the app.
-            We scope this provider to MANAGE_SPONSORSHIPS_PANEL instead.
-            AddressSelect uses `bypassDefaultFsm`, so behavior is unchanged.
-          */}
+          {/* AGENT_LIST_SELECT_PANEL removed; scope to MANAGE_SPONSORSHIPS_PANEL */}
           <AssetSelectProvider
             containerType={SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL}
             closePanelCallback={() => onClose?.()}

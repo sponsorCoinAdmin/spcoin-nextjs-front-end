@@ -1,6 +1,5 @@
 // lib/structure/assetSelection/types/context.ts
 
-import type { AssetSelectDisplay } from '../enums';
 
 export type AssetSelectContextType = {
   /** Optional: useful when multiple selection instances are mounted */

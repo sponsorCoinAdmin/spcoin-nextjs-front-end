@@ -17,10 +17,10 @@ const ReadWagmiERC20RecordFields = ( { TOKEN_CONTRACT_ADDRESS }: Props) => {
   const decimalRec = useWagmiERC20TokenDecimalRec(TOKEN_CONTRACT_ADDRESS)
   const totalSupplyRec = useWagmiERC20TokenTotalSupplyRec(TOKEN_CONTRACT_ADDRESS)
 
-  let name = nameRec.status === 'success' ? nameRec.data : `ERROR name: ${nameRec.status}`
-  let symbol = symbolRec.status === 'success' ?  symbolRec.data : `ERROR: ${symbolRec.status}`
-  let decimals = decimalRec?.status === 'success' ? decimalRec?.data : `ERROR decimals: ${decimalRec.status}`
-  let totalSupply = totalSupplyRec.status === 'success' ? totalSupplyRec.data : `ERROR totalSupply: ${totalSupplyRec.status}`
+  const name = nameRec.status === 'success' ? nameRec.data : `ERROR name: ${nameRec.status}`
+  const symbol = symbolRec.status === 'success' ?  symbolRec.data : `ERROR: ${symbolRec.status}`
+  const decimals = decimalRec?.status === 'success' ? decimalRec?.data : `ERROR decimals: ${decimalRec.status}`
+  const totalSupply = totalSupplyRec.status === 'success' ? totalSupplyRec.data : `ERROR totalSupply: ${totalSupplyRec.status}`
 
   return (
     <>

@@ -1,8 +1,8 @@
 // File: lib/hooks/inputValidations/helpers/fetchTokenMetadata.ts
 
-import { Address, PublicClient } from 'viem';
+import { Address, PublicClient , erc20Abi } from 'viem';
 import { TokenMetadata } from '../types/validationTypes';
-import { erc20Abi } from 'viem';
+
 
 /**
  * Fetch metadata (name, symbol, decimals, totalSupply) from an ERC-20 contract.

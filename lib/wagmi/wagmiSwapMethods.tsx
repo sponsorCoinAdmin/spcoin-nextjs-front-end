@@ -1,9 +1,8 @@
-import { useBalance, useReadContract, useWriteContract } from 'wagmi'
+import { useBalance, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
 import { Address, formatUnits } from 'viem'
 // import { erc20ABI } from 'viem'
 // import erc20ABI from '@/resources/data/ABIs/erc20ABI.json'
-import { wethAbi } from '@/resources/data/ABIs/wethABI'
 import { erc20ABI } from '@/resources/data/ABIs/erc20ABI'
 import { TokenContract, ContractRecs, BURN_ADDRESS } from '@/lib/structure'
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
@@ -130,7 +129,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined):Tok
 
 const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
   if (val === undefined) return undefined;
-  let bigInt = BigInt(val)
+  const bigInt = BigInt(val)
   return (decimals !== undefined) ? formatUnits(bigInt, decimals) : bigInt.toString()
 }
 

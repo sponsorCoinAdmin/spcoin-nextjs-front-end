@@ -14,7 +14,6 @@ import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
 import { defaultMissingImage } from '@/lib/network/utils';
-import ManageAgents from './ManageAgents';
 
 type Props = { onClose?: () => void };
 

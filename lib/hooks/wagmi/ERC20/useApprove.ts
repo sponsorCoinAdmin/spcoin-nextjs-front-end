@@ -1,8 +1,8 @@
 'use client';
 
 import { useWriteContract } from 'wagmi';
-import { erc20Abi } from 'viem';
-import { Address } from 'viem';
+import { erc20Abi , Address } from 'viem';
+
 
 export function useApprove() {
   const { writeContract, ...rest } = useWriteContract();

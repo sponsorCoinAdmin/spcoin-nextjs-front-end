@@ -2,8 +2,8 @@
 'use client';
 
 import { useReadContract } from 'wagmi';
-import { erc20Abi } from 'viem';
-import { Address } from 'viem';
+import { erc20Abi , Address } from 'viem';
+
 
 export function useDecimals(tokenAddress: Address) {
   return useReadContract({

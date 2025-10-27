@@ -93,7 +93,7 @@ export function saveLocalExchangeContext(ctx: ExchangeContext) {
       ? out.settings.spCoinPanelTree
       : [];
 
-    let flatTree: FlatPanel[] = toFlat(rawTree)
+    const flatTree: FlatPanel[] = toFlat(rawTree)
       // Never persist these
       .filter(
         (n) =>

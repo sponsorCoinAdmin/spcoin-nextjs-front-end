@@ -11,7 +11,7 @@ export function clampDisplay(numStr: string, max = maxInputSz): string {
   const sign = neg ? '-' : '';
   if (neg) s = s.slice(1);
 
-  let [intPart, fracPart = ''] = s.split('.');
+  const [intPart, fracPart = ''] = s.split('.');
   const intLenWithSign = sign.length + intPart.length;
 
   if (intLenWithSign >= max) {

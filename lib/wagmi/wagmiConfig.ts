@@ -20,7 +20,7 @@ let BASE_URL = '';
 let MAINNET_URL = '';
 let POLYGON_URL = '';
 let SEPOLIA_URL = '';
-let HARDHAT_URL = process.env.HARDHAT || '';
+const HARDHAT_URL = process.env.HARDHAT || '';
 
 switch (BLOCKCHAIN_PROVIDER) {
   case 'ALCHEMY':

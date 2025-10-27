@@ -1,4 +1,3 @@
-import SpCoinProviders from '@/components/Wrappers/SpCoinProviders'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

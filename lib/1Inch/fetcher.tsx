@@ -10,10 +10,10 @@ import {
   useErrorMessage,
   useSellAmount,
   useTradeData,
-} from '@/lib/context/hooks';
+ useAppChainId } from '@/lib/context/hooks';
 import { Address } from 'viem';
 import { useAccount } from 'wagmi';
-import { useAppChainId } from '@/lib/context/hooks';
+
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;

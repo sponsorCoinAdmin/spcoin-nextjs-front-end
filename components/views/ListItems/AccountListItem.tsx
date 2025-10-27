@@ -4,7 +4,7 @@
 import React from 'react';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import type { FEED_TYPE, WalletAccount } from '@/lib/structure';
+import type { WalletAccount } from '@/lib/structure';
 import BaseListRow from './BaseListRow';
 
 type AccountListItemProps = {

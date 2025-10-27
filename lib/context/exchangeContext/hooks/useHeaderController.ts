@@ -1,8 +1,8 @@
 // File: lib/context/exchangeContext/hooks/useHeaderController.ts
 'use client';
 
-import React from 'react';
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
+
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';

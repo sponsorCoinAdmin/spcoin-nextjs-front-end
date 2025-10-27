@@ -2,11 +2,10 @@
 
 import { useBalance, useReadContract } from 'wagmi'
 import { config } from '@/lib/wagmi/wagmiConfig'
-import { Address, formatUnits } from 'viem'
-import { erc20Abi } from 'viem'
+import { Address, formatUnits , erc20Abi } from 'viem'
+
 import { TokenContract, ContractRecs, BURN_ADDRESS } from '@/lib/structure'
 import { getBlockChainName } from '@/lib/context/helpers/NetworkHelpers';
-import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useAppChainId } from '../context/hooks'
 
 const useWagmiERC20TokenBalanceOfRec = (connectedAccountAddr: Address | undefined, contractAddress: Address | undefined) => {
@@ -155,7 +154,7 @@ const useErc20NetworkContract = (ACTIVE_NETWORK_ADDRESS:Address | undefined) => 
 
 const formatDecimals = (val: bigint | number | string | undefined, decimals:number|undefined) => {
   if (val === undefined) return undefined;
-  let bigInt = BigInt(val)
+  const bigInt = BigInt(val)
   return (decimals !== undefined) ? formatUnits(bigInt, decimals) : bigInt.toString()
 }
 
