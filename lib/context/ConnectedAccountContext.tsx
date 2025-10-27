@@ -1,7 +1,7 @@
+// File: lib/context/ConnectedAccountContext.tsx
 'use client';
 
-import type { ReactNode } from 'react';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useAccount } from 'wagmi';
 import type { WalletAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
@@ -12,7 +12,7 @@ export const useConnectedAccount = (): WalletAccount | undefined => {
   return useContext(ConnectedAccountContext);
 };
 
-export const ConnectedAccountProvider = ({ children }: { children: ReactNode }) => {
+export function ConnectedAccountProvider({ children }: { children: ReactNode }) {
   const { address, isConnected } = useAccount();
   const [connectedAccount, setConnectedAccount] = useState<WalletAccount | undefined>(undefined);
 
@@ -22,21 +22,23 @@ export const ConnectedAccountProvider = ({ children }: { children: ReactNode }) 
       return;
     }
 
-    const fetchWalletAccount = async () => {
+    const ac = new AbortController();
+
+    (async () => {
       const accountPath = `/assets/accounts/${address}/wallet.json`;
-
       try {
-        const response = await fetch(accountPath);
-        if (!response.ok) throw new Error('File not found');
+        const res = await fetch(accountPath, { signal: ac.signal, cache: 'no-store' });
+        if (!res.ok) throw new Error('File not found');
 
-        const metadata = await response.json();
+        const metadata = await res.json();
         const wallet: WalletAccount = {
           ...metadata,
           address,
         };
 
-        setConnectedAccount(wallet);
-      } catch (error) {
+        if (!ac.signal.aborted) setConnectedAccount(wallet);
+      } catch (_err) {
+        // Fallback minimal wallet record when metadata is missing
         const fallback: WalletAccount = {
           address,
           type: 'ERC20_WALLET',
@@ -48,12 +50,11 @@ export const ConnectedAccountProvider = ({ children }: { children: ReactNode }) 
           balance: 0n,
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
         };
-
-        setConnectedAccount(fallback);
+        if (!ac.signal.aborted) setConnectedAccount(fallback);
       }
-    };
+    })();
 
-    fetchWalletAccount();
+    return () => ac.abort();
   }, [address, isConnected]);
 
   return (
@@ -61,4 +62,4 @@ export const ConnectedAccountProvider = ({ children }: { children: ReactNode }) 
       {children}
     </ConnectedAccountContext.Provider>
   );
-};
+}

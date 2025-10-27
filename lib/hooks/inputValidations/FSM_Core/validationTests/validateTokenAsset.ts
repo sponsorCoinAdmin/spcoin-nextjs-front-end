@@ -25,7 +25,7 @@ export async function validateTokenAsset(params: ValidateFSMInput): Promise<Vali
 
   // 1) Native token short-circuit
   if (addr === NATIVE_TOKEN_ADDRESS) {
-    log.log?.(`native token → UPDATE_VALIDATED_ASSET`);
+    log.log?.('native token → UPDATE_VALIDATED_ASSET');
     return {
       nextState: InputState.UPDATE_VALIDATED_ASSET,
       assetPatch: {
@@ -49,30 +49,43 @@ export async function validateTokenAsset(params: ValidateFSMInput): Promise<Vali
   }
 
   // 3) Try to fetch ERC-20 metadata (graceful fallbacks)
-  let decimals: number | undefined;
-  let symbol: string | undefined;
-  let name: string | undefined;
-
-  const read = async (fn: 'decimals' | 'symbol' | 'name') => {
+  const readNumber = async (fn: 'decimals'): Promise<number | undefined> => {
     try {
-      return await publicClient.readContract({
+      const out = await publicClient.readContract({
         address: addr,
         abi: ERC20_ABI as any,
         functionName: fn,
       });
+      return typeof out === 'number' ? out : Number(out);
     } catch (e) {
       log.warn?.(`read ${fn} failed: ${(e as Error).message}`);
       return undefined;
     }
   };
 
-  decimals = await read('decimals');
-  symbol   = await read('symbol');
-  name     = await read('name');
+  const readString = async (fn: 'symbol' | 'name'): Promise<string | undefined> => {
+    try {
+      const out = await publicClient.readContract({
+        address: addr,
+        abi: ERC20_ABI as any,
+        functionName: fn,
+      });
+      return typeof out === 'string' ? out : String(out);
+    } catch (e) {
+      log.warn?.(`read ${fn} failed: ${(e as Error).message}`);
+      return undefined;
+    }
+  };
+
+  const [decimals, symbol, name] = await Promise.all([
+    readNumber('decimals'),
+    readString('symbol'),
+    readString('name'),
+  ]);
 
   // 4) Build the patch; proceed even if metadata is partial
   const patch: any = { address: addr, chainId };
-  if (typeof decimals === 'number') patch.decimals = decimals;
+  if (typeof decimals === 'number' && !Number.isNaN(decimals)) patch.decimals = decimals;
   if (symbol) patch.symbol = symbol;
   if (name) patch.name = name;
 
@@ -80,7 +93,7 @@ export async function validateTokenAsset(params: ValidateFSMInput): Promise<Vali
     // Metadata completely missing — still proceed with bare token patch
     log.warn?.(`metadata not available for ${addr}; proceeding with bare patch`);
   } else {
-    log.log?.(`token resolved → UPDATE_VALIDATED_ASSET`, patch);
+    log.log?.('token resolved → UPDATE_VALIDATED_ASSET', patch);
   }
 
   return {
