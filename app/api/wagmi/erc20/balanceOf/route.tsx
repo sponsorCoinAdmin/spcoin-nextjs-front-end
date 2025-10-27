@@ -7,6 +7,6 @@ export async function GET(req: Request) {
   const tokenAddress    = getQueryVariable(params, "tokenAddress")
 
   const wagmiBalance = await getWagmiBalanceOfRec(tokenAddress)
-  console.log("BalanceOf = "+wagmiBalance)
+  console.log("BalanceOf = " + wagmiBalance)
   return new Response(JSON.stringify(wagmiBalance))
 }

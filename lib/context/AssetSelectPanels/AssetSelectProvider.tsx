@@ -14,46 +14,17 @@ import { useInstanceId } from './hooks/useInstanceId';
 import { useFeedType } from './hooks/useFeedType';
 import { usePanelBag } from './hooks/usePanelBag';
 import { useValidatedAsset } from './hooks/useValidatedAsset';
-// ⬇️ REMOVED: global callback bridge
 import { useFSMBridge } from './hooks/useFSMBridge';
 
-const LOG_TIME = false;
+const LOG_TIME = false as const;
 const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
 
-// Toggle all regular debug logs with this flag
+// Env-gated logging only
 const DEBUG_ENABLED =
-  (process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true') ||
-  (process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true') ||
-  true; // keep `true` until LOG_CLEANUP passes, then switch to env-gated
+  process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 
 const debugLog = createDebugLogger('AssetSelectProvider', DEBUG_ENABLED, LOG_TIME, LOG_LEVEL);
-
-// Deep trace for balance/asset handoffs
-const TRACE_BALANCE = process.env.NEXT_PUBLIC_TRACE_BALANCE === 'true';
-
-// Small helper that respects DEBUG_ENABLED so we can safely remove raw console usage later
-const rawLog = (...args: any[]) => {
-  if (!DEBUG_ENABLED) return;
-  // eslint-disable-next-line no-console
-  console.log(...args);
-};
-
-function snapshotAsset(asset: TokenContract | WalletAccount | undefined) {
-  if (!asset) return { kind: 'unknown', note: 'asset is undefined' };
-  const a: any = asset;
-  return {
-    kind:
-      typeof a?.decimals === 'number' || typeof a?.symbol === 'string'
-        ? 'TokenContract'
-        : 'WalletAccount/Other',
-    address: a?.address ?? '(none)',
-    symbol: a?.symbol ?? '(none)',
-    name: a?.name ?? '(none)',
-    decimals: typeof a?.decimals === 'number' ? a.decimals : '(n/a)',
-    logoURL: a?.logoURL ?? undefined,
-    website: a?.website ?? undefined,
-  };
-}
 
 type Props = {
   children: ReactNode;
@@ -72,31 +43,28 @@ export const AssetSelectProvider = ({
 }: Props) => {
   const instanceId = useInstanceId(containerType);
   const feedType = useFeedType(containerType);
-
   const { panelBag, setPanelBag } = usePanelBag(initialPanelBag, containerType);
 
-  // Local UI state
-  const [manualEntry, setManualEntry] = useState(false);
-  const [bypassFSM, setBypassFSM] = useState(false); // per-instance runner bypass
+  // Call once (Rules of Hooks)
+  const {
+    activeSubDisplay,
+    setActiveSubDisplay,
+    resetPreview,
+    showAssetPreview,
+    showErrorPreview,
+  } = useAssetSelectDisplay();
 
-  // Mount log
+  // Local UI state (kept for compatibility)
+  const [manualEntry, setManualEntry] = useState(false);
+  const [bypassFSM, setBypassFSM] = useState(false);
+
+  // Mount — light summary only
   useEffect(() => {
     debugLog.log?.(
-      `🔧 mount: containerType=${SP_COIN_DISPLAY[containerType]}, feedType=${FEED_TYPE[feedType]}, instanceId=${instanceId}, initialBag=${
-        initialPanelBag ? JSON.stringify(initialPanelBag) : '—'
-      }`
+      `mount: container=${SP_COIN_DISPLAY[containerType]} | feed=${FEED_TYPE[feedType]} | instance=${instanceId} | hasInitialBag=${!!initialPanelBag}`
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount-only
-
-  // State change logs (gated)
-  useEffect(() => {
-    rawLog('[AssetSelectProvider] state change: manualEntry', { instanceId, manualEntry });
-  }, [manualEntry, instanceId]);
-
-  useEffect(() => {
-    rawLog('[AssetSelectProvider] state change: bypassFSM', { instanceId, bypassFSM });
-  }, [bypassFSM, instanceId]);
+  }, []);
 
   const {
     validatedAsset,
@@ -105,82 +73,14 @@ export const AssetSelectProvider = ({
     setValidatedAssetNarrow,
   } = useValidatedAsset<TokenContract | WalletAccount>();
 
-  // Parent commit callback with trace
-  const tracedSetSelectedAssetCallback = useCallback(
-    (asset: TokenContract | WalletAccount) => {
-      rawLog('[AssetSelectProvider] setSelectedAssetCallback(IN)', {
-        instanceId,
-        containerType: SP_COIN_DISPLAY[containerType],
-        feedType: FEED_TYPE[feedType],
-        asset: snapshotAsset(asset),
-      });
-
-      if (TRACE_BALANCE) {
-        // eslint-disable-next-line no-console
-        console.groupCollapsed('[TRACE][AssetSelectProvider] setSelectedAssetCallback IN');
-        // eslint-disable-next-line no-console
-        console.log({ instanceId, containerType: SP_COIN_DISPLAY[containerType], feedType: FEED_TYPE[feedType] });
-        // eslint-disable-next-line no-console
-        console.log('incoming asset snapshot:', snapshotAsset(asset));
-        // eslint-disable-next-line no-console
-        console.trace('callsite');
-        // eslint-disable-next-line no-console
-        console.groupEnd();
-      }
-
-      // Delegate to parent
-      setSelectedAssetCallback(asset);
-
-      rawLog('[AssetSelectProvider] setSelectedAssetCallback(OUT → delegated to parent)', {
-        instanceId,
-        wroteAddress: (asset as any)?.address ?? '(none)',
-        wroteSymbol: (asset as any)?.symbol ?? '(none)',
-      });
-
-      if (TRACE_BALANCE) {
-        // eslint-disable-next-line no-console
-        console.log('[TRACE][AssetSelectProvider] setSelectedAssetCallback OUT (delegated to parent)', {
-          instanceId,
-          wroteAddress: (asset as any)?.address ?? '(none)',
-          wroteSymbol: (asset as any)?.symbol ?? '(none)',
-        });
-      }
-    },
-    [setSelectedAssetCallback, instanceId, containerType, feedType]
-  );
-
-  // ⬇️ REPLACEMENT for the removed global bridge: thin local “fire*” wrappers.
-  const fireClosePanel = useCallback(
-    (fromUser?: boolean) => {
-      closePanelCallback(fromUser);
-    },
-    [closePanelCallback]
-  );
-
-  const fireSetTradingToken = useCallback(
-    (asset: TokenContract | WalletAccount) => {
-      tracedSetSelectedAssetCallback(asset);
-    },
-    [tracedSetSelectedAssetCallback]
-  );
-
-  const { resetPreview, showErrorPreview, showAssetPreview } = useAssetSelectDisplay();
-
+  // Peer address derived from panelBag
   const peerAddress = useMemo<Address | undefined>(() => {
-    const peer = panelBag && isTokenSelectBag(panelBag)
+    return panelBag && isTokenSelectBag(panelBag)
       ? (panelBag.peerAddress as Address | undefined)
       : undefined;
+  }, [panelBag]);
 
-    rawLog('[AssetSelectProvider] derive peerAddress', {
-      instanceId,
-      containerType: SP_COIN_DISPLAY[containerType],
-      peerAddress: peer ?? null,
-    });
-
-    return peer;
-  }, [panelBag, containerType, instanceId]);
-
-  // Bridge (receives bypassFSM)
+  // Bridge to FSM
   const {
     inputState,
     setInputState,
@@ -202,8 +102,8 @@ export const AssetSelectProvider = ({
     manualEntry,
     validatedAsset,
     setValidatedAsset,
-    fireClosePanel,
-    fireSetTradingToken,
+    fireClosePanel: (fromUser?: boolean) => closePanelCallback(fromUser),
+    fireSetTradingToken: (asset: TokenContract | WalletAccount) => setSelectedAssetCallback(asset),
     resetPreview,
     showAssetPreview,
     showErrorPreview,
@@ -211,11 +111,11 @@ export const AssetSelectProvider = ({
     bypassFSM,
   });
 
-  // inputState transitions (gated)
+  // InputState transitions
   const prevStateRef = useRef(inputState);
   useEffect(() => {
     if (prevStateRef.current !== inputState) {
-      rawLog('[AssetSelectProvider] inputState transition', {
+      debugLog.log?.('inputState transition', {
         instanceId,
         from: prevStateRef.current,
         to: inputState,
@@ -224,74 +124,92 @@ export const AssetSelectProvider = ({
     }
   }, [inputState, instanceId]);
 
-  // Deep trace: snapshot when bridge produces a validatedAsset
-  if (TRACE_BALANCE && validatedAsset) {
-    // eslint-disable-next-line no-console
-    console.log('[TRACE][AssetSelectProvider] validatedAsset snapshot (pre-commit hint)', {
-      instanceId,
-      containerType: SP_COIN_DISPLAY[containerType],
-      snapshot: snapshotAsset(validatedAsset),
-    });
-  }
-
-  // Log input feed updates at key debounce edges (gated)
-  const lastDebouncedRef = useRef<string | undefined>(undefined);
+  // Log when validatedAsset changes (guarded)
+  const prevValidatedRef = useRef<TokenContract | WalletAccount | undefined>(undefined);
   useEffect(() => {
-    if (debouncedHexInput !== lastDebouncedRef.current) {
-      rawLog('[AssetSelectProvider] debouncedHexInput', {
+    if (validatedAsset && validatedAsset !== prevValidatedRef.current) {
+      const a: any = validatedAsset;
+      debugLog.log?.('validatedAsset changed', {
         instanceId,
-        debouncedHexInput,
-        manualEntry,
-        bypassFSM,
+        address: a?.address ?? '(none)',
+        symbol: a?.symbol ?? '(none)',
+        name: a?.name ?? '(none)',
       });
-      lastDebouncedRef.current = debouncedHexInput;
+      prevValidatedRef.current = validatedAsset;
     }
-  }, [debouncedHexInput, manualEntry, bypassFSM, instanceId]);
+  }, [validatedAsset, instanceId]);
 
-  // Context-facing wrappers (same names for compatibility)
+  // Context-facing wrappers (minimal logging)
   const setTradingTokenCallbackCtx = useCallback(
-    (a: TokenContract | WalletAccount) => {
-      rawLog('[AssetSelectProvider] ctx.setTradingTokenCallback → fireSetTradingToken(IN)', {
+    (asset: TokenContract | WalletAccount) => {
+      debugLog.log?.('setTradingTokenCallback', {
         instanceId,
-        asset: snapshotAsset(a),
+        address: (asset as any)?.address ?? '(none)',
+        symbol: (asset as any)?.symbol ?? '(none)',
       });
-      fireSetTradingToken(a);
-      rawLog('[AssetSelectProvider] ctx.setTradingTokenCallback → fireSetTradingToken(OUT)');
+      setSelectedAssetCallback(asset);
     },
-    [fireSetTradingToken, instanceId]
+    [instanceId, setSelectedAssetCallback]
   );
 
   const closePanelCallbackCtx = useCallback(() => {
-    rawLog('[AssetSelectProvider] ctx.closePanelCallback → fireClosePanel(IN)', { instanceId });
-    fireClosePanel(true);
-    rawLog('[AssetSelectProvider] ctx.closePanelCallback → fireClosePanel(OUT)');
-  }, [fireClosePanel, instanceId]);
+    debugLog.log?.('closePanelCallback', { instanceId });
+    closePanelCallback(true);
+  }, [instanceId, closePanelCallback]);
 
+  // 🔸 Always-present no-ops to satisfy strict context type
+  const dumpFSMContext = useCallback(
+    (h?: string) => {
+      if (DEBUG_ENABLED) dumpFSM(h ?? '');
+    },
+    [dumpFSM]
+  );
+
+  const dumpInputFeedContext = useCallback(
+    (h?: string) => {
+      if (DEBUG_ENABLED) dumpInputFeed(h ?? '');
+    },
+    [dumpInputFeed]
+  );
+
+  // Deprecated alias kept for compatibility — calls FSM dump
+  const dumpAssetSelectContext = useCallback(
+    (h?: string) => {
+      if (DEBUG_ENABLED) dumpFSM(h ?? '');
+    },
+    [dumpFSM]
+  );
+
+  // Also required by the type; keep as no-op unless you intend to support it
+  const setValidatedWallet = useCallback((_?: WalletAccount) => {
+    /* no-op: deprecated */
+  }, []);
+
+  // Build the public context value
   const ctxValue = useMemo(
     () => ({
       // FSM state + controls
       inputState,
       setInputState,
 
-      // Validated asset (token-focused API kept for backwards compatibility)
+      // Validated asset
       validatedAsset: validatedAssetNarrow,
       setValidatedAsset: setValidatedAssetNarrow,
 
-      // Local flags
+      // Local flags (compat)
       manualEntry,
       setManualEntry,
-
-      // Bypass control exposed to children (e.g., AddressSelect)
       bypassFSM,
       setBypassFSM,
 
-      // Token-only helpers (legacy naming preserved)
+      // Token-only legacy helper (compat)
       setValidatedToken: (t?: TokenContract) => setValidatedAssetNarrow(t),
-      setValidatedWallet: (_?: WalletAccount) => {},
 
-      // Debug dumps
-      dumpFSMContext: (h?: string) => dumpFSM(h ?? ''),
-      dumpAssetSelectContext: (h?: string) => dumpFSM(h ?? ''), // keep alias for now
+      // Required by AssetSelectContextType
+      setValidatedWallet,          // no-op (deprecated)
+      dumpAssetSelectContext,      // compat alias → dumpFSM
+      dumpFSMContext,              // always present; no-op when disabled
+      dumpInputFeedContext,        // always present; no-op when disabled
 
       // Input feed
       validHexInput,
@@ -302,14 +220,13 @@ export const AssetSelectProvider = ({
       isValidHexString,
       handleHexInputChange,
       resetHexInput,
-      dumpInputFeedContext: (h?: string) => dumpInputFeed(h ?? ''),
 
       // Identity / meta
       containerType,
       feedType,
       instanceId,
 
-      // Parent bridges exposed to children (legacy name preserved) — now direct
+      // Parent bridges
       closePanelCallback: closePanelCallbackCtx,
       setTradingTokenCallback: setTradingTokenCallbackCtx,
 
@@ -317,17 +234,24 @@ export const AssetSelectProvider = ({
       panelBag,
       setPanelBag,
 
-      // Preview controls
+      // Display controls
+      activeSubDisplay,
+      setActiveSubDisplay,
       showErrorPreview,
       showAssetPreview,
       resetPreview,
     }),
     [
+      // FSM / validated
       inputState,
       validatedAssetNarrow,
       setValidatedAssetNarrow,
+
+      // flags
       manualEntry,
       bypassFSM,
+
+      // input feed
       validHexInput,
       debouncedHexInput,
       failedHexInput,
@@ -336,19 +260,33 @@ export const AssetSelectProvider = ({
       isValidHexString,
       handleHexInputChange,
       resetHexInput,
+
+      // identity
       containerType,
       feedType,
       instanceId,
+
+      // bridges
       closePanelCallbackCtx,
       setTradingTokenCallbackCtx,
+
+      // bag
       panelBag,
       setPanelBag,
+
+      // display
+      activeSubDisplay,
+      setActiveSubDisplay,
       showErrorPreview,
       showAssetPreview,
       resetPreview,
-      dumpInputFeed,
-      dumpFSM,
-    ],
+
+      // required fns
+      setValidatedWallet,
+      dumpAssetSelectContext,
+      dumpFSMContext,
+      dumpInputFeedContext,
+    ]
   );
 
   return <AssetSelectContext.Provider value={ctxValue}>{children}</AssetSelectContext.Provider>;

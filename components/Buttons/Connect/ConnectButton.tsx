@@ -1,7 +1,7 @@
 // File: components/Buttons/Connect/ConnectButton.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { ConnectKitButton } from 'connectkit';
 import { useChainId, useConnect, useConnectors, useDisconnect, useSwitchChain } from 'wagmi';
 import { useAppChainId } from '@/lib/context/hooks';

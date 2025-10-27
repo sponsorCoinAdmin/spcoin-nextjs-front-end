@@ -3,17 +3,24 @@
 'use client';
 
 import { InputState } from '@/lib/structure/assetSelection';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useEffect, useState } from 'react';
 
 const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 
 let clearTrace: (() => void) | null = null;
 let clearHeader: (() => void) | null = null;
+/* ---------------------------- Debug logger toggle --------------------------- */
+// NEW: panel trace logger (FSM panel diffs) controlled by env flag
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_FSM_TRACE_PANEL === 'true';
+const debugLog = createDebugLogger('FSMTracePanel', DEBUG_ENABLED, LOG_TIME);
+
 
 export function clearFSMHeaderFromMemory(): void {
   try {
     localStorage.removeItem('latestFSMHeader');
-    console.log('[FSMTracePanel] 🧹 Cleared latestFSMHeader from localStorage');
+    debugLog.log('Cleared latestFSMHeader from localStorage');
     if (clearHeader) clearHeader();
   } catch (err) {
     console.error('[FSMTracePanel] ❌ Failed to clear FSM Header:', err);
@@ -24,7 +31,7 @@ export function clearFSMTraceFromMemory(): void {
   try {
     localStorage.removeItem('latestFSMTrace');
     localStorage.removeItem(LOCAL_TRACE_LINES_KEY);
-    console.log('[FSMTracePanel] 🧹 Cleared FSM trace from localStorage');
+    debugLog.log('Cleared FSM trace from localStorage');
     if (clearTrace) clearTrace();
   } catch (err) {
     console.error('[FSMTracePanel] ❌ Failed to clear FSM trace:', err);
@@ -39,13 +46,13 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
 
   useEffect(() => {
     clearTrace = () => {
-      console.log('[FSMTracePanel] 🔁 clearTrace called');
+      debugLog.log('🔁 clearTrace called');
       setTrace(null);
       setTraceLines(null);
     };
 
     clearHeader = () => {
-      console.log('[FSMTracePanel] 🔁 clearHeader called');
+      debugLog.log('🔁 clearHeader called');
       setHeaderString(null);
     };
 

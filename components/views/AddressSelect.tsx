@@ -15,8 +15,6 @@ const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ADDRESS_SELECT === 'true';
 const debugLog = createDebugLogger('AddressSelect', DEBUG_ENABLED, LOG_TIME);
 
-debugLog.log('✅ [AddressSelect] component file loaded');
-
 type Props = {
   defaultAddress?: string;
   /** If true, this AddressSelect instance disables the FSM runner. */

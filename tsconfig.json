@@ -9,35 +9,29 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
 
-    // Enable path aliases like @/lib/structure/types
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
+      "@/lib/*": ["lib/*"],
+      "@/resources/*": ["resources/*"],
       "@ctx/*": ["lib/context/*"],
       "@ctx/select/*": ["lib/context/AssetSelectPanels/*"],
       "@lib/context/providers/*": ["lib/context/providers/*"]
     },
 
-    // Next.js TypeScript plugin
-    "plugins": [
-      { "name": "next" }
-    ]
+    "plugins": [{ "name": "next" }],
 
-    // Optional stricter cleanup checks (uncomment if desired)
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
