@@ -10,6 +10,7 @@ test.out
 */.e
 package-lock.json
 run.out
+lint.out
 
 cache
 artifacts
