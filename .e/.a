@@ -12,7 +12,8 @@ alias rundev="runfe"
 alias runprod="npm run build && npm start"
 
 # NPM SETUP
-alias npmi="npm install @sponsorcoin/spcoin-access-modules-cjs"
+alias npmclean="clear; cdfe; rm -rf node_modules package-lock.json .next"
+alias npmi="npmclean; npm install @sponsorcoin/spcoin-access-modules-cjs"
 
 alias rt="clear; . ./scripts/installNodeModules.sh 0"
 alias vt="vi ./scripts/installNodeModules.sh"

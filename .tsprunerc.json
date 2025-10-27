@@ -1,0 +1,175 @@
+{
+  "name": "spcoin-hardhat-contract-access-test",
+  "version": "1.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "echo \"Error: no spcoin-nextjs-front-end tests specified\" && exit 1",
+    "preinstall": "echo 'Executing package.json for: spcoin-hardhat-contract-access-test'",
+    "postinstall": "echo postinstall spcoin-nextjs-front-end Installation Complete",
+    "installDevModules": "bash ./scripts/installNodeSubModules.sh",
+    "generate:barrels": "barrelsby",
+    "lint": "eslint --ext .ts,.tsx .",
+    "lint:fix": "eslint --ext .ts,.tsx . --fix",
+    "dead:exports": "ts-prune --ignore \"node_modules|\\.next|dist|coverage\" || echo ts-prune finished",
+    "dead:files": "knip -m files,exports --reporter=compact || echo knip finished",
+    "dead:deps": "depcheck --skip-missing || echo depcheck finished",
+    "cleanup:scan": "npm run lint && npm run dead:exports && npm run dead:files && npm run dead:deps",
+    "cleanup:fix": "npm run lint:fix"
+  },
+  "dependencies": {
+    "@sponsorcoin/spcoin-access-modules-cjs": "^1.0.6",
+    "@sponsorcoin/spcoin-lib": "^1.0.3",
+    "@sponsorcoin/spcoin-lib-es6": "^1.0.0",
+    "@sponsorcoin/weth-access-module-es6": "^1.0.5",
+    "@tanstack/react-query": "^5.29.2",
+    "@types/pbkdf2": "^3.1.2",
+    "@wagmi/connectors": "^5.1.4",
+    "@wagmi/core": "^2.6.17",
+    "clsx": "^2.1.1",
+    "connectkit": "^1.7.3",
+    "cors": "^2.8.5",
+    "ethers": "^6.12.0",
+    "lucide-react": "^0.487.0",
+    "next": "^15.3.0-canary.32",
+    "qs": "^6.12.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-is": "^19.1.0",
+    "swr": "^2.2.5",
+    "viem": "^2.9.25",
+    "wagmi": "^2.12.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/qs": "^6.9.15",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "autoprefixer": "^10.4.21",
+    "barrelsby": "^2.8.1",
+    "depcheck": "^1.4.7",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "knip": "^5.66.3",
+    "pino-pretty": "^13.0.0",
+    "postcss": "^8.5.6",
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "tailwindcss": "^3.4.17",
+    "ts-prune": "^0.10.3",
+    "typescript": "5.8.3"
+  },
+  "eslintConfig": {
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": [
+        "./tsconfig.json"
+      ],
+      "tsconfigRootDir": ".",
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "plugins": [
+      "@typescript-eslint",
+      "unused-imports",
+      "import"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:import/recommended",
+      "plugin:import/typescript"
+    ],
+    "settings": {
+      "import/resolver": {
+        "typescript": {
+          "project": [
+            "./tsconfig.json"
+          ]
+        }
+      }
+    },
+    "rules": {
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          "vars": "all",
+          "varsIgnorePattern": "^_",
+          "args": "after-used",
+          "argsIgnorePattern": "^_"
+        }
+      ],
+      "import/no-unused-modules": "off",
+      "no-console": [
+        "warn",
+        {
+          "allow": [
+            "warn",
+            "error"
+          ]
+        }
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          "paths": [
+            {
+              "name": "wagmi/providers/public",
+              "message": "Use wagmi v2 http() transport."
+            },
+            {
+              "name": "wagmi/providers/alchemy",
+              "message": "Use wagmi v2 http() transport."
+            },
+            {
+              "name": "wagmi/providers/infura",
+              "message": "Use wagmi v2 http() transport."
+            },
+            {
+              "name": "wagmi/providers/jsonRpc",
+              "message": "Use wagmi v2 http() transport."
+            }
+          ],
+          "patterns": [
+            "wagmi/providers/*"
+          ]
+        }
+      ]
+    },
+    "ignorePatterns": [
+      "**/node_modules/**",
+      ".next/**",
+      "dist/**",
+      "coverage/**",
+      "**/*.d.ts"
+    ]
+  },
+  "knip": {
+    "$schema": "https://unpkg.com/knip@latest/schema.json",
+    "project": [
+      "**/*.{ts,tsx}"
+    ],
+    "ignore": [
+      "node_modules/**",
+      ".next/**",
+      "dist/**",
+      "coverage/**",
+      "**/app/**/page.tsx",
+      "**/app/**/layout.tsx",
+      "**/app/**/loading.tsx",
+      "**/app/**/error.tsx",
+      "**/app/**/template.tsx",
+      "**/app/**/default.tsx",
+      "**/app/**/route.ts",
+      "**/pages/**"
+    ],
+    "workspaces": false
+  }
+}
