@@ -37,8 +37,7 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
         };
 
         if (!ac.signal.aborted) setConnectedAccount(wallet);
-      } catch (_err) {
-        // Fallback minimal wallet record when metadata is missing
+      } catch {
         const fallback: WalletAccount = {
           address,
           type: 'ERC20_WALLET',

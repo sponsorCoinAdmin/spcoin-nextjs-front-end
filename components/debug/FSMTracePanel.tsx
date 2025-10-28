@@ -1,5 +1,4 @@
 // File: components/debug/FSMTracePanel.tsx
-
 'use client';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -10,8 +9,6 @@ const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
 let clearTrace: (() => void) | null = null;
 let clearHeader: (() => void) | null = null;
 
-/* ---------------------------- Debug logger toggle --------------------------- */
-// NEW: panel trace logger (FSM panel diffs) controlled by env flag
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_FSM_TRACE_PANEL === 'true';
 const debugLog = createDebugLogger('FSMTracePanel', DEBUG_ENABLED, LOG_TIME);
@@ -21,7 +18,7 @@ export function clearFSMHeaderFromMemory(): void {
     localStorage.removeItem('latestFSMHeader');
     debugLog.log('Cleared latestFSMHeader from localStorage');
     if (clearHeader) clearHeader();
-  } catch (_err) {
+  } catch {
     debugLog.error('[FSMTracePanel] ❌ Failed to clear FSM Header');
   }
 }
@@ -32,7 +29,7 @@ export function clearFSMTraceFromMemory(): void {
     localStorage.removeItem(LOCAL_TRACE_LINES_KEY);
     debugLog.log('Cleared FSM trace from localStorage');
     if (clearTrace) clearTrace();
-  } catch (_err) {
+  } catch {
     debugLog.error('[FSMTracePanel] ❌ Failed to clear FSM trace');
   }
 }
@@ -76,7 +73,7 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
           const { timestamp: ts, ...rest } = parsedHeader ?? {};
           setHeaderString(JSON.stringify(rest, null, 2));
           setTimestamp(ts ?? null);
-        } catch (_err) {
+        } catch {
           debugLog.warn('[FSMTracePanel] ⚠️ Failed to parse rawHeader; showing raw text');
           setHeaderString(rawHeader);
           setTimestamp(null);
@@ -85,7 +82,7 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
         setHeaderString(null);
         setTimestamp(null);
       }
-    } catch (_err) {
+    } catch {
       debugLog.error('[FSMTracePanel] ❌ Failed to load FSM trace');
       setTraceLines(null);
       setHeaderString(null);
@@ -97,7 +94,6 @@ export default function FSMTracePanel({ visible }: { visible: boolean }) {
 
   return (
     <div>
-      {/* Clear Buttons */}
       <div className="mb-[6px] flex flex-wrap gap-4">
         <button
           onClick={clearFSMHeaderFromMemory}

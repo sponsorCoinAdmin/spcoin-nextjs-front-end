@@ -12,8 +12,7 @@ import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 
 /** Resolve a remote URL (if you add remote hosting later). Returning undefined means "use fallbacks". */
-export function getDataListURL(feedType: FEED_TYPE, chainId?: number): string | undefined {
-  // Keep this as the single place to compute URLs if/when you publish lists remotely.
+export function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {  // Keep this as the single place to compute URLs if/when you publish lists remotely.
   // For now, return undefined to rely on bundled JSON fallbacks.
   return undefined;
 }

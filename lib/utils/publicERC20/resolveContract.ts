@@ -1,8 +1,6 @@
 // File: lib/utils/publicERC20/resolveContract.ts
-import type { Address} from 'viem';
-import { isAddress } from 'viem';
+import { isAddress, type Address, type PublicClient } from 'viem';
 import type { TokenContract } from '@/lib/structure/types';
-import type { createPublicClient } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 
@@ -20,16 +18,15 @@ const erc20Abi = [
 // Minimal mapping so native tokens don’t show “NATIVE”
 const nativeSymbolByChain: Record<number, { name: string; symbol: string; decimals: number }> = {
   1: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  10: { name: 'Ether', symbol: 'ETH', decimals: 18 },      // Optimism
-  56: { name: 'BNB', symbol: 'BNB', decimals: 18 },        // BSC
-  137: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },   // Polygon
-  8453: { name: 'Ether', symbol: 'ETH', decimals: 18 },    // Base
-  42161: { name: 'Ether', symbol: 'ETH', decimals: 18 },   // Arbitrum
-  43114: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },   // Avalanche
-  250: { name: 'Fantom', symbol: 'FTM', decimals: 18 },    // Fantom
+  10: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  56: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+  137: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+  8453: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  42161: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  43114: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+  250: { name: 'Fantom', symbol: 'FTM', decimals: 18 },
 };
 
-// Use ONLY the imported canonical sentinel; detect natively by case-insensitive compare
 function isNativeSentinel(addr: string): boolean {
   return addr.toLowerCase() === String(NATIVE_TOKEN_ADDRESS).toLowerCase();
 }
@@ -64,8 +61,8 @@ async function fetchNativeTokenMeta(chainId: number): Promise<{ name: string; sy
 export async function resolveContract(
   tokenAddress: Address,
   chainId: number,
-  publicClient: ReturnType<typeof createPublicClient>,
-  _accountAddress?: Address // kept for compatibility; unused
+  publicClient: PublicClient,
+  _accountAddress?: Address
 ): Promise<TokenContract | undefined> {
   if (!tokenAddress) return undefined;
 
@@ -77,7 +74,7 @@ export async function resolveContract(
     return undefined;
   }
 
-  // Native path (metadata only)
+  // Native path
   if (isNativeSentinel(addrStr)) {
     debug.log('🟢 detected native sentinel, taking native path');
 
@@ -92,14 +89,14 @@ export async function resolveContract(
       symbol,
       decimals,
       totalSupply: 0n,
-      balance: 0n, // live value comes from useGetBalance
+      balance: 0n,
       chainId,
     };
     debug.log('✅ native token resolved (no balance)', nativeToken);
     return nativeToken;
   }
 
-  // ERC-20 path (metadata only)
+  // ERC-20 path
   try {
     const results = await publicClient.multicall({
       allowFailure: true,
@@ -130,7 +127,7 @@ export async function resolveContract(
       symbol,
       decimals,
       totalSupply,
-      balance: 0n, // live value comes from useGetBalance
+      balance: 0n,
       chainId,
     };
     debug.log('✅ erc20 token resolved (no balance)', token);

@@ -2,14 +2,8 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import type { Address } from 'viem';
-import type {
-  ExchangeContext,
-  TokenContract,
-  TradeData,
-  WalletAccount} from '@/lib/structure';
-import {
-  FEED_TYPE
-} from '@/lib/structure';
+import type { ExchangeContext, TokenContract, TradeData, WalletAccount } from '@/lib/structure';
+import { FEED_TYPE } from '@/lib/structure';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { NATIVE_TOKEN_ADDRESS, BURN_ADDRESS } from '../structure/constants/addresses';
@@ -17,7 +11,7 @@ import { NATIVE_TOKEN_ADDRESS, BURN_ADDRESS } from '../structure/constants/addre
 // Debug logging
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_UTILS === 'true';
-const debugLog = createDebugLogger('ExchangeButton', DEBUG_ENABLED, LOG_TIME);
+const debugLog = createDebugLogger('NetworkUtils', DEBUG_ENABLED, LOG_TIME);
 
 /* ───────── Asset/logo utilities (no network metadata) ───────── */
 
@@ -113,8 +107,7 @@ const isActiveAccountBuyToken = (exchangeContext: ExchangeContext): boolean =>
   !!exchangeContext?.tradeData?.buyTokenContract &&
   isActiveAccountToken(exchangeContext, exchangeContext.tradeData.buyTokenContract);
 
-const isNativeTokenAddress = (address?: Address): boolean =>
-  address === NATIVE_TOKEN_ADDRESS;
+const isNativeTokenAddress = (address?: Address): boolean => address === NATIVE_TOKEN_ADDRESS;
 
 const isNativeToken = (tokenContract: TokenContract): boolean =>
   isNativeTokenAddress(tokenContract.address);
@@ -125,8 +118,7 @@ const isNativeSellToken = (tradeData: TradeData): boolean =>
 const isNativeBuyToken = (tradeData: TradeData): boolean =>
   !!tradeData.buyTokenContract && isNativeToken(tradeData.buyTokenContract);
 
-const isBurnTokenAddress = (address?: Address): boolean =>
-  address === BURN_ADDRESS;
+const isBurnTokenAddress = (address?: Address): boolean => address === BURN_ADDRESS;
 
 const isBurnToken = (tokenContract: TokenContract): boolean =>
   !!tokenContract?.address && isBurnTokenAddress(tokenContract.address);
@@ -158,6 +150,7 @@ export {
   isActiveAccountSellToken,
   isActiveAccountToken,
   isBurnTokenAddress,
+  isBurnToken, // ✅ export to avoid “declared but never used” lint
   isLowerCase,
   isNativeBuyToken,
   isNativeSellToken,

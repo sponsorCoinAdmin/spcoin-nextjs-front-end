@@ -31,16 +31,13 @@ export default function ManageAgent({ onClose }: Props) {
 
   const resolvedLogo = useMemo(() => logoURL || defaultMissingImage, [logoURL]);
 
-  // File: components/views/ManageSponsorships/ManageAgent.tsx
-  // …imports unchanged…
-
-  // Replace the left-element registration with this (Option A still: no crop, square)
+  // Register square logo on the left side of the header
   useRegisterHeaderLeft(
     SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
     useMemo(
       () =>
         () => (
-          <div className="relative h-10 w-10 shrink-0 m-0 -ml-2.5">
+          <div className="relative -ml-2.5 m-0 h-10 w-10 shrink-0">
             <Image
               src={resolvedLogo}
               alt="Agent Logo"
@@ -54,10 +51,7 @@ export default function ManageAgent({ onClose }: Props) {
     )
   );
 
-
-
   const [showToDo, setShowToDo] = useState<boolean>(true);
-  const showToDoOverlay = useCallback(() => setShowToDo(true), []);
 
   const handleClose = useCallback(() => {
     openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);

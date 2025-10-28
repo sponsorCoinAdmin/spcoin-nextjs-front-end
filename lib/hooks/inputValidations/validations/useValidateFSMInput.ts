@@ -2,13 +2,14 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
-import { useAppChainId, useAccount, usePublicClient } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
+import { useAppChainId , useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
-import { useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
+
 import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -30,11 +31,16 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
 
   const validatedToken = validatedAsset; // Explicit alias
 
-  const sellAddress = useSellTokenAddress();
-  const buyAddress = useBuyTokenAddress();
-  const chainId = useAppChainId();
-  const publicClient = usePublicClient();
-  const { address: accountAddress } = useAccount();
+  // 🧹 Keep but underscore-prefix to satisfy lint (future use expected)
+  const _sellAddress = useSellTokenAddress();
+  const _buyAddress = useBuyTokenAddress();
+
+  // 🔧 Use the app-level chain id hook (tuple) — destructure the value
+  const [chainId] = useAppChainId();
+
+  // 🧹 Keep but underscore-prefix to satisfy lint (future use expected)
+  const _publicClient = usePublicClient();
+  const { address: _accountAddress } = useAccount();
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
 
