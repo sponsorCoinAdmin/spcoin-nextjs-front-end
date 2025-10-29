@@ -1,31 +1,92 @@
 // File: app/(menu)/(dynamic)/RecipientSite/page.tsx
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useExchangeContext } from '@/lib/context/hooks';
+import { useConnectedAccount } from '@/lib/context/ConnectedAccountContext';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const TAB_STORAGE_KEY = 'header_open_tabs';
 const RECIPIENT_TAB_HREF = '/RecipientSite';
 
-// ✅ Ensure the header shows the tab even on direct navigation / page refresh
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_RECIPIENT_SITE === 'true' || true;
+const dbg = (...args: any[]) => {
+  if (DEBUG_ENABLED) console.debug('[RecipientSite]', ...args);
+};
+
 function ensureHeaderTab() {
   try {
     const raw = sessionStorage.getItem(TAB_STORAGE_KEY);
     const arr = raw ? JSON.parse(raw) : [];
-    const next = Array.isArray(arr) ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF])) : [RECIPIENT_TAB_HREF];
+    const next = Array.isArray(arr)
+      ? Array.from(new Set([...arr, RECIPIENT_TAB_HREF]))
+      : [RECIPIENT_TAB_HREF];
     sessionStorage.setItem(TAB_STORAGE_KEY, JSON.stringify(next));
-    // eslint-disable-next-line no-empty
   } catch {
-    /* no-op: sessionStorage may be unavailable (e.g., in private mode) */
+    // no-op (private mode, etc.)
   }
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } }));
+    window.dispatchEvent(
+      new CustomEvent('header:add-tab', { detail: { href: RECIPIENT_TAB_HREF } })
+    );
   }
+}
+
+function normalizeUrl(u?: string | null): string | undefined {
+  const s = (u ?? '').trim();
+  if (!s) return undefined;
+  if (s.startsWith('http://') || s.startsWith('https://')) return s;
+  return `https://${s}`;
 }
 
 export default function Recipient() {
   const searchParams = useSearchParams();
-  const urlParam = searchParams.get('url');
+  const queryUrlParam = searchParams.get('url');
+
+  const { exchangeContext } = useExchangeContext();
+  const connectedAccount = useConnectedAccount();
+
+  const selectedRecipient = exchangeContext?.accounts?.recipientAccount;
+  const recipientWebsite = selectedRecipient?.website;
+  const connectedWebsite = connectedAccount?.website;
+
+  // 🔎 Extra debug so we can verify the wallet JSON fields are present (incl. `website`)
+  useEffect(() => {
+    if (!DEBUG_ENABLED) return;
+    dbg('query url =', queryUrlParam);
+    dbg('selectedRecipient =', stringifyBigInt(selectedRecipient));
+    dbg('connectedAccount =', stringifyBigInt(connectedAccount));
+    dbg('selectedRecipient.website =', selectedRecipient?.website);
+    dbg('connectedAccount.website =', connectedAccount?.website);
+  }, [queryUrlParam, selectedRecipient, connectedAccount]);
+
+  // Pick the best source for the URL (priority: query param → selected recipient → connected account)
+  const chosenUrl = useMemo(() => {
+    const fromQuery = normalizeUrl(queryUrlParam);
+    if (fromQuery) {
+      dbg('Using query url:', fromQuery);
+      return fromQuery;
+    }
+    const fromRecipient = normalizeUrl(recipientWebsite);
+    if (fromRecipient) {
+      dbg('Using recipient website:', fromRecipient, 'for', selectedRecipient?.address);
+      return fromRecipient;
+    }
+    const fromConnected = normalizeUrl(connectedWebsite);
+    if (fromConnected) {
+      dbg('Using connected account website:', fromConnected, 'for', connectedAccount?.address);
+      return fromConnected;
+    }
+    dbg('Falling back to default help page');
+    return undefined;
+  }, [
+    queryUrlParam,
+    recipientWebsite,
+    connectedWebsite,
+    selectedRecipient?.address,
+    connectedAccount?.address,
+  ]);
 
   useEffect(() => {
     ensureHeaderTab();
@@ -46,26 +107,22 @@ export default function Recipient() {
   const parentContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!urlParam && typeof window === 'undefined') return;
+    // If a chosen URL exists (query or website fields), use it; otherwise use the help page.
+    const next = chosenUrl ?? (defaultHelpPage ? `${defaultHelpPage}?timestamp=${Date.now()}` : '');
+    if (!next) return;
 
-    if (urlParam) {
-      const formattedUrl =
-        urlParam.startsWith('https://') || urlParam.startsWith('http://')
-          ? urlParam
-          : `https://${urlParam}`;
-
-      setRemoteUrl(formattedUrl);
-      sessionStorage.setItem('iframeUrl', formattedUrl);
-      setLoading(true);
-      setLoadingError(false);
-    } else if (!sessionStorage.getItem('iframeUrl')) {
-      const withTs = `${defaultHelpPage}?timestamp=${Date.now()}`;
-      setRemoteUrl(withTs);
-      sessionStorage.setItem('iframeUrl', defaultHelpPage);
-      setLoading(true);
-      setLoadingError(false);
+    setRemoteUrl(next);
+    try {
+      // persist a clean help page without timestamp for later refreshes
+      sessionStorage.setItem('iframeUrl', chosenUrl ?? defaultHelpPage);
+    } catch {
+      // ignore storage failures
     }
-  }, [urlParam, defaultHelpPage]);
+    setLoading(true);
+    setLoadingError(false);
+
+    if (DEBUG_ENABLED) dbg('remoteUrl set →', next);
+  }, [chosenUrl, defaultHelpPage]);
 
   const handleIframeError = () => setLoadingError(true);
   const handleIframeLoad = () => setLoading(false);
@@ -80,8 +137,8 @@ export default function Recipient() {
         ) : (
           <>
             {loading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 text-xl text-gray-800 font-bold p-4">
-                <h1 className="text-xl font-bold mb-4">Remote URL Loader</h1>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-200 p-4 text-xl font-bold text-gray-800">
+                <h1 className="mb-4 text-xl font-bold">Remote URL Loader</h1>
                 <p>
                   Now loading: <strong>{remoteUrl}</strong>
                 </p>
@@ -89,7 +146,7 @@ export default function Recipient() {
             )}
             <iframe
               src={remoteUrl}
-              className="w-full h-[calc(100vh-60px)] border-0"
+              className="h-[calc(100vh-60px)] w-full border-0"
               title="Remote Content"
               onError={handleIframeError}
               onLoad={handleIframeLoad}

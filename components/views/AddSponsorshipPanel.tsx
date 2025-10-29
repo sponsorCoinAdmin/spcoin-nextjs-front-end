@@ -1,9 +1,10 @@
 // File: components/views/AddSponsorshipPanel.tsx
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Address } from 'viem';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import type { WalletAccount } from '@/lib/structure/types';
@@ -17,8 +18,17 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { useExchangeContext } from '@/lib/context/hooks';
 
+// ✅ REST helpers
+import { fetchRecipientMeta, type RecipientMeta } from '@/lib/rest/recipientMeta';
+import { resolveWallet } from '@/lib/rest/resolveWallet';
+
 // ✅ ToDo overlay
 import ToDo from '@/lib/utils/components/ToDo';
+
+// ✅ Debug logger
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_ADD_SPONSORSHIP === 'true';
+const debugLog = createDebugLogger('AddSponsorshipPanel', DEBUG_ENABLED);
 
 const TAB_STORAGE_KEY = 'header_open_tabs';
 const RECIPIENT_TAB_HREF = '/RecipientSite';
@@ -37,6 +47,7 @@ function openRecipientSiteTab() {
 }
 
 const AddSponsorShipPanel: React.FC = () => {
+  // ── Context / visibility ─────────────────────────────────────────────────────
   const { exchangeContext, setExchangeContext } = useExchangeContext();
   const { openPanel, closePanel } = usePanelTree();
   const { openConfigSponsorship, closeConfigSponsorship } = usePanelTransitions();
@@ -47,17 +58,71 @@ const AddSponsorShipPanel: React.FC = () => {
 
   const recipientWallet: WalletAccount | undefined = exchangeContext.accounts.recipientAccount;
 
-  const [siteExists, setSiteExists] = useState<boolean>(false);
-
-  // ▶ ToDo toggle (initialized to true)
+  // ── State ────────────────────────────────────────────────────────────────────
   const [showToDo, setShowToDo] = useState<boolean>(true);
+  const [recipientMeta, setRecipientMeta] = useState<RecipientMeta | undefined>(undefined);
 
+  // ── Debug: mount / wallet changes ────────────────────────────────────────────
+  useEffect(() => {
+    debugLog.log?.('mounted; resolveWallet typeof =', typeof resolveWallet);
+    return () => debugLog.log?.('unmounted');
+  }, []);
+  useEffect(() => {
+    if (!recipientWallet) return;
+    debugLog.log?.('recipientWallet changed:', {
+      address: recipientWallet.address,
+      name: recipientWallet.name,
+      symbol: recipientWallet.symbol,
+      logoURL: recipientWallet.logoURL,
+      website: (recipientWallet as any).website,
+    });
+  }, [recipientWallet?.address]);
+
+  // Ensure TRADING_STATION_PANEL visible when this opens
+  useEffect(() => {
+    if (isVisible && !tradingVisible) {
+      debugLog.log?.('Forcing TRADING_STATION_PANEL visible');
+      openPanel(SP_TREE.TRADING_STATION_PANEL);
+    }
+  }, [isVisible, tradingVisible, openPanel]);
+
+  // Fetch wallet.json for selected recipient (from /public)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const addr = recipientWallet?.address?.trim();
+      if (!addr) {
+        debugLog.log?.('No recipient address; clearing recipientMeta');
+        setRecipientMeta(undefined);
+        return;
+      }
+      try {
+        debugLog.log?.('Fetching recipientMeta for address:', addr);
+        // ✅ fetchRecipientMeta expects a single argument
+        const meta = await fetchRecipientMeta(addr as Address);
+        if (!cancelled) {
+          debugLog.log?.('recipientMeta fetched:', meta || '(none)');
+          setRecipientMeta(meta);
+        }
+      } catch (err: any) {
+        debugLog.warn?.('recipientMeta fetch error:', err?.message || err);
+        if (!cancelled) setRecipientMeta(undefined);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [recipientWallet?.address]);
+
+  // ── Callbacks ────────────────────────────────────────────────────────────────
   const toggleSponsorRateConfig = useCallback(() => {
+    debugLog.log?.('toggleSponsorRateConfig clicked; currently visible?', configVisible);
     if (configVisible) closeConfigSponsorship();
     else openConfigSponsorship();
   }, [configVisible, openConfigSponsorship, closeConfigSponsorship]);
 
-  const clearRecipient = useCallback(() => {
+  const closeAddSponsorshipPanel = useCallback(() => {
+    debugLog.log?.('closeAddSponsorshipPanel clicked');
     setExchangeContext(
       (prev) => {
         const next: any = structuredClone(prev);
@@ -65,42 +130,82 @@ const AddSponsorShipPanel: React.FC = () => {
         next.accounts.recipientAccount = undefined;
         return next;
       },
-      'AddSponsorShipPanel:clearRecipient'
+      'AddSponsorShipPanel:closeAddSponsorshipPanel'
     );
     closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
     openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
   }, [setExchangeContext, closePanel, openPanel]);
 
-  useEffect(() => {
-    if (isVisible && !tradingVisible) {
-      openPanel(SP_TREE.TRADING_STATION_PANEL);
-    }
-  }, [isVisible, tradingVisible, openPanel]);
+  // ── Derived values ───────────────────────────────────────────────────────────
+  const pageQueryUrl = useMemo(() => {
+    const val =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('url')
+        : null;
+    if (val) debugLog.log?.('pageQueryUrl:', val);
+    return val;
+  }, []);
 
-  useEffect(() => {
-    const website = recipientWallet?.website?.trim();
-    const ac = new AbortController();
+  const fallbackBase = useMemo(() => {
+    const url = getPublicFileUrl('assets/accounts/site-info.html');
+    debugLog.log?.('fallbackBase:', url);
+    return url;
+  }, []);
 
-    if (!website || website === 'N/A') {
-      setSiteExists(false);
-      return () => ac.abort();
-    }
+  const effectiveWebsite = useMemo(() => {
+    // Build a safe fallback only if we *have* an address; otherwise leave undefined.
+    const fallbackMeta: Pick<RecipientMeta, 'address' | 'website'> | undefined =
+      recipientWallet?.address
+        ? {
+            address: recipientWallet.address as `0x${string}`,
+            website: (recipientWallet as any).website,
+          }
+        : undefined;
 
-    fetch(website, { method: 'HEAD', mode: 'no-cors', signal: ac.signal })
-      .then(() => setSiteExists(true))
-      .catch(() => setSiteExists(false));
+    const resolved = resolveWallet({
+      queryUrl: pageQueryUrl,
+      // If fetch succeeded use it, else use our safe fallback (or undefined)
+      recipientMeta: recipientMeta ?? fallbackMeta,
+      connectedWebsite: exchangeContext.accounts?.connectedAccount?.website ?? null,
+      fallbackBaseUrl: fallbackBase,
+    });
 
-    return () => ac.abort();
-  }, [recipientWallet?.website]);
+    debugLog.log?.('effectiveWebsite resolved →', resolved, {
+      queryUrl: pageQueryUrl,
+      recipientMeta,
+      walletWebsite: (recipientWallet as any)?.website,
+      connectedWebsite: exchangeContext.accounts?.connectedAccount?.website,
+      fallbackBase,
+    });
+    return resolved;
+  }, [
+    pageQueryUrl,
+    recipientMeta,
+    recipientWallet?.address,
+    (recipientWallet as any)?.website,
+    exchangeContext.accounts?.connectedAccount?.website,
+    fallbackBase,
+  ]);
 
+  const recipientSiteHref = useMemo(() => {
+    const href = `/RecipientSite?url=${encodeURIComponent(effectiveWebsite)}`;
+    debugLog.log?.('recipientSiteHref:', href);
+    return href;
+  }, [effectiveWebsite]);
+
+  const linkTopClass = useMemo(
+    () =>
+      (recipientWallet?.name ? 'absolute top-[47px] left-[10px]' : 'absolute top-[57px] left-[10px]'),
+    [recipientWallet?.name]
+  );
+
+  // ── Only now is it safe to early-return (after all hooks have been called) ───
   if (!isVisible) return null;
 
-  const baseURL = getPublicFileUrl('assets/accounts/site-info.html');
-  const sitekey = recipientWallet?.address?.trim() ? `siteKey=${recipientWallet.address.trim()}` : '';
-  const defaultStaticFileUrl = `/RecipientSite?url=${baseURL}?${sitekey}`; // ⬅️ ensure leading slash
-
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
+      id="AddSponsorshipPanel"
       className="
         pt-[8px]
         relative
@@ -111,40 +216,29 @@ const AddSponsorShipPanel: React.FC = () => {
         bg-[#1f2639] text-[#94a3b8]
       "
     >
-      <div id="recipientContainerDiv_ID" className="h-[90px]">
+      <div className="h-[90px]">
         <div className="absolute top-3 left-[11px] text-[14px] text-[#94a3b8]">
           You are sponsoring:
         </div>
 
-        {recipientWallet && siteExists ? (
+        <div id="OpenRecipientSite">
           <Link
-            href={`/RecipientSite?url=${encodeURIComponent(recipientWallet.website!)}`}
-            onClick={openRecipientSiteTab}
-            className="
-              absolute top-[47px] left-[10px]
+            href={recipientSiteHref}
+            onClick={() => {
+              debugLog.log?.('Link clicked → opening RecipientSite tab for:', recipientSiteHref);
+              openRecipientSiteTab();
+            }}
+            className={`
+              ${linkTopClass}
               min-w-[50px] h-[10px]
               text-[#94a3b8] text-[25px]
               pr-2 flex items-center justify-start gap-1
               cursor-pointer hover:text-[orange] transition-colors duration-200
-            "
-          >
-            {recipientWallet.name}
-          </Link>
-        ) : (
-          <Link
-            href={defaultStaticFileUrl}
-            onClick={openRecipientSiteTab}
-            className="
-              absolute top-[57px] left-[10px]
-              min-w-[50px] h-[10px]
-              text-[#94a3b8] text-[25px]
-              pr-2 flex items-center justify-start gap-1
-              cursor-pointer hover:text-[orange] transition-colors duration-200
-            "
+            `}
           >
             {recipientWallet?.name || 'No recipient selected'}
           </Link>
-        )}
+        </div>
 
         <div
           className="
@@ -186,7 +280,7 @@ const AddSponsorShipPanel: React.FC = () => {
         </div>
 
         <div
-          id="clearSponsorSelect"
+          id="closeAddSponsorshipPanel"
           className="
             pt-[12px]
             absolute -top-2 right-[15px]
@@ -194,7 +288,7 @@ const AddSponsorShipPanel: React.FC = () => {
             text-[20px]
             cursor-pointer
           "
-          onClick={clearRecipient}
+          onClick={closeAddSponsorshipPanel}
         >
           X
         </div>
