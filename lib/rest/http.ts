@@ -41,7 +41,7 @@ function isTransientError(err: unknown): boolean {
   return (
     (err instanceof DOMException && err.name === 'AbortError') ||
     err instanceof TypeError ||
-    msg.includes('Failed to Get') ||
+    msg.includes('Failed to fetch') ||   // <- fixed
     msg.includes('NetworkError') ||
     msg.includes('network')
   );
@@ -80,16 +80,16 @@ export async function get(url: string, opts: GetOptions = {}): Promise<Response>
       clear();
 
       if (!res.ok) {
-        // retry on 5xx
-        if (res.status >= 500 && res.status < 600 && attempt < retries) {
-          attempt++;
-          // exponential backoff with a bit of jitter
-          const delay = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
-          await sleep(delay);
-          continue;
+        // retry on 5xx, 408 (Request Timeout), 429 (Too Many Requests)
+        if ((res.status >= 500 && res.status < 600) || res.status === 408 || res.status === 429) {
+          if (attempt < retries) {
+            attempt++;
+            const delay = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
+            await sleep(delay);
+            continue;
+          }
         }
 
-        // include a small body preview to aid debugging
         let preview = '';
         try { preview = (await res.text()).slice(0, 200); } catch {}
         throw new HttpError(
@@ -132,14 +132,12 @@ export async function getJson<T>(url: string, opts: JsonOptions = {}): Promise<T
   });
 
   const ctype = res.headers.get('content-type') ?? '';
-  // allow structured suffixes like application/*+json
   const looksLikeJson = /\bjson\b/i.test(ctype);
 
   if (looksLikeJson || forceParse) {
     return (await res.json()) as T;
   }
 
-  // still try to parse, but warn with a better error if it fails
   try {
     return (await res.json()) as T;
   } catch {
@@ -183,9 +181,25 @@ export async function headOk(
   while (attempt <= retries) {
     const { ctrl, clear } = startAbortTimer(timeoutMs);
     try {
-      const res = await fetch(url, { method: 'HEAD', signal: ctrl.signal, cache: init?.cache ?? defaultCacheFor(url), ...init });
+      const res = await fetch(url, {
+        method: 'HEAD',
+        signal: ctrl.signal,
+        cache: init?.cache ?? defaultCacheFor(url),
+        ...init,
+      });
       clear();
-      // Many CDNs return 405 for HEAD; consider any 2xx/3xx a pass.
+
+      // Many CDNs return 405 for HEAD; fall back to simple GET check.
+      if (res.status === 405) {
+        const getRes = await fetch(url, {
+          method: 'GET',
+          cache: init?.cache ?? defaultCacheFor(url),
+          ...init,
+          signal: ctrl.signal,
+        }).catch(() => undefined);
+        return !!getRes && getRes.status >= 200 && getRes.status < 400;
+      }
+
       return res.status >= 200 && res.status < 400;
     } catch (err) {
       clear();

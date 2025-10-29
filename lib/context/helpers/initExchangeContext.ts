@@ -1,11 +1,13 @@
+// File: lib/context/initExchangeContext.ts
 import { sanitizeExchangeContext } from './ExchangeSanitizeHelpers';
 import { loadLocalExchangeContext } from './loadLocalExchangeContext';
-import type { WalletAccount, ExchangeContext} from '@/lib/structure';
-import { STATUS , SP_COIN_DISPLAY as SP } from '@/lib/structure';
+import type { WalletAccount, ExchangeContext } from '@/lib/structure';
+import { STATUS, SP_COIN_DISPLAY as SP } from '@/lib/structure';
 
-import type { Address} from 'viem';
+import type { Address } from 'viem';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getJson } from '@/lib/rest/http'; // ← REST helper
 
 const LOG_TIME = false;
 const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
@@ -21,7 +23,6 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
  * - May enrich `accounts.connectedAccount` with metadata for a connected wallet.
  * - Does NOT create or mutate any panel state (`settings.spCoinPanelTree`, etc.). Panel state is owned by the Provider.
  */
-
 export async function initExchangeContext(
   chainId: number,
   isConnected: boolean,
@@ -104,32 +105,35 @@ function makeWalletFallback(addr: Address, status: STATUS, description: string):
   };
 }
 
+type WalletJson = Partial<WalletAccount> & { balance?: string | number | bigint };
+
+/** RESTful metadata loader (no plain). */
 async function loadWalletMetadata(addr: Address): Promise<WalletAccount> {
-  // Local, static metadata (don’t block the app if it fails)
-  const res = await fetch(`/assets/accounts/${addr}/wallet.json`).catch(() => undefined);
-  if (!res || !res.ok) {
+  const url = `/assets/accounts/${addr}/wallet.json`;
+
+  let json: WalletJson | undefined;
+  try {
+    json = await getJson<WalletJson>(url, {
+      timeoutMs: 6000,
+      retries: 1,
+      accept: 'application/json',
+      init: { cache: 'no-store' },
+    });
+  } catch {
     return makeWalletFallback(addr, STATUS.MESSAGE_ERROR, `Account ${addr} not registered on this site`);
   }
 
-  let json: Partial<WalletAccount> & { balance?: string | number | bigint } = {};
-  try {
-    json = (await res.json()) ?? {};
-  } catch {
-    // non-JSON / parse error → fallback
-    return makeWalletFallback(addr, STATUS.MESSAGE_ERROR, `Account ${addr} metadata could not be parsed`);
-  }
-
-  const balance = toBigIntSafe(json.balance);
+  const balance = toBigIntSafe(json?.balance);
 
   return {
     address: addr,
-    type: json.type ?? 'ERC20_WALLET',
-    name: json.name ?? '',
-    symbol: json.symbol ?? '',
-    website: json.website ?? '',
+    type: json?.type ?? 'ERC20_WALLET',
+    name: json?.name ?? '',
+    symbol: json?.symbol ?? '',
+    website: json?.website ?? '',
     status: STATUS.INFO,
-    description: json.description ?? '',
-    logoURL: json.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
+    description: json?.description ?? '',
+    logoURL: json?.logoURL ?? '/assets/miscellaneous/SkullAndBones.png',
     balance,
   };
 }
@@ -161,15 +165,10 @@ function getPanelsArray(ctx: any): FlatPanel[] | undefined {
 function logStoredBootState(stored: any) {
   const hasStored = !!stored;
   const panels = getPanelsArray(stored);
-  console.groupCollapsed(
-    '%cseed:initExchangeContext(stored)',
-    'color:#89b4fa;font-weight:bold;'
-  );
+  console.groupCollapsed('%cseed:initExchangeContext(stored)', 'color:#89b4fa;font-weight:bold;');
   console.log('hasStored?', hasStored);
   if (!hasStored) {
-    console.log(
-      'ℹ️ No stored ExchangeContext found. Expect the Provider to seed defaultPanelTree on mount.'
-    );
+    console.log('ℹ️ No stored ExchangeContext found. Expect the Provider to seed defaultPanelTree on mount.');
   }
   if (panels) {
     logPanelSnapshot('stored', panels);
@@ -181,20 +180,16 @@ function logStoredBootState(stored: any) {
 
 // Pretty-print + quick checks that catch your “missing widgets / extra transient panel” issue
 function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
-  console.groupCollapsed(
-    `%cseed:panels(${label})`,
-    'color:#a6e3a1;font-weight:bold;'
-  );
+  console.groupCollapsed(`%cseed:panels(${label})`, 'color:#a6e3a1;font-weight:bold;');
   if (!panels) {
     console.log('panels = <undefined>');
     console.groupEnd();
     return;
   }
 
-  // Show a concise table (panel id, name, visible)
   try {
     console.table(
-      panels.map(p => ({
+      panels.map((p) => ({
         panel: p.panel,
         name: p.name,
         visible: p.visible,
@@ -204,11 +199,9 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     console.log('panels(raw):', panels);
   }
 
-  // Build quick lookup
   const byId = new Map<number, FlatPanel>();
   for (const p of panels) byId.set(p.panel, p);
 
-  // Required-by-default set (should be present with the indicated visibility on a fresh seed)
   const mustIncludeOnBoot: Array<[number, boolean]> = [
     [SP.MAIN_TRADING_PANEL, true],
     [SP.TRADE_CONTAINER_HEADER, true],
@@ -220,7 +213,6 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     [SP.FEE_DISCLOSURE, true],
   ];
 
-  // Panels that should never be persisted/seeded
   const neverPersist: number[] = [SP.SPONSOR_LIST_SELECT_PANEL];
 
   const missing = mustIncludeOnBoot.filter(([id]) => !byId.has(id)).map(([id]) => id);
@@ -228,22 +220,18 @@ function logPanelSnapshot(label: string, panels?: FlatPanel[]) {
     .filter(([id, vis]) => byId.has(id) && !!byId.get(id)!.visible !== vis)
     .map(([id, vis]) => ({ id, expected: vis, got: !!byId.get(id)!.visible }));
 
-  const accidentallyIncluded = neverPersist.filter(id => byId.has(id));
+  const accidentallyIncluded = neverPersist.filter((id) => byId.has(id));
 
-  console.log(
-    '%cchecks.missing',
-    'color:#f38ba8',
-    missing.map(id => SP[id] ?? id)
-  );
+  console.log('%cchecks.missing', 'color:#f38ba8', missing.map((id) => SP[id] ?? id));
   console.log(
     '%cchecks.wrongVisibility',
     'color:#fab387',
-    wrongVisibility.map(row => ({ name: SP[row.id] ?? row.id, ...row }))
+    wrongVisibility.map((row) => ({ name: SP[row.id] ?? row.id, ...row }))
   );
   console.log(
     '%cchecks.accidentallyIncluded',
     'color:#f38ba8',
-    accidentallyIncluded.map(id => SP[id] ?? id)
+    accidentallyIncluded.map((id) => SP[id] ?? id)
   );
 
   console.groupEnd();

@@ -10,9 +10,11 @@ import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json
 import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
 import agentJsonList from '@/resources/data/agents/agentJsonList.json';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
+import { getJson } from '@/lib/rest/http';
 
 /** Resolve a remote URL (if you add remote hosting later). Returning undefined means "use fallbacks". */
-export function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {  // Keep this as the single place to compute URLs if/when you publish lists remotely.
+export function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {
+  // Keep this as the single place to compute URLs if/when you publish lists remotely.
   // For now, return undefined to rely on bundled JSON fallbacks.
   return undefined;
 }
@@ -48,11 +50,26 @@ export async function getDataListObj(feedType: FEED_TYPE, chainId?: number): Pro
   if (!url) return getFallbackList(feedType, chainId);
 
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    return Array.isArray(json) ? json : [];
+    // Be lenient about content-type with `forceParse: true` (some hosts mislabel JSON)
+    const json = await getJson<any>(url, {
+      timeoutMs: 8000,
+      retries: 1,
+      backoffMs: 400,
+      accept: 'application/json',
+      forceParse: true,
+    });
+
+    // Accept either a plain array or common “{ tokens: [...] }” shapes
+    if (Array.isArray(json)) return json;
+    if (json && typeof json === 'object') {
+      if (Array.isArray((json as any).tokens)) return (json as any).tokens;
+      if (Array.isArray((json as any).items))  return (json as any).items;
+    }
+
+    // Shape unexpected → fall back
+    return getFallbackList(feedType, chainId);
   } catch {
+    // Network/HTTP/parse errors → fall back
     return getFallbackList(feedType, chainId);
   }
 }

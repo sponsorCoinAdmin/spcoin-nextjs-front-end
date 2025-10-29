@@ -6,6 +6,7 @@ import type { ExchangeContext, TokenContract, TradeData, WalletAccount } from '@
 import { FEED_TYPE } from '@/lib/structure';
 import { isAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { headOk } from '@/lib/rest/http';
 import { NATIVE_TOKEN_ADDRESS, BURN_ADDRESS } from '../structure/constants/addresses';
 
 // Debug logging
@@ -15,33 +16,31 @@ const debugLog = createDebugLogger('NetworkUtils', DEBUG_ENABLED, LOG_TIME);
 
 /* ───────── Asset/logo utilities (no network metadata) ───────── */
 
-const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
-const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
+export const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
+export const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
+
+// Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();
 
 async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
+  // Avoid SSR get; assume assets exist during server render to prevent hydration warnings.
   if (typeof window === 'undefined') return true;
-  try {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), timeoutMs);
-    let res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
-    clearTimeout(t);
-    if (res.ok) return true;
-    if (res.status === 405) {
-      res = await fetch(url, { method: 'GET', cache: 'no-store' });
-      return res.ok;
-    }
-    return false;
-  } catch {
-    return false;
-  }
+
+  // Fast HEAD probe using REST helper (treats 2xx/3xx as pass).
+  const ok = await headOk(url, {
+    timeoutMs,
+    retries: 0,
+    init: { cache: 'no-store' },
+  });
+
+  return ok;
 }
 
 /**
  * Resolve an asset logo path and verify existence (client-side).
  * Uses chainId only for building the asset path; does not read network metadata.
  */
-const getLogoURL = async (
+export const getLogoURL = async (
   chainId: number | undefined,
   address: Address,
   dataFeedType: FEED_TYPE
@@ -67,94 +66,71 @@ const getLogoURL = async (
   return ok ? path : defaultMissingImage;
 };
 
-type RequiredAssetMembers = { address: string; chainId: number };
+export type RequiredAssetMembers = { address: string; chainId: number };
 
-const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string => {
+export const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string => {
   if (!requiredAssetMembers || !isAddress(requiredAssetMembers.address)) {
     return badTokenAddressImage;
   }
   const { chainId, address } = requiredAssetMembers;
   const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
-  debugLog.log(`getTokenLogoURL.logoURL=${logoURL}`);
+  debugLog.log?.(`getTokenLogoURL.logoURL=${logoURL}`);
   return logoURL;
 };
 
-const getAddressLogoURL = (address: string, chainId: number): string => {
+export const getAddressLogoURL = (address: string, chainId: number): string => {
   if (isAddress(address)) {
     const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
-    debugLog.log(`getAddressLogoURL.logoURL=${logoURL}`);
+    debugLog.log?.(`getAddressLogoURL.logoURL=${logoURL}`);
     return logoURL;
   }
   return badTokenAddressImage;
 };
 
-const getAccountLogo = (account?: WalletAccount): string =>
+export const getAccountLogo = (account?: WalletAccount): string =>
   account ? `/assets/accounts/${account.address}/logo.png` : defaultMissingImage;
 
 /* ───────── Active account / token helpers (no network metadata) ───────── */
 
-const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address) =>
+export const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address) =>
   address ? address === exchangeContext?.accounts?.connectedAccount?.address : false;
 
-const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract) =>
+export const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract) =>
   isActiveAccountAddress(exchangeContext, tokenContract.address);
 
-const isActiveAccountSellToken = (exchangeContext: ExchangeContext): boolean =>
+export const isActiveAccountSellToken = (exchangeContext: ExchangeContext): boolean =>
   !!exchangeContext?.tradeData?.sellTokenContract &&
   isActiveAccountToken(exchangeContext, exchangeContext.tradeData.sellTokenContract);
 
-const isActiveAccountBuyToken = (exchangeContext: ExchangeContext): boolean =>
+export const isActiveAccountBuyToken = (exchangeContext: ExchangeContext): boolean =>
   !!exchangeContext?.tradeData?.buyTokenContract &&
   isActiveAccountToken(exchangeContext, exchangeContext.tradeData.buyTokenContract);
 
-const isNativeTokenAddress = (address?: Address): boolean => address === NATIVE_TOKEN_ADDRESS;
+export const isNativeTokenAddress = (address?: Address): boolean => address === NATIVE_TOKEN_ADDRESS;
 
-const isNativeToken = (tokenContract: TokenContract): boolean =>
+export const isNativeToken = (tokenContract: TokenContract): boolean =>
   isNativeTokenAddress(tokenContract.address);
 
-const isNativeSellToken = (tradeData: TradeData): boolean =>
+export const isNativeSellToken = (tradeData: TradeData): boolean =>
   !!tradeData.sellTokenContract && isNativeToken(tradeData.sellTokenContract);
 
-const isNativeBuyToken = (tradeData: TradeData): boolean =>
+export const isNativeBuyToken = (tradeData: TradeData): boolean =>
   !!tradeData.buyTokenContract && isNativeToken(tradeData.buyTokenContract);
 
-const isBurnTokenAddress = (address?: Address): boolean => address === BURN_ADDRESS;
+export const isBurnTokenAddress = (address?: Address): boolean => address === BURN_ADDRESS;
 
-const isBurnToken = (tokenContract: TokenContract): boolean =>
+export const isBurnToken = (tokenContract: TokenContract): boolean =>
   !!tokenContract?.address && isBurnTokenAddress(tokenContract.address);
 
 /* ───────── Hooks / misc utilities (no network metadata) ───────── */
 
-const useIsActiveAccountAddress = (address?: Address): boolean => {
+export const useIsActiveAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
   return isActiveAccountAddress(exchangeContext, address);
 };
 
-const isLowerCase = (input: string): boolean => input === input.toLowerCase();
+export const isLowerCase = (input: string): boolean => input === input.toLowerCase();
 
-function delay(ms: number | undefined) {
+export function delay(ms: number | undefined) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
-export {
-  type RequiredAssetMembers,
-  badTokenAddressImage,
-  defaultMissingImage,
-  delay,
-  getLogoURL,
-  getTokenLogoURL,
-  getAccountLogo,
-  getAddressLogoURL,
-  isActiveAccountAddress,
-  isActiveAccountBuyToken,
-  isActiveAccountSellToken,
-  isActiveAccountToken,
-  isBurnTokenAddress,
-  isBurnToken, // ✅ export to avoid “declared but never used” lint
-  isLowerCase,
-  isNativeBuyToken,
-  isNativeSellToken,
-  isNativeToken,
-  isNativeTokenAddress,
-  useIsActiveAccountAddress,
-};

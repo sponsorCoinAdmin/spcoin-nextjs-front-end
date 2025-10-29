@@ -60,7 +60,7 @@ export const apiResponse = async (request: string, urlParms: string) => {
       headers: { 'content-type': 'application/json' },
     })
   } catch (err) {
-    debugLog.error?.('Failed to fetch from 1inch API:', err)
+    debugLog.error?.('Failed to get from 1inch API:', err)
     return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 })
   }
 }

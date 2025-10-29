@@ -30,7 +30,7 @@ export function useFeedData(feedType: FEED_TYPE) {
       } catch (e: any) {
         if (!cancelled) {
           setFeedData(null);
-          setError(e?.message ?? 'Failed to fetch feed');
+          setError(e?.message ?? 'Failed to get feed');
         }
       } finally {
         if (!cancelled) setLoading(false);

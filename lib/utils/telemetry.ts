@@ -24,20 +24,6 @@ function _emitBeacon(evt: TelemetryEvent) {
     window.dispatchEvent(new CustomEvent('telemetry', { detail: evt }));
   } catch { /* ignore */ }
 
-  // If you later add an API route, uncomment this block. Keeping it disabled avoids any network touches.
-  /*
-  try {
-    const url = '/api/telemetry';
-    const body = JSON.stringify(evt);
-    if (navigator?.sendBeacon) {
-      const blob = new Blob([body], { type: 'application/json' });
-      navigator.sendBeacon(url, blob);
-    } else {
-      // fire-and-forget; ignore result
-      fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
-    }
-  } catch { }
-  */
 }
 
 export const telemetry = {

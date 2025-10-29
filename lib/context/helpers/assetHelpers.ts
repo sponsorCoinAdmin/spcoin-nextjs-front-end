@@ -2,6 +2,7 @@
 import type { Address } from 'viem';
 import { FEED_TYPE, type WalletAccount } from '@/lib/structure';
 import { defaultMissingImage, badTokenAddressImage } from '@/lib/network/utils';
+import { headOk, get } from '@/lib/rest/http';
 
 // Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();
@@ -9,17 +10,14 @@ const logoExistenceCache = new Map<string, boolean>();
 async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
   // Avoid SSR get; assume assets exist during server render to prevent hydration warnings.
   if (typeof window === 'undefined') return true;
+
+  // Try a lightweight HEAD first; if a CDN returns 405 for HEAD, fall back to GET.
+  const headPass = await headOk(url, { timeoutMs, retries: 0, init: { cache: 'no-store' } });
+  if (headPass) return true;
+
   try {
-    const controller = new AbortController();
-    const to = setTimeout(() => controller.abort(), timeoutMs);
-    let res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
-    clearTimeout(to);
-    if (res.ok) return true;
-    if (res.status === 405) {
-      res = await fetch(url, { method: 'GET', cache: 'no-store' });
-      return res.ok;
-    }
-    return false;
+    const res = await get(url, { timeoutMs, retries: 0, init: { cache: 'no-store' } });
+    return res.ok;
   } catch {
     return false;
   }

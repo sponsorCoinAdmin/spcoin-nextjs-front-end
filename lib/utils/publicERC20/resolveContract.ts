@@ -3,6 +3,7 @@ import { isAddress, type Address, type PublicClient } from 'viem';
 import type { TokenContract } from '@/lib/structure/types';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
+import { getJson, HttpError } from '@/lib/rest/http';
 
 const LOG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_CONTRACT === 'true';
 const debug = createDebugLogger('resolveContract', LOG_ENABLED);
@@ -31,30 +32,37 @@ function isNativeSentinel(addr: string): boolean {
   return addr.toLowerCase() === String(NATIVE_TOKEN_ADDRESS).toLowerCase();
 }
 
-async function fetchNativeTokenMeta(chainId: number): Promise<{ name: string; symbol: string; decimals: number } | undefined> {
+async function fetchNativeTokenMeta(
+  chainId: number
+): Promise<{ name: string; symbol: string; decimals: number } | undefined> {
+  const fallback = nativeSymbolByChain[chainId] ?? { name: 'Native Token', symbol: 'NATIVE', decimals: 18 };
   try {
     const url = `/api/native-token/${chainId}`;
     debug.log(`🌐 native meta → ${url}`);
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) {
-      debug.warn(`⚠️ native meta not ok: ${res.status} ${res.statusText}`);
-      return nativeSymbolByChain[chainId];
-    }
-    const data = await res.json();
+
+    const data = await getJson<{ name?: string; symbol?: string; decimals?: number }>(url, {
+      timeoutMs: 6000,
+      retries: 1,
+      backoffMs: 350,
+      accept: 'application/json',
+      forceParse: true,
+      init: { cache: 'no-store' },
+    });
+
     debug.log('📦 native meta payload:', data);
-    const fromApi = {
-      name: typeof data?.name === 'string' ? data.name : undefined,
-      symbol: typeof data?.symbol === 'string' ? data.symbol : undefined,
-      decimals: Number.isFinite(data?.decimals) ? Number(data.decimals) : undefined,
-    };
+
     return {
-      name: fromApi.name ?? nativeSymbolByChain[chainId]?.name ?? 'Native Token',
-      symbol: fromApi.symbol ?? nativeSymbolByChain[chainId]?.symbol ?? 'NATIVE',
-      decimals: fromApi.decimals ?? nativeSymbolByChain[chainId]?.decimals ?? 18,
+      name: typeof data?.name === 'string' ? data.name : fallback.name,
+      symbol: typeof data?.symbol === 'string' ? data.symbol : fallback.symbol,
+      decimals: Number.isFinite(data?.decimals) ? Number(data.decimals) : fallback.decimals,
     };
   } catch (err: any) {
-    debug.error('❌ native meta get failed:', err?.message ?? err);
-    return nativeSymbolByChain[chainId] ?? { name: 'Native Token', symbol: 'NATIVE', decimals: 18 };
+    if (err instanceof HttpError) {
+      debug.warn(`⚠️ native meta HTTP ${err.status} ${err.statusText} (${err.url}) :: ${err.bodyPreview ?? ''}`);
+    } else {
+      debug.error('❌ native meta get failed:', err?.message ?? err);
+    }
+    return fallback;
   }
 }
 
@@ -116,10 +124,14 @@ export async function resolveContract(
       totalSupply: totalSupplyRes.status,
     });
 
-    const name = nameRes.status === 'success' && typeof nameRes.result === 'string' ? nameRes.result : 'Missing name';
-    const symbol = symbolRes.status === 'success' && typeof symbolRes.result === 'string' ? symbolRes.result : 'Missing symbol';
-    const decimals = decimalsRes.status === 'success' && typeof decimalsRes.result === 'number' ? decimalsRes.result : 18;
-    const totalSupply = totalSupplyRes.status === 'success' && typeof totalSupplyRes.result === 'bigint' ? totalSupplyRes.result : 0n;
+    const name =
+      nameRes.status === 'success' && typeof nameRes.result === 'string' ? nameRes.result : 'Missing name';
+    const symbol =
+      symbolRes.status === 'success' && typeof symbolRes.result === 'string' ? symbolRes.result : 'Missing symbol';
+    const decimals =
+      decimalsRes.status === 'success' && typeof decimalsRes.result === 'number' ? decimalsRes.result : 18;
+    const totalSupply =
+      totalSupplyRes.status === 'success' && typeof totalSupplyRes.result === 'bigint' ? totalSupplyRes.result : 0n;
 
     const token: TokenContract = {
       address: tokenAddress,
