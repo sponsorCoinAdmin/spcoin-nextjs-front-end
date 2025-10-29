@@ -1,3 +1,4 @@
+// File: components/views/BaseSelectPanel.tsx
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -10,6 +11,7 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import type { WalletAccount } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getPublicFileUrl } from '@/lib/spCoin/guiUtils';
+import { headOk, withProtocol } from '@/lib/rest/http';
 
 // ✅ New local (nested) display system only
 import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
@@ -57,39 +59,46 @@ const BaseSelectPanel: React.FC<BaseSelectPanelProps> = ({
 
     const raw = selectedAccount?.website?.trim();
     if (!raw || raw === 'N/A') {
-      debugLog.log('🌐 skip website probe: none');
+      debugLog.log?.('🌐 skip website probe: none');
       setSiteExists(false);
       return;
     }
 
-    const hasProtocol = /^(https?:)?\/\//i.test(raw);
-    const probeURL = hasProtocol ? raw : `https://${raw}`;
+    const probeURL = withProtocol(raw);
+    if (!probeURL) {
+      debugLog.warn?.('⚠️ invalid website value, skipping probe');
+      setSiteExists(false);
+      return;
+    }
 
     let cancelled = false;
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 3000);
+    debugLog.log?.(`🌐 probing website (HEAD via rest): ${probeURL}`);
 
-    debugLog.log(`🌐 probing website (HEAD, no-cors): ${probeURL}`);
-
-    fetch(probeURL, { method: 'HEAD', mode: 'no-cors', signal: controller.signal })
-      .then(() => {
-        if (!cancelled) {
-          debugLog.log('✅ probe resolved (opaque or ok) → siteExists=true');
+    headOk(probeURL, {
+      timeoutMs: 3000,
+      retries: 0,
+      // Keep opaque success semantics like your previous `mode: 'no-cors'`
+      init: { mode: 'no-cors' as RequestMode },
+    })
+      .then((ok) => {
+        if (cancelled) return;
+        if (ok) {
+          debugLog.log?.('✅ probe resolved (opaque or ok) → siteExists=true');
           setSiteExists(true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          debugLog.warn('⚠️ probe failed → siteExists=false');
+        } else {
+          debugLog.warn?.('⚠️ probe failed → siteExists=false');
           setSiteExists(false);
         }
       })
-      .finally(() => window.clearTimeout(timeoutId));
+      .catch((err) => {
+        if (!cancelled) {
+          debugLog.warn?.('⚠️ probe threw → siteExists=false', err);
+          setSiteExists(false);
+        }
+      });
 
     return () => {
       cancelled = true;
-      controller.abort();
-      window.clearTimeout(timeoutId);
     };
   }, [selectedAccount?.website]);
 

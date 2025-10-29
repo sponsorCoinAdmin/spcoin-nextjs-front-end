@@ -27,7 +27,7 @@ export function useNativeToken(): MappedTokenContract | undefined {
           });
         }
       } catch (err) {
-        console.error(`Failed to fetch native token for chainId ${chainId}:`, err);
+        console.error(`Failed to get native token for chainId ${chainId}:`, err);
       }
     };
 

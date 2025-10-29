@@ -51,7 +51,7 @@ export default function WalletsPage() {
                 [typeOfWallets]: downloadedWallets,
             }));
         } catch (e: any) {
-            if (!cancelled) setErr(e?.message ?? 'Failed to fetch wallets');
+            if (!cancelled) setErr(e?.message ?? 'Failed to get wallets');
         } finally {
             if (!cancelled) setLoading(false);
         }

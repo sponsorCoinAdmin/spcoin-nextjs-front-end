@@ -61,7 +61,7 @@ const fetchTokenDetails = async (
 }
 
 /**
- * High-level wrapper to fetch token details and store them with a callback.
+ * High-level wrapper to get token details and store them with a callback.
  */
 const getTokenDetails = async (
   chainId: number,

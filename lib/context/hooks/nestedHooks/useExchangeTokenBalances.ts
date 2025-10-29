@@ -36,7 +36,7 @@ export function useExchangeTokenBalances() {
 
   const publicClient = usePublicClient({ chainId });
 
-  // Used to ensure only the latest fetch writes results
+  // Used to ensure only the latest get writes results
   const reqIdRef = useRef(0);
 
   useEffect(() => {

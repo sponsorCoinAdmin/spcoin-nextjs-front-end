@@ -43,5 +43,5 @@ export const getTestName = async (): Promise<string> => {
 
   return balanceOf !== null
     ? `balanceOf = ${stringifyBigInt(balanceOf)}`
-    : 'Failed to fetch balance';
+    : 'Failed to Get balance';
 };

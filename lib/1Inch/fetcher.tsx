@@ -10,26 +10,34 @@ import {
   useErrorMessage,
   useSellAmount,
   useTradeData,
- useAppChainId } from '@/lib/context/hooks';
+  useAppChainId,
+} from '@/lib/context/hooks';
 import type { Address } from 'viem';
 import { useAccount } from 'wagmi';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getJson } from '@/lib/rest/http';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_PRICE_API === 'true';
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
 const API_PROVIDER = '1Inch/';
-const NEXT_PUBLIC_API_SERVER = process.env.NEXT_PUBLIC_API_SERVER + API_PROVIDER;
+const NEXT_PUBLIC_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '') + API_PROVIDER;
 const apiPriceBase = '/quote';
 
-const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
+const ZERO_ADDRESS: Address =
+  '0x0000000000000000000000000000000000000000' as Address;
 
+// ✅ RESTful fetcher using shared helper (timeout, retries, JSON validation)
 const fetcher = async ([url]: [string]) => {
-  debugLog.log(`[1inch Fetch] ${url}`);
-  const response = await fetch(url);
-  return response.json();
+  debugLog.log?.(`[1inch Fetch] ${url}`);
+  const data = await getJson<unknown>(url, {
+    timeoutMs: 10_000,
+    retries: 1,
+    accept: 'application/json',
+  });
+  return data;
 };
 
 function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
@@ -49,7 +57,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
     });
 
     if (Object.keys(changesObj).length) {
-      debugLog.log(`[why-did-you-update] ${name}`, changesObj);
+      debugLog.log?.(`[why-did-you-update] ${name}`, changesObj);
     }
 
     previousProps.current = props;
@@ -58,28 +66,30 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
 
 function usePriceAPI() {
   const tradeData = useTradeData();
-  const [chainId] = useAppChainId(); // ✅ destructure the tuple
+  const [chainId] = useAppChainId();
   const { address: userAddress } = useAccount();
   const [errorMessage] = useErrorMessage();
   const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount] = useSellAmount();
 
-  const rawSellTokenAddress = tradeData?.sellTokenContract?.address ?? ZERO_ADDRESS;
-  const rawBuyTokenAddress = tradeData?.buyTokenContract?.address ?? ZERO_ADDRESS;
+  const rawSellTokenAddress = (tradeData?.sellTokenContract?.address ??
+    ZERO_ADDRESS) as Address;
+  const rawBuyTokenAddress = (tradeData?.buyTokenContract?.address ??
+    ZERO_ADDRESS) as Address;
 
   const mappedSellTokenAddress = rawSellTokenAddress;
   const mappedBuyTokenAddress = rawBuyTokenAddress;
 
   const slippagePercentage =
-    Number.isFinite(tradeData?.slippage?.bps) && tradeData.slippage.bps > 0
-      ? (tradeData.slippage.bps / 100).toString()
+    Number.isFinite(tradeData?.slippage?.bps) && (tradeData?.slippage?.bps ?? 0) > 0
+      ? String((tradeData!.slippage!.bps as number) / 100)
       : '1';
 
   const shouldFetch =
-    tradeData?.sellTokenContract &&
-    tradeData?.buyTokenContract &&
-    mappedSellTokenAddress !== mappedBuyTokenAddress &&
+    !!tradeData?.sellTokenContract &&
+    !!tradeData?.buyTokenContract &&
+    mappedSellTokenAddress.toLowerCase() !== mappedBuyTokenAddress.toLowerCase() &&
     sellAmount > 0n &&
     !!userAddress &&
     chainId !== CHAIN_ID.HARDHAT;
@@ -107,9 +117,9 @@ function usePriceAPI() {
     swrKey,
   });
 
-  return useSWR(swrKey, fetcher, {
-    onSuccess: (data) => {
-      debugLog.log(`[1inch SUCCESS]`, data);
+  return useSWR<unknown, Error, [string] | null>(swrKey as [string] | null, fetcher, {
+    onSuccess: (data: any) => {
+      debugLog.log?.(`[1inch SUCCESS]`, data);
       if (data?.toTokenAmount) {
         try {
           setBuyAmount(BigInt(data.toTokenAmount));
@@ -123,7 +133,7 @@ function usePriceAPI() {
         status: STATUS.ERROR_API_PRICE,
         source: '1inchFetcher',
         errCode: error?.code ?? 500,
-        msg: error,
+        msg: error?.message ?? String(error),
       });
     },
   });

@@ -7,7 +7,7 @@ import { defaultMissingImage, badTokenAddressImage } from '@/lib/network/utils';
 const logoExistenceCache = new Map<string, boolean>();
 
 async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
-  // Avoid SSR fetch; assume assets exist during server render to prevent hydration warnings.
+  // Avoid SSR get; assume assets exist during server render to prevent hydration warnings.
   if (typeof window === 'undefined') return true;
   try {
     const controller = new AbortController();

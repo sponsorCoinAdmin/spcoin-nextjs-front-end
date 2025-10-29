@@ -25,7 +25,7 @@ export async function fetchAndBuildDataList(
 }
 
 /**
- * (Optional) Convenience: fetch a source and return a single normalized item.
+ * (Optional) Convenience: get a source and return a single normalized item.
  * - TOKEN_LIST → one BuiltToken (from first/only item)
  * - *_ACCOUNTS → first WalletAccount (or null if none)
  */

@@ -105,7 +105,7 @@ const AddSponsorShipPanel: React.FC = () => {
           setRecipientMeta(meta);
         }
       } catch (err: any) {
-        debugLog.warn?.('recipientMeta fetch error:', err?.message || err);
+        debugLog.warn?.('recipientMeta get error:', err?.message || err);
         if (!cancelled) setRecipientMeta(undefined);
       }
     })();
@@ -164,7 +164,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
     const resolved = resolveWallet({
       queryUrl: pageQueryUrl,
-      // If fetch succeeded use it, else use our safe fallback (or undefined)
+      // If get succeeded use it, else use our safe fallback (or undefined)
       recipientMeta: recipientMeta ?? fallbackMeta,
       connectedWebsite: exchangeContext.accounts?.connectedAccount?.website ?? null,
       fallbackBaseUrl: fallbackBase,

@@ -48,7 +48,7 @@ export async function validateTokenAsset(params: ValidateFSMInput): Promise<Vali
     return { nextState: InputState.RESOLVE_ASSET_ERROR, errorMessage: msg };
   }
 
-  // 3) Try to fetch ERC-20 metadata (graceful fallbacks)
+  // 3) Try to get ERC-20 metadata (graceful fallbacks)
   const readNumber = async (fn: 'decimals'): Promise<number | undefined> => {
     try {
       const out = await publicClient.readContract({

@@ -13,7 +13,7 @@ export type BuiltToken = {
   [k: string]: any;
 };
 
-/** Discriminated union returned by fetch/build services */
+/** Discriminated union returned by /build services */
 export type FeedData =
   | {
       feedType: FEED_TYPE.RECIPIENT_ACCOUNTS | FEED_TYPE.AGENT_ACCOUNTS;

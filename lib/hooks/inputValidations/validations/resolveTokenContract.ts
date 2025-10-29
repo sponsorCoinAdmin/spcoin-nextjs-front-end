@@ -18,7 +18,7 @@ function dbg(...args: any[]) {
  * Resolves a TokenContract from an address:
  * - Keeps address case AS-IS (no checksum/case normalization)
  * - Fetches logo URL and metadata in parallel
- * - ❌ Does NOT fetch user balance (authoritative source is useGetBalance hook)
+ * - ❌ Does NOT get user balance (authoritative source is useGetBalance hook)
  * - Always returns a TokenContract with a logoURL (fallbacks to defaultMissingImage)
  */
 export async function resolveTokenContract(
@@ -84,7 +84,7 @@ export async function resolveTokenContract(
       logoURL: logoURL || defaultMissingImage,
     };
 
-    dbg('return native (no balance fetch)', {
+    dbg('return native (no balance)', {
       ms: Date.now() - t0,
       ret: {
         ...ret,
@@ -103,7 +103,7 @@ export async function resolveTokenContract(
         return m;
       })
       .catch((e) => {
-        dbg('⚠️ metadata fetch failed', e);
+        dbg('⚠️ metadata get failed', e);
         return undefined;
       }),
     logoP,
@@ -126,7 +126,7 @@ export async function resolveTokenContract(
     logoURL: logoURL || defaultMissingImage,
   };
 
-  dbg('return erc20 (no balance fetch)', {
+  dbg('return erc20 (no balance)', {
     ms: Date.now() - t0,
     ret: {
       ...ret,

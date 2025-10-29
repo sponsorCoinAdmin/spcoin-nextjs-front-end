@@ -1,11 +1,11 @@
-// File: (wherever this lives) usePriceAPI.ts
+// File: lib/hooks/usePriceAPI.ts
 
 import { useEffect, useRef } from 'react';
 import { stringify } from 'qs';
 import useSWR from 'swr';
 import { isAddress, type Address } from 'viem';
 
-import type { PriceRequestParams} from '@/lib/structure';
+import type { PriceRequestParams } from '@/lib/structure';
 import { TRADE_DIRECTION, STATUS } from '@/lib/structure';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 
@@ -22,6 +22,7 @@ import {
 import type PriceResponse from '@/lib/0X/typesV1';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { getJson } from '@/lib/rest/http';
 
 const API_PROVIDER = '0X/';
 const NEXT_PUBLIC_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '') + API_PROVIDER;
@@ -43,7 +44,7 @@ const fetcher = async ([endpoint, params]: FetchKey) => {
     (sellAmount !== undefined && sellAmount === '0') ||
     (buyAmount !== undefined && buyAmount === '0')
   ) {
-    debugLog.warn(`Blocked fetch with zero amount`, { sellAmount, buyAmount });
+    debugLog.warn?.('Blocked get with zero amount', { sellAmount, buyAmount });
     return;
   }
 
@@ -55,13 +56,16 @@ const fetcher = async ([endpoint, params]: FetchKey) => {
 
   const query = stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
-  debugLog.log(`📡 Fetching:`, apiCall);
+  debugLog.log?.('📡 Fetching:', apiCall);
 
-  const response = await fetch(apiCall);
-  if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
-  }
-  return response.json();
+  // 🔁 RESTful call (timeout + retries + JSON validation)
+  const data = await getJson<unknown>(apiCall, {
+    timeoutMs: 10_000,
+    retries: 1,
+    accept: 'application/json',
+  });
+
+  return data;
 };
 
 const getApiErrorTransactionData = (
@@ -96,7 +100,7 @@ const getPriceApiCall = (
     (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) ||
     (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n)
   ) {
-    debugLog.warn(`Skipping fetch due to 0 amount`, { tradeDirection, sellAmount, buyAmount });
+    debugLog.warn?.('Skipping get due to 0 amount', { tradeDirection, sellAmount, buyAmount });
     return undefined;
   }
 
@@ -130,7 +134,7 @@ function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
     });
 
     if (Object.keys(changesObj).length) {
-      debugLog.log(`[why-did-you-update] ${name}`, changesObj);
+      debugLog.log?.(`[why-did-you-update] ${name}`, changesObj);
     }
 
     previousProps.current = props;
@@ -168,27 +172,27 @@ function usePriceAPI() {
     effectiveAmount?: bigint
   ): boolean => {
     if (!chainId) {
-      debugLog.warn(`Missing chainId`);
+      debugLog.warn?.('Missing chainId');
       return false;
     }
     if (!isAddress(sellToken ?? '')) {
-      debugLog.warn(`Invalid or missing sellTokenAddress`, sellToken);
+      debugLog.warn?.('Invalid or missing sellTokenAddress', sellToken);
       return false;
     }
     if (!isAddress(buyToken ?? '')) {
-      debugLog.warn(`Invalid or missing buyTokenAddress`, buyToken);
+      debugLog.warn?.('Invalid or missing buyTokenAddress', buyToken);
       return false;
     }
     if ((sellToken as string).toLowerCase() === (buyToken as string).toLowerCase()) {
-      debugLog.warn(`Sell and buy tokens are the same`);
+      debugLog.warn?.('Sell and buy tokens are the same');
       return false;
     }
     if (!effectiveAmount || effectiveAmount === 0n) {
-      debugLog.warn(`Amount is 0`);
+      debugLog.warn?.('Amount is 0');
       return false;
     }
     if (chainId === CHAIN_ID.HARDHAT) {
-      debugLog.warn(`Chain is HARDHAT`);
+      debugLog.warn?.('Chain is HARDHAT');
       return false;
     }
     return true;
@@ -235,7 +239,7 @@ function usePriceAPI() {
 
   const swr = useSWR<unknown, Error, FetchKey | null>(swrKey, fetcher, {
     onSuccess: (data: any) => {
-      debugLog.log(`✅ API SUCCESS`, data);
+      debugLog.log?.('✅ API SUCCESS', data);
 
       if (data && typeof data === 'object' && 'code' in data) {
         setApiErrorMessage({
@@ -271,7 +275,7 @@ function usePriceAPI() {
       }
     },
     onError: (error: any) => {
-      debugLog.error(`❌ API ERROR`, error);
+      debugLog.error?.('❌ API ERROR', error);
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
         source: 'ApiFetcher',

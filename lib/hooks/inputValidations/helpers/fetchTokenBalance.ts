@@ -35,7 +35,7 @@ export async function fetchTokenBalance(
       args: [accountAddress],
     });
   } catch (err) {
-    log.warn(`⚠️ Failed to fetch balance for ${tokenAddress}`, err);
+    log.warn(`⚠️ Failed to get balance for ${tokenAddress}`, err);
     return 0n;
   }
 }

@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import type { WalletAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+import { getJson } from '@/lib/rest/http';
 
 const ConnectedAccountContext = createContext<WalletAccount | undefined>(undefined);
 export const useConnectedAccount = (): WalletAccount | undefined => useContext(ConnectedAccountContext);
@@ -27,11 +28,19 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
 
     (async () => {
       const accountPath = `/assets/accounts/${address}/wallet.json`;
-      try {
-        const res = await fetch(accountPath, { signal: ac.signal, cache: 'no-store' });
-        if (!res.ok) throw new Error('File not found');
 
-        const metadata = await res.json();
+      try {
+        // ✅ RESTful helper (timeout, retries, typed JSON)
+        const metadata = await getJson<WalletAccount>(accountPath, {
+          timeoutMs: 8000,
+          retries: 0, // local file — no need to retry
+          accept: 'application/json',
+          init: {
+            signal: ac.signal,
+            cache: 'no-store',
+          },
+        });
+
         const wallet: WalletAccount = { ...metadata, address };
 
         if (!ac.signal.aborted) {

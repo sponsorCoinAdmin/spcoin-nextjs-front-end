@@ -34,10 +34,10 @@ function isNativeSentinel(addr: string): boolean {
 async function fetchNativeTokenMeta(chainId: number): Promise<{ name: string; symbol: string; decimals: number } | undefined> {
   try {
     const url = `/api/native-token/${chainId}`;
-    debug.log(`🌐 fetch native meta → ${url}`);
+    debug.log(`🌐 native meta → ${url}`);
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
-      debug.warn(`⚠️ native meta fetch not ok: ${res.status} ${res.statusText}`);
+      debug.warn(`⚠️ native meta not ok: ${res.status} ${res.statusText}`);
       return nativeSymbolByChain[chainId];
     }
     const data = await res.json();
@@ -53,7 +53,7 @@ async function fetchNativeTokenMeta(chainId: number): Promise<{ name: string; sy
       decimals: fromApi.decimals ?? nativeSymbolByChain[chainId]?.decimals ?? 18,
     };
   } catch (err: any) {
-    debug.error('❌ native meta fetch failed:', err?.message ?? err);
+    debug.error('❌ native meta get failed:', err?.message ?? err);
     return nativeSymbolByChain[chainId] ?? { name: 'Native Token', symbol: 'NATIVE', decimals: 18 };
   }
 }
