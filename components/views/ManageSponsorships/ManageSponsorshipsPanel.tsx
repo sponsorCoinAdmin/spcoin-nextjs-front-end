@@ -29,11 +29,13 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
 
+  let accountType = "";
+
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
 
   const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
-  const [showToDo, setShowToDo] = useState<boolean>(true);
+  const [showToDo, setShowToDo] = useState<boolean>(false);
 
   // Exchange context (must not be after an early return)
   const ctx = useContext(ExchangeContextState);
@@ -55,16 +57,20 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   }, [openPanel, closePanel]);
 
   /** Alert-only placeholder per request */
-  const claimRewards = useCallback((accountType: AccountType) => {
+  const claimRewards = useCallback((actType: AccountType) => {
+    setShowToDo(true)
+    accountType = actType;
+  }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
+
+  const doToDo = useCallback(() => {
+    setShowToDo(false)
     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
-    // eslint-disable-next-line no-alert
-    alert(
-      [
-        'ToDo: (Not Yet Implemented)',
-        `Claim ${accountType.toString()} Rewards`,
-        `For account: ${connected ? connected.address : '(none connected)'}`,
-      ].join('\n')
-    );
+    let msg:String = 'ToDo: (Not Yet Implemented)\n';
+    msg += `Claim: `;
+    msg += accountType.toString() === "ALL" ? accountType.toString() : `${accountType.toString()}(s)`;
+    msg += ` Rewards\n`
+    msg += `For account: ${connected ? connected.address : '(none connected)'}`;
+    alert( msg );
   }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
 
   // ✅ Early return happens only after all hooks have been called
@@ -324,7 +330,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
           opacity={0.5}
           color="#ff1a1a"
           zIndex={2000}
-          onDismiss={() => setShowToDo(false)}
+          onDismiss={() => doToDo()}
         />
       )}
     </>
