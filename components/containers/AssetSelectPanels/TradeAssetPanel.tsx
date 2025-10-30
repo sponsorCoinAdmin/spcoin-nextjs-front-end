@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import type { Address} from 'viem';
+import type { Address } from 'viem';
 import { formatUnits, parseUnits } from 'viem';
 import { clsx } from 'clsx';
 import { useAccount } from 'wagmi';
@@ -24,7 +24,7 @@ import {
   API_TRADING_PROVIDER,
 } from '@/lib/structure';
 
-import { parseValidFormattedAmount } from '@/lib/spCoin/coreUtils';
+import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useTokenSelection } from '@/lib/hooks/trade/useTokenSelection';
@@ -43,8 +43,8 @@ const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
 
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
-  const { exchangeContext, setSellBalance, setBuyBalance } = useExchangeContext(); // ⬅️ grab balance setters
-  const { address } = useAccount(); // owner for balances
+  const { exchangeContext, setSellBalance, setBuyBalance } = useExchangeContext();
+  const { address } = useAccount();
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -56,7 +56,7 @@ function TradeAssetPanelInner() {
   const { setLocalTokenContract, setLocalAmount, containerType: containerTypeRoot } =
     useTokenPanelContext();
 
-  const isBuy  = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL;
+  const isBuy = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL;
   const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL;
 
   // selection state
@@ -72,13 +72,46 @@ function TradeAssetPanelInner() {
     setBuyAmount,
   });
 
-  // BUY-side: keep tree hookup (even if result isn’t used)
-  usePanelTree();
+  // Panel tree controls for visibility toggles
+  const { openPanel, closePanel } = usePanelTree();
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Add Sponsorship BUTTON gate (BUY-side only):
+  // Flip ONLY the button node's visibility when buyTokenContract.address changes.
+  // - No first-render guard (OK to flip on load per request).
+  // - Does NOT change overlay selection except to ensure panel closes when non-SpCoin.
+  // - Runs only from the BUY instance to avoid double writers.
+  // ────────────────────────────────────────────────────────────────────────────
+  const prevBuyAddrRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!isBuy) return; // only BUY side manages the Add button/panel
+
+    const addr = buyTokenContract?.address as string | undefined;
+
+    // React only when the buy address actually changes
+    if (prevBuyAddrRef.current === addr) return;
+    prevBuyAddrRef.current = addr;
+
+    // Toggle only the BUTTON visibility; also ensure the PANEL is closed on non-SpCoin
+    if (!addr) {
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL);
+      return;
+    }
+
+    if (isSpCoin(buyTokenContract)) {
+      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
+    } else {
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL);
+    }
+  }, [isBuy, buyTokenContract?.address, openPanel, closePanel]);
+  // ────────────────────────────────────────────────────────────────────────────
 
   // amount input
   const [inputValue, setInputValue] = useState('0');
   const debouncedSell = useDebounce(sellAmount, 600);
-  const debouncedBuy  = useDebounce(buyAmount, 600);
+  const debouncedBuy = useDebounce(buyAmount, 600);
 
   const typingUntilRef = useRef(0);
   const currentAmount = isSell ? sellAmount : buyAmount;
@@ -154,12 +187,12 @@ function TradeAssetPanelInner() {
   };
 
   const buySellText = isSell
-    ? (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
-        ? `You Pay ± ${slippage.percentageString}`
-        : `You Exactly Pay:`)
-    : (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-        ? `You Receive ± ${slippage.percentageString}`
-        : `You Exactly Receive:`);
+    ? tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
+      ? `You Pay ± ${slippage.percentageString}`
+      : `You Exactly Pay:`
+    : tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
+    ? `You Receive ± ${slippage.percentageString}`
+    : `You Exactly Receive:`;
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
@@ -190,7 +223,6 @@ function TradeAssetPanelInner() {
     try {
       parsed = parseUnits(liveFormattedBalance, tokenDecimals);
     } catch {
-      // formatted can be "—" or "…" or other; ignore silently
       return;
     }
 
@@ -202,7 +234,10 @@ function TradeAssetPanelInner() {
       tokenAddr: tokenAddr,
       liveFormattedBalance,
       parsed: String(parsed),
-      prevBal: exchangeContext?.tradeData?.[isSell ? 'sellTokenContract' : 'buyTokenContract']?.balance?.toString?.(),
+      prevBal:
+        exchangeContext?.tradeData?.[
+          isSell ? 'sellTokenContract' : 'buyTokenContract'
+        ]?.balance?.toString?.(),
     });
 
     if (isSell) {

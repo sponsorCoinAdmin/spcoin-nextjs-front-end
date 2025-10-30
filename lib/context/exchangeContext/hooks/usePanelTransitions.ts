@@ -79,10 +79,11 @@ export function usePanelTransitions() {
   const closeManageSponsorships = useCallback(() => {
     perf.start();
     closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+    // Removed: do not force button visibility; respect restored state
+    // openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
     perf.end('closeManageSponsorships');
     _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'close');
-  }, [closePanel, openPanel, perf]);
+  }, [closePanel, perf]);
 
   // ---- Non-overlay panels (inline) ----
   const startAddSponsorship = useCallback(() => {

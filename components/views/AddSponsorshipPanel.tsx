@@ -16,7 +16,8 @@ import { RecipientSelectDropDown } from '../containers/AssetSelectDropDowns';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
-import { useExchangeContext } from '@/lib/context/hooks';
+import { useExchangeContext, useBuyTokenContract } from '@/lib/context/hooks';
+import { isSpCoin } from '@/lib/spCoin/coreUtils';
 
 // ✅ REST helpers
 import { fetchRecipientMeta, type RecipientMeta } from '@/lib/rest/recipientMeta';
@@ -55,6 +56,8 @@ const AddSponsorShipPanel: React.FC = () => {
   const isVisible = usePanelVisible(SP_TREE.ADD_SPONSORSHIP_PANEL);
   const configVisible = usePanelVisible(SP_TREE.CONFIG_SPONSORSHIP_PANEL);
   const tradingVisible = usePanelVisible(SP_TREE.TRADING_STATION_PANEL);
+
+  const [buyTokenContract] = useBuyTokenContract();
 
   const recipientWallet: WalletAccount | undefined = exchangeContext.accounts.recipientAccount;
 
@@ -98,7 +101,6 @@ const AddSponsorShipPanel: React.FC = () => {
       }
       try {
         debugLog.log?.('Fetching recipientMeta for address:', addr);
-        // ✅ fetchRecipientMeta expects a single argument
         const meta = await fetchRecipientMeta(addr as Address);
         if (!cancelled) {
           debugLog.log?.('recipientMeta fetched:', meta || '(none)');
@@ -132,9 +134,15 @@ const AddSponsorShipPanel: React.FC = () => {
       },
       'AddSponsorShipPanel:closeAddSponsorshipPanel'
     );
+
+    // Close the panel
     closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
-    openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
-  }, [setExchangeContext, closePanel, openPanel]);
+
+    // Only re-show the launcher button if the current BUY token is an SpCoin
+    if (buyTokenContract && isSpCoin(buyTokenContract)) {
+      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
+    }
+  }, [setExchangeContext, closePanel, openPanel, buyTokenContract]);
 
   // ── Derived values ───────────────────────────────────────────────────────────
   const pageQueryUrl = useMemo(() => {
@@ -164,7 +172,6 @@ const AddSponsorShipPanel: React.FC = () => {
 
     const resolved = resolveWallet({
       queryUrl: pageQueryUrl,
-      // If get succeeded use it, else use our safe fallback (or undefined)
       recipientMeta: recipientMeta ?? fallbackMeta,
       connectedWebsite: exchangeContext.accounts?.connectedAccount?.website ?? null,
       fallbackBaseUrl: fallbackBase,
@@ -205,8 +212,8 @@ const AddSponsorShipPanel: React.FC = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
-      id="AddSponsorshipPanel"
-      className="
+      id='AddSponsorshipPanel'
+      className='
         pt-[8px]
         relative
         mb-[5px]
@@ -214,14 +221,14 @@ const AddSponsorShipPanel: React.FC = () => {
         rounded-b-[12px]
         overflow-hidden
         bg-[#1f2639] text-[#94a3b8]
-      "
+      '
     >
-      <div className="h-[90px]">
-        <div className="absolute top-3 left-[11px] text-[14px] text-[#94a3b8]">
+      <div className='h-[90px]'>
+        <div className='absolute top-3 left-[11px] text-[14px] text-[#94a3b8]'>
           You are sponsoring:
         </div>
 
-        <div id="OpenRecipientSite">
+        <div id='OpenRecipientSite'>
           <Link
             href={recipientSiteHref}
             onClick={() => {
@@ -241,14 +248,14 @@ const AddSponsorShipPanel: React.FC = () => {
         </div>
 
         <div
-          className="
+          className='
             absolute left-[160px]
             min-w-[50px] h-[25px]
             rounded-full
             flex items-center justify-start gap-1
             font-bold text-[17px] pr-2
             text-white bg-[#243056]
-          "
+          '
         >
           <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
@@ -256,18 +263,18 @@ const AddSponsorShipPanel: React.FC = () => {
         <div>
           <Image
             src={cog_png}
-            className="
+            className='
               absolute right-[39px]
               object-contain
               text-[#51586f]
               inline-block
               transition-transform duration-300
               hover:rotate-[360deg] hover:cursor-pointer
-            "
+            '
             width={20}
             height={20}
-            alt="Settings"
-            role="button"
+            alt='Settings'
+            role='button'
             tabIndex={0}
             onClick={toggleSponsorRateConfig}
             onKeyDown={(e) => {
@@ -280,14 +287,14 @@ const AddSponsorShipPanel: React.FC = () => {
         </div>
 
         <div
-          id="closeAddSponsorshipPanel"
-          className="
+          id='closeAddSponsorshipPanel'
+          className='
             pt-[12px]
             absolute -top-2 right-[15px]
             text-[#94a3b8]
             text-[20px]
             cursor-pointer
-          "
+          '
           onClick={closeAddSponsorshipPanel}
         >
           X
@@ -300,9 +307,9 @@ const AddSponsorShipPanel: React.FC = () => {
       {!showToDo && (
         <ToDo
           show
-          message="ToDo"
+          message='ToDo'
           opacity={0.5}
-          color="#ff1a1a"
+          color='#ff1a1a'
           zIndex={2000}
           onDismiss={() => setShowToDo(false)}
         />
