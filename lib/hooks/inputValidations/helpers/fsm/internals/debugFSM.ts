@@ -1,6 +1,8 @@
-// File: lib/hooks/inputValidations/helpers/fsmTraceUtils.ts
+// File: lib/hooks/inputValidations/helpers/fsm/internals/debugFSM.ts
+'use client';
 
 import { InputState } from '@/lib/structure/assetSelection';
+import { FEED_TYPE } from '@/lib/structure';
 
 export const LOCAL_TRACE_KEY = 'latestFSMTrace';
 export const LOCAL_TRACE_LINES_KEY = 'latestFSMTraceLines';
@@ -28,18 +30,67 @@ export function getStateIcon(state: InputState): string {
   }
 }
 
-export function formatTrace(trace: InputState[]): string {
-  if (!trace?.length) return 'No FSM trace found.';
+/** Build a list of FEED_TYPE enum names (ignore numeric reverse mapping). */
+function getFeedNames(): string[] {
+  return Object.keys(FEED_TYPE).filter((k) => isNaN(Number(k)));
+}
+
+/** Remove any FEED_TYPE token (e.g., TOKEN_LIST) if it appears in a header (prefix/suffix). */
+function stripFeedTokens(line: string): string {
+  const feeds = getFeedNames();
+  if (!feeds.length) return line;
+
+  const feedAlt = feeds.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+
+  // Suffix: " TOKEN_LIST" or " • TOKEN_LIST"
+  const suffixRe = new RegExp(`\\s*(?:•\\s*)?(?:${feedAlt})\\s*$`);
+  // Prefix right after emoji: "🧮 TOKEN_LIST "
+  const prefixRe = new RegExp(`^(\\s*🧮\\s*)(?:${feedAlt})\\s+`);
+
+  let out = line.replace(suffixRe, '');
+  out = out.replace(prefixRe, '$1');
+  return out;
+}
+
+/**
+ * Formats a trace of InputState transitions.
+ * If `opts.header` is provided, it's sanitized to strip any FEED_TYPE tokens and prepended.
+ */
+export function formatTrace(
+  trace: InputState[],
+  opts?: { header?: string; withSeparator?: boolean }
+): string {
+  if (!trace?.length) {
+    // If header requested, still show it (sanitized) even if no trace lines.
+    if (opts?.header) {
+      const header = stripFeedTokens(opts.header);
+      return opts?.withSeparator ? `${sepLine()}\n${header}` : header;
+    }
+    return 'No FSM trace found.';
+  }
+
   const lines: string[] = [];
   for (let i = 0; i < trace.length - 1; i++) {
     const from = trace[i];
     const to = trace[i + 1];
-    if (from === to) continue;
-    const icon = i === 0 ? '🟢' : '🟡';
-    lines.push(`${icon} ${getStateIcon(from)} ${InputState[from]} → ${getStateIcon(to)} ${InputState[to]}`);
+    if (from === to) continue; // collapse no-op transitions
+    const color = i === 0 ? '🟢' : '🟡';
+    lines.push(`${color} ${getStateIcon(from)} ${InputState[from]} → ${getStateIcon(to)} ${InputState[to]}`);
   }
   if (trace.length === 1) {
     lines.push(`🟢 ${getStateIcon(trace[0])} ${InputState[trace[0]]}`);
   }
+
+  // Optional sanitized header
+  if (opts?.header) {
+    const header = stripFeedTokens(opts.header);
+    return opts?.withSeparator ? `${sepLine()}\n${header}\n${lines.join('\n')}` : `${header}\n${lines.join('\n')}`;
+  }
+
   return lines.join('\n');
+}
+
+/** Local separator so this file is self-contained. */
+function sepLine() {
+  return '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
 }

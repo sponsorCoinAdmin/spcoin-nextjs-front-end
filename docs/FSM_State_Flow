@@ -1,25 +1,32 @@
-→ INVALID_HEX_INPUT → Display <ErrorAssetPreview />
-→ VALIDATE_ADDRESS → Triggered by user input
-        ├── undefined or empty → EMPTY_INPUT
-        ├── Incomplete Address → INCOMPLETE_ADDRESS
-		├── Invalid address → INVALID_ADDRESS_INPUT
-		└── Valid address → TEST_DUPLICATE_INPUT
-→ EMPTY_INPUT → Do Nothing 
-→ INCOMPLETE_ADDRESS  → Display <ErrorAssetPreview />
-→ INVALID_HEX_INPUT → Display <ErrorAssetPreview />
-→ INVALID_ADDRESS_INPUT → Display <ErrorAssetPreview />
-→ TEST_DUPLICATE_INPUT → Check if duplicate
-        ├── if duplicate  → DUPLICATE_INPUT_ERROR
-        └── not duplicate → VALIDATE_EXISTS_ON_CHAIN
-→ DUPLICATE_INPUT_ERROR → Display <ErrorAssetPreview />
-→ VALIDATE_EXISTS_ON_CHAIN → Check if exists on-chain
-        ├── if found → VALIDATE_PREVIEW
-        └── if not found → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN
-→ CONTRACT_NOT_FOUND_ON_BLOCKCHAIN → Display <ErrorAssetPreview />
-→ VALIDATE_PREVIEW → Check preview step
-→ RESOLVE_ASSET → Check balance
-        ├── if error → TOKEN_NOT_RESOLVED_ERROR 
-        ├── if error → RESOLVE_ASSET_ERROR 
-        └── if ok → CLOSE_SELECT_PANEL
-→ CLOSE_SELECT_PANEL → Promote and close
-        └── set token in context, clear input
+VALIDATE_ADDRESS (triggered by input)
+  ├─ empty/undefined           → EMPTY_INPUT
+  ├─ incomplete                → INCOMPLETE_ADDRESS
+  ├─ invalid hex/address       → INVALID_ADDRESS_INPUT  (or INVALID_HEX_INPUT if you split)
+  └─ valid                     → TEST_DUPLICATE_INPUT
+
+EMPTY_INPUT                     → (do nothing / clear previews)
+
+INCOMPLETE_ADDRESS              → show ErrorAssetPreview
+INVALID_HEX_INPUT               → show ErrorAssetPreview
+INVALID_ADDRESS_INPUT           → show ErrorAssetPreview
+
+TEST_DUPLICATE_INPUT
+  ├─ duplicate                 → DUPLICATE_INPUT_ERROR (show ErrorAssetPreview)
+  └─ ok                        → PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
+
+PREVIEW_CONTRACT_NOT_FOUND_LOCALLY
+  → VALIDATE_EXISTS_ON_CHAIN
+
+VALIDATE_EXISTS_ON_CHAIN
+  ├─ not on chain              → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN (show ErrorAssetPreview)
+  └─ on chain                  → RESOLVE_ASSET
+
+RESOLVE_ASSET
+  ├─ resolve error             → RESOLVE_ASSET_ERROR (show ErrorAssetPreview)
+  └─ resolve ok                → (branch on manualEntry)
+        • manualEntry === true   → VALIDATE_PREVIEW (show RenderAssetPreview, await click)
+        • manualEntry === false  → UPDATE_VALIDATED_ASSET → CLOSE_SELECT_PANEL
+
+VALIDATE_PREVIEW                → (user sees preview; no auto-commit)
+UPDATE_VALIDATED_ASSET          → (bridge commits to context)
+CLOSE_SELECT_PANEL              → (bridge closes & resets)

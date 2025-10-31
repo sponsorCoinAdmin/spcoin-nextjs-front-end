@@ -36,7 +36,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
   const wallets = useMemo<WalletAccount[]>(() => feedData.wallets ?? [], [feedData.wallets]);
   const tokens = useMemo<TokenFeedItem[]>(() => feedData.tokens ?? [], [feedData.tokens]);
 
-  // FSM / selection bridge (unchanged)
+  // FSM / selection bridge (unchanged except explicit manualEntry=false when programmatic)
   const {
     handleHexInputChange,
     setManualEntry,
@@ -54,7 +54,17 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     enforceProgrammatic
   );
 
-  // Commit deferred pick once allowed (unchanged)
+  // DEBUG LOG TO BE REMOVED LATER
+  useEffect(() => {
+    console.log('[DataListSelect] mount', {
+      feedType,
+      walletsCount: wallets.length,
+      tokensCount: tokens.length,
+      loading,
+    });
+  }, [feedType, wallets.length, tokens.length, loading]);
+
+  // Commit deferred pick once allowed (unchanged + manualEntry=false)
   useEffect(() => {
     if (!programmaticReady || !pendingPickRef.current) return;
 
@@ -62,12 +72,29 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     pendingPickRef.current = null;
     setEnforceProgrammatic(false);
 
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[DataListSelect] deferred programmatic commit', {
+      addr,
+      programmaticReady,
+    });
+
+    // ✅ Programmatic flow: ensure manualEntry=false
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[DataListSelect] setManualEntry(false) before deferred commit');
+    setManualEntry(false);
+
     setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
     handleHexInputChange(addr, false);
 
     if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS) {
       const picked = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
-      if (picked) setTradingTokenCallback(picked);
+      if (picked) {
+        // DEBUG LOG TO BE REMOVED LATER
+        console.log('[DataListSelect] setTradingTokenCallback (deferred)', {
+          address: picked.address,
+        });
+        setTradingTokenCallback(picked);
+      }
     }
   }, [
     programmaticReady,
@@ -76,22 +103,43 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     feedType,
     wallets,
     setTradingTokenCallback,
+    setManualEntry,
   ]);
 
   const handlePickAddress = useCallback(
     (address: string) => {
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[DataListSelect] handlePickAddress', {
+        addressPreview: address?.slice(0, 10),
+        manualEntry,
+        programmaticReady,
+      });
+
       if (!programmaticReady) {
+        // DEBUG LOG TO BE REMOVED LATER
+        console.log('[DataListSelect] not ready → deferring pick', { address });
         pendingPickRef.current = address;
         setEnforceProgrammatic(true);
         return;
       }
+
+      // ✅ Programmatic flow: ensure manualEntry=false before we kick FSM
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[DataListSelect] setManualEntry(false) before immediate programmatic commit');
+      setManualEntry(false);
 
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
       handleHexInputChange(address, false);
 
       if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS) {
         const picked = wallets.find((w) => w.address.toLowerCase() === address.toLowerCase());
-        if (picked) setTradingTokenCallback(picked);
+        if (picked) {
+          // DEBUG LOG TO BE REMOVED LATER
+          console.log('[DataListSelect] setTradingTokenCallback (immediate)', {
+            address: picked.address,
+          });
+          setTradingTokenCallback(picked);
+        }
       }
     },
     [
@@ -101,6 +149,8 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       feedType,
       wallets,
       setTradingTokenCallback,
+      setManualEntry,
+      manualEntry,
     ]
   );
 
@@ -150,7 +200,9 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
           tokens.map((token) => {
             // Ensure TokenListItem receives required string props
             const safeName: string =
-              token.name ?? token.symbol ?? (typeof token.address === 'string' ? token.address : String(token.address));
+              token.name ??
+              token.symbol ??
+              (typeof token.address === 'string' ? token.address : String(token.address));
             const safeSymbol: string = token.symbol ?? '';
 
             return (

@@ -1,7 +1,7 @@
 // File: components/views/ManageSponsorships/ManageWallet.tsx
 'use client';
 
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo, useState, useRef } from 'react';
 
 import type { WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, AccountType } from '@/lib/structure';
@@ -9,6 +9,7 @@ import { AssetSelectDisplayProvider } from '@/lib/context/providers/AssetSelect/
 import { AssetSelectProvider } from '@/lib/context/AssetSelectPanels/AssetSelectProvider';
 import AddressSelect from '../AddressSelect';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
+import ToDo from '@/lib/utils/components/ToDo';
 
 type Props = {
   wallet?: WalletAccount;
@@ -56,24 +57,37 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const stakedBalance = 0;
   const pendingBalance = 0;
 
-  // 🔔 Exact same message structure as in ManageWalletList
+  // 🔴 ToDo overlay pattern (matches ManageSponsorships / ManageWalletList)
+  const [showToDo, setShowToDo] = useState<boolean>(false);
+  const pendingClaimRef = useRef<{ type: AccountType } | null>(null);
+
+  // Trigger ToDo (store intent, then show red overlay)
   const claimRewards = useCallback(
     (type: AccountType) => {
-      const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
-
-      // eslint-disable-next-line no-alert
-      alert(
-        [
-          'ToDo:(Not Yet Implemented)',
-          `Claim ${type.toString()} Rewards`,
-          `From: ${name.toString()}`,
-          `From Account: ${address.toString()}`,
-          `For account: ${connected ? connected.address : '(none connected)'}`,
-        ].join('\n')
-      );
+      pendingClaimRef.current = { type };
+      setShowToDo(true);
     },
-    [ctx?.exchangeContext?.accounts?.connectedAccount, name, address]
+    []
   );
+
+  // When ToDo is dismissed, show the alert and hide overlay
+  const doToDo = useCallback(() => {
+    setShowToDo(false);
+
+    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const pending = pendingClaimRef.current ?? { type: accountType };
+
+    // eslint-disable-next-line no-alert
+    alert(
+      [
+        'ToDo:(Not Yet Implemented)',
+        `Claim ${pending.type.toString()} Rewards`,
+        `From: ${name.toString()}`,
+        `From Account: ${address.toString()}`,
+        `For account: ${connected ? connected.address : '(none connected)'}`,
+      ].join('\n')
+    );
+  }, [accountType, ctx?.exchangeContext?.accounts?.connectedAccount, name, address]);
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';
@@ -186,7 +200,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         </table>
       </div>
 
-      {/* Claim Rewards button under the table — same message/behavior as list view */}
+      {/* Claim Rewards button under the table — now uses ToDo flow */}
       <div className="mb-6 flex items-center justify-start">
         <button
           type="button"
@@ -197,6 +211,18 @@ export default function ManageWallet({ wallet, onClose }: Props) {
           Claim Rewards
         </button>
       </div>
+
+      {/* 🔴 ToDo overlay (click the red text to dismiss) */}
+      {showToDo && (
+        <ToDo
+          show
+          message="ToDo"
+          opacity={0.5}
+          color="#ff1a1a"
+          zIndex={2000}
+          onDismiss={doToDo}
+        />
+      )}
 
       {/* Styles (container-scoped, with !important), mirroring ManageSponsors strategy */}
       <style jsx>{`

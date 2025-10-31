@@ -5,16 +5,15 @@ import type { MutableRefObject } from 'react';
 import type {
   SP_COIN_DISPLAY,
   WalletAccount,
-  TokenContract} from '@/lib/structure';
-import {
-  FEED_TYPE
+  TokenContract
 } from '@/lib/structure';
+import { FEED_TYPE } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 
 import { validateFSMCore } from '../../validateFSMCore';
 import type { ValidateFSMInput } from '../../FSM_Core/types/validateFSMTypes';
 
-import type { Address} from 'viem';
+import type { Address } from 'viem';
 import { zeroAddress } from 'viem';
 import { isTriggerFSMState } from '../../FSM_Core/fSMInputStates';
 import { runFSM } from './runFSM';
@@ -81,16 +80,22 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     closePanelCallback,
   } = args;
 
-  if (DEBUG_ENABLED) {
-    console.log(
-      `↪️ enter: input="${debouncedHexInput || '(empty)'}", isValid=${isValid}, failed="${
-        failedHexInput ?? '—'
-      }", manual=${String(manualEntry)}, peer=${peerAddress ?? '—'}, chainId=${chainId}`
-    );
-  }
+  // DEBUG LOG TO BE REMOVED LATER
+  console.log('[startFSM] ↪️ enter', {
+    inputPreview: debouncedHexInput ? debouncedHexInput.slice(0, 10) : '(empty)',
+    isValid,
+    failed: failedHexInput ?? '—',
+    manualEntry: !!manualEntry,
+    peer: peerAddress ?? '—',
+    chainId,
+    containerType,
+    feedType,
+  });
 
   if (!publicClient || !chainId) {
     debug.warn('⛔ Missing publicClient/chainId — skipping FSM run.');
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[startFSM] ⛔ skip: missing publicClient/chainId');
     return null;
   }
 
@@ -101,7 +106,9 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
       '⚠️ publicClient chain mismatch — fix caller to use usePublicClient({ chainId })',
       { expectedChainId: chainId, clientChainId } as any
     );
-    // NOTE: We *do not* bail here; we continue running to preserve behavior.
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[startFSM] ⚠️ chain mismatch', { expected: chainId, clientChainId });
+    // NOTE: Continue to preserve behavior.
   }
 
   const newSignature = makeSignature(debouncedHexInput, isValid);
@@ -109,6 +116,8 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
 
   if (!canRun) {
     if (DEBUG_ENABLED) console.log(`⏸️ Unchanged signature "${newSignature}" — skipping FSM run.`);
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[startFSM] ⏸️ skip run: unchanged signature', { newSignature });
     return null;
   }
 
@@ -116,6 +125,11 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     const reason = signatureDiff(prevDebouncedInputRef.current, newSignature);
     console.log(`▶️ Triggering FSM${reason ? `: ${reason}` : ''}`);
   }
+  // DEBUG LOG TO BE REMOVED LATER
+  console.log('[startFSM] ▶️ trigger run', {
+    prevSignature: prevDebouncedInputRef.current,
+    newSignature,
+  });
 
   // update signature after we decide to run
   prevDebouncedInputRef.current = newSignature;
@@ -142,6 +156,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     publicClient,
     accountAddress: (accountAddress ?? zeroAddress) as Address,
 
+    // ⚠️ Preserve caller-provided manualEntry; default to true (manual) if undefined
     manualEntry: manualEntry ?? true,
     peerAddress,
 
@@ -152,6 +167,13 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     seenBrokenLogos: new Set<string>(),
     resolvedAsset: undefined,
   };
+
+  // DEBUG LOG TO BE REMOVED LATER
+  console.log('[startFSM] current (pre-run)', {
+    state: InputState[current.inputState],
+    manualEntry: current.manualEntry,
+    debouncedHexInputPreview: current.debouncedHexInput?.slice(0, 10),
+  });
 
   // Run the pure FSM loop
   const { finalState, assetAcc } = await runFSM({
@@ -167,6 +189,12 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
           `🟢 ${getStateIcon(prev)} ${InputState[prev]} → ${getStateIcon(next)} ${InputState[next]} (FSM)`
         );
       }
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[startFSM] transition', {
+        from: InputState[prev],
+        to: InputState[next],
+        manualEntry: current.manualEntry,
+      });
       traceSink.onTransition(prev, next);
     },
   });
@@ -203,6 +231,11 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
           logoURL: finalURL,
         });
       }
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[startFSM] logoURL filled at commit stage', {
+        address: addr,
+        logoURL: finalURL,
+      });
     } catch (e) {
       committedAsset = {
         ...(committedAsset as TokenContract),
@@ -215,25 +248,39 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
           error: e,
         });
       }
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[startFSM] logoURL fallback used at commit stage', {
+        address: addr,
+      });
     }
   }
 
-  if (DEBUG_ENABLED) {
-    const addr = (committedAsset as any)?.address ?? '—';
-    const sym = (committedAsset as any)?.symbol ?? '—';
-    const nm = (committedAsset as any)?.name ?? '—';
-    const logo = (committedAsset as any)?.logoURL ?? '—';
-    console.log(
-      `🏁 finalState → ${InputState[finalState]} | asset: { address: ${addr}, symbol: ${sym}, name: ${nm}, logoURL: ${logo} }`
-    );
-  }
+  // DEBUG LOG TO BE REMOVED LATER
+  console.log('[startFSM] 🏁 final', {
+    finalState: InputState[finalState],
+    hasAddr,
+    manualEntry: current.manualEntry,
+    assetPreview: hasAddr ? (committedAsset as any)?.address?.slice(0, 10) : '(none)',
+  });
 
-  // Surface asset only for preview/commit states
+  // Commit/preview classification
   const isCommit =
     finalState === InputState.UPDATE_VALIDATED_ASSET ||
     finalState === InputState.CLOSE_SELECT_PANEL;
   const isPreview = finalState === InputState.VALIDATE_PREVIEW;
 
+  // ✅ Critical gating:
+  // If this was manual entry (typed/pasted), do NOT surface the asset on commit states.
+  // Only DataListSelect (programmatic) should directly return assets for commit.
+  if (isCommit && current.manualEntry) {
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[startFSM] 🚫 commit blocked by manualEntry=true', {
+      finalState: InputState[finalState],
+    });
+    return { finalState }; // no asset returned
+  }
+
+  // Surface asset only for preview (to render) or commit (when allowed)
   return hasAddr && (isPreview || isCommit)
     ? { finalState, asset: committedAsset }
     : { finalState };

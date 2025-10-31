@@ -1,7 +1,7 @@
 // File: components/views/ManageSponsorships/ManageWalletList.tsx
 'use client';
 
-import React, { useMemo, useState, useCallback, useContext } from 'react';
+import React, { useMemo, useState, useCallback, useContext, useRef } from 'react';
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
@@ -45,7 +45,10 @@ export default function ManageWalletList({
   }, [containerType]);
 
   const [mode] = useState<'all' | 'recipients' | 'agents' | 'sponsors'>('all');
-  const [showToDo, setShowToDo] = useState<boolean>(true);
+
+  // 🔴 ToDo overlay pattern (align with other pages)
+  const [showToDo, setShowToDo] = useState<boolean>(false);
+  const pendingClaimRef = useRef<{ type: AccountType; accountId: number } | null>(null);
 
   // Derive role label + id prefix from the enum member name (robust to build differences)
   const { roleLabel, idPrefix } = useMemo(() => {
@@ -56,38 +59,63 @@ export default function ManageWalletList({
     return { roleLabel: 'Agent', idPrefix: 'ma' };
   }, [containerType]);
 
-  // 🛎️ Alert-only placeholder per request — includes account row context
+  // 🛎️ ToDo trigger: store context, then show overlay
   const claimRewards = useCallback(
     (type: AccountType, accountId: number) => {
-      const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
-
-      const isTotal = accountId < 0 || accountId >= walletList.length;
-      const row = isTotal ? undefined : walletList[accountId];
-
-      const rowName = row?.name ?? (row?.address ? shortAddr(String((row as any).address)) : 'N/A');
-      // Some lists may store address under different keys; try common fallbacks
-      const rowAccount =
-        (row as any)?.account ??
-        (row as any)?.address ??
-        (row as any)?.hex ??
-        (row as any)?.bech32 ??
-        (row as any)?.value ??
-        (row as any)?.id ??
-        'N/A';
-
-      // eslint-disable-next-line no-alert
-      alert(
-        [
-          'ToDo:(Not Yet Implemented)',
-          `Claim ${type.toString()} Rewards`,
-          isTotal ? 'From: Total' : `From: ${String(rowName)}`,
-          isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,
-          `For account: ${connected ? connected.address : '(none connected)'}`,
-        ].join('\n')
-      );
+      pendingClaimRef.current = { type, accountId };
+      setShowToDo(true);
     },
-    [ctx?.exchangeContext?.accounts?.connectedAccount, walletList]
+    []
   );
+
+  // 🧾 ToDo dismiss handler: alert with stored context, then hide
+  const doToDo = useCallback(() => {
+    setShowToDo(false);
+
+    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const pending = pendingClaimRef.current ?? { type: accountType, accountId: -1 };
+
+    const isTotal = pending.accountId < 0 || pending.accountId >= walletList.length;
+    const row = isTotal ? undefined : walletList[pending.accountId];
+
+    const addressText =
+      typeof (row as any)?.address === 'string'
+        ? (row as any).address
+        : (() => {
+            const a = (row as any)?.address as Record<string, unknown> | undefined;
+            if (!a) return 'N/A';
+            const cand = a['address'] ?? a['hex'] ?? a['bech32'] ?? a['value'] ?? a['id'];
+            try {
+              return cand ? String(cand) : JSON.stringify(a);
+            } catch {
+              return 'N/A';
+            }
+          })();
+
+    const rowName = row?.name ?? (addressText ? shortAddr(addressText) : 'N/A');
+    const rowAccount =
+      (row as any)?.account ??
+      (row as any)?.address ??
+      (row as any)?.hex ??
+      (row as any)?.bech32 ??
+      (row as any)?.value ??
+      (row as any)?.id ??
+      'N/A';
+
+    const label =
+      pending.type === AccountType.ALL ? 'ALL' : `${pending.type.toString()}${isTotal ? '' : '(s)'}`;
+
+    // eslint-disable-next-line no-alert
+    alert(
+      [
+        'ToDo:(Not Yet Implemented)',
+        `Claim ${label} Rewards`,
+        isTotal ? 'From: Total' : `From: ${String(rowName)}`,
+        isTotal ? 'From Account: (aggregate)' : `From Account: ${String(rowAccount)}`,
+        `For account: ${connected ? connected.address : '(none connected)'}`,
+      ].join('\n')
+    );
+  }, [accountType, ctx?.exchangeContext?.accounts?.connectedAccount, walletList]);
 
   // Scoped ids to avoid CSS collisions across pages
   const wrapperId = `${idPrefix}Wrapper`;
@@ -320,6 +348,7 @@ export default function ManageWalletList({
         </div>
       )}
 
+      {/* 🔴 ToDo overlay (click the red text to dismiss) */}
       {showToDo && (
         <ToDo
           show
@@ -327,7 +356,7 @@ export default function ManageWalletList({
           opacity={0.5}
           color="#ff1a1a"
           zIndex={2000}
-          onDismiss={() => setShowToDo(false)}
+          onDismiss={doToDo}
         />
       )}
     </>

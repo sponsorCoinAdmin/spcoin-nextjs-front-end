@@ -1,14 +1,14 @@
 // File: lib/context/AssetSelectPanels/AssetSelectProvider.tsx
 'use client';
 
-import type { ReactNode} from 'react';
+import type { ReactNode } from 'react';
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import type { Address } from 'viem';
 
 import { AssetSelectContext } from './useAssetSelectContext';
 import type { TokenContract, WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
-import type { AssetSelectBag} from '@/lib/context/structure/types/panelBag';
+import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
 import { isTokenSelectBag } from '@/lib/context/structure/types/panelBag';
 import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -58,16 +58,26 @@ export const AssetSelectProvider = ({
   } = useAssetSelectDisplay();
 
   // Local UI state (kept for compatibility)
-  const [manualEntry, setManualEntry] = useState(false);
+  const [manualEntry, _setManualEntry] = useState(false);
   const [bypassFSM, setBypassFSM] = useState(false);
 
-  // Mount — light summary only
+  // DEBUG LOG TO BE REMOVED LATER
   useEffect(() => {
-    debugLog.log?.(
-      `mount: container=${SP_COIN_DISPLAY[containerType]} | feed=${FEED_TYPE[feedType]} | instance=${instanceId} | hasInitialBag=${!!initialPanelBag}`
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    console.log('[AssetSelectProvider] mount', {
+      instanceId,
+      container: SP_COIN_DISPLAY[containerType],
+      feed: FEED_TYPE[feedType],
+      hasInitialBag: !!initialPanelBag,
+    });
+  }, [instanceId, containerType, feedType, initialPanelBag]);
+
+  // DEBUG LOG TO BE REMOVED LATER
+  useEffect(() => {
+    console.log('[AssetSelectProvider] manualEntry changed →', manualEntry, {
+      instanceId,
+      container: SP_COIN_DISPLAY[containerType],
+    });
+  }, [manualEntry, instanceId, containerType]);
 
   const {
     validatedAsset,
@@ -86,14 +96,14 @@ export const AssetSelectProvider = ({
   // Bridge to FSM
   const {
     inputState,
-    setInputState,
+    setInputState: _setInputState,
     validHexInput,
     debouncedHexInput,
     failedHexInput,
     failedHexCount,
     isValid,
     isValidHexString,
-    handleHexInputChange,
+    handleHexInputChange: _handleHexInputChange,
     resetHexInput,
     dumpInputFeed,
     dumpFSM,
@@ -114,6 +124,55 @@ export const AssetSelectProvider = ({
     bypassFSM,
   });
 
+  // ---- Debug wrappers (no behavior change) ----
+
+  const setManualEntry = useCallback((flag: boolean) => {
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[AssetSelectProvider] setManualEntry called →', flag, {
+      instanceId,
+      fromState: manualEntry,
+    });
+    _setManualEntry(flag);
+  }, [instanceId, manualEntry]);
+
+  const setInputState = useCallback((state: any, source?: string) => {
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[AssetSelectProvider] setInputState()', {
+      requested: state,
+      source: source ?? '(none)',
+      instanceId,
+      manualEntry,
+      debouncedHexInput,
+    });
+    _setInputState(state, source);
+  }, [_setInputState, instanceId, manualEntry, debouncedHexInput]);
+
+  const handleHexInputChange = useCallback((raw: string, isManual?: boolean) => {
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[AssetSelectProvider] handleHexInputChange()', {
+      rawPreview: raw?.slice(0, 12),
+      isManual,
+      instanceId,
+      manualEntry,
+    });
+    const res = _handleHexInputChange(raw, isManual);
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[AssetSelectProvider] handleHexInputChange result →', res);
+    return res;
+  }, [_handleHexInputChange, instanceId, manualEntry]);
+
+  const setValidatedAssetLogged = useCallback((asset?: TokenContract | WalletAccount) => {
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[AssetSelectProvider] setValidatedAsset()', {
+      instanceId,
+      manualEntry,
+      addr: (asset as any)?.address ?? '(none)',
+      sym: (asset as any)?.symbol ?? '(none)',
+      name: (asset as any)?.name ?? '(none)',
+    });
+    setValidatedAsset(asset as any);
+  }, [instanceId, manualEntry, setValidatedAsset]);
+
   // InputState transitions
   const prevStateRef = useRef(inputState);
   useEffect(() => {
@@ -123,9 +182,16 @@ export const AssetSelectProvider = ({
         from: prevStateRef.current,
         to: inputState,
       });
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[AssetSelectProvider] inputState transition', {
+        instanceId,
+        from: prevStateRef.current,
+        to: inputState,
+        manualEntry,
+      });
       prevStateRef.current = inputState;
     }
-  }, [inputState, instanceId]);
+  }, [inputState, instanceId, manualEntry]);
 
   // Log when validatedAsset changes (guarded)
   const prevValidatedRef = useRef<TokenContract | WalletAccount | undefined>(undefined);
@@ -138,13 +204,28 @@ export const AssetSelectProvider = ({
         symbol: a?.symbol ?? '(none)',
         name: a?.name ?? '(none)',
       });
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[AssetSelectProvider] validatedAsset changed', {
+        instanceId,
+        address: a?.address ?? '(none)',
+        symbol: a?.symbol ?? '(none)',
+        name: a?.name ?? '(none)',
+        manualEntry,
+      });
       prevValidatedRef.current = validatedAsset;
     }
-  }, [validatedAsset, instanceId]);
+  }, [validatedAsset, instanceId, manualEntry]);
 
   // Context-facing wrappers (minimal logging)
   const setTradingTokenCallbackCtx = useCallback(
     (asset: TokenContract | WalletAccount) => {
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[AssetSelectProvider] setTradingTokenCallback (ctx)', {
+        instanceId,
+        manualEntry,
+        address: (asset as any)?.address ?? '(none)',
+        symbol: (asset as any)?.symbol ?? '(none)',
+      });
       debugLog.log?.('setTradingTokenCallback', {
         instanceId,
         address: (asset as any)?.address ?? '(none)',
@@ -152,13 +233,15 @@ export const AssetSelectProvider = ({
       });
       setSelectedAssetCallback(asset);
     },
-    [instanceId, setSelectedAssetCallback]
+    [instanceId, setSelectedAssetCallback, manualEntry]
   );
 
   const closePanelCallbackCtx = useCallback(() => {
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[AssetSelectProvider] closePanelCallback()', { instanceId, manualEntry });
     debugLog.log?.('closePanelCallback', { instanceId });
     closePanelCallback(true);
-  }, [instanceId, closePanelCallback]);
+  }, [instanceId, closePanelCallback, manualEntry]);
 
   // 🔸 Always-present no-ops to satisfy strict context type
   const dumpFSMContext = useCallback(
@@ -193,15 +276,15 @@ export const AssetSelectProvider = ({
     () => ({
       // FSM state + controls
       inputState,
-      setInputState,
+      setInputState, // wrapped
 
       // Validated asset
       validatedAsset: validatedAssetNarrow,
-      setValidatedAsset: setValidatedAssetNarrow,
+      setValidatedAsset: setValidatedAssetLogged, // wrapped
 
       // Local flags (compat)
       manualEntry,
-      setManualEntry,
+      setManualEntry, // wrapped
       bypassFSM,
       setBypassFSM,
 
@@ -221,7 +304,7 @@ export const AssetSelectProvider = ({
       failedHexCount,
       isValid,
       isValidHexString,
-      handleHexInputChange,
+      handleHexInputChange, // wrapped
       resetHexInput,
 
       // Identity / meta
@@ -248,7 +331,7 @@ export const AssetSelectProvider = ({
       // FSM / validated
       inputState,
       validatedAssetNarrow,
-      setValidatedAssetNarrow,
+      setValidatedAssetLogged, // wrapped
 
       // flags
       manualEntry,
@@ -261,7 +344,7 @@ export const AssetSelectProvider = ({
       failedHexCount,
       isValid,
       isValidHexString,
-      handleHexInputChange,
+      handleHexInputChange, // wrapped
       resetHexInput,
 
       // identity

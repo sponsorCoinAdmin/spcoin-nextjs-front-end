@@ -1,4 +1,5 @@
 // File: lib/hooks/inputValidations/FSM_Core/validationTests/validateExistsOnChain.ts
+'use client';
 
 import type { Address } from 'viem';
 import { isAddress } from 'viem';
@@ -55,9 +56,9 @@ async function getBytecodeWithTiming(
 
 /**
  * On-chain existence gate.
- * - TOKEN_LIST flows require contract bytecode.
+ * - TOKEN_LIST flows require contract bytecode (except native token).
  * - Non-token flows accept EOAs (bytecode '0x') as valid accounts.
- * - Native token address short-circuits to RESOLVE_ASSET.
+ * - Native token address short-circuits (case-insensitive) to RESOLVE_ASSET.
  *
  * ⚙️ Policy-aware: respects studyPolicy for VALIDATE_EXISTS_ON_CHAIN.
  */
@@ -65,9 +66,9 @@ export async function validateExistsOnChain(
   {
     debouncedHexInput,
     publicClient,
-    feedType,     // ← use the feed type to decide EOA handling
-    appChainId,   // optional; used only for logging/mismatch detection
-    containerType, // ← panel that invoked the study (policy gate)
+    feedType,
+    appChainId,
+    containerType,
   }: ValidateFSMInput & { appChainId?: number; containerType: SP_COIN_DISPLAY }
 ): Promise<ValidateFSMOutput> {
   const addr = (debouncedHexInput ?? '').trim() as Address;
@@ -77,12 +78,17 @@ export async function validateExistsOnChain(
   const clientChainId = clientSummary.chainId as number | undefined;
   const rpcUrl = clientSummary.transportUrl;
 
+  // Case-insensitive native token detection
+  const NATIVE_LC = NATIVE_TOKEN_ADDRESS.toLowerCase();
+  const isNativeCaseInsensitive = addr.toLowerCase() === NATIVE_LC;
+
   log.log?.(
     `[${traceId}] [ENTRY] validateExistsOnChain`,
     {
       address: addr,
       isAddress: isAddress(addr || '0x'),
-      isNative: addr === NATIVE_TOKEN_ADDRESS,
+      isNativeStrict: addr === NATIVE_TOKEN_ADDRESS,
+      isNativeCaseInsensitive,
       feedType,
       appChainId,
       clientChainId,
@@ -101,9 +107,11 @@ export async function validateExistsOnChain(
     return { nextState: InputState.RESOLVE_ASSET };
   }
 
-  // Native token has no bytecode by definition
-  if (addr === NATIVE_TOKEN_ADDRESS) {
-    log.log?.(`[${traceId}] [SHORT-CIRCUIT] Native token → RESOLVE_ASSET`);
+  // ✅ Native token has no bytecode; short-circuit (case-insensitive)
+  if (isNativeCaseInsensitive) {
+    log.log?.(
+      `[${traceId}] [SHORT-CIRCUIT] Native token (${NATIVE_TOKEN_ADDRESS}) matched case-insensitively → RESOLVE_ASSET`
+    );
     return { nextState: InputState.RESOLVE_ASSET };
   }
 
@@ -155,9 +163,8 @@ export async function validateExistsOnChain(
       exists = !!bytecode && bytecode !== '0x';
     }
 
-    // Decide based on feed type
     if (feedType === FEED_TYPE.TOKEN_LIST) {
-      // Token flow: require contract code
+      // Token flow: require contract code (but native already short-circuited above)
       if (!exists) {
         const why = bytecode === null ? 'null' : bytecode === '0x' ? 'EOA-or-no-code' : `len=${bytecode.length}`;
         log.log?.(
@@ -176,9 +183,8 @@ export async function validateExistsOnChain(
       );
       return { nextState: InputState.RESOLVE_ASSET };
     } else {
-      // Account/recipient/agent/sponsor flows: EOAs are valid
+      // Account-like flows: EOA or contract → both acceptable
       if (bytecode === null) {
-        // RPC failed repeatedly; this is a transport issue
         const msg = `Bytecode read failed (null) via ${rpcUrl}`;
         log.warn?.(
           `[${traceId}] [RESULT] Transport issue → CONTRACT_NOT_FOUND_ON_BLOCKCHAIN`,
@@ -190,7 +196,6 @@ export async function validateExistsOnChain(
         };
       }
 
-      // Either '0x' (EOA) or contract code — both acceptable for "account-like" feeds
       const kind = bytecode === '0x' ? 'EOA' : `contract(len=${bytecode.length})`;
       log.log?.(
         `[${traceId}] [RESULT] ${kind} acceptable for non-token flow → RESOLVE_ASSET`,

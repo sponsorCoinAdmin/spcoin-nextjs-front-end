@@ -37,7 +37,7 @@ type BridgeParams = {
   // (optional) external reset injection
   resetHexInputExternal?: (() => void) | undefined;
 
-  // ⬇️ NEW: per-instance bypass
+  // ⬇️ per-instance bypass
   bypassFSM?: boolean;
 };
 
@@ -59,8 +59,22 @@ export function useFSMBridge(params: BridgeParams) {
     bypassFSM = false,
   } = params;
 
+  // DEBUG LOG TO BE REMOVED LATER
+  console.log('[useFSMBridge] mount', {
+    instanceId,
+    containerType,
+    feedType,
+    peerAddress,
+    manualEntry,
+    bypassFSM,
+  });
+
   const manualEntryRef = useRef(manualEntry);
-  useEffect(() => { manualEntryRef.current = manualEntry; }, [manualEntry]);
+  useEffect(() => {
+    manualEntryRef.current = manualEntry;
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[useFSMBridge] manualEntry ->', manualEntry, { instanceId });
+  }, [manualEntry, instanceId]);
 
   const {
     inputState,
@@ -82,8 +96,25 @@ export function useFSMBridge(params: BridgeParams) {
     setTradingTokenCallback: fireSetTradingToken,
     peerAddress,
     manualEntry: manualEntryRef.current,
-    bypassFSM, // ⬅️ pass down
+    bypassFSM,
   });
+
+  // DEBUG: inputState transitions (prev → next)
+  const prevStateRef = useRef<InputState>(inputState);
+  useEffect(() => {
+    if (prevStateRef.current !== inputState) {
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[useFSMBridge] inputState transition', {
+        instanceId,
+        from: InputState[prevStateRef.current],
+        to: InputState[inputState],
+        manualEntryAtTransition: manualEntryRef.current,
+        debouncedHexInput,
+        bypassFSM,
+      });
+      prevStateRef.current = inputState;
+    }
+  }, [inputState, instanceId, debouncedHexInput, bypassFSM]);
 
   // Terminal transition guard (StrictMode-friendly)
   const didHandleTerminalRef = useRef(false);
@@ -92,17 +123,38 @@ export function useFSMBridge(params: BridgeParams) {
   useEffect(() => {
     if (bypassFSM) {
       didHandleTerminalRef.current = false;
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[useFSMBridge] bypassFSM active — terminal handlers muted', { instanceId });
       return;
     }
 
     if (inputState === InputState.UPDATE_VALIDATED_ASSET) {
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[useFSMBridge] UPDATE_VALIDATED_ASSET reached', {
+        instanceId,
+        hasValidatedAsset: !!validatedAsset,
+        manualEntryAtCommit: manualEntryRef.current,
+      });
+
       if (didHandleTerminalRef.current) return;
       didHandleTerminalRef.current = true;
 
       if (!validatedAsset) {
         debugLog.warn?.(`[${instanceId}] UPDATE_VALIDATED_ASSET with no validatedAsset`);
       } else {
-        debugLog.log?.(`[${instanceId}] ✅ commit validatedAsset → setTradingToken`);
+        // ⚠️ This is where a *manual* entry should NEVER auto-commit.
+        // If we ever see manualEntryAtCommit === true here, something upstream didn’t gate it.
+        // DEBUG LOG TO BE REMOVED LATER
+        if (manualEntryRef.current) {
+          console.warn(
+            '[useFSMBridge] WARNING: manualEntry was TRUE at UPDATE_VALIDATED_ASSET — this should be gated upstream',
+            { instanceId }
+          );
+        }
+
+        debugLog.log?.(
+          `[${instanceId}] ✅ commit validatedAsset → setTradingToken (manual=${manualEntryRef.current})`
+        );
         fireSetTradingToken(validatedAsset);
       }
       setInputState(InputState.CLOSE_SELECT_PANEL, `Bridge(${instanceId}) commit → close`);
@@ -110,15 +162,23 @@ export function useFSMBridge(params: BridgeParams) {
     }
 
     if (inputState === InputState.CLOSE_SELECT_PANEL) {
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[useFSMBridge] CLOSE_SELECT_PANEL', {
+        instanceId,
+        handled: didHandleTerminalRef.current,
+        hasValidatedAsset: !!validatedAsset,
+      });
+
       if (!didHandleTerminalRef.current) {
         debugLog.warn?.(
-          `[${instanceId}] CLOSE_SELECT_PANEL before commit (asset=${String(!!validatedAsset)})`,
+          `[${instanceId}] CLOSE_SELECT_PANEL before commit (asset=${String(!!validatedAsset)})`
         );
       }
       try {
         fireClosePanel(true);
       } finally {
-        debugLog.log?.(`[${instanceId}] ♻️ reset after close`);
+        // DEBUG LOG TO BE REMOVED LATER
+        console.log('[useFSMBridge] CLOSE_SELECT_PANEL → cleanup & reset', { instanceId });
         resetPreview();
         setValidatedAsset(undefined);
         (resetHexInputExternal ?? resetHexInput)();
@@ -132,6 +192,13 @@ export function useFSMBridge(params: BridgeParams) {
   // UI preview bridge — muted while bypassing
   useEffect(() => {
     if (bypassFSM) return;
+
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[useFSMBridge] preview bridge', {
+      instanceId,
+      inputState: InputState[inputState],
+      hasValidatedAsset: !!validatedAsset,
+    });
 
     switch (inputState) {
       case InputState.EMPTY_INPUT:
@@ -154,6 +221,8 @@ export function useFSMBridge(params: BridgeParams) {
   const dumpInputFeed = useCallback(
     (header?: string) => {
       if (!DEBUG_ENABLED) return;
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[useFSMBridge] dumpInputFeed()', { instanceId, header });
       dumpInputFeedContext(
         header ?? '',
         validHexInput,
@@ -161,7 +230,7 @@ export function useFSMBridge(params: BridgeParams) {
         failedHexInput,
         failedHexCount,
         isValid,
-        instanceId,
+        instanceId
       );
     },
     [
@@ -171,16 +240,18 @@ export function useFSMBridge(params: BridgeParams) {
       failedHexCount,
       isValid,
       instanceId,
-    ],
+    ]
   );
 
   const dumpFSM = useCallback(
     (header?: string) => {
       if (!DEBUG_ENABLED) return;
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[useFSMBridge] dumpFSM()', { instanceId, header });
       dumpFSMContext(header ?? '', inputState, validatedAsset as TokenContract | undefined, instanceId);
       dumpInputFeed(header ?? '');
     },
-    [inputState, validatedAsset, dumpInputFeed, instanceId],
+    [inputState, validatedAsset, dumpInputFeed, instanceId]
   );
 
   return {

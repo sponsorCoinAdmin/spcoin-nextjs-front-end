@@ -28,9 +28,26 @@ export default function RenderAssetPreview() {
     setInputState,
     feedType,
     setManualEntry,
+    manualEntry, // ⬅️ bring it in so we can gate commit
   } = ctx;
 
   const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
+
+  // DEBUG LOG TO BE REMOVED LATER
+  useEffect(() => {
+    console.log('[RenderAssetPreview] mount', {
+      feedType,
+    });
+  }, [feedType]);
+
+  // DEBUG LOG TO BE REMOVED LATER
+  useEffect(() => {
+    console.log('[RenderAssetPreview] state change', {
+      inputState: InputState[inputState],
+      hasValidatedAsset: Boolean(validatedAsset),
+      manualEntry,
+    });
+  }, [inputState, validatedAsset, manualEntry]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,9 +61,19 @@ export default function RenderAssetPreview() {
       // Default while resolving/guarding
       setAvatarSrc(prev => prev || defaultMissingImage);
 
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[RenderAssetPreview] resolveLogo start', {
+        visible,
+        addressPreview: address?.slice(0, 10) ?? '(none)',
+        feedType: FEED_TYPE[feedType],
+        chainId,
+      });
+
       if (feedType === FEED_TYPE.TOKEN_LIST) {
         if (!address || !chainId) {
           if (!cancelled) setAvatarSrc(defaultMissingImage);
+          // DEBUG LOG TO BE REMOVED LATER
+          console.log('[RenderAssetPreview] resolveLogo early-exit: missing address/chainId');
           return;
         }
         try {
@@ -87,8 +114,23 @@ export default function RenderAssetPreview() {
   const onAvatarClick = () => {
     if (!address) return;
 
+    // DEBUG LOG TO BE REMOVED LATER
+    console.log('[RenderAssetPreview] onAvatarClick', {
+      manualEntry,
+      addressPreview: address.slice(0, 10),
+      inputState: InputState[inputState],
+    });
+
+    // 🚫 Gate: If the user is in manual-entry mode, do NOT commit directly from preview.
+    if (manualEntry) {
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[RenderAssetPreview] blocked commit because manualEntry===true');
+      return;
+    }
+
     try {
-      setManualEntry?.(false);
+      // Make extra-sure the flag is false for programmatic commit paths.
+      setManualEntry?.(false); // harmless if already false
 
       // Ensure chainId/address present on the committed object
       const assetToCommit: any = { ...validatedAsset };
@@ -133,10 +175,10 @@ export default function RenderAssetPreview() {
   };
 
   return (
-    <div id="RenderAssetPreview" className="w-full">
+    <div id='RenderAssetPreview' className='w-full'>
       <BasePreviewWrapper show>
         <BaseListRow
-          className="w-full"
+          className='w-full'
           avatarSrc={avatarSrc}
           title={name}
           subtitle={symbol}

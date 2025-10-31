@@ -51,7 +51,21 @@ export default function ManageSponsor({ onClose }: Props) {
     )
   );
 
-  const [showToDo, setShowToDo] = useState<boolean>(true);
+    const doToDo = useCallback(() => {
+    setShowToDo(false);
+    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const name = sponsorWallet?.name ?? 'N/A';
+    const addr = sponsorWallet?.address ?? '(no sponsor selected)';
+    const msg =
+      'ToDo: (Not Yet Implemented)\n' +
+      `Manage Sponsor actions for: ${name}\n` +
+      `Sponsor address: ${addr}\n` +
+      `Connected account: ${connected ? connected.address : '(none connected)'}`;
+    // eslint-disable-next-line no-alert
+    alert(msg);
+  }, [ctx?.exchangeContext?.accounts?.connectedAccount, sponsorWallet?.name, sponsorWallet?.address]);
+
+  const [showToDo, setShowToDo] = useState<boolean>(false);
 
   const handleClose = useCallback(() => {
     openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
@@ -71,7 +85,7 @@ export default function ManageSponsor({ onClose }: Props) {
           opacity={0.5}
           color="#ff1a1a"
           zIndex={2000}
-          onDismiss={() => setShowToDo(false)}
+          onDismiss={() => doToDo()}
         />
       )}
     </>
