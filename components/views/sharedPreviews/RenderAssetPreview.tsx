@@ -1,7 +1,7 @@
 // File: components/shared/utils/sharedPreviews/RenderAssetPreview.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Address } from 'viem';
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetSelectContext';
@@ -12,13 +12,14 @@ import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import BaseListRow from '@/components/views/ListItems/BaseListRow';
-import { useAppChainId } from '@/lib/context/hooks'; // ✅ correct source
+import { useAppChainId } from '@/lib/context/hooks';
+import { flushSync } from 'react-dom';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
 const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
 
 export default function RenderAssetPreview() {
-  const [chainId] = useAppChainId(); // ✅ tuple form
+  const [chainId] = useAppChainId();
   const ctx: any = useAssetSelectContext();
 
   const {
@@ -27,27 +28,15 @@ export default function RenderAssetPreview() {
     setValidatedAsset,
     setInputState,
     feedType,
+    manualEntry,
     setManualEntry,
-    manualEntry, // ⬅️ bring it in so we can gate commit
   } = ctx;
 
+  // Keep a live ref of manualEntry so logs always show the freshest value
+  const manualEntryRef = useRef<boolean>(!!manualEntry);
+  useEffect(() => { manualEntryRef.current = !!manualEntry; }, [manualEntry]);
+
   const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
-
-  // DEBUG LOG TO BE REMOVED LATER
-  useEffect(() => {
-    console.log('[RenderAssetPreview] mount', {
-      feedType,
-    });
-  }, [feedType]);
-
-  // DEBUG LOG TO BE REMOVED LATER
-  useEffect(() => {
-    console.log('[RenderAssetPreview] state change', {
-      inputState: InputState[inputState],
-      hasValidatedAsset: Boolean(validatedAsset),
-      manualEntry,
-    });
-  }, [inputState, validatedAsset, manualEntry]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,21 +48,11 @@ export default function RenderAssetPreview() {
       const address = validatedAsset.address as string | undefined;
 
       // Default while resolving/guarding
-      setAvatarSrc(prev => prev || defaultMissingImage);
-
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[RenderAssetPreview] resolveLogo start', {
-        visible,
-        addressPreview: address?.slice(0, 10) ?? '(none)',
-        feedType: FEED_TYPE[feedType],
-        chainId,
-      });
+      setAvatarSrc((prev) => prev || defaultMissingImage);
 
       if (feedType === FEED_TYPE.TOKEN_LIST) {
         if (!address || !chainId) {
           if (!cancelled) setAvatarSrc(defaultMissingImage);
-          // DEBUG LOG TO BE REMOVED LATER
-          console.log('[RenderAssetPreview] resolveLogo early-exit: missing address/chainId');
           return;
         }
         try {
@@ -99,9 +78,7 @@ export default function RenderAssetPreview() {
     };
 
     resolveLogo();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [inputState, validatedAsset, feedType, chainId]);
 
   const visible = isRenderFSMState(inputState);
@@ -116,30 +93,27 @@ export default function RenderAssetPreview() {
 
     // DEBUG LOG TO BE REMOVED LATER
     console.log('[RenderAssetPreview] onAvatarClick', {
-      manualEntry,
+      manualEntry: manualEntryRef.current,
       addressPreview: address.slice(0, 10),
       inputState: InputState[inputState],
     });
 
-    // 🚫 Gate: If the user is in manual-entry mode, do NOT commit directly from preview.
-    if (manualEntry) {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[RenderAssetPreview] blocked commit because manualEntry===true');
-      return;
-    }
-
     try {
-      // Make extra-sure the flag is false for programmatic commit paths.
-      setManualEntry?.(false); // harmless if already false
+      // 1) Flip manualEntry to false **synchronously** so downstream commit treats this as programmatic
+      // DEBUG LOG TO BE REMOVED LATER
+      console.log('[RenderAssetPreview] forcing manualEntry=false before commit');
+      flushSync(() => setManualEntry?.(false));
 
-      // Ensure chainId/address present on the committed object
+      // 2) Ensure chainId/address present on the committed object
       const assetToCommit: any = { ...validatedAsset };
       if (!assetToCommit.address) assetToCommit.address = address as Address;
       if (!assetToCommit.chainId) assetToCommit.chainId = chainId;
 
+      // 3) Write the validated asset
       if (typeof setValidatedAsset === 'function') {
         setValidatedAsset(assetToCommit);
-        debugLog.log('✅ setValidatedAsset dispatched', {
+        // DEBUG LOG TO BE REMOVED LATER
+        console.log('[RenderAssetPreview] setValidatedAsset dispatched', {
           address: assetToCommit.address,
           chainId: assetToCommit.chainId,
           symbol: assetToCommit.symbol,
@@ -149,9 +123,11 @@ export default function RenderAssetPreview() {
         debugLog.warn('⚠️ setValidatedAsset not available in context');
       }
 
+      // 4) Now that manualEntry is definitely false, advance FSM → UPDATE_VALIDATED_ASSET
+      //    Bridge will commit to context, then CLOSE_SELECT_PANEL, then reset.
       setInputState(
         InputState.UPDATE_VALIDATED_ASSET,
-        'RenderAssetPreview → UPDATE_VALIDATED_ASSET'
+        'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)'
       );
     } catch (err) {
       debugLog.error('❌ Failed to dispatch validated asset', err);
@@ -175,10 +151,10 @@ export default function RenderAssetPreview() {
   };
 
   return (
-    <div id='RenderAssetPreview' className='w-full'>
+    <div id="RenderAssetPreview" className="w-full">
       <BasePreviewWrapper show>
         <BaseListRow
-          className='w-full'
+          className="w-full"
           avatarSrc={avatarSrc}
           title={name}
           subtitle={symbol}

@@ -1,8 +1,6 @@
 // File: lib/hooks/inputValidations/FSM_Core/validateFSMCore.ts
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-
-
 import { InputState } from '@/lib/structure/assetSelection';
 import type { ValidateFSMOutput, ValidateFSMInput } from './FSM_Core/types/validateFSMTypes';
 import { closeSelectPanel } from './FSM_Core/validationTests/closeSelectPanel';
@@ -82,10 +80,24 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       await step(out, F.EXISTS_ONCHAIN, () => validateExistsOnChain(input), InputState.RESOLVE_ASSET);
       break;
 
-    case InputState.RESOLVE_ASSET:
+    case InputState.RESOLVE_ASSET: {
       // 🔧 crucial: panel-aware; returns assetPatch for account-like flows
       await step(out, F.RESOLVE, () => resolveAsset(input), InputState.UPDATE_VALIDATED_ASSET);
+
+      // DEBUG LOG TO BE REMOVED LATER
+      // At this point, `out.nextState` is typically UPDATE_VALIDATED_ASSET.
+      // If the input came from *manual entry* (typed/pasted), we *preview* instead of committing.
+      // This forces <RenderAssetPreview /> to show and waits for an explicit user click to commit.
+      if (out.nextState === InputState.UPDATE_VALIDATED_ASSET && input.manualEntry) {
+        // DEBUG LOG TO BE REMOVED LATER
+        console.log('[validateFSMCore] manualEntry=true → route to VALIDATE_PREVIEW (was UPDATE_VALIDATED_ASSET)', {
+          container: input.containerType,
+          feedType: input.feedType,
+        });
+        out.nextState = InputState.VALIDATE_PREVIEW;
+      }
       break;
+    }
 
     case InputState.UPDATE_VALIDATED_ASSET:
       // Your updateValidated should read input.assetPatch (runner merges patches across steps)
