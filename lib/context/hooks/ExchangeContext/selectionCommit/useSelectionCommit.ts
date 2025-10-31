@@ -35,30 +35,22 @@ export function useSelectionCommit(): UseSelectionCommit {
   const { setExchangeContext } = useExchangeContext();
 
   const finish = useCallback(() => {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[useSelectionCommit] finish() → openPanel(TRADING_STATION_PANEL)');
+    log.log?.('finish → openPanel(TRADING_STATION_PANEL)');
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
   }, [openPanel]);
 
   const commitBuyToken = useCallback(
     (t: TokenContract) => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitBuyToken START', {
-        address: (t as any)?.address,
-        symbol: (t as any)?.symbol,
-      });
+      const addr = (t as any)?.address;
+      const sym = (t as any)?.symbol;
 
-      if (!t || !(t as any)?.address) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.warn('[useSelectionCommit] commitBuyToken aborted: missing token or address', t);
+      if (!t || !addr) {
+        log.warn?.('commitBuyToken aborted: missing token or address', { token: t });
         return;
       }
 
-      log.log?.('commitBuyToken', (t as any)?.address);
+      log.log?.('commitBuyToken', { address: addr, symbol: sym });
       setBuyTokenContract(t);
-
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitBuyToken DONE → finish()');
       finish();
     },
     [setBuyTokenContract, finish]
@@ -66,23 +58,16 @@ export function useSelectionCommit(): UseSelectionCommit {
 
   const commitSellToken = useCallback(
     (t: TokenContract) => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitSellToken START', {
-        address: (t as any)?.address,
-        symbol: (t as any)?.symbol,
-      });
+      const addr = (t as any)?.address;
+      const sym = (t as any)?.symbol;
 
-      if (!t || !(t as any)?.address) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.warn('[useSelectionCommit] commitSellToken aborted: missing token or address', t);
+      if (!t || !addr) {
+        log.warn?.('commitSellToken aborted: missing token or address', { token: t });
         return;
       }
 
-      log.log?.('commitSellToken', (t as any)?.address);
+      log.log?.('commitSellToken', { address: addr, symbol: sym });
       setSellTokenContract(t);
-
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitSellToken DONE → finish()');
       finish();
     },
     [setSellTokenContract, finish]
@@ -90,40 +75,28 @@ export function useSelectionCommit(): UseSelectionCommit {
 
   const commitToken = useCallback(
     (t: TokenContract, side: 'buy' | 'sell') => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitToken START', {
-        side,
-        address: (t as any)?.address,
-        symbol: (t as any)?.symbol,
-      });
-
+      log.log?.('commitToken', { side, address: (t as any)?.address, symbol: (t as any)?.symbol });
       if (side === 'buy') {
         commitBuyToken(t);
       } else {
         commitSellToken(t);
       }
-
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitToken END', { side });
     },
     [commitBuyToken, commitSellToken]
   );
 
   const commitRecipient = useCallback(
     (w: WalletAccount) => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitRecipient START', {
-        address: (w as any)?.address,
-        name: (w as any)?.name,
-      });
+      const addr = (w as any)?.address;
+      const name = (w as any)?.name;
 
-      if (!w || !(w as any)?.address) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.warn('[useSelectionCommit] commitRecipient aborted: missing wallet or address', w);
+      if (!w || !addr) {
+        log.warn?.('commitRecipient aborted: missing wallet or address', { wallet: w });
         return;
       }
 
-      log.log?.('commitRecipient', (w as any)?.address);
+      log.log?.('commitRecipient', { address: addr, name });
+
       setExchangeContext(
         (prev) => {
           const next: any = structuredClone(prev);
@@ -134,8 +107,6 @@ export function useSelectionCommit(): UseSelectionCommit {
         'useSelectionCommit:recipient'
       );
 
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitRecipient DONE → finish()');
       finish();
     },
     [setExchangeContext, finish]
@@ -143,19 +114,16 @@ export function useSelectionCommit(): UseSelectionCommit {
 
   const commitAgent = useCallback(
     (w: WalletAccount) => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitAgent START', {
-        address: (w as any)?.address,
-        name: (w as any)?.name,
-      });
+      const addr = (w as any)?.address;
+      const name = (w as any)?.name;
 
-      if (!w || !(w as any)?.address) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.warn('[useSelectionCommit] commitAgent aborted: missing wallet or address', w);
+      if (!w || !addr) {
+        log.warn?.('commitAgent aborted: missing wallet or address', { wallet: w });
         return;
       }
 
-      log.log?.('commitAgent', (w as any)?.address);
+      log.log?.('commitAgent', { address: addr, name });
+
       setExchangeContext(
         (prev) => {
           const next: any = structuredClone(prev);
@@ -166,8 +134,6 @@ export function useSelectionCommit(): UseSelectionCommit {
         'useSelectionCommit:agent'
       );
 
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[useSelectionCommit] commitAgent DONE → finish()');
       finish();
     },
     [setExchangeContext, finish]

@@ -8,6 +8,7 @@ import TokenListItem from './ListItems/TokenListItem';
 import AccountListItem from './ListItems/AccountListItem';
 import { useAssetSelectContext } from '@/lib/context';
 import { useEnsureBoolWhen } from '@/lib/hooks/useSettledState';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 // Normalize the token feed so TokenListItem always receives strict strings
 export type TokenFeedItem = {
@@ -30,6 +31,10 @@ type Props = {
   /** Which feed we’re rendering, to wire selection behavior. */
   feedType: FEED_TYPE;
 };
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_DATALIST === 'true';
+const debugLog = createDebugLogger('DataListSelect', DEBUG_ENABLED, LOG_TIME);
 
 export default function DataListSelect({ feedData, loading = false, feedType }: Props) {
   // 💡 SSOT: use props directly; do not copy to local state
@@ -54,9 +59,8 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     enforceProgrammatic
   );
 
-  // DEBUG LOG TO BE REMOVED LATER
   useEffect(() => {
-    console.log('[DataListSelect] mount', {
+    debugLog.log?.('[mount]', {
       feedType,
       walletsCount: wallets.length,
       tokensCount: tokens.length,
@@ -72,15 +76,10 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     pendingPickRef.current = null;
     setEnforceProgrammatic(false);
 
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[DataListSelect] deferred programmatic commit', {
-      addr,
-      programmaticReady,
-    });
+    debugLog.log?.('[deferred-commit] begin', { addr, programmaticReady });
 
     // ✅ Programmatic flow: ensure manualEntry=false
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[DataListSelect] setManualEntry(false) before deferred commit');
+    debugLog.log?.('[deferred-commit] setManualEntry(false)');
     setManualEntry(false);
 
     setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic commit)');
@@ -89,13 +88,12 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS) {
       const picked = wallets.find((w) => w.address.toLowerCase() === addr.toLowerCase());
       if (picked) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.log('[DataListSelect] setTradingTokenCallback (deferred)', {
-          address: picked.address,
-        });
+        debugLog.log?.('[deferred-commit] setTradingTokenCallback', { address: picked.address });
         setTradingTokenCallback(picked);
       }
     }
+
+    debugLog.log?.('[deferred-commit] end');
   }, [
     programmaticReady,
     handleHexInputChange,
@@ -108,24 +106,21 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
 
   const handlePickAddress = useCallback(
     (address: string) => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[DataListSelect] handlePickAddress', {
+      debugLog.log?.('[pick]', {
         addressPreview: address?.slice(0, 10),
         manualEntry,
         programmaticReady,
       });
 
       if (!programmaticReady) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.log('[DataListSelect] not ready → deferring pick', { address });
+        debugLog.log?.('[pick] not ready → deferring', { address });
         pendingPickRef.current = address;
         setEnforceProgrammatic(true);
         return;
       }
 
       // ✅ Programmatic flow: ensure manualEntry=false before we kick FSM
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[DataListSelect] setManualEntry(false) before immediate programmatic commit');
+      debugLog.log?.('[pick] setManualEntry(false) immediate');
       setManualEntry(false);
 
       setInputState(InputState.EMPTY_INPUT, 'DataListSelect (Programmatic)');
@@ -134,10 +129,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
       if (feedType === FEED_TYPE.RECIPIENT_ACCOUNTS || feedType === FEED_TYPE.AGENT_ACCOUNTS) {
         const picked = wallets.find((w) => w.address.toLowerCase() === address.toLowerCase());
         if (picked) {
-          // DEBUG LOG TO BE REMOVED LATER
-          console.log('[DataListSelect] setTradingTokenCallback (immediate)', {
-            address: picked.address,
-          });
+          debugLog.log?.('[pick] setTradingTokenCallback immediate', { address: picked.address });
           setTradingTokenCallback(picked);
         }
       }
@@ -158,7 +150,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
     'flex flex-col flex-1 min-h-0 overflow-y-auto bg-[#243056] text-[#5981F3] rounded-[20px] p-2.5 box-border';
 
   const renderEmptyState = (message: string) => (
-    <div className="flex flex-1 items-center justify-center">
+    <div className='flex flex-1 items-center justify-center'>
       <p>{message}</p>
     </div>
   );
@@ -178,10 +170,10 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
         }
       `}</style>
 
-      <div id="DataListWrapper" className={wrapperClass}>
+      <div id='DataListWrapper' className={wrapperClass}>
         {isAccountFeed ? (
           loading
-            ? renderEmptyState('Loading accounts...')
+            ? renderEmptyState('Loading accounts…')
             : wallets.length === 0
             ? renderEmptyState('No accounts available.')
             : wallets.map((wallet) => (
@@ -193,7 +185,7 @@ export default function DataListSelect({ feedData, loading = false, feedType }: 
                 />
               ))
         ) : loading ? (
-          renderEmptyState('Loading tokens...')
+          renderEmptyState('Loading tokens…')
         ) : tokens.length === 0 ? (
           renderEmptyState('No tokens available.')
         ) : (

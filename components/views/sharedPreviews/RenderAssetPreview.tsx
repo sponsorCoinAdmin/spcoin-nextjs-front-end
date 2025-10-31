@@ -15,8 +15,9 @@ import BaseListRow from '@/components/views/ListItems/BaseListRow';
 import { useAppChainId } from '@/lib/context/hooks';
 import { flushSync } from 'react-dom';
 
+const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
-const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED);
+const debugLog = createDebugLogger('RenderAssetPreview', DEBUG_ENABLED, LOG_TIME);
 
 export default function RenderAssetPreview() {
   const [chainId] = useAppChainId();
@@ -34,7 +35,9 @@ export default function RenderAssetPreview() {
 
   // Keep a live ref of manualEntry so logs always show the freshest value
   const manualEntryRef = useRef<boolean>(!!manualEntry);
-  useEffect(() => { manualEntryRef.current = !!manualEntry; }, [manualEntry]);
+  useEffect(() => {
+    manualEntryRef.current = !!manualEntry;
+  }, [manualEntry]);
 
   const [avatarSrc, setAvatarSrc] = useState<string>(defaultMissingImage);
 
@@ -59,12 +62,12 @@ export default function RenderAssetPreview() {
           const url = await getLogoURL(chainId, address as Address, FEED_TYPE.TOKEN_LIST);
           if (!cancelled) {
             setAvatarSrc(url || defaultMissingImage);
-            debugLog.log('🖼️ Resolved token logo', { chainId, address, url });
+            debugLog.log?.('🖼️ Resolved token logo', { chainId, address, url });
           }
         } catch (e) {
           if (!cancelled) {
             setAvatarSrc(defaultMissingImage);
-            debugLog.warn('⚠️ getLogoURL failed; using fallback', { chainId, address, error: e });
+            debugLog.warn?.('⚠️ getLogoURL failed; using fallback', { chainId, address, error: e });
           }
         }
       } else {
@@ -78,7 +81,9 @@ export default function RenderAssetPreview() {
     };
 
     resolveLogo();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [inputState, validatedAsset, feedType, chainId]);
 
   const visible = isRenderFSMState(inputState);
@@ -91,8 +96,7 @@ export default function RenderAssetPreview() {
   const onAvatarClick = () => {
     if (!address) return;
 
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[RenderAssetPreview] onAvatarClick', {
+    debugLog.log?.('[onAvatarClick]', {
       manualEntry: manualEntryRef.current,
       addressPreview: address.slice(0, 10),
       inputState: InputState[inputState],
@@ -100,8 +104,7 @@ export default function RenderAssetPreview() {
 
     try {
       // 1) Flip manualEntry to false **synchronously** so downstream commit treats this as programmatic
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[RenderAssetPreview] forcing manualEntry=false before commit');
+      debugLog.log?.('[onAvatarClick] forcing manualEntry=false before commit');
       flushSync(() => setManualEntry?.(false));
 
       // 2) Ensure chainId/address present on the committed object
@@ -112,15 +115,14 @@ export default function RenderAssetPreview() {
       // 3) Write the validated asset
       if (typeof setValidatedAsset === 'function') {
         setValidatedAsset(assetToCommit);
-        // DEBUG LOG TO BE REMOVED LATER
-        console.log('[RenderAssetPreview] setValidatedAsset dispatched', {
+        debugLog.log?.('[onAvatarClick] setValidatedAsset dispatched', {
           address: assetToCommit.address,
           chainId: assetToCommit.chainId,
           symbol: assetToCommit.symbol,
           name: assetToCommit.name,
         });
       } else {
-        debugLog.warn('⚠️ setValidatedAsset not available in context');
+        debugLog.warn?.('⚠️ setValidatedAsset not available in context');
       }
 
       // 4) Now that manualEntry is definitely false, advance FSM → UPDATE_VALIDATED_ASSET
@@ -130,7 +132,7 @@ export default function RenderAssetPreview() {
         'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)'
       );
     } catch (err) {
-      debugLog.error('❌ Failed to dispatch validated asset', err);
+      debugLog.error?.('❌ Failed to dispatch validated asset', err);
     }
   };
 
@@ -151,10 +153,10 @@ export default function RenderAssetPreview() {
   };
 
   return (
-    <div id="RenderAssetPreview" className="w-full">
+    <div id='RenderAssetPreview' className='w-full'>
       <BasePreviewWrapper show>
         <BaseListRow
-          className="w-full"
+          className='w-full'
           avatarSrc={avatarSrc}
           title={name}
           subtitle={symbol}

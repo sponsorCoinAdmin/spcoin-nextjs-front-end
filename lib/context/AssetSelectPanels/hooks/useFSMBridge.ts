@@ -61,9 +61,9 @@ export function useFSMBridge(params: BridgeParams) {
     bypassFSM = false,
   } = params;
 
-  // DEBUG LOG TO BE REMOVED LATER
+  // Replace raw console logging with gated debug logs
   useEffect(() => {
-    console.log('[useFSMBridge] manualEntry changed', { instanceId, manualEntry });
+    debugLog.log?.('manualEntry changed', { instanceId, manualEntry });
   }, [instanceId, manualEntry]);
 
   const {
@@ -107,12 +107,9 @@ export function useFSMBridge(params: BridgeParams) {
       if (!validatedAsset) {
         debugLog.warn?.(`[${instanceId}] UPDATE_VALIDATED_ASSET with no validatedAsset`);
       } else {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.log('[useFSMBridge] committing validatedAsset (UPDATE_VALIDATED_ASSET)', {
-          instanceId,
+        debugLog.log?.(`[${instanceId}] ✅ commit validatedAsset → setTradingToken`, {
           manualEntryAtCommitStep: manualEntry,
         });
-        debugLog.log?.(`[${instanceId}] ✅ commit validatedAsset → setTradingToken`);
         fireSetTradingToken(validatedAsset);
       }
       setInputState(InputState.CLOSE_SELECT_PANEL, `Bridge(${instanceId}) commit → close`);

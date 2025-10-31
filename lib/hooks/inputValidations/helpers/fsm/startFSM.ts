@@ -80,8 +80,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     closePanelCallback,
   } = args;
 
-  // DEBUG LOG TO BE REMOVED LATER
-  console.log('[startFSM] ↪️ enter', {
+  debug.log?.('↪️ enter', {
     inputPreview: debouncedHexInput ? debouncedHexInput.slice(0, 10) : '(empty)',
     isValid,
     failed: failedHexInput ?? '—',
@@ -93,21 +92,17 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   });
 
   if (!publicClient || !chainId) {
-    debug.warn('⛔ Missing publicClient/chainId — skipping FSM run.');
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[startFSM] ⛔ skip: missing publicClient/chainId');
+    debug.warn?.('⛔ Missing publicClient/chainId — skipping FSM run.');
     return null;
   }
 
   // Preflight: log if the provided publicClient is on the wrong chain
   const clientChainId = await getClientChainIdSafe(publicClient);
   if (clientChainId !== undefined && clientChainId !== chainId) {
-    debug.warn(
-      '⚠️ publicClient chain mismatch — fix caller to use usePublicClient({ chainId })',
-      { expectedChainId: chainId, clientChainId } as any
-    );
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[startFSM] ⚠️ chain mismatch', { expected: chainId, clientChainId });
+    debug.warn?.('⚠️ publicClient chain mismatch — fix caller to use usePublicClient({ chainId })', {
+      expectedChainId: chainId,
+      clientChainId,
+    } as any);
     // NOTE: Continue to preserve behavior.
   }
 
@@ -115,21 +110,18 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   const canRun = shouldRunFSM(prevDebouncedInputRef, newSignature);
 
   if (!canRun) {
-    if (DEBUG_ENABLED) console.log(`⏸️ Unchanged signature "${newSignature}" — skipping FSM run.`);
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[startFSM] ⏸️ skip run: unchanged signature', { newSignature });
+    debug.log?.(`⏸️ Unchanged signature "${newSignature}" — skipping FSM run.`);
     return null;
   }
 
-  if (DEBUG_ENABLED) {
+  {
     const reason = signatureDiff(prevDebouncedInputRef.current, newSignature);
-    console.log(`▶️ Triggering FSM${reason ? `: ${reason}` : ''}`);
+    debug.log?.(`▶️ Triggering FSM${reason ? `: ${reason}` : ''}`);
+    debug.log?.('▶️ trigger run', {
+      prevSignature: prevDebouncedInputRef.current,
+      newSignature,
+    });
   }
-  // DEBUG LOG TO BE REMOVED LATER
-  console.log('[startFSM] ▶️ trigger run', {
-    prevSignature: prevDebouncedInputRef.current,
-    newSignature,
-  });
 
   // update signature after we decide to run
   prevDebouncedInputRef.current = newSignature;
@@ -168,8 +160,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     resolvedAsset: undefined,
   };
 
-  // DEBUG LOG TO BE REMOVED LATER
-  console.log('[startFSM] current (pre-run)', {
+  debug.log?.('current (pre-run)', {
     state: InputState[current.inputState],
     manualEntry: current.manualEntry,
     debouncedHexInputPreview: current.debouncedHexInput?.slice(0, 10),
@@ -183,14 +174,10 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
     validateFSMCore,
     maxSteps: 30,
     onTransition(prev, next) {
-      if (DEBUG_ENABLED) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `🟢 ${getStateIcon(prev)} ${InputState[prev]} → ${getStateIcon(next)} ${InputState[next]} (FSM)`
-        );
-      }
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[startFSM] transition', {
+      debug.log?.(
+        `🟢 ${getStateIcon(prev)} ${InputState[prev]} → ${getStateIcon(next)} ${InputState[next]} (FSM)`
+      );
+      debug.log?.('transition', {
         from: InputState[prev],
         to: InputState[next],
         manualEntry: current.manualEntry,
@@ -224,15 +211,8 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
         ...(committedAsset as TokenContract),
         logoURL: finalURL,
       };
-      if (DEBUG_ENABLED) {
-        console.log('🖼️ Filled missing logoURL at commit stage', {
-          chainId,
-          address: addr,
-          logoURL: finalURL,
-        });
-      }
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[startFSM] logoURL filled at commit stage', {
+      debug.log?.('🖼️ Filled missing logoURL at commit stage', {
+        chainId,
         address: addr,
         logoURL: finalURL,
       });
@@ -241,22 +221,15 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
         ...(committedAsset as TokenContract),
         logoURL: defaultMissingImage,
       };
-      if (DEBUG_ENABLED) {
-        debug.warn('⚠️ getLogoURL failed at commit stage; using fallback', {
-          chainId,
-          address: addr,
-          error: e,
-        });
-      }
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[startFSM] logoURL fallback used at commit stage', {
+      debug.warn?.('⚠️ getLogoURL failed at commit stage; using fallback', {
+        chainId,
         address: addr,
+        error: e,
       });
     }
   }
 
-  // DEBUG LOG TO BE REMOVED LATER
-  console.log('[startFSM] 🏁 final', {
+  debug.log?.('🏁 final', {
     finalState: InputState[finalState],
     hasAddr,
     manualEntry: current.manualEntry,
@@ -273,8 +246,7 @@ export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
   // If this was manual entry (typed/pasted), do NOT surface the asset on commit states.
   // Only DataListSelect (programmatic) should directly return assets for commit.
   if (isCommit && current.manualEntry) {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[startFSM] 🚫 commit blocked by manualEntry=true', {
+    debug.log?.('🚫 commit blocked by manualEntry=true', {
       finalState: InputState[finalState],
     });
     return { finalState }; // no asset returned

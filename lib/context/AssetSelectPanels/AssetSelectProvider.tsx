@@ -61,21 +61,21 @@ export const AssetSelectProvider = ({
   const [manualEntry, _setManualEntry] = useState(false);
   const [bypassFSM, setBypassFSM] = useState(false);
 
-  // DEBUG LOG TO BE REMOVED LATER
   useEffect(() => {
-    console.log('[AssetSelectProvider] mount', {
+    debugLog.log?.('mount', {
       instanceId,
       container: SP_COIN_DISPLAY[containerType],
       feed: FEED_TYPE[feedType],
       hasInitialBag: !!initialPanelBag,
     });
-  }, [instanceId, containerType, feedType, initialPanelBag]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // DEBUG LOG TO BE REMOVED LATER
   useEffect(() => {
-    console.log('[AssetSelectProvider] manualEntry changed →', manualEntry, {
+    debugLog.log?.('manualEntry changed', {
       instanceId,
       container: SP_COIN_DISPLAY[containerType],
+      manualEntry,
     });
   }, [manualEntry, instanceId, containerType]);
 
@@ -126,64 +126,62 @@ export const AssetSelectProvider = ({
 
   // ---- Debug wrappers (no behavior change) ----
 
-  const setManualEntry = useCallback((flag: boolean) => {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[AssetSelectProvider] setManualEntry called →', flag, {
-      instanceId,
-      fromState: manualEntry,
-    });
-    _setManualEntry(flag);
-  }, [instanceId, manualEntry]);
+  const setManualEntry = useCallback(
+    (flag: boolean) => {
+      debugLog.log?.('setManualEntry', { instanceId, fromState: manualEntry, toState: flag });
+      _setManualEntry(flag);
+    },
+    [instanceId, manualEntry]
+  );
 
-  const setInputState = useCallback((state: any, source?: string) => {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[AssetSelectProvider] setInputState()', {
-      requested: state,
-      source: source ?? '(none)',
-      instanceId,
-      manualEntry,
-      debouncedHexInput,
-    });
-    _setInputState(state, source);
-  }, [_setInputState, instanceId, manualEntry, debouncedHexInput]);
+  const setInputState = useCallback(
+    (state: any, source?: string) => {
+      debugLog.log?.('setInputState', {
+        requested: state,
+        source: source ?? '(none)',
+        instanceId,
+        manualEntry,
+        debouncedHexInput,
+      });
+      _setInputState(state, source);
+    },
+    [_setInputState, instanceId, manualEntry, debouncedHexInput]
+  );
 
-  const handleHexInputChange = useCallback((raw: string, isManual?: boolean) => {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[AssetSelectProvider] handleHexInputChange()', {
-      rawPreview: raw?.slice(0, 12),
-      isManual,
-      instanceId,
-      manualEntry,
-    });
-    const res = _handleHexInputChange(raw, isManual);
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[AssetSelectProvider] handleHexInputChange result →', res);
-    return res;
-  }, [_handleHexInputChange, instanceId, manualEntry]);
+  const handleHexInputChange = useCallback(
+    (raw: string, isManual?: boolean) => {
+      debugLog.log?.('handleHexInputChange', {
+        rawPreview: raw?.slice(0, 12),
+        isManual,
+        instanceId,
+        manualEntry,
+      });
+      const res = _handleHexInputChange(raw, isManual);
+      debugLog.log?.('handleHexInputChange result', { accepted: res });
+      return res;
+    },
+    [_handleHexInputChange, instanceId, manualEntry]
+  );
 
-  const setValidatedAssetLogged = useCallback((asset?: TokenContract | WalletAccount) => {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[AssetSelectProvider] setValidatedAsset()', {
-      instanceId,
-      manualEntry,
-      addr: (asset as any)?.address ?? '(none)',
-      sym: (asset as any)?.symbol ?? '(none)',
-      name: (asset as any)?.name ?? '(none)',
-    });
-    setValidatedAsset(asset as any);
-  }, [instanceId, manualEntry, setValidatedAsset]);
+  const setValidatedAssetLogged = useCallback(
+    (asset?: TokenContract | WalletAccount) => {
+      debugLog.log?.('setValidatedAsset', {
+        instanceId,
+        manualEntry,
+        addr: (asset as any)?.address ?? '(none)',
+        sym: (asset as any)?.symbol ?? '(none)',
+        name: (asset as any)?.name ?? '(none)',
+      });
+      setValidatedAsset(asset as any);
+    },
+    [instanceId, manualEntry, setValidatedAsset]
+  );
 
   // InputState transitions
   const prevStateRef = useRef(inputState);
   useEffect(() => {
     if (prevStateRef.current !== inputState) {
       debugLog.log?.('inputState transition', {
-        instanceId,
-        from: prevStateRef.current,
-        to: inputState,
-      });
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[AssetSelectProvider] inputState transition', {
         instanceId,
         from: prevStateRef.current,
         to: inputState,
@@ -203,13 +201,6 @@ export const AssetSelectProvider = ({
         address: a?.address ?? '(none)',
         symbol: a?.symbol ?? '(none)',
         name: a?.name ?? '(none)',
-      });
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[AssetSelectProvider] validatedAsset changed', {
-        instanceId,
-        address: a?.address ?? '(none)',
-        symbol: a?.symbol ?? '(none)',
-        name: a?.name ?? '(none)',
         manualEntry,
       });
       prevValidatedRef.current = validatedAsset;
@@ -219,15 +210,9 @@ export const AssetSelectProvider = ({
   // Context-facing wrappers (minimal logging)
   const setTradingTokenCallbackCtx = useCallback(
     (asset: TokenContract | WalletAccount) => {
-      // DEBUG LOG TO BE REMOVED LATER
-      console.log('[AssetSelectProvider] setTradingTokenCallback (ctx)', {
-        instanceId,
-        manualEntry,
-        address: (asset as any)?.address ?? '(none)',
-        symbol: (asset as any)?.symbol ?? '(none)',
-      });
       debugLog.log?.('setTradingTokenCallback', {
         instanceId,
+        manualEntry,
         address: (asset as any)?.address ?? '(none)',
         symbol: (asset as any)?.symbol ?? '(none)',
       });
@@ -237,9 +222,7 @@ export const AssetSelectProvider = ({
   );
 
   const closePanelCallbackCtx = useCallback(() => {
-    // DEBUG LOG TO BE REMOVED LATER
-    console.log('[AssetSelectProvider] closePanelCallback()', { instanceId, manualEntry });
-    debugLog.log?.('closePanelCallback', { instanceId });
+    debugLog.log?.('closePanelCallback', { instanceId, manualEntry });
     closePanelCallback(true);
   }, [instanceId, closePanelCallback, manualEntry]);
 
@@ -292,10 +275,10 @@ export const AssetSelectProvider = ({
       setValidatedToken: (t?: TokenContract) => setValidatedAssetNarrow(t),
 
       // Required by AssetSelectContextType
-      setValidatedWallet,          // no-op (deprecated)
-      dumpAssetSelectContext,      // compat alias → dumpFSM
-      dumpFSMContext,              // always present; no-op when disabled
-      dumpInputFeedContext,        // always present; no-op when disabled
+      setValidatedWallet, // no-op (deprecated)
+      dumpAssetSelectContext, // compat alias → dumpFSM
+      dumpFSMContext, // always present; no-op when disabled
+      dumpInputFeedContext, // always present; no-op when disabled
 
       // Input feed
       validHexInput,
