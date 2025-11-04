@@ -7,7 +7,7 @@ import { useChainId, useConnect, useConnectors, useDisconnect, useSwitchChain } 
 import { useAppChainId } from '@/lib/context/hooks';
 
 import ConnectMainButton from './ConnectMainButton';
-import ConnectDropDown from './ConnectDropDown';
+import ConnectDropDown from './CConnectDropDown';
 
 import DropDownPortal from './DDropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
