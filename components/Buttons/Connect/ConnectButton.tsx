@@ -12,7 +12,7 @@ import ConnectDropDown from './ConnectDropDown';
 import DropDownPortal from './DropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
 import { useWalletActions } from './hooks/useWalletActions';
-import { useDropDownPortal } from './hooks/useDropDownPortal';
+import { useDropDownPortal } from './hooks/useDDropDownPortal';
 import { usePersistentState } from './hooks/usePersistentState'; // optional
 
 export type ConnectButtonProps = {
