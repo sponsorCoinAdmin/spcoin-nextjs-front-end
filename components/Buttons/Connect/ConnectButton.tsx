@@ -7,9 +7,9 @@ import { useChainId, useConnect, useConnectors, useDisconnect, useSwitchChain } 
 import { useAppChainId } from '@/lib/context/hooks';
 
 import ConnectMainButton from './ConnectMainButton';
-import ConnectDropDown from './CConnectDropDown';
+import ConnectDropDown from './ConnectDropDown';
 
-import DropDownPortal from './DDropDownPortal';
+import DropDownPortal from './DropDownPortal';
 import { useNetworkOptions } from './hooks/useNetworkOptions';
 import { useWalletActions } from './hooks/useWalletActions';
 import { useDropDownPortal } from './hooks/useDropDownPortal';
