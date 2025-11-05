@@ -4,15 +4,31 @@ const path = require('path');
 
 module.exports = {
   root: true,
-  plugins: ['@typescript-eslint', 'unused-imports', 'import'],
+  plugins: [
+    '@typescript-eslint',
+    'unused-imports',
+    'import',
+    'react-hooks',
+    // NOTE: Do not add 'next' here. Next.js ESLint rules come via `extends: ['next/core-web-vitals']`.
+  ],
   extends: [
+    // Base
     'eslint:recommended',
-    'next/core-web-vitals', // includes react-hooks rules
+
+    // Next.js rules (adds @next/next/* messages that your build referenced)
+    'next/core-web-vitals',
+
+    // TS w/ type-checking aware configs (v6 preset names)
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-type-checked',
     'plugin:@typescript-eslint/stylistic-type-checked',
+
+    // import resolver helpers
     'plugin:import/recommended',
     'plugin:import/typescript',
+
+    // Hooks
+    'plugin:react-hooks/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -28,55 +44,100 @@ module.exports = {
       node: {},
     },
   },
-  rules: {
-    // Unused
-    'no-unused-vars': 'off',
-    'unused-imports/no-unused-imports': 'error',
-    'unused-imports/no-unused-vars': ['warn', { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
-    '@typescript-eslint/no-unused-vars': ['warn', { varsIgnorePattern: '^_', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', ignoreRestSiblings: true }],
 
-    // TS strictness tuning
+  rules: {
+    // ------- Unused detection (keep these strong) -------
+    'no-unused-vars': 'off', // use TS-aware version
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        vars: 'all',
+        varsIgnorePattern: '^_',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
+
+    // ------- Pragmatic TS strictness tuning -------
     '@typescript-eslint/no-unsafe-assignment': 'warn',
     '@typescript-eslint/no-unsafe-member-access': 'warn',
     '@typescript-eslint/no-unsafe-argument': 'warn',
     '@typescript-eslint/no-unsafe-return': 'warn',
     '@typescript-eslint/no-unsafe-call': 'warn',
-    '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off', // noisy with mixed enums
     '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     '@typescript-eslint/no-redundant-type-constituents': 'off',
-    '@typescript-eslint/restrict-template-expressions': ['warn', { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true }],
+    '@typescript-eslint/restrict-template-expressions': [
+      'warn',
+      { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
+    ],
 
-    // ✅ unblock builds: make this a warning (or set to 'off' if you prefer)
-    '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-
-    // Promises
-    '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true, ignoreIIFE: true }],
+    // Promise rules
+    '@typescript-eslint/no-floating-promises': [
+      'warn',
+      { ignoreVoid: true, ignoreIIFE: true },
+    ],
     '@typescript-eslint/require-await': 'off',
     '@typescript-eslint/await-thenable': 'off',
-    '@typescript-eslint/no-misused-promises': ['warn', { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false }],
+    '@typescript-eslint/no-misused-promises': [
+      'warn',
+      {
+        checksVoidReturn: { attributes: false, arguments: false },
+        checksConditionals: false,
+      },
+    ],
 
-    // Style
+    // TS style preferences
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
 
-    // Next/React
-    'react-hooks/exhaustive-deps': 'off', // Next provides react-hooks plugin; we just tune this rule
-    '@next/next/no-img-element': 'warn',
+    // React Hooks
+    'react-hooks/exhaustive-deps': 'off',
 
-    // Misc
+    // import plugin: keep useful, drop noisy
     'import/export': 'off',
     'import/no-duplicates': 'warn',
     'import/no-named-as-default-member': 'off',
+
+    // Next rule that warned about <img>; keep as a warning for now
+    '@next/next/no-img-element': 'warn',
+
+    // Misc project prefs
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'prefer-const': 'warn',
     'no-console': 'off',
   },
+
   overrides: [
-    { files: ['app/api/**/*.{ts,tsx}'], rules: { 'no-console': 'off', 'react-hooks/exhaustive-deps': 'off' } },
+    // API routes / server handlers
     {
-      files: ['lib/**/debug*.{ts,tsx}', 'lib/**/trace*.{ts,tsx}', 'lib/utils/**/{debugLogger,renderTrace}.ts'],
+      files: ['app/api/**/*.{ts,tsx}'],
+      rules: {
+        'no-console': 'off',
+        'react-hooks/exhaustive-deps': 'off',
+      },
+    },
+    // Debug/trace utilities
+    {
+      files: [
+        'lib/**/debug*.{ts,tsx}',
+        'lib/**/trace*.{ts,tsx}',
+        'lib/utils/**/{debugLogger,renderTrace}.ts',
+      ],
       rules: { 'no-console': 'off' },
     },
+    // Playground: keep it loose
     {
       files: ['app/(menu)/Test/**/*.{ts,tsx}'],
       rules: {
@@ -91,6 +152,24 @@ module.exports = {
         '@typescript-eslint/no-unsafe-call': 'off',
       },
     },
+    // Components that intentionally accept extra props from wagmi/connectors
+    {
+      files: [
+        'components/Buttons/Connect/**/*.{ts,tsx}',
+        'components/Buttons/CustomConnectButton.tsx',
+      ],
+      rules: {
+        '@typescript-eslint/no-unused-vars': [
+          'warn',
+          {
+            varsIgnorePattern: '^_|^(isConnected|isConnecting|hide|address|ensName|chain)$',
+            argsIgnorePattern: '^_',
+          },
+        ],
+        'unused-imports/no-unused-vars': 'off',
+      },
+    },
+    // Legacy “helpers” & “context” hot spots: downgrade safety rules to warnings only
     {
       files: [
         'lib/context/**/*.{ts,tsx}',
@@ -107,11 +186,29 @@ module.exports = {
         '@typescript-eslint/no-unnecessary-type-assertion': 'off',
         '@typescript-eslint/no-redundant-type-constituents': 'off',
         '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-        '@typescript-eslint/restrict-template-expressions': ['warn', { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true }],
-        '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true, ignoreIIFE: true }],
-        '@typescript-eslint/no-misused-promises': ['warn', { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false }],
+        '@typescript-eslint/restrict-template-expressions': [
+          'warn',
+          { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
+        ],
+        '@typescript-eslint/no-floating-promises': [
+          'warn',
+          { ignoreVoid: true, ignoreIIFE: true },
+        ],
+        '@typescript-eslint/no-misused-promises': [
+          'warn',
+          { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false },
+        ],
       },
     },
   ],
-  ignorePatterns: ['**/node_modules/**', '.next/**', 'dist/**', 'coverage/**', '**/*.d.ts', 'scripts/**/dist/**'],
+
+  ignorePatterns: [
+    '**/node_modules/**',
+    '.next/**',
+    'dist/**',
+    'coverage/**',
+    '**/*.d.ts',
+    // generated or legacy build outputs if any
+    'scripts/**/dist/**',
+  ],
 };
