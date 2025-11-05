@@ -1,80 +1,90 @@
 // File: components/Headers/TradeContainerHeader.tsx
 'use client';
 
-import Image from 'next/image';
-import cog_png from '@/public/assets/miscellaneous/cog.png';
-import ConfigPanel from '@/components/views/Config/ConfigPanel';
-import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
-import { useExchangeContext } from '@/lib/context/hooks';
-import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  useCallback,
+  type ReactNode,
+} from 'react';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+// ⬇️ registry hook now returns computed values (no getCloser/getTitle/getIcon)
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
-import CloseButton from '@/components/Buttons/CloseButton';
 
-export default function TradeContainerHeader() {
-  const { exchangeContext } = useExchangeContext();
+export type TradeHeaderAPI = {
+  setTitle: (title?: string) => void;
+  setIcon: (icon?: ReactNode | string) => void;
+  setCloseCallback: (cb?: () => void) => void;
+  reset: () => void;
+};
+
+const DEFAULT_TITLE = 'Network';
+const DEFAULT_ICON = '/assets/network-default.png';
+
+const TradeContainerHeader = forwardRef<TradeHeaderAPI>(function TradeContainerHeader(_, ref) {
+  const { activeMainOverlay, closePanel } = usePanelTree();
   const {
-    title,
-    leftElement,
-    isConfigOpen,
-    onOpenConfig,
-    onCloseConfig,
-    onClose,
-    isTrading,
+    title: regTitle,
+    leftElement,        // optional left-side element provided by registry
+    onClose: registryClose,
   } = useHeaderController();
 
-  return (
-    <div
-      id="TradeContainerHeader"
-      className="grid grid-cols-[auto_1fr_auto] items-center w-full box-border h-[50px] min-h-[50px] py-0 px-2.5 shrink-0 my-[3px]"
-    >
-      <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
+  // Imperative API (highest precedence)
+  const [titleImp, setTitleImp] = useState<string | undefined>(undefined);
+  const [iconImp, setIconImp] = useState<ReactNode | string | undefined>(undefined);
+  const closeCbImpRef = useRef<(() => void) | undefined>(undefined);
 
-      {/* Left */}
-      <div
-        id="SponsorCoinLogo.png"
-        onDoubleClick={() => exchangeContextDump(exchangeContext)}
-        className="flex items-center my-0"
-      >
-        {leftElement ?? (
-          <ConnectButton
-            showName={false}
-            showSymbol={false}
-            showChevron={false}
-            showConnect={false}
-            showDisconnect={false}
-            showHoverBg={false}
-          />
-        )}
-      </div>
-
-      {/* Center title */}
-      <h4 className="justify-self-center m-0 leading-none text-base font-semibold select-none text-center">
-        {title}
-      </h4>
-
-      {/* Right */}
-      <div className="flex items-center justify-end my-0">
-        {isTrading ? (
-          <Image
-            src={cog_png}
-            alt="Open settings"
-            title="Open settings"
-            onClick={onOpenConfig}
-            className="h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]"
-            priority
-          />
-        ) : (
-          <CloseButton
-            closeCallback={onClose}
-            className="
-              absolute top-2 right-[27px] h-10 w-10 rounded-full
-              bg-[#243056] text-[#5981F3] flex items-center justify-center
-              leading-none transition-colors text-3xl
-              hover:bg-[#5981F3] hover:text-[#243056]
-            "
-          />
-        )}
-      </div>
-    </div>
+  useImperativeHandle(
+    ref,
+    () => ({
+      setTitle: (t) => setTitleImp(t),
+      setIcon: (i) => setIconImp(i),
+      setCloseCallback: (cb) => {
+        closeCbImpRef.current = cb;
+      },
+      reset: () => {
+        setTitleImp(undefined);
+        setIconImp(undefined);
+        closeCbImpRef.current = undefined;
+      },
+    }),
+    []
   );
-}
+
+  // Resolve values with precedence: imperative → registry → defaults
+  const title = titleImp ?? regTitle ?? DEFAULT_TITLE;
+
+  // Icon/left content:
+  // - If imperative icon is set, render that.
+  // - Else, if registry leftElement exists, render it in the icon slot.
+  // - Else, render a default icon image.
+  const iconLike: ReactNode | string = iconImp ?? leftElement ?? DEFAULT_ICON;
+
+  const closer =
+    closeCbImpRef.current ??
+    registryClose ??
+    (activeMainOverlay != null ? () => closePanel(activeMainOverlay) : undefined);
+
+  const onClose = useCallback(() => {
+    if (closer) closer();
+  }, [closer]);
+
+  const iconNode =
+    typeof iconLike === 'string' ? <img src={iconLike} alt="" className="h-5 w-5" /> : iconLike;
+
+  return (
+    <header className="flex items-center justify-between px-3 py-2">
+      <div className="flex items-center gap-2">
+        {iconNode}
+        <h1 className="text-base font-semibold">{title}</h1>
+      </div>
+      <button onClick={onClose} aria-label="Close" className="rounded p-1 hover:bg-white/10">
+        ✕
+      </button>
+    </header>
+  );
+});
+
+export default TradeContainerHeader;
