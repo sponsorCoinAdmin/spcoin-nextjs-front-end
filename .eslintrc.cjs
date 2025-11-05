@@ -8,27 +8,25 @@ module.exports = {
     '@typescript-eslint',
     'unused-imports',
     'import',
-    'react-hooks',
-    // NOTE: Do not add 'next' here. Next.js ESLint rules come via `extends: ['next/core-web-vitals']`.
+    // ❌ do NOT add 'react-hooks' here; Next includes it via its config
   ],
   extends: [
     // Base
     'eslint:recommended',
 
-    // Next.js rules (adds @next/next/* messages that your build referenced)
+    // Next.js rules (includes @next/next/* and react-hooks)
     'next/core-web-vitals',
 
-    // TS w/ type-checking aware configs (v6 preset names)
+    // TS w/ type-checking aware configs
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-type-checked',
     'plugin:@typescript-eslint/stylistic-type-checked',
 
-    // import resolver helpers
+    // import resolvers
     'plugin:import/recommended',
     'plugin:import/typescript',
 
-    // Hooks
-    'plugin:react-hooks/recommended',
+    // ❌ do NOT add 'plugin:react-hooks/recommended' here either
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -46,36 +44,25 @@ module.exports = {
   },
 
   rules: {
-    // ------- Unused detection (keep these strong) -------
-    'no-unused-vars': 'off', // use TS-aware version
+    // ------- Unused detection -------
+    'no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
       'warn',
-      {
-        vars: 'all',
-        varsIgnorePattern: '^_',
-        args: 'after-used',
-        argsIgnorePattern: '^_',
-        ignoreRestSiblings: true,
-      },
+      { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_', ignoreRestSiblings: true },
     ],
     '@typescript-eslint/no-unused-vars': [
       'warn',
-      {
-        varsIgnorePattern: '^_',
-        argsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_',
-        ignoreRestSiblings: true,
-      },
+      { varsIgnorePattern: '^_', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', ignoreRestSiblings: true },
     ],
 
-    // ------- Pragmatic TS strictness tuning -------
+    // ------- TS strictness tuning -------
     '@typescript-eslint/no-unsafe-assignment': 'warn',
     '@typescript-eslint/no-unsafe-member-access': 'warn',
     '@typescript-eslint/no-unsafe-argument': 'warn',
     '@typescript-eslint/no-unsafe-return': 'warn',
     '@typescript-eslint/no-unsafe-call': 'warn',
-    '@typescript-eslint/no-unsafe-enum-comparison': 'off', // noisy with mixed enums
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off',
     '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     '@typescript-eslint/no-redundant-type-constituents': 'off',
     '@typescript-eslint/restrict-template-expressions': [
@@ -83,37 +70,31 @@ module.exports = {
       { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
     ],
 
-    // Promise rules
-    '@typescript-eslint/no-floating-promises': [
-      'warn',
-      { ignoreVoid: true, ignoreIIFE: true },
-    ],
+    // Promises
+    '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true, ignoreIIFE: true }],
     '@typescript-eslint/require-await': 'off',
     '@typescript-eslint/await-thenable': 'off',
     '@typescript-eslint/no-misused-promises': [
       'warn',
-      {
-        checksVoidReturn: { attributes: false, arguments: false },
-        checksConditionals: false,
-      },
+      { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false },
     ],
 
-    // TS style preferences
+    // TS style
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
 
-    // React Hooks
+    // React Hooks — Next already enables the plugin; tweak only specific rules if desired
     'react-hooks/exhaustive-deps': 'off',
 
-    // import plugin: keep useful, drop noisy
+    // import plugin
     'import/export': 'off',
     'import/no-duplicates': 'warn',
     'import/no-named-as-default-member': 'off',
 
-    // Next rule that warned about <img>; keep as a warning for now
+    // Next
     '@next/next/no-img-element': 'warn',
 
-    // Misc project prefs
+    // Misc
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'prefer-const': 'warn',
     'no-console': 'off',
@@ -137,7 +118,7 @@ module.exports = {
       ],
       rules: { 'no-console': 'off' },
     },
-    // Playground: keep it loose
+    // Playground
     {
       files: ['app/(menu)/Test/**/*.{ts,tsx}'],
       rules: {
@@ -152,24 +133,7 @@ module.exports = {
         '@typescript-eslint/no-unsafe-call': 'off',
       },
     },
-    // Components that intentionally accept extra props from wagmi/connectors
-    {
-      files: [
-        'components/Buttons/Connect/**/*.{ts,tsx}',
-        'components/Buttons/CustomConnectButton.tsx',
-      ],
-      rules: {
-        '@typescript-eslint/no-unused-vars': [
-          'warn',
-          {
-            varsIgnorePattern: '^_|^(isConnected|isConnecting|hide|address|ensName|chain)$',
-            argsIgnorePattern: '^_',
-          },
-        ],
-        'unused-imports/no-unused-vars': 'off',
-      },
-    },
-    // Legacy “helpers” & “context” hot spots: downgrade safety rules to warnings only
+    // Legacy hot spots
     {
       files: [
         'lib/context/**/*.{ts,tsx}',
@@ -190,10 +154,7 @@ module.exports = {
           'warn',
           { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
         ],
-        '@typescript-eslint/no-floating-promises': [
-          'warn',
-          { ignoreVoid: true, ignoreIIFE: true },
-        ],
+        '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true, ignoreIIFE: true }],
         '@typescript-eslint/no-misused-promises': [
           'warn',
           { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false },
@@ -208,7 +169,6 @@ module.exports = {
     'dist/**',
     'coverage/**',
     '**/*.d.ts',
-    // generated or legacy build outputs if any
     'scripts/**/dist/**',
   ],
 };
