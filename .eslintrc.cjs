@@ -8,14 +8,13 @@ module.exports = {
     '@typescript-eslint',
     'unused-imports',
     'import',
-    'react-hooks',
-    // NOTE: Do not add 'next' here. Next.js ESLint rules come via `extends: ['next/core-web-vitals']`.
+    // NOTE: omit 'react-hooks' to avoid version conflicts with Next's built-in config
   ],
   extends: [
     // Base
     'eslint:recommended',
 
-    // Next.js rules (adds @next/next/* messages that your build referenced)
+    // Next.js rules (includes @next/next/* and react-hooks recommendations)
     'next/core-web-vitals',
 
     // TS w/ type-checking aware configs (v6 preset names)
@@ -23,12 +22,11 @@ module.exports = {
     'plugin:@typescript-eslint/recommended-type-checked',
     'plugin:@typescript-eslint/stylistic-type-checked',
 
-    // import resolver helpers
+    // import resolvers
     'plugin:import/recommended',
     'plugin:import/typescript',
 
-    // Hooks
-    'plugin:react-hooks/recommended',
+    // DO NOT add 'plugin:react-hooks/recommended' — Next already includes it
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -46,8 +44,8 @@ module.exports = {
   },
 
   rules: {
-    // ------- Unused detection (keep these strong) -------
-    'no-unused-vars': 'off', // use TS-aware version
+    // ------- Unused detection -------
+    'no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
       'warn',
@@ -69,13 +67,13 @@ module.exports = {
       },
     ],
 
-    // ------- Pragmatic TS strictness tuning -------
+    // ------- Pragmatic TS strictness -------
     '@typescript-eslint/no-unsafe-assignment': 'warn',
     '@typescript-eslint/no-unsafe-member-access': 'warn',
     '@typescript-eslint/no-unsafe-argument': 'warn',
     '@typescript-eslint/no-unsafe-return': 'warn',
     '@typescript-eslint/no-unsafe-call': 'warn',
-    '@typescript-eslint/no-unsafe-enum-comparison': 'off', // noisy with mixed enums
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off',
     '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     '@typescript-eslint/no-redundant-type-constituents': 'off',
     '@typescript-eslint/restrict-template-expressions': [
@@ -83,26 +81,20 @@ module.exports = {
       { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
     ],
 
-    // Promise rules
-    '@typescript-eslint/no-floating-promises': [
-      'warn',
-      { ignoreVoid: true, ignoreIIFE: true },
-    ],
+    // Promises
+    '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true, ignoreIIFE: true }],
     '@typescript-eslint/require-await': 'off',
     '@typescript-eslint/await-thenable': 'off',
     '@typescript-eslint/no-misused-promises': [
       'warn',
-      {
-        checksVoidReturn: { attributes: false, arguments: false },
-        checksConditionals: false,
-      },
+      { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false },
     ],
 
-    // TS style preferences
+    // TS style
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
 
-    // React Hooks
+    // React Hooks deps rule is included via Next config; we keep it off here if you prefer
     'react-hooks/exhaustive-deps': 'off',
 
     // import plugin: keep useful, drop noisy
@@ -110,10 +102,10 @@ module.exports = {
     'import/no-duplicates': 'warn',
     'import/no-named-as-default-member': 'off',
 
-    // Next rule that warned about <img>; keep as a warning for now
+    // Next rule that warned about <img>; keep as a warning
     '@next/next/no-img-element': 'warn',
 
-    // Misc project prefs
+    // Misc
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'prefer-const': 'warn',
     'no-console': 'off',
@@ -137,7 +129,7 @@ module.exports = {
       ],
       rules: { 'no-console': 'off' },
     },
-    // Playground: keep it loose
+    // Playground
     {
       files: ['app/(menu)/Test/**/*.{ts,tsx}'],
       rules: {
@@ -169,7 +161,7 @@ module.exports = {
         'unused-imports/no-unused-vars': 'off',
       },
     },
-    // Legacy “helpers” & “context” hot spots: downgrade safety rules to warnings only
+    // Legacy hot spots
     {
       files: [
         'lib/context/**/*.{ts,tsx}',
@@ -190,10 +182,7 @@ module.exports = {
           'warn',
           { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
         ],
-        '@typescript-eslint/no-floating-promises': [
-          'warn',
-          { ignoreVoid: true, ignoreIIFE: true },
-        ],
+        '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true, ignoreIIFE: true }],
         '@typescript-eslint/no-misused-promises': [
           'warn',
           { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false },
