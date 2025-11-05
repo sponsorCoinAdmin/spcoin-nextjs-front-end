@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+// File: app/api/native-token/[chainId]/route.ts
+import { NextResponse, type NextRequest } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
@@ -6,11 +7,16 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 export const runtime = 'nodejs';
 
 // 🌐 Debug logging flag and logger controlled by .env.local
-const LOG_TIME:boolean = false;
+const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.DEBUG_LOG_API_SPCOIN_TOKEN === 'true';
 const debugLog = createDebugLogger('api/native-token', DEBUG_ENABLED, LOG_TIME);
 
-function validateTokenInfo(data: any): boolean {
+function validateTokenInfo(data: any): data is {
+  chainId: number;
+  address: string;
+  name: string;
+  symbol: string;
+} {
   return (
     typeof data?.chainId === 'number' &&
     typeof data?.address === 'string' &&
@@ -20,9 +26,10 @@ function validateTokenInfo(data: any): boolean {
 }
 
 export async function GET(
-  { params }: { params: Promise<{ chainId: string }> }
+  _req: NextRequest, // underscore avoids "unused" lint error
+  context: { params: { chainId: string } }
 ) {
-  const { chainId } = await params;
+  const { chainId } = context.params;
 
   const infoPath = path.join(
     process.cwd(),
@@ -50,7 +57,7 @@ export async function GET(
     const rawData = fs.readFileSync(infoPath, 'utf-8');
     debugLog.log(`📄 Raw file contents (truncated): ${rawData.slice(0, 300)}...`);
 
-    let data;
+    let data: unknown;
     try {
       data = JSON.parse(rawData);
     } catch (err) {
@@ -59,7 +66,7 @@ export async function GET(
     }
 
     if (!validateTokenInfo(data)) {
-      debugLog.warn('⚠️ Invalid token info structure', data);
+      debugLog.warn('⚠️ Invalid token info structure', data as any);
       return NextResponse.json({ error: 'Invalid token info structure' }, { status: 400 });
     }
 
