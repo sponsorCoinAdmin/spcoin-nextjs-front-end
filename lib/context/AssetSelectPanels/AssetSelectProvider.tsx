@@ -156,7 +156,7 @@ export const AssetSelectProvider = ({
         instanceId,
         manualEntry,
       });
-      const res = _handleHexInputChange(raw, isManual);
+      const res = _handleHexInputChange(raw);
       debugLog.log?.('handleHexInputChange result', { accepted: res });
       return res;
     },
