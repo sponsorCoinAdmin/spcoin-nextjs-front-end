@@ -65,7 +65,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const doToDo = useCallback(() => {
     setShowToDo(false)
     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
-    let msg:String = 'ToDo: (Not Yet Implemented)\n';
+    let msg:string = 'ToDo: (Not Yet Implemented)\n';
     msg += `Claim: `;
     msg += accountType.toString() === "ALL" ? accountType.toString() : `${accountType.toString()}(s)`;
     msg += ` Rewards\n`

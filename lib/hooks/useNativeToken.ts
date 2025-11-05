@@ -42,9 +42,6 @@ export function useNativeToken(): MappedTokenContract | undefined {
           symbol: data.symbol,
           totalSupply: 0n,
         });
-      } catch (err) {
-        // keep quiet or swap in your debug logger if desired
-        // createDebugLogger('useNativeToken', true)?.error?.(err);
       }
     })();
   }, [chainId]);
