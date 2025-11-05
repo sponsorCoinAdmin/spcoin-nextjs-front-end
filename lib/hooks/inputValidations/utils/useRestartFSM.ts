@@ -16,7 +16,6 @@ const debugFSM = createDebugLogger('useRestartFSMIfNeeded', DEBUG_ENABLED, LOG_T
  * - Goes to EMPTY_INPUT if input is empty
  */
 export function useRestartFSMIfNeeded(
-  inputState: InputState,
   debouncedInput: string,
   setInputState: (s: InputState) => void
 ) {
