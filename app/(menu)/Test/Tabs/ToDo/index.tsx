@@ -14,9 +14,6 @@ import ReadWagmiERC20ContractSymbol from '@/components/ERC20/ReadWagmiERC20Contr
 import ReadWagmiERC20ContractDecimals from '@/components/ERC20/ReadWagmiERC20ContractDecimals';
 import ReadWagmiERC20ContractTotalSupply from '@/components/ERC20/ReadWagmiERC20ContractTotalSupply';
 
-const buttonClasses =
-  'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
-
 export default function ToDoTab() {
   const { exchangeContext } = useExchangeContext();
   const { setState } = usePageState();
