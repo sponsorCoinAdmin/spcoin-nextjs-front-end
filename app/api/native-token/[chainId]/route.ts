@@ -1,8 +1,8 @@
 // File: app/api/native-token/[chainId]/route.ts
-import { NextResponse } from `next/server`;
-import path from `path`;
-import fs from `fs`;
-import { createDebugLogger } from `@/lib/utils/debugLogger`;
+import { NextResponse } from 'next/server';
+import path from 'path';
+import fs from 'fs';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 export const runtime = `nodejs`;
 
