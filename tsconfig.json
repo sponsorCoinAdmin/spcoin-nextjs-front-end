@@ -1,12 +1,19 @@
+// File: tsconfig.json
 {
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
+
+    // Keep JS allowed if you still have some utilities in .js
     "allowJs": true,
+
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+
+    // Next.js compiles; we don't emit TS output
     "noEmit": true,
+
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "Bundler",
@@ -15,6 +22,10 @@
     "jsx": "preserve",
     "incremental": true,
 
+    // Help Node-based tooling (eslint, next, webpack) resolve built-ins cleanly
+    "types": ["node"],
+
+    // Path aliases
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
@@ -25,13 +36,25 @@
       "@lib/context/providers/*": ["lib/context/providers/*"]
     },
 
+    // Next.js TS plugin
     "plugins": [{ "name": "next" }],
 
+    // ✅ Dead code / unused detection (TS-level)
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+
+    // Safer, clearer module semantics
     "verbatimModuleSyntax": true,
-    "noFallthroughCasesInSwitch": true
+
+    // Extra safety
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true
   },
+
+  // Include only source + Next type helpers
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+
+  // Keep heavy generated folders out
   "exclude": ["node_modules"]
 }

@@ -10,11 +10,7 @@ const nextConfig = {
   // Prevent Next from walking the entire parent tree when multiple lockfiles exist
   outputFileTracingRoot: path.join(__dirname, `..`),
 
-  // Avoid remote font fetch during builds on small instances
-  optimizeFonts: false,
-
-  // Lower memory pressure during builds (you can set back to true later)
-  swcMinify: false,
+  // NOTE: Next 15 no longer accepts `optimizeFonts` or `swcMinify`. Removed to silence warnings.
 
   // Optional: skip lint/type blocking during CI builds on tiny boxes
   // eslint: { ignoreDuringBuilds: true },

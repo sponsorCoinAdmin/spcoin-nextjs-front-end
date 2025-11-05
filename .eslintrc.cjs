@@ -3,6 +3,32 @@ const path = require('path');
 
 module.exports = {
   root: true,
+  plugins: [
+    '@typescript-eslint',
+    'unused-imports',
+    'import',
+    'react-hooks',
+    'next',
+  ],
+  extends: [
+    // Base
+    'eslint:recommended',
+
+    // Next.js rules (adds @next/next/* messages that your build referenced)
+    'next/core-web-vitals',
+
+    // TS w/ type-checking aware configs (v6 preset names)
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-type-checked',
+    'plugin:@typescript-eslint/stylistic-type-checked',
+
+    // import resolver helpers
+    'plugin:import/recommended',
+    'plugin:import/typescript',
+
+    // Hooks
+    'plugin:react-hooks/recommended',
+  ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [path.join(__dirname, 'tsconfig.json')],
@@ -10,28 +36,17 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint', 'unused-imports', 'import', 'react-hooks'],
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:import/recommended',
-    'plugin:import/typescript',
-    'plugin:react-hooks/recommended',
-  ],
   settings: {
+    react: { version: 'detect' },
     'import/resolver': {
-      typescript: {
-        project: [path.join(__dirname, 'tsconfig.json')],
-      },
+      typescript: { project: [path.join(__dirname, 'tsconfig.json')] },
       node: {},
     },
-    react: { version: 'detect' },
   },
-  rules: {
-    // Disable base rule (use TS-aware one)
-    'no-unused-vars': 'off',
 
-    // Aggressive removal of unused imports (keeps tree clean)
+  rules: {
+    // ------- Unused detection (keep these strong) -------
+    'no-unused-vars': 'off', // use TS-aware version
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
       'warn',
@@ -43,44 +58,70 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
-
-    // TypeScript tweaks
-    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': [
       'warn',
       {
         varsIgnorePattern: '^_',
         argsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_', // allow `_err`
+        caughtErrorsIgnorePattern: '^_',
         ignoreRestSiblings: true,
       },
     ],
-    '@typescript-eslint/no-unused-expressions': [
-      'error',
-      { allowShortCircuit: true, allowTernary: true, allowTaggedTemplates: true },
+
+    // ------- Pragmatic TS strictness tuning -------
+    // You’re hitting thousands of these; relax them to warnings so builds pass,
+    // while still surfacing problems during local dev.
+    '@typescript-eslint/no-unsafe-assignment': 'warn',
+    '@typescript-eslint/no-unsafe-member-access': 'warn',
+    '@typescript-eslint/no-unsafe-argument': 'warn',
+    '@typescript-eslint/no-unsafe-return': 'warn',
+    '@typescript-eslint/no-unsafe-call': 'warn',
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off', // noisy with mixed enums
+    '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+    '@typescript-eslint/no-redundant-type-constituents': 'off',
+    '@typescript-eslint/restrict-template-expressions': [
+      'warn',
+      { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
     ],
-    // Nudge toward `import type { ... }`
+
+    // Promise rules: keep signal, reduce friction in React effects & fire-and-forget
+    '@typescript-eslint/no-floating-promises': [
+      'warn',
+      { ignoreVoid: true, ignoreIIFE: true },
+    ],
+    '@typescript-eslint/require-await': 'off',
+    '@typescript-eslint/await-thenable': 'off',
+    '@typescript-eslint/no-misused-promises': [
+      'warn',
+      {
+        checksVoidReturn: { attributes: false, arguments: false },
+        checksConditionals: false,
+      },
+    ],
+
+    // TS style preferences
+    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
 
-    // React Hooks: turn off deps nag — many patterns are intentional in this codebase
+    // React Hooks (keep default recommended; deps rule off as requested)
     'react-hooks/exhaustive-deps': 'off',
 
-    // import plugin: avoid noise
+    // import plugin: keep useful, drop noisy
     'import/export': 'off',
     'import/no-duplicates': 'warn',
-    // Silence memo/named export caution (React has a named `memo`)
     'import/no-named-as-default-member': 'off',
 
-    // Pragmatic noise control
+    // Next rule that warned about <img>; keep as a warning for now
+    '@next/next/no-img-element': 'warn',
+
+    // Misc project prefs
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'prefer-const': 'warn',
-
-    // Allow console across the app (debug-heavy project)
     'no-console': 'off',
   },
 
   overrides: [
-    // API routes / server handlers: allow anything console-related and hook heuristics
+    // API routes / server handlers
     {
       files: ['app/api/**/*.{ts,tsx}'],
       rules: {
@@ -88,7 +129,7 @@ module.exports = {
         'react-hooks/exhaustive-deps': 'off',
       },
     },
-    // Debug/trace utilities can log freely
+    // Debug/trace utilities
     {
       files: [
         'lib/**/debug*.{ts,tsx}',
@@ -97,7 +138,7 @@ module.exports = {
       ],
       rules: { 'no-console': 'off' },
     },
-    // Test playground & demo tabs: relax strictness
+    // Playground: keep it loose
     {
       files: ['app/(menu)/Test/**/*.{ts,tsx}'],
       rules: {
@@ -105,24 +146,70 @@ module.exports = {
         'unused-imports/no-unused-vars': 'off',
         'react-hooks/exhaustive-deps': 'off',
         'no-console': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
       },
     },
-    // wagmi adapter-style components often accept but ignore many props (isConnected, etc.)
+    // Components that intentionally accept extra props from wagmi/connectors
     {
-      files: ['components/Buttons/Connect/**/*.{ts,tsx}', 'components/Buttons/CustomConnectButton.tsx'],
+      files: [
+        'components/Buttons/Connect/**/*.{ts,tsx}',
+        'components/Buttons/CustomConnectButton.tsx',
+      ],
       rules: {
         '@typescript-eslint/no-unused-vars': [
           'warn',
           {
-            varsIgnorePattern:
-              '^_|^(isConnected|isConnecting|hide|address|ensName|chain)$',
+            varsIgnorePattern: '^_|^(isConnected|isConnecting|hide|address|ensName|chain)$',
             argsIgnorePattern: '^_',
           },
         ],
         'unused-imports/no-unused-vars': 'off',
       },
     },
+    // Legacy “helpers” & “context” hot spots: downgrade safety rules to warnings only
+    {
+      files: [
+        'lib/context/**/*.{ts,tsx}',
+        'lib/network/**/*.{ts,tsx}',
+        'lib/utils/feeds/**/*.{ts,tsx}',
+        'lib/hooks/inputValidations/**/*.{ts,tsx}',
+      ],
+      rules: {
+        '@typescript-eslint/no-unsafe-assignment': 'warn',
+        '@typescript-eslint/no-unsafe-member-access': 'warn',
+        '@typescript-eslint/no-unsafe-argument': 'warn',
+        '@typescript-eslint/no-unsafe-return': 'warn',
+        '@typescript-eslint/no-unsafe-call': 'warn',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+        '@typescript-eslint/no-redundant-type-constituents': 'off',
+        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+        '@typescript-eslint/restrict-template-expressions': [
+          'warn',
+          { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
+        ],
+        '@typescript-eslint/no-floating-promises': [
+          'warn',
+          { ignoreVoid: true, ignoreIIFE: true },
+        ],
+        '@typescript-eslint/no-misused-promises': [
+          'warn',
+          { checksVoidReturn: { attributes: false, arguments: false }, checksConditionals: false },
+        ],
+      },
+    },
   ],
 
-  ignorePatterns: ['**/node_modules/**', '.next/**', 'dist/**', 'coverage/**', '**/*.d.ts'],
+  ignorePatterns: [
+    '**/node_modules/**',
+    '.next/**',
+    'dist/**',
+    'coverage/**',
+    '**/*.d.ts',
+    // generated or legacy build outputs if any
+    'scripts/**/dist/**',
+  ],
 };
