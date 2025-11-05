@@ -1,3 +1,4 @@
+// File: .eslintrc.cjs
 /* eslint-disable import/no-commonjs */
 const path = require('path');
 
@@ -8,7 +9,7 @@ module.exports = {
     'unused-imports',
     'import',
     'react-hooks',
-    'next',
+    // NOTE: Do not add 'next' here. Next.js ESLint rules come via `extends: ['next/core-web-vitals']`.
   ],
   extends: [
     // Base
@@ -69,8 +70,6 @@ module.exports = {
     ],
 
     // ------- Pragmatic TS strictness tuning -------
-    // You’re hitting thousands of these; relax them to warnings so builds pass,
-    // while still surfacing problems during local dev.
     '@typescript-eslint/no-unsafe-assignment': 'warn',
     '@typescript-eslint/no-unsafe-member-access': 'warn',
     '@typescript-eslint/no-unsafe-argument': 'warn',
@@ -84,7 +83,7 @@ module.exports = {
       { allowNumber: true, allowBoolean: true, allowNullish: true, allowAny: true },
     ],
 
-    // Promise rules: keep signal, reduce friction in React effects & fire-and-forget
+    // Promise rules
     '@typescript-eslint/no-floating-promises': [
       'warn',
       { ignoreVoid: true, ignoreIIFE: true },
@@ -103,7 +102,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
 
-    // React Hooks (keep default recommended; deps rule off as requested)
+    // React Hooks
     'react-hooks/exhaustive-deps': 'off',
 
     // import plugin: keep useful, drop noisy
