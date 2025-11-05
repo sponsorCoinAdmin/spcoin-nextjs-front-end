@@ -31,15 +31,10 @@ export const useValidateFSMInput = (selectAddress: string | undefined) => {
 
   const validatedToken = validatedAsset; // Explicit alias
 
-  // 🧹 Keep but underscore-prefix to satisfy lint (future use expected)
-  const _sellAddress = useSellTokenAddress();
-  const _buyAddress = useBuyTokenAddress();
-
-  // 🔧 Use the app-level chain id hook (tuple) — destructure the value
+   // 🔧 Use the app-level chain id hook (tuple) — destructure the value
   const [chainId] = useAppChainId();
 
   // 🧹 Keep but underscore-prefix to satisfy lint (future use expected)
-  const _publicClient = usePublicClient();
   const { address: _accountAddress } = useAccount();
 
   const seenBrokenLogosRef = useRef<Set<string>>(new Set());
