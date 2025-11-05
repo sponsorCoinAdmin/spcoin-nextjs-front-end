@@ -2,8 +2,8 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
-import { useAccount, usePublicClient } from 'wagmi';
-import { useAppChainId , useBuyTokenAddress, useSellTokenAddress } from '@/lib/context/hooks';
+import { useAccount } from 'wagmi';
+import { useAppChainId } from '@/lib/context/hooks';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
