@@ -186,15 +186,3 @@ export default function PanelsTab() {
     </div>
   );
 }
-
-function QuickAction({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      className="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-700 text-sm text-left"
-      onClick={onClick}
-      type="button"
-    >
-      {label}
-    </button>
-  );
-}
