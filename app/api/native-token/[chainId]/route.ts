@@ -20,7 +20,6 @@ function validateTokenInfo(data: any): boolean {
 }
 
 export async function GET(
-  request: Request,
   { params }: { params: Promise<{ chainId: string }> }
 ) {
   const { chainId } = await params;
