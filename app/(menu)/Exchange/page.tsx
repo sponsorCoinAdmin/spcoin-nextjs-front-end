@@ -2,7 +2,7 @@
 
 'use client'
 
-import Component from './index'
+// import Component from './index'
 
 import React from 'react'
 
