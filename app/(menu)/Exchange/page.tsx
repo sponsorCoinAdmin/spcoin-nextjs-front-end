@@ -1,17 +1,8 @@
 // File: app/(menu)/Exchange/page.tsx
+'use client';
 
-'use client'
+import PriceView from './Price';
 
-import Component from './index'
-
-import React from 'react'
-
-function connectedPage() {
-  return (
-    <>
-      <Component />
-    </>
-  )
+export default function ExchangePage() {
+  return <PriceView />;
 }
-
-export default connectedPage
