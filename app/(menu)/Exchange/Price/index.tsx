@@ -14,7 +14,8 @@ export default function PriceView() {
 
   return (
     <div className={styles.pageWrap}>
-      <MainTradingPanel />
+      {/* <MainTradingPanel /> */}
+      Hello World
     </div>
   );
 }
