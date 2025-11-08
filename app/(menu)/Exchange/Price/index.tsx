@@ -2,15 +2,15 @@
 'use client';
 
 import styles from '@/styles/Exchange.module.css';
-import { MainTradingPanel } from '@/components/views';
+// import { MainTradingPanel } from '@/components/views';
 
-import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
-import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
+// import { usePriceErrorEffect } from '@/lib/hooks/usePriceErrorEffect';
+// import { useResetAmountsOnTokenChange } from '@/lib/hooks/useResetAmountsOnTokenChange';
 
 export default function PriceView() {
   // UX-relevant side effects
-  usePriceErrorEffect();
-  useResetAmountsOnTokenChange();
+  // usePriceErrorEffect();
+  // useResetAmountsOnTokenChange();
 
   return (
     <div className={styles.pageWrap}>
