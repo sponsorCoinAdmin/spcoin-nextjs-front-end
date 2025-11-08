@@ -7,7 +7,7 @@ import SpCoinProviders from '@/components/Wrappers/SpCoinProviders'
 
 export const metadata: Metadata = {
   title: 'spCoin',
-  description: 'A decentralized cryptocurrency exchange platform powered by spCoin.', // ✅ updated meaningful description
+  description: 'A decentralized cryptocurrency exchange platform powered by spCoin.',
 }
 
 export default function RootLayout({
@@ -15,13 +15,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // keep the param to satisfy Next.js layout typing, but don't render it
+  void children
+
   return (
     <>
-      {/* <ExchangeProvider> previously used, currently replaced by SpCoinProviders */}
       <SpCoinProviders>
         <Header />
-        {children}
-        {/* <Footer /> temporarily disabled for redesign */}
+        {/* {children} */}
+        {/* <Footer /> */}
       </SpCoinProviders>
     </>
   )
