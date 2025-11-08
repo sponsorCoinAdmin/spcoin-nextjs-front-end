@@ -1,5 +1,4 @@
 // File: app/(menu)/layout.tsx
-
 import type { Metadata } from 'next'
 import '@/app/globals.css'
 import Header from '@/components/panes/header'
@@ -10,21 +9,10 @@ export const metadata: Metadata = {
   description: 'A decentralized cryptocurrency exchange platform powered by spCoin.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  // keep the param to satisfy Next.js layout typing, but don't render it
-  void children
-
+export default function RootLayout() {
   return (
-    <>
-      <SpCoinProviders>
-        <Header />
-        {/* {children} */}
-        {/* <Footer /> */}
-      </SpCoinProviders>
-    </>
+    <SpCoinProviders>
+      <Header />
+    </SpCoinProviders>
   )
 }
