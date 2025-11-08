@@ -1,6 +1,5 @@
 <ExchangeProvider>
   └── <PriceView>
-        ├── useDisplayStateCorrection()
         ├── useSwapTokensEffect()
         ├── usePriceErrorEffect()
         ├── useResetAmountsOnTokenChange()

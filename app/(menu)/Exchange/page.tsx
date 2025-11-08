@@ -1,16 +1,15 @@
-
+// File: app/(menu)/Exchange/page.tsx
 
 'use client'
 
-// import Component from './index'
+import Component from './index'
 
 import React from 'react'
 
 function connectedPage() {
   return (
     <>
-      {/* <Component /> */}
-      Hello World
+      <Component />
     </>
   )
 }
