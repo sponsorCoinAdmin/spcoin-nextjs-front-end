@@ -96,7 +96,7 @@ export default function SponsorCoinPage() {
 
           <div className="flex justify-center mt-0">
             <div className="flex items-center gap-4 mb-6">
-              <h1 className="text-3xl font-bold text-[#EBCA6A]">SponsorCoin Portal</h1>
+              <h1 className="text-3xl font-bold text-[#EBCA6A]">SponsorCoin JUNK Portal</h1>
             </div>
           </div>
 
