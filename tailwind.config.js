@@ -8,7 +8,7 @@ module.exports = {
     `./components/**/*.{js,ts,jsx,tsx,mdx}`,
     `./lib/**/*.{js,ts,jsx,tsx,mdx}`,
     `./pages/**/*.{js,ts,jsx,tsx,mdx}`,
-    `./styles/**/*.{css}`,
+    `./styles/**/*.css`,
   ],
 
   darkMode: `class`,
