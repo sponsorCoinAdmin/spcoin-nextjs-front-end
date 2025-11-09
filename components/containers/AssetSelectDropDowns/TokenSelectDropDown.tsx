@@ -16,7 +16,10 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
-import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+
+// 🔎 New: minimal probe to record the open intent (timestamp + stack) for SELL/BUY
+import { markPanelOpen } from '@/lib/debug/panels/panelVisibilityProbe';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -41,9 +44,8 @@ function TokenSelectDropDown({ containerType }: Props) {
   // Transition helpers
   const { openSellList, openBuyList } = usePanelTransitions();
 
-  // VISIBILITY PROBES (debug-friendly, cheap)
-  const sellListVisible = usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-  const buyListVisible  = usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+  // Panel visibility (for debug only)
+  const { isVisible } = usePanelTree();
 
   // Resolve logo with safe fallback
   const logoURL = useMemo(() => {
@@ -60,7 +62,7 @@ function TokenSelectDropDown({ containerType }: Props) {
 
   const handleMissingLogoURL = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
-      const img = event.currentTarget;
+      const img = event.currentTarget as HTMLImageElement;
       img.onerror = null;
       img.src = defaultMissingImage;
 
@@ -73,46 +75,74 @@ function TokenSelectDropDown({ containerType }: Props) {
     [tokenContract]
   );
 
-  // Small helper to stop bubbling; useful if a global click-to-close is listening
-  const stop = (e: React.SyntheticEvent) => {
-    e.stopPropagation();
-  };
-
   const openTokenSelectPanel = useCallback((e?: React.SyntheticEvent) => {
-    // Guard against global click handlers closing immediately
-    e?.stopPropagation();
+    // Prevent outside-click listeners from seeing this click (avoids open→immediate close flashes)
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
     clearFSMTraceFromMemory();
 
-    const target = isSellRoot ? 'SELL' : 'BUY';
-    DEBUG_ENABLED && debugLog.log(
-      `🟩 openTokenSelectPanel click → target=${target}; before: {sellVisible:${sellListVisible}, buyVisible:${buyListVisible}}`
+    const side: 'SELL' | 'BUY' = isSellRoot ? 'SELL' : 'BUY';
+    const targetPanel =
+      isSellRoot ? SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL : SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
+
+    const startSellVisible = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+    const startBuyVisible  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+
+    const sourceId =
+      (e?.target as HTMLElement | null)?.id ||
+      (e?.currentTarget as HTMLElement | null)?.id ||
+      'unknown';
+
+    // 🔎 record intent with timestamp + stack (the probe decides how to persist)
+    try {
+      markPanelOpen(side);
+    } catch {
+      // probe is optional; ignore if absent
+    }
+
+    debugLog.log(
+      `📂 Intent: open ${side}_LIST_SELECT_PANEL (source=${sourceId}) ` +
+      `(before sell=${startSellVisible}, buy=${startBuyVisible})`
     );
 
-    // Use named transition (radio behavior handled internally)
-    isSellRoot ? openSellList() : openBuyList();
+    // Defer to next task/microtask to avoid competing global “mousedown” closers
+    queueMicrotask(() => {
+      isSellRoot ? openSellList() : openBuyList();
 
-    // Defer a tick to see if something instantly closes it
-    if (DEBUG_ENABLED) {
+      // Verify result next tick; if it closes immediately, we’ll see it here
       setTimeout(() => {
-        debugLog.log(
-          `🟨 after open → {sellVisible:${document ? sellListVisible : 'n/a'}, buyVisible:${document ? buyListVisible : 'n/a'}} (note: values are hooks, so add console probes below if needed)`
-        );
+        const endSellVisible = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+        const endBuyVisible  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+
+        const opened =
+          (targetPanel === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL && endSellVisible) ||
+          (targetPanel === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL && endBuyVisible);
+
+        if (opened) {
+          debugLog.log(
+            `✅ Opened ${side}_LIST_SELECT_PANEL (sell=${endSellVisible}, buy=${endBuyVisible})`
+          );
+        } else {
+          // This is the critical case you’re seeing in prod (flash open→closed)
+          debugLog.warn(
+            `❌ Panel not visible after open attempt → likely closed by another handler ` +
+            `(sell=${endSellVisible}, buy=${endBuyVisible})`
+          );
+        }
       }, 0);
-      // Extra microtask to catch truly immediate flips
-      Promise.resolve().then(() => {
-        debugLog.log('🟡 microtask after open (if it closed immediately, a click-outside/toggle likely fired)');
-      });
-    }
-  }, [DEBUG_ENABLED, buyListVisible, isSellRoot, openBuyList, openSellList, sellListVisible]);
+    });
+  }, [isSellRoot, openSellList, openBuyList, isVisible]);
+
+  // Helper to prevent bubbling to any document/parent mousedown listeners that might close overlays
+  const stopMouseDown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
 
   return (
-    <div
-      id="TokenSelectDropDown"
-      className={styles.assetSelect}
-      onMouseDown={stop}   // reduce risk of mousedown-up combos triggering global handlers
-      onClick={stop}
-    >
+    <div id="TokenSelectDropDown" className={styles.assetSelect}>
       {tokenContract ? (
         <>
           <img
@@ -122,8 +152,8 @@ function TokenSelectDropDown({ containerType }: Props) {
             src={logoURL}
             loading="lazy"
             decoding="async"
-            onMouseDown={stop}
-            onClick={(e) => openTokenSelectPanel(e)}
+            onMouseDown={stopMouseDown}
+            onClick={openTokenSelectPanel}
             onError={handleMissingLogoURL}
           />
           {tokenContract.symbol ?? 'Select Token'}
@@ -136,8 +166,8 @@ function TokenSelectDropDown({ containerType }: Props) {
         id="ChevronDown"
         size={18}
         className="ml-2 cursor-pointer"
-        onMouseDown={stop}
-        onClick={(e) => openTokenSelectPanel(e)}
+        onMouseDown={stopMouseDown}
+        onClick={openTokenSelectPanel}
       />
     </div>
   );
