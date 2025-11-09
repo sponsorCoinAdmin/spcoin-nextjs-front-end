@@ -7,6 +7,8 @@ alias vm="vi  $ACTIVE_ENV_PATH/.m;m"
 alias killport=". \$ACTIVE_SCRIPTS_PATH/killport.sh"
 alias kp3000="killport 3000"
 
+alias cdssh="cd ~/.ssh"
+
 alias sshec2="ssh sponsorcoin"
 alias sshspc="ssh sponsorcoin-admin"
 alias sshrobin="ssh sponsorcoin-robin"
