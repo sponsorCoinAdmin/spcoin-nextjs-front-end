@@ -16,7 +16,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -41,8 +41,9 @@ function TokenSelectDropDown({ containerType }: Props) {
   // Transition helpers
   const { openSellList, openBuyList } = usePanelTransitions();
 
-  // Panel visibility (for debug only)
-  const { isVisible } = usePanelTree();
+  // VISIBILITY PROBES (debug-friendly, cheap)
+  const sellListVisible = usePanelVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+  const buyListVisible  = usePanelVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
 
   // Resolve logo with safe fallback
   const logoURL = useMemo(() => {
@@ -72,46 +73,46 @@ function TokenSelectDropDown({ containerType }: Props) {
     [tokenContract]
   );
 
+  // Small helper to stop bubbling; useful if a global click-to-close is listening
+  const stop = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  };
+
   const openTokenSelectPanel = useCallback((e?: React.SyntheticEvent) => {
-    // Prevent outside-click listeners from seeing this click (avoids open→immediate close flashes)
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    // Guard against global click handlers closing immediately
+    e?.stopPropagation();
 
     clearFSMTraceFromMemory();
 
     const target = isSellRoot ? 'SELL' : 'BUY';
-    const startSellVisible = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-    const startBuyVisible  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-
-    debugLog.log(
-      `📂 Opening TokenListSelectPanel: ${target}_LIST_SELECT_PANEL ` +
-      `(before sell=${startSellVisible}, buy=${startBuyVisible})`
+    DEBUG_ENABLED && debugLog.log(
+      `🟩 openTokenSelectPanel click → target=${target}; before: {sellVisible:${sellListVisible}, buyVisible:${buyListVisible}}`
     );
 
-    // Defer to next task/microtask to avoid competing event handlers (e.g., global mousedown closers)
-    queueMicrotask(() => {
-      isSellRoot ? openSellList() : openBuyList();
+    // Use named transition (radio behavior handled internally)
+    isSellRoot ? openSellList() : openBuyList();
 
-      // Give the panel system a tick to update visibility, then log
+    // Defer a tick to see if something instantly closes it
+    if (DEBUG_ENABLED) {
       setTimeout(() => {
-        const endSellVisible = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-        const endBuyVisible  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
         debugLog.log(
-          `✅ After open transition (sell=${endSellVisible}, buy=${endBuyVisible})`
+          `🟨 after open → {sellVisible:${document ? sellListVisible : 'n/a'}, buyVisible:${document ? buyListVisible : 'n/a'}} (note: values are hooks, so add console probes below if needed)`
         );
       }, 0);
-    });
-  }, [isSellRoot, openSellList, openBuyList, isVisible]);
-
-  // Helper to prevent bubbling to any document/parent mousedown listeners that might close overlays
-  const stopMouseDown = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+      // Extra microtask to catch truly immediate flips
+      Promise.resolve().then(() => {
+        debugLog.log('🟡 microtask after open (if it closed immediately, a click-outside/toggle likely fired)');
+      });
+    }
+  }, [DEBUG_ENABLED, buyListVisible, isSellRoot, openBuyList, openSellList, sellListVisible]);
 
   return (
-    <div id="TokenSelectDropDown" className={styles.assetSelect}>
+    <div
+      id="TokenSelectDropDown"
+      className={styles.assetSelect}
+      onMouseDown={stop}   // reduce risk of mousedown-up combos triggering global handlers
+      onClick={stop}
+    >
       {tokenContract ? (
         <>
           <img
@@ -121,8 +122,8 @@ function TokenSelectDropDown({ containerType }: Props) {
             src={logoURL}
             loading="lazy"
             decoding="async"
-            onMouseDown={stopMouseDown}
-            onClick={openTokenSelectPanel}
+            onMouseDown={stop}
+            onClick={(e) => openTokenSelectPanel(e)}
             onError={handleMissingLogoURL}
           />
           {tokenContract.symbol ?? 'Select Token'}
@@ -135,8 +136,8 @@ function TokenSelectDropDown({ containerType }: Props) {
         id="ChevronDown"
         size={18}
         className="ml-2 cursor-pointer"
-        onMouseDown={stopMouseDown}
-        onClick={openTokenSelectPanel}
+        onMouseDown={stop}
+        onClick={(e) => openTokenSelectPanel(e)}
       />
     </div>
   );
