@@ -1,35 +1,40 @@
-// File: lib/context/exchangeContext/providers/PanelTreeProvider.tsx
-// (or wherever you apply openPanel/closePanel mutations)
+// File: lib/debug/panels/panelVisibilityProbe.ts
+// (env-gated, zero-cost in prod unless flags are on)
 
-import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { markPanelApply } from '@/lib/debug/panels/panelVisibilityProbe';
+const DBG =
+  typeof window !== 'undefined' &&
+  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+    process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true');
 
-// ... your state and reducer ...
-
-function setVisible(panel: SP_COIN_DISPLAY, visible: boolean, reason?: string) {
-  setState(prev => {
-    const next = /* mutate or clone to set panel.visible = visible */;
-    // ← Instrument the actual apply point:
-    markPanelApply(panel, SP_COIN_DISPLAY[panel], visible, reason);
-    return next;
-  });
+export function markPanelOpen(side: 'SELL' | 'BUY') {
+  if (!DBG) return;
+  (window as any).__lastTokenListOpen = { side, ts: Date.now(), stack: new Error().stack };
+  console.groupCollapsed(`[PanelProbe] OPEN requested → ${side}_LIST_SELECT_PANEL`);
+  console.log((window as any).__lastTokenListOpen);
+  console.groupEnd();
 }
 
-// Example usages in your existing handlers:
-const openPanel = (p: SP_COIN_DISPLAY, reason?: string) => setVisible(p, true, reason);
-const closePanel = (p: SP_COIN_DISPLAY, reason?: string) => setVisible(p, false, reason);
+export function markPanelClosed(reason: string, detail?: unknown) {
+  if (!DBG) return;
+  const last = (window as any).__lastTokenListOpen;
+  const dt = last ? `${Date.now() - last.ts}ms after open` : 'no prior open mark';
+  console.groupCollapsed(`[PanelProbe] CLOSED (${reason}) — ${dt}`);
+  if (last) console.log('last open', last);
+  if (detail) console.log('detail', detail);
+  console.log('close trace:', new Error().stack);
+  console.groupEnd();
+}
 
-// If you have a hydration restore or radio-group restore effect, tag them:
-useEffect(() => {
-  // when restoring from localStorage:
-  // for each panel p with persisted visible v:
-  setVisible(p, v, 'hydration-restore');
-}, []);
-
-// when enforcing radio-group (open one, close others):
-function enforceRadioGroup(opened: SP_COIN_DISPLAY) {
-  // close other members:
-  for (const other of RADIO_GROUP) {
-    if (other !== opened) closePanel(other, 'radio-enforce');
-  }
+// ✅ New: called when visibility is actually applied by your tree
+export function markPanelApply(
+  label: string,
+  visible: boolean,
+  reason?: string
+) {
+  if (!DBG) return;
+  console.groupCollapsed(
+    `[PanelProbe] APPLY ${label} → ${visible ? 'OPEN' : 'CLOSED'}${reason ? ` (${reason})` : ''}`
+  );
+  console.trace();
+  console.groupEnd();
 }
