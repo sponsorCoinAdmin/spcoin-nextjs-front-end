@@ -4,41 +4,28 @@
 import React, { useEffect } from 'react'
 import Component from './index'
 
-function ExchangePage() {
-  // Lazily install the document-click probe only when debug flags are on.
+export default function ExchangePage() {
   useEffect(() => {
-    const DBG =
-      typeof window !== 'undefined' &&
-      (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-        process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true')
-
-    if (!DBG) return
-
     let cleanup: (() => void) | undefined
 
     ;(async () => {
       try {
         const mod = await import('@/lib/debug/panels/installDocClickProbe')
-        // If the module exists and exports a function, call it.
-        // If it returns a cleanup, keep it for unmount.
         if (typeof mod.installDocClickProbe === 'function') {
-          cleanup = mod.installDocClickProbe()
+          const ret = mod.installDocClickProbe()
+          if (typeof ret === 'function') cleanup = ret
         }
       } catch {
-        // Probe is optional; ignore if absent in certain builds.
+        // Probe is optional; ignore if it doesn't exist in this build
       }
     })()
 
     return () => {
-      try {
-        cleanup?.()
-      } catch {
-        // no-op
+      if (typeof cleanup === 'function') {
+        try { cleanup() } catch {}
       }
     }
   }, [])
 
   return <Component />
 }
-
-export default ExchangePage
