@@ -10,12 +10,33 @@ import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
+/* --------------------------------------------------------------------------------
+   NEW: unified options for callers that want to include both reason and parent.
+   Backward compatible with the old `(panel, reason?: string)` signature.
+--------------------------------------------------------------------------------- */
+type PanelActionOpts = {
+  reason?: string;
+  parent?: SP_COIN_DISPLAY;
+};
+
+function parseOpts(arg?: string | PanelActionOpts): {
+  reason: string;
+  parentId: SP_COIN_DISPLAY | undefined;
+  parentName: string | undefined;
+} {
+  if (!arg) return { reason: '(unspecified)', parentId: undefined, parentName: undefined };
+  if (typeof arg === 'string') return { reason: arg, parentId: undefined, parentName: undefined };
+  const parentId = arg.parent;
+  const parentName = parentId != null ? SP_COIN_DISPLAY[parentId] : undefined;
+  return { reason: arg.reason ?? '(unspecified)', parentId, parentName };
+}
+
 /* ------------------------------ debug helpers ------------------------------ */
 
 const PT_DEBUG =
   typeof window !== 'undefined' &&
   (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true') || true;
 
 const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
@@ -133,13 +154,18 @@ export function usePanelTree() {
 
   /* ------------------------------- actions ------------------------------- */
 
+  // Overloads preserved for BW-compat:
+  //   openPanel(panel, reason?);
+  //   openPanel(panel, { reason?, parent? });
   const openPanel = useCallback(
-    (panel: SP_COIN_DISPLAY, parentName = '(unspecified)') => {
-      dbg(`openPanel(${SP_COIN_DISPLAY[panel]})`, { from: parentName });
+    (panel: SP_COIN_DISPLAY, arg?: string | PanelActionOpts) => {
+      const { reason, parentName } = parseOpts(arg);
+
+      dbg(`openPanel(${SP_COIN_DISPLAY[panel]})`, { from: reason, parent: parentName });
       traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
 
       if (!KNOWN.has(panel)) {
-        dbg('⚠️ openPanel unknown id', { panel, from: parentName });
+        dbg('⚠️ openPanel unknown id', { panel, from: reason, parent: parentName });
         return;
       }
 
@@ -168,19 +194,24 @@ export function usePanelTree() {
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
-        }, `usePanelTree:open:${parentName}`);
+        }, `usePanelTree:open:${reason}`);
       });
     },
     [setExchangeContext, overlays]
   );
 
+  // Overloads preserved for BW-compat:
+  //   closePanel(panel, reason?);
+  //   closePanel(panel, { reason?, parent? });
   const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, parentName = '(unspecified)') => {
-      dbg(`closePanel(${SP_COIN_DISPLAY[panel]})`, { from: parentName });
+    (panel: SP_COIN_DISPLAY, arg?: string | PanelActionOpts) => {
+      const { reason, parentName } = parseOpts(arg);
+
+      dbg(`closePanel(${SP_COIN_DISPLAY[panel]})`, { from: reason, parent: parentName });
       traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
 
       if (!KNOWN.has(panel)) {
-        dbg('⚠️ closePanel unknown id', { panel, from: parentName });
+        dbg('⚠️ closePanel unknown id', { panel, from: reason, parent: parentName });
         return;
       }
 
@@ -214,7 +245,7 @@ export function usePanelTree() {
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
-        }, `usePanelTree:close:${parentName}`);
+        }, `usePanelTree:close:${reason}`);
       });
     },
     [setExchangeContext, overlays]
@@ -237,7 +268,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel,   // (panel, parentName?)
-    closePanel,  // (panel, parentName?)
+    openPanel,   // (panel, reason?) OR (panel, { reason?, parent? })
+    closePanel,  // (panel, reason?) OR (panel, { reason?, parent? })
   };
 }
