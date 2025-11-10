@@ -1,19 +1,19 @@
 // File: components/containers/AssetListSelectPanel/AssetListSelectPanel.tsx
 'use client';
 
-import AddressSelect from '@/components/views/AddressSelect';
-import DataListSelect from '@/components/views/DataListSelect';
+// import AddressSelect from '@/components/views/AddressSelect';
+// import DataListSelect from '@/components/views/DataListSelect';
 import { useAssetSelectContext } from '@/lib/context';
-import { useFeedData } from '@/lib/utils/feeds/assetSelect';
+// import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 
 export default function AssetListSelectPanel() {
   const { instanceId, feedType } = useAssetSelectContext();
 
   // Build data + loading state via the shared hook
-  const { feedData, loading } = useFeedData(feedType);
+  // const { feedData, loading } = useFeedData(feedType);
 
   // Ensure DataListSelect always receives a non-null FeedData
-  const safeFeedData = feedData ?? { wallets: [], tokens: [] };
+  // const safeFeedData = feedData ?? { wallets: [], tokens: [] };
 
   return (
     <div
