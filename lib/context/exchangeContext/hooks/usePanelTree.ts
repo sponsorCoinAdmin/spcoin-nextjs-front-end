@@ -12,10 +12,10 @@ type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
 /* ------------------------------ debug helpers ------------------------------ */
 
-const PT_DEBUG =
-  typeof window !== 'undefined' &&
-  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+const PT_DEBUG = true;
+  // typeof window !== 'undefined' &&
+  // (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+  //   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
 
 function dbg(label: string, payload?: unknown) {
   if (!PT_DEBUG) return;
