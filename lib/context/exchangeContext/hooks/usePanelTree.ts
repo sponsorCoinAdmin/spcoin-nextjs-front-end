@@ -25,12 +25,12 @@ function traceIfEnabled(label: string) {
   console.trace(`[usePanelTree] ${label}`);
 }
 
-function logAction(kind: 'openPanel' | 'closePanel', panel: SP_COIN_DISPLAY, parent?: string) {
+function logAction(kind: 'openPanel' | 'closePanel', panel: SP_COIN_DISPLAY, invoker?: string) {
   if (!PT_DEBUG) return;
   const panelName = SP_COIN_DISPLAY[panel];
-  const parentLabel = parent ?? 'unknown';
+  const invokerLabel = invoker ?? 'unknown';
   // eslint-disable-next-line no-console
-  console.log(`[usePanelTree] ${kind}({panel: ${panelName}, parent: '${parentLabel}'})`);
+  console.log(`[usePanelTree] ${kind}({panel: ${panelName}, invoker: '${invokerLabel}'})`);
 }
 
 /* ------------------------------ helpers ------------------------------ */
@@ -128,16 +128,16 @@ export function usePanelTree() {
   }, []);
 
   // Placeholder for future tree-aware children lookup (kept for API stability)
-  const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
+  const getPanelChildren = useCallback((_invoker: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
   /* ------------------------------- actions ------------------------------- */
 
   // New, simplified signature:
-  //   openPanel(panel, parent?)
+  //   openPanel(panel, invoker?)
   const openPanel = useCallback(
-    (panel: SP_COIN_DISPLAY, parent?: string) => {
+    (panel: SP_COIN_DISPLAY, invoker?: string) => {
       traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
-      logAction('openPanel', panel, parent);
+      logAction('openPanel', panel, invoker);
 
       if (!KNOWN.has(panel)) {
         logAction('openPanel', panel, `unknown-id(${panel})`);
@@ -176,11 +176,11 @@ export function usePanelTree() {
   );
 
   // New, simplified signature:
-  //   closePanel(panel, parent?)
+  //   closePanel(panel, invoker?)
   const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, parent?: string) => {
+    (panel: SP_COIN_DISPLAY, invoker?: string) => {
       traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
-      logAction('closePanel', panel, parent);
+      logAction('closePanel', panel, invoker);
 
       if (!KNOWN.has(panel)) {
         logAction('closePanel', panel, `unknown-id(${panel})`);
@@ -242,7 +242,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel,   // (panel, parent?)
-    closePanel,  // (panel, parent?)
+    openPanel,   // (panel, invoker?)
+    closePanel,  // (panel, invoker?)
   };
 }
