@@ -93,7 +93,7 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
 function findParentInTree(nodes: any[] | undefined, target: number): SP_COIN_DISPLAY | undefined {
   if (!Array.isArray(nodes)) return undefined;
 
-  const walk = (ns: any[], parentId?: number): SP_COIN_DISPLAY | undefined => {
+  const walk = (ns: any[]): SP_COIN_DISPLAY | undefined => {
     for (const n of ns) {
       const id = typeof n?.panel === 'number' ? (n.panel as number) : NaN;
       if (!Number.isFinite(id) || !KNOWN.has(id)) continue;
