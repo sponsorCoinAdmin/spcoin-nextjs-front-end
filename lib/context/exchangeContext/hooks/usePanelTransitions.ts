@@ -8,25 +8,35 @@ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { telemetry } from '@/lib/utils/telemetry';
 
-type OpenOpts = {
-  /** For correlating caller in logs/telemetry */
-  methodName?: string;
-};
+type OpenOpts = { methodName?: string };
+type ClickOpts = OpenOpts & { preventDefault?: boolean; stopPropagation?: boolean; defer?: boolean };
 
-type ClickOpts = OpenOpts & {
-  /** default true */
-  preventDefault?: boolean;
-  /** default true */
-  stopPropagation?: boolean;
-  /** If true, wrap the open call in queueMicrotask() (helps avoid outside-click closers) */
-  defer?: boolean;
-};
+// ⬇️ Optional parent threading (kept local for now)
+type MaybeParent = SP_COIN_DISPLAY | undefined;
 
 export function usePanelTransitions() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
 
-  // Monotonic counters to correlate repeated attempts
+  // ── Compatibility wrappers: keep 1–2 arg API today ────────────────────────
+  const openWithParent = useCallback(
+    (id: SP_COIN_DISPLAY, methodName?: string, _parent?: MaybeParent) => {
+      // If you want a noop log for parent while keeping the 1–2 arg signature:
+      // console.debug('[openPanel]', SP_COIN_DISPLAY[id], 'parent:', _parent && SP_COIN_DISPLAY[_parent]);
+      openPanel(id, methodName); // ✅ only pass the supported args
+    },
+    [openPanel],
+  );
+
+  const closeWithParent = useCallback(
+    (id: SP_COIN_DISPLAY, methodName?: string, _parent?: MaybeParent) => {
+      // console.debug('[closePanel]', SP_COIN_DISPLAY[id], 'parent:', _parent && SP_COIN_DISPLAY[_parent]);
+      closePanel(id, methodName); // ✅ only pass the supported args
+    },
+    [closePanel],
+  );
+  // ──────────────────────────────────────────────────────────────────────────
+
   const buyCountRef  = useRef(0);
   const sellCountRef = useRef(0);
 
@@ -37,218 +47,239 @@ export function usePanelTransitions() {
     count?: number,
   ) => {
     telemetry.emit('panel_transition', {
-      action,
-      to,
-      label: SP_COIN_DISPLAY[to],
-      ts: Date.now(),
-      methodName,
-      count,
+      action, to, label: SP_COIN_DISPLAY[to], ts: Date.now(), methodName, count,
     });
   };
 
-  // Helper to build safe click handlers with correct typing
   const toClickHandler = <T extends HTMLElement>(
     act: (opts?: OpenOpts) => void,
     base?: ClickOpts,
   ): MouseEventHandler<T> => {
-    const {
-      preventDefault = true,
-      stopPropagation = true,
-      defer = true,
-      methodName,
-    } = base ?? {};
+    const { preventDefault = true, stopPropagation = true, defer = true, methodName } = base ?? {};
     return (e: MouseEvent<T>) => {
       if (preventDefault) e.preventDefault();
       if (stopPropagation) e.stopPropagation();
-      if (defer) {
-        queueMicrotask(() => act({ methodName }));
-      } else {
-        act({ methodName });
-      }
+      defer ? queueMicrotask(() => act({ methodName })) : act({ methodName });
     };
   };
 
-  // ─── Core overlays (radio group) ───────────────────────────────────────────
+  // ─── Core overlays ────────────────────────────────────────────────────────
   const toTrading = useCallback(() => {
     perf.start();
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'usePanelTransitions:toTrading');
+    openWithParent(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'usePanelTransitions:toTrading', undefined);
     perf.end('toTrading');
     _emit(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'open', 'toTrading');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const openBuyList = useCallback((opts?: OpenOpts) => {
     const count = ++buyCountRef.current;
     const methodName = opts?.methodName ?? 'openBuyList';
-
-    const before = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-    const beforeOther = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
-    console.log('[openBuyList]', `#${count}`, { before, beforeOther, methodName });
+    console.log('[openBuyList]', `#${count}`, {
+      before: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+      beforeOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+      methodName,
+    });
 
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
       `usePanelTransitions:openBuyList#${count}(${methodName})`,
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('openBuyList');
     _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open', methodName, count);
 
-    const after = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-    const afterOther = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
-    console.log('[openBuyList]', `#${count} (after)`, { after, afterOther, methodName });
-  }, [openPanel, isVisible, perf]);
+    console.log('[openBuyList]', `#${count} (after)`, {
+      after: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+      afterOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+      methodName,
+    });
+  }, [isVisible, openWithParent, perf]);
 
   const openSellList = useCallback((opts?: OpenOpts) => {
     const count = ++sellCountRef.current;
     const methodName = opts?.methodName ?? 'openSellList';
-
-    const before = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-    const beforeOther = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
-    console.log('[openSellList]', `#${count}`, { before, beforeOther, methodName });
+    console.log('[openSellList]', `#${count}`, {
+      before: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+      beforeOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+      methodName,
+    });
 
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
       `usePanelTransitions:openSellList#${count}(${methodName})`,
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('openSellList');
     _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open', methodName, count);
 
-    const after = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-    const afterOther = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
-    console.log('[openSellList]', `#${count} (after)`, { after, afterOther, methodName });
-  }, [openPanel, isVisible, perf]);
+    console.log('[openSellList]', `#${count} (after)`, {
+      after: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+      afterOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+      methodName,
+    });
+  }, [isVisible, openWithParent, perf]);
 
-  // Type-safe click handlers you can pass directly to onClick
-  const openBuyListClick    = useCallback(
+  const openBuyListClick  = useCallback(
     (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openBuyList, opts),
     [openBuyList],
   );
-  const openSellListClick   = useCallback(
+  const openSellListClick = useCallback(
     (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openSellList, opts),
     [openSellList],
   );
 
-  // ─── Other panels ──────────────────────────────────────────────────────────
+  // ─── Other panels ─────────────────────────────────────────────────────────
   const openRecipientList = useCallback(() => {
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
       'usePanelTransitions:openRecipientList',
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('openRecipientList');
     _emit(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'open', 'openRecipientList');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const openAgentList = useCallback(() => {
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
       'usePanelTransitions:openAgentList',
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('openAgentList');
     _emit(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL, 'open', 'openAgentList');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const showErrorOverlay = useCallback(() => {
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
       'usePanelTransitions:showErrorOverlay',
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('showErrorOverlay');
     _emit(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'open', 'showErrorOverlay');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const openManageSponsorships = useCallback(() => {
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
       'usePanelTransitions:openManageSponsorships',
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('openManageSponsorships');
     _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'open', 'openManageSponsorships');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const closeManageSponsorships = useCallback(() => {
     perf.start();
-    closePanel(
+    closeWithParent(
       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
       'usePanelTransitions:closeManageSponsorships',
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
     );
     perf.end('closeManageSponsorships');
     _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'close', 'closeManageSponsorships');
-  }, [closePanel, perf]);
+  }, [closeWithParent, perf]);
 
   const startAddSponsorship = useCallback(() => {
     perf.time('startAddSponsorship', () => {
-      openPanel(
+      openWithParent(
         SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
         'usePanelTransitions:startAddSponsorship',
+        SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
       );
     });
     _emit(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'open', 'startAddSponsorship');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const openConfigSponsorship = useCallback(() => {
     perf.start();
-    openPanel(
+    openWithParent(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       'usePanelTransitions:openConfigSponsorship',
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
     );
     perf.end('openConfigSponsorship');
     _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'open', 'openConfigSponsorship');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   const closeConfigSponsorship = useCallback(() => {
     perf.start();
-    closePanel(
+    closeWithParent(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       'usePanelTransitions:closeConfigSponsorship',
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
     );
     perf.end('closeConfigSponsorship');
     _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'close', 'closeConfigSponsorship');
-  }, [closePanel, perf]);
+  }, [closeWithParent, perf]);
 
   const toggleSponsorConfig = useCallback(() => {
     const open = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
     perf.start();
     open
-      ? closePanel(
+      ? closeWithParent(
           SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
           'usePanelTransitions:toggleSponsorConfig(close)',
+          SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
         )
-      : openPanel(
+      : openWithParent(
           SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
           'usePanelTransitions:toggleSponsorConfig(open)',
+          SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
         );
     perf.end('toggleSponsorConfig');
     _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, open ? 'close' : 'open', 'toggleSponsorConfig');
-  }, [isVisible, closePanel, openPanel, perf]);
+  }, [isVisible, closeWithParent, openWithParent, perf]);
 
   const closeAddSponsorship = useCallback(() => {
     perf.start();
-    closePanel(
+    closeWithParent(
       SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
       'usePanelTransitions:closeAddSponsorship(Config)',
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
     );
-    closePanel(
+    closeWithParent(
       SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
       'usePanelTransitions:closeAddSponsorship(Add)',
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
     );
     perf.end('closeAddSponsorship');
     _emit(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'close', 'closeAddSponsorship');
-  }, [closePanel, perf]);
+  }, [closeWithParent, perf]);
 
   const openOverlay = useCallback((overlay: SP_COIN_DISPLAY) => {
+    // optional parent guess stays here for future use
+    const parentGuess: MaybeParent =
+      overlay === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
+      overlay === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL ||
+      overlay === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL ||
+      overlay === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL ||
+      overlay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL
+        ? SP_COIN_DISPLAY.TRADING_STATION_PANEL
+        : overlay === SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL ||
+          overlay === SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
+        ? SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL
+        : undefined;
+
     perf.start();
-    openPanel(overlay, `usePanelTransitions:openOverlay(${SP_COIN_DISPLAY[overlay]})`);
+    openWithParent(
+      overlay,
+      `usePanelTransitions:openOverlay(${SP_COIN_DISPLAY[overlay]})`,
+      parentGuess,
+    );
     perf.end(`openOverlay:${overlay}`);
     _emit(overlay, 'open', 'openOverlay');
-  }, [openPanel, perf]);
+  }, [openWithParent, perf]);
 
   return {
     // programmatic

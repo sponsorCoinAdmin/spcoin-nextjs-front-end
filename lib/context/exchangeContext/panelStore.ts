@@ -28,8 +28,28 @@ class PanelStore {
     this.queueEmit(id);
   };
 
-  openPanel = (id: PanelId) => this.setVisible(id, true);
-  closePanel = (id: PanelId) => this.setVisible(id, false);
+  // Overloads allow (id) or (id, parentId)
+  openPanel(id: PanelId): void;
+  openPanel(id: PanelId, parentId: PanelId): void;
+  openPanel(id: PanelId, parentId?: PanelId): void {
+    if (typeof parentId === 'number') {
+      // Ensure parent is visible first
+      this.setVisible(parentId, true);
+    }
+    this.setVisible(id, true);
+  }
+
+  // Overloads allow (id) or (id, parentId)
+  closePanel(id: PanelId): void;
+  closePanel(id: PanelId, parentId: PanelId): void;
+  closePanel(id: PanelId, parentId?: PanelId): void {
+    // Close the child first
+    this.setVisible(id, false);
+    if (typeof parentId === 'number') {
+      // Optionally also close the parent if requested
+      this.setVisible(parentId, false);
+    }
+  }
 
   // --- subscribe ---
   subscribePanel = (id: PanelId, listener: Listener) => {

@@ -29,7 +29,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
 
-  let accountType = "";
+  let accountType = '';
 
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
@@ -44,33 +44,46 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const defaultAddr = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
 
   // Open only the requested panel; close the alternatives
-  const openOnly = useCallback((id: SP_COIN_DISPLAY) => {
-    try {
-      [
-        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
-        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
-        SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
-      ].forEach((pid) => (pid === id ? openPanel(pid) : closePanel(pid)));
-    } catch {
-      /* no-op: panel tree may not be ready */
-    }
-  }, [openPanel, closePanel]);
+  const openOnly = useCallback(
+    (id: SP_COIN_DISPLAY) => {
+      try {
+        [
+          SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
+          SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+          SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+        ].forEach((pid) =>
+          pid === id
+            ? openPanel(pid, 'ManageSponsorshipsPanel:openOnly')
+            : closePanel(pid, 'ManageSponsorshipsPanel:openOnly')
+        );
+      } catch {
+        /* no-op: panel tree may not be ready */
+      }
+    },
+    [openPanel, closePanel]
+  );
 
   /** Alert-only placeholder per request */
-  const claimRewards = useCallback((actType: AccountType) => {
-    setShowToDo(true)
-    accountType = actType;
-  }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
+  const claimRewards = useCallback(
+    (actType: AccountType) => {
+      setShowToDo(true);
+      accountType = actType;
+    },
+    [ctx?.exchangeContext?.accounts?.connectedAccount]
+  );
 
   const doToDo = useCallback(() => {
-    setShowToDo(false)
+    setShowToDo(false);
     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
-    let msg:string = 'ToDo: (Not Yet Implemented)\n';
+    let msg: string = 'ToDo: (Not Yet Implemented)\n';
     msg += `Claim: `;
-    msg += accountType.toString() === "ALL" ? accountType.toString() : `${accountType.toString()}(s)`;
-    msg += ` Rewards\n`
+    msg +=
+      accountType.toString() === 'ALL'
+        ? accountType.toString()
+        : `${accountType.toString()}(s)`;
+    msg += ` Rewards\n`;
     msg += `For account: ${connected ? connected.address : '(none connected)'}`;
-    alert( msg );
+    alert(msg);
   }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
 
   // ✅ Early return happens only after all hooks have been called
@@ -87,7 +100,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const rowH = 'h-[40px]';
   const tdInner = `${rowH} w-full px-3 text-sm align-middle flex items-center`;
   const tdInnerCenter = `${tdInner} justify-center`;
-  const rowA = 'bg-[rgba(56,78,126,0.35)]';   // Sponsors / Agents
+  const rowA = 'bg-[rgba(56,78,126,0.35)]'; // Sponsors / Agents
   const rowB = 'bg-[rgba(156,163,175,0.25)]'; // Recipients / Total
   const th =
     'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';

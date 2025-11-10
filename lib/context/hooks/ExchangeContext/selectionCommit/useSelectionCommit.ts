@@ -36,7 +36,7 @@ export function useSelectionCommit(): UseSelectionCommit {
 
   const finish = useCallback(() => {
     log.log?.('finish → openPanel(TRADING_STATION_PANEL)');
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'useSelectionCommit:finish');
   }, [openPanel]);
 
   const commitBuyToken = useCallback(

@@ -29,7 +29,10 @@ export default function ManageSponsors({ onClose }: Props) {
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
   // Allow header close to signal "exit detail → list"
-  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, () => setWalletCallBack(undefined));
+  useRegisterDetailCloser(
+    SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+    () => setWalletCallBack(undefined)
+  );
 
   // Resolve wallets once and store in ExchangeContext.accounts.sponsorAccounts
   useEffect(() => {
@@ -114,9 +117,15 @@ export default function ManageSponsors({ onClose }: Props) {
     );
 
     if (w) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+      openPanel(
+        SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+        'ManageSponsors:setSponsorAccount(open)'
+      );
     } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+      closePanel(
+        SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+        'ManageSponsors:setSponsorAccount(close)'
+      );
     }
   };
 

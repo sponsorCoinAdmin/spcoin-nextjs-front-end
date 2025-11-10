@@ -48,8 +48,8 @@ export default function ManageRecipient({ onClose }: Props) {
 
   const handleClose = useCallback(() => {
     // Go back to the list panel when the header X is clicked
-    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'ManageRecipient:handleClose(open)');
+    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, 'ManageRecipient:handleClose(close)');
     onClose?.();
   }, [openPanel, closePanel, onClose]);
 

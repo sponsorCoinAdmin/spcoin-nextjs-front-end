@@ -26,7 +26,10 @@ export default function ManageAgents({ onClose }: Props) {
 
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
-  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, () => setWalletCallBack(undefined));
+  useRegisterDetailCloser(
+    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+    () => setWalletCallBack(undefined)
+  );
 
   useEffect(() => {
     let alive = true;
@@ -61,8 +64,11 @@ export default function ManageAgents({ onClose }: Props) {
       return { ...prev, accounts: { ...prev.accounts, agentAccount: w } };
     }, 'ManageAgents:setAgentAccount');
 
-    if (w) openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
-    else closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
+    if (w) {
+      openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(open)');
+    } else {
+      closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(close)');
+    }
   };
 
   return (

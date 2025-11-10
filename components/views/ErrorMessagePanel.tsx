@@ -9,12 +9,14 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 
 function ErrorMessagePanelInner() {
   const [errorMessage, setErrorMessage] = useErrorMessage();
-  const { openPanel } = usePanelTree();
+  const { openPanel, closePanel } = usePanelTree();
 
   const onDismiss = useCallback(() => {
     setErrorMessage(undefined);
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
-  }, [setErrorMessage, openPanel]);
+    // Close the error overlay and ensure trading station is visible
+    closePanel(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'ErrorMessagePanel:onDismiss');
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'ErrorMessagePanel:onDismiss');
+  }, [setErrorMessage, openPanel, closePanel]);
 
   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);
 

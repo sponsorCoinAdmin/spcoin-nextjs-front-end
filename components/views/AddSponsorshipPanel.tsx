@@ -85,7 +85,7 @@ const AddSponsorShipPanel: React.FC = () => {
   useEffect(() => {
     if (isVisible && !tradingVisible) {
       debugLog.log?.('Forcing TRADING_STATION_PANEL visible');
-      openPanel(SP_TREE.TRADING_STATION_PANEL);
+      openPanel(SP_TREE.TRADING_STATION_PANEL, 'AddSponsorshipPanel:ensureTradingVisible');
     }
   }, [isVisible, tradingVisible, openPanel]);
 
@@ -136,11 +136,11 @@ const AddSponsorShipPanel: React.FC = () => {
     );
 
     // Close the panel
-    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
+    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipPanel:closePanel');
 
     // Only re-show the launcher button if the current BUY token is an SpCoin
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
-      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
+      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipPanel:reopenLauncher');
     }
   }, [setExchangeContext, closePanel, openPanel, buyTokenContract]);
 

@@ -144,18 +144,24 @@ export function useHeaderController() {
   // Helper: force exactly one manage sub-list visible (and hide hub + details)
   const openOnlyManageList = useCallback((list: SP_COIN_DISPLAY) => {
     // close hub + all details
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
-    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:openOnlyManageList');
+    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'HeaderController:openOnlyManageList');
+    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, 'HeaderController:openOnlyManageList');
+    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, 'HeaderController:openOnlyManageList');
 
     // close the other lists
-    if (list !== SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL) closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-    if (list !== SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL) closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
-    if (list !== SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL) closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+    if (list !== SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL) {
+      closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'HeaderController:openOnlyManageList');
+    }
+    if (list !== SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL) {
+      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'HeaderController:openOnlyManageList');
+    }
+    if (list !== SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL) {
+      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'HeaderController:openOnlyManageList');
+    }
 
     // finally open the requested list
-    openPanel(list);
+    openPanel(list, 'HeaderController:openOnlyManageList');
   }, [openPanel, closePanel]);
 
   const onClose = useCallback(() => {
@@ -186,7 +192,7 @@ export function useHeaderController() {
       case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
       case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL:
-        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:onClose');
         return;
 
       default:

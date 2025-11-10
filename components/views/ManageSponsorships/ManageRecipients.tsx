@@ -30,7 +30,10 @@ export default function ManageRecipients({ onClose }: Props) {
   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
 
   // Allow header close to say “exit detail → list”
-  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, () => setWalletCallBack(undefined));
+  useRegisterDetailCloser(
+    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+    () => setWalletCallBack(undefined)
+  );
 
   // Resolve recipients once (same enrichment pattern as Agents) and store in ExchangeContext.accounts.recipientAccounts
   useEffect(() => {
@@ -115,9 +118,15 @@ export default function ManageRecipients({ onClose }: Props) {
     );
 
     if (w) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+      openPanel(
+        SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+        'ManageRecipients:setRecipientAccount(open)'
+      );
     } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+      closePanel(
+        SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+        'ManageRecipients:setRecipientAccount(close)'
+      );
     }
   };
 

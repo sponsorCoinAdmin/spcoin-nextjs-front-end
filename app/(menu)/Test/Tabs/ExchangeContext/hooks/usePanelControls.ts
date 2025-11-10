@@ -17,10 +17,10 @@ export function usePanelControls() {
 
       if (isMain) {
         // Radio overlays: visible → close (allow "none"), otherwise open
-        visible ? closePanel(panelId) : openPanel(panelId);
+        visible ? closePanel(panelId, 'usePanelControls') : openPanel(panelId, 'usePanelControls');
       } else {
         // Non-radio panels: simple toggle
-        visible ? closePanel(panelId) : openPanel(panelId);
+        visible ? closePanel(panelId, 'usePanelControls') : openPanel(panelId, 'usePanelControls');
       }
     },
     [isVisible, openPanel, closePanel]

@@ -51,7 +51,7 @@ export default function ManageSponsor({ onClose }: Props) {
     )
   );
 
-    const doToDo = useCallback(() => {
+  const doToDo = useCallback(() => {
     setShowToDo(false);
     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
     const name = sponsorWallet?.name ?? 'N/A';
@@ -68,8 +68,14 @@ export default function ManageSponsor({ onClose }: Props) {
   const [showToDo, setShowToDo] = useState<boolean>(false);
 
   const handleClose = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+    openPanel(
+      SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+      'ManageSponsor:handleClose(open)'
+    );
+    closePanel(
+      SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+      'ManageSponsor:handleClose(close)'
+    );
     onClose?.();
   }, [openPanel, closePanel, onClose]);
 

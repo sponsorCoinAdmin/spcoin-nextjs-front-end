@@ -13,7 +13,8 @@ export function usePanelTreeProbe() {
     (p: SP_COIN_DISPLAY, reason = 'openPanel') => {
       // mark *intent* and let the tree do its thing
       markPanelApply(p, SP_COIN_DISPLAY[p], true, reason);
-      return openPanel(p);
+      // Thread the reason as the optional methodName for telemetry/debug
+      return openPanel(p, `usePanelTreeProbe:${reason}`);
     },
     [openPanel]
   );
@@ -22,7 +23,7 @@ export function usePanelTreeProbe() {
     (p: SP_COIN_DISPLAY, reason = 'closePanel') => {
       markPanelApply(p, SP_COIN_DISPLAY[p], false, reason);
       markPanelClosed(reason);
-      return closePanel(p);
+      return closePanel(p, `usePanelTreeProbe:${reason}`);
     },
     [closePanel]
   );

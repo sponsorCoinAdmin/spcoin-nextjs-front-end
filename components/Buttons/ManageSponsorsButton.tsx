@@ -34,17 +34,17 @@ export default function ManageSponsorsButton() {
     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
 
     if (shouldShow) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, 'ManageSponsorsButton');
     } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, 'ManageSponsorsButton');
     }
 
     appliedRef.current = next;
   }, [addr, openPanel, closePanel, sellToken]);
 
   const onOpenManage = useCallback(() => {
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
-    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, 'ManageSponsorsButton:onOpenManage');
+    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'ManageSponsorsButton:onOpenManage');
   }, [openPanel, closePanel]);
 
   if (!launcherVisible) return null;

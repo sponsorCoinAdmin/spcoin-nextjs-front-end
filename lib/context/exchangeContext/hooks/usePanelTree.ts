@@ -72,7 +72,7 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
     const prev = !!prevMap[idNum];
     const next = !!nextMap[idNum];
     if (prev !== next) {
-      dbg(`publish ${SP_COIN_DISPLAY[id]}: ${prev} → ${next}`);
+      // dbg(`publish ${SP_COIN_DISPLAY[id]}: ${prev} → ${next}`);
       panelStore.setVisible(id, next);
     }
   });

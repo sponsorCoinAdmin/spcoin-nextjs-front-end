@@ -54,8 +54,9 @@ export default function ManageAgent({ onClose }: Props) {
   const [showToDo, setShowToDo] = useState<boolean>(true);
 
   const handleClose = useCallback(() => {
-    openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
-    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
+    // Provide parent/source for logs
+    openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'ManageAgent:handleClose');
+    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgent:handleClose');
     onClose?.();
   }, [openPanel, closePanel, onClose]);
 

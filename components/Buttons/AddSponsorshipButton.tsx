@@ -33,17 +33,17 @@ export default function AddSponsorshipButton() {
     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
 
     if (shouldShow) {
-      openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+      openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipButton');
     } else {
-      closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+      closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipButton');
     }
 
     appliedRef.current = next;
   }, [addr, openPanel, closePanel, buyToken]);
 
   const onOpenInline = useCallback(() => {
-    closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
-    openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
+    closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipButton:onOpenInline');
+    openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipButton:onOpenInline');
   }, [openPanel, closePanel]);
 
   if (!launcherVisible) return null;

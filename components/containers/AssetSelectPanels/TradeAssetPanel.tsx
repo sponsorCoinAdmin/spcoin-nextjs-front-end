@@ -78,9 +78,6 @@ function TradeAssetPanelInner() {
   // ────────────────────────────────────────────────────────────────────────────
   // Add Sponsorship BUTTON gate (BUY-side only):
   // Flip ONLY the button node's visibility when buyTokenContract.address changes.
-  // - No first-render guard (OK to flip on load per request).
-  // - Does NOT change overlay selection except to ensure panel closes when non-SpCoin.
-  // - Runs only from the BUY instance to avoid double writers.
   // ────────────────────────────────────────────────────────────────────────────
   const prevBuyAddrRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -94,16 +91,16 @@ function TradeAssetPanelInner() {
 
     // Toggle only the BUTTON visibility; also ensure the PANEL is closed on non-SpCoin
     if (!addr) {
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL);
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanel:BUY.addrUnset');
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanel:BUY.addrUnset');
       return;
     }
 
     if (isSpCoin(buyTokenContract)) {
-      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
+      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanel:BUY.isSpCoin');
     } else {
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL);
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanel:BUY.notSpCoin');
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanel:BUY.notSpCoin');
     }
   }, [isBuy, buyTokenContract?.address, openPanel, closePanel]);
   // ────────────────────────────────────────────────────────────────────────────
