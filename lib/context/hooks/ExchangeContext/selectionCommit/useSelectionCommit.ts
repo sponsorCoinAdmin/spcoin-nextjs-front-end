@@ -36,11 +36,11 @@ export function useSelectionCommit(): UseSelectionCommit {
 
   const finish = useCallback(() => {
     log.log?.('finish → openPanel(TRADING_STATION_PANEL)');
-    // Thread parent just like usePanelTransitions.toTrading (parent = MAIN_TRADING_PANEL)
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, {
-      reason: 'useSelectionCommit:finish',
-      parent: SP_COIN_DISPLAY.MAIN_TRADING_PANEL,
-    });
+    // Parent label follows the new convention: module:method(args)
+    openPanel(
+      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+      'useSelectionCommit:finish(MAIN_TRADING_PANEL)',
+    );
   }, [openPanel]);
 
   const commitBuyToken = useCallback(

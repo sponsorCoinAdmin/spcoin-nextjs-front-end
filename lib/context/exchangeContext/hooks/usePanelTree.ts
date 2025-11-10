@@ -10,27 +10,6 @@ import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
-/* --------------------------------------------------------------------------------
-   Unified options for callers that want to include both reason and parent.
-   Backward compatible with the old `(panel, reason?: string)` signature.
---------------------------------------------------------------------------------- */
-type PanelActionOpts = {
-  reason?: string;
-  parent?: SP_COIN_DISPLAY;
-};
-
-function parseOpts(arg?: string | PanelActionOpts): {
-  reason: string;
-  parentId: SP_COIN_DISPLAY | undefined;
-  parentName: string | undefined;
-} {
-  if (!arg) return { reason: '(unspecified)', parentId: undefined, parentName: undefined };
-  if (typeof arg === 'string') return { reason: arg, parentId: undefined, parentName: undefined };
-  const parentId = arg.parent;
-  const parentName = parentId != null ? SP_COIN_DISPLAY[parentId] : undefined;
-  return { reason: arg.reason ?? '(unspecified)', parentId, parentName };
-}
-
 /* ------------------------------ debug helpers ------------------------------ */
 
 const PT_DEBUG =
@@ -40,16 +19,18 @@ const PT_DEBUG =
 
 const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
-function dbg(label: string, payload?: unknown) {
-  if (!PT_DEBUG) return;
-  // eslint-disable-next-line no-console
-  console.log(`[usePanelTree] ${label}`, payload ?? '');
-}
-
 function traceIfEnabled(label: string) {
   if (!PT_DEBUG || !PT_TRACE) return;
   // eslint-disable-next-line no-console
   console.trace(`[usePanelTree] ${label}`);
+}
+
+function logAction(kind: 'openPanel' | 'closePanel', panel: SP_COIN_DISPLAY, parent?: string) {
+  if (!PT_DEBUG) return;
+  const panelName = SP_COIN_DISPLAY[panel];
+  const parentLabel = parent ?? 'unknown';
+  // eslint-disable-next-line no-console
+  console.log(`[usePanelTree] ${kind}({panel: ${panelName}, parent: '${parentLabel}'})`);
 }
 
 /* ------------------------------ helpers ------------------------------ */
@@ -127,10 +108,6 @@ export function usePanelTree() {
     if (visible.length <= 1) return;
 
     const keep = visible[0];
-    dbg('reconcile overlays: multiple visible → collapsing', {
-      visible: visible.map((id) => SP_COIN_DISPLAY[id]),
-      keep: SP_COIN_DISPLAY[keep],
-    });
 
     schedule(() => {
       setExchangeContext((prev) => {
@@ -155,18 +132,15 @@ export function usePanelTree() {
 
   /* ------------------------------- actions ------------------------------- */
 
-  // Overloads preserved for BW-compat:
-  //   openPanel(panel, reason?);
-  //   openPanel(panel, { reason?, parent? });
+  // New, simplified signature:
+  //   openPanel(panel, parent?)
   const openPanel = useCallback(
-    (panel: SP_COIN_DISPLAY, arg?: string | PanelActionOpts) => {
-      const { reason, parentName } = parseOpts(arg);
-
-      dbg(`openPanel(${SP_COIN_DISPLAY[panel]})`, { from: reason, parent: parentName });
+    (panel: SP_COIN_DISPLAY, parent?: string) => {
       traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
+      logAction('openPanel', panel, parent);
 
       if (!KNOWN.has(panel)) {
-        dbg('⚠️ openPanel unknown id', { panel, from: reason, parent: parentName });
+        logAction('openPanel', panel, `unknown-id(${panel})`);
         return;
       }
 
@@ -201,18 +175,15 @@ export function usePanelTree() {
     [setExchangeContext, overlays]
   );
 
-  // Overloads preserved for BW-compat:
-  //   closePanel(panel, reason?);
-  //   closePanel(panel, { reason?, parent? });
+  // New, simplified signature:
+  //   closePanel(panel, parent?)
   const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, arg?: string | PanelActionOpts) => {
-      const { reason, parentName } = parseOpts(arg);
-
-      dbg(`closePanel(${SP_COIN_DISPLAY[panel]})`, { from: reason, parent: parentName });
+    (panel: SP_COIN_DISPLAY, parent?: string) => {
       traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
+      logAction('closePanel', panel, parent);
 
       if (!KNOWN.has(panel)) {
-        dbg('⚠️ closePanel unknown id', { panel, from: reason, parent: parentName });
+        logAction('closePanel', panel, `unknown-id(${panel})`);
         return;
       }
 
@@ -271,7 +242,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel, // (panel, reason?) OR (panel, { reason?, parent? })
-    closePanel, // (panel, reason?) OR (panel, { reason?, parent? })
+    openPanel,   // (panel, parent?)
+    closePanel,  // (panel, parent?)
   };
 }
