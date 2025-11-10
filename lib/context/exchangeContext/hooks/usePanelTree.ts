@@ -13,15 +13,19 @@ type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 /* ------------------------------ debug helpers ------------------------------ */
 
 const PT_DEBUG = true;
-// typeof window !== 'undefined' &&
-// (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-//   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
 function dbg(label: string, payload?: unknown) {
   if (!PT_DEBUG) return;
   // @debug: PANEL_TREE
   // eslint-disable-next-line no-console
   console.log(`[usePanelTree] ${label}`, payload ?? '');
+}
+
+function traceIfEnabled(label: string) {
+  if (!PT_DEBUG || !PT_TRACE) return;
+  // eslint-disable-next-line no-console
+  console.trace(`[usePanelTree] ${label}`);
 }
 
 function fmtMap(map: Record<number, boolean>) {
@@ -157,16 +161,14 @@ export function usePanelTree() {
 
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, parentName?: string) => {
-      if (!KNOWN.has(panel)) return;
-
-      // ✅ explicit open/close instrumentation requested
-      if (PT_DEBUG) {
-        // eslint-disable-next-line no-console
-        console.log(`opening panel ${SP_COIN_DISPLAY[panel]} (from: ${parentName ?? 'unknown'})`);
-      }
-
-      // @debug: PANEL_TREE open-call
+      // 🔊 Always log first (so console filters see it), and trace if enabled
       dbg(`openPanel(${SP_COIN_DISPLAY[panel]}) call`, { from: parentName ?? 'unknown' });
+      traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
+
+      if (!KNOWN.has(panel)) {
+        dbg('⚠️ openPanel unknown id', { panel, from: parentName ?? 'unknown' });
+        return;
+      }
 
       schedule(() => {
         setExchangeContext((prev) => {
@@ -195,9 +197,13 @@ export function usePanelTree() {
             return writeFlat(prev, flat);
           }
 
-          // non-radio: visible=true
+          // non-radio: visible=true (idempotent)
           const nextFlat = [...flat];
           const i = nextFlat.findIndex((e) => e.panel === panel);
+          if (i >= 0 && nextFlat[i].visible === true) {
+            dbg(`open non-overlay (no-op) ${SP_COIN_DISPLAY[panel]}`, { from: parentName ?? 'unknown' });
+            return prev;
+          }
           if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: true };
           else nextFlat.push({ panel, visible: true });
 
@@ -218,16 +224,14 @@ export function usePanelTree() {
 
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, parentName?: string) => {
-      if (!KNOWN.has(panel)) return;
-
-      // ✅ explicit open/close instrumentation requested
-      if (PT_DEBUG) {
-        // eslint-disable-next-line no-console
-        console.log(`closing panel ${SP_COIN_DISPLAY[panel]} (from: ${parentName ?? 'unknown'})`);
-      }
-
-      // @debug: PANEL_TREE close-call
+      // 🔊 Always log first (so console filters see it), and trace if enabled
       dbg(`closePanel(${SP_COIN_DISPLAY[panel]}) call`, { from: parentName ?? 'unknown' });
+      traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
+
+      if (!KNOWN.has(panel)) {
+        dbg('⚠️ closePanel unknown id', { panel, from: parentName ?? 'unknown' });
+        return;
+      }
 
       schedule(() => {
         setExchangeContext((prev) => {
@@ -269,7 +273,11 @@ export function usePanelTree() {
 
           const nextFlat = [...flat0];
           const i = nextFlat.findIndex((e) => e.panel === panel);
-          if (i >= 0 && nextFlat[i].visible) nextFlat[i] = { ...nextFlat[i], visible: false };
+          if (i >= 0 && nextFlat[i].visible === false) {
+            dbg(`close non-overlay (no-op) ${SP_COIN_DISPLAY[panel]}`, { from: parentName ?? 'unknown' });
+            return prev;
+          }
+          if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: false };
 
           // @debug: PANEL_TREE close-non-overlay
           dbg(`close non-overlay ${SP_COIN_DISPLAY[panel]}`, {
