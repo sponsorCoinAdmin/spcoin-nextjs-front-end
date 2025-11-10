@@ -12,7 +12,10 @@ type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
 /* ------------------------------ debug helpers ------------------------------ */
 
-const PT_DEBUG = true;
+const PT_DEBUG =  typeof window !== 'undefined' &&
+(process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+
 const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
 function dbg(label: string, payload?: unknown) {
@@ -79,7 +82,7 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
     const next = !!nextMap[idNum];
     if (prev !== next) {
       // @debug: PANEL_TREE publish-change
-      dbg(`publish ${SP_COIN_DISPLAY[id]}: ${prev} → ${next}`);
+      console.log(`publish ${SP_COIN_DISPLAY[id]}: ${prev} → ${next}`);
       panelStore.setVisible(id, next);
     }
   });
