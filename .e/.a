@@ -10,7 +10,7 @@ alias kp3000="killport 3000"
 alias cdssh="cd ~/.ssh"
 
 
-alias gpr="git add *; git add .*; git commit -m "WIP"; git push"
+alias gitall="git add *; git add .*; git commit -m "WIP"; git push"
 
 alias sshec2="ssh sponsorcoin"
 alias sshspc="ssh sponsorcoin-admin"
