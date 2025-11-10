@@ -7,7 +7,7 @@ import { useAssetSelectContext } from '@/lib/context';
 // import { useFeedData } from '@/lib/utils/feeds/assetSelect';
 
 export default function AssetListSelectPanel() {
-  const { instanceId, feedType } = useAssetSelectContext();
+  const { instanceId } = useAssetSelectContext();
 
   // Build data + loading state via the shared hook
   // const { feedData, loading } = useFeedData(feedType);
