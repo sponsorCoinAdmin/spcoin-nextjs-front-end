@@ -24,23 +24,6 @@ function dbg(label: string, payload?: unknown) {
   console.log(`[usePanelTree] ${label}`, payload ?? '');
 }
 
-// 🔎 event-level logs requested (“opening panel <NAME>”, “closing panel <NAME>”)
-function eventOpen(panel: SP_COIN_DISPLAY, reason?: string) {
-  if (!PT_DEBUG) return;
-  // eslint-disable-next-line no-console
-  console.info(
-    `[PanelEvent] opening panel ${SP_COIN_DISPLAY[panel]}${reason ? ` (reason: ${reason})` : ''}`
-  );
-}
-
-function eventClose(panel: SP_COIN_DISPLAY, reason?: string) {
-  if (!PT_DEBUG) return;
-  // eslint-disable-next-line no-console
-  console.info(
-    `[PanelEvent] closing panel ${SP_COIN_DISPLAY[panel]}${reason ? ` (reason: ${reason})` : ''}`
-  );
-}
-
 function fmtMap(map: Record<number, boolean>) {
   const out: Record<string, boolean> = {};
   Object.keys(map).forEach((k) => {
@@ -65,7 +48,6 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
       if (Array.isArray(n.children) && n.children.length) walk(n.children);
     }
   };
-  // ✅ use the correct variable name (`nodes`)
   walk(nodes);
   const seen = new Set<number>();
   return out.filter((e) => (seen.has(e.panel) ? false : (seen.add(e.panel), true)));
@@ -171,14 +153,16 @@ export function usePanelTree() {
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
   /* ------------------------------- actions ------------------------------- */
-  // NOTE: optional `reason` param added for the requested logging; existing callers can ignore it.
 
   const openPanel = useCallback(
-    (panel: SP_COIN_DISPLAY, reason?: string) => {
+    (panel: SP_COIN_DISPLAY) => {
       if (!KNOWN.has(panel)) return;
 
-      // 📣 requested log
-      eventOpen(panel, reason);
+      // ✅ explicit open/close instrumentation requested
+      if (PT_DEBUG) {
+        // eslint-disable-next-line no-console
+        console.log(`opening panel ${SP_COIN_DISPLAY[panel]}`);
+      }
 
       // @debug: PANEL_TREE open-call
       dbg(`openPanel(${SP_COIN_DISPLAY[panel]}) call`);
@@ -230,11 +214,14 @@ export function usePanelTree() {
   );
 
   const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, reason?: string) => {
+    (panel: SP_COIN_DISPLAY) => {
       if (!KNOWN.has(panel)) return;
 
-      // 📣 requested log
-      eventClose(panel, reason);
+      // ✅ explicit open/close instrumentation requested
+      if (PT_DEBUG) {
+        // eslint-disable-next-line no-console
+        console.log(`closing panel ${SP_COIN_DISPLAY[panel]}`);
+      }
 
       // @debug: PANEL_TREE close-call
       dbg(`closePanel(${SP_COIN_DISPLAY[panel]}) call`);
@@ -308,7 +295,6 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    // note: optional reason is supported; callers can still pass only (panel)
     openPanel,
     closePanel,
   };
