@@ -1,4 +1,3 @@
-// File: lib/context/exchangeContext/hooks/usePanelTransitions.ts
 'use client';
 
 import { useCallback, useRef } from 'react';
@@ -8,25 +7,25 @@ import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { telemetry } from '@/lib/utils/telemetry';
 
 type OpenOpts = {
-  methodName?: string;   // who called this (forensics)
-  count?: number;        // external sequence id if you want to thread events across components
+  methodName?: string;
 };
 
 export function usePanelTransitions() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
 
-  // local counters to catch unexpected double-fires
-  const openBuyCount  = useRef(0);
-  const openSellCount = useRef(0);
+  // simple counters to correlate open attempts
+  const buyCountRef = useRef(0);
+  const sellCountRef = useRef(0);
 
-  const _emit = (to: SP_COIN_DISPLAY, action: 'open' | 'close' | 'toggle', extra?: Record<string, unknown>) => {
+  const _emit = (to: SP_COIN_DISPLAY, action: 'open' | 'close' | 'toggle', methodName?: string, count?: number) => {
     telemetry.emit('panel_transition', {
       action,
       to,
       label: SP_COIN_DISPLAY[to],
       ts: Date.now(),
-      ...extra,
+      methodName,
+      count,
     });
   };
 
@@ -38,44 +37,41 @@ export function usePanelTransitions() {
   }, [openPanel, perf]);
 
   const openBuyList = useCallback((opts?: OpenOpts) => {
-    const callNo = ++openBuyCount.current;
+    const count = ++buyCountRef.current;
+    const methodName = opts?.methodName ?? 'unknown';
     const before = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     const beforeOther = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
-    console.log(`[openBuyList] #${callNo}`, { before, beforeOther, ...opts });
+    console.log('[openBuyList]', `#${count}`, { before, beforeOther, methodName });
 
     perf.start();
     openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     perf.end('openBuyList');
-    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open', { callNo, ...opts });
+    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open', methodName, count);
 
-    // log after the tree has a chance to settle
-    setTimeout(() => {
-      const after = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-      const afterOther = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-      // eslint-disable-next-line no-console
-      console.log(`[openBuyList] #${callNo} (after)`, { after, afterOther, ...opts });
-    }, 0);
+    const after = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+    const afterOther = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+    // eslint-disable-next-line no-console
+    console.log('[openBuyList]', `#${count} (after)`, { after, afterOther, methodName });
   }, [openPanel, isVisible, perf]);
 
   const openSellList = useCallback((opts?: OpenOpts) => {
-    const callNo = ++openSellCount.current;
+    const count = ++sellCountRef.current;
+    const methodName = opts?.methodName ?? 'unknown';
     const before = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     const beforeOther = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
-    console.log(`[openSellList] #${callNo}`, { before, beforeOther, ...opts });
+    console.log('[openSellList]', `#${count}`, { before, beforeOther, methodName });
 
     perf.start();
     openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     perf.end('openSellList');
-    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open', { callNo, ...opts });
+    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open', methodName, count);
 
-    setTimeout(() => {
-      const after = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
-      const afterOther = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-      // eslint-disable-next-line no-console
-      console.log(`[openSellList] #${callNo} (after)`, { after, afterOther, ...opts });
-    }, 0);
+    const after = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+    const afterOther = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+    // eslint-disable-next-line no-console
+    console.log('[openSellList]', `#${count} (after)`, { after, afterOther, methodName });
   }, [openPanel, isVisible, perf]);
 
   const openRecipientList = useCallback(() => {
