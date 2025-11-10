@@ -1,3 +1,4 @@
+// File: components/PanelTree/Branch.tsx
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -126,11 +127,13 @@ const Branch: React.FC<BranchProps> = ({
         const panelId = (value as any).id as number;
         const currentlyVisible = !!(value as any).visible;
         if (!currentlyVisible) {
-          openPanel(panelId);
+          // 🔎 Pass a parent/source tag so we can trace where the toggle came from
+          openPanel(panelId, `PanelTree:${path}`);
           ensureOpen(path);
           ensureOpen(`${path}.children`);
         } else {
-          closePanel(panelId);
+          // 🔎 Include the same source tag on close
+          closePanel(panelId, `PanelTree:${path}`);
         }
       } else if (hasEntries) {
         togglePath(path);

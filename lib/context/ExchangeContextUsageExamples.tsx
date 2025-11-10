@@ -34,16 +34,17 @@ export default function ExchangeContextUsageExamples() {
 
   const { isVisible, openPanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
 
+  // ✅ identify source of panel open/close calls
+  const PARENT_NAME = 'ExchangeContextUsageExamples';
+
   const activePanelLabel = useMemo(() => {
     if (isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL)) return 'SELL_LIST_SELECT_PANEL';
     if (isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)) return 'BUY_LIST_SELECT_PANEL';
-    return activeMainOverlay != null
-      ? SP_COIN_DISPLAY[activeMainOverlay]
-      : 'NONE';
+    return activeMainOverlay != null ? SP_COIN_DISPLAY[activeMainOverlay] : 'NONE';
   }, [isVisible, activeMainOverlay]);
 
   return (
-    <div className="font-mono p-4 space-y-2">
+    <div className='font-mono p-4 space-y-2'>
       <h2>🧪 Exchange Context Hook Tester</h2>
       <pre>Sell Amount: {sellAmount.toString()}</pre>
       <pre>Buy Amount: {buyAmount.toString()}</pre>
@@ -63,9 +64,9 @@ export default function ExchangeContextUsageExamples() {
       <pre>Error Message: {JSON.stringify(errorMessage)}</pre>
       <pre>API Error Message: {JSON.stringify(apiErrorMessage)}</pre>
 
-      <hr className="my-4" />
+      <hr className='my-4' />
 
-      <div className="flex flex-wrap gap-2">
+      <div className='flex flex-wrap gap-2'>
         <button onClick={() => setSellAmount(sellAmount + 1n)}>+1 Sell</button>
         <button onClick={() => setBuyAmount(buyAmount + 1n)}>+1 Buy</button>
 
@@ -169,23 +170,27 @@ export default function ExchangeContextUsageExamples() {
           Clear Errors
         </button>
 
-        {/* Panel-tree test controls */}
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL)}>
+        {/* Panel-tree test controls (now pass parentName for source tracing) */}
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, PARENT_NAME)}>
           Open SELL panel
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, PARENT_NAME)}>
           Open BUY panel
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)}>
+        <button
+          onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, PARENT_NAME)}
+        >
           Open RECIPIENT panel
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, PARENT_NAME)}>
           Open SPONSOR CONFIG
         </button>
-        <button onClick={() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL)}>
+        <button onClick={() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, PARENT_NAME)}>
           Close overlays (show Trading)
         </button>
       </div>
     </div>
+
+
   );
 }

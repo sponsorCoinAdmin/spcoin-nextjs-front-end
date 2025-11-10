@@ -13,9 +13,9 @@ type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 /* ------------------------------ debug helpers ------------------------------ */
 
 const PT_DEBUG = true;
-  // typeof window !== 'undefined' &&
-  // (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-  //   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+// typeof window !== 'undefined' &&
+// (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+//   process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
 
 function dbg(label: string, payload?: unknown) {
   if (!PT_DEBUG) return;
@@ -153,19 +153,20 @@ export function usePanelTree() {
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
   /* ------------------------------- actions ------------------------------- */
+  // NOTE: Added optional parentName to capture the source of the action.
 
   const openPanel = useCallback(
-    (panel: SP_COIN_DISPLAY) => {
+    (panel: SP_COIN_DISPLAY, parentName?: string) => {
       if (!KNOWN.has(panel)) return;
 
       // ✅ explicit open/close instrumentation requested
       if (PT_DEBUG) {
         // eslint-disable-next-line no-console
-        console.log(`opening panel ${SP_COIN_DISPLAY[panel]}`);
+        console.log(`opening panel ${SP_COIN_DISPLAY[panel]} (from: ${parentName ?? 'unknown'})`);
       }
 
       // @debug: PANEL_TREE open-call
-      dbg(`openPanel(${SP_COIN_DISPLAY[panel]}) call`);
+      dbg(`openPanel(${SP_COIN_DISPLAY[panel]}) call`, { from: parentName ?? 'unknown' });
 
       schedule(() => {
         setExchangeContext((prev) => {
@@ -176,6 +177,7 @@ export function usePanelTree() {
             // @debug: PANEL_TREE open-overlay
             dbg(`open overlay (radio) ${SP_COIN_DISPLAY[panel]}`, {
               before: fmtMap(toMap(flat0)),
+              from: parentName ?? 'unknown',
             });
 
             // radio: set ONLY this overlay to visible, others to false
@@ -188,7 +190,7 @@ export function usePanelTree() {
 
             const nextMap = toMap(flat);
             // @debug: PANEL_TREE open-overlay-after
-            dbg('after open overlay', fmtMap(nextMap));
+            dbg('after open overlay', { map: fmtMap(nextMap), from: parentName ?? 'unknown' });
             diffAndPublish(toMap(flat0), nextMap);
             return writeFlat(prev, flat);
           }
@@ -203,28 +205,29 @@ export function usePanelTree() {
           dbg(`open non-overlay ${SP_COIN_DISPLAY[panel]}`, {
             before: fmtMap(toMap(flat0)),
             after: fmtMap(toMap(nextFlat)),
+            from: parentName ?? 'unknown',
           });
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
-        }, 'usePanelTree:open');
+        }, `usePanelTree:open${parentName ? `:${parentName}` : ''}`);
       });
     },
     [setExchangeContext, overlays]
   );
 
   const closePanel = useCallback(
-    (panel: SP_COIN_DISPLAY) => {
+    (panel: SP_COIN_DISPLAY, parentName?: string) => {
       if (!KNOWN.has(panel)) return;
 
       // ✅ explicit open/close instrumentation requested
       if (PT_DEBUG) {
         // eslint-disable-next-line no-console
-        console.log(`closing panel ${SP_COIN_DISPLAY[panel]}`);
+        console.log(`closing panel ${SP_COIN_DISPLAY[panel]} (from: ${parentName ?? 'unknown'})`);
       }
 
       // @debug: PANEL_TREE close-call
-      dbg(`closePanel(${SP_COIN_DISPLAY[panel]}) call`);
+      dbg(`closePanel(${SP_COIN_DISPLAY[panel]}) call`, { from: parentName ?? 'unknown' });
 
       schedule(() => {
         setExchangeContext((prev) => {
@@ -237,6 +240,7 @@ export function usePanelTree() {
             dbg(`close overlay (radio) ${SP_COIN_DISPLAY[panel]}`, {
               active: isActive,
               before: fmtMap(toMap(flat0)),
+              from: parentName ?? 'unknown',
             });
 
             if (isActive) {
@@ -248,14 +252,17 @@ export function usePanelTree() {
               }, [...flat0]);
 
               // @debug: PANEL_TREE close-overlay-after
-              dbg('after close overlay', fmtMap(toMap(next)));
+              dbg('after close overlay', { map: fmtMap(toMap(next)), from: parentName ?? 'unknown' });
               diffAndPublish(toMap(flat0), toMap(next));
               return writeFlat(prev, next);
             }
 
             const nextFlat = flat0.map((e) => (e.panel === panel ? { ...e, visible: false } : e));
             // @debug: PANEL_TREE close-overlay-nonactive
-            dbg('close overlay (non-active) result', fmtMap(toMap(nextFlat)));
+            dbg('close overlay (non-active) result', {
+              map: fmtMap(toMap(nextFlat)),
+              from: parentName ?? 'unknown',
+            });
             diffAndPublish(toMap(flat0), toMap(nextFlat));
             return writeFlat(prev, nextFlat);
           }
@@ -268,11 +275,12 @@ export function usePanelTree() {
           dbg(`close non-overlay ${SP_COIN_DISPLAY[panel]}`, {
             before: fmtMap(toMap(flat0)),
             after: fmtMap(toMap(nextFlat)),
+            from: parentName ?? 'unknown',
           });
 
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
-        }, 'usePanelTree:close');
+        }, `usePanelTree:close${parentName ? `:${parentName}` : ''}`);
       });
     },
     [setExchangeContext, overlays]
@@ -295,7 +303,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel,
-    closePanel,
+    openPanel,   // (panel, parentName?)
+    closePanel,  // (panel, parentName?)
   };
 }

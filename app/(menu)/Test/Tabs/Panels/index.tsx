@@ -1,4 +1,3 @@
-// File: app/(menu)/Test/Tabs/Panels/index.tsx
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
@@ -64,26 +63,32 @@ export default function PanelsTab() {
   }, [updateExchangePage]);
 
   const togglePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, _reason?: string) => {
+    (panel: SP_COIN_DISPLAY, reason?: string) => {
+      const src = reason ?? 'PanelsTab:toggle';
       if (isMainOverlay(panel)) {
-        isVisible(panel) ? closePanel(panel) : openPanel(panel);
+        isVisible(panel) ? closePanel(panel, src) : openPanel(panel, src);
         return;
       }
-      isVisible(panel) ? closePanel(panel) : openPanel(panel);
+      isVisible(panel) ? closePanel(panel, src) : openPanel(panel, src);
     },
     [isMainOverlay, isVisible, openPanel, closePanel]
   );
 
   const openOnlyHere = useCallback(
     (panel: SP_COIN_DISPLAY) => {
-      if (isMainOverlay(panel)) {
-        openPanel(panel);
-        return;
-      }
+      // Close other non-main panels first, then open the requested one.
       KNOWN_PANELS.forEach((p) => {
-        if (p !== panel && !isMainOverlay(p) && isVisible(p)) closePanel(p);
+        if (p !== panel && !isMainOverlay(p) && isVisible(p)) {
+          closePanel(p, 'PanelsTab:openOnlyHere:closeOthers');
+        }
       });
-      openPanel(panel);
+      // For main overlays, just open it (radio behavior handled by usePanelTree).
+      openPanel(
+        panel,
+        isMainOverlay(panel)
+          ? 'PanelsTab:openOnlyHere:openMain'
+          : 'PanelsTab:openOnlyHere:openTarget'
+      );
     },
     [KNOWN_PANELS, isMainOverlay, isVisible, openPanel, closePanel]
   );
@@ -101,53 +106,58 @@ export default function PanelsTab() {
   const hasActiveOverlay = activeMainOverlay !== null && activeMainOverlay !== undefined;
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Header row */}
-      <div className="grid grid-cols-3 items-center -mt-3">
+      <div className='grid grid-cols-3 items-center -mt-3'>
         <div />
-        <h2 className="text-xl font-semibold text-center">Panels</h2>
-        <div className="flex justify-end">
+        <h2 className='text-xl font-semibold text-center'>Panels</h2>
+        <div className='flex justify-end'>
           <button
             onClick={hidePanelTree}
-            aria-label="Close Panels"
-            title="Close Panels"
-            className="h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
-                       hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
-            type="button"
+            aria-label='Close Panels'
+            title='Close Panels'
+            className='h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
+                       hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl'
+            type='button'
           >
             ×
           </button>
         </div>
       </div>
 
-      {/* Quick actions (unchanged) */}
-      {/* ... */}
-
       {/* Tree inspector */}
-      <div className="rounded-2xl border border-slate-700 p-4">
-        <div className="font-medium mb-3">Panel Tree</div>
-        <ul className="space-y-2">
+      <div className='rounded-2xl border border-slate-700 p-4'>
+        <div className='font-medium mb-3'>Panel Tree</div>
+        <ul className='space-y-2'>
           {nodes.map((n, i) => (
-            <li key={`${n.panel}-${i}`} className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+            <li key={`${n.panel}-${i}`} className='flex items-center justify-between gap-2'>
+              <div className='flex items-center gap-2'>
                 {SHOW_IDS && (
-                  <span className="font-mono text-xs opacity-70">#{n.panel}</span>
+                  <span className='font-mono text-xs opacity-70'>#{n.panel}</span>
                 )}
                 <span>{SP_COIN_DISPLAY[n.panel]}</span>
                 {SHOW_VIS && (
                   <span className={pill(n.visible)}>{n.visible ? 'visible' : 'hidden'}</span>
                 )}
                 {n.main && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300">
+                  <span className='px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300'>
                     main
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <button className={btn} onClick={() => togglePanel(n.panel, 'PanelsTab:toggle')} type="button">
+              <div className='flex items-center gap-2'>
+                <button
+                  className={btn}
+                  onClick={() => togglePanel(n.panel, 'PanelsTab:toggle')}
+                  type='button'
+                >
                   Toggle
                 </button>
-                <button className={btn} onClick={() => openOnlyHere(n.panel)} type="button">
+                <button
+                  className={btn}
+                  onClick={() => openOnlyHere(n.panel)}
+                  type='button'
+                >
                   Open only
                 </button>
               </div>
@@ -156,27 +166,27 @@ export default function PanelsTab() {
         </ul>
       </div>
 
-      {/* Root/main overlay info (left intact) */}
-      <div className="rounded-2xl border border-slate-700 p-4 text-sm">
-        <div className="font-medium mb-2">Main Overlay</div>
+      {/* Root/main overlay info */}
+      <div className='rounded-2xl border border-slate-700 p-4 text-sm'>
+        <div className='font-medium mb-2'>Main Overlay</div>
 
         {!hasActiveOverlay ? (
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs opacity-70">—</span>
+          <div className='flex items-center gap-2'>
+            <span className='font-mono text-xs opacity-70'>—</span>
             <span>None</span>
             <span className={pill(false)}>inactive</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             {SHOW_IDS && (
-              <span className="font-mono text-xs opacity-70">#{activeMainOverlay}</span>
+              <span className='font-mono text-xs opacity-70'>#{activeMainOverlay}</span>
             )}
             <span>{SP_COIN_DISPLAY[activeMainOverlay as number]}</span>
             <span className={pill(true)}>active</span>
           </div>
         )}
 
-        <div className="mt-3 text-xs opacity-80">
+        <div className='mt-3 text-xs opacity-80'>
           Token scroll visible:{' '}
           <span className={pill(isTokenScrollVisible)}>
             {isTokenScrollVisible ? 'yes' : 'no'}
