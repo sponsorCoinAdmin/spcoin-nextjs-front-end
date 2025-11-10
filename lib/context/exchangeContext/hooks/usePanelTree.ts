@@ -34,9 +34,10 @@ function parseOpts(arg?: string | PanelActionOpts): {
 /* ------------------------------ debug helpers ------------------------------ */
 
 const PT_DEBUG =
-  typeof window !== 'undefined' &&
-  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true') || true;
+  (typeof window !== 'undefined' &&
+    (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+      process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true')) ||
+  true;
 
 const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
@@ -268,7 +269,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel,   // (panel, reason?) OR (panel, { reason?, parent? })
-    closePanel,  // (panel, reason?) OR (panel, { reason?, parent? })
+    openPanel, // (panel, reason?) OR (panel, { reason?, parent? })
+    closePanel, // (panel, reason?) OR (panel, { reason?, parent? })
   };
 }
