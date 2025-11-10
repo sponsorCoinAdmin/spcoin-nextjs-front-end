@@ -212,12 +212,10 @@ function PanelBootstrap() {
     // Only pick a default if nothing is selected (rare), so we never override a persisted choice
     if (activeMainOverlay == null) {
       queueMicrotask(() =>
+        // ⬇️ New signature: openPanel(panel, parent?: string)
         openPanel(
           SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-          {
-            reason: 'ExchangeProvider:PanelBootstrap',
-            parent: SP_COIN_DISPLAY.MAIN_TRADING_PANEL, // ⬅️ parent wired
-          }
+          'ExchangeProvider:PanelBootstrap(openPanel)'
         )
       );
     }
