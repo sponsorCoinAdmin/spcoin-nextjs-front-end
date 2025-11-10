@@ -11,7 +11,7 @@ const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
 /* --------------------------------------------------------------------------------
-   NEW: unified options for callers that want to include both reason and parent.
+   Unified options for callers that want to include both reason and parent.
    Backward compatible with the old `(panel, reason?: string)` signature.
 --------------------------------------------------------------------------------- */
 type PanelActionOpts = {
@@ -34,10 +34,9 @@ function parseOpts(arg?: string | PanelActionOpts): {
 /* ------------------------------ debug helpers ------------------------------ */
 
 const PT_DEBUG =
-  (typeof window !== 'undefined' &&
-    (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-      process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true')) ||
-  true;
+  typeof window !== 'undefined' &&
+  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
 
 const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
@@ -55,7 +54,8 @@ function traceIfEnabled(label: string) {
 
 /* ------------------------------ helpers ------------------------------ */
 
-const schedule = (fn: () => void) => setTimeout(fn, 0); // post-commit scheduling
+const schedule = (fn: () => void) =>
+  typeof queueMicrotask === 'function' ? queueMicrotask(fn) : setTimeout(fn, 0); // post-commit scheduling
 
 function flatten(nodes: any[] | undefined): PanelEntry[] {
   if (!Array.isArray(nodes)) return [];
@@ -94,7 +94,6 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
     const prev = !!prevMap[idNum];
     const next = !!nextMap[idNum];
     if (prev !== next) {
-      // dbg(`publish ${SP_COIN_DISPLAY[id]}: ${prev} → ${next}`);
       panelStore.setVisible(id, next);
     }
   });
@@ -151,6 +150,7 @@ export function usePanelTree() {
     return panelStore.isVisible(panel);
   }, []);
 
+  // Placeholder for future tree-aware children lookup (kept for API stability)
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
   /* ------------------------------- actions ------------------------------- */
@@ -260,7 +260,9 @@ export function usePanelTree() {
   }, [map, overlays]);
 
   const isTokenScrollVisible = useMemo(
-    () => map[SP_COIN_DISPLAY.BUY_SELECT_PANEL] || map[SP_COIN_DISPLAY.SELL_SELECT_PANEL],
+    () =>
+      map[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
+      map[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL],
     [map]
   );
 

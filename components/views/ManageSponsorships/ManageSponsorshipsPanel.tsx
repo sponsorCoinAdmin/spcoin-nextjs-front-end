@@ -1,7 +1,7 @@
 // File: components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
 'use client';
 
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useRef } from 'react';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
 
 import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
@@ -29,8 +29,6 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
 
-  let accountType = '';
-
   usePanelTransitions();
   const { openPanel, closePanel } = usePanelTree();
 
@@ -43,19 +41,26 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
   const defaultAddr = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
 
+  // 🔒 Keep latest selected account type for the ToDo alert across renders
+  const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
+
   // Open only the requested panel; close the alternatives
   const openOnly = useCallback(
     (id: SP_COIN_DISPLAY) => {
       try {
-        [
+        const ids = [
           SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
           SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
           SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
-        ].forEach((pid) =>
-          pid === id
-            ? openPanel(pid, 'ManageSponsorshipsPanel:openOnly')
-            : closePanel(pid, 'ManageSponsorshipsPanel:openOnly')
-        );
+        ] as const;
+
+        ids.forEach((pid) => {
+          if (pid === id) {
+            openPanel(pid, `ManageSponsorshipsPanel:openOnly(target=${SP_COIN_DISPLAY[id]}#${id})`);
+          } else {
+            closePanel(pid, `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${pid})`);
+          }
+        });
       } catch {
         /* no-op: panel tree may not be ready */
       }
@@ -67,22 +72,21 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const claimRewards = useCallback(
     (actType: AccountType) => {
       setShowToDo(true);
-      accountType = actType;
+      accountTypeRef.current = actType;
     },
-    [ctx?.exchangeContext?.accounts?.connectedAccount]
+    []
   );
 
   const doToDo = useCallback(() => {
     setShowToDo(false);
     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const sel = String(accountTypeRef.current);
     let msg: string = 'ToDo: (Not Yet Implemented)\n';
-    msg += `Claim: `;
-    msg +=
-      accountType.toString() === 'ALL'
-        ? accountType.toString()
-        : `${accountType.toString()}(s)`;
-    msg += ` Rewards\n`;
+    msg += 'Claim: ';
+    msg += sel === 'ALL' ? sel : `${sel}(s)`;
+    msg += ' Rewards\n';
     msg += `For account: ${connected ? connected.address : '(none connected)'}`;
+    // eslint-disable-next-line no-alert
     alert(msg);
   }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
 
@@ -109,7 +113,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   return (
     <>
       {/* Address selector */}
-      <div className="mb-6">
+      <div className='mb-6'>
         <AssetSelectDisplayProvider>
           {/* AGENT_LIST_SELECT_PANEL removed; scope to MANAGE_SPONSORSHIPS_PANEL */}
           <AssetSelectProvider
@@ -123,45 +127,45 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       </div>
 
       {mode === 'all' && (
-        <div id="msWrapper" className="mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
-          <table id="msTable" className="min-w-full border-collapse">
+        <div id='msWrapper' className='mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black'>
+          <table id='msTable' className='min-w-full border-collapse'>
             <thead>
-              <tr className="border-b border-black">
-                <th scope="col" className={th}>Account</th>
-                <th scope="col" className={`${th} text-center`}>Staked Coins</th>
-                <th scope="col" className={`${th} text-center`}>Pending Coins</th>
-                <th scope="col" className={`${th} text-center`}>Rewards</th>
-                <th scope="col" className={`${th} text-center`}>Config</th>
+              <tr className='border-b border-black'>
+                <th scope='col' className={th}>Account</th>
+                <th scope='col' className={`${th} text-center`}>Staked Coins</th>
+                <th scope='col' className={`${th} text-center`}>Pending Coins</th>
+                <th scope='col' className={`${th} text-center`}>Rewards</th>
+                <th scope='col' className={`${th} text-center`}>Config</th>
               </tr>
             </thead>
             <tbody>
               {/* Row 1: Sponsors (A) */}
               <tr className={`${rowBorder}`}>
-                <td className="p-0"><div className={`${rowA} ${tdInner}`}>Sponsors</div></td>
-                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0">
+                <td className='p-0'><div className={`${rowA} ${tdInner}`}>Sponsors</div></td>
+                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'>
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type="button"
-                      className="ms-claim--orange"
-                      aria-label="Claim Sponsors rewards"
+                      type='button'
+                      className='ms-claim--orange'
+                      aria-label='Claim Sponsors rewards'
                       onClick={() => claimRewards(AccountType.SPONSOR)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className="p-0">
+                <td className='p-0'>
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type="button"
+                      type='button'
                       className={iconBtn}
                       onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)}
-                      aria-label="Open Sponsors reconfigure"
-                      title="Reconfigure Sponsors"
+                      aria-label='Open Sponsors reconfigure'
+                      title='Reconfigure Sponsors'
                     >
-                      <span className="cog-white-mask cog-rot" aria-hidden />
+                      <span className='cog-white-mask cog-rot' aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -169,31 +173,31 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
               {/* Row 2: Recipients (B) */}
               <tr className={`${rowBorder}`}>
-                <td className="p-0"><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
-                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0">
+                <td className='p-0'><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
+                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'>
                   <div className={`${rowB} ${tdInnerCenter}`}>
                     <button
-                      type="button"
-                      className="ms-claim--green"
-                      aria-label="Claim Recipients rewards"
+                      type='button'
+                      className='ms-claim--green'
+                      aria-label='Claim Recipients rewards'
                       onClick={() => claimRewards(AccountType.RECIPIENT)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className="p-0">
+                <td className='p-0'>
                   <div className={`${rowB} ${tdInnerCenter}`}>
                     <button
-                      type="button"
+                      type='button'
                       className={iconBtn}
                       onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)}
-                      aria-label="Open Recipients reconfigure"
-                      title="Reconfigure Recipients"
+                      aria-label='Open Recipients reconfigure'
+                      title='Reconfigure Recipients'
                     >
-                      <span className="cog-white-mask cog-rot" aria-hidden />
+                      <span className='cog-white-mask cog-rot' aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -201,31 +205,31 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
               {/* Row 3: Agents (A) */}
               <tr className={`${rowBorder}`}>
-                <td className="p-0"><div className={`${rowA} ${tdInner}`}>Agents</div></td>
-                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0">
+                <td className='p-0'><div className={`${rowA} ${tdInner}`}>Agents</div></td>
+                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'>
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type="button"
-                      className="ms-claim--orange"
-                      aria-label="Claim Agents rewards"
+                      type='button'
+                      className='ms-claim--orange'
+                      aria-label='Claim Agents rewards'
                       onClick={() => claimRewards(AccountType.AGENT)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className="p-0">
+                <td className='p-0'>
                   <div className={`${rowA} ${tdInnerCenter}`}>
                     <button
-                      type="button"
+                      type='button'
                       className={iconBtn}
                       onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
-                      aria-label="Open Agents reconfigure"
-                      title="Reconfigure Agents"
+                      aria-label='Open Agents reconfigure'
+                      title='Reconfigure Agents'
                     >
-                      <span className="cog-white-mask cog-rot" aria-hidden />
+                      <span className='cog-white-mask cog-rot' aria-hidden />
                     </button>
                   </div>
                 </td>
@@ -233,22 +237,22 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
               {/* Row 4: Total (B, no cog) */}
               <tr className={`${rowBorder}`}>
-                <td className="p-0"><div className={`${rowB} ${tdInner}`}>Total</div></td>
-                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
-                <td className="p-0">
+                <td className='p-0'><div className={`${rowB} ${tdInner}`}>Total</div></td>
+                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+                <td className='p-0'>
                   <div className={`${rowB} ${tdInnerCenter}`}>
                     <button
-                      type="button"
-                      className="ms-claim--green"
-                      aria-label="Claim Total rewards"
+                      type='button'
+                      className='ms-claim--green'
+                      aria-label='Claim Total rewards'
                       onClick={() => claimRewards(AccountType.ALL)}
                     >
                       Claim
                     </button>
                   </div>
                 </td>
-                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`} /></td>
+                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`} /></td>
               </tr>
             </tbody>
           </table>
@@ -339,9 +343,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
       {showToDo && (
         <ToDo
           show
-          message="ToDo"
+          message='ToDo'
           opacity={0.5}
-          color="#ff1a1a"
+          color='#ff1a1a'
           zIndex={2000}
           onDismiss={() => doToDo()}
         />

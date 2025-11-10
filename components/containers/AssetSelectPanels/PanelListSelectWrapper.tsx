@@ -102,6 +102,9 @@ function PanelListSelectWrapperInner({
   );
 
   const closeForProvider = useCallback((_fromUser?: boolean) => {
+    // Note: this wrapper does not call openPanel/closePanel directly; it delegates
+    // to usePanelTransitions.toTrading(). Parent tagging is therefore handled
+    // inside the transitions hook implementation.
     toTrading();
   }, [toTrading]);
 

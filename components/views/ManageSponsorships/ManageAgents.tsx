@@ -62,12 +62,12 @@ export default function ManageAgents({ onClose }: Props) {
     ctx?.setExchangeContext((prev) => {
       if (!prev) return prev;
       return { ...prev, accounts: { ...prev.accounts, agentAccount: w } };
-    }, 'ManageAgents:setAgentAccount');
+    }, 'ManageAgents:setWalletCallBack(w)');
 
     if (w) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(open)');
+      openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(w)');
     } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(close)');
+      closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(undefined)');
     }
   };
 

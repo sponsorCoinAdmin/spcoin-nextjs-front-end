@@ -19,6 +19,23 @@ export default function ManageSponsorsButton() {
   const [sellToken] = useSellTokenContract();
   const { openPanel, closePanel } = usePanelTree();
 
+  // ⚙️ Parent-tag rule: when not provided explicitly, use Module:Method(params)
+  const safeOpen = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => {
+      const parentTag = parent ?? `ManageSponsorsButton:safeOpen(${panel})`;
+      openPanel(panel, parentTag);
+    },
+    [openPanel]
+  );
+
+  const safeClose = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => {
+      const parentTag = parent ?? `ManageSponsorsButton:safeClose(${panel})`;
+      closePanel(panel, parentTag);
+    },
+    [closePanel]
+  );
+
   // Re-render only when THIS launcher flag changes
   const launcherVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
 
@@ -34,18 +51,24 @@ export default function ManageSponsorsButton() {
     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
 
     if (shouldShow) {
-      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, 'ManageSponsorsButton');
+      safeOpen(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
     } else {
-      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, 'ManageSponsorsButton');
+      safeClose(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
     }
 
     appliedRef.current = next;
-  }, [addr, openPanel, closePanel, sellToken]);
+  }, [addr, sellToken, safeOpen, safeClose]);
 
   const onOpenManage = useCallback(() => {
-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON, 'ManageSponsorsButton:onOpenManage');
-    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'ManageSponsorsButton:onOpenManage');
-  }, [openPanel, closePanel]);
+    safeClose(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON,
+      'ManageSponsorsButton:onOpenManage(closeLauncher)'
+    );
+    safeOpen(
+      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+      'ManageSponsorsButton:onOpenManage(openPanel)'
+    );
+  }, [safeOpen, safeClose]);
 
   if (!launcherVisible) return null;
 

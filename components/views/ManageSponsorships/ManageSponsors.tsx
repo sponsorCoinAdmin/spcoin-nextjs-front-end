@@ -74,7 +74,7 @@ export default function ManageSponsors({ onClose }: Props) {
               sponsorAccounts: built,
             },
           };
-        }, 'ManageSponsors:loadSponsorAccounts');
+        }, 'ManageSponsors:useEffect(loadSponsorAccounts)');
       } catch {
         const fallback = (Array.isArray(rawSponsors) ? rawSponsors : []).map((a: any) => {
           const w = buildWalletObj(a);
@@ -96,7 +96,7 @@ export default function ManageSponsors({ onClose }: Props) {
               sponsorAccounts: fallback,
             },
           };
-        }, 'ManageSponsors:loadSponsorAccounts(fallback)');
+        }, 'ManageSponsors:useEffect(loadSponsorAccounts(fallback))');
       }
     })();
 
@@ -113,18 +113,18 @@ export default function ManageSponsors({ onClose }: Props) {
         const next = { ...prev, accounts: { ...prev.accounts, sponsorAccount: w } };
         return next;
       },
-      'ManageSponsors:setSponsorAccount'
+      'ManageSponsors:setWalletCallBack(setSponsorAccount)'
     );
 
     if (w) {
       openPanel(
         SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-        'ManageSponsors:setSponsorAccount(open)'
+        'ManageSponsors:setWalletCallBack(open)'
       );
     } else {
       closePanel(
         SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
-        'ManageSponsors:setSponsorAccount(close)'
+        'ManageSponsors:setWalletCallBack(close)'
       );
     }
   };

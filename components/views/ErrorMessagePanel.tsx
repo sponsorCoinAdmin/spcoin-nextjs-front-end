@@ -14,8 +14,8 @@ function ErrorMessagePanelInner() {
   const onDismiss = useCallback(() => {
     setErrorMessage(undefined);
     // Close the error overlay and ensure trading station is visible
-    closePanel(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'ErrorMessagePanel:onDismiss');
-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'ErrorMessagePanel:onDismiss');
+    closePanel(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'ErrorMessagePanel:onDismiss()');
+    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'ErrorMessagePanel:onDismiss()');
   }, [setErrorMessage, openPanel, closePanel]);
 
   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);

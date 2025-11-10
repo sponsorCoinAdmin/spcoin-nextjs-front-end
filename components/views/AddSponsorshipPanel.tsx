@@ -85,7 +85,7 @@ const AddSponsorShipPanel: React.FC = () => {
   useEffect(() => {
     if (isVisible && !tradingVisible) {
       debugLog.log?.('Forcing TRADING_STATION_PANEL visible');
-      openPanel(SP_TREE.TRADING_STATION_PANEL, 'AddSponsorshipPanel:ensureTradingVisible');
+      openPanel(SP_TREE.TRADING_STATION_PANEL, 'AddSponsorshipPanel:ensureTradingVisible()');
     }
   }, [isVisible, tradingVisible, openPanel]);
 
@@ -136,11 +136,11 @@ const AddSponsorShipPanel: React.FC = () => {
     );
 
     // Close the panel
-    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipPanel:closePanel');
+    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipPanel:closeAddSponsorshipPanel(closePanel)');
 
     // Only re-show the launcher button if the current BUY token is an SpCoin
     if (buyTokenContract && isSpCoin(buyTokenContract)) {
-      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipPanel:reopenLauncher');
+      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipPanel:closeAddSponsorshipPanel(reopenLauncher)');
     }
   }, [setExchangeContext, closePanel, openPanel, buyTokenContract]);
 
@@ -220,8 +220,7 @@ const AddSponsorShipPanel: React.FC = () => {
         rounded-t-[12px]
         rounded-b-[12px]
         overflow-hidden
-        bg-[#1f2639] text-[#94a3b8]
-      '
+        bg-[#1f2639] text-[#94a3b8]'
     >
       <div className='h-[90px]'>
         <div className='absolute top-3 left-[11px] text-[14px] text-[#94a3b8]'>
@@ -235,42 +234,20 @@ const AddSponsorShipPanel: React.FC = () => {
               debugLog.log?.('Link clicked → opening RecipientSite tab for:', recipientSiteHref);
               openRecipientSiteTab();
             }}
-            className={`
-              ${linkTopClass}
-              min-w-[50px] h-[10px]
-              text-[#94a3b8] text-[25px]
-              pr-2 flex items-center justify-start gap-1
-              cursor-pointer hover:text-[orange] transition-colors duration-200
-            `}
+            className={`${linkTopClass} min-w-[50px] h-[10px] text-[#94a3b8] text-[25px] pr-2 flex items-center justify-start gap-1 cursor-pointer hover:text-[orange] transition-colors duration-200`}
           >
             {recipientWallet?.name || 'No recipient selected'}
           </Link>
         </div>
 
-        <div
-          className='
-            absolute left-[160px]
-            min-w-[50px] h-[25px]
-            rounded-full
-            flex items-center justify-start gap-1
-            font-bold text-[17px] pr-2
-            text-white bg-[#243056]
-          '
-        >
+        <div className='absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]'>
           <RecipientSelectDropDown recipientAccount={recipientWallet} />
         </div>
 
         <div>
           <Image
             src={cog_png}
-            className='
-              absolute right-[39px]
-              object-contain
-              text-[#51586f]
-              inline-block
-              transition-transform duration-300
-              hover:rotate-[360deg] hover:cursor-pointer
-            '
+            className='absolute right-[39px] object-contain text-[#51586f] inline-block transition-transform duration-300 hover:rotate-[360deg] hover:cursor-pointer'
             width={20}
             height={20}
             alt='Settings'
@@ -288,13 +265,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
         <div
           id='closeAddSponsorshipPanel'
-          className='
-            pt-[12px]
-            absolute -top-2 right-[15px]
-            text-[#94a3b8]
-            text-[20px]
-            cursor-pointer
-          '
+          className='pt-[12px] absolute -top-2 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer'
           onClick={closeAddSponsorshipPanel}
         >
           X
@@ -305,14 +276,7 @@ const AddSponsorShipPanel: React.FC = () => {
 
       {/* 🔴 ToDo overlay (red text, click to dismiss) */}
       {!showToDo && (
-        <ToDo
-          show
-          message='ToDo'
-          opacity={0.5}
-          color='#ff1a1a'
-          zIndex={2000}
-          onDismiss={() => setShowToDo(false)}
-        />
+        <ToDo show message='ToDo' opacity={0.5} color='#ff1a1a' zIndex={2000} onDismiss={() => setShowToDo(false)} />
       )}
     </div>
   );

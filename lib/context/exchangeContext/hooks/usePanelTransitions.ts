@@ -7,16 +7,32 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { telemetry } from '@/lib/utils/telemetry';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-type OpenOpts = { methodName?: string };
+type OpenOpts  = { methodName?: string };
 type ClickOpts = OpenOpts & { preventDefault?: boolean; stopPropagation?: boolean; defer?: boolean };
 
 // ⬇️ Optional parent threading
 type MaybeParent = SP_COIN_DISPLAY | undefined;
 
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_PANEL_TRANSITIONS === 'true';
+const debug = createDebugLogger('usePanelTransitions', DEBUG_ENABLED);
+
 export function usePanelTransitions() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
+
+  // Map overlays → their “most likely” parent (used when caller didn’t provide one)
+  const parentMap: Partial<Record<SP_COIN_DISPLAY, SP_COIN_DISPLAY>> = {
+    [SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL]:       SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+    [SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL]:      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+    [SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL]: SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+    [SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL]:     SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+    [SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL]:         SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+
+    [SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL]:       SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+    [SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL]:    SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+  };
 
   // ── Wrappers that actually pass parent into usePanelTree ───────────────────
   const openWithParent = useCallback(
@@ -56,7 +72,9 @@ export function usePanelTransitions() {
     return (e: MouseEvent<T>) => {
       if (preventDefault) e.preventDefault();
       if (stopPropagation) e.stopPropagation();
-      defer ? queueMicrotask(() => act({ methodName })) : act({ methodName });
+      // queueMicrotask is supported on evergreen; small fallback for safety:
+      const runner = () => act({ methodName });
+      defer ? (typeof queueMicrotask === 'function' ? queueMicrotask(runner) : Promise.resolve().then(runner)) : runner();
     };
   };
 
@@ -76,8 +94,8 @@ export function usePanelTransitions() {
   const openBuyList = useCallback((opts?: OpenOpts) => {
     const count = ++buyCountRef.current;
     const methodName = opts?.methodName ?? 'openBuyList';
-    // eslint-disable-next-line no-console
-    console.log('[openBuyList]', `#${count}`, {
+
+    debug.log?.('[openBuyList]', `#${count}`, {
       before: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
       beforeOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
       methodName,
@@ -92,8 +110,7 @@ export function usePanelTransitions() {
     perf.end('openBuyList');
     _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open', methodName, count);
 
-    // eslint-disable-next-line no-console
-    console.log('[openBuyList]', `#${count} (after)`, {
+    debug.log?.('[openBuyList]', `#${count} (after)`, {
       after: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
       afterOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
       methodName,
@@ -103,8 +120,8 @@ export function usePanelTransitions() {
   const openSellList = useCallback((opts?: OpenOpts) => {
     const count = ++sellCountRef.current;
     const methodName = opts?.methodName ?? 'openSellList';
-    // eslint-disable-next-line no-console
-    console.log('[openSellList]', `#${count}`, {
+
+    debug.log?.('[openSellList]', `#${count}`, {
       before: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
       beforeOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
       methodName,
@@ -119,8 +136,7 @@ export function usePanelTransitions() {
     perf.end('openSellList');
     _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open', methodName, count);
 
-    // eslint-disable-next-line no-console
-    console.log('[openSellList]', `#${count} (after)`, {
+    debug.log?.('[openSellList]', `#${count} (after)`, {
       after: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
       afterOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
       methodName,
@@ -260,18 +276,7 @@ export function usePanelTransitions() {
   }, [closeWithParent, perf]);
 
   const openOverlay = useCallback((overlay: SP_COIN_DISPLAY) => {
-    const parentGuess: MaybeParent =
-      overlay === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
-      overlay === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL ||
-      overlay === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL ||
-      overlay === SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL ||
-      overlay === SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL
-        ? SP_COIN_DISPLAY.TRADING_STATION_PANEL
-        : overlay === SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL ||
-          overlay === SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
-        ? SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL
-        : undefined;
-
+    const parentGuess: MaybeParent = parentMap[overlay];
     perf.start();
     openWithParent(
       overlay,

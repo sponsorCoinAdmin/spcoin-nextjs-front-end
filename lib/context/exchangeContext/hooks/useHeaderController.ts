@@ -9,7 +9,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
-const detailClosers = new Map<number, Set<() => void>>();
+const detailClosers = new Map<SP_COIN_DISPLAY, Set<() => void>>();
 export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void) {
   useEffect(() => {
     if (!fn) return;
@@ -27,7 +27,7 @@ export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void)
 }
 
 /** Title overrides (per panel) registered by screens like ManageAgent */
-const headerTitleOverrides = new Map<number, string>();
+const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
 export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
   useEffect(() => {
     if (title === undefined) return;
@@ -42,7 +42,7 @@ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
 
 /** Left-element (component) overrides (per panel) */
 type LeftFactory = () => React.ReactNode;
-const headerLeftOverrides = new Map<number, LeftFactory>();
+const headerLeftOverrides = new Map<SP_COIN_DISPLAY, LeftFactory>();
 
 /** Register a custom left-side component for a specific panel header */
 export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFactory) {
@@ -72,7 +72,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
     case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';
     case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Claim Agent Rewards';
     case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Claim Sponsor Rewards';
-    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Claim Recipient Account';
+    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account'; // ← fix label
     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
     default: return 'Main Panel Header';

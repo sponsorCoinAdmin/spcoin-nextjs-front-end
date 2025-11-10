@@ -75,7 +75,7 @@ export default function ManageRecipients({ onClose }: Props) {
               recipientAccounts: built,
             },
           };
-        }, 'ManageRecipients:loadRecipientAccounts');
+        }, 'ManageRecipients:loadRecipientAccounts()');
       } catch {
         const fallback = (Array.isArray(rawRecipients) ? rawRecipients : []).map((a: any) => {
           const w = buildWalletObj(a);
@@ -114,18 +114,18 @@ export default function ManageRecipients({ onClose }: Props) {
         const next = { ...prev, accounts: { ...prev.accounts, recipientAccount: w } };
         return next;
       },
-      'ManageRecipients:setRecipientAccount'
+      'ManageRecipients:setWalletCallBack(w)'
     );
 
     if (w) {
       openPanel(
         SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-        'ManageRecipients:setRecipientAccount(open)'
+        'ManageRecipients:setWalletCallBack(w)'
       );
     } else {
       closePanel(
         SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
-        'ManageRecipients:setRecipientAccount(close)'
+        'ManageRecipients:setWalletCallBack(undefined)'
       );
     }
   };

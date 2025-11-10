@@ -91,16 +91,16 @@ function TradeAssetPanelInner() {
 
     // Toggle only the BUTTON visibility; also ensure the PANEL is closed on non-SpCoin
     if (!addr) {
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanel:BUY.addrUnset');
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanel:BUY.addrUnset');
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(addrUnset)');
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanelInner:buyAddrEffect(addrUnset)');
       return;
     }
 
     if (isSpCoin(buyTokenContract)) {
-      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanel:BUY.isSpCoin');
+      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(isSpCoin)');
     } else {
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanel:BUY.notSpCoin');
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanel:BUY.notSpCoin');
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(notSpCoin)');
+      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanelInner:buyAddrEffect(notSpCoin)');
     }
   }, [isBuy, buyTokenContract?.address, openPanel, closePanel]);
   // ────────────────────────────────────────────────────────────────────────────

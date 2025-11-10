@@ -214,7 +214,10 @@ function PanelBootstrap() {
       queueMicrotask(() =>
         openPanel(
           SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-          'ExchangeProvider:PanelBootstrap'
+          {
+            reason: 'ExchangeProvider:PanelBootstrap',
+            parent: SP_COIN_DISPLAY.MAIN_TRADING_PANEL, // ⬅️ parent wired
+          }
         )
       );
     }

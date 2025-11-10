@@ -18,6 +18,21 @@ export default function AddSponsorshipButton() {
   const [buyToken] = useBuyTokenContract();
   const { openPanel, closePanel } = usePanelTree();
 
+  // 🔧 Always provide a non-empty parent/source tag to open/close.
+  //    If a caller forgets to provide one, use this module's name.
+  const DEFAULT_PARENT = 'components/buttons/AddSponsorshipButton';
+  const asParent = (p?: string) => (p && p.trim().length > 0 ? p : DEFAULT_PARENT);
+
+  const safeOpen = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => openPanel(panel, asParent(parent)),
+    [openPanel]
+  );
+
+  const safeClose = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) => closePanel(panel, asParent(parent)),
+    [closePanel]
+  );
+
   // Re-render only when THIS launcher flag changes
   const launcherVisible = usePanelVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
 
@@ -33,18 +48,24 @@ export default function AddSponsorshipButton() {
     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
 
     if (shouldShow) {
-      openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipButton');
+      safeOpen(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoShow`);
     } else {
-      closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipButton');
+      safeClose(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoHide`);
     }
 
     appliedRef.current = next;
-  }, [addr, openPanel, closePanel, buyToken]);
+  }, [addr, buyToken, safeOpen, safeClose]);
 
   const onOpenInline = useCallback(() => {
-    closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipButton:onOpenInline');
-    openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipButton:onOpenInline');
-  }, [openPanel, closePanel]);
+    safeClose(
+      SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON,
+      `${DEFAULT_PARENT}:onOpenInline:closeLauncher`
+    );
+    safeOpen(
+      SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
+      `${DEFAULT_PARENT}:onOpenInline:openPanel`
+    );
+  }, [safeOpen, safeClose]);
 
   if (!launcherVisible) return null;
 

@@ -1,3 +1,5 @@
+// File: app/(menu)/Test/Tabs/ExchangeContext/PanelsTab.tsx
+
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
@@ -21,6 +23,19 @@ export default function PanelsTab() {
   const { setState } = usePageState();
   const { activeMainOverlay, isVisible, openPanel, closePanel, isTokenScrollVisible } =
     usePanelTree();
+
+  // ⚙️ Parent-tag rule: when not provided explicitly, use Module:Method(params)
+  const safeOpen = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) =>
+      openPanel(panel, parent ?? `PanelsTab:safeOpen(${panel})`),
+    [openPanel]
+  );
+
+  const safeClose = useCallback(
+    (panel: SP_COIN_DISPLAY, parent?: string) =>
+      closePanel(panel, parent ?? `PanelsTab:safeClose(${panel})`),
+    [closePanel]
+  );
 
   const KNOWN_PANELS: SP_COIN_DISPLAY[] = useMemo(
     () => [
@@ -63,15 +78,15 @@ export default function PanelsTab() {
   }, [updateExchangePage]);
 
   const togglePanel = useCallback(
-    (panel: SP_COIN_DISPLAY, reason?: string) => {
-      const src = reason ?? 'PanelsTab:toggle';
+    (panel: SP_COIN_DISPLAY) => {
+      const src = `PanelsTab:togglePanel(${panel})`;
       if (isMainOverlay(panel)) {
-        isVisible(panel) ? closePanel(panel, src) : openPanel(panel, src);
+        isVisible(panel) ? safeClose(panel, src) : safeOpen(panel, src);
         return;
       }
-      isVisible(panel) ? closePanel(panel, src) : openPanel(panel, src);
+      isVisible(panel) ? safeClose(panel, src) : safeOpen(panel, src);
     },
-    [isMainOverlay, isVisible, openPanel, closePanel]
+    [isMainOverlay, isVisible, safeOpen, safeClose]
   );
 
   const openOnlyHere = useCallback(
@@ -79,18 +94,18 @@ export default function PanelsTab() {
       // Close other non-main panels first, then open the requested one.
       KNOWN_PANELS.forEach((p) => {
         if (p !== panel && !isMainOverlay(p) && isVisible(p)) {
-          closePanel(p, 'PanelsTab:openOnlyHere:closeOthers');
+          safeClose(p, `PanelsTab:openOnlyHereCloseOthers(${p})`);
         }
       });
       // For main overlays, just open it (radio behavior handled by usePanelTree).
-      openPanel(
+      safeOpen(
         panel,
         isMainOverlay(panel)
-          ? 'PanelsTab:openOnlyHere:openMain'
-          : 'PanelsTab:openOnlyHere:openTarget'
+          ? `PanelsTab:openOnlyHereOpenMain(${panel})`
+          : `PanelsTab:openOnlyHereOpenTarget(${panel})`
       );
     },
-    [KNOWN_PANELS, isMainOverlay, isVisible, openPanel, closePanel]
+    [KNOWN_PANELS, isMainOverlay, isVisible, safeOpen, safeClose]
   );
 
   const nodes = useMemo(
@@ -148,7 +163,7 @@ export default function PanelsTab() {
               <div className='flex items-center gap-2'>
                 <button
                   className={btn}
-                  onClick={() => togglePanel(n.panel, 'PanelsTab:toggle')}
+                  onClick={() => togglePanel(n.panel)}
                   type='button'
                 >
                   Toggle
