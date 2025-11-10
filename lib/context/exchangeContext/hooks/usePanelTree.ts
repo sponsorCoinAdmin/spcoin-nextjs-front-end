@@ -11,25 +11,13 @@ const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
 /* --------------------------------------------------------------------------------
-   Unified options for callers that want to include both reason and parent.
-   Backward compatible with the old `(panel, reason?: string)` signature.
+   Options for callers that want to include both reason and parent.
+   BW-compatible with the old `(panel, reason?: string)` signature.
 --------------------------------------------------------------------------------- */
 type PanelActionOpts = {
   reason?: string;
   parent?: SP_COIN_DISPLAY;
 };
-
-function parseOpts(arg?: string | PanelActionOpts): {
-  reason: string;
-  parentId: SP_COIN_DISPLAY | undefined;
-  parentName: string | undefined;
-} {
-  if (!arg) return { reason: '(unspecified)', parentId: undefined, parentName: undefined };
-  if (typeof arg === 'string') return { reason: arg, parentId: undefined, parentName: undefined };
-  const parentId = arg.parent;
-  const parentName = parentId != null ? SP_COIN_DISPLAY[parentId] : undefined;
-  return { reason: arg.reason ?? '(unspecified)', parentId, parentName };
-}
 
 /* ------------------------------ debug helpers ------------------------------ */
 
@@ -99,6 +87,57 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
   });
 }
 
+/* ------------------------- parent detection helpers ------------------------- */
+
+/** Walk the *current* tree to find a node’s parent panel id (if any). */
+function findParentInTree(nodes: any[] | undefined, target: number): SP_COIN_DISPLAY | undefined {
+  if (!Array.isArray(nodes)) return undefined;
+
+  const walk = (ns: any[], parentId?: number): SP_COIN_DISPLAY | undefined => {
+    for (const n of ns) {
+      const id = typeof n?.panel === 'number' ? (n.panel as number) : NaN;
+      if (!Number.isFinite(id) || !KNOWN.has(id)) continue;
+
+      // direct child
+      if (Array.isArray(n.children) && n.children.some((c: any) => c?.panel === target)) {
+        return id as SP_COIN_DISPLAY;
+      }
+      // recurse
+      const found = Array.isArray(n.children) ? walk(n.children, id) : undefined;
+      if (found != null) return found;
+    }
+    return undefined;
+  };
+
+  return walk(nodes, undefined);
+}
+
+/** Parse user arg, and if missing parent, infer it from the current tree. */
+function parseOptsWithFallbackParent(
+  arg: string | PanelActionOpts | undefined,
+  currentTreeNodes: any[] | undefined,
+  targetPanel: SP_COIN_DISPLAY
+): { reason: string; parentId: SP_COIN_DISPLAY | undefined; parentName: string | undefined } {
+  let reason = '(unspecified)';
+  let parentId: SP_COIN_DISPLAY | undefined;
+
+  if (arg) {
+    if (typeof arg === 'string') {
+      reason = arg;
+    } else {
+      reason = arg.reason ?? '(unspecified)';
+      parentId = arg.parent;
+    }
+  }
+
+  if (parentId == null) {
+    parentId = findParentInTree(currentTreeNodes, targetPanel);
+  }
+
+  const parentName = parentId != null ? SP_COIN_DISPLAY[parentId] : undefined;
+  return { reason, parentId, parentName };
+}
+
 /* --------------------------------- hook --------------------------------- */
 
 export function usePanelTree() {
@@ -160,7 +199,8 @@ export function usePanelTree() {
   //   openPanel(panel, { reason?, parent? });
   const openPanel = useCallback(
     (panel: SP_COIN_DISPLAY, arg?: string | PanelActionOpts) => {
-      const { reason, parentName } = parseOpts(arg);
+      const currentTree = (exchangeContext as any)?.settings?.spCoinPanelTree as any[] | undefined;
+      const { reason, parentName } = parseOptsWithFallbackParent(arg, currentTree, panel);
 
       dbg(`openPanel(${SP_COIN_DISPLAY[panel]})`, { from: reason, parent: parentName });
       traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
@@ -198,7 +238,7 @@ export function usePanelTree() {
         }, `usePanelTree:open:${reason}`);
       });
     },
-    [setExchangeContext, overlays]
+    [setExchangeContext, overlays, exchangeContext]
   );
 
   // Overloads preserved for BW-compat:
@@ -206,7 +246,8 @@ export function usePanelTree() {
   //   closePanel(panel, { reason?, parent? });
   const closePanel = useCallback(
     (panel: SP_COIN_DISPLAY, arg?: string | PanelActionOpts) => {
-      const { reason, parentName } = parseOpts(arg);
+      const currentTree = (exchangeContext as any)?.settings?.spCoinPanelTree as any[] | undefined;
+      const { reason, parentName } = parseOptsWithFallbackParent(arg, currentTree, panel);
 
       dbg(`closePanel(${SP_COIN_DISPLAY[panel]})`, { from: reason, parent: parentName });
       traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
@@ -249,7 +290,7 @@ export function usePanelTree() {
         }, `usePanelTree:close:${reason}`);
       });
     },
-    [setExchangeContext, overlays]
+    [setExchangeContext, overlays, exchangeContext]
   );
 
   /* ------------------------------- derived -------------------------------- */
@@ -271,7 +312,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel, // (panel, reason?) OR (panel, { reason?, parent? })
+    openPanel,  // (panel, reason?) OR (panel, { reason?, parent? })
     closePanel, // (panel, reason?) OR (panel, { reason?, parent? })
   };
 }
