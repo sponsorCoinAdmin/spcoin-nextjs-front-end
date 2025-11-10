@@ -21,8 +21,8 @@ export default function AssetListSelectPanel() {
       className="flex flex-col h-full w-full rounded-[15px] overflow-hidden min-h-0 gap-[4px]"
       data-instance={instanceId}
     >
-      <AddressSelect />
-      <DataListSelect feedData={safeFeedData} loading={loading} feedType={feedType} />
+      {/* <AddressSelect />
+      <DataListSelect feedData={safeFeedData} loading={loading} feedType={feedType} /> */}
     </div>
   );
 }
