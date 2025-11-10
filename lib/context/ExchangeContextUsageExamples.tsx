@@ -34,20 +34,12 @@ export default function ExchangeContextUsageExamples() {
 
   const { isVisible, openPanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
 
-  // Helper: thread parent consistently (mirrors usePanelTransitions behavior)
-  const openWithParent = (panel: SP_COIN_DISPLAY, methodName: string) => {
-    const parent =
-      panel === SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL ||
-      panel === SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL ||
-      panel === SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL
-        ? SP_COIN_DISPLAY.TRADING_STATION_PANEL
-        : panel === SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL
-        ? SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL
-        : panel === SP_COIN_DISPLAY.TRADING_STATION_PANEL
-        ? SP_COIN_DISPLAY.MAIN_TRADING_PANEL
-        : undefined;
+  // Helper: build parent tags like Module:method(args)
+  const tag = (m: string, extra?: string) => (extra ? `ExchangeContextUsageExamples:${m}(${extra})` : `ExchangeContextUsageExamples:${m}()`);
 
-    return openPanel(panel, { reason: `ExchangeContextUsageExamples:${methodName}`, parent });
+  // Small helper that threads parent as a string
+  const openWithParent = (panel: SP_COIN_DISPLAY, methodName: string, extra?: string) => {
+    return openPanel(panel, tag(methodName, extra));
   };
 
   const activePanelLabel = useMemo(() => {
@@ -183,52 +175,33 @@ export default function ExchangeContextUsageExamples() {
           Clear Errors
         </button>
 
-        {/* Panel-tree test controls with parent threading */}
+        {/* Panel-tree test controls with parent tags */}
         <button
-          onClick={() =>
-            openWithParent(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'openSellList')
-          }
+          onClick={() => openWithParent(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'openSellList')}
         >
           Open SELL panel
         </button>
 
         <button
-          onClick={() =>
-            openWithParent(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'openBuyList')
-          }
+          onClick={() => openWithParent(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'openBuyList')}
         >
           Open BUY panel
         </button>
 
         <button
-          onClick={() =>
-            openWithParent(
-              SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
-              'openRecipientList'
-            )
-          }
+          onClick={() => openWithParent(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'openRecipientList')}
         >
           Open RECIPIENT panel
         </button>
 
         <button
-          onClick={() =>
-            openWithParent(
-              SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
-              'openSponsorConfig'
-            )
-          }
+          onClick={() => openWithParent(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'openSponsorConfig')}
         >
           Open SPONSOR CONFIG
         </button>
 
         <button
-          onClick={() =>
-            openWithParent(
-              SP_COIN_DISPLAY.TRADING_STATION_PANEL,
-              'showTradingStation'
-            )
-          }
+          onClick={() => openWithParent(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'showTradingStation')}
         >
           Close overlays (show Trading)
         </button>
