@@ -1,4 +1,3 @@
-// File: lib/context/exchangeContext/hooks/usePanelTree.ts
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -9,6 +8,29 @@ import { panelStore } from '@/lib/context/exchangeContext/panelStore';
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
+
+/* ------------------------------ debug helpers ------------------------------ */
+
+const PT_DEBUG =
+  typeof window !== 'undefined' &&
+  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+
+function dbg(label: string, payload?: unknown) {
+  if (!PT_DEBUG) return;
+  // @debug: PANEL_TREE
+  // eslint-disable-next-line no-console
+  console.log(`[usePanelTree] ${label}`, payload ?? '');
+}
+
+function fmtMap(map: Record<number, boolean>) {
+  const out: Record<string, boolean> = {};
+  Object.keys(map).forEach((k) => {
+    const id = Number(k) as SP_COIN_DISPLAY;
+    out[SP_COIN_DISPLAY[id]] = map[id];
+  });
+  return out;
+}
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -51,7 +73,11 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
     const id = idNum as SP_COIN_DISPLAY;
     const prev = !!prevMap[idNum];
     const next = !!nextMap[idNum];
-    if (prev !== next) panelStore.setVisible(id, next);
+    if (prev !== next) {
+      // @debug: PANEL_TREE publish-change
+      dbg(`publish ${SP_COIN_DISPLAY[id]}: ${prev} → ${next}`);
+      panelStore.setVisible(id, next);
+    }
   });
 }
 
@@ -61,10 +87,21 @@ export function usePanelTree() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const list = useMemo<PanelEntry[]>(
-    () => flatten((exchangeContext as any)?.settings?.spCoinPanelTree),
+    () => {
+      const flat = flatten((exchangeContext as any)?.settings?.spCoinPanelTree);
+      // @debug: PANEL_TREE flatten
+      dbg('flatten()', flat.map((e) => ({ panel: SP_COIN_DISPLAY[e.panel], visible: e.visible })));
+      return flat;
+    },
     [exchangeContext]
   );
-  const map = useMemo(() => toMap(list), [list]);
+
+  const map = useMemo(() => {
+    const m = toMap(list);
+    // @debug: PANEL_TREE map
+    dbg('map()', fmtMap(m));
+    return m;
+  }, [list]);
 
   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
 
@@ -72,6 +109,8 @@ export function usePanelTree() {
   const prevMapRef = useRef<Record<number, boolean> | null>(null);
   useEffect(() => {
     const prev = prevMapRef.current ?? {};
+    // @debug: PANEL_TREE sync
+    dbg('sync panelStore (prev → next)', { prev: fmtMap(prev), next: fmtMap(map) });
     diffAndPublish(prev, map);
     prevMapRef.current = map;
   }, [map]);
@@ -80,7 +119,13 @@ export function usePanelTree() {
   useEffect(() => {
     const visible = overlays.filter((id) => !!map[id]);
     if (visible.length <= 1) return;
+
     const keep = visible[0];
+    // @debug: PANEL_TREE reconcile
+    dbg('reconcile overlays: multiple visible → collapsing', {
+      visible: visible.map((id) => SP_COIN_DISPLAY[id]),
+      keep: SP_COIN_DISPLAY[keep],
+    });
 
     schedule(() => {
       setExchangeContext((prev) => {
@@ -88,6 +133,8 @@ export function usePanelTree() {
         const next = flatPrev.map((e) =>
           overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
         );
+        // @debug: PANEL_TREE reconcile-diff
+        dbg('reconcile diff', { prev: fmtMap(toMap(flatPrev)), next: fmtMap(toMap(next)) });
         diffAndPublish(toMap(flatPrev), toMap(next));
         return writeFlat(prev, next);
       }, 'usePanelTree:reconcile');
@@ -96,7 +143,13 @@ export function usePanelTree() {
 
   /* ------------------------------- queries ------------------------------- */
 
-  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
+  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => {
+    const v = panelStore.isVisible(panel);
+    // @debug: PANEL_TREE isVisible
+    dbg(`isVisible(${SP_COIN_DISPLAY[panel]}) → ${v}`);
+    return v;
+  }, []);
+
   const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
 
   /* ------------------------------- actions ------------------------------- */
@@ -105,12 +158,20 @@ export function usePanelTree() {
     (panel: SP_COIN_DISPLAY) => {
       if (!KNOWN.has(panel)) return;
 
+      // @debug: PANEL_TREE open-call
+      dbg(`openPanel(${SP_COIN_DISPLAY[panel]}) call`);
+
       schedule(() => {
         setExchangeContext((prev) => {
           const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
           let flat = ensurePanelPresent(flat0, panel);
 
           if (overlays.includes(panel)) {
+            // @debug: PANEL_TREE open-overlay
+            dbg(`open overlay (radio) ${SP_COIN_DISPLAY[panel]}`, {
+              before: fmtMap(toMap(flat0)),
+            });
+
             // radio: set ONLY this overlay to visible, others to false
             flat = overlays.reduce((acc, id) => {
               const idx = acc.findIndex((e) => e.panel === id);
@@ -118,7 +179,11 @@ export function usePanelTree() {
               else acc.push({ panel: id, visible: id === panel });
               return acc;
             }, [...flat]);
-            diffAndPublish(toMap(flat0), toMap(flat));
+
+            const nextMap = toMap(flat);
+            // @debug: PANEL_TREE open-overlay-after
+            dbg('after open overlay', fmtMap(nextMap));
+            diffAndPublish(toMap(flat0), nextMap);
             return writeFlat(prev, flat);
           }
 
@@ -127,6 +192,13 @@ export function usePanelTree() {
           const i = nextFlat.findIndex((e) => e.panel === panel);
           if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: true };
           else nextFlat.push({ panel, visible: true });
+
+          // @debug: PANEL_TREE open-non-overlay
+          dbg(`open non-overlay ${SP_COIN_DISPLAY[panel]}`, {
+            before: fmtMap(toMap(flat0)),
+            after: fmtMap(toMap(nextFlat)),
+          });
+
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
         }, 'usePanelTree:open');
@@ -139,12 +211,22 @@ export function usePanelTree() {
     (panel: SP_COIN_DISPLAY) => {
       if (!KNOWN.has(panel)) return;
 
+      // @debug: PANEL_TREE close-call
+      dbg(`closePanel(${SP_COIN_DISPLAY[panel]}) call`);
+
       schedule(() => {
         setExchangeContext((prev) => {
           const flat0 = flatten((prev as any)?.settings?.spCoinPanelTree);
 
           if (overlays.includes(panel)) {
             const isActive = !!flat0.find((e) => e.panel === panel && e.visible);
+
+            // @debug: PANEL_TREE close-overlay
+            dbg(`close overlay (radio) ${SP_COIN_DISPLAY[panel]}`, {
+              active: isActive,
+              before: fmtMap(toMap(flat0)),
+            });
+
             if (isActive) {
               const next = overlays.reduce((acc, id) => {
                 const idx = acc.findIndex((e) => e.panel === id);
@@ -152,10 +234,16 @@ export function usePanelTree() {
                 else acc.push({ panel: id, visible: false });
                 return acc;
               }, [...flat0]);
+
+              // @debug: PANEL_TREE close-overlay-after
+              dbg('after close overlay', fmtMap(toMap(next)));
               diffAndPublish(toMap(flat0), toMap(next));
               return writeFlat(prev, next);
             }
+
             const nextFlat = flat0.map((e) => (e.panel === panel ? { ...e, visible: false } : e));
+            // @debug: PANEL_TREE close-overlay-nonactive
+            dbg('close overlay (non-active) result', fmtMap(toMap(nextFlat)));
             diffAndPublish(toMap(flat0), toMap(nextFlat));
             return writeFlat(prev, nextFlat);
           }
@@ -163,6 +251,13 @@ export function usePanelTree() {
           const nextFlat = [...flat0];
           const i = nextFlat.findIndex((e) => e.panel === panel);
           if (i >= 0 && nextFlat[i].visible) nextFlat[i] = { ...nextFlat[i], visible: false };
+
+          // @debug: PANEL_TREE close-non-overlay
+          dbg(`close non-overlay ${SP_COIN_DISPLAY[panel]}`, {
+            before: fmtMap(toMap(flat0)),
+            after: fmtMap(toMap(nextFlat)),
+          });
+
           diffAndPublish(toMap(flat0), toMap(nextFlat));
           return writeFlat(prev, nextFlat);
         }, 'usePanelTree:close');
