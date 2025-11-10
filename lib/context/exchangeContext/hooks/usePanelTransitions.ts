@@ -1,24 +1,41 @@
+// File: lib/context/exchangeContext/hooks/usePanelTransitions.ts
 'use client';
 
 import { useCallback, useRef } from 'react';
+import type { MouseEvent, MouseEventHandler } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { telemetry } from '@/lib/utils/telemetry';
 
 type OpenOpts = {
+  /** For correlating caller in logs/telemetry */
   methodName?: string;
+};
+
+type ClickOpts = OpenOpts & {
+  /** default true */
+  preventDefault?: boolean;
+  /** default true */
+  stopPropagation?: boolean;
+  /** If true, wrap the open call in queueMicrotask() (helps avoid outside-click closers) */
+  defer?: boolean;
 };
 
 export function usePanelTransitions() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
 
-  // simple counters to correlate open attempts
-  const buyCountRef = useRef(0);
+  // Monotonic counters to correlate repeated attempts
+  const buyCountRef  = useRef(0);
   const sellCountRef = useRef(0);
 
-  const _emit = (to: SP_COIN_DISPLAY, action: 'open' | 'close' | 'toggle', methodName?: string, count?: number) => {
+  const _emit = (
+    to: SP_COIN_DISPLAY,
+    action: 'open' | 'close' | 'toggle',
+    methodName?: string,
+    count?: number,
+  ) => {
     telemetry.emit('panel_transition', {
       action,
       to,
@@ -29,6 +46,29 @@ export function usePanelTransitions() {
     });
   };
 
+  // Helper to build safe click handlers with correct typing
+  const toClickHandler = <T extends HTMLElement>(
+    act: (opts?: OpenOpts) => void,
+    base?: ClickOpts,
+  ): MouseEventHandler<T> => {
+    const {
+      preventDefault = true,
+      stopPropagation = true,
+      defer = true,
+      methodName,
+    } = base ?? {};
+    return (e: MouseEvent<T>) => {
+      if (preventDefault) e.preventDefault();
+      if (stopPropagation) e.stopPropagation();
+      if (defer) {
+        queueMicrotask(() => act({ methodName }));
+      } else {
+        act({ methodName });
+      }
+    };
+  };
+
+  // ─── Core overlays (radio group) ───────────────────────────────────────────
   const toTrading = useCallback(() => {
     perf.start();
     openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
@@ -39,6 +79,7 @@ export function usePanelTransitions() {
   const openBuyList = useCallback((opts?: OpenOpts) => {
     const count = ++buyCountRef.current;
     const methodName = opts?.methodName ?? 'unknown';
+
     const before = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     const beforeOther = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
@@ -58,6 +99,7 @@ export function usePanelTransitions() {
   const openSellList = useCallback((opts?: OpenOpts) => {
     const count = ++sellCountRef.current;
     const methodName = opts?.methodName ?? 'unknown';
+
     const before = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
     const beforeOther = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
     // eslint-disable-next-line no-console
@@ -74,6 +116,17 @@ export function usePanelTransitions() {
     console.log('[openSellList]', `#${count} (after)`, { after, afterOther, methodName });
   }, [openPanel, isVisible, perf]);
 
+  // Type-safe click handlers you can pass directly to onClick
+  const openBuyListClick    = useCallback(
+    (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openBuyList, opts),
+    [openBuyList],
+  );
+  const openSellListClick   = useCallback(
+    (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openSellList, opts),
+    [openSellList],
+  );
+
+  // ─── Other panels ──────────────────────────────────────────────────────────
   const openRecipientList = useCallback(() => {
     perf.start();
     openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
@@ -156,6 +209,7 @@ export function usePanelTransitions() {
   }, [openPanel, perf]);
 
   return {
+    // programmatic
     toTrading,
     openBuyList,
     openSellList,
@@ -170,5 +224,9 @@ export function usePanelTransitions() {
     closeConfigSponsorship,
     toggleSponsorConfig,
     closeAddSponsorship,
+
+    // click-safe handlers
+    openBuyListClick,
+    openSellListClick,
   };
 }
