@@ -1,11 +1,20 @@
 // File: lib/context/exchangeContext/hooks/usePanelTransitions.ts
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
 import { telemetry } from '@/lib/utils/telemetry';
+
+type DebugCtx = {
+  /** Optional: who is calling (e.g., 'TokenSelectDropDown.openTokenSelectPanel:SELL') */
+  methodName?: string;
+  /** Optional: external sequence/counter if the caller tracks attempts */
+  count?: number;
+};
+
+const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TRANSITIONS === 'true';
 
 /**
  * Declarative, named transitions for common UI flows.
@@ -15,15 +24,43 @@ export function usePanelTransitions() {
   const { openPanel, closePanel, isVisible } = usePanelTree();
   const perf = usePerfMarks('panelTransition');
 
+  // Local counters so we can spot rapid-fire toggles in prod
+  const sellOpenSeqRef = useRef(0);
+  const buyOpenSeqRef  = useRef(0);
+
   // ---- helpers ----
-  const _emit = (to: SP_COIN_DISPLAY, action: 'open' | 'close' | 'toggle') => {
+  const _emit = (to: SP_COIN_DISPLAY, action: 'open' | 'close' | 'toggle', ctx?: DebugCtx) => {
     telemetry.emit('panel_transition', {
       action,
       to,
       label: SP_COIN_DISPLAY[to],
-      // Add anything useful for later analysis here:
       ts: Date.now(),
+      methodName: ctx?.methodName,
+      count: ctx?.count,
     });
+  };
+
+  const _debugPre = (label: string, to: SP_COIN_DISPLAY, ctx?: DebugCtx) => {
+    if (!DEBUG) return;
+    const vis = isVisible(to);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[usePanelTransitions] → ${label} start`,
+      { panel: SP_COIN_DISPLAY[to], visible: vis, methodName: ctx?.methodName, count: ctx?.count }
+    );
+    // Quick, shallow trace to see the path (kept tiny to avoid console spam)
+    // eslint-disable-next-line no-console
+    console.trace?.(`[usePanelTransitions] trace for ${label}`);
+  };
+
+  const _debugPost = (label: string, to: SP_COIN_DISPLAY, ctx?: DebugCtx) => {
+    if (!DEBUG) return;
+    const vis = isVisible(to);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[usePanelTransitions] ✓ ${label} done`,
+      { panel: SP_COIN_DISPLAY[to], visible: vis, methodName: ctx?.methodName, count: ctx?.count }
+    );
   };
 
   // ---- Core overlays (radio group) ----
@@ -34,19 +71,29 @@ export function usePanelTransitions() {
     _emit(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'open');
   }, [openPanel, perf]);
 
-  const openBuyList = useCallback(() => {
+  const openBuyList = useCallback((ctx?: DebugCtx) => {
+    const localSeq = ++buyOpenSeqRef.current;
     perf.start();
-    openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-    perf.end('openBuyList');
-    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open');
-  }, [openPanel, perf]);
+    _debugPre(`openBuyList#${localSeq}`, SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, ctx);
 
-  const openSellList = useCallback(() => {
+    openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+
+    perf.end('openBuyList');
+    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open', { ...ctx, count: ctx?.count ?? localSeq });
+    _debugPost(`openBuyList#${localSeq}`, SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, ctx);
+  }, [openPanel, perf, isVisible]);
+
+  const openSellList = useCallback((ctx?: DebugCtx) => {
+    const localSeq = ++sellOpenSeqRef.current;
     perf.start();
+    _debugPre(`openSellList#${localSeq}`, SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, ctx);
+
     openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+
     perf.end('openSellList');
-    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open');
-  }, [openPanel, perf]);
+    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open', { ...ctx, count: ctx?.count ?? localSeq });
+    _debugPost(`openSellList#${localSeq}`, SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, ctx);
+  }, [openPanel, perf, isVisible]);
 
   const openRecipientList = useCallback(() => {
     perf.start();
@@ -79,8 +126,6 @@ export function usePanelTransitions() {
   const closeManageSponsorships = useCallback(() => {
     perf.start();
     closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
-    // Removed: do not force button visibility; respect restored state
-    // openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
     perf.end('closeManageSponsorships');
     _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'close');
   }, [closePanel, perf]);
@@ -126,12 +171,14 @@ export function usePanelTransitions() {
   }, [closePanel, perf]);
 
   // ---- Generic helper (if you need a custom overlay) ----
-  const openOverlay = useCallback((overlay: SP_COIN_DISPLAY) => {
+  const openOverlay = useCallback((overlay: SP_COIN_DISPLAY, ctx?: DebugCtx) => {
     perf.start();
+    _debugPre(`openOverlay`, overlay, ctx);
     openPanel(overlay);
     perf.end(`openOverlay:${overlay}`);
-    _emit(overlay, 'open');
-  }, [openPanel, perf]);
+    _emit(overlay, 'open', ctx);
+    _debugPost(`openOverlay`, overlay, ctx);
+  }, [openPanel, perf, isVisible]);
 
   return {
     // overlays
