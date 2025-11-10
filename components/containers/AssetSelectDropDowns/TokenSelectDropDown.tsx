@@ -1,7 +1,7 @@
 // File: components/containers/TokenSelectDropDown.tsx
 'use client';
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
 
@@ -24,13 +24,12 @@ interface Props {
 function TokenSelectDropDown({ containerType }: Props) {
   const sellHook = useSellTokenContract();
   const buyHook  = useBuyTokenContract();
+
   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
   const [tokenContract] = isSellRoot ? sellHook : buyHook;
 
   const { openSellList, openBuyList } = usePanelTransitions();
   const { isVisible } = usePanelTree();
-
-  const clickCountRef = useRef(0);
 
   const logoURL = useMemo(() => {
     const raw = tokenContract?.logoURL?.trim();
@@ -42,8 +41,8 @@ function TokenSelectDropDown({ containerType }: Props) {
     return defaultMissingImage;
   }, [tokenContract?.logoURL]);
 
-  const handleMissingLogoURL = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
+  const handleMissingLogoURL = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget;
     img.onerror = null;
     img.src = defaultMissingImage;
     if (tokenContract?.symbol && tokenContract?.address) {
@@ -53,38 +52,38 @@ function TokenSelectDropDown({ containerType }: Props) {
     }
   }, [tokenContract]);
 
+  // stop at pointer-down (earlier than mousedown/click) to beat global outside-closers
+  const stopPointerDown = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const stopMouseDown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   const openTokenSelectPanel = useCallback((e?: React.SyntheticEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
+
     clearFSMTraceFromMemory();
 
-    const count = ++clickCountRef.current;
-    const methodName = 'TokenSelectDropDown/openTokenSelectPanel';
-
-    // Hard idempotency guard — avoid accidental toggle if already open
-    const target = isSellRoot
-      ? SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL
-      : SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL;
-
-    if (isVisible(target)) {
-      debugLog.log(`🟡 already visible, skip open → ${SP_COIN_DISPLAY[target]} (count=${count})`);
-      return;
-    }
-
+    // Defer to avoid racing with any outside-click closers
     queueMicrotask(() => {
-      if (isSellRoot) {
-        openSellList({ methodName, count });
-      } else {
-        openBuyList({ methodName, count });
-      }
+      const methodName = 'TokenSelectDropDown:openTokenSelectPanel';
+      isSellRoot
+        ? openSellList({ methodName })
+        : openBuyList({ methodName });
+
+      // Optional: verify final state shortly after
+      setTimeout(() => {
+        const sell = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+        const buy  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+        debugLog.log(`After openTokenSelectPanel → visible? {sell:${sell}, buy:${buy}}`);
+      }, 0);
     });
   }, [isSellRoot, openSellList, openBuyList, isVisible]);
-
-  const stopMouseDown = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
 
   return (
     <div id="TokenSelectDropDown" className={styles.assetSelect}>
@@ -97,6 +96,7 @@ function TokenSelectDropDown({ containerType }: Props) {
             src={logoURL}
             loading="lazy"
             decoding="async"
+            onPointerDown={stopPointerDown}
             onMouseDown={stopMouseDown}
             onClick={openTokenSelectPanel}
             onError={handleMissingLogoURL}
@@ -106,10 +106,12 @@ function TokenSelectDropDown({ containerType }: Props) {
       ) : (
         <>Select Token:</>
       )}
+
       <ChevronDown
         id="ChevronDown"
         size={18}
         className="ml-2 cursor-pointer"
+        onPointerDown={stopPointerDown}
         onMouseDown={stopMouseDown}
         onClick={openTokenSelectPanel}
       />
