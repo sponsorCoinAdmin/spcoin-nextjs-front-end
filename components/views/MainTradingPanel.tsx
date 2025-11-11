@@ -1,6 +1,7 @@
 // File: components/views/MainTradingPanel.tsx
 'use client';
 
+import React, { useMemo } from 'react';
 import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
@@ -28,11 +29,47 @@ import {
 
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+
+const SHOW_ACTIVE =
+  process.env.NEXT_PUBLIC_SHOW_ACTIVE_OVERLAY === 'true' ||
+  process.env.NEXT_PUBLIC_TREE_SHOW_VISIBILITY === 'true';
 
 export default function MainTradingPanel() {
+  const { activeMainOverlay } = usePanelTree();
+
+  const activeOverlayLabel = useMemo(() => {
+    return activeMainOverlay != null ? SP_COIN_DISPLAY[activeMainOverlay] : 'NONE';
+  }, [activeMainOverlay]);
+
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
-      <div id="MainPage_ID">
+      <div id="MainPage_ID" style={{ position: 'relative' }}>
+        {/* 🟢 Debug HUD: current active main overlay */}
+        {SHOW_ACTIVE && (
+          <div
+            id="ActiveOverlayHUD"
+            className="pointer-events-none select-none"
+            style={{
+              position: 'absolute',
+              top: 6,
+              right: 6,
+              zIndex: 50,
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              fontSize: 12,
+              background: 'rgba(0,0,0,0.6)',
+              color: '#9BE28F',
+              padding: '6px 8px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            }}
+            aria-live="polite"
+          >
+            activeMainOverlay:&nbsp;<strong>{activeOverlayLabel}</strong>
+          </div>
+        )}
+
         <div id="mainTradingPanel" className={styles.mainTradingPanel}>
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
             <TradeContainerHeader />
