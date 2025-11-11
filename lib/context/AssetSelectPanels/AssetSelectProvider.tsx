@@ -57,8 +57,8 @@ export const AssetSelectProvider = ({
     showErrorPreview,
   } = useAssetSelectDisplay();
 
-  // Local UI state (kept for compatibility)
-  const [manualEntry, _setManualEntry] = useState(false);
+  // ⬇️ Minimal change: default manualEntry = true (so every mount starts "manual")
+  const [manualEntry, _setManualEntry] = useState(true);
   const [bypassFSM, setBypassFSM] = useState(false);
 
   useEffect(() => {
@@ -68,6 +68,8 @@ export const AssetSelectProvider = ({
       feed: FEED_TYPE[feedType],
       hasInitialBag: !!initialPanelBag,
     });
+    // Ensure the default is enforced at mount as a safeguard
+    _setManualEntry(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -311,46 +313,31 @@ export const AssetSelectProvider = ({
       resetPreview,
     }),
     [
-      // FSM / validated
       inputState,
       validatedAssetNarrow,
-      setValidatedAssetLogged, // wrapped
-
-      // flags
+      setValidatedAssetLogged,
       manualEntry,
       bypassFSM,
-
-      // input feed
       validHexInput,
       debouncedHexInput,
       failedHexInput,
       failedHexCount,
       isValid,
       isValidHexString,
-      handleHexInputChange, // wrapped
+      handleHexInputChange,
       resetHexInput,
-
-      // identity
       containerType,
       feedType,
       instanceId,
-
-      // bridges
       closePanelCallbackCtx,
       setTradingTokenCallbackCtx,
-
-      // bag
       panelBag,
       setPanelBag,
-
-      // display
       activeSubDisplay,
       setActiveSubDisplay,
       showErrorPreview,
       showAssetPreview,
       resetPreview,
-
-      // required fns
       setValidatedWallet,
       dumpAssetSelectContext,
       dumpFSMContext,

@@ -36,6 +36,11 @@ export default function AddressSelect({ defaultAddress, bypassDefaultFsm = false
   debugLog.log?.('🆔 context instanceId:', instanceId);
   debugLog.log?.('✅ AddressSelect function START');
 
+  // ⬇️ Minimal change: enforce manualEntry=true when AddressSelect mounts
+  useEffect(() => {
+    setManualEntry(true);
+  }, [setManualEntry]);
+
   // Reflect prop → context
   useEffect(() => {
     if (typeof setBypassFSM === 'function') {
