@@ -1,0 +1,2712 @@
+diff --git a/app/(menu)/Exchange/DebugPanelProbes.tsx b/app/(menu)/Exchange/DebugPanelProbes.tsx
+deleted file mode 100644
+index d52b971d..00000000
+--- a/app/(menu)/Exchange/DebugPanelProbes.tsx
++++ /dev/null
+@@ -1,11 +0,0 @@
+-// File: app/(menu)/Exchange/DebugPanelProbes.tsx
+-'use client';
+-import { useEffect } from 'react';
+-import { installDocClickProbe } from '@/lib/debug/panels/installDocClickProbe';
+-
+-export default function DebugPanelProbes() {
+-  useEffect(() => {
+-    installDocClickProbe();
+-  }, []);
+-  return null;
+-}
+diff --git a/app/(menu)/Exchange/page.tsx b/app/(menu)/Exchange/page.tsx
+index b41d6a58..f682dc9b 100644
+--- a/app/(menu)/Exchange/page.tsx
++++ b/app/(menu)/Exchange/page.tsx
+@@ -1,31 +1,17 @@
+ // File: app/(menu)/Exchange/page.tsx
++
+ 'use client'
+ 
+-import React, { useEffect } from 'react'
+ import Component from './index'
+ 
+-export default function ExchangePage() {
+-  useEffect(() => {
+-    let cleanup: (() => void) | undefined
+-
+-    ;(async () => {
+-      try {
+-        const mod = await import('@/lib/debug/panels/installDocClickProbe')
+-        if (typeof mod.installDocClickProbe === 'function') {
+-          const ret = mod.installDocClickProbe()
+-          if (typeof ret === 'function') cleanup = ret
+-        }
+-      } catch {
+-        // Probe is optional; ignore if it doesn't exist in this build
+-      }
+-    })()
++import React from 'react'
+ 
+-    return () => {
+-      if (typeof cleanup === 'function') {
+-        try { cleanup() } catch {}
+-      }
+-    }
+-  }, [])
+-
+-  return <Component />
++function connectedPage() {
++  return (
++    <>
++      <Component />
++    </>
++  )
+ }
++
++export default connectedPage
+diff --git a/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx b/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
+index c021d508..9e741ddc 100644
+--- a/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
++++ b/app/(menu)/Test/Tabs/ExchangeContext/components/Tree/Branch.tsx
+@@ -1,4 +1,3 @@
+-// File: components/PanelTree/Branch.tsx
+ 'use client';
+ 
+ import React, { useEffect, useRef } from 'react';
+@@ -78,10 +77,10 @@ const Branch: React.FC<BranchProps> = ({
+ 
+   // dot-path classifiers for *virtual* panel nodes (now includes spCoinPanelTree)
+   const isPanelArrayItem =
+-    (/(\.(spCoinPanelTree|children|spCoinPanelTree)\.\d+$)/.test(path)) &&
++    (/\.(spCoinPanelTree|children|spCoinPanelTree)\.\d+$/.test(path)) &&
+     looksLikeVirtualPanelNode(value);
+ 
+-  // Treat any array labeled exactly 'children' as a pure container (no row rendered)
++  // Treat any array labeled exactly "children" as a pure container (no row rendered)
+   const isChildrenContainer = isArray && label === 'children';
+ 
+   const ensureOpen = (p: string) => {
+@@ -126,23 +125,20 @@ const Branch: React.FC<BranchProps> = ({
+       if (isPanelArrayItem) {
+         const panelId = (value as any).id as number;
+         const currentlyVisible = !!(value as any).visible;
+-        const parentTag = 'Branch:onRowClick()';
+         if (!currentlyVisible) {
+-          // ✅ Always include a parent/source tag for open
+-          openPanel(panelId, parentTag);
++          openPanel(panelId);
+           ensureOpen(path);
+           ensureOpen(`${path}.children`);
+         } else {
+-          // ✅ Always include a parent/source tag for close (mirrors open)
+-          closePanel(panelId, parentTag);
++          closePanel(panelId);
+         }
+       } else if (hasEntries) {
+         togglePath(path);
+       }
+     };
+ 
+-    // Hide 'name' inside virtual panel node bodies (avoid duplication)
+-    // NEW: also hide 'id' and/or 'visible' based on env flags
++    // Hide "name" inside virtual panel node bodies (avoid duplication)
++    // NEW: also hide "id" and/or "visible" based on env flags
+     const isVirtualNode = looksLikeVirtualPanelNode(value);
+     const keys = isArray
+       ? (value as any[]).map((_, i) => String(i))
+@@ -154,7 +150,7 @@ const Branch: React.FC<BranchProps> = ({
+           return true;
+         });
+ 
+-    // 'children' container renders items directly (no own row)
++    // "children" container renders items directly (no own row)
+     if (isChildrenContainer) {
+       return (
+         <>
+@@ -173,7 +169,7 @@ const Branch: React.FC<BranchProps> = ({
+                   key={childPath}
+                   label={childLabel}
+                   value={childVal}
+-                  depth={depth} // same depth (no 'children' row shown)
++                  depth={depth} // same depth (no "children" row shown)
+                   path={childPath}
+                   exp={exp}
+                   togglePath={togglePath}
+@@ -206,7 +202,7 @@ const Branch: React.FC<BranchProps> = ({
+             let childLabel = isArray ? `[${k}]` : k;
+ 
+             // ✅ Append enum/name with smart indexing for arrays of virtual panel nodes,
+-            //    including top-level 'spCoinPanelTree' and any 'children' arrays.
++            //    including top-level "spCoinPanelTree" and any "children" arrays.
+             if (
+               isArray &&
+               PANEL_ARRAY_LABELS.has(label) &&
+@@ -242,12 +238,12 @@ const Branch: React.FC<BranchProps> = ({
+   const content =
+     enumForKey && typeof value === 'number' ? (
+       <>
+-        {/* If ids are hidden and this key is 'id', skip rendering entirely.
++        {/* If ids are hidden and this key is "id", skip rendering entirely.
+             (Normally filtered above, but this is an extra guard.) */}
+         {label === 'id' && !SHOW_IDS ? null : (
+           <>
+             {`${label}(${value}): `}
+-            <span className='text-[#5981F3]'>
++            <span className="text-[#5981F3]">
+               {typeof enumForKey[value] === 'string' ? enumForKey[value] : `[${value}]`}
+             </span>
+           </>
+@@ -256,7 +252,7 @@ const Branch: React.FC<BranchProps> = ({
+     ) : label === 'visible' && !SHOW_VIS ? null : (
+       <>
+         {`${label}: `}
+-        <span className='text-[#5981F3]'>{quoteIfString(value)}</span>
++        <span className="text-[#5981F3]">{quoteIfString(value)}</span>
+       </>
+     );
+ 
+@@ -264,7 +260,7 @@ const Branch: React.FC<BranchProps> = ({
+ 
+   return (
+     <div className={`font-mono ${lineClass} text-slate-200 m-0 p-0`}>
+-      <span className='whitespace-pre select-none'>{'  '.repeat(depth)}</span>
++      <span className="whitespace-pre select-none">{'  '.repeat(depth)}</span>
+       <span>{content}</span>
+     </div>
+   );
+diff --git a/app/(menu)/Test/Tabs/ExchangeContext/hooks/usePanelControls.ts b/app/(menu)/Test/Tabs/ExchangeContext/hooks/usePanelControls.ts
+index 99e4127b..3f988d3a 100644
+--- a/app/(menu)/Test/Tabs/ExchangeContext/hooks/usePanelControls.ts
++++ b/app/(menu)/Test/Tabs/ExchangeContext/hooks/usePanelControls.ts
+@@ -10,42 +10,21 @@ import type { SP_COIN_DISPLAY } from '@/lib/structure';
+ export function usePanelControls() {
+   const { isVisible, openPanel, closePanel } = usePanelTree();
+ 
+-  // ⚙️ Parent tagging rule: if the caller doesn't provide a parent, we
+-  // synthesize one using the format Module:Method(Parameters)
+-
+-  const safeOpen = useCallback(
+-    (panelId: SP_COIN_DISPLAY, parent?: string) => {
+-      const parentTag = parent ?? `usePanelControls:safeOpen(${panelId})`;
+-      openPanel(panelId, parentTag);
+-    },
+-    [openPanel]
+-  );
+-
+-  const safeClose = useCallback(
+-    (panelId: SP_COIN_DISPLAY, parent?: string) => {
+-      const parentTag = parent ?? `usePanelControls:safeClose(${panelId})`;
+-      closePanel(panelId, parentTag);
+-    },
+-    [closePanel]
+-  );
+-
+   const onTogglePanel = useCallback(
+-    (panelId: SP_COIN_DISPLAY, parent?: string) => {
++    (panelId: SP_COIN_DISPLAY) => {
+       const visible = isVisible(panelId);
+       const isMain = MAIN_OVERLAY_GROUP.includes(panelId);
+-      const parentTag = parent ?? `usePanelControls:onTogglePanel(${panelId})`;
+ 
+       if (isMain) {
+         // Radio overlays: visible → close (allow "none"), otherwise open
+-        visible ? safeClose(panelId, parentTag) : safeOpen(panelId, parentTag);
++        visible ? closePanel(panelId) : openPanel(panelId);
+       } else {
+         // Non-radio panels: simple toggle
+-        visible ? safeClose(panelId, parentTag) : safeOpen(panelId, parentTag);
++        visible ? closePanel(panelId) : openPanel(panelId);
+       }
+     },
+-    [isVisible, safeOpen, safeClose]
++    [isVisible, openPanel, closePanel]
+   );
+ 
+-  // Expose the safe wrappers (parent defaulting to Module:Method(params) when omitted)
+-  return { isVisible, onTogglePanel, openPanel: safeOpen, closePanel: safeClose };
++  return { isVisible, onTogglePanel };
+ }
+diff --git a/app/(menu)/Test/Tabs/Panels/index.tsx b/app/(menu)/Test/Tabs/Panels/index.tsx
+index 72843967..bc84b960 100644
+--- a/app/(menu)/Test/Tabs/Panels/index.tsx
++++ b/app/(menu)/Test/Tabs/Panels/index.tsx
+@@ -1,5 +1,4 @@
+-// File: app/(menu)/Test/Tabs/ExchangeContext/PanelsTab.tsx
+-
++// File: app/(menu)/Test/Tabs/Panels/index.tsx
+ 'use client';
+ 
+ import React, { useMemo, useCallback } from 'react';
+@@ -24,19 +23,6 @@ export default function PanelsTab() {
+   const { activeMainOverlay, isVisible, openPanel, closePanel, isTokenScrollVisible } =
+     usePanelTree();
+ 
+-  // ⚙️ Parent-tag rule: when not provided explicitly, use Module:Method(params)
+-  const safeOpen = useCallback(
+-    (panel: SP_COIN_DISPLAY, parent?: string) =>
+-      openPanel(panel, parent ?? `PanelsTab:safeOpen(${panel})`),
+-    [openPanel]
+-  );
+-
+-  const safeClose = useCallback(
+-    (panel: SP_COIN_DISPLAY, parent?: string) =>
+-      closePanel(panel, parent ?? `PanelsTab:safeClose(${panel})`),
+-    [closePanel]
+-  );
+-
+   const KNOWN_PANELS: SP_COIN_DISPLAY[] = useMemo(
+     () => [
+       SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+@@ -78,34 +64,28 @@ export default function PanelsTab() {
+   }, [updateExchangePage]);
+ 
+   const togglePanel = useCallback(
+-    (panel: SP_COIN_DISPLAY) => {
+-      const src = `PanelsTab:togglePanel(${panel})`;
++    (panel: SP_COIN_DISPLAY, _reason?: string) => {
+       if (isMainOverlay(panel)) {
+-        isVisible(panel) ? safeClose(panel, src) : safeOpen(panel, src);
++        isVisible(panel) ? closePanel(panel) : openPanel(panel);
+         return;
+       }
+-      isVisible(panel) ? safeClose(panel, src) : safeOpen(panel, src);
++      isVisible(panel) ? closePanel(panel) : openPanel(panel);
+     },
+-    [isMainOverlay, isVisible, safeOpen, safeClose]
++    [isMainOverlay, isVisible, openPanel, closePanel]
+   );
+ 
+   const openOnlyHere = useCallback(
+     (panel: SP_COIN_DISPLAY) => {
+-      // Close other non-main panels first, then open the requested one.
++      if (isMainOverlay(panel)) {
++        openPanel(panel);
++        return;
++      }
+       KNOWN_PANELS.forEach((p) => {
+-        if (p !== panel && !isMainOverlay(p) && isVisible(p)) {
+-          safeClose(p, `PanelsTab:openOnlyHereCloseOthers(${p})`);
+-        }
++        if (p !== panel && !isMainOverlay(p) && isVisible(p)) closePanel(p);
+       });
+-      // For main overlays, just open it (radio behavior handled by usePanelTree).
+-      safeOpen(
+-        panel,
+-        isMainOverlay(panel)
+-          ? `PanelsTab:openOnlyHereOpenMain(${panel})`
+-          : `PanelsTab:openOnlyHereOpenTarget(${panel})`
+-      );
++      openPanel(panel);
+     },
+-    [KNOWN_PANELS, isMainOverlay, isVisible, safeOpen, safeClose]
++    [KNOWN_PANELS, isMainOverlay, isVisible, openPanel, closePanel]
+   );
+ 
+   const nodes = useMemo(
+@@ -121,58 +101,53 @@ export default function PanelsTab() {
+   const hasActiveOverlay = activeMainOverlay !== null && activeMainOverlay !== undefined;
+ 
+   return (
+-    <div className='space-y-4'>
++    <div className="space-y-4">
+       {/* Header row */}
+-      <div className='grid grid-cols-3 items-center -mt-3'>
++      <div className="grid grid-cols-3 items-center -mt-3">
+         <div />
+-        <h2 className='text-xl font-semibold text-center'>Panels</h2>
+-        <div className='flex justify-end'>
++        <h2 className="text-xl font-semibold text-center">Panels</h2>
++        <div className="flex justify-end">
+           <button
+             onClick={hidePanelTree}
+-            aria-label='Close Panels'
+-            title='Close Panels'
+-            className='h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
+-                       hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl'
+-            type='button'
++            aria-label="Close Panels"
++            title="Close Panels"
++            className="h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
++                       hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
++            type="button"
+           >
+             ×
+           </button>
+         </div>
+       </div>
+ 
++      {/* Quick actions (unchanged) */}
++      {/* ... */}
++
+       {/* Tree inspector */}
+-      <div className='rounded-2xl border border-slate-700 p-4'>
+-        <div className='font-medium mb-3'>Panel Tree</div>
+-        <ul className='space-y-2'>
++      <div className="rounded-2xl border border-slate-700 p-4">
++        <div className="font-medium mb-3">Panel Tree</div>
++        <ul className="space-y-2">
+           {nodes.map((n, i) => (
+-            <li key={`${n.panel}-${i}`} className='flex items-center justify-between gap-2'>
+-              <div className='flex items-center gap-2'>
++            <li key={`${n.panel}-${i}`} className="flex items-center justify-between gap-2">
++              <div className="flex items-center gap-2">
+                 {SHOW_IDS && (
+-                  <span className='font-mono text-xs opacity-70'>#{n.panel}</span>
++                  <span className="font-mono text-xs opacity-70">#{n.panel}</span>
+                 )}
+                 <span>{SP_COIN_DISPLAY[n.panel]}</span>
+                 {SHOW_VIS && (
+                   <span className={pill(n.visible)}>{n.visible ? 'visible' : 'hidden'}</span>
+                 )}
+                 {n.main && (
+-                  <span className='px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300'>
++                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-300">
+                     main
+                   </span>
+                 )}
+               </div>
+-              <div className='flex items-center gap-2'>
+-                <button
+-                  className={btn}
+-                  onClick={() => togglePanel(n.panel)}
+-                  type='button'
+-                >
++              <div className="flex items-center gap-2">
++                <button className={btn} onClick={() => togglePanel(n.panel, 'PanelsTab:toggle')} type="button">
+                   Toggle
+                 </button>
+-                <button
+-                  className={btn}
+-                  onClick={() => openOnlyHere(n.panel)}
+-                  type='button'
+-                >
++                <button className={btn} onClick={() => openOnlyHere(n.panel)} type="button">
+                   Open only
+                 </button>
+               </div>
+@@ -181,27 +156,27 @@ export default function PanelsTab() {
+         </ul>
+       </div>
+ 
+-      {/* Root/main overlay info */}
+-      <div className='rounded-2xl border border-slate-700 p-4 text-sm'>
+-        <div className='font-medium mb-2'>Main Overlay</div>
++      {/* Root/main overlay info (left intact) */}
++      <div className="rounded-2xl border border-slate-700 p-4 text-sm">
++        <div className="font-medium mb-2">Main Overlay</div>
+ 
+         {!hasActiveOverlay ? (
+-          <div className='flex items-center gap-2'>
+-            <span className='font-mono text-xs opacity-70'>—</span>
++          <div className="flex items-center gap-2">
++            <span className="font-mono text-xs opacity-70">—</span>
+             <span>None</span>
+             <span className={pill(false)}>inactive</span>
+           </div>
+         ) : (
+-          <div className='flex items-center gap-2'>
++          <div className="flex items-center gap-2">
+             {SHOW_IDS && (
+-              <span className='font-mono text-xs opacity-70'>#{activeMainOverlay}</span>
++              <span className="font-mono text-xs opacity-70">#{activeMainOverlay}</span>
+             )}
+             <span>{SP_COIN_DISPLAY[activeMainOverlay as number]}</span>
+             <span className={pill(true)}>active</span>
+           </div>
+         )}
+ 
+-        <div className='mt-3 text-xs opacity-80'>
++        <div className="mt-3 text-xs opacity-80">
+           Token scroll visible:{' '}
+           <span className={pill(isTokenScrollVisible)}>
+             {isTokenScrollVisible ? 'yes' : 'no'}
+@@ -210,4 +185,4 @@ export default function PanelsTab() {
+       </div>
+     </div>
+   );
+-}
++}
+\ No newline at end of file
+diff --git a/components/Buttons/AddSponsorshipButton.tsx b/components/Buttons/AddSponsorshipButton.tsx
+index 6edca596..91f1aff5 100644
+--- a/components/Buttons/AddSponsorshipButton.tsx
++++ b/components/Buttons/AddSponsorshipButton.tsx
+@@ -18,21 +18,6 @@ export default function AddSponsorshipButton() {
+   const [buyToken] = useBuyTokenContract();
+   const { openPanel, closePanel } = usePanelTree();
+ 
+-  // 🔧 Always provide a non-empty parent/source tag to open/close.
+-  //    If a caller forgets to provide one, use this module's name.
+-  const DEFAULT_PARENT = 'components/buttons/AddSponsorshipButton';
+-  const asParent = (p?: string) => (p && p.trim().length > 0 ? p : DEFAULT_PARENT);
+-
+-  const safeOpen = useCallback(
+-    (panel: SP_COIN_DISPLAY, parent?: string) => openPanel(panel, asParent(parent)),
+-    [openPanel]
+-  );
+-
+-  const safeClose = useCallback(
+-    (panel: SP_COIN_DISPLAY, parent?: string) => closePanel(panel, asParent(parent)),
+-    [closePanel]
+-  );
+-
+   // Re-render only when THIS launcher flag changes
+   const launcherVisible = usePanelVisible(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+ 
+@@ -48,24 +33,18 @@ export default function AddSponsorshipButton() {
+     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
+ 
+     if (shouldShow) {
+-      safeOpen(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoShow`);
++      openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+     } else {
+-      safeClose(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON, `${DEFAULT_PARENT}:autoHide`);
++      closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
+     }
+ 
+     appliedRef.current = next;
+-  }, [addr, buyToken, safeOpen, safeClose]);
++  }, [addr, openPanel, closePanel, buyToken]);
+ 
+   const onOpenInline = useCallback(() => {
+-    safeClose(
+-      SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON,
+-      `${DEFAULT_PARENT}:onOpenInline:closeLauncher`
+-    );
+-    safeOpen(
+-      SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
+-      `${DEFAULT_PARENT}:onOpenInline:openPanel`
+-    );
+-  }, [safeOpen, safeClose]);
++    closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_BUTTON);
++    openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
++  }, [openPanel, closePanel]);
+ 
+   if (!launcherVisible) return null;
+ 
+diff --git a/components/Buttons/ManageSponsorsButton.tsx b/components/Buttons/ManageSponsorsButton.tsx
+index 14f89aee..563d5528 100644
+--- a/components/Buttons/ManageSponsorsButton.tsx
++++ b/components/Buttons/ManageSponsorsButton.tsx
+@@ -19,23 +19,6 @@ export default function ManageSponsorsButton() {
+   const [sellToken] = useSellTokenContract();
+   const { openPanel, closePanel } = usePanelTree();
+ 
+-  // ⚙️ Parent-tag rule: when not provided explicitly, use Module:Method(params)
+-  const safeOpen = useCallback(
+-    (panel: SP_COIN_DISPLAY, parent?: string) => {
+-      const parentTag = parent ?? `ManageSponsorsButton:safeOpen(${panel})`;
+-      openPanel(panel, parentTag);
+-    },
+-    [openPanel]
+-  );
+-
+-  const safeClose = useCallback(
+-    (panel: SP_COIN_DISPLAY, parent?: string) => {
+-      const parentTag = parent ?? `ManageSponsorsButton:safeClose(${panel})`;
+-      closePanel(panel, parentTag);
+-    },
+-    [closePanel]
+-  );
+-
+   // Re-render only when THIS launcher flag changes
+   const launcherVisible = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+ 
+@@ -51,24 +34,18 @@ export default function ManageSponsorsButton() {
+     if (prev && prev.addr === next.addr && prev.visible === next.visible) return;
+ 
+     if (shouldShow) {
+-      safeOpen(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
++      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+     } else {
+-      safeClose(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
++      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+     }
+ 
+     appliedRef.current = next;
+-  }, [addr, sellToken, safeOpen, safeClose]);
++  }, [addr, openPanel, closePanel, sellToken]);
+ 
+   const onOpenManage = useCallback(() => {
+-    safeClose(
+-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON,
+-      'ManageSponsorsButton:onOpenManage(closeLauncher)'
+-    );
+-    safeOpen(
+-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+-      'ManageSponsorsButton:onOpenManage(openPanel)'
+-    );
+-  }, [safeOpen, safeClose]);
++    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
++    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
++  }, [openPanel, closePanel]);
+ 
+   if (!launcherVisible) return null;
+ 
+diff --git a/components/containers/AssetSelectDropDowns/TokenSelectDropDown.tsx b/components/containers/AssetSelectDropDowns/TokenSelectDropDown.tsx
+index 7014bba3..2a3c05ce 100644
+--- a/components/containers/AssetSelectDropDowns/TokenSelectDropDown.tsx
++++ b/components/containers/AssetSelectDropDowns/TokenSelectDropDown.tsx
+@@ -1,11 +1,17 @@
+ // File: components/containers/TokenSelectDropDown.tsx
+ 'use client';
+ 
+-import { useCallback, useMemo, useRef } from 'react';
++import { useCallback, useMemo } from 'react';
+ import styles from '@/styles/Exchange.module.css';
+ import { ChevronDown } from 'lucide-react';
++
+ import { SP_COIN_DISPLAY } from '@/lib/structure';
+-import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
++
++import {
++  useBuyTokenContract,
++  useSellTokenContract,
++} from '@/lib/context/hooks';
++
+ import { createDebugLogger } from '@/lib/utils/debugLogger';
+ import { defaultMissingImage } from '@/lib/network/utils';
+ import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
+@@ -13,31 +19,38 @@ import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePane
+ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+ 
+ const LOG_TIME = false;
+-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
++const DEBUG_ENABLED =
++  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
+ const debugLog = createDebugLogger('TokenSelectDropDown', DEBUG_ENABLED, LOG_TIME);
+ 
+ interface Props {
+-  containerType: SP_COIN_DISPLAY.SELL_SELECT_PANEL | SP_COIN_DISPLAY.BUY_SELECT_PANEL;
++  /** The root container this dropdown belongs to (SELL_SELECT_PANEL or BUY_SELECT_PANEL) */
++  containerType:
++    | SP_COIN_DISPLAY.SELL_SELECT_PANEL
++    | SP_COIN_DISPLAY.BUY_SELECT_PANEL;
+ }
+ 
+-export default function TokenSelectDropDown({ containerType }: Props) {
++function TokenSelectDropDown({ containerType }: Props) {
+   const sellHook = useSellTokenContract();
+-  const buyHook = useBuyTokenContract();
++  const buyHook  = useBuyTokenContract();
+ 
++  // ✅ Use the *root* panel to decide which token state to read
+   const isSellRoot = containerType === SP_COIN_DISPLAY.SELL_SELECT_PANEL;
+   const [tokenContract] = isSellRoot ? sellHook : buyHook;
+ 
++  // Transition helpers
+   const { openSellList, openBuyList } = usePanelTransitions();
+-  const { isVisible } = usePanelTree();
+ 
+-  // Guard against re-entrancy + help diagnose "flash close"
+-  const lastOpenAtRef = useRef<number | null>(null);
+-  const openingRef = useRef(false);
++  // Panel visibility (for debug only)
++  const { isVisible } = usePanelTree();
+ 
++  // Resolve logo with safe fallback
+   const logoURL = useMemo(() => {
+     const raw = tokenContract?.logoURL?.trim();
+     if (raw && raw.length > 0) {
+-      return raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')
++      return raw.startsWith('http://') ||
++        raw.startsWith('https://') ||
++        raw.startsWith('/')
+         ? raw
+         : `/${raw.replace(/^\/+/, '')}`;
+     }
+@@ -49,115 +62,68 @@ export default function TokenSelectDropDown({ containerType }: Props) {
+       const img = event.currentTarget;
+       img.onerror = null;
+       img.src = defaultMissingImage;
++
+       if (tokenContract?.symbol && tokenContract?.address) {
+         debugLog.log(`⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`);
+       } else {
+-        debugLog.log('⚠️ Missing logo (no tokenContract info available)');
++        debugLog.log(`⚠️ Missing logo (no tokenContract info available)`);
+       }
+     },
+     [tokenContract]
+   );
+ 
+-  // stop bubbling for mousedown and click; some “outside close” handlers listen on either
+-  const stopMouseDown = useCallback((e: React.MouseEvent) => {
+-    e.stopPropagation();
+-  }, []);
+-  const stopClick = useCallback((e: React.MouseEvent) => {
+-    e.stopPropagation();
+-  }, []);
++  const openTokenSelectPanel = useCallback((e?: React.SyntheticEvent) => {
++    // Prevent outside-click listeners from seeing this click (avoids open→immediate close flashes)
++    if (e) {
++      e.preventDefault();
++      e.stopPropagation();
++    }
+ 
+-  // Post-open visibility probes to catch "flash close"
+-  const schedulePostChecks = useCallback(
+-    (panel: SP_COIN_DISPLAY) => {
+-      const t0 = performance.now();
+-      const check = (label: string) => {
+-        const now = performance.now();
+-        const v = isVisible(panel);
+-        const sellV = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+-        const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+-        debugLog.log(
+-          `[post-check:${label}] +${Math.round(now - (lastOpenAtRef.current ?? t0))}ms ` +
+-            `{ panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`
+-        );
+-        // If we see it already closed within 250ms, warn loudly
+-        if (!v && now - (lastOpenAtRef.current ?? t0) < 300) {
+-          debugLog.warn?.(
+-            `⚠️ Detected early close ("flash"): ${SP_COIN_DISPLAY[panel]} closed within ${Math.round(
+-              now - (lastOpenAtRef.current ?? t0)
+-            )}ms`
+-          );
+-        }
+-      };
+-
+-      // Do a couple of quick samples
+-      setTimeout(() => check('0ms'), 0);
+-      setTimeout(() => check('150ms'), 150);
+-      setTimeout(() => {
+-        openingRef.current = false;
+-        check('400ms');
+-      }, 400);
+-    },
+-    [isVisible]
+-  );
++    clearFSMTraceFromMemory();
+ 
+-  const openTokenSelectPanel = useCallback(
+-    (e?: React.SyntheticEvent) => {
+-      if (e) {
+-        e.preventDefault();
+-        e.stopPropagation();
+-      }
+-      // If we’re already in the middle of opening due to rapid double-clicks, ignore
+-      if (openingRef.current) {
+-        debugLog.log('⏳ Ignoring re-entrant open while a previous open is in-flight');
+-        return;
+-      }
++    const target = isSellRoot ? 'SELL' : 'BUY';
++    const startSellVisible = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
++    const startBuyVisible  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+ 
+-      clearFSMTraceFromMemory();
++    debugLog.log(
++      `📂 Opening TokenListSelectPanel: ${target}_LIST_SELECT_PANEL ` +
++      `(before sell=${startSellVisible}, buy=${startBuyVisible})`
++    );
+ 
+-      const methodName = 'TokenSelectDropDown:openTokenSelectPanel';
+-      openingRef.current = true;
+-      lastOpenAtRef.current = performance.now();
++    // Defer to next task/microtask to avoid competing event handlers (e.g., global mousedown closers)
++    queueMicrotask(() => {
++      isSellRoot ? openSellList() : openBuyList();
+ 
+-      // Open synchronously to avoid microtask races with global outside-click closers
+-      if (isSellRoot) {
+-        openSellList({ methodName });
+-        schedulePostChecks(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+-      } else {
+-        openBuyList({ methodName });
+-        schedulePostChecks(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+-      }
++      // Give the panel system a tick to update visibility, then log
++      setTimeout(() => {
++        const endSellVisible = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
++        const endBuyVisible  = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
++        debugLog.log(
++          `✅ After open transition (sell=${endSellVisible}, buy=${endBuyVisible})`
++        );
++      }, 0);
++    });
++  }, [isSellRoot, openSellList, openBuyList, isVisible]);
+ 
+-      // Immediate snapshot after open
+-      const sellNow = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+-      const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+-      debugLog.log(
+-        `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} } (isSellRoot=${isSellRoot})`
+-      );
+-    },
+-    [isSellRoot, openSellList, openBuyList, isVisible, schedulePostChecks]
+-  );
++  // Helper to prevent bubbling to any document/parent mousedown listeners that might close overlays
++  const stopMouseDown = useCallback((e: React.MouseEvent) => {
++    e.stopPropagation();
++  }, []);
+ 
+   return (
+-    <div
+-      id='TokenSelectDropDown'
+-      className={styles.assetSelect}
+-      onClick={stopClick}
+-      onMouseDown={stopMouseDown}
+-      data-panel-root={isSellRoot ? 'sell' : 'buy'}
+-    >
++    <div id="TokenSelectDropDown" className={styles.assetSelect}>
+       {tokenContract ? (
+         <>
+           <img
+-            id='TokenSelectDropDownImage.png'
+-            className='h-9 w-9 mr-2 rounded-md cursor-pointer'
++            id="TokenSelectDropDownImage.png"
++            className="h-9 w-9 mr-2 rounded-md cursor-pointer"
+             alt={`${tokenContract.name ?? tokenContract.symbol ?? 'token'} logo`}
+             src={logoURL}
+-            loading='lazy'
+-            decoding='async'
++            loading="lazy"
++            decoding="async"
+             onMouseDown={stopMouseDown}
+             onClick={openTokenSelectPanel}
+             onError={handleMissingLogoURL}
+-            data-testid='token-dropdown-avatar'
+           />
+           {tokenContract.symbol ?? 'Select Token'}
+         </>
+@@ -166,13 +132,14 @@ export default function TokenSelectDropDown({ containerType }: Props) {
+       )}
+ 
+       <ChevronDown
+-        id='ChevronDown'
++        id="ChevronDown"
+         size={18}
+-        className='ml-2 cursor-pointer'
++        className="ml-2 cursor-pointer"
+         onMouseDown={stopMouseDown}
+         onClick={openTokenSelectPanel}
+-        data-testid='token-dropdown-chevron'
+       />
+     </div>
+   );
+ }
++
++export default TokenSelectDropDown;
+diff --git a/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx b/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
+index 4bd8017d..2cd7b9cb 100644
+--- a/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
++++ b/components/containers/AssetSelectPanels/PanelListSelectWrapper.tsx
+@@ -102,9 +102,6 @@ function PanelListSelectWrapperInner({
+   );
+ 
+   const closeForProvider = useCallback((_fromUser?: boolean) => {
+-    // Note: this wrapper does not call openPanel/closePanel directly; it delegates
+-    // to usePanelTransitions.toTrading(). Parent tagging is therefore handled
+-    // inside the transitions hook implementation.
+     toTrading();
+   }, [toTrading]);
+ 
+diff --git a/components/containers/AssetSelectPanels/TradeAssetPanel.tsx b/components/containers/AssetSelectPanels/TradeAssetPanel.tsx
+index 629515f7..d7c47317 100644
+--- a/components/containers/AssetSelectPanels/TradeAssetPanel.tsx
++++ b/components/containers/AssetSelectPanels/TradeAssetPanel.tsx
+@@ -78,6 +78,9 @@ function TradeAssetPanelInner() {
+   // ────────────────────────────────────────────────────────────────────────────
+   // Add Sponsorship BUTTON gate (BUY-side only):
+   // Flip ONLY the button node's visibility when buyTokenContract.address changes.
++  // - No first-render guard (OK to flip on load per request).
++  // - Does NOT change overlay selection except to ensure panel closes when non-SpCoin.
++  // - Runs only from the BUY instance to avoid double writers.
+   // ────────────────────────────────────────────────────────────────────────────
+   const prevBuyAddrRef = useRef<string | undefined>(undefined);
+   useEffect(() => {
+@@ -91,16 +94,16 @@ function TradeAssetPanelInner() {
+ 
+     // Toggle only the BUTTON visibility; also ensure the PANEL is closed on non-SpCoin
+     if (!addr) {
+-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(addrUnset)');
+-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanelInner:buyAddrEffect(addrUnset)');
++      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
++      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL);
+       return;
+     }
+ 
+     if (isSpCoin(buyTokenContract)) {
+-      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(isSpCoin)');
++      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
+     } else {
+-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(notSpCoin)');
+-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanelInner:buyAddrEffect(notSpCoin)');
++      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON);
++      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL);
+     }
+   }, [isBuy, buyTokenContract?.address, openPanel, closePanel]);
+   // ────────────────────────────────────────────────────────────────────────────
+diff --git a/components/utility/PanelGate.tsx b/components/utility/PanelGate.tsx
+index 5f6a8f5b..7fe231c6 100644
+--- a/components/utility/PanelGate.tsx
++++ b/components/utility/PanelGate.tsx
+@@ -1,71 +1,17 @@
+ // File: components/utility/PanelGate.tsx
+ 'use client';
+ 
+-import React from 'react';
+-import { SP_COIN_DISPLAY } from '@/lib/structure';
++import type { ReactNode } from 'react';
++import type { SP_COIN_DISPLAY } from '@/lib/structure';
+ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
+ 
+-/**
+- * PanelGate
+- *
+- * Controls whether a panel's children are mounted and/or visible based on the
+- * PanelTree visibility for the given `panel` id.
+- *
+- * Props:
+- * - panel: SP_COIN_DISPLAY enum value for this section.
+- * - lazyLoad?: if true (default), children are only mounted when the panel is visible.
+- * - mountAlways?: (deprecated alias) if true, always mount the children and just hide/show them.
+- *                 Prefer `lazyLoad={false}` instead. If both are provided, `lazyLoad` wins.
+- * - className?: optional wrapper class when mounted.
+- *
+- * Behavior:
+- * - lazyLoad === true  → mount only when visible (render null otherwise).
+- * - lazyLoad === false → always mount; apply `hidden` when not visible to avoid unmount churn.
+- */
+ type Props = {
+   panel: SP_COIN_DISPLAY;
+-  children: React.ReactNode;
+-  lazyLoad?: boolean;
+-  /** @deprecated Use `lazyLoad={false}` instead. */
+-  mountAlways?: boolean;
+-  className?: string;
++  children: ReactNode;
+ };
+ 
+-export default function PanelGate({
+-  panel,
+-  children,
+-  lazyLoad,
+-  mountAlways,
+-  className,
+-}: Props) {
+-  // Back-compat mapping: if consumer passes mountAlways and not lazyLoad,
+-  // interpret as lazyLoad = !mountAlways
+-  const resolvedLazy =
+-    typeof lazyLoad === 'boolean'
+-      ? lazyLoad
+-      : typeof mountAlways === 'boolean'
+-      ? !mountAlways
+-      : true; // default: lazy load
+-
++export default function PanelGate({ panel, children }: Props) {
+   const visible = usePanelVisible(panel);
+-
+-  // Lazy path: don't even mount when hidden
+-  if (resolvedLazy && !visible) return null;
+-
+-  // Non-lazy path: keep mounted; hide when not visible
+-  // Use `hidden` (Tailwind) to avoid layout flashes while preserving node state.
+-  const wrapperClass =
+-    !resolvedLazy && !visible
+-      ? ['hidden', className].filter(Boolean).join(' ')
+-      : className ?? '';
+-
+-  return (
+-    <div
+-      data-panel={SP_COIN_DISPLAY[panel]}
+-      data-visible={visible ? 'true' : 'false'}
+-      className={wrapperClass}
+-    >
+-      {children}
+-    </div>
+-  );
++  if (!visible) return null;
++  return <>{children}</>;
+ }
+diff --git a/components/views/AddSponsorshipPanel.tsx b/components/views/AddSponsorshipPanel.tsx
+index 9eedcca6..533e59e2 100644
+--- a/components/views/AddSponsorshipPanel.tsx
++++ b/components/views/AddSponsorshipPanel.tsx
+@@ -85,7 +85,7 @@ const AddSponsorShipPanel: React.FC = () => {
+   useEffect(() => {
+     if (isVisible && !tradingVisible) {
+       debugLog.log?.('Forcing TRADING_STATION_PANEL visible');
+-      openPanel(SP_TREE.TRADING_STATION_PANEL, 'AddSponsorshipPanel:ensureTradingVisible()');
++      openPanel(SP_TREE.TRADING_STATION_PANEL);
+     }
+   }, [isVisible, tradingVisible, openPanel]);
+ 
+@@ -136,11 +136,11 @@ const AddSponsorShipPanel: React.FC = () => {
+     );
+ 
+     // Close the panel
+-    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL, 'AddSponsorshipPanel:closeAddSponsorshipPanel(closePanel)');
++    closePanel(SP_TREE.ADD_SPONSORSHIP_PANEL);
+ 
+     // Only re-show the launcher button if the current BUY token is an SpCoin
+     if (buyTokenContract && isSpCoin(buyTokenContract)) {
+-      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON, 'AddSponsorshipPanel:closeAddSponsorshipPanel(reopenLauncher)');
++      openPanel(SP_TREE.ADD_SPONSORSHIP_BUTTON);
+     }
+   }, [setExchangeContext, closePanel, openPanel, buyTokenContract]);
+ 
+@@ -220,7 +220,8 @@ const AddSponsorShipPanel: React.FC = () => {
+         rounded-t-[12px]
+         rounded-b-[12px]
+         overflow-hidden
+-        bg-[#1f2639] text-[#94a3b8]'
++        bg-[#1f2639] text-[#94a3b8]
++      '
+     >
+       <div className='h-[90px]'>
+         <div className='absolute top-3 left-[11px] text-[14px] text-[#94a3b8]'>
+@@ -234,20 +235,42 @@ const AddSponsorShipPanel: React.FC = () => {
+               debugLog.log?.('Link clicked → opening RecipientSite tab for:', recipientSiteHref);
+               openRecipientSiteTab();
+             }}
+-            className={`${linkTopClass} min-w-[50px] h-[10px] text-[#94a3b8] text-[25px] pr-2 flex items-center justify-start gap-1 cursor-pointer hover:text-[orange] transition-colors duration-200`}
++            className={`
++              ${linkTopClass}
++              min-w-[50px] h-[10px]
++              text-[#94a3b8] text-[25px]
++              pr-2 flex items-center justify-start gap-1
++              cursor-pointer hover:text-[orange] transition-colors duration-200
++            `}
+           >
+             {recipientWallet?.name || 'No recipient selected'}
+           </Link>
+         </div>
+ 
+-        <div className='absolute left-[160px] min-w-[50px] h-[25px] rounded-full flex items-center justify-start gap-1 font-bold text-[17px] pr-2 text-white bg-[#243056]'>
++        <div
++          className='
++            absolute left-[160px]
++            min-w-[50px] h-[25px]
++            rounded-full
++            flex items-center justify-start gap-1
++            font-bold text-[17px] pr-2
++            text-white bg-[#243056]
++          '
++        >
+           <RecipientSelectDropDown recipientAccount={recipientWallet} />
+         </div>
+ 
+         <div>
+           <Image
+             src={cog_png}
+-            className='absolute right-[39px] object-contain text-[#51586f] inline-block transition-transform duration-300 hover:rotate-[360deg] hover:cursor-pointer'
++            className='
++              absolute right-[39px]
++              object-contain
++              text-[#51586f]
++              inline-block
++              transition-transform duration-300
++              hover:rotate-[360deg] hover:cursor-pointer
++            '
+             width={20}
+             height={20}
+             alt='Settings'
+@@ -265,7 +288,13 @@ const AddSponsorShipPanel: React.FC = () => {
+ 
+         <div
+           id='closeAddSponsorshipPanel'
+-          className='pt-[12px] absolute -top-2 right-[15px] text-[#94a3b8] text-[20px] cursor-pointer'
++          className='
++            pt-[12px]
++            absolute -top-2 right-[15px]
++            text-[#94a3b8]
++            text-[20px]
++            cursor-pointer
++          '
+           onClick={closeAddSponsorshipPanel}
+         >
+           X
+@@ -276,7 +305,14 @@ const AddSponsorShipPanel: React.FC = () => {
+ 
+       {/* 🔴 ToDo overlay (red text, click to dismiss) */}
+       {!showToDo && (
+-        <ToDo show message='ToDo' opacity={0.5} color='#ff1a1a' zIndex={2000} onDismiss={() => setShowToDo(false)} />
++        <ToDo
++          show
++          message='ToDo'
++          opacity={0.5}
++          color='#ff1a1a'
++          zIndex={2000}
++          onDismiss={() => setShowToDo(false)}
++        />
+       )}
+     </div>
+   );
+diff --git a/components/views/AddressSelect.tsx b/components/views/AddressSelect.tsx
+index d65f0494..968abaeb 100644
+--- a/components/views/AddressSelect.tsx
++++ b/components/views/AddressSelect.tsx
+@@ -36,11 +36,6 @@ export default function AddressSelect({ defaultAddress, bypassDefaultFsm = false
+   debugLog.log?.('🆔 context instanceId:', instanceId);
+   debugLog.log?.('✅ AddressSelect function START');
+ 
+-  // ⬇️ Minimal change: enforce manualEntry=true when AddressSelect mounts
+-  useEffect(() => {
+-    setManualEntry(true);
+-  }, [setManualEntry]);
+-
+   // Reflect prop → context
+   useEffect(() => {
+     if (typeof setBypassFSM === 'function') {
+diff --git a/components/views/ErrorMessagePanel.tsx b/components/views/ErrorMessagePanel.tsx
+index 2bc83b23..71b92d1c 100644
+--- a/components/views/ErrorMessagePanel.tsx
++++ b/components/views/ErrorMessagePanel.tsx
+@@ -9,14 +9,12 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
+ 
+ function ErrorMessagePanelInner() {
+   const [errorMessage, setErrorMessage] = useErrorMessage();
+-  const { openPanel, closePanel } = usePanelTree();
++  const { openPanel } = usePanelTree();
+ 
+   const onDismiss = useCallback(() => {
+     setErrorMessage(undefined);
+-    // Close the error overlay and ensure trading station is visible
+-    closePanel(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'ErrorMessagePanel:onDismiss()');
+-    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'ErrorMessagePanel:onDismiss()');
+-  }, [setErrorMessage, openPanel, closePanel]);
++    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
++  }, [setErrorMessage, openPanel]);
+ 
+   const hasDetails = Boolean(errorMessage?.errCode || errorMessage?.source);
+ 
+diff --git a/components/views/MainTradingPanel.tsx b/components/views/MainTradingPanel.tsx
+index ee8bf34f..af4e303e 100644
+--- a/components/views/MainTradingPanel.tsx
++++ b/components/views/MainTradingPanel.tsx
+@@ -1,7 +1,6 @@
+ // File: components/views/MainTradingPanel.tsx
+ 'use client';
+ 
+-import React, { useMemo } from 'react';
+ import styles from '@/styles/Exchange.module.css';
+ 
+ import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
+@@ -29,47 +28,11 @@ import {
+ 
+ import { SP_COIN_DISPLAY } from '@/lib/structure';
+ import PanelGate from '@/components/utility/PanelGate';
+-import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+-
+-const SHOW_ACTIVE =
+-  process.env.NEXT_PUBLIC_SHOW_ACTIVE_OVERLAY === 'true' ||
+-  process.env.NEXT_PUBLIC_TREE_SHOW_VISIBILITY === 'true';
+ 
+ export default function MainTradingPanel() {
+-  const { activeMainOverlay } = usePanelTree();
+-
+-  const activeOverlayLabel = useMemo(() => {
+-    return activeMainOverlay != null ? SP_COIN_DISPLAY[activeMainOverlay] : 'NONE';
+-  }, [activeMainOverlay]);
+-
+   return (
+     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
+-      <div id="MainPage_ID" style={{ position: 'relative' }}>
+-        {/* 🟢 Debug HUD: current active main overlay */}
+-        {SHOW_ACTIVE && (
+-          <div
+-            id="ActiveOverlayHUD"
+-            className="pointer-events-none select-none"
+-            style={{
+-              position: 'absolute',
+-              top: 6,
+-              right: 6,
+-              zIndex: 50,
+-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+-              fontSize: 12,
+-              background: 'rgba(0,0,0,0.6)',
+-              color: '#9BE28F',
+-              padding: '6px 8px',
+-              borderRadius: 8,
+-              border: '1px solid rgba(255,255,255,0.15)',
+-              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+-            }}
+-            aria-live="polite"
+-          >
+-            activeMainOverlay:&nbsp;<strong>{activeOverlayLabel}</strong>
+-          </div>
+-        )}
+-
++      <div id="MainPage_ID">
+         <div id="mainTradingPanel" className={styles.mainTradingPanel}>
+           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
+             <TradeContainerHeader />
+diff --git a/components/views/ManageSponsorships/ManageAgent.tsx b/components/views/ManageSponsorships/ManageAgent.tsx
+index 689fa45b..20b8d1a4 100644
+--- a/components/views/ManageSponsorships/ManageAgent.tsx
++++ b/components/views/ManageSponsorships/ManageAgent.tsx
+@@ -54,9 +54,8 @@ export default function ManageAgent({ onClose }: Props) {
+   const [showToDo, setShowToDo] = useState<boolean>(true);
+ 
+   const handleClose = useCallback(() => {
+-    // Provide parent/source for logs
+-    openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'ManageAgent:handleClose()');
+-    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgent:handleClose()');
++    openPanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
++    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
+     onClose?.();
+   }, [openPanel, closePanel, onClose]);
+ 
+diff --git a/components/views/ManageSponsorships/ManageAgents.tsx b/components/views/ManageSponsorships/ManageAgents.tsx
+index 8a763eb4..bde51536 100644
+--- a/components/views/ManageSponsorships/ManageAgents.tsx
++++ b/components/views/ManageSponsorships/ManageAgents.tsx
+@@ -26,10 +26,7 @@ export default function ManageAgents({ onClose }: Props) {
+ 
+   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
+ 
+-  useRegisterDetailCloser(
+-    SP_COIN_DISPLAY.MANAGE_AGENT_PANEL,
+-    () => setWalletCallBack(undefined)
+-  );
++  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, () => setWalletCallBack(undefined));
+ 
+   useEffect(() => {
+     let alive = true;
+@@ -62,13 +59,10 @@ export default function ManageAgents({ onClose }: Props) {
+     ctx?.setExchangeContext((prev) => {
+       if (!prev) return prev;
+       return { ...prev, accounts: { ...prev.accounts, agentAccount: w } };
+-    }, 'ManageAgents:setWalletCallBack(w)');
++    }, 'ManageAgents:setAgentAccount');
+ 
+-    if (w) {
+-      openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(w)');
+-    } else {
+-      closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'ManageAgents:setWalletCallBack(undefined)');
+-    }
++    if (w) openPanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
++    else closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
+   };
+ 
+   return (
+diff --git a/components/views/ManageSponsorships/ManageRecipient.tsx b/components/views/ManageSponsorships/ManageRecipient.tsx
+index e8fb91eb..a87508c3 100644
+--- a/components/views/ManageSponsorships/ManageRecipient.tsx
++++ b/components/views/ManageSponsorships/ManageRecipient.tsx
+@@ -48,8 +48,8 @@ export default function ManageRecipient({ onClose }: Props) {
+ 
+   const handleClose = useCallback(() => {
+     // Go back to the list panel when the header X is clicked
+-    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'ManageRecipient:handleClose()');
+-    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, 'ManageRecipient:handleClose()');
++    openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
++    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+     onClose?.();
+   }, [openPanel, closePanel, onClose]);
+ 
+diff --git a/components/views/ManageSponsorships/ManageRecipients.tsx b/components/views/ManageSponsorships/ManageRecipients.tsx
+index 93bc8aa8..c055bd94 100644
+--- a/components/views/ManageSponsorships/ManageRecipients.tsx
++++ b/components/views/ManageSponsorships/ManageRecipients.tsx
+@@ -30,10 +30,7 @@ export default function ManageRecipients({ onClose }: Props) {
+   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
+ 
+   // Allow header close to say “exit detail → list”
+-  useRegisterDetailCloser(
+-    SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+-    () => setWalletCallBack(undefined)
+-  );
++  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, () => setWalletCallBack(undefined));
+ 
+   // Resolve recipients once (same enrichment pattern as Agents) and store in ExchangeContext.accounts.recipientAccounts
+   useEffect(() => {
+@@ -75,7 +72,7 @@ export default function ManageRecipients({ onClose }: Props) {
+               recipientAccounts: built,
+             },
+           };
+-        }, 'ManageRecipients:loadRecipientAccounts()');
++        }, 'ManageRecipients:loadRecipientAccounts');
+       } catch {
+         const fallback = (Array.isArray(rawRecipients) ? rawRecipients : []).map((a: any) => {
+           const w = buildWalletObj(a);
+@@ -114,19 +111,13 @@ export default function ManageRecipients({ onClose }: Props) {
+         const next = { ...prev, accounts: { ...prev.accounts, recipientAccount: w } };
+         return next;
+       },
+-      'ManageRecipients:setWalletCallBack(w)'
++      'ManageRecipients:setRecipientAccount'
+     );
+ 
+     if (w) {
+-      openPanel(
+-        SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+-        'ManageRecipients:setWalletCallBack(w)'
+-      );
++      openPanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+     } else {
+-      closePanel(
+-        SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL,
+-        'ManageRecipients:setWalletCallBack(undefined)'
+-      );
++      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
+     }
+   };
+ 
+diff --git a/components/views/ManageSponsorships/ManageSponsor.tsx b/components/views/ManageSponsorships/ManageSponsor.tsx
+index f0b24998..f61db3e1 100644
+--- a/components/views/ManageSponsorships/ManageSponsor.tsx
++++ b/components/views/ManageSponsorships/ManageSponsor.tsx
+@@ -51,7 +51,7 @@ export default function ManageSponsor({ onClose }: Props) {
+     )
+   );
+ 
+-  const doToDo = useCallback(() => {
++    const doToDo = useCallback(() => {
+     setShowToDo(false);
+     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+     const name = sponsorWallet?.name ?? 'N/A';
+@@ -68,14 +68,8 @@ export default function ManageSponsor({ onClose }: Props) {
+   const [showToDo, setShowToDo] = useState<boolean>(false);
+ 
+   const handleClose = useCallback(() => {
+-    openPanel(
+-      SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+-      'ManageSponsor:handleClose(open)'
+-    );
+-    closePanel(
+-      SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+-      'ManageSponsor:handleClose(close)'
+-    );
++    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
++    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+     onClose?.();
+   }, [openPanel, closePanel, onClose]);
+ 
+diff --git a/components/views/ManageSponsorships/ManageSponsors.tsx b/components/views/ManageSponsorships/ManageSponsors.tsx
+index 99e1952c..51062146 100644
+--- a/components/views/ManageSponsorships/ManageSponsors.tsx
++++ b/components/views/ManageSponsorships/ManageSponsors.tsx
+@@ -29,10 +29,7 @@ export default function ManageSponsors({ onClose }: Props) {
+   const [walletList, setWalletList] = useState<WalletAccount[]>([]);
+ 
+   // Allow header close to signal "exit detail → list"
+-  useRegisterDetailCloser(
+-    SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+-    () => setWalletCallBack(undefined)
+-  );
++  useRegisterDetailCloser(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, () => setWalletCallBack(undefined));
+ 
+   // Resolve wallets once and store in ExchangeContext.accounts.sponsorAccounts
+   useEffect(() => {
+@@ -74,7 +71,7 @@ export default function ManageSponsors({ onClose }: Props) {
+               sponsorAccounts: built,
+             },
+           };
+-        }, 'ManageSponsors:useEffect(loadSponsorAccounts)');
++        }, 'ManageSponsors:loadSponsorAccounts');
+       } catch {
+         const fallback = (Array.isArray(rawSponsors) ? rawSponsors : []).map((a: any) => {
+           const w = buildWalletObj(a);
+@@ -96,7 +93,7 @@ export default function ManageSponsors({ onClose }: Props) {
+               sponsorAccounts: fallback,
+             },
+           };
+-        }, 'ManageSponsors:useEffect(loadSponsorAccounts(fallback))');
++        }, 'ManageSponsors:loadSponsorAccounts(fallback)');
+       }
+     })();
+ 
+@@ -113,19 +110,13 @@ export default function ManageSponsors({ onClose }: Props) {
+         const next = { ...prev, accounts: { ...prev.accounts, sponsorAccount: w } };
+         return next;
+       },
+-      'ManageSponsors:setWalletCallBack(setSponsorAccount)'
++      'ManageSponsors:setSponsorAccount'
+     );
+ 
+     if (w) {
+-      openPanel(
+-        SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+-        'ManageSponsors:setWalletCallBack(open)'
+-      );
++      openPanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+     } else {
+-      closePanel(
+-        SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL,
+-        'ManageSponsors:setWalletCallBack(close)'
+-      );
++      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+     }
+   };
+ 
+diff --git a/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx b/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
+index 8a5d131d..775a4e92 100644
+--- a/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
++++ b/components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
+@@ -1,7 +1,7 @@
+ // File: components/views/ManageSponsorships/ManageSponsorshipsPanel.tsx
+ 'use client';
+ 
+-import React, { useState, useCallback, useContext, useRef } from 'react';
++import React, { useState, useCallback, useContext } from 'react';
+ import cog_png from '@/public/assets/miscellaneous/cog.png';
+ 
+ import { AccountType, SP_COIN_DISPLAY } from '@/lib/structure';
+@@ -29,6 +29,8 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+   const vAgents = usePanelVisible(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
+   const vSponsors = usePanelVisible(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+ 
++  let accountType = "";
++
+   usePanelTransitions();
+   const { openPanel, closePanel } = usePanelTree();
+ 
+@@ -41,53 +43,34 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+   // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
+   const defaultAddr = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
+ 
+-  // 🔒 Keep latest selected account type for the ToDo alert across renders
+-  const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
+-
+   // Open only the requested panel; close the alternatives
+-  const openOnly = useCallback(
+-    (id: SP_COIN_DISPLAY) => {
+-      try {
+-        const ids = [
+-          SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
+-          SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
+-          SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
+-        ] as const;
+-
+-        ids.forEach((pid) => {
+-          if (pid === id) {
+-            openPanel(pid, `ManageSponsorshipsPanel:openOnly(target=${SP_COIN_DISPLAY[id]}#${id})`);
+-          } else {
+-            closePanel(pid, `ManageSponsorshipsPanel:openOnly(close=${SP_COIN_DISPLAY[pid]}#${pid})`);
+-          }
+-        });
+-      } catch {
+-        /* no-op: panel tree may not be ready */
+-      }
+-    },
+-    [openPanel, closePanel]
+-  );
++  const openOnly = useCallback((id: SP_COIN_DISPLAY) => {
++    try {
++      [
++        SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL,
++        SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL,
++        SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL,
++      ].forEach((pid) => (pid === id ? openPanel(pid) : closePanel(pid)));
++    } catch {
++      /* no-op: panel tree may not be ready */
++    }
++  }, [openPanel, closePanel]);
+ 
+   /** Alert-only placeholder per request */
+-  const claimRewards = useCallback(
+-    (actType: AccountType) => {
+-      setShowToDo(true);
+-      accountTypeRef.current = actType;
+-    },
+-    []
+-  );
++  const claimRewards = useCallback((actType: AccountType) => {
++    setShowToDo(true)
++    accountType = actType;
++  }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
+ 
+   const doToDo = useCallback(() => {
+-    setShowToDo(false);
++    setShowToDo(false)
+     const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+-    const sel = String(accountTypeRef.current);
+-    let msg: string = 'ToDo: (Not Yet Implemented)\n';
+-    msg += 'Claim: ';
+-    msg += sel === 'ALL' ? sel : `${sel}(s)`;
+-    msg += ' Rewards\n';
++    let msg:string = 'ToDo: (Not Yet Implemented)\n';
++    msg += `Claim: `;
++    msg += accountType.toString() === "ALL" ? accountType.toString() : `${accountType.toString()}(s)`;
++    msg += ` Rewards\n`
+     msg += `For account: ${connected ? connected.address : '(none connected)'}`;
+-    // eslint-disable-next-line no-alert
+-    alert(msg);
++    alert( msg );
+   }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
+ 
+   // ✅ Early return happens only after all hooks have been called
+@@ -104,7 +87,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+   const rowH = 'h-[40px]';
+   const tdInner = `${rowH} w-full px-3 text-sm align-middle flex items-center`;
+   const tdInnerCenter = `${tdInner} justify-center`;
+-  const rowA = 'bg-[rgba(56,78,126,0.35)]'; // Sponsors / Agents
++  const rowA = 'bg-[rgba(56,78,126,0.35)]';   // Sponsors / Agents
+   const rowB = 'bg-[rgba(156,163,175,0.25)]'; // Recipients / Total
+   const th =
+     'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
+@@ -113,7 +96,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+   return (
+     <>
+       {/* Address selector */}
+-      <div className='mb-6'>
++      <div className="mb-6">
+         <AssetSelectDisplayProvider>
+           {/* AGENT_LIST_SELECT_PANEL removed; scope to MANAGE_SPONSORSHIPS_PANEL */}
+           <AssetSelectProvider
+@@ -127,45 +110,45 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+       </div>
+ 
+       {mode === 'all' && (
+-        <div id='msWrapper' className='mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black'>
+-          <table id='msTable' className='min-w-full border-collapse'>
++        <div id="msWrapper" className="mb-6 -mt-[25px] overflow-x-auto rounded-xl border border-black">
++          <table id="msTable" className="min-w-full border-collapse">
+             <thead>
+-              <tr className='border-b border-black'>
+-                <th scope='col' className={th}>Account</th>
+-                <th scope='col' className={`${th} text-center`}>Staked Coins</th>
+-                <th scope='col' className={`${th} text-center`}>Pending Coins</th>
+-                <th scope='col' className={`${th} text-center`}>Rewards</th>
+-                <th scope='col' className={`${th} text-center`}>Config</th>
++              <tr className="border-b border-black">
++                <th scope="col" className={th}>Account</th>
++                <th scope="col" className={`${th} text-center`}>Staked Coins</th>
++                <th scope="col" className={`${th} text-center`}>Pending Coins</th>
++                <th scope="col" className={`${th} text-center`}>Rewards</th>
++                <th scope="col" className={`${th} text-center`}>Config</th>
+               </tr>
+             </thead>
+             <tbody>
+               {/* Row 1: Sponsors (A) */}
+               <tr className={`${rowBorder}`}>
+-                <td className='p-0'><div className={`${rowA} ${tdInner}`}>Sponsors</div></td>
+-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'>
++                <td className="p-0"><div className={`${rowA} ${tdInner}`}>Sponsors</div></td>
++                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0">
+                   <div className={`${rowA} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
+-                      className='ms-claim--orange'
+-                      aria-label='Claim Sponsors rewards'
++                      type="button"
++                      className="ms-claim--orange"
++                      aria-label="Claim Sponsors rewards"
+                       onClick={() => claimRewards(AccountType.SPONSOR)}
+                     >
+                       Claim
+                     </button>
+                   </div>
+                 </td>
+-                <td className='p-0'>
++                <td className="p-0">
+                   <div className={`${rowA} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
++                      type="button"
+                       className={iconBtn}
+                       onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL)}
+-                      aria-label='Open Sponsors reconfigure'
+-                      title='Reconfigure Sponsors'
++                      aria-label="Open Sponsors reconfigure"
++                      title="Reconfigure Sponsors"
+                     >
+-                      <span className='cog-white-mask cog-rot' aria-hidden />
++                      <span className="cog-white-mask cog-rot" aria-hidden />
+                     </button>
+                   </div>
+                 </td>
+@@ -173,31 +156,31 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+ 
+               {/* Row 2: Recipients (B) */}
+               <tr className={`${rowBorder}`}>
+-                <td className='p-0'><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
+-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'>
++                <td className="p-0"><div className={`${rowB} ${tdInner}`}>Recipients</div></td>
++                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0">
+                   <div className={`${rowB} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
+-                      className='ms-claim--green'
+-                      aria-label='Claim Recipients rewards'
++                      type="button"
++                      className="ms-claim--green"
++                      aria-label="Claim Recipients rewards"
+                       onClick={() => claimRewards(AccountType.RECIPIENT)}
+                     >
+                       Claim
+                     </button>
+                   </div>
+                 </td>
+-                <td className='p-0'>
++                <td className="p-0">
+                   <div className={`${rowB} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
++                      type="button"
+                       className={iconBtn}
+                       onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL)}
+-                      aria-label='Open Recipients reconfigure'
+-                      title='Reconfigure Recipients'
++                      aria-label="Open Recipients reconfigure"
++                      title="Reconfigure Recipients"
+                     >
+-                      <span className='cog-white-mask cog-rot' aria-hidden />
++                      <span className="cog-white-mask cog-rot" aria-hidden />
+                     </button>
+                   </div>
+                 </td>
+@@ -205,31 +188,31 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+ 
+               {/* Row 3: Agents (A) */}
+               <tr className={`${rowBorder}`}>
+-                <td className='p-0'><div className={`${rowA} ${tdInner}`}>Agents</div></td>
+-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'>
++                <td className="p-0"><div className={`${rowA} ${tdInner}`}>Agents</div></td>
++                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0"><div className={`${rowA} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0">
+                   <div className={`${rowA} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
+-                      className='ms-claim--orange'
+-                      aria-label='Claim Agents rewards'
++                      type="button"
++                      className="ms-claim--orange"
++                      aria-label="Claim Agents rewards"
+                       onClick={() => claimRewards(AccountType.AGENT)}
+                     >
+                       Claim
+                     </button>
+                   </div>
+                 </td>
+-                <td className='p-0'>
++                <td className="p-0">
+                   <div className={`${rowA} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
++                      type="button"
+                       className={iconBtn}
+                       onClick={() => openOnly(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL)}
+-                      aria-label='Open Agents reconfigure'
+-                      title='Reconfigure Agents'
++                      aria-label="Open Agents reconfigure"
++                      title="Reconfigure Agents"
+                     >
+-                      <span className='cog-white-mask cog-rot' aria-hidden />
++                      <span className="cog-white-mask cog-rot" aria-hidden />
+                     </button>
+                   </div>
+                 </td>
+@@ -237,22 +220,22 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+ 
+               {/* Row 4: Total (B, no cog) */}
+               <tr className={`${rowBorder}`}>
+-                <td className='p-0'><div className={`${rowB} ${tdInner}`}>Total</div></td>
+-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
+-                <td className='p-0'>
++                <td className="p-0"><div className={`${rowB} ${tdInner}`}>Total</div></td>
++                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`}>0</div></td>
++                <td className="p-0">
+                   <div className={`${rowB} ${tdInnerCenter}`}>
+                     <button
+-                      type='button'
+-                      className='ms-claim--green'
+-                      aria-label='Claim Total rewards'
++                      type="button"
++                      className="ms-claim--green"
++                      aria-label="Claim Total rewards"
+                       onClick={() => claimRewards(AccountType.ALL)}
+                     >
+                       Claim
+                     </button>
+                   </div>
+                 </td>
+-                <td className='p-0'><div className={`${rowB} ${tdInnerCenter}`} /></td>
++                <td className="p-0"><div className={`${rowB} ${tdInnerCenter}`} /></td>
+               </tr>
+             </tbody>
+           </table>
+@@ -343,9 +326,9 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
+       {showToDo && (
+         <ToDo
+           show
+-          message='ToDo'
++          message="ToDo"
+           opacity={0.5}
+-          color='#ff1a1a'
++          color="#ff1a1a"
+           zIndex={2000}
+           onDismiss={() => doToDo()}
+         />
+diff --git a/components/views/sharedPreviews/RenderAssetPreview.tsx b/components/views/sharedPreviews/RenderAssetPreview.tsx
+index 6e01911b..4526f2ad 100644
+--- a/components/views/sharedPreviews/RenderAssetPreview.tsx
++++ b/components/views/sharedPreviews/RenderAssetPreview.tsx
+@@ -167,4 +167,4 @@ export default function RenderAssetPreview() {
+       </BasePreviewWrapper>
+     </div>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/lib/context/AssetSelectPanels/AssetSelectProvider.tsx b/lib/context/AssetSelectPanels/AssetSelectProvider.tsx
+index 6427a5e3..c42e84e5 100644
+--- a/lib/context/AssetSelectPanels/AssetSelectProvider.tsx
++++ b/lib/context/AssetSelectPanels/AssetSelectProvider.tsx
+@@ -57,8 +57,8 @@ export const AssetSelectProvider = ({
+     showErrorPreview,
+   } = useAssetSelectDisplay();
+ 
+-  // ⬇️ Minimal change: default manualEntry = true (so every mount starts "manual")
+-  const [manualEntry, _setManualEntry] = useState(true);
++  // Local UI state (kept for compatibility)
++  const [manualEntry, _setManualEntry] = useState(false);
+   const [bypassFSM, setBypassFSM] = useState(false);
+ 
+   useEffect(() => {
+@@ -68,8 +68,6 @@ export const AssetSelectProvider = ({
+       feed: FEED_TYPE[feedType],
+       hasInitialBag: !!initialPanelBag,
+     });
+-    // Ensure the default is enforced at mount as a safeguard
+-    _setManualEntry(true);
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, []);
+ 
+@@ -313,31 +311,46 @@ export const AssetSelectProvider = ({
+       resetPreview,
+     }),
+     [
++      // FSM / validated
+       inputState,
+       validatedAssetNarrow,
+-      setValidatedAssetLogged,
++      setValidatedAssetLogged, // wrapped
++
++      // flags
+       manualEntry,
+       bypassFSM,
++
++      // input feed
+       validHexInput,
+       debouncedHexInput,
+       failedHexInput,
+       failedHexCount,
+       isValid,
+       isValidHexString,
+-      handleHexInputChange,
++      handleHexInputChange, // wrapped
+       resetHexInput,
++
++      // identity
+       containerType,
+       feedType,
+       instanceId,
++
++      // bridges
+       closePanelCallbackCtx,
+       setTradingTokenCallbackCtx,
++
++      // bag
+       panelBag,
+       setPanelBag,
++
++      // display
+       activeSubDisplay,
+       setActiveSubDisplay,
+       showErrorPreview,
+       showAssetPreview,
+       resetPreview,
++
++      // required fns
+       setValidatedWallet,
+       dumpAssetSelectContext,
+       dumpFSMContext,
+diff --git a/lib/context/ExchangeContextUsageExamples.tsx b/lib/context/ExchangeContextUsageExamples.tsx
+index 96795638..9569e2a9 100644
+--- a/lib/context/ExchangeContextUsageExamples.tsx
++++ b/lib/context/ExchangeContextUsageExamples.tsx
+@@ -34,22 +34,16 @@ export default function ExchangeContextUsageExamples() {
+ 
+   const { isVisible, openPanel, activeMainOverlay, isTokenScrollVisible } = usePanelTree();
+ 
+-  // Helper: build parent tags like Module:method(args)
+-  const tag = (m: string, extra?: string) => (extra ? `ExchangeContextUsageExamples:${m}(${extra})` : `ExchangeContextUsageExamples:${m}()`);
+-
+-  // Small helper that threads parent as a string
+-  const openWithParent = (panel: SP_COIN_DISPLAY, methodName: string, extra?: string) => {
+-    return openPanel(panel, tag(methodName, extra));
+-  };
+-
+   const activePanelLabel = useMemo(() => {
+     if (isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL)) return 'SELL_LIST_SELECT_PANEL';
+     if (isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)) return 'BUY_LIST_SELECT_PANEL';
+-    return activeMainOverlay != null ? SP_COIN_DISPLAY[activeMainOverlay] : 'NONE';
++    return activeMainOverlay != null
++      ? SP_COIN_DISPLAY[activeMainOverlay]
++      : 'NONE';
+   }, [isVisible, activeMainOverlay]);
+ 
+   return (
+-    <div className='font-mono p-4 space-y-2'>
++    <div className="font-mono p-4 space-y-2">
+       <h2>🧪 Exchange Context Hook Tester</h2>
+       <pre>Sell Amount: {sellAmount.toString()}</pre>
+       <pre>Buy Amount: {buyAmount.toString()}</pre>
+@@ -69,9 +63,9 @@ export default function ExchangeContextUsageExamples() {
+       <pre>Error Message: {JSON.stringify(errorMessage)}</pre>
+       <pre>API Error Message: {JSON.stringify(apiErrorMessage)}</pre>
+ 
+-      <hr className='my-4' />
++      <hr className="my-4" />
+ 
+-      <div className='flex flex-wrap gap-2'>
++      <div className="flex flex-wrap gap-2">
+         <button onClick={() => setSellAmount(sellAmount + 1n)}>+1 Sell</button>
+         <button onClick={() => setBuyAmount(buyAmount + 1n)}>+1 Buy</button>
+ 
+@@ -175,34 +169,20 @@ export default function ExchangeContextUsageExamples() {
+           Clear Errors
+         </button>
+ 
+-        {/* Panel-tree test controls with parent tags */}
+-        <button
+-          onClick={() => openWithParent(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'openSellList')}
+-        >
++        {/* Panel-tree test controls */}
++        <button onClick={() => openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL)}>
+           Open SELL panel
+         </button>
+-
+-        <button
+-          onClick={() => openWithParent(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'openBuyList')}
+-        >
++        <button onClick={() => openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL)}>
+           Open BUY panel
+         </button>
+-
+-        <button
+-          onClick={() => openWithParent(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'openRecipientList')}
+-        >
++        <button onClick={() => openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL)}>
+           Open RECIPIENT panel
+         </button>
+-
+-        <button
+-          onClick={() => openWithParent(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'openSponsorConfig')}
+-        >
++        <button onClick={() => openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)}>
+           Open SPONSOR CONFIG
+         </button>
+-
+-        <button
+-          onClick={() => openWithParent(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'showTradingStation')}
+-        >
++        <button onClick={() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL)}>
+           Close overlays (show Trading)
+         </button>
+       </div>
+diff --git a/lib/context/ExchangeProvider.tsx b/lib/context/ExchangeProvider.tsx
+index 8f749c8a..fb29197b 100644
+--- a/lib/context/ExchangeProvider.tsx
++++ b/lib/context/ExchangeProvider.tsx
+@@ -211,13 +211,7 @@ function PanelBootstrap() {
+ 
+     // Only pick a default if nothing is selected (rare), so we never override a persisted choice
+     if (activeMainOverlay == null) {
+-      queueMicrotask(() =>
+-        // ⬇️ New signature: openPanel(panel, parent?: string)
+-        openPanel(
+-          SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+-          'ExchangeProvider:PanelBootstrap(openPanel)'
+-        )
+-      );
++      queueMicrotask(() => openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL));
+     }
+   }, [activeMainOverlay, openPanel]);
+ 
+@@ -488,35 +482,26 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
+ 
+ /* --------------------------------- Utilities -------------------------------- */
+ /** Start from authored defaults, merge persisted, enforce required and order. */
+-// File: lib/context/ExchangeProvider.tsx
+-
+-// File: lib/context/ExchangeProvider.tsx
+-
+ function repairPanels(
+   persisted: Array<{ panel: number; name?: string; visible?: boolean }> | undefined
+ ): PanelNode[] {
+-  // Start from authored defaults, excluding non-persisted IDs
+   const defaults = flattenPanelTree(defaultSpCoinPanelTree).filter(
+     (p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY)
+   );
+ 
+-  // Index defaults by id
+   const byId = new Map<number, PanelNode>();
+   for (const p of defaults) {
+     byId.set(p.panel, {
+       panel: p.panel,
+-      // ✅ use String(p.panel), not String[p.panel]
+       name: p.name || (SP_COIN_DISPLAY[p.panel] ?? String(p.panel)),
+       visible: !!p.visible,
+     });
+   }
+ 
+-  // Merge any persisted visibility/name (if provided)
+   if (Array.isArray(persisted)) {
+     for (const p of persisted) {
+       const id = p?.panel;
+       if (!Number.isFinite(id) || NON_PERSISTED_PANELS.has(id as SP_COIN_DISPLAY)) continue;
+-
+       const prev = byId.get(id);
+       if (prev) {
+         if (typeof p.visible === 'boolean') prev.visible = p.visible;
+@@ -531,27 +516,16 @@ function repairPanels(
+     }
+   }
+ 
+-  // Ensure required panels exist
+   for (const [id, vis] of MUST_INCLUDE_ON_BOOT) {
+-    if (!byId.has(id)) {
+-      byId.set(id, {
+-        panel: id,
+-        name: SP_COIN_DISPLAY[id] ?? String(id),
+-        visible: vis,
+-      });
+-    }
++    if (!byId.has(id)) byId.set(id, { panel: id, name: SP_COIN_DISPLAY[id] ?? String(id), visible: vis });
+   }
+ 
+-  // Preserve default order, then append any extras
+   const defaultOrder = defaults.map((d) => d.panel);
+   const extras = [...byId.keys()].filter((id) => !defaultOrder.includes(id));
+   const orderedIds = [...defaultOrder, ...extras];
+-
+-  // ✅ Always return a value
+   return orderedIds.map((id) => byId.get(id)!);
+ }
+ 
+-
+ /** Drop non-persisted items (safety no-op if they’re already excluded). */
+ function dropNonPersisted(panels: PanelNode[]) {
+   return panels.filter((p) => !NON_PERSISTED_PANELS.has(p.panel as SP_COIN_DISPLAY));
+diff --git a/lib/context/exchangeContext/hooks/useHeaderController.ts b/lib/context/exchangeContext/hooks/useHeaderController.ts
+index da20f5e5..618139d1 100644
+--- a/lib/context/exchangeContext/hooks/useHeaderController.ts
++++ b/lib/context/exchangeContext/hooks/useHeaderController.ts
+@@ -9,7 +9,7 @@ import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVis
+ import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
+ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+ 
+-const detailClosers = new Map<SP_COIN_DISPLAY, Set<() => void>>();
++const detailClosers = new Map<number, Set<() => void>>();
+ export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void) {
+   useEffect(() => {
+     if (!fn) return;
+@@ -27,7 +27,7 @@ export function useRegisterDetailCloser(panel: SP_COIN_DISPLAY, fn?: () => void)
+ }
+ 
+ /** Title overrides (per panel) registered by screens like ManageAgent */
+-const headerTitleOverrides = new Map<SP_COIN_DISPLAY, string>();
++const headerTitleOverrides = new Map<number, string>();
+ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
+   useEffect(() => {
+     if (title === undefined) return;
+@@ -42,7 +42,7 @@ export function useRegisterHeaderTitle(panel: SP_COIN_DISPLAY, title?: string) {
+ 
+ /** Left-element (component) overrides (per panel) */
+ type LeftFactory = () => React.ReactNode;
+-const headerLeftOverrides = new Map<SP_COIN_DISPLAY, LeftFactory>();
++const headerLeftOverrides = new Map<number, LeftFactory>();
+ 
+ /** Register a custom left-side component for a specific panel header */
+ export function useRegisterHeaderLeft(panel: SP_COIN_DISPLAY, factory?: LeftFactory) {
+@@ -72,7 +72,7 @@ function titleFor(display: SP_COIN_DISPLAY): string {
+     case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL: return 'Claim Recipient Rewards';
+     case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL: return 'Claim Agent Rewards';
+     case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL: return 'Claim Sponsor Rewards';
+-    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Manage Recipient Account'; // ← fix label
++    case SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL: return 'Claim Recipient Account';
+     case SP_COIN_DISPLAY.MANAGE_AGENT_PANEL: return 'Manage Agent Account';
+     case SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL: return 'Manage Sponsor Account';
+     default: return 'Main Panel Header';
+@@ -144,24 +144,18 @@ export function useHeaderController() {
+   // Helper: force exactly one manage sub-list visible (and hide hub + details)
+   const openOnlyManageList = useCallback((list: SP_COIN_DISPLAY) => {
+     // close hub + all details
+-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:openOnlyManageList');
+-    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL, 'HeaderController:openOnlyManageList');
+-    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL, 'HeaderController:openOnlyManageList');
+-    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL, 'HeaderController:openOnlyManageList');
++    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
++    closePanel(SP_COIN_DISPLAY.MANAGE_AGENT_PANEL);
++    closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENT_PANEL);
++    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSOR_PANEL);
+ 
+     // close the other lists
+-    if (list !== SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL) {
+-      closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL, 'HeaderController:openOnlyManageList');
+-    }
+-    if (list !== SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL) {
+-      closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL, 'HeaderController:openOnlyManageList');
+-    }
+-    if (list !== SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL) {
+-      closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL, 'HeaderController:openOnlyManageList');
+-    }
++    if (list !== SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL) closePanel(SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL);
++    if (list !== SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL) closePanel(SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL);
++    if (list !== SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL) closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL);
+ 
+     // finally open the requested list
+-    openPanel(list, 'HeaderController:openOnlyManageList');
++    openPanel(list);
+   }, [openPanel, closePanel]);
+ 
+   const onClose = useCallback(() => {
+@@ -192,7 +186,7 @@ export function useHeaderController() {
+       case SP_COIN_DISPLAY.MANAGE_AGENTS_PANEL:
+       case SP_COIN_DISPLAY.MANAGE_RECIPIENTS_PANEL:
+       case SP_COIN_DISPLAY.MANAGE_SPONSORS_PANEL:
+-        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'HeaderController:onClose');
++        openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+         return;
+ 
+       default:
+diff --git a/lib/context/exchangeContext/hooks/usePanelTransitions.ts b/lib/context/exchangeContext/hooks/usePanelTransitions.ts
+index c9135936..d334f6aa 100644
+--- a/lib/context/exchangeContext/hooks/usePanelTransitions.ts
++++ b/lib/context/exchangeContext/hooks/usePanelTransitions.ts
+@@ -1,247 +1,140 @@
+ // File: lib/context/exchangeContext/hooks/usePanelTransitions.ts
+ 'use client';
+ 
+-import { useCallback, useRef } from 'react';
+-import type { MouseEvent, MouseEventHandler } from 'react';
++import { useCallback } from 'react';
+ import { SP_COIN_DISPLAY } from '@/lib/structure';
+ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+ import { usePerfMarks } from '@/lib/hooks/perf/usePerfMarks';
+ import { telemetry } from '@/lib/utils/telemetry';
+-import { createDebugLogger } from '@/lib/utils/debugLogger';
+-
+-type OpenOpts  = { methodName?: string };
+-type ClickOpts = OpenOpts & { preventDefault?: boolean; stopPropagation?: boolean; defer?: boolean };
+-
+-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_PANEL_TRANSITIONS === 'true';
+-const debug = createDebugLogger('usePanelTransitions', DEBUG_ENABLED);
+ 
++/**
++ * Declarative, named transitions for common UI flows.
++ * Now instrumented with optional perf marks + telemetry events.
++ */
+ export function usePanelTransitions() {
+   const { openPanel, closePanel, isVisible } = usePanelTree();
+   const perf = usePerfMarks('panelTransition');
+ 
+-  const buyCountRef  = useRef(0);
+-  const sellCountRef = useRef(0);
+-
+-  const _emit = (
+-    to: SP_COIN_DISPLAY,
+-    action: 'open' | 'close' | 'toggle',
+-    methodName?: string,
+-    count?: number,
+-  ) => {
++  // ---- helpers ----
++  const _emit = (to: SP_COIN_DISPLAY, action: 'open' | 'close' | 'toggle') => {
+     telemetry.emit('panel_transition', {
+-      action, to, label: SP_COIN_DISPLAY[to], ts: Date.now(), methodName, count,
++      action,
++      to,
++      label: SP_COIN_DISPLAY[to],
++      // Add anything useful for later analysis here:
++      ts: Date.now(),
+     });
+   };
+ 
+-  const toClickHandler = <T extends HTMLElement>(
+-    act: (opts?: OpenOpts) => void,
+-    base?: ClickOpts,
+-  ): MouseEventHandler<T> => {
+-    const { preventDefault = true, stopPropagation = true, defer = true, methodName } = base ?? {};
+-    return (e: MouseEvent<T>) => {
+-      if (preventDefault) e.preventDefault();
+-      if (stopPropagation) e.stopPropagation();
+-      const runner = () => act({ methodName });
+-      defer
+-        ? (typeof queueMicrotask === 'function' ? queueMicrotask(runner) : Promise.resolve().then(runner))
+-        : runner();
+-    };
+-  };
+-
+-  // ─── Core overlays ────────────────────────────────────────────────────────
++  // ---- Core overlays (radio group) ----
+   const toTrading = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+-      'usePanelTransitions:toTrading(MAIN_TRADING_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+     perf.end('toTrading');
+-    _emit(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'open', 'toTrading');
++    _emit(SP_COIN_DISPLAY.TRADING_STATION_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+-  const openBuyList = useCallback((opts?: OpenOpts) => {
+-    const count = ++buyCountRef.current;
+-    const methodName = opts?.methodName ?? 'openBuyList';
+-
+-    debug.log?.('[openBuyList]', `#${count}`, {
+-      before: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+-      beforeOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+-      methodName,
+-    });
+-
++  const openBuyList = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL,
+-      `usePanelTransitions:openBuyList#${count}(${methodName}→TRADING_STATION_PANEL)`,
+-    );
++    openPanel(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
+     perf.end('openBuyList');
+-    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open', methodName, count);
+-
+-    debug.log?.('[openBuyList]', `#${count} (after)`, {
+-      after: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+-      afterOther: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+-      methodName,
+-    });
+-  }, [isVisible, openPanel, perf]);
+-
+-  const openSellList = useCallback((opts?: OpenOpts) => {
+-    const count = ++sellCountRef.current;
+-    const methodName = opts?.methodName ?? 'openSellList';
+-
+-    debug.log?.('[openSellList]', `#${count}`, {
+-      before: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+-      beforeOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+-      methodName,
+-    });
++    _emit(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL, 'open');
++  }, [openPanel, perf]);
+ 
++  const openSellList = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL,
+-      `usePanelTransitions:openSellList#${count}(${methodName}→TRADING_STATION_PANEL)`,
+-    );
++    openPanel(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
+     perf.end('openSellList');
+-    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open', methodName, count);
+-
+-    debug.log?.('[openSellList]', `#${count} (after)`, {
+-      after: isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL),
+-      afterOther: isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL),
+-      methodName,
+-    });
+-  }, [isVisible, openPanel, perf]);
+-
+-  const openBuyListClick  = useCallback(
+-    (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openBuyList, opts),
+-    [openBuyList],
+-  );
+-  const openSellListClick = useCallback(
+-    (opts?: ClickOpts) => toClickHandler<HTMLDivElement>(openSellList, opts),
+-    [openSellList],
+-  );
++    _emit(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL, 'open');
++  }, [openPanel, perf]);
+ 
+-  // ─── Other panels ─────────────────────────────────────────────────────────
+   const openRecipientList = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL,
+-      'usePanelTransitions:openRecipientList(TRADING_STATION_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL);
+     perf.end('openRecipientList');
+-    _emit(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'open', 'openRecipientList');
++    _emit(SP_COIN_DISPLAY.RECIPIENT_LIST_SELECT_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+   const openAgentList = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL,
+-      'usePanelTransitions:openAgentList(TRADING_STATION_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL);
+     perf.end('openAgentList');
+-    _emit(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL, 'open', 'openAgentList');
++    _emit(SP_COIN_DISPLAY.AGENT_LIST_SELECT_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+   const showErrorOverlay = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL,
+-      'usePanelTransitions:showErrorOverlay(TRADING_STATION_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL);
+     perf.end('showErrorOverlay');
+-    _emit(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'open', 'showErrorOverlay');
++    _emit(SP_COIN_DISPLAY.ERROR_MESSAGE_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+   const openManageSponsorships = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+-      'usePanelTransitions:openManageSponsorships(TRADING_STATION_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
+     perf.end('openManageSponsorships');
+-    _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'open', 'openManageSponsorships');
++    _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+   const closeManageSponsorships = useCallback(() => {
+     perf.start();
+-    closePanel(
+-      SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL,
+-      'usePanelTransitions:closeManageSponsorships(TRADING_STATION_PANEL)',
+-    );
++    closePanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL);
++    // Removed: do not force button visibility; respect restored state
++    // openPanel(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_BUTTON);
+     perf.end('closeManageSponsorships');
+-    _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'close', 'closeManageSponsorships');
++    _emit(SP_COIN_DISPLAY.MANAGE_SPONSORSHIPS_PANEL, 'close');
+   }, [closePanel, perf]);
+ 
++  // ---- Non-overlay panels (inline) ----
+   const startAddSponsorship = useCallback(() => {
+     perf.time('startAddSponsorship', () => {
+-      openPanel(
+-        SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
+-        'usePanelTransitions:startAddSponsorship(MANAGE_SPONSORSHIPS_PANEL)',
+-      );
++      openPanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
+     });
+-    _emit(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'open', 'startAddSponsorship');
++    _emit(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+   const openConfigSponsorship = useCallback(() => {
+     perf.start();
+-    openPanel(
+-      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+-      'usePanelTransitions:openConfigSponsorship(MANAGE_SPONSORSHIPS_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
+     perf.end('openConfigSponsorship');
+-    _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'open', 'openConfigSponsorship');
++    _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'open');
+   }, [openPanel, perf]);
+ 
+   const closeConfigSponsorship = useCallback(() => {
+     perf.start();
+-    closePanel(
+-      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+-      'usePanelTransitions:closeConfigSponsorship(MANAGE_SPONSORSHIPS_PANEL)',
+-    );
++    closePanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
+     perf.end('closeConfigSponsorship');
+-    _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'close', 'closeConfigSponsorship');
++    _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, 'close');
+   }, [closePanel, perf]);
+ 
+   const toggleSponsorConfig = useCallback(() => {
+     const open = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
+     perf.start();
+     open
+-      ? closePanel(
+-          SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+-          'usePanelTransitions:toggleSponsorConfig(close→MANAGE_SPONSORSHIPS_PANEL)',
+-        )
+-      : openPanel(
+-          SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+-          'usePanelTransitions:toggleSponsorConfig(open→MANAGE_SPONSORSHIPS_PANEL)',
+-        );
++      ? closePanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL)
++      : openPanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
+     perf.end('toggleSponsorConfig');
+-    _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, open ? 'close' : 'open', 'toggleSponsorConfig');
++    _emit(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL, open ? 'close' : 'open');
+   }, [isVisible, closePanel, openPanel, perf]);
+ 
+   const closeAddSponsorship = useCallback(() => {
+     perf.start();
+-    closePanel(
+-      SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL,
+-      'usePanelTransitions:closeAddSponsorship(Config→MANAGE_SPONSORSHIPS_PANEL)',
+-    );
+-    closePanel(
+-      SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL,
+-      'usePanelTransitions:closeAddSponsorship(Add→MANAGE_SPONSORSHIPS_PANEL)',
+-    );
++    closePanel(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
++    closePanel(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL);
+     perf.end('closeAddSponsorship');
+-    _emit(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'close', 'closeAddSponsorship');
++    _emit(SP_COIN_DISPLAY.ADD_SPONSORSHIP_PANEL, 'close');
+   }, [closePanel, perf]);
+ 
++  // ---- Generic helper (if you need a custom overlay) ----
+   const openOverlay = useCallback((overlay: SP_COIN_DISPLAY) => {
+-    const name = SP_COIN_DISPLAY[overlay];
+     perf.start();
+-    openPanel(
+-      overlay,
+-      `usePanelTransitions:openOverlay(${name}→TRADING_STATION_PANEL)`,
+-    );
++    openPanel(overlay);
+     perf.end(`openOverlay:${overlay}`);
+-    _emit(overlay, 'open', 'openOverlay');
++    _emit(overlay, 'open');
+   }, [openPanel, perf]);
+ 
+   return {
+-    // programmatic
++    // overlays
+     toTrading,
+     openBuyList,
+     openSellList,
+@@ -251,14 +144,11 @@ export function usePanelTransitions() {
+     openManageSponsorships,
+     closeManageSponsorships,
+     openOverlay,
++    // inline flow
+     startAddSponsorship,
+     openConfigSponsorship,
+     closeConfigSponsorship,
+     toggleSponsorConfig,
+     closeAddSponsorship,
+-
+-    // click-safe handlers
+-    openBuyListClick,
+-    openSellListClick,
+   };
+ }
+diff --git a/lib/context/exchangeContext/hooks/usePanelTree.ts b/lib/context/exchangeContext/hooks/usePanelTree.ts
+index 4e79cf5f..3749d6e4 100644
+--- a/lib/context/exchangeContext/hooks/usePanelTree.ts
++++ b/lib/context/exchangeContext/hooks/usePanelTree.ts
+@@ -10,33 +10,9 @@ import { panelStore } from '@/lib/context/exchangeContext/panelStore';
+ const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
+ type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
+ 
+-/* ------------------------------ debug helpers ------------------------------ */
+-
+-const PT_DEBUG =
+-  typeof window !== 'undefined' &&
+-  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+-    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+-
+-const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
+-
+-function traceIfEnabled(label: string) {
+-  if (!PT_DEBUG || !PT_TRACE) return;
+-  // eslint-disable-next-line no-console
+-  console.trace(`[usePanelTree] ${label}`);
+-}
+-
+-function logAction(kind: 'openPanel' | 'closePanel', panel: SP_COIN_DISPLAY, invoker?: string) {
+-  if (!PT_DEBUG) return;
+-  const panelName = SP_COIN_DISPLAY[panel];
+-  const invokerLabel = invoker ?? 'unknown';
+-  // eslint-disable-next-line no-console
+-  console.log(`[usePanelTree] ${kind}({panel: ${panelName}, invoker: '${invokerLabel}'})`);
+-}
+-
+ /* ------------------------------ helpers ------------------------------ */
+ 
+-const schedule = (fn: () => void) =>
+-  typeof queueMicrotask === 'function' ? queueMicrotask(fn) : setTimeout(fn, 0); // post-commit scheduling
++const schedule = (fn: () => void) => setTimeout(fn, 0); // post-commit scheduling
+ 
+ function flatten(nodes: any[] | undefined): PanelEntry[] {
+   if (!Array.isArray(nodes)) return [];
+@@ -49,6 +25,7 @@ function flatten(nodes: any[] | undefined): PanelEntry[] {
+       if (Array.isArray(n.children) && n.children.length) walk(n.children);
+     }
+   };
++  // ✅ Fix: use the correct variable name (`nodes`) instead of `ns`
+   walk(nodes);
+   const seen = new Set<number>();
+   return out.filter((e) => (seen.has(e.panel) ? false : (seen.add(e.panel), true)));
+@@ -74,9 +51,7 @@ function diffAndPublish(prevMap: Record<number, boolean>, nextMap: Record<number
+     const id = idNum as SP_COIN_DISPLAY;
+     const prev = !!prevMap[idNum];
+     const next = !!nextMap[idNum];
+-    if (prev !== next) {
+-      panelStore.setVisible(id, next);
+-    }
++    if (prev !== next) panelStore.setVisible(id, next);
+   });
+ }
+ 
+@@ -89,7 +64,6 @@ export function usePanelTree() {
+     () => flatten((exchangeContext as any)?.settings?.spCoinPanelTree),
+     [exchangeContext]
+   );
+-
+   const map = useMemo(() => toMap(list), [list]);
+ 
+   const overlays = useMemo(() => MAIN_OVERLAY_GROUP.slice(), []);
+@@ -106,7 +80,6 @@ export function usePanelTree() {
+   useEffect(() => {
+     const visible = overlays.filter((id) => !!map[id]);
+     if (visible.length <= 1) return;
+-
+     const keep = visible[0];
+ 
+     schedule(() => {
+@@ -117,32 +90,20 @@ export function usePanelTree() {
+         );
+         diffAndPublish(toMap(flatPrev), toMap(next));
+         return writeFlat(prev, next);
+-      });
++      }, 'usePanelTree:reconcile');
+     });
+   }, [map, overlays, setExchangeContext]);
+ 
+   /* ------------------------------- queries ------------------------------- */
+ 
+-  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => {
+-    return panelStore.isVisible(panel);
+-  }, []);
+-
+-  // Placeholder for future tree-aware children lookup (kept for API stability)
+-  const getPanelChildren = useCallback((_invoker: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
++  const isVisible = useCallback((panel: SP_COIN_DISPLAY) => panelStore.isVisible(panel), []);
++  const getPanelChildren = useCallback((_parent: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
+ 
+   /* ------------------------------- actions ------------------------------- */
+ 
+-  // New, simplified signature:
+-  //   openPanel(panel, invoker?)
+   const openPanel = useCallback(
+-    (panel: SP_COIN_DISPLAY, invoker?: string) => {
+-      traceIfEnabled(`openPanel(${SP_COIN_DISPLAY[panel]})`);
+-      logAction('openPanel', panel, invoker);
+-
+-      if (!KNOWN.has(panel)) {
+-        logAction('openPanel', panel, `unknown-id(${panel})`);
+-        return;
+-      }
++    (panel: SP_COIN_DISPLAY) => {
++      if (!KNOWN.has(panel)) return;
+ 
+       schedule(() => {
+         setExchangeContext((prev) => {
+@@ -150,42 +111,33 @@ export function usePanelTree() {
+           let flat = ensurePanelPresent(flat0, panel);
+ 
+           if (overlays.includes(panel)) {
++            // radio: set ONLY this overlay to visible, others to false
+             flat = overlays.reduce((acc, id) => {
+               const idx = acc.findIndex((e) => e.panel === id);
+               if (idx >= 0) acc[idx] = { ...acc[idx], visible: id === panel };
+               else acc.push({ panel: id, visible: id === panel });
+               return acc;
+             }, [...flat]);
+-
+             diffAndPublish(toMap(flat0), toMap(flat));
+             return writeFlat(prev, flat);
+           }
+ 
++          // non-radio: visible=true
+           const nextFlat = [...flat];
+           const i = nextFlat.findIndex((e) => e.panel === panel);
+-          if (i >= 0 && nextFlat[i].visible === true) return prev; // idempotent
+           if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: true };
+           else nextFlat.push({ panel, visible: true });
+-
+           diffAndPublish(toMap(flat0), toMap(nextFlat));
+           return writeFlat(prev, nextFlat);
+-        });
++        }, 'usePanelTree:open');
+       });
+     },
+     [setExchangeContext, overlays]
+   );
+ 
+-  // New, simplified signature:
+-  //   closePanel(panel, invoker?)
+   const closePanel = useCallback(
+-    (panel: SP_COIN_DISPLAY, invoker?: string) => {
+-      traceIfEnabled(`closePanel(${SP_COIN_DISPLAY[panel]})`);
+-      logAction('closePanel', panel, invoker);
+-
+-      if (!KNOWN.has(panel)) {
+-        logAction('closePanel', panel, `unknown-id(${panel})`);
+-        return;
+-      }
++    (panel: SP_COIN_DISPLAY) => {
++      if (!KNOWN.has(panel)) return;
+ 
+       schedule(() => {
+         setExchangeContext((prev) => {
+@@ -200,11 +152,9 @@ export function usePanelTree() {
+                 else acc.push({ panel: id, visible: false });
+                 return acc;
+               }, [...flat0]);
+-
+               diffAndPublish(toMap(flat0), toMap(next));
+               return writeFlat(prev, next);
+             }
+-
+             const nextFlat = flat0.map((e) => (e.panel === panel ? { ...e, visible: false } : e));
+             diffAndPublish(toMap(flat0), toMap(nextFlat));
+             return writeFlat(prev, nextFlat);
+@@ -212,12 +162,10 @@ export function usePanelTree() {
+ 
+           const nextFlat = [...flat0];
+           const i = nextFlat.findIndex((e) => e.panel === panel);
+-          if (i >= 0 && nextFlat[i].visible === false) return prev; // idempotent
+-          if (i >= 0) nextFlat[i] = { ...nextFlat[i], visible: false };
+-
++          if (i >= 0 && nextFlat[i].visible) nextFlat[i] = { ...nextFlat[i], visible: false };
+           diffAndPublish(toMap(flat0), toMap(nextFlat));
+           return writeFlat(prev, nextFlat);
+-        });
++        }, 'usePanelTree:close');
+       });
+     },
+     [setExchangeContext, overlays]
+@@ -231,9 +179,7 @@ export function usePanelTree() {
+   }, [map, overlays]);
+ 
+   const isTokenScrollVisible = useMemo(
+-    () =>
+-      map[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
+-      map[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL],
++    () => map[SP_COIN_DISPLAY.BUY_SELECT_PANEL] || map[SP_COIN_DISPLAY.SELL_SELECT_PANEL],
+     [map]
+   );
+ 
+@@ -242,7 +188,7 @@ export function usePanelTree() {
+     isVisible,
+     isTokenScrollVisible,
+     getPanelChildren,
+-    openPanel,   // (panel, invoker?)
+-    closePanel,  // (panel, invoker?)
++    openPanel,
++    closePanel,
+   };
+ }
+diff --git a/lib/context/exchangeContext/panelStore.ts b/lib/context/exchangeContext/panelStore.ts
+index 6b0f67ea..dadf629c 100644
+--- a/lib/context/exchangeContext/panelStore.ts
++++ b/lib/context/exchangeContext/panelStore.ts
+@@ -9,22 +9,18 @@ class PanelStore {
+   private state = new Map<PanelId, boolean>();
+   private listeners = new Map<PanelId, Set<Listener>>();
+ 
+-  // Defer notifications to post-commit and coalesce duplicates
++  // Batch/deferral
+   private pending = new Set<PanelId>();
+   private scheduled = false;
+ 
+-  // --- reads --------------------------------------------------
+-
++  // --- read ---
+   isVisible = (id: PanelId): boolean => this.state.get(id) ?? false;
+-
+-  // Alias kept for existing callers
+   getPanelSnapshot = (id: PanelId): boolean => this.state.get(id) ?? false;
+ 
+-  // Tooling/inspection
++  // Useful for tooling
+   getAll = (): Map<PanelId, boolean> => new Map(this.state);
+ 
+-  // --- writes -------------------------------------------------
+-
++  // --- write ---
+   setVisible = (id: PanelId, visible: boolean) => {
+     const prev = this.state.get(id) ?? false;
+     if (prev === visible) return;
+@@ -32,24 +28,10 @@ class PanelStore {
+     this.queueEmit(id);
+   };
+ 
+-  // Overloads: (id) or (id, parentId)
+-  openPanel(id: PanelId): void;
+-  openPanel(id: PanelId, parentId: PanelId): void;
+-  openPanel(id: PanelId, parentId?: PanelId): void {
+-    if (typeof parentId === 'number') this.setVisible(parentId, true);
+-    this.setVisible(id, true);
+-  }
+-
+-  // Overloads: (id) or (id, parentId)
+-  closePanel(id: PanelId): void;
+-  closePanel(id: PanelId, parentId: PanelId): void;
+-  closePanel(id: PanelId, parentId?: PanelId): void {
+-    this.setVisible(id, false);
+-    if (typeof parentId === 'number') this.setVisible(parentId, false);
+-  }
+-
+-  // --- subscribe ---------------------------------------------
++  openPanel = (id: PanelId) => this.setVisible(id, true);
++  closePanel = (id: PanelId) => this.setVisible(id, false);
+ 
++  // --- subscribe ---
+   subscribePanel = (id: PanelId, listener: Listener) => {
+     let set = this.listeners.get(id);
+     if (!set) {
+@@ -63,26 +45,24 @@ class PanelStore {
+     };
+   };
+ 
+-  // --- internals ---------------------------------------------
+-
++  // ─────────── internals ───────────
+   private queueEmit(id: PanelId) {
+     this.pending.add(id);
+     if (this.scheduled) return;
+     this.scheduled = true;
+-    // Notify after React commit
+-    setTimeout(() => this.flushNow(), 0);
+-  }
+-
+-  private flushNow() {
+-    this.scheduled = false;
+-    const toNotify = Array.from(this.pending);
+-    this.pending.clear();
+-    for (const pid of toNotify) this.emitNow(pid);
++    // Use a macrotask to ensure commit phase has finished before notifying subscribers.
++    setTimeout(() => {
++      this.scheduled = false;
++      const toNotify = Array.from(this.pending);
++      this.pending.clear();
++      for (const pid of toNotify) this.emitNow(pid);
++    }, 0);
+   }
+ 
+   private emitNow(id: PanelId) {
+     const set = this.listeners.get(id);
+     if (!set) return;
++    // iterate directly to avoid temporary array allocation
+     for (const fn of set) fn();
+   }
+ }
+diff --git a/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts b/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts
+index 0d2840c2..d7cad135 100644
+--- a/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts
++++ b/lib/context/hooks/ExchangeContext/selectionCommit/useSelectionCommit.ts
+@@ -36,11 +36,7 @@ export function useSelectionCommit(): UseSelectionCommit {
+ 
+   const finish = useCallback(() => {
+     log.log?.('finish → openPanel(TRADING_STATION_PANEL)');
+-    // Parent label follows the new convention: module:method(args)
+-    openPanel(
+-      SP_COIN_DISPLAY.TRADING_STATION_PANEL,
+-      'useSelectionCommit:finish(MAIN_TRADING_PANEL)',
+-    );
++    openPanel(SP_COIN_DISPLAY.TRADING_STATION_PANEL);
+   }, [openPanel]);
+ 
+   const commitBuyToken = useCallback(
+diff --git a/lib/debug/panels/installDocClickProbe.ts b/lib/debug/panels/installDocClickProbe.ts
+deleted file mode 100644
+index 349c87e7..00000000
+--- a/lib/debug/panels/installDocClickProbe.ts
++++ /dev/null
+@@ -1,37 +0,0 @@
+-// File: lib/debug/panels/installDocClickProbe.ts
+-'use client';
+-
+-let installed = false;
+-
+-export function installDocClickProbe() {
+-  if (installed) return;
+-  installed = true;
+-
+-  const DBG =
+-    typeof window !== 'undefined' &&
+-    (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+-     process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true');
+-
+-  if (!DBG) return; // zero-cost when flags are off
+-
+-  const onMouseDown = (e: MouseEvent) => {
+-    // Record who closed things, with a stack
+-    (window as any).__lastDocMouseDown = {
+-      targetId: (e.target as HTMLElement | null)?.id ?? 'unknown',
+-      ts: Date.now(),
+-      stack: new Error().stack,
+-    };
+-    // Keep logging minimal but useful
+-    // console.log('[DocClickProbe] mousedown on', (e.target as HTMLElement)?.id);
+-  };
+-
+-  document.addEventListener('mousedown', onMouseDown, true);
+-
+-  // Optional: clean up if the page hot-reloads in dev
+-  if (import.meta && (import.meta as any).hot) {
+-    (import.meta as any).hot.dispose(() => {
+-      document.removeEventListener('mousedown', onMouseDown, true);
+-      installed = false;
+-    });
+-  }
+-}
+diff --git a/lib/debug/panels/usePanelTreeProbe.ts b/lib/debug/panels/usePanelTreeProbe.ts
+index f9ea91ff..7a941b48 100644
+--- a/lib/debug/panels/usePanelTreeProbe.ts
++++ b/lib/debug/panels/usePanelTreeProbe.ts
+@@ -6,38 +6,25 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
+ import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+ import { markPanelApply, markPanelClosed } from './panelVisibilityProbe';
+ 
+-type ProbeOpts = string; // now just a label that becomes the parent string
+-
+ export function usePanelTreeProbe() {
+   const { openPanel, closePanel, isVisible } = usePanelTree();
+ 
+   const open = useCallback(
+-    (p: SP_COIN_DISPLAY, reason: ProbeOpts = 'openPanel') => {
+-      const parent = `usePanelTreeProbe:${reason}`;
+-
+-      // Avoid noisy intent marks if already visible
+-      if (!isVisible(p)) {
+-        markPanelApply(p, SP_COIN_DISPLAY[p], true, reason);
+-      }
+-
+-      return openPanel(p, parent);
++    (p: SP_COIN_DISPLAY, reason = 'openPanel') => {
++      // mark *intent* and let the tree do its thing
++      markPanelApply(p, SP_COIN_DISPLAY[p], true, reason);
++      return openPanel(p);
+     },
+-    [openPanel, isVisible]
++    [openPanel]
+   );
+ 
+   const close = useCallback(
+-    (p: SP_COIN_DISPLAY, reason: ProbeOpts = 'closePanel') => {
+-      const parent = `usePanelTreeProbe:${reason}`;
+-
+-      // Only mark close when it would actually change state
+-      if (isVisible(p)) {
+-        markPanelApply(p, SP_COIN_DISPLAY[p], false, reason);
+-        markPanelClosed(reason);
+-      }
+-
+-      return closePanel(p, parent);
++    (p: SP_COIN_DISPLAY, reason = 'closePanel') => {
++      markPanelApply(p, SP_COIN_DISPLAY[p], false, reason);
++      markPanelClosed(reason);
++      return closePanel(p);
+     },
+-    [closePanel, isVisible]
++    [closePanel]
+   );
+ 
+   return { openPanel: open, closePanel: close, isVisible };
