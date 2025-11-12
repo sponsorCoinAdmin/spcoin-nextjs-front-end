@@ -1,8 +1,5 @@
 // File: lib/rest/http.ts
-/* Minimal GET-only REST helpers with timeout, retries, and type-safe JSON parsing,
-   now with optional low-noise debugging. Enable with:
-   NEXT_PUBLIC_DEBUG_HTTP=true
-*/
+/* Minimal GET-only REST helpers with timeout, retries, and type-safe JSON parsing. */
 
 export type GetOptions = {
   timeoutMs?: number;     // default 6000
@@ -30,44 +27,6 @@ export class HttpError extends Error {
   }
 }
 
-/* ────────────────────────── Debug helpers ────────────────────────── */
-
-// const DEBUG_HTTP = typeof window !== 'undefined'
-//   ? (process.env.NEXT_PUBLIC_DEBUG_HTTP === 'true')
-//   : false;
-
-function dbg(...args: any[]) {
-  if (true) {
-    // eslint-disable-next-line no-console
-    console.debug('[http]', ...args);
-  }
-}
-
-/** Redacts/serializes a RequestInit for safe logging. */
-function loggableInit(init?: RequestInit) {
-  if (!init) return init;
-  const { headers, signal, ...rest } = init;
-  let safeHeaders: Record<string, string> | undefined;
-  if (headers && typeof headers === 'object' && 'forEach' in (headers as any)) {
-    safeHeaders = {};
-    (headers as Headers).forEach((v, k) => {
-      // redact known sensitive headers
-      const lower = k.toLowerCase();
-      safeHeaders![k] = (lower.includes('authorization') || lower.includes('api-key'))
-        ? '***redacted***'
-        : v;
-    });
-  } else if (headers && typeof headers === 'object') {
-    safeHeaders = Object.fromEntries(
-      Object.entries(headers as Record<string, string>).map(([k, v]) => {
-        const lower = k.toLowerCase();
-        return [k, (lower.includes('authorization') || lower.includes('api-key')) ? '***redacted***' : v];
-      })
-    );
-  }
-  return { ...rest, headers: safeHeaders, signal: !!signal };
-}
-
 function startAbortTimer(ms: number | undefined) {
   const ctrl = new AbortController();
   const timer = typeof ms === 'number' && ms > 0
@@ -82,9 +41,9 @@ function isTransientError(err: unknown): boolean {
   return (
     (err instanceof DOMException && err.name === 'AbortError') ||
     err instanceof TypeError ||
-    msg.includes('Failed to fetch') ||   // <- network-level fetch failure
+    msg.includes('Failed to fetch') ||   // <- fixed
     msg.includes('NetworkError') ||
-    msg.toLowerCase().includes('network')
+    msg.includes('network')
   );
 }
 
@@ -96,8 +55,6 @@ function sleep(ms: number) {
 function defaultCacheFor(url: string): RequestCache {
   return url.startsWith('/') ? 'force-cache' : 'no-store';
 }
-
-/* ────────────────────────────── GET ─────────────────────────────── */
 
 /** Low-level GET that returns the raw Response (2xx only unless `init.redirect` changes semantics). */
 export async function get(url: string, opts: GetOptions = {}): Promise<Response> {
@@ -114,27 +71,20 @@ export async function get(url: string, opts: GetOptions = {}): Promise<Response>
   while (attempt <= retries) {
     const { ctrl, clear } = startAbortTimer(timeoutMs);
     try {
-      const effectiveInit: RequestInit = {
+      const res = await fetch(url, {
         method: 'GET',
         signal: ctrl.signal,
         cache: init?.cache ?? defaultCacheFor(url),
         ...init,
-      };
-
-      dbg('GET attempt', `${attempt + 1}/${retries + 1}`, { url, init: loggableInit(effectiveInit) });
-
-      const res = await fetch(url, effectiveInit);
+      });
       clear();
 
       if (!res.ok) {
-        dbg('HTTP non-2xx', { status: res.status, statusText: res.statusText, url });
-
         // retry on 5xx, 408 (Request Timeout), 429 (Too Many Requests)
         if ((res.status >= 500 && res.status < 600) || res.status === 408 || res.status === 429) {
           if (attempt < retries) {
             attempt++;
             const delay = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
-            dbg('Retrying after', `${delay}ms`, 'for', url);
             await sleep(delay);
             continue;
           }
@@ -151,25 +101,12 @@ export async function get(url: string, opts: GetOptions = {}): Promise<Response>
         );
       }
 
-      dbg('HTTP 2xx', { status: res.status, statusText: res.statusText, url });
       return res;
     } catch (err) {
       clear();
-
-      const e = err as any;
-      dbg('Fetch error', {
-        name: e?.name,
-        message: e?.message,
-        cause: e?.cause,
-        isAbortError: e instanceof DOMException && e.name === 'AbortError',
-        isTypeError: e instanceof TypeError,
-        url,
-      });
-
       if (isTransientError(err) && attempt < retries) {
         attempt++;
         const delay = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
-        dbg('Transient -> retrying after', `${delay}ms`, 'for', url);
         await sleep(delay);
         lastErr = err;
         continue;
@@ -180,14 +117,9 @@ export async function get(url: string, opts: GetOptions = {}): Promise<Response>
   throw lastErr ?? new Error(`GET ${url} failed`);
 }
 
-/* ─────────────────────────── JSON/Text/etc ─────────────────────────── */
-
 /** Convenience: GET + parse JSON, with optional permissive parsing when servers mislabel content-type. */
 export async function getJson<T>(url: string, opts: JsonOptions = {}): Promise<T> {
   const { accept = 'application/json', forceParse = false, ...rest } = opts;
-
-  dbg('getJson()', { url, accept, forceParse });
-
   const res = await get(url, {
     ...rest,
     init: {
@@ -203,24 +135,13 @@ export async function getJson<T>(url: string, opts: JsonOptions = {}): Promise<T
   const looksLikeJson = /\bjson\b/i.test(ctype);
 
   if (looksLikeJson || forceParse) {
-    try {
-      const data = await res.json();
-      dbg('getJson() parsed JSON', { url, contentType: ctype });
-      return data as T;
-    } catch (e) {
-      dbg('getJson() JSON parse error (looksLikeJson)', { url, contentType: ctype, error: (e as Error)?.message });
-      throw e;
-    }
+    return (await res.json()) as T;
   }
 
-  // fallback attempt to parse as JSON, then throw a typed error with a preview
   try {
-    const data = await res.json();
-    dbg('getJson() parsed JSON despite content-type', { url, contentType: ctype });
-    return data as T;
+    return (await res.json()) as T;
   } catch {
     const text = await res.text().catch(() => '');
-    dbg('getJson() Expected JSON but got different content-type', { url, contentType: ctype, preview: text.slice(0, 120) });
     throw new HttpError(
       `Expected JSON but got '${ctype}'.`,
       url,
@@ -233,7 +154,6 @@ export async function getJson<T>(url: string, opts: JsonOptions = {}): Promise<T
 
 /** Convenience: GET plain text. */
 export async function getText(url: string, opts: GetOptions = {}): Promise<string> {
-  dbg('getText()', { url });
   const res = await get(url, {
     ...opts,
     init: {
@@ -241,18 +161,13 @@ export async function getText(url: string, opts: GetOptions = {}): Promise<strin
       headers: { Accept: 'text/plain, text/*;q=0.9, */*;q=0.1', ...(opts.init?.headers ?? {}) },
     },
   });
-  const text = await res.text();
-  dbg('getText() ok', { url, length: text.length });
-  return text;
+  return await res.text();
 }
 
 /** Convenience: GET as ArrayBuffer (binary). */
 export async function getBinary(url: string, opts: GetOptions = {}): Promise<ArrayBuffer> {
-  dbg('getBinary()', { url });
   const res = await get(url, opts);
-  const buf = await res.arrayBuffer();
-  dbg('getBinary() ok', { url, bytes: buf.byteLength });
-  return buf;
+  return await res.arrayBuffer();
 }
 
 /** Lightweight HEAD probe (useful on same-origin resources). */
@@ -266,7 +181,6 @@ export async function headOk(
   while (attempt <= retries) {
     const { ctrl, clear } = startAbortTimer(timeoutMs);
     try {
-      dbg('HEAD attempt', `${attempt + 1}/${retries + 1}`, { url });
       const res = await fetch(url, {
         method: 'HEAD',
         signal: ctrl.signal,
@@ -277,7 +191,6 @@ export async function headOk(
 
       // Many CDNs return 405 for HEAD; fall back to simple GET check.
       if (res.status === 405) {
-        dbg('HEAD 405 -> probing with GET', { url });
         const getRes = await fetch(url, {
           method: 'GET',
           cache: init?.cache ?? defaultCacheFor(url),
@@ -287,12 +200,9 @@ export async function headOk(
         return !!getRes && getRes.status >= 200 && getRes.status < 400;
       }
 
-      const ok = res.status >= 200 && res.status < 400;
-      dbg('HEAD result', { url, status: res.status, ok });
-      return ok;
+      return res.status >= 200 && res.status < 400;
     } catch (err) {
       clear();
-      dbg('HEAD error', { url, message: (err as Error)?.message });
       if (isTransientError(err) && attempt < retries) {
         attempt++;
         continue;
