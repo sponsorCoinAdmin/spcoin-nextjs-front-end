@@ -32,9 +32,9 @@ export class HttpError extends Error {
 
 /* ────────────────────────── Debug helpers ────────────────────────── */
 
-const DEBUG_HTTP = typeof window !== 'undefined'
-  ? (process.env.NEXT_PUBLIC_DEBUG_HTTP === 'true')
-  : false;
+// const DEBUG_HTTP = typeof window !== 'undefined'
+//   ? (process.env.NEXT_PUBLIC_DEBUG_HTTP === 'true')
+//   : false;
 
 function dbg(...args: any[]) {
   if (true) {
