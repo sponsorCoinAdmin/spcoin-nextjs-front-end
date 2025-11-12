@@ -37,7 +37,7 @@ const DEBUG_HTTP = typeof window !== 'undefined'
   : false;
 
 function dbg(...args: any[]) {
-  if (DEBUG_HTTP) {
+  if (true) {
     // eslint-disable-next-line no-console
     console.debug('[http]', ...args);
   }
