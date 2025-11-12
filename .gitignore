@@ -7,9 +7,11 @@ test.out
 /.vscode/
 .env
 .env.local
+.env.production
 */.e
 package-lock.json
 run.out
+lint.out
 
 cache
 artifacts
