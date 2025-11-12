@@ -5,8 +5,7 @@ test.out
 /.deps
 /.next/
 /.vscode/
-.env
-.env.local
+.env*
 */.e
 package-lock.json
 run.out
