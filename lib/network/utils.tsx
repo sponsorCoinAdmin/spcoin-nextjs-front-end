@@ -4,7 +4,7 @@ import { useExchangeContext } from '@/lib/context/hooks';
 import type { Address } from 'viem';
 import type { ExchangeContext, TokenContract, TradeData, WalletAccount } from '@/lib/structure';
 import { FEED_TYPE } from '@/lib/structure';
-import { isAddress } from 'viem';
+import { isAddress, getAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { headOk } from '@/lib/rest/http';
 import { NATIVE_TOKEN_ADDRESS, BURN_ADDRESS } from '../structure/constants/addresses';
@@ -39,21 +39,25 @@ async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
 /**
  * Resolve an asset logo path and verify existence (client-side).
  * Uses chainId only for building the asset path; does not read network metadata.
+ * IMPORTANT: Production hosting is case-sensitive, so we must use EIP-55 checksummed casing.
  */
 export const getLogoURL = async (
   chainId: number | undefined,
   address: Address,
   dataFeedType: FEED_TYPE
 ): Promise<string> => {
-  const addr = (address ?? '').trim();
-  if (!addr) return defaultMissingImage;
+  const raw = (address ?? '').trim();
+  if (!raw) return defaultMissingImage;
+
+  // Enforce EIP-55 checksum casing so paths match case-sensitive files on Linux.
+  const addr = isAddress(raw) ? (getAddress(raw) as Address) : (raw as Address);
 
   const path =
     dataFeedType === FEED_TYPE.TOKEN_LIST
       ? `/assets/blockchains/${chainId ?? 1}/contracts/${addr}/logo.png`
       : dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS
-        ? `/assets/accounts/${addr}/logo.png`
-        : '';
+      ? `/assets/accounts/${addr}/logo.png`
+      : '';
 
   if (!path) return defaultMissingImage;
 
@@ -73,22 +77,28 @@ export const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): st
     return badTokenAddressImage;
   }
   const { chainId, address } = requiredAssetMembers;
-  const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+  const checksummed = getAddress(address);
+  const logoURL = `/assets/blockchains/${chainId}/contracts/${checksummed}/logo.png`;
   debugLog.log?.(`getTokenLogoURL.logoURL=${logoURL}`);
   return logoURL;
 };
 
 export const getAddressLogoURL = (address: string, chainId: number): string => {
   if (isAddress(address)) {
-    const logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+    const checksummed = getAddress(address);
+    const logoURL = `/assets/blockchains/${chainId}/contracts/${checksummed}/logo.png`;
     debugLog.log?.(`getAddressLogoURL.logoURL=${logoURL}`);
     return logoURL;
   }
   return badTokenAddressImage;
 };
 
-export const getAccountLogo = (account?: WalletAccount): string =>
-  account ? `/assets/accounts/${account.address}/logo.png` : defaultMissingImage;
+export const getAccountLogo = (account?: WalletAccount): string => {
+  if (!account) return defaultMissingImage;
+  const addr = account.address;
+  const checksummed = isAddress(addr) ? getAddress(addr) : addr;
+  return `/assets/accounts/${checksummed}/logo.png`;
+};
 
 /* ───────── Active account / token helpers (no network metadata) ───────── */
 

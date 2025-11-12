@@ -1,4 +1,4 @@
-// File: components/Buttons/Connect/ConnectButton.tsx
+// File: components/Buttons/Connect/ConnectNetworkButton.tsx
 'use client';
 
 import React from 'react';
@@ -15,7 +15,7 @@ import { useWalletActions } from './hooks/useWalletActions';
 import { useDropDownPortal } from './hooks/useDropDownPortal';
 import { usePersistentState } from './hooks/usePersistentState'; // optional
 
-export type ConnectButtonProps = {
+export type ConnectNetworkButtonProps = {
   showName?: boolean;
   showSymbol?: boolean;
   showChevron?: boolean;
@@ -26,7 +26,7 @@ export type ConnectButtonProps = {
   allowWalletModal?: boolean;
 };
 
-export default function ConnectButton({
+export default function ConnectNetworkButton({
   showName = true,
   showSymbol = true,
   showChevron = true,
@@ -35,7 +35,7 @@ export default function ConnectButton({
   showHoverBg = true,
   trimHorizontalPaddingPx,
   allowWalletModal = true,
-}: ConnectButtonProps) {
+}: ConnectNetworkButtonProps) {
   // portal/open/position
   const { open, toggle, close, anchorRef, portalRef, pos } = useDropDownPortal();
 
