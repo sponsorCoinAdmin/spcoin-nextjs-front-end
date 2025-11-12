@@ -21,9 +21,9 @@ export default function Header() {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const [openTabs, setOpenTabs] = useState<string[]>([]); // hrefs only
 
-  const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
-  const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
-  const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
+  const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_TAB === 'true';
+  const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
+  const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
 
   /** Hydrate from tabsManager (single source of truth). */
   useEffect(() => {
