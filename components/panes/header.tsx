@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
-import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
+import ConnectNetworkButtonProps from '@/components/Buttons/Connect/ConnectNetworkButton';
 
 import { labelForPath, getTabById, PATH_TO_ID } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, listOpenTabs } from '@/lib/utils/tabs/tabsManager';
@@ -169,7 +169,7 @@ export default function Header() {
             onMouseDownCapture={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
-            <ConnectButton
+            <ConnectNetworkButtonProps
               showName={false}
               showSymbol={true}
               showChevron={true}
