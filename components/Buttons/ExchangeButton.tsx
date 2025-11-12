@@ -150,6 +150,7 @@ const ExchangeButton = ({ isLoadingPrice }: Props) => {
         alert('Select Buy/Sell Tokens\nFrom The Drop Down Token List');
         return;
       case BUTTON_TYPE.API_TRANSACTION_ERROR:
+        console.error(errorMessage?.msg ?? 'API Transaction Error');
         alert(errorMessage?.msg ?? 'API Transaction Error');
         return;
       case BUTTON_TYPE.ZERO_AMOUNT:

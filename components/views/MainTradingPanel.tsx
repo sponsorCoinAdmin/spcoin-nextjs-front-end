@@ -23,7 +23,6 @@ import {
   TokenListSelectPanel,
   RecipientListSelectPanel,
   AgentSelectPanel,
-  // If you have a SponsorListSelectPanel, import and render it here too.
   // SponsorListSelectPanel,
 } from '@/components/containers/AssetSelectPanels';
 
@@ -35,6 +34,11 @@ const SHOW_ACTIVE =
   process.env.NEXT_PUBLIC_SHOW_ACTIVE_OVERLAY === 'true' ||
   process.env.NEXT_PUBLIC_TREE_SHOW_VISIBILITY === 'true';
 
+const AGENT_TITLE =
+  process.env.NEXT_PUBLIC_AGENT_TITLE ?? 'Sponsor Coin Trading Station';
+const AGENT_SUB_TITLE =
+  process.env.NEXT_PUBLIC_AGENT_SUB_TITLE ?? 'Your Sponsor Agent';
+
 export default function MainTradingPanel() {
   const { activeMainOverlay } = usePanelTree();
 
@@ -44,18 +48,19 @@ export default function MainTradingPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.MAIN_TRADING_PANEL}>
-      <div id="MainPage_ID" style={{ position: 'relative' }}>
+      <div id='MainPage_ID' style={{ position: 'relative' }}>
         {/* 🟢 Debug HUD: current active main overlay */}
         {SHOW_ACTIVE && (
           <div
-            id="ActiveOverlayHUD"
-            className="pointer-events-none select-none"
+            id='ActiveOverlayHUD'
+            className='pointer-events-none select-none'
             style={{
               position: 'absolute',
               top: 6,
               right: 6,
               zIndex: 50,
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              fontFamily:
+                'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
               fontSize: 12,
               background: 'rgba(0,0,0,0.6)',
               color: '#9BE28F',
@@ -64,13 +69,29 @@ export default function MainTradingPanel() {
               border: '1px solid rgba(255,255,255,0.15)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
             }}
-            aria-live="polite"
+            aria-live='polite'
           >
             activeMainOverlay:&nbsp;<strong>{activeOverlayLabel}</strong>
           </div>
         )}
 
-        <div id="mainTradingPanel" className={styles.mainTradingPanel}>
+        {/* ⬆️ Lifted header block (moved up by an extra 25px → total -60px) */}
+        <div
+          id='MainTradingPanelHeader'
+          className='w-full text-center pt-[10px] pb-2 select-none relative -top-[80px]'
+        >
+          <h2 className="m-0 text-2xl md:text-3xl font-extrabold tracking-wide leading-tight text-[#5981F3]">
+            {AGENT_TITLE}
+          </h2>
+          <p className='m-0 mt-1 text-sm opacity-80'>
+            {AGENT_SUB_TITLE}
+          </p>
+        </div>
+
+        {/* Spacer matches the lift so the panel doesn’t overlap the header */}
+        <div aria-hidden className='h-[60px]' />
+
+        <div id='mainTradingPanel' className={styles.mainTradingPanel}>
           <PanelGate panel={SP_COIN_DISPLAY.TRADE_CONTAINER_HEADER}>
             <TradeContainerHeader />
           </PanelGate>
@@ -93,7 +114,7 @@ export default function MainTradingPanel() {
             <ManageSponsors />
           </PanelGate>
 
-          {/* Detail views — these were missing */}
+          {/* Detail views */}
           <PanelGate panel={SP_COIN_DISPLAY.MANAGE_AGENT_PANEL}>
             <ManageAgent />
           </PanelGate>
@@ -108,7 +129,6 @@ export default function MainTradingPanel() {
           <TokenListSelectPanel />
           <RecipientListSelectPanel />
           <AgentSelectPanel />
-          {/* If you have a dedicated SponsorListSelectPanel, render it too */}
           {/* <SponsorListSelectPanel /> */}
 
           <ErrorMessagePanel />

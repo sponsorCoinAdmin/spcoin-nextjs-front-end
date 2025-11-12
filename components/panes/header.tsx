@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import spCoin_png from '@/public/assets/miscellaneous/spCoin.png';
 import Image from 'next/image';
 import Link from 'next/link';
-import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
+import ConnectNetworkButtonProps from '@/components/Buttons/Connect/ConnectNetworkButton';
 
 import { labelForPath, getTabById, PATH_TO_ID } from '@/lib/utils/tabs/registry';
 import { closeTabByHref, listOpenTabs } from '@/lib/utils/tabs/tabsManager';
@@ -21,9 +21,9 @@ export default function Header() {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const [openTabs, setOpenTabs] = useState<string[]>([]); // hrefs only
 
-  const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_PAGE === 'true';
-  const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_PAGE === 'true';
-  const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_PAGE === 'true';
+  const TEST_LINK = process.env.NEXT_PUBLIC_SHOW_TEST_TAB === 'true';
+  const EXCHANGE_LINK = process.env.NEXT_PUBLIC_SHOW_EXCHANGE_TAB === 'true';
+  const SPCOIN_LINK = process.env.NEXT_PUBLIC_SHOW_SPCOIN_TAB === 'true';
 
   /** Hydrate from tabsManager (single source of truth). */
   useEffect(() => {
@@ -169,7 +169,7 @@ export default function Header() {
             onMouseDownCapture={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
-            <ConnectButton
+            <ConnectNetworkButtonProps
               showName={false}
               showSymbol={true}
               showChevron={true}

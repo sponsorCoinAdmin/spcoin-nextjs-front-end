@@ -6,7 +6,7 @@ import cog_png from '@/public/assets/miscellaneous/cog.png';
 import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
-import ConnectButton from '@/components/Buttons/Connect/ConnectButton';
+import ConnectNetworkButton from '@/components/Buttons/Connect/ConnectNetworkButton';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import CloseButton from '@/components/Buttons/CloseButton';
 
@@ -25,17 +25,17 @@ export default function TradeContainerHeader() {
   return (
     <div
       id='TradeContainerHeader'
-      className='grid grid-cols-[auto_1fr_auto] items-center w-full box-border h-[50px] min-h-[50px] py-0 px-2.5 shrink-0 my-[3px]'
+      className='grid grid-cols-[auto_1fr_auto] items-center w-full box-border h-[50px] min-h-[50px] py-0 px-0 shrink-0 my-[3px]'
     >
       <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
 
       <div
         id='SponsorCoinLogo.png'
         onDoubleClick={() => exchangeContextDump(exchangeContext)}
-        className='flex items-center my-0'
+        className='flex items-center my-0 pl-0 ml-0'
       >
         {leftElement ?? (
-          <ConnectButton
+          <ConnectNetworkButton
             showName={false}
             showSymbol={false}
             showChevron={false}
