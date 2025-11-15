@@ -102,19 +102,19 @@ export const getAccountLogo = (account?: WalletAccount): string => {
 
 /* ───────── Active account / token helpers (no network metadata) ───────── */
 
-export const isActiveAccountAddress = (exchangeContext: ExchangeContext, address?: Address) =>
+export const isAppAccountAddress = (exchangeContext: ExchangeContext, address?: Address) =>
   address ? address === exchangeContext?.accounts?.connectedAccount?.address : false;
 
-export const isActiveAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract) =>
-  isActiveAccountAddress(exchangeContext, tokenContract.address);
+export const isAppAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract) =>
+  isAppAccountAddress(exchangeContext, tokenContract.address);
 
-export const isActiveAccountSellToken = (exchangeContext: ExchangeContext): boolean =>
+export const isAppAccountSellToken = (exchangeContext: ExchangeContext): boolean =>
   !!exchangeContext?.tradeData?.sellTokenContract &&
-  isActiveAccountToken(exchangeContext, exchangeContext.tradeData.sellTokenContract);
+  isAppAccountToken(exchangeContext, exchangeContext.tradeData.sellTokenContract);
 
-export const isActiveAccountBuyToken = (exchangeContext: ExchangeContext): boolean =>
+export const isAppAccountBuyToken = (exchangeContext: ExchangeContext): boolean =>
   !!exchangeContext?.tradeData?.buyTokenContract &&
-  isActiveAccountToken(exchangeContext, exchangeContext.tradeData.buyTokenContract);
+  isAppAccountToken(exchangeContext, exchangeContext.tradeData.buyTokenContract);
 
 export const isNativeTokenAddress = (address?: Address): boolean => address === NATIVE_TOKEN_ADDRESS;
 
@@ -134,9 +134,9 @@ export const isBurnToken = (tokenContract: TokenContract): boolean =>
 
 /* ───────── Hooks / misc utilities (no network metadata) ───────── */
 
-export const useIsActiveAccountAddress = (address?: Address): boolean => {
+export const useIsAppAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
-  return isActiveAccountAddress(exchangeContext, address);
+  return isAppAccountAddress(exchangeContext, address);
 };
 
 export const isLowerCase = (input: string): boolean => input === input.toLowerCase();

@@ -2,25 +2,33 @@
 
 import type { TradeData, ExchangeContext } from '@/lib/structure';
 import { getInitialContext } from './ExchangeInitialContext';
-import type { PanelNode, SpCoinPanelTree } from '@/lib/structure/exchangeContext/types/PanelNode';
+import type {
+  PanelNode,
+  SpCoinPanelTree,
+} from '@/lib/structure/exchangeContext/types/PanelNode';
 
 /** Legacy guards — we only use them to decide whether to preserve or drop. */
 function isPanelNodeArray(x: unknown): x is PanelNode[] {
-  return Array.isArray(x) && x.every(
-    (n) =>
-      n &&
-      typeof n === 'object' &&
-      typeof (n as any).panel === 'number' &&
-      typeof (n as any).visible === 'boolean' &&
-      Array.isArray((n as any).children ?? [])
+  return (
+    Array.isArray(x) &&
+    x.every(
+      (n) =>
+        n &&
+        typeof n === 'object' &&
+        typeof (n as any).panel === 'number' &&
+        typeof (n as any).visible === 'boolean' &&
+        Array.isArray((n as any).children ?? []),
+    )
   );
 }
 function isSpCoinPanelTree(x: unknown): x is SpCoinPanelTree {
-  return !!x &&
+  return (
+    !!x &&
     typeof x === 'object' &&
     typeof (x as any).panel === 'number' &&
     typeof (x as any).visible === 'boolean' &&
-    Array.isArray((x as any).children ?? []);
+    Array.isArray((x as any).children ?? [])
+  );
 }
 
 /**
@@ -30,8 +38,8 @@ function isSpCoinPanelTree(x: unknown): x is SpCoinPanelTree {
  *   Provider/init code is responsible for seeding/migrating defaults.
  */
 export const sanitizeExchangeContext = (
-  raw: { tradeData?: Partial<TradeData> } & Partial<ExchangeContext> | null,
-  chainId: number
+  raw: ({ tradeData?: Partial<TradeData> } & Partial<ExchangeContext>) | null,
+  chainId: number,
 ): ExchangeContext => {
   const defaultContext = getInitialContext(chainId);
 
@@ -47,7 +55,7 @@ export const sanitizeExchangeContext = (
     ...prevSettings,
   };
 
- // Preserve persisted panel state if it looks like either the new tree or the old array
+  // Preserve persisted panel state if it looks like either the new tree or the old array
   const mpn = prevSettings.spCoinPanelTree;
   if (isSpCoinPanelTree(mpn) || isPanelNodeArray(mpn)) {
     sanitizedSettings.spCoinPanelTree = mpn;
@@ -65,26 +73,55 @@ export const sanitizeExchangeContext = (
 
   // ----- ACCOUNTS
   const sanitizedAccounts = {
+    // 🔹 New app-level account (can persist even if wallet disconnects)
+    appAccount: raw.accounts?.appAccount
+      ? {
+          ...raw.accounts.appAccount,
+          balance: raw.accounts.appAccount.balance ?? 0n,
+        }
+      : defaultContext.accounts.appAccount,
+
     connectedAccount: raw.accounts?.connectedAccount
-      ? { ...raw.accounts.connectedAccount, balance: raw.accounts.connectedAccount.balance ?? 0n }
+      ? {
+          ...raw.accounts.connectedAccount,
+          balance: raw.accounts.connectedAccount.balance ?? 0n,
+        }
       : defaultContext.accounts.connectedAccount,
+
     sponsorAccount: raw.accounts?.sponsorAccount
-      ? { ...raw.accounts.sponsorAccount, balance: raw.accounts.sponsorAccount.balance ?? 0n }
+      ? {
+          ...raw.accounts.sponsorAccount,
+          balance: raw.accounts.sponsorAccount.balance ?? 0n,
+        }
       : defaultContext.accounts.sponsorAccount,
+
     recipientAccount: raw.accounts?.recipientAccount
-      ? { ...raw.accounts.recipientAccount, balance: raw.accounts.recipientAccount.balance ?? 0n }
+      ? {
+          ...raw.accounts.recipientAccount,
+          balance: raw.accounts.recipientAccount.balance ?? 0n,
+        }
       : defaultContext.accounts.recipientAccount,
+
     agentAccount: raw.accounts?.agentAccount
-      ? { ...raw.accounts.agentAccount, balance: raw.accounts.agentAccount.balance ?? 0n }
+      ? {
+          ...raw.accounts.agentAccount,
+          balance: raw.accounts.agentAccount.balance ?? 0n,
+        }
       : defaultContext.accounts.agentAccount,
-    sponsorAccounts: raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
-    recipientAccounts: raw.accounts?.recipientAccounts ?? defaultContext.accounts.recipientAccounts,
-    agentAccounts: raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
+
+    sponsorAccounts:
+      raw.accounts?.sponsorAccounts ?? defaultContext.accounts.sponsorAccounts,
+    recipientAccounts:
+      raw.accounts?.recipientAccounts ??
+      defaultContext.accounts.recipientAccounts,
+    agentAccounts:
+      raw.accounts?.agentAccounts ?? defaultContext.accounts.agentAccounts,
   };
 
   // ----- TRADEDATA
   const sanitizedTradeData: TradeData = {
-    tradeDirection: raw.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
+    tradeDirection:
+      raw.tradeData?.tradeDirection ?? defaultContext.tradeData.tradeDirection,
     sellTokenContract: raw.tradeData?.sellTokenContract
       ? {
           ...defaultContext.tradeData.sellTokenContract,
@@ -101,10 +138,15 @@ export const sanitizeExchangeContext = (
       : defaultContext.tradeData.buyTokenContract,
     rateRatio: raw.tradeData?.rateRatio ?? defaultContext.tradeData.rateRatio,
     slippage: {
-      bps: raw.tradeData?.slippage?.bps ?? defaultContext.tradeData.slippage.bps,
-      percentage: raw.tradeData?.slippage?.percentage ?? defaultContext.tradeData.slippage.percentage,
+      bps:
+        raw.tradeData?.slippage?.bps ??
+        defaultContext.tradeData.slippage.bps,
+      percentage:
+        raw.tradeData?.slippage?.percentage ??
+        defaultContext.tradeData.slippage.percentage,
       percentageString:
-        raw.tradeData?.slippage?.percentageString ?? defaultContext.tradeData.slippage.percentageString,
+        raw.tradeData?.slippage?.percentageString ??
+        defaultContext.tradeData.slippage.percentageString,
     },
   };
 

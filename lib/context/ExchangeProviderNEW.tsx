@@ -40,9 +40,6 @@ import {
 
 import { persistWithOptDiff } from '@/lib/context/exchangeContext/helpers/persistExchangeContext';
 
-// 🔹 App-level bootstrap (mirrors UI ConnectedAccount → exchangeContext.appAccount)
-import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
-
 /* ---------------------------- Debug logger toggle --------------------------- */
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -409,9 +406,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
         setApiErrorMessage,
       }}
     >
-      {/* Post-mount helpers that depend on ExchangeContext */}
       <PanelBootstrap />
-      <AppBootstrap />
       {children}
     </ExchangeContextState.Provider>
   );

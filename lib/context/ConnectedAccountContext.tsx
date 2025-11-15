@@ -1,26 +1,51 @@
 // File: lib/context/ConnectedAccountContext.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useAccount } from 'wagmi';
 import type { WalletAccount } from '@/lib/structure';
 import { STATUS } from '@/lib/structure';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { getJson } from '@/lib/rest/http';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const ConnectedAccountContext = createContext<WalletAccount | undefined>(undefined);
-export const useConnectedAccount = (): WalletAccount | undefined => useContext(ConnectedAccountContext);
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_CONNECTED_ACCOUNT === 'true';
 
-const DEBUG_CONNECTED = process.env.NEXT_PUBLIC_DEBUG_CONNECTED_ACCOUNT === 'true';
+const debugLog = createDebugLogger(
+  'ConnectedAccountContext',
+  DEBUG_ENABLED,
+  LOG_TIME,
+);
+
+const ConnectedAccountContext = createContext<WalletAccount | undefined>(
+  undefined,
+);
+
+// 🔹 UI-level hook (RecipientSite, etc.)
+// Note: this is separate from the ExchangeContext nested hook
+export const useConnectedAccount = (): WalletAccount | undefined =>
+  useContext(ConnectedAccountContext);
 
 export function ConnectedAccountProvider({ children }: { children: ReactNode }) {
   const { address, isConnected } = useAccount();
-  const [connectedAccount, setConnectedAccount] = useState<WalletAccount | undefined>(undefined);
+
+  // ✅ Local state again — no dependency on ExchangeContext
+  const [connectedAccount, setConnectedAccount] = useState<
+    WalletAccount | undefined
+  >(undefined);
 
   useEffect(() => {
     if (!isConnected || !address) {
       setConnectedAccount(undefined);
-      if (DEBUG_CONNECTED) console.debug('[ConnectedAccount] cleared (disconnected or no address)');
+      debugLog.log?.('[ConnectedAccount] cleared (disconnected or no address)');
       return;
     }
 
@@ -30,10 +55,9 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
       const accountPath = `/assets/accounts/${address}/wallet.json`;
 
       try {
-        // ✅ RESTful helper (timeout, retries, typed JSON)
         const metadata = await getJson<WalletAccount>(accountPath, {
           timeoutMs: 8000,
-          retries: 0, // local file — no need to retry
+          retries: 0,
           accept: 'application/json',
           init: {
             signal: ac.signal,
@@ -45,10 +69,11 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
 
         if (!ac.signal.aborted) {
           setConnectedAccount(wallet);
-          if (DEBUG_CONNECTED) {
-            console.debug('[ConnectedAccount] loaded wallet.json →', stringifyBigInt(wallet));
-            console.debug('[ConnectedAccount] website =', wallet.website);
-          }
+          debugLog.log?.(
+            '[ConnectedAccount] loaded wallet.json →',
+            stringifyBigInt(wallet),
+          );
+          debugLog.log?.('[ConnectedAccount] website =', wallet.website);
         }
       } catch {
         const fallback: WalletAccount = {
@@ -62,12 +87,14 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
           balance: 0n,
           logoURL: '/assets/miscellaneous/SkullAndBones.png',
         };
+
         if (!ac.signal.aborted) {
           setConnectedAccount(fallback);
-          if (DEBUG_CONNECTED) {
-            console.debug('[ConnectedAccount] fallback wallet →', stringifyBigInt(fallback));
-            console.debug('[ConnectedAccount] website(fallback) = ""');
-          }
+          debugLog.log?.(
+            '[ConnectedAccount] fallback wallet →',
+            stringifyBigInt(fallback),
+          );
+          debugLog.log?.('[ConnectedAccount] website(fallback) = ""');
         }
       }
     })();

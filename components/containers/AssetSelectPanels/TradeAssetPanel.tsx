@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Address } from 'viem';
 import { formatUnits, parseUnits } from 'viem';
 import { clsx } from 'clsx';
-import { useAccount } from 'wagmi';
 
 import {
   useApiProvider,
@@ -29,22 +28,35 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useTokenSelection } from '@/lib/hooks/trade/useTokenSelection';
 import { useFormattedBalance } from '@/lib/hooks/trade/useFormattedBalance';
-import { clampDisplay, isIntermediateDecimal, maxInputSz, TYPING_GRACE_MS } from '@/lib/utils/tradeFormat';
+import {
+  clampDisplay,
+  isIntermediateDecimal,
+  maxInputSz,
+  TYPING_GRACE_MS,
+} from '@/lib/utils/tradeFormat';
 
 import ManageSponsorsButton from '@/components/Buttons/ManageSponsorsButton';
 import AddSponsorshipButton from '@/components/Buttons/AddSponsorshipButton';
 import TokenSelectDropDown from '../AssetSelectDropDowns/TokenSelectDropDown';
-import { TokenPanelProvider, useTokenPanelContext } from '@/lib/context/providers/Panels';
+import {
+  TokenPanelProvider,
+  useTokenPanelContext,
+} from '@/lib/context/providers/Panels';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
+const DEBUG =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
 const debugLog = createDebugLogger('TradeAssetPanel', DEBUG, false);
 
 function TradeAssetPanelInner() {
   const [apiProvider] = useApiProvider();
-  const { exchangeContext, setSellBalance, setBuyBalance } = useExchangeContext();
-  const { address } = useAccount();
+  const { exchangeContext, setSellBalance, setBuyBalance } =
+    useExchangeContext();
+
+  // 🔹 Use appAccount from ExchangeContext as the owner of balances
+  const appAccountAddr = exchangeContext.accounts?.appAccount
+    ?.address as Address | undefined;
 
   const [sellAmount, setSellAmount] = useSellAmount();
   const [buyAmount, setBuyAmount] = useBuyAmount();
@@ -53,8 +65,11 @@ function TradeAssetPanelInner() {
   const [sellTokenContract] = useSellTokenContract();
   const [buyTokenContract] = useBuyTokenContract();
 
-  const { setLocalTokenContract, setLocalAmount, containerType: containerTypeRoot } =
-    useTokenPanelContext();
+  const {
+    setLocalTokenContract,
+    setLocalAmount,
+    containerType: containerTypeRoot,
+  } = useTokenPanelContext();
 
   const isBuy = containerTypeRoot === SP_ROOT.BUY_SELECT_PANEL;
   const isSell = containerTypeRoot === SP_ROOT.SELL_SELECT_PANEL;
@@ -76,8 +91,7 @@ function TradeAssetPanelInner() {
   const { openPanel, closePanel } = usePanelTree();
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Add Sponsorship BUTTON gate (BUY-side only):
-  // Flip ONLY the button node's visibility when buyTokenContract.address changes.
+  // Add Sponsorship BUTTON gate (BUY-side only)
   // ────────────────────────────────────────────────────────────────────────────
   const prevBuyAddrRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -85,22 +99,35 @@ function TradeAssetPanelInner() {
 
     const addr = buyTokenContract?.address as string | undefined;
 
-    // React only when the buy address actually changes
     if (prevBuyAddrRef.current === addr) return;
     prevBuyAddrRef.current = addr;
 
-    // Toggle only the BUTTON visibility; also ensure the PANEL is closed on non-SpCoin
     if (!addr) {
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(addrUnset)');
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanelInner:buyAddrEffect(addrUnset)');
+      closePanel(
+        SP_ROOT.ADD_SPONSORSHIP_BUTTON,
+        'TradeAssetPanelInner:buyAddrEffect(addrUnset)',
+      );
+      closePanel(
+        SP_ROOT.ADD_SPONSORSHIP_PANEL,
+        'TradeAssetPanelInner:buyAddrEffect(addrUnset)',
+      );
       return;
     }
 
     if (isSpCoin(buyTokenContract)) {
-      openPanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(isSpCoin)');
+      openPanel(
+        SP_ROOT.ADD_SPONSORSHIP_BUTTON,
+        'TradeAssetPanelInner:buyAddrEffect(isSpCoin)',
+      );
     } else {
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_BUTTON, 'TradeAssetPanelInner:buyAddrEffect(notSpCoin)');
-      closePanel(SP_ROOT.ADD_SPONSORSHIP_PANEL, 'TradeAssetPanelInner:buyAddrEffect(notSpCoin)');
+      closePanel(
+        SP_ROOT.ADD_SPONSORSHIP_BUTTON,
+        'TradeAssetPanelInner:buyAddrEffect(notSpCoin)',
+      );
+      closePanel(
+        SP_ROOT.ADD_SPONSORSHIP_PANEL,
+        'TradeAssetPanelInner:buyAddrEffect(notSpCoin)',
+      );
     }
   }, [isBuy, buyTokenContract?.address, openPanel, closePanel]);
   // ────────────────────────────────────────────────────────────────────────────
@@ -193,6 +220,16 @@ function TradeAssetPanelInner() {
 
   const chainId = exchangeContext?.network?.chainId ?? 1;
 
+  // 🔍 Log inputs into the balance hook for debugging
+  useEffect(() => {
+    debugLog.log?.('balance hook params', {
+      chainId,
+      tokenAddr,
+      appAccountAddr,
+      enabled: Boolean(tokenAddr && appAccountAddr && chainId),
+    });
+  }, [chainId, tokenAddr, appAccountAddr]);
+
   // ✅ useFormattedBalance expects: { chainId, tokenAddress, owner?, decimalsHint?, enabled? }
   const {
     formatted: liveFormattedBalance,
@@ -201,9 +238,9 @@ function TradeAssetPanelInner() {
   } = useFormattedBalance({
     chainId,
     tokenAddress: tokenContract?.address as Address | undefined,
-    owner: (address ?? undefined) as Address | undefined,
+    owner: appAccountAddr,
     decimalsHint: tokenDecimals,
-    enabled: Boolean(tokenAddr && address),
+    enabled: Boolean(tokenAddr && appAccountAddr && chainId),
   });
 
   const formattedBalance =
@@ -212,7 +249,7 @@ function TradeAssetPanelInner() {
   // 🔁 Push live balance into ExchangeContext (only when stable / non-loading / no error)
   const prevPushedBalanceRef = useRef<bigint | undefined>(undefined);
   useEffect(() => {
-    if (!tokenAddr || !address) return;
+    if (!tokenAddr || !appAccountAddr) return;
     if (balanceLoading || balanceError) return;
     if (liveFormattedBalance == null || tokenDecimals == null) return;
 
@@ -228,7 +265,7 @@ function TradeAssetPanelInner() {
 
     debugLog.log('balance sync', {
       side: isSell ? 'SELL' : 'BUY',
-      tokenAddr: tokenAddr,
+      tokenAddr,
       liveFormattedBalance,
       parsed: String(parsed),
       prevBal:
@@ -243,7 +280,7 @@ function TradeAssetPanelInner() {
       setBuyBalance?.(parsed);
     }
   }, [
-    address,
+    appAccountAddr,
     tokenAddr,
     tokenDecimals,
     liveFormattedBalance,
@@ -267,7 +304,10 @@ function TradeAssetPanelInner() {
   return (
     <div
       id="TradeAssetPanelInner"
-      className={clsx('relative mt-[5px] mb-[5px]', 'rounded-[12px] overflow-hidden')}
+      className={clsx(
+        'relative mt-[5px] mb-[5px]',
+        'rounded-[12px] overflow-hidden',
+      )}
     >
       <input
         id="TokenPanelInputAmount"
@@ -275,7 +315,7 @@ function TradeAssetPanelInner() {
           'w-full h-[106px] indent-[10px] pt-[10px]',
           'bg-[#1f2639] text-[#94a3b8] text-[25px]',
           'border-0 outline-none focus:outline-none',
-          'rounded-b-[12px]'
+          'rounded-b-[12px]',
         )}
         placeholder="0"
         disabled={isInputDisabled}
