@@ -141,8 +141,8 @@ export default function TokenSelectDropDown({ containerType }: Props) {
   function displaySymbol(tokenContract: TokenContract) {
     if (DEBUG_ENABLED) {
       const msg = stringifyBigInt(tokenContract);
-      alert(msg)
       console.log(msg)
+      alert(msg)
     }
     return  tokenContract.symbol ?? 'Select Token'
   }
