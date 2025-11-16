@@ -139,7 +139,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
   );
 
   function displaySymbol(tokenContract: TokenContract) {
-    if (DEBUG_ENABLED)
+    if (DEBUG_ENABLED || true)
       alert(stringifyBigInt(tokenContract))
     return  tokenContract.symbol ?? 'Select Token'
   }
