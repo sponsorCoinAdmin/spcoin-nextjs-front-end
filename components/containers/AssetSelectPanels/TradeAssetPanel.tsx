@@ -27,7 +27,6 @@ import { parseValidFormattedAmount, isSpCoin } from '@/lib/spCoin/coreUtils';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useTokenSelection } from '@/lib/hooks/trade/useTokenSelection';
-import { useFormattedBalance } from '@/lib/hooks/trade/useFormattedBalance';
 import {
   clampDisplay,
   isIntermediateDecimal,
@@ -44,6 +43,7 @@ import {
 } from '@/lib/context/providers/Panels';
 
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { useGetBalance } from '@/lib/hooks/useGetBalance';
 
 const DEBUG =
   process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
@@ -218,11 +218,15 @@ function TradeAssetPanelInner() {
     ? `You Receive ± ${slippage.percentageString}`
     : `You Exactly Receive:`;
 
-  const chainId = exchangeContext?.network?.chainId ?? 1;
+  // ⚠️ Important: this was previously `network.chainId`; we really care about appChainId.
+  const chainId =
+    exchangeContext?.network?.appChainId ??
+    exchangeContext?.network?.chainId ??
+    1;
 
   // 🔍 Log inputs into the balance hook for debugging
   useEffect(() => {
-    debugLog.log?.('balance hook params', {
+    debugLog.log?.('balance hook params (direct useGetBalance)', {
       chainId,
       tokenAddr,
       appAccountAddr,
@@ -230,32 +234,43 @@ function TradeAssetPanelInner() {
     });
   }, [chainId, tokenAddr, appAccountAddr]);
 
-  // ✅ useFormattedBalance expects: { chainId, tokenAddress, owner?, decimalsHint?, enabled? }
+  // ────────────────────────────────────────────────────────────────────────────
+  // 🔑 DIRECT balance call via useGetBalance (bypassing useFormattedBalance)
+  // ────────────────────────────────────────────────────────────────────────────
   const {
-    formatted: liveFormattedBalance,
+    balance: rawBalance,
+    decimals: balanceDecimals,
+    formatted: hookFormatted,
     isLoading: balanceLoading,
     error: balanceError,
-  } = useFormattedBalance({
-    chainId,
+  } = useGetBalance({
     tokenAddress: tokenContract?.address as Address | undefined,
-    owner: appAccountAddr,
+    chainId,
+    userAddress: appAccountAddr,
     decimalsHint: tokenDecimals,
-    enabled: Boolean(tokenAddr && appAccountAddr && chainId),
+    enabled: Boolean(tokenAddr && chainId && appAccountAddr),
+    staleTimeMs: 20_000,
   });
 
   const formattedBalance =
-    balanceError ? '—' : balanceLoading ? '…' : liveFormattedBalance ?? '0.0';
+    balanceError
+      ? '—'
+      : balanceLoading
+      ? '…'
+      : hookFormatted ?? '0.0';
 
   // 🔁 Push live balance into ExchangeContext (only when stable / non-loading / no error)
   const prevPushedBalanceRef = useRef<bigint | undefined>(undefined);
   useEffect(() => {
     if (!tokenAddr || !appAccountAddr) return;
     if (balanceLoading || balanceError) return;
-    if (liveFormattedBalance == null || tokenDecimals == null) return;
+    if (rawBalance == null || (balanceDecimals ?? tokenDecimals) == null) return;
 
+    const decs = balanceDecimals ?? tokenDecimals!;
     let parsed: bigint | undefined;
     try {
-      parsed = parseUnits(liveFormattedBalance, tokenDecimals);
+      // rawBalance is already bigint, so we just pass it through
+      parsed = rawBalance;
     } catch {
       return;
     }
@@ -266,7 +281,7 @@ function TradeAssetPanelInner() {
     debugLog.log('balance sync', {
       side: isSell ? 'SELL' : 'BUY',
       tokenAddr,
-      liveFormattedBalance,
+      liveFormattedBalance: hookFormatted,
       parsed: String(parsed),
       prevBal:
         exchangeContext?.tradeData?.[
@@ -282,8 +297,10 @@ function TradeAssetPanelInner() {
   }, [
     appAccountAddr,
     tokenAddr,
+    rawBalance,
+    balanceDecimals,
     tokenDecimals,
-    liveFormattedBalance,
+    hookFormatted,
     balanceLoading,
     balanceError,
     isSell,

@@ -43,9 +43,13 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
   >(undefined);
 
   useEffect(() => {
+    // 🔁 On disconnect / no address:
+    //    ➜ DO NOT clear connectedAccount anymore
+    //    ➜ Just log and keep the last known value
     if (!isConnected || !address) {
-      setConnectedAccount(undefined);
-      debugLog.log?.('[ConnectedAccount] cleared (disconnected or no address)');
+      debugLog.log?.(
+        '[ConnectedAccount] disconnect or missing address — preserving previous connectedAccount',
+      );
       return;
     }
 

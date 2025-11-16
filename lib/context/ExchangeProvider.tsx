@@ -271,6 +271,16 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
 
     const nextAddr = isConnected ? (address ?? undefined) : undefined;
 
+    // 🛑 On disconnect / missing address:
+    //     ➜ Do NOT clear accounts.connectedAccount
+    //     ➜ Just log and preserve previous value
+    if (!isConnected || !nextAddr) {
+      debugLog.log?.(
+        '[ExchangeProvider] disconnect or missing address — preserving previous accounts.connectedAccount',
+      );
+      return;
+    }
+
     if (
       lastAppliedAddrRef.current === nextAddr &&
       contextState.accounts?.connectedAccount?.address === nextAddr
@@ -282,14 +292,10 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (prev) => {
         const next = clone(prev);
         (next as any).accounts = (next as any).accounts ?? {};
-        if (nextAddr) {
-          (next as any).accounts.connectedAccount = {
-            ...((next as any).accounts.connectedAccount ?? {}),
-            address: nextAddr,
-          };
-        } else {
-          (next as any).accounts.connectedAccount = undefined;
-        }
+        (next as any).accounts.connectedAccount = {
+          ...((next as any).accounts.connectedAccount ?? {}),
+          address: nextAddr,
+        };
         return next;
       },
       'provider:syncConnectedAccount',
