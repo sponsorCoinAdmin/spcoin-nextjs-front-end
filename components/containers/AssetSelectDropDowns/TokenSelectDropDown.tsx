@@ -144,7 +144,6 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       alert(msg)
       console.log(msg)
     }
-    
     return  tokenContract.symbol ?? 'Select Token'
   }
 
