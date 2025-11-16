@@ -4,13 +4,14 @@
 import { useCallback, useMemo, useRef } from 'react';
 import styles from '@/styles/Exchange.module.css';
 import { ChevronDown } from 'lucide-react';
-import { SP_COIN_DISPLAY } from '@/lib/structure';
+import { SP_COIN_DISPLAY, type TokenContract } from '@/lib/structure';
 import { useBuyTokenContract, useSellTokenContract } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { defaultMissingImage } from '@/lib/network/utils';
 import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
@@ -137,6 +138,12 @@ export default function TokenSelectDropDown({ containerType }: Props) {
     [isSellRoot, openSellList, openBuyList, isVisible, schedulePostChecks]
   );
 
+  function displaySymbol(tokenContract: TokenContract) {
+    if (DEBUG_ENABLED)
+      alert(stringifyBigInt(tokenContract))
+    return  tokenContract.symbol ?? 'Select Token'
+  }
+
   return (
     <div
       id='TokenSelectDropDown'
@@ -159,7 +166,7 @@ export default function TokenSelectDropDown({ containerType }: Props) {
             onError={handleMissingLogoURL}
             data-testid='token-dropdown-avatar'
           />
-          {tokenContract.symbol ?? 'Select Token'}
+          {displaySymbol(tokenContract)}
         </>
       ) : (
         <>Select Token:</>
