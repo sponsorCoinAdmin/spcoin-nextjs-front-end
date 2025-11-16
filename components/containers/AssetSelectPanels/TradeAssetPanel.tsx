@@ -54,7 +54,7 @@ function TradeAssetPanelInner() {
   const { exchangeContext, setSellBalance, setBuyBalance } =
     useExchangeContext();
 
-  const connectedAccountAddr = exchangeContext.accounts?.connectedAccount
+  const activeAccountAddr = exchangeContext.accounts?.activeAccount
     ?.address as Address | undefined;
 
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -226,7 +226,7 @@ function TradeAssetPanelInner() {
   // ────────────────────────────────────────────────────────────────────────────
   // Balance owner & enable flags
   // ────────────────────────────────────────────────────────────────────────────
-  const hasBalanceOwner = Boolean(connectedAccountAddr);
+  const hasBalanceOwner = Boolean(activeAccountAddr);
   const balanceEnabled = Boolean(tokenAddr && chainId && hasBalanceOwner);
 
   // 🔍 Throttled logging of balance hook parameters to avoid noisy spam
@@ -280,7 +280,7 @@ function TradeAssetPanelInner() {
   } = useGetBalance({
     tokenAddress: tokenContract?.address as Address | undefined,
     chainId,
-    userAddress: connectedAccountAddr,
+    userAddress: activeAccountAddr,
     decimalsHint: tokenDecimals,
     // ⬇️ Let useGetBalance self-gate based on user + chain + token
     // enabled: balanceEnabled,
@@ -309,7 +309,7 @@ function TradeAssetPanelInner() {
   // 🔁 Push live balance into ExchangeContext (only when stable / non-loading / no error)
   const prevPushedBalanceRef = useRef<bigint | undefined>(undefined);
   useEffect(() => {
-    if (!tokenAddr || !connectedAccountAddr) return;
+    if (!tokenAddr || !activeAccountAddr) return;
     if (balanceLoading || balanceError) return;
     if (rawBalance == null || (balanceDecimals ?? tokenDecimals) == null) return;
 
@@ -341,7 +341,7 @@ function TradeAssetPanelInner() {
       setBuyBalance?.(parsed);
     }
   }, [
-    connectedAccountAddr,
+    activeAccountAddr,
     tokenAddr,
     rawBalance,
     balanceDecimals,

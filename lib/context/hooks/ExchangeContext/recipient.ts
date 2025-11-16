@@ -6,7 +6,7 @@ export const useRecipientAccount = (): [WalletAccount | undefined, (w: WalletAcc
   return [exchangeContext?.accounts?.recipientAccount, setRecipientAccount];
 };
 
-export const useConnectedAccount = () => {
+export const useActiveAccount = () => {
   const { exchangeContext } = useExchangeContext();
-  return exchangeContext?.accounts?.connectedAccount;
+  return exchangeContext?.accounts?.activeAccount;
 };

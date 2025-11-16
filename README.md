@@ -60,7 +60,7 @@ open http://localhost:3000
 
 #### RFQ Integration on Swap API
 
-The 0x Swap API makes it simple to easily integrate RFQ liquidity for the best pricing. This demo app is setup to enable RFQ liquidity by default because it requires a non-null connectedAccountAddr. For more implement details and the difference between indicative pricing and requesting a firm quote, check out [**How to Integrate RFQ Liquidity**](https://0x.org/docs/0x-swap-api/guides/accessing-rfq-liquidity/how-to-integrate-rfq-liquidity). 
+The 0x Swap API makes it simple to easily integrate RFQ liquidity for the best pricing. This demo app is setup to enable RFQ liquidity by default because it requires a non-null activeAccountAddr. For more implement details and the difference between indicative pricing and requesting a firm quote, check out [**How to Integrate RFQ Liquidity**](https://0x.org/docs/0x-swap-api/guides/accessing-rfq-liquidity/how-to-integrate-rfq-liquidity). 
 
 #### Monetizing Your Swap Integration
 

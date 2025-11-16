@@ -41,7 +41,7 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
     accounts: {
 
       // 🔹 Wallet-linked account (mirrors wagmi connection)
-      connectedAccount: undefined,
+      activeAccount: undefined,
 
       sponsorAccount: undefined,
       recipientAccount: initialContextMap.get('defaultRecipient') as

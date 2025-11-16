@@ -53,7 +53,7 @@ export default function ManageSponsor({ onClose }: Props) {
 
   const doToDo = useCallback(() => {
     setShowToDo(false);
-    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
     const name = sponsorWallet?.name ?? 'N/A';
     const addr = sponsorWallet?.address ?? '(no sponsor selected)';
     const msg =
@@ -63,7 +63,7 @@ export default function ManageSponsor({ onClose }: Props) {
       `Connected account: ${connected ? connected.address : '(none connected)'}`;
     // eslint-disable-next-line no-alert
     alert(msg);
-  }, [ctx?.exchangeContext?.accounts?.connectedAccount, sponsorWallet?.name, sponsorWallet?.address]);
+  }, [ctx?.exchangeContext?.accounts?.activeAccount, sponsorWallet?.name, sponsorWallet?.address]);
 
   const [showToDo, setShowToDo] = useState<boolean>(false);
 

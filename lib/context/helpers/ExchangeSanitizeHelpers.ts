@@ -73,12 +73,12 @@ export const sanitizeExchangeContext = (
 
   // ----- ACCOUNTS
   const sanitizedAccounts = {
-     connectedAccount: raw.accounts?.connectedAccount
+     activeAccount: raw.accounts?.activeAccount
       ? {
-          ...raw.accounts.connectedAccount,
-          balance: raw.accounts.connectedAccount.balance ?? 0n,
+          ...raw.accounts.activeAccount,
+          balance: raw.accounts.activeAccount.balance ?? 0n,
         }
-      : defaultContext.accounts.connectedAccount,
+      : defaultContext.accounts.activeAccount,
 
     sponsorAccount: raw.accounts?.sponsorAccount
       ? {

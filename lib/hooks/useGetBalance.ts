@@ -49,7 +49,7 @@ export type UseGetBalanceParams = {
   chainId?: number;
   /**
    * account address to read for
-   * - if omitted, defaults to exchangeContext.accounts.connectedAccount.address
+   * - if omitted, defaults to exchangeContext.accounts.activeAccount.address
    */
   userAddress?: Address | null;
   /** provide to skip an extra decimals() RPC */
@@ -80,7 +80,7 @@ export function useGetBalance({
   const publicClient = usePublicClient();
 
   const { exchangeContext } = useExchangeContext();
-  const activeAccount = exchangeContext.accounts?.connectedAccount
+  const activeAccount = exchangeContext.accounts?.activeAccount
     ?.address as Address | undefined;
 
   const appChainId = exchangeContext.network?.appChainId;

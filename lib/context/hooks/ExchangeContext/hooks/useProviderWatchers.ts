@@ -166,13 +166,13 @@ export function useProviderWatchers({
       const next = clone(prevCtx);
 
       if (nextSlice.address && isConnected) {
-        const current = next.accounts.connectedAccount ?? ({} as WalletAccount);
-        next.accounts.connectedAccount = {
+        const current = next.accounts.activeAccount ?? ({} as WalletAccount);
+        next.accounts.activeAccount = {
           ...current,
           address: nextSlice.address as Address,
         };
       } else {
-        next.accounts.connectedAccount = undefined as any;
+        next.accounts.activeAccount = undefined as any;
       }
 
       if (next.tradeData.sellTokenContract) next.tradeData.sellTokenContract.balance = 0n;

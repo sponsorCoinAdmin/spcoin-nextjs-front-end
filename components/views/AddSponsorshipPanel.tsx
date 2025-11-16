@@ -173,7 +173,7 @@ const AddSponsorShipPanel: React.FC = () => {
     const resolved = resolveWallet({
       queryUrl: pageQueryUrl,
       recipientMeta: recipientMeta ?? fallbackMeta,
-      connectedWebsite: exchangeContext.accounts?.connectedAccount?.website ?? null,
+      connectedWebsite: exchangeContext.accounts?.activeAccount?.website ?? null,
       fallbackBaseUrl: fallbackBase,
     });
 
@@ -181,7 +181,7 @@ const AddSponsorShipPanel: React.FC = () => {
       queryUrl: pageQueryUrl,
       recipientMeta,
       walletWebsite: (recipientWallet as any)?.website,
-      connectedWebsite: exchangeContext.accounts?.connectedAccount?.website,
+      connectedWebsite: exchangeContext.accounts?.activeAccount?.website,
       fallbackBase,
     });
     return resolved;
@@ -190,7 +190,7 @@ const AddSponsorShipPanel: React.FC = () => {
     recipientMeta,
     recipientWallet?.address,
     (recipientWallet as any)?.website,
-    exchangeContext.accounts?.connectedAccount?.website,
+    exchangeContext.accounts?.activeAccount?.website,
     fallbackBase,
   ]);
 

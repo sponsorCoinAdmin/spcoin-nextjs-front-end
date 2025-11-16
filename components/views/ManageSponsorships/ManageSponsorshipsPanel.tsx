@@ -39,7 +39,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
   const ctx = useContext(ExchangeContextState);
 
   // ⬇️ Pull connected address for AddressSelect default (falls back to empty string)
-  const defaultAddr = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
+  const defaultAddr = String(ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '');
 
   // 🔒 Keep latest selected account type for the ToDo alert across renders
   const accountTypeRef = useRef<AccountType | 'ALL' | ''>('');
@@ -79,7 +79,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
 
   const doToDo = useCallback(() => {
     setShowToDo(false);
-    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
     const sel = String(accountTypeRef.current);
     let msg: string = 'ToDo: (Not Yet Implemented)\n';
     msg += 'Claim: ';
@@ -88,7 +88,7 @@ export default function ManageSponsorshipsPanel({ onClose }: Props) {
     msg += `For account: ${connected ? connected.address : '(none connected)'}`;
     // eslint-disable-next-line no-alert
     alert(msg);
-  }, [ctx?.exchangeContext?.accounts?.connectedAccount]);
+  }, [ctx?.exchangeContext?.accounts?.activeAccount]);
 
   // ✅ Early return happens only after all hooks have been called
   if (!isActive) return null;

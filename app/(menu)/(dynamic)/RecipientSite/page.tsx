@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useExchangeContext } from '@/lib/context/hooks';
-import { useConnectedAccount } from '@/lib/context/ConnectedAccountContext';
+import { useActiveAccount } from '@/lib/context/ActiveAccountContext';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 
 const TAB_STORAGE_KEY = 'header_open_tabs';
@@ -45,21 +45,21 @@ export default function Recipient() {
   const queryUrlParam = searchParams.get('url');
 
   const { exchangeContext } = useExchangeContext();
-  const connectedAccount = useConnectedAccount();
+  const activeAccount = useActiveAccount();
 
   const selectedRecipient = exchangeContext?.accounts?.recipientAccount;
   const recipientWebsite = selectedRecipient?.website;
-  const connectedWebsite = connectedAccount?.website;
+  const connectedWebsite = activeAccount?.website;
 
   // 🔎 Extra debug so we can verify the wallet JSON fields are present (incl. `website`)
   useEffect(() => {
     if (!DEBUG_ENABLED) return;
     dbg('query url =', queryUrlParam);
     dbg('selectedRecipient =', stringifyBigInt(selectedRecipient));
-    dbg('connectedAccount =', stringifyBigInt(connectedAccount));
+    dbg('activeAccount =', stringifyBigInt(activeAccount));
     dbg('selectedRecipient.website =', selectedRecipient?.website);
-    dbg('connectedAccount.website =', connectedAccount?.website);
-  }, [queryUrlParam, selectedRecipient, connectedAccount]);
+    dbg('activeAccount.website =', activeAccount?.website);
+  }, [queryUrlParam, selectedRecipient, activeAccount]);
 
   // Pick the best source for the URL (priority: query param → selected recipient → connected account)
   const chosenUrl = useMemo(() => {
@@ -75,7 +75,7 @@ export default function Recipient() {
     }
     const fromConnected = normalizeUrl(connectedWebsite);
     if (fromConnected) {
-      dbg('Using connected account website:', fromConnected, 'for', connectedAccount?.address);
+      dbg('Using connected account website:', fromConnected, 'for', activeAccount?.address);
       return fromConnected;
     }
     dbg('Falling back to default help page');
@@ -85,7 +85,7 @@ export default function Recipient() {
     recipientWebsite,
     connectedWebsite,
     selectedRecipient?.address,
-    connectedAccount?.address,
+    activeAccount?.address,
   ]);
 
   useEffect(() => {

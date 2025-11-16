@@ -16,14 +16,14 @@ import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
  * ----------------------------------------------*/
 
 const useWagmiERC20TokenBalanceOfRec = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
   return useReadContract({
     abi: erc20ABI,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'balanceOf',
-    args: [connectedAccountAddr || BURN_ADDRESS],
+    args: [activeAccountAddr || BURN_ADDRESS],
     config,
   });
 };
@@ -90,19 +90,19 @@ const useWagmiERC20TokenTotalSupply = (contractAddress: Address | undefined) =>
   useWagmiERC20TokenTotalSupplyRec(contractAddress).data as bigint | undefined;
 
 const useWagmiERC20TokenBalanceOf = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
-  const rec = useWagmiERC20TokenBalanceOfRec(connectedAccountAddr, contractAddress);
+  const rec = useWagmiERC20TokenBalanceOfRec(activeAccountAddr, contractAddress);
   return rec?.data as bigint | undefined;
 };
 
 const useWagmiERC20TokenBalanceOfStr = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
   const bigIntBalanceOf: bigint | undefined = useWagmiERC20TokenBalanceOf(
-    connectedAccountAddr,
+    activeAccountAddr,
     contractAddress
   );
   return bigIntBalanceOf ? bigIntBalanceOf.toString() : '0';
@@ -171,10 +171,10 @@ const useFormattedClientTotalSupply = (contractAddress: Address | undefined) => 
 };
 
 const useFormattedClientBalanceOf = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
-  const balanceOf = useWagmiERC20TokenBalanceOfStr(connectedAccountAddr, contractAddress);
+  const balanceOf = useWagmiERC20TokenBalanceOfStr(activeAccountAddr, contractAddress);
   const decimals = useWagmiERC20TokenDecimals(contractAddress);
   return balanceOf && decimals !== undefined ? formatDecimals(balanceOf, decimals) : '0';
 };

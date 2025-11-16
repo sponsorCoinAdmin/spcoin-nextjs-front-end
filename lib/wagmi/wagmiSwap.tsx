@@ -13,14 +13,14 @@ import { useAppChainId } from '@/lib/context/hooks';
 /* ----------------------------- Read helpers (wagmi) ----------------------------- */
 
 const useWagmiERC20TokenBalanceOfRec = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
   return useReadContract({
     abi: erc20Abi,
     address: contractAddress || BURN_ADDRESS,
     functionName: 'balanceOf',
-    args: [connectedAccountAddr || BURN_ADDRESS],
+    args: [activeAccountAddr || BURN_ADDRESS],
   });
 };
 
@@ -74,18 +74,18 @@ const useWagmiERC20TokenTotalSupply = (contractAddress: Address | undefined) =>
   useWagmiERC20TokenTotalSupplyRec(contractAddress).data as bigint | undefined;
 
 const useWagmiERC20TokenBalanceOf = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
-  return useWagmiERC20TokenBalanceOfRec(connectedAccountAddr, contractAddress)
+  return useWagmiERC20TokenBalanceOfRec(activeAccountAddr, contractAddress)
     .data as bigint | undefined;
 };
 
 const useWagmiERC20TokenBalanceOfStr = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
-  const bigIntBalanceOf = useWagmiERC20TokenBalanceOf(connectedAccountAddr, contractAddress);
+  const bigIntBalanceOf = useWagmiERC20TokenBalanceOf(activeAccountAddr, contractAddress);
   return bigIntBalanceOf ? bigIntBalanceOf.toString() : '0';
 };
 
@@ -152,10 +152,10 @@ const useFormattedClientTotalSupply = (contractAddress: Address | undefined) => 
 };
 
 const useFormattedClientBalanceOf = (
-  connectedAccountAddr: Address | undefined,
+  activeAccountAddr: Address | undefined,
   contractAddress: Address | undefined
 ) => {
-  const balanceOf = useWagmiERC20TokenBalanceOfStr(connectedAccountAddr, contractAddress);
+  const balanceOf = useWagmiERC20TokenBalanceOfStr(activeAccountAddr, contractAddress);
   const decimals = useWagmiERC20TokenDecimals(contractAddress);
   return balanceOf && decimals !== undefined ? formatDecimals(balanceOf, decimals) : '0';
 };

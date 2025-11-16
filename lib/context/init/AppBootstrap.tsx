@@ -5,8 +5,8 @@ import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useConnectedAccount as useUiConnectedAccount } from '@/lib/context/ConnectedAccountContext';
-import { useConnectedAccount as useCtxConnectedAccount } from '@/lib/context/hooks/nestedHooks/useAccounts';
+import { useActiveAccount as useUiActiveAccount } from '@/lib/context/ActiveAccountContext';
+import { useActiveAccount as useCtxActiveAccount } from '@/lib/context/hooks/nestedHooks/useAccounts';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
@@ -22,10 +22,10 @@ type AppBootstrapProps = {
 
 export function AppBootstrap(_props: AppBootstrapProps) {
   // 🔹 UI-level wallet (loaded from wallet.json or fallback)
-  const uiConnectedAccount = useUiConnectedAccount();
+  const uiActiveAccount = useUiActiveAccount();
 
   // 🔹 ExchangeContext-level connected account
-  const [ctxConnectedAccount, setCtxConnectedAccount] = useCtxConnectedAccount();
+  const [ctxActiveAccount, setCtxActiveAccount] = useCtxActiveAccount();
 
   // 🔹 Access to ExchangeContext for appNetwork wiring
   const {
@@ -41,49 +41,49 @@ export function AppBootstrap(_props: AppBootstrapProps) {
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 
   /* ------------------------------------------------------------------------ */
-  /*           1) Mirror UI connectedAccount → ExchangeContext.accounts       */
+  /*           1) Mirror UI activeAccount → ExchangeContext.accounts       */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    const uiAddr = uiConnectedAccount?.address?.toLowerCase?.();
-    const ctxAddr = ctxConnectedAccount?.address?.toLowerCase?.();
+    const uiAddr = uiActiveAccount?.address?.toLowerCase?.();
+    const ctxAddr = ctxActiveAccount?.address?.toLowerCase?.();
 
     debugLog.log?.('🧮 account mirror check', { uiAddr, ctxAddr });
 
-    // No UI connected wallet: intentionally leave ctxConnectedAccount as-is
+    // No UI connected wallet: intentionally leave ctxActiveAccount as-is
     if (!uiAddr) {
       debugLog.log?.(
-        'ℹ️ No UI connectedAccount — leaving context.connectedAccount unchanged',
+        'ℹ️ No UI activeAccount — leaving context.activeAccount unchanged',
       );
       return;
     }
 
-    // Seed context connectedAccount when empty
+    // Seed context activeAccount when empty
     if (!ctxAddr) {
       debugLog.log?.(
-        '🔄 Seeding context.connectedAccount from UI connectedAccount',
+        '🔄 Seeding context.activeAccount from UI activeAccount',
         { uiAddr },
       );
-      setCtxConnectedAccount(uiConnectedAccount);
+      setCtxActiveAccount(uiActiveAccount);
       return;
     }
 
     // Follow when UI wallet switches accounts
     if (uiAddr !== ctxAddr) {
       debugLog.log?.(
-        '🔄 Updating context.connectedAccount to follow UI connectedAccount',
+        '🔄 Updating context.activeAccount to follow UI activeAccount',
         { from: ctxAddr, to: uiAddr },
       );
-      setCtxConnectedAccount(uiConnectedAccount);
+      setCtxActiveAccount(uiActiveAccount);
       return;
     }
 
     // Already in sync
     debugLog.log?.(
-      '✅ context.connectedAccount already matches UI connectedAccount — no-op',
+      '✅ context.activeAccount already matches UI activeAccount — no-op',
       { uiAddr, ctxAddr },
     );
-  }, [uiConnectedAccount, ctxConnectedAccount, setCtxConnectedAccount]);
+  }, [uiActiveAccount, ctxActiveAccount, setCtxActiveAccount]);
 
   /* ------------------------------------------------------------------------ */
   /*                    2) appChainId → appNetwork (display)                  */

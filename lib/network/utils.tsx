@@ -120,33 +120,33 @@ export const getAccountLogo = (account?: WalletAccount): string => {
 
 /* ───────── Active connected-account / token helpers (no network metadata) ───────── */
 
-export const isConnectedAccountAddress = (
+export const isActiveAccountAddress = (
   exchangeContext: ExchangeContext,
   address?: Address,
 ) =>
   address
-    ? address === exchangeContext?.accounts?.connectedAccount?.address
+    ? address === exchangeContext?.accounts?.activeAccount?.address
     : false;
 
-export const isConnectedAccountToken = (
+export const isActiveAccountToken = (
   exchangeContext: ExchangeContext,
   tokenContract: TokenContract,
-) => isConnectedAccountAddress(exchangeContext, tokenContract.address);
+) => isActiveAccountAddress(exchangeContext, tokenContract.address);
 
-export const isConnectedAccountSellToken = (
+export const isActiveAccountSellToken = (
   exchangeContext: ExchangeContext,
 ): boolean =>
   !!exchangeContext?.tradeData?.sellTokenContract &&
-  isConnectedAccountToken(
+  isActiveAccountToken(
     exchangeContext,
     exchangeContext.tradeData.sellTokenContract,
   );
 
-export const isConnectedAccountBuyToken = (
+export const isActiveAccountBuyToken = (
   exchangeContext: ExchangeContext,
 ): boolean =>
   !!exchangeContext?.tradeData?.buyTokenContract &&
-  isConnectedAccountToken(
+  isActiveAccountToken(
     exchangeContext,
     exchangeContext.tradeData.buyTokenContract,
   );
@@ -171,9 +171,9 @@ export const isBurnToken = (tokenContract: TokenContract): boolean =>
 
 /* ───────── Hooks / misc utilities (no network metadata) ───────── */
 
-export const useIsConnectedAccountAddress = (address?: Address): boolean => {
+export const useIsActiveAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
-  return isConnectedAccountAddress(exchangeContext, address);
+  return isActiveAccountAddress(exchangeContext, address);
 };
 
 export const isLowerCase = (input: string): boolean =>

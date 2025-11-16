@@ -27,7 +27,7 @@ const warnMissingAccounts = () => {
 /*                             INDIVIDUAL ACCOUNT HOOKS                       */
 /* -------------------------------------------------------------------------- */
 
-const useConnectedAccount = (): [
+const useActiveAccount = (): [
   WalletAccount | undefined,
   (next: WalletAccount | undefined) => void,
 ] => {
@@ -38,9 +38,9 @@ const useConnectedAccount = (): [
     warnMissingAccounts();
   }
 
-  const connectedAccount = accounts?.connectedAccount;
+  const activeAccount = accounts?.activeAccount;
 
-  const setConnectedAccount = (next: WalletAccount | undefined) => {
+  const setActiveAccount = (next: WalletAccount | undefined) => {
     setExchangeContext((prev) => {
       const cloned = structuredClone(prev);
       if (!cloned.accounts) {
@@ -48,14 +48,14 @@ const useConnectedAccount = (): [
         return cloned;
       }
 
-      const prevVal = cloned.accounts.connectedAccount;
-      debugHookChange('accounts.connectedAccount', prevVal, next);
-      cloned.accounts.connectedAccount = next;
+      const prevVal = cloned.accounts.activeAccount;
+      debugHookChange('accounts.activeAccount', prevVal, next);
+      cloned.accounts.activeAccount = next;
       return cloned;
     });
   };
 
-  return [connectedAccount, setConnectedAccount];
+  return [activeAccount, setActiveAccount];
 };
 
 const useSponsorAccount = (): [
@@ -249,7 +249,7 @@ const useAgentAccounts = (): [
 /* -------------------------------------------------------------------------- */
 
 const useAccounts = () => {
-  const [connectedAccount, setConnectedAccount] = useConnectedAccount();
+  const [activeAccount, setActiveAccount] = useActiveAccount();
 
   const [sponsorAccount, setSponsorAccount] = useSponsorAccount();
   const [recipientAccount, setRecipientAccount] = useRecipientAccount();
@@ -261,13 +261,13 @@ const useAccounts = () => {
 
   // 🔍 Top-level render log to prove the hook is actually running
   debugLog.log?.('🎯 useAccounts render', {
-    ctxConnected: connectedAccount?.address,
+    ctxConnected: activeAccount?.address,
   });
 
   return {
     // single accounts
-    connectedAccount,
-    setConnectedAccount,
+    activeAccount,
+    setActiveAccount,
     sponsorAccount,
     setSponsorAccount,
     recipientAccount,
@@ -291,7 +291,7 @@ const useAccounts = () => {
 
 export {
   useAccounts,
-  useConnectedAccount,
+  useActiveAccount,
   useSponsorAccount,
   useRecipientAccount,
   useAgentAccount,

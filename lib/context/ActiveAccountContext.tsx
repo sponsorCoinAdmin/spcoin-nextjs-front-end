@@ -1,4 +1,4 @@
-// File: lib/context/ConnectedAccountContext.tsx
+// File: lib/context/ActiveAccountContext.tsx
 'use client';
 
 import React, {
@@ -20,35 +20,35 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_CONNECTED_ACCOUNT === 'true';
 
 const debugLog = createDebugLogger(
-  'ConnectedAccountContext',
+  'ActiveAccountContext',
   DEBUG_ENABLED,
   LOG_TIME,
 );
 
-const ConnectedAccountContext = createContext<WalletAccount | undefined>(
+const ActiveAccountContext = createContext<WalletAccount | undefined>(
   undefined,
 );
 
 // 🔹 UI-level hook (RecipientSite, etc.)
 // Note: this is separate from the ExchangeContext nested hook
-export const useConnectedAccount = (): WalletAccount | undefined =>
-  useContext(ConnectedAccountContext);
+export const useActiveAccount = (): WalletAccount | undefined =>
+  useContext(ActiveAccountContext);
 
-export function ConnectedAccountProvider({ children }: { children: ReactNode }) {
+export function ActiveAccountProvider({ children }: { children: ReactNode }) {
   const { address, isConnected } = useAccount();
 
   // ✅ Local state again — no dependency on ExchangeContext
-  const [connectedAccount, setConnectedAccount] = useState<
+  const [activeAccount, setActiveAccount] = useState<
     WalletAccount | undefined
   >(undefined);
 
   useEffect(() => {
     // 🔁 On disconnect / no address:
-    //    ➜ DO NOT clear connectedAccount anymore
+    //    ➜ DO NOT clear activeAccount anymore
     //    ➜ Just log and keep the last known value
     if (!isConnected || !address) {
       debugLog.log?.(
-        '[ConnectedAccount] disconnect or missing address — preserving previous connectedAccount',
+        '[ActiveAccount] disconnect or missing address — preserving previous activeAccount',
       );
       return;
     }
@@ -72,12 +72,12 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
         const wallet: WalletAccount = { ...metadata, address };
 
         if (!ac.signal.aborted) {
-          setConnectedAccount(wallet);
+          setActiveAccount(wallet);
           debugLog.log?.(
-            '[ConnectedAccount] loaded wallet.json →',
+            '[ActiveAccount] loaded wallet.json →',
             stringifyBigInt(wallet),
           );
-          debugLog.log?.('[ConnectedAccount] website =', wallet.website);
+          debugLog.log?.('[ActiveAccount] website =', wallet.website);
         }
       } catch {
         const fallback: WalletAccount = {
@@ -93,12 +93,12 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
         };
 
         if (!ac.signal.aborted) {
-          setConnectedAccount(fallback);
+          setActiveAccount(fallback);
           debugLog.log?.(
-            '[ConnectedAccount] fallback wallet →',
+            '[ActiveAccount] fallback wallet →',
             stringifyBigInt(fallback),
           );
-          debugLog.log?.('[ConnectedAccount] website(fallback) = ""');
+          debugLog.log?.('[ActiveAccount] website(fallback) = ""');
         }
       }
     })();
@@ -107,8 +107,8 @@ export function ConnectedAccountProvider({ children }: { children: ReactNode }) 
   }, [address, isConnected]);
 
   return (
-    <ConnectedAccountContext.Provider value={connectedAccount}>
+    <ActiveAccountContext.Provider value={activeAccount}>
       {children}
-    </ConnectedAccountContext.Provider>
+    </ActiveAccountContext.Provider>
   );
 }

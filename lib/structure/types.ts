@@ -61,7 +61,7 @@ export type ContractRecs = {
  * All known accounts tracked by the app.
  */
 export type Accounts = {
-  connectedAccount?: WalletAccount;
+  activeAccount?: WalletAccount;
   sponsorAccount?: WalletAccount;
   recipientAccount?: WalletAccount;
   agentAccount?: WalletAccount;
@@ -138,7 +138,7 @@ export interface PriceRequestParams {
   chainId: number;
   buyAmount?: string;
   buyToken: Address | string;
-  connectedAccountAddr?: string;
+  activeAccountAddr?: string;
   sellAmount?: string;
   sellToken: Address | string;
   slippageBps?: number;

@@ -13,7 +13,7 @@ type Props = { isLoadingPrice: boolean };
 const PriceButton = ({ isLoadingPrice }: Props) => {
   const show = usePanelVisible(SP.PRICE_BUTTON);
   const { exchangeContext } = useExchangeContext();
-  const walletAddress = exchangeContext?.accounts?.connectedAccount?.address;
+  const walletAddress = exchangeContext?.accounts?.activeAccount?.address;
 
   if (!show) return null;
 

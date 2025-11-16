@@ -72,7 +72,7 @@ export default function ManageWalletList({
   const doToDo = useCallback(() => {
     setShowToDo(false);
 
-    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
     const pending = pendingClaimRef.current ?? { type: accountType, accountId: -1 };
 
     const isTotal = pending.accountId < 0 || pending.accountId >= walletList.length;
@@ -115,7 +115,7 @@ export default function ManageWalletList({
         `For account: ${connected ? connected.address : '(none connected)'}`,
       ].join('\n')
     );
-  }, [accountType, ctx?.exchangeContext?.accounts?.connectedAccount, walletList]);
+  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, walletList]);
 
   // Scoped ids to avoid CSS collisions across pages
   const wrapperId = `${idPrefix}Wrapper`;
@@ -134,7 +134,7 @@ export default function ManageWalletList({
   const zebraB = 'bg-[rgba(156,163,175,0.25)]';
 
   // 🔗 Connected address for AddressSelect default, and stable instance id for display scope
-  const connectedAddress = String(ctx?.exchangeContext?.accounts?.connectedAccount?.address ?? '');
+  const connectedAddress = String(ctx?.exchangeContext?.accounts?.activeAccount?.address ?? '');
   const chainId = ctx?.exchangeContext?.network?.chainId ?? 1;
   const instanceId = useMemo(
     () => `${idPrefix.toUpperCase()}_${(SP_COIN_DISPLAY as any)[containerType]}_${chainId}`,

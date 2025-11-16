@@ -23,7 +23,7 @@ export function useExchangeTokenBalances() {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
   const chainId = exchangeContext?.network?.chainId ?? 0;
-  const account = exchangeContext?.accounts?.connectedAccount?.address as Address | undefined;
+  const account = exchangeContext?.accounts?.activeAccount?.address as Address | undefined;
 
   const sellAddr = useMemo(
     () => lower(exchangeContext?.tradeData?.sellTokenContract?.address),

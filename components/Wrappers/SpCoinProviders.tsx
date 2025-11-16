@@ -5,7 +5,7 @@ import * as React from 'react';
 import SpCoinConfig from '@/components/Wrappers/SpCoinConfig';
 import { config } from '@/lib/wagmi/wagmiConfig';
 import { PageStateProvider } from '@/lib/context/PageStateContext';
-import { ConnectedAccountProvider } from '@/lib/context/ConnectedAccountContext';
+import { ActiveAccountProvider } from '@/lib/context/ActiveAccountContext';
 import { ExchangeProvider } from '@/lib/context/ExchangeProvider';
 import AppChainController from '@/lib/network/AppChainController';
 
@@ -13,13 +13,13 @@ export default function SpCoinProviders({ children }: { children: React.ReactNod
   return (
     <SpCoinConfig config={config}>
       <PageStateProvider>
-        <ConnectedAccountProvider>
+        <ActiveAccountProvider>
           <ExchangeProvider>
             {/* Anything that calls useExchangeContext/useAppChainId must be below this line */}
             <AppChainController />
             {children}
           </ExchangeProvider>
-        </ConnectedAccountProvider>
+        </ActiveAccountProvider>
       </PageStateProvider>
     </SpCoinConfig>
   );

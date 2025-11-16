@@ -12,7 +12,7 @@ export default function ManageAccountsPage() {
 
   // Exchange context → connected account for Public Key
   const ctx = useContext(ExchangeContextState);
-  const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+  const connected = ctx?.exchangeContext?.accounts?.activeAccount;
 
   const headerStyle =
     'text-xl font-semibold mb-2 text-[#5981F3] group-hover:text-[#000000] transition-colors';
@@ -142,15 +142,27 @@ export default function ManageAccountsPage() {
   const getTotal = (data: { pending: number }[]) =>
     data
       .reduce((acc, curr) => acc + curr.pending, 0)
-      .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      .toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
   // 🔴 For fields below "Public Key": red text only; keep white border/background unchanged
   const todoInputClasses =
     'w-[46ch] max-w-full p-2 bg-[#1A1D2E] rounded border border-white text-[#ff1a1a] focus:outline-none focus:ring-0';
 
+  // For the three "ToDo" rows under Public Key
+  const summaryFields = [
+    { id: 'tradeBalance', label: 'Trade Balance' },
+    { id: 'sponsoredBalance', label: 'Sponsored Balance' },
+    { id: 'totalBalance', label: 'Total Balance' },
+  ] as const;
+
   return (
     <main className="min-h-screen p-8 bg-black text-white">
-      <h1 className="text-center text-2xl font-bold mb-8 text-[#E5B94F]">Manage Accounts</h1>
+      <h1 className="text-center text-2xl font-bold mb-8 text-[#E5B94F]">
+        Manage Accounts
+      </h1>
 
       <div className="flex justify-center gap-6 mb-6">
         {[
@@ -177,9 +189,15 @@ export default function ManageAccountsPage() {
         <div className="space-y-4">
           {/* Public Key (populated from connected account) */}
           <div className="flex items-center gap-4">
-            <label className="w-48 font-medium whitespace-nowrap">Public Key</label>
+            <label
+              htmlFor="connectedPublicKey"
+              className="w-48 font-medium whitespace-nowrap"
+            >
+              Public Key
+            </label>
             <div className="flex-1">
               <input
+                id="connectedPublicKey"
                 type="text"
                 placeholder="0x..."
                 value={accountKey}
@@ -189,20 +207,42 @@ export default function ManageAccountsPage() {
             </div>
           </div>
 
-          {/* New row directly under Public Key: SpCoin Contract (blank label field with "ToDo:" text in red) */}
+          {/* New row directly under Public Key: SpCoin Contract */}
           <div className="flex items-center gap-4">
-            <label className="w-48 font-medium whitespace-nowrap">SpCoin Contract</label>
+            <label
+              htmlFor="spCoinContract"
+              className="w-48 font-medium whitespace-nowrap"
+            >
+              SpCoin Contract
+            </label>
             <div className="flex-1">
-              <input type="text" value="ToDo:" readOnly className={todoInputClasses} />
+              <input
+                id="spCoinContract"
+                type="text"
+                value="ToDo:"
+                readOnly
+                className={todoInputClasses}
+              />
             </div>
           </div>
 
           {/* Fields below Public Key default to "ToDo:" with red text only */}
-          {['Trade Balance', 'Sponsored Balance', 'Total Balance'].map((label) => (
-            <div key={label} className="flex items-center gap-4">
-              <label className="w-48 font-medium whitespace-nowrap">{label}</label>
+          {summaryFields.map(({ id, label }) => (
+            <div key={id} className="flex items-center gap-4">
+              <label
+                htmlFor={id}
+                className="w-48 font-medium whitespace-nowrap"
+              >
+                {label}
+              </label>
               <div className="flex-1">
-                <input type="text" value="ToDo:" readOnly className={todoInputClasses} />
+                <input
+                  id={id}
+                  type="text"
+                  value="ToDo:"
+                  readOnly
+                  className={todoInputClasses}
+                />
               </div>
             </div>
           ))}
@@ -237,9 +277,13 @@ export default function ManageAccountsPage() {
                 </tr>
               ))}
               <tr className="border-t border-gray-600">
-                <td className="py-2 font-semibold text-white">Total Pending Rewards</td>
+                <td className="py-2 font-semibold text-white">
+                  Total Pending Rewards
+                </td>
                 <td colSpan={2}></td>
-                <td className="py-2 font-semibold text-white">{getTotal(recipientData)}</td>
+                <td className="py-2 font-semibold text-white">
+                  {getTotal(recipientData)}
+                </td>
                 <td className="text-right">
                   <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">
                     Claim All
@@ -279,9 +323,13 @@ export default function ManageAccountsPage() {
                 </tr>
               ))}
               <tr className="border-t border-gray-600">
-                <td className="py-2 font-semibold text-white">Total Pending Rewards</td>
+                <td className="py-2 font-semibold text-white">
+                  Total Pending Rewards
+                </td>
                 <td colSpan={2}></td>
-                <td className="py-2 font-semibold text-white">{getTotal(sponsorData)}</td>
+                <td className="py-2 font-semibold text-white">
+                  {getTotal(sponsorData)}
+                </td>
                 <td className="text-right">
                   <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">
                     Claim All
@@ -321,9 +369,13 @@ export default function ManageAccountsPage() {
                 </tr>
               ))}
               <tr className="border-t border-gray-600">
-                <td className="py-2 font-semibold text-white">Total Pending Rewards</td>
+                <td className="py-2 font-semibold text-white">
+                  Total Pending Rewards
+                </td>
                 <td colSpan={2}></td>
-                <td className="py-2 font-semibold text-white">{getTotal(agentData)}</td>
+                <td className="py-2 font-semibold text-white">
+                  {getTotal(agentData)}
+                </td>
                 <td className="text-right">
                   <button className="bg-[#E5B94F] hover:bg-[#cfa52f] text-black font-semibold px-4 py-1 rounded">
                     Claim All

@@ -74,7 +74,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
   const doToDo = useCallback(() => {
     setShowToDo(false);
 
-    const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+    const connected = ctx?.exchangeContext?.accounts?.activeAccount;
     const pending = pendingClaimRef.current ?? { type: accountType };
 
     // eslint-disable-next-line no-alert
@@ -87,7 +87,7 @@ export default function ManageWallet({ wallet, onClose }: Props) {
         `For account: ${connected ? connected.address : '(none connected)'}`,
       ].join('\n')
     );
-  }, [accountType, ctx?.exchangeContext?.accounts?.connectedAccount, name, address]);
+  }, [accountType, ctx?.exchangeContext?.accounts?.activeAccount, name, address]);
 
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-300/80';
   const cell = 'px-3 py-3 text-sm align-middle';

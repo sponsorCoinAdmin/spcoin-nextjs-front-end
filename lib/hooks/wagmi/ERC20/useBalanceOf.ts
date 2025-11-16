@@ -13,19 +13,19 @@ type UseBalanceOfParams = {
   token?: Address;
   /** Gate the query */
   enabled?: boolean;
-  /** If true, mirror into accounts.connectedAccount.balance when user === connected */
-  mirrorConnectedAccount?: boolean;
+  /** If true, mirror into accounts.activeAccount.balance when user === connected */
+  mirrorActiveAccount?: boolean;
 };
 
 export function useBalanceOf({
   user,
   token,
   enabled = true,
-  mirrorConnectedAccount = false,
+  mirrorActiveAccount = false,
 }: UseBalanceOfParams) {
   const { exchangeContext, setExchangeContext } = useExchangeContext();
 
-  const connected = exchangeContext.accounts?.connectedAccount?.address as Address | undefined;
+  const connected = exchangeContext.accounts?.activeAccount?.address as Address | undefined;
   const userAddress = (user ?? connected) as Address | undefined;
 
   const isEnabled = Boolean(userAddress) && enabled;
@@ -38,9 +38,9 @@ export function useBalanceOf({
     query: { enabled: isEnabled },
   });
 
-  // Optional: mirror into connectedAccount.balance snapshot (for debug/persistence)
+  // Optional: mirror into activeAccount.balance snapshot (for debug/persistence)
   useEffect(() => {
-    if (!mirrorConnectedAccount) return;
+    if (!mirrorActiveAccount) return;
     if (!userAddress || !connected) return;
     if (userAddress.toLowerCase() !== connected.toLowerCase()) return;
 
@@ -48,17 +48,17 @@ export function useBalanceOf({
     if (v === undefined) return;
 
     setExchangeContext((prev) => {
-      const ca = prev.accounts?.connectedAccount;
+      const ca = prev.accounts?.activeAccount;
       if (!ca || ca.balance === v) return prev;
       return {
         ...prev,
         accounts: {
           ...prev.accounts,
-          connectedAccount: { ...ca, balance: v },
+          activeAccount: { ...ca, balance: v },
         },
       };
     });
-  }, [mirrorConnectedAccount, userAddress, connected, result.data?.value, setExchangeContext]);
+  }, [mirrorActiveAccount, userAddress, connected, result.data?.value, setExchangeContext]);
 
   return result;
 }

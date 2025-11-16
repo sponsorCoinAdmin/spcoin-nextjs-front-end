@@ -20,7 +20,7 @@ const debugLog = createDebugLogger('initExchangeContext', DEBUG_ENABLED, LOG_TIM
 /**
  * NOTE (contract with ExchangeProvider):
  * - Hydrates ExchangeContext from localStorage (if present) and sanitizes it for the given chainId.
- * - May enrich `accounts.connectedAccount` with metadata for a connected wallet.
+ * - May enrich `accounts.activeAccount` with metadata for a connected wallet.
  * - Does NOT create or mutate any panel state (`settings.spCoinPanelTree`, etc.). Panel state is owned by the Provider.
  */
 export async function initExchangeContext(
@@ -55,10 +55,10 @@ export async function initExchangeContext(
   if (isConnected && address && isProbablyClient() && isAddress(address)) {
     try {
       const meta = await loadWalletMetadata(address);
-      sanitized.accounts.connectedAccount = meta;
+      sanitized.accounts.activeAccount = meta;
     } catch (err) {
       debugLog.error('⛔ Wallet metadata load failed; falling back.', err);
-      sanitized.accounts.connectedAccount = makeWalletFallback(
+      sanitized.accounts.activeAccount = makeWalletFallback(
         address,
         STATUS.MESSAGE_ERROR,
         `Account ${address} metadata could not be loaded`

@@ -86,7 +86,7 @@ const dumpSwapState = (swapType: any) => {
  * Refresh a user's token balance in the UI.
  */
 const updateBalance = async (
-  connectedAccountAddr: string | undefined | null,
+  activeAccountAddr: string | undefined | null,
   tokenContract: TokenContract,
   setBalance: (balance: string) => void
 ) => {
@@ -94,7 +94,7 @@ const updateBalance = async (
   let balance: string = 'N/A'
   let errMsg = 'N/A'
 
-  if (connectedAccountAddr) {
+  if (activeAccountAddr) {
     try {
       const retResponse = await getWagmiBalanceOfRec(tokenContract.address)
       balance = retResponse.formatted

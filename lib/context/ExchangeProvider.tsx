@@ -262,7 +262,7 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     );
   }, [isConnected, wagmiChainId, contextState, setExchangeContext]);
 
-  /* 🔐 Authoritative sync of connectedAccount from Wagmi */
+  /* 🔐 Authoritative sync of activeAccount from Wagmi */
   const lastAppliedAddrRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
@@ -271,18 +271,18 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
     const nextAddr = isConnected ? (address ?? undefined) : undefined;
 
     // 🛑 On disconnect / missing address:
-    //     ➜ Do NOT clear accounts.connectedAccount
+    //     ➜ Do NOT clear accounts.activeAccount
     //     ➜ Just log and preserve previous value
     if (!isConnected || !nextAddr) {
       debugLog.log?.(
-        '[ExchangeProvider] disconnect or missing address — preserving previous accounts.connectedAccount',
+        '[ExchangeProvider] disconnect or missing address — preserving previous accounts.activeAccount',
       );
       return;
     }
 
     if (
       lastAppliedAddrRef.current === nextAddr &&
-      contextState.accounts?.connectedAccount?.address === nextAddr
+      contextState.accounts?.activeAccount?.address === nextAddr
     ) {
       return;
     }
@@ -291,13 +291,13 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
       (prev) => {
         const next = clone(prev);
         (next as any).accounts = (next as any).accounts ?? {};
-        (next as any).accounts.connectedAccount = {
-          ...((next as any).accounts.connectedAccount ?? {}),
+        (next as any).accounts.activeAccount = {
+          ...((next as any).accounts.activeAccount ?? {}),
           address: nextAddr,
         };
         return next;
       },
-      'provider:syncConnectedAccount',
+      'provider:syncActiveAccount',
     );
 
     lastAppliedAddrRef.current = nextAddr;
@@ -306,18 +306,18 @@ export function ExchangeProvider({ children }: { children: React.ReactNode }) {
   // 🩹 Repair after rehydrate (in case storage clobbers a live connection)
   useEffect(() => {
     if (!contextState) return;
-    if (isConnected && address && !contextState.accounts?.connectedAccount?.address) {
+    if (isConnected && address && !contextState.accounts?.activeAccount?.address) {
       setExchangeContext(
         (prev) => {
           const next = clone(prev);
           (next as any).accounts = (next as any).accounts ?? {};
-          (next as any).accounts.connectedAccount = {
-            ...((next as any).accounts.connectedAccount ?? {}),
+          (next as any).accounts.activeAccount = {
+            ...((next as any).accounts.activeAccount ?? {}),
             address,
           };
           return next;
         },
-        'provider:rehydrateRepairConnectedAccount',
+        'provider:rehydrateRepairActiveAccount',
       );
       lastAppliedAddrRef.current = address;
     }

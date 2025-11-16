@@ -19,7 +19,7 @@ interface RecipientFormData {
 export default function CreateRecipientAccountPage() {
   // ⬇️ Connected account → Public Key (read-only)
   const ctx = useContext(ExchangeContextState);
-  const connected = ctx?.exchangeContext?.accounts?.connectedAccount;
+  const connected = ctx?.exchangeContext?.accounts?.activeAccount;
 
   const [publicKey, setPublicKey] = useState<string>('');
   useEffect(() => {
