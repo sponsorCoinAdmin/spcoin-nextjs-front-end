@@ -1,3 +1,4 @@
+// File: app/(menu)/_providers/AppBootstrap.tsx (or similar – adjust path if needed)
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -5,7 +6,7 @@ import type { ReactNode } from 'react';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useConnectedAccount as useUiConnectedAccount } from '@/lib/context/ConnectedAccountContext';
-import { useAppAccount } from '@/lib/context/hooks/nestedHooks/useAccounts';
+import { useConnectedAccount as useCtxConnectedAccount } from '@/lib/context/hooks/nestedHooks/useAccounts';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
@@ -21,10 +22,10 @@ type AppBootstrapProps = {
 
 export function AppBootstrap(_props: AppBootstrapProps) {
   // 🔹 UI-level wallet (loaded from wallet.json or fallback)
-  const connectedAccount = useUiConnectedAccount();
+  const uiConnectedAccount = useUiConnectedAccount();
 
-  // 🔹 App-level account stored in ExchangeContext
-  const [appAccount, setAppAccount] = useAppAccount();
+  // 🔹 ExchangeContext-level connected account
+  const [ctxConnectedAccount, setCtxConnectedAccount] = useCtxConnectedAccount();
 
   // 🔹 Access to ExchangeContext for appNetwork wiring
   const {
@@ -40,48 +41,49 @@ export function AppBootstrap(_props: AppBootstrapProps) {
   const prevAppChainIdRef = useRef<number | undefined>(undefined);
 
   /* ------------------------------------------------------------------------ */
-  /*                    1) appAccount ⇄ connectedAccount                      */
+  /*           1) Mirror UI connectedAccount → ExchangeContext.accounts       */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    const connectedAddr = connectedAccount?.address?.toLowerCase?.();
-    const appAddr = appAccount?.address?.toLowerCase?.();
+    const uiAddr = uiConnectedAccount?.address?.toLowerCase?.();
+    const ctxAddr = ctxConnectedAccount?.address?.toLowerCase?.();
 
-    debugLog.log?.('🧮 account mirror check', { connectedAddr, appAddr });
+    debugLog.log?.('🧮 account mirror check', { uiAddr, ctxAddr });
 
-    // No connected wallet: intentionally leave appAccount as-is (offline memory)
-    if (!connectedAddr) {
+    // No UI connected wallet: intentionally leave ctxConnectedAccount as-is
+    if (!uiAddr) {
       debugLog.log?.(
-        'ℹ️ No connectedAccount — leaving appAccount unchanged',
+        'ℹ️ No UI connectedAccount — leaving context.connectedAccount unchanged',
       );
       return;
     }
 
-    // Seed appAccount when empty
-    if (!appAddr) {
-      debugLog.log?.('🔄 Seeding appAccount from connectedAccount', {
-        connectedAddr,
-      });
-      setAppAccount(connectedAccount);
+    // Seed context connectedAccount when empty
+    if (!ctxAddr) {
+      debugLog.log?.(
+        '🔄 Seeding context.connectedAccount from UI connectedAccount',
+        { uiAddr },
+      );
+      setCtxConnectedAccount(uiConnectedAccount);
       return;
     }
 
-    // Follow wallet when it switches accounts
-    if (connectedAddr !== appAddr) {
-      debugLog.log?.('🔄 Updating appAccount to follow connectedAccount', {
-        from: appAddr,
-        to: connectedAddr,
-      });
-      setAppAccount(connectedAccount);
+    // Follow when UI wallet switches accounts
+    if (uiAddr !== ctxAddr) {
+      debugLog.log?.(
+        '🔄 Updating context.connectedAccount to follow UI connectedAccount',
+        { from: ctxAddr, to: uiAddr },
+      );
+      setCtxConnectedAccount(uiConnectedAccount);
       return;
     }
 
     // Already in sync
-    debugLog.log?.('✅ appAccount already matches connectedAccount — no-op', {
-      connectedAddr,
-      appAddr,
-    });
-  }, [connectedAccount, appAccount, setAppAccount]);
+    debugLog.log?.(
+      '✅ context.connectedAccount already matches UI connectedAccount — no-op',
+      { uiAddr, ctxAddr },
+    );
+  }, [uiConnectedAccount, ctxConnectedAccount, setCtxConnectedAccount]);
 
   /* ------------------------------------------------------------------------ */
   /*                    2) appChainId → appNetwork (display)                  */

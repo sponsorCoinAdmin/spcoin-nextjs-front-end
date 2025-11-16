@@ -2,12 +2,20 @@
 
 import { useExchangeContext } from '@/lib/context/hooks';
 import type { Address } from 'viem';
-import type { ExchangeContext, TokenContract, TradeData, WalletAccount } from '@/lib/structure';
+import type {
+  ExchangeContext,
+  TokenContract,
+  TradeData,
+  WalletAccount,
+} from '@/lib/structure';
 import { FEED_TYPE } from '@/lib/structure';
 import { isAddress, getAddress } from 'viem';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { headOk } from '@/lib/rest/http';
-import { NATIVE_TOKEN_ADDRESS, BURN_ADDRESS } from '../structure/constants/addresses';
+import {
+  NATIVE_TOKEN_ADDRESS,
+  BURN_ADDRESS,
+} from '../structure/constants/addresses';
 
 // Debug logging
 const LOG_TIME = false;
@@ -16,8 +24,10 @@ const debugLog = createDebugLogger('NetworkUtils', DEBUG_ENABLED, LOG_TIME);
 
 /* ───────── Asset/logo utilities (no network metadata) ───────── */
 
-export const defaultMissingImage = '/assets/miscellaneous/QuestionBlackOnRed.png';
-export const badTokenAddressImage = '/assets/miscellaneous/badTokenAddressImage.png';
+export const defaultMissingImage =
+  '/assets/miscellaneous/QuestionBlackOnRed.png';
+export const badTokenAddressImage =
+  '/assets/miscellaneous/badTokenAddressImage.png';
 
 // Minimal client-side existence cache for logo paths
 const logoExistenceCache = new Map<string, boolean>();
@@ -44,20 +54,23 @@ async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
 export const getLogoURL = async (
   chainId: number | undefined,
   address: Address,
-  dataFeedType: FEED_TYPE
+  dataFeedType: FEED_TYPE,
 ): Promise<string> => {
   const raw = (address ?? '').trim();
   if (!raw) return defaultMissingImage;
 
   // Enforce EIP-55 checksum casing so paths match case-sensitive files on Linux.
-  const addr = isAddress(raw) ? (getAddress(raw) as Address) : (raw as Address);
+  const addr = isAddress(raw)
+    ? (getAddress(raw) as Address)
+    : (raw as Address);
 
   const path =
     dataFeedType === FEED_TYPE.TOKEN_LIST
       ? `/assets/blockchains/${chainId ?? 1}/contracts/${addr}/logo.png`
-      : dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS || dataFeedType === FEED_TYPE.AGENT_ACCOUNTS
-      ? `/assets/accounts/${addr}/logo.png`
-      : '';
+      : dataFeedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+          dataFeedType === FEED_TYPE.AGENT_ACCOUNTS
+        ? `/assets/accounts/${addr}/logo.png`
+        : '';
 
   if (!path) return defaultMissingImage;
 
@@ -72,7 +85,9 @@ export const getLogoURL = async (
 
 export type RequiredAssetMembers = { address: string; chainId: number };
 
-export const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): string => {
+export const getTokenLogoURL = (
+  requiredAssetMembers?: RequiredAssetMembers,
+): string => {
   if (!requiredAssetMembers || !isAddress(requiredAssetMembers.address)) {
     return badTokenAddressImage;
   }
@@ -83,7 +98,10 @@ export const getTokenLogoURL = (requiredAssetMembers?: RequiredAssetMembers): st
   return logoURL;
 };
 
-export const getAddressLogoURL = (address: string, chainId: number): string => {
+export const getAddressLogoURL = (
+  address: string,
+  chainId: number,
+): string => {
   if (isAddress(address)) {
     const checksummed = getAddress(address);
     const logoURL = `/assets/blockchains/${chainId}/contracts/${checksummed}/logo.png`;
@@ -100,23 +118,41 @@ export const getAccountLogo = (account?: WalletAccount): string => {
   return `/assets/accounts/${checksummed}/logo.png`;
 };
 
-/* ───────── Active account / token helpers (no network metadata) ───────── */
+/* ───────── Active connected-account / token helpers (no network metadata) ───────── */
 
-export const isAppAccountAddress = (exchangeContext: ExchangeContext, address?: Address) =>
-  address ? address === exchangeContext?.accounts?.connectedAccount?.address : false;
+export const isConnectedAccountAddress = (
+  exchangeContext: ExchangeContext,
+  address?: Address,
+) =>
+  address
+    ? address === exchangeContext?.accounts?.connectedAccount?.address
+    : false;
 
-export const isAppAccountToken = (exchangeContext: ExchangeContext, tokenContract: TokenContract) =>
-  isAppAccountAddress(exchangeContext, tokenContract.address);
+export const isConnectedAccountToken = (
+  exchangeContext: ExchangeContext,
+  tokenContract: TokenContract,
+) => isConnectedAccountAddress(exchangeContext, tokenContract.address);
 
-export const isAppAccountSellToken = (exchangeContext: ExchangeContext): boolean =>
+export const isConnectedAccountSellToken = (
+  exchangeContext: ExchangeContext,
+): boolean =>
   !!exchangeContext?.tradeData?.sellTokenContract &&
-  isAppAccountToken(exchangeContext, exchangeContext.tradeData.sellTokenContract);
+  isConnectedAccountToken(
+    exchangeContext,
+    exchangeContext.tradeData.sellTokenContract,
+  );
 
-export const isAppAccountBuyToken = (exchangeContext: ExchangeContext): boolean =>
+export const isConnectedAccountBuyToken = (
+  exchangeContext: ExchangeContext,
+): boolean =>
   !!exchangeContext?.tradeData?.buyTokenContract &&
-  isAppAccountToken(exchangeContext, exchangeContext.tradeData.buyTokenContract);
+  isConnectedAccountToken(
+    exchangeContext,
+    exchangeContext.tradeData.buyTokenContract,
+  );
 
-export const isNativeTokenAddress = (address?: Address): boolean => address === NATIVE_TOKEN_ADDRESS;
+export const isNativeTokenAddress = (address?: Address): boolean =>
+  address === NATIVE_TOKEN_ADDRESS;
 
 export const isNativeToken = (tokenContract: TokenContract): boolean =>
   isNativeTokenAddress(tokenContract.address);
@@ -127,19 +163,21 @@ export const isNativeSellToken = (tradeData: TradeData): boolean =>
 export const isNativeBuyToken = (tradeData: TradeData): boolean =>
   !!tradeData.buyTokenContract && isNativeToken(tradeData.buyTokenContract);
 
-export const isBurnTokenAddress = (address?: Address): boolean => address === BURN_ADDRESS;
+export const isBurnTokenAddress = (address?: Address): boolean =>
+  address === BURN_ADDRESS;
 
 export const isBurnToken = (tokenContract: TokenContract): boolean =>
   !!tokenContract?.address && isBurnTokenAddress(tokenContract.address);
 
 /* ───────── Hooks / misc utilities (no network metadata) ───────── */
 
-export const useIsAppAccountAddress = (address?: Address): boolean => {
+export const useIsConnectedAccountAddress = (address?: Address): boolean => {
   const { exchangeContext } = useExchangeContext();
-  return isAppAccountAddress(exchangeContext, address);
+  return isConnectedAccountAddress(exchangeContext, address);
 };
 
-export const isLowerCase = (input: string): boolean => input === input.toLowerCase();
+export const isLowerCase = (input: string): boolean =>
+  input === input.toLowerCase();
 
 export function delay(ms: number | undefined) {
   return new Promise((resolve) => setTimeout(resolve, ms));

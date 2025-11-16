@@ -2,8 +2,6 @@
 
 'use client';
 
-import { useEffect } from 'react';
-
 import { useExchangeContext } from '@/lib/context/hooks';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
@@ -247,39 +245,11 @@ const useAgentAccounts = (): [
 };
 
 /* -------------------------------------------------------------------------- */
-/*                            ACTIVE ACCOUNT HOOK                              */
-/* -------------------------------------------------------------------------- */
-
-const useAppAccount = (): [
-  WalletAccount | undefined,
-  (acc?: WalletAccount) => void,
-] => {
-  const { exchangeContext, setExchangeContext } = useExchangeContext();
-  const active = exchangeContext.accounts?.appAccount;
-
-  const setAppAccount = (next?: WalletAccount) => {
-    setExchangeContext((prev) => {
-      const cloned = structuredClone(prev);
-      cloned.accounts = cloned.accounts ?? {};
-
-      const prevVal = cloned.accounts.appAccount;
-      debugHookChange('accounts.appAccount', prevVal, next);
-      cloned.accounts.appAccount = next;
-
-      return cloned;
-    });
-  };
-
-  return [active, setAppAccount];
-};
-
-/* -------------------------------------------------------------------------- */
 /*                                AGGREGATE HOOK                              */
 /* -------------------------------------------------------------------------- */
 
 const useAccounts = () => {
   const [connectedAccount, setConnectedAccount] = useConnectedAccount();
-  const [appAccount, setAppAccount] = useAppAccount();
 
   const [sponsorAccount, setSponsorAccount] = useSponsorAccount();
   const [recipientAccount, setRecipientAccount] = useRecipientAccount();
@@ -292,63 +262,9 @@ const useAccounts = () => {
   // 🔍 Top-level render log to prove the hook is actually running
   debugLog.log?.('🎯 useAccounts render', {
     ctxConnected: connectedAccount?.address,
-    ctxActive: appAccount?.address,
   });
 
-  // 🔄 Mirror logic:
-  // - If connectedAccount becomes defined and appAccount is empty → seed from connected.
-  // - If connectedAccount switches to a different address → overwrite appAccount.
-  // - If connectedAccount becomes undefined → keep appAccount as-is.
-  useEffect(() => {
-    const connectedAddr = connectedAccount?.address?.toLowerCase?.();
-    const activeAddr = appAccount?.address?.toLowerCase?.();
-
-    alert("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
-
-    debugLog.log?.('🧮 mirrorEffect check', {
-      connectedAddr,
-      activeAddr,
-    });
-
-    // If there is no connected wallet, we deliberately DO NOT clear appAccount.
-    if (!connectedAddr) {
-      debugLog.log?.(
-        'ℹ️ connectedAccount is undefined — leaving appAccount unchanged',
-      );
-      return;
-    }
-
-    // Seed when empty
-    if (!activeAddr) {
-      debugLog.log?.('🔄 Seeding appAccount from connectedAccount', {
-        connectedAddr,
-        activeAddr,
-      });
-      setAppAccount(connectedAccount);
-      return;
-    }
-
-    // Update on wallet switch
-    if (connectedAddr !== activeAddr) {
-      debugLog.log?.('🔄 Updating appAccount to follow connectedAccount', {
-        connectedAddr,
-        previousActive: activeAddr,
-      });
-      setAppAccount(connectedAccount);
-      return;
-    }
-
-    debugLog.log?.('✅ appAccount already matches connectedAccount — no-op', {
-      connectedAddr,
-      activeAddr,
-    });
-  }, [connectedAccount, appAccount, setAppAccount]);
-
   return {
-    // app-level account
-    appAccount,
-    setAppAccount,
-
     // single accounts
     connectedAccount,
     setConnectedAccount,
@@ -374,7 +290,6 @@ const useAccounts = () => {
 /* -------------------------------------------------------------------------- */
 
 export {
-  useAppAccount,
   useAccounts,
   useConnectedAccount,
   useSponsorAccount,

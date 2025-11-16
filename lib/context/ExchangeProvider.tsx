@@ -40,7 +40,6 @@ import {
 
 import { persistWithOptDiff } from '@/lib/context/exchangeContext/helpers/persistExchangeContext';
 
-// 🔹 App-level bootstrap (mirrors UI ConnectedAccount → exchangeContext.appAccount)
 import { AppBootstrap } from '@/lib/context/init/AppBootstrap';
 
 /* ---------------------------- Debug logger toggle --------------------------- */

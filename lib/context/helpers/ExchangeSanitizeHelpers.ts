@@ -73,15 +73,7 @@ export const sanitizeExchangeContext = (
 
   // ----- ACCOUNTS
   const sanitizedAccounts = {
-    // 🔹 New app-level account (can persist even if wallet disconnects)
-    appAccount: raw.accounts?.appAccount
-      ? {
-          ...raw.accounts.appAccount,
-          balance: raw.accounts.appAccount.balance ?? 0n,
-        }
-      : defaultContext.accounts.appAccount,
-
-    connectedAccount: raw.accounts?.connectedAccount
+     connectedAccount: raw.accounts?.connectedAccount
       ? {
           ...raw.accounts.connectedAccount,
           balance: raw.accounts.connectedAccount.balance ?? 0n,

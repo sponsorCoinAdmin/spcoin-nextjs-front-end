@@ -54,7 +54,6 @@ function TradeAssetPanelInner() {
   const { exchangeContext, setSellBalance, setBuyBalance } =
     useExchangeContext();
 
-  // 🔹 Use network.connectedAccount as the balance owner (no wagmi useAccount, no appAccount)
   const connectedAccountAddr = exchangeContext.accounts?.connectedAccount
     ?.address as Address | undefined;
 
@@ -283,7 +282,8 @@ function TradeAssetPanelInner() {
     chainId,
     userAddress: connectedAccountAddr,
     decimalsHint: tokenDecimals,
-    enabled: balanceEnabled,
+    // ⬇️ Let useGetBalance self-gate based on user + chain + token
+    // enabled: balanceEnabled,
     staleTimeMs: 20_000,
   });
 

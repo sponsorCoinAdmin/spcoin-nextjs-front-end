@@ -39,8 +39,6 @@ export const getInitialContext = (chainId: number): ExchangeContext => {
       spCoinPanelTree: buildDefaultSpCoinPanelTree(), // ✅ a SpCoinPanelTree, not an array
     },
     accounts: {
-      // 🔹 New app-level account slot (persists even if wallet disconnects)
-      appAccount: undefined,
 
       // 🔹 Wallet-linked account (mirrors wagmi connection)
       connectedAccount: undefined,

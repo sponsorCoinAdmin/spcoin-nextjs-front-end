@@ -49,7 +49,7 @@ export type UseGetBalanceParams = {
   chainId?: number;
   /**
    * account address to read for
-   * - if omitted, defaults to exchangeContext.accounts.appAccount.address
+   * - if omitted, defaults to exchangeContext.accounts.connectedAccount.address
    */
   userAddress?: Address | null;
   /** provide to skip an extra decimals() RPC */
@@ -79,20 +79,20 @@ export function useGetBalance({
 } {
   const publicClient = usePublicClient();
 
-  // Prefer appAccount from ExchangeContext if no explicit userAddress is passed
   const { exchangeContext } = useExchangeContext();
-  const appAddr = exchangeContext.accounts?.connectedAccount
+  const activeAccount = exchangeContext.accounts?.connectedAccount
     ?.address as Address | undefined;
 
   const appChainId = exchangeContext.network?.appChainId;
 
-  // Canonicalize inputs: userAddress > appAccount
-  const user = (userAddress ?? appAddr ?? null) as Address | null;
+  // Chosen owner: explicit userAddress → activeAccount → null
+  const user = (userAddress ?? activeAccount ?? null) as Address | null;
 
+  // Effective chain: explicit chainId → appChainId → publicClient.chain.id
   const effChainId = chainId ?? appChainId ?? publicClient?.chain?.id;
 
+  // Effective token: explicit tokenAddress → native token → normalized
   const effectiveToken: Address | null = useMemo(() => {
-    // If no token provided, treat as native
     const addr = (tokenAddress ?? NATIVE_TOKEN_ADDRESS) as Address;
     return normalizeTokenAddress(addr);
   }, [tokenAddress]);
@@ -112,62 +112,18 @@ export function useGetBalance({
     publicClientChainId: publicClient?.chain?.id,
     effChainId,
     paramUserAddress: userAddress,
-    appAddr,
+    activeAccount,
     chosenUser: user,
     hasPublicClient: !!publicClient,
   };
 
+  // eslint-disable-next-line no-console
   console.log('[useGetBalance] 📊 preflight', preflightSnapshot);
   debug.log?.('📊 preflight', preflightSnapshot);
 
-  const reportParamError = (reason: string) => {
-    const lines: string[] = [];
-    lines.push('*** ERROR *** useGetBalance: missing or invalid parameter');
-    lines.push(`Reason: ${reason}`);
-    lines.push('');
-    lines.push(`param.tokenAddress     : ${String(tokenAddress)}`);
-    lines.push(`normalizedToken        : ${String(effectiveToken)}`);
-    lines.push(`param.chainId          : ${String(chainId)}`);
-    lines.push(`appChainId             : ${String(appChainId)}`);
-    lines.push(`effChainId             : ${String(effChainId)}`);
-    lines.push(`param.userAddress      : ${String(userAddress)}`);
-    lines.push(`appAddr (appAccount)   : ${String(appAddr)}`);
-    lines.push(`chosenUser             : ${String(user)}`);
-    lines.push(`hasPublicClient        : ${publicClient ? 'true' : 'false'}`);
-
-    const msg = lines.join('\n');
-    console.error(msg);
-    debug.warn?.(msg);
-
-    if (typeof window !== 'undefined' && typeof window.alert === 'function') {
-      // eslint-disable-next-line no-alert
-      window.alert(msg);
-    }
-  };
-
-  if (!publicClient) {
-    reportParamError('publicClient is null/undefined');
-  }
-  if (!effChainId) {
-    reportParamError('effChainId is null/0 (no chainId resolved)');
-  }
-  if (!user) {
-    reportParamError('user (account address) is null/undefined');
-  }
-  if (!effectiveToken) {
-    reportParamError('effectiveToken is null/undefined');
-  }
-  if (!tokenAddress) {
-    // This is allowed (native token), but we still log loudly so you see it.
-    reportParamError(
-      'param.tokenAddress is falsy (using NATIVE_TOKEN_ADDRESS fallback)',
-    );
-  }
-
   // 💡 IMPORTANT:
-  // We *do* gate on `user` here now.
-  // If there is no effective owner address yet, we skip the query instead of
-  // forcing queryFn to run and then blow up on missing preconditions.
+  // We gate the query on `user`, `publicClient`, `effChainId`, and `effectiveToken`.
+  // If any of these are missing, the query is disabled and nothing is fetched.
   const isEnabled = useMemo(() => {
     const base =
       !!publicClient && !!effChainId && !!effectiveToken && !!user;
@@ -183,6 +139,7 @@ export function useGetBalance({
       finalEnabled,
     };
 
+    // eslint-disable-next-line no-console
     console.log('[useGetBalance] ⚙️ isEnabled check', snapshot);
     debug.log?.('⚙️ isEnabled check', snapshot);
 
@@ -216,6 +173,7 @@ export function useGetBalance({
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     queryFn: async () => {
+      // eslint-disable-next-line no-console
       console.log('[useGetBalance] 🚀 queryFn start', {
         effChainId,
         user,
@@ -223,6 +181,7 @@ export function useGetBalance({
         isNative,
       });
 
+      // Defensive check: should never hit if isEnabled is false
       if (!publicClient || !effChainId || !user || !effectiveToken) {
         const parts = [
           'Preconditions not met in useGetBalance.queryFn',
@@ -232,6 +191,7 @@ export function useGetBalance({
           `token       : ${String(effectiveToken)}`,
         ];
         const errMsg = parts.join(' | ');
+        // eslint-disable-next-line no-console
         console.error(errMsg);
         debug.warn?.(errMsg);
         throw new Error(errMsg);
@@ -242,6 +202,7 @@ export function useGetBalance({
           const bal = await publicClient.getBalance({
             address: user as Address,
           });
+          // eslint-disable-next-line no-console
           console.log(
             '[useGetBalance] 💰 native balance',
             bal.toString(),
@@ -266,6 +227,7 @@ export function useGetBalance({
           }),
         ]);
 
+        // eslint-disable-next-line no-console
         console.log(
           '[useGetBalance] 💰 erc20 balance',
           (bal as bigint).toString(),
@@ -278,6 +240,7 @@ export function useGetBalance({
         return { balance: bal as bigint, decimals: Number(d) };
       } catch (e: any) {
         const msg = e?.shortMessage || e?.message || String(e);
+        // eslint-disable-next-line no-console
         console.error('[useGetBalance] ⚠️ balance query failed', msg, e);
         debug.warn?.(`⚠️ balance query failed: ${msg}`);
         throw e;
@@ -290,6 +253,7 @@ export function useGetBalance({
           ? formatUnits(balance, decimals)
           : undefined;
 
+      // eslint-disable-next-line no-console
       console.log('[useGetBalance] ✅ select result', {
         balance: balance.toString(),
         decimals,
@@ -304,6 +268,7 @@ export function useGetBalance({
     },
   });
 
+  // eslint-disable-next-line no-console
   console.log('[useGetBalance] 🔁 hook return snapshot', {
     key: isEnabled ? keyString : undefined,
     isEnabled,
