@@ -54,8 +54,8 @@ function TradeAssetPanelInner() {
   const { exchangeContext, setSellBalance, setBuyBalance } =
     useExchangeContext();
 
-  // 🔹 Use appAccount from ExchangeContext as the owner of balances
-  const appAccountAddr = exchangeContext.accounts?.appAccount
+  // 🔹 Use network.connectedAccount as the balance owner (no wagmi useAccount, no appAccount)
+  const connectedAccountAddr = exchangeContext.accounts?.connectedAccount
     ?.address as Address | undefined;
 
   const [sellAmount, setSellAmount] = useSellAmount();
@@ -213,10 +213,10 @@ function TradeAssetPanelInner() {
   const buySellText = isSell
     ? tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
       ? `You Pay ± ${slippage.percentageString}`
-      : `You Exactly Pay:`
+      : 'You Exactly Pay:'
     : tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
     ? `You Receive ± ${slippage.percentageString}`
-    : `You Exactly Receive:`;
+    : 'You Exactly Receive:';
 
   // ⚠️ Important: this was previously `network.chainId`; we really care about appChainId.
   const chainId =
@@ -224,15 +224,50 @@ function TradeAssetPanelInner() {
     exchangeContext?.network?.chainId ??
     1;
 
-  // 🔍 Log inputs into the balance hook for debugging
+  // ────────────────────────────────────────────────────────────────────────────
+  // Balance owner & enable flags
+  // ────────────────────────────────────────────────────────────────────────────
+  const hasBalanceOwner = Boolean(connectedAccountAddr);
+  const balanceEnabled = Boolean(tokenAddr && chainId && hasBalanceOwner);
+
+  // 🔍 Throttled logging of balance hook parameters to avoid noisy spam
+  const lastBalanceParamsRef = useRef<{
+    chainId: number | undefined;
+    tokenAddr: string | undefined;
+    hasBalanceOwner: boolean;
+    balanceEnabled: boolean;
+  } | null>(null);
+
   useEffect(() => {
-    debugLog.log?.('balance hook params (direct useGetBalance)', {
+    const next = {
       chainId,
       tokenAddr,
-      appAccountAddr,
-      enabled: Boolean(tokenAddr && appAccountAddr && chainId),
-    });
-  }, [chainId, tokenAddr, appAccountAddr]);
+      hasBalanceOwner,
+      balanceEnabled,
+    };
+
+    const prev = lastBalanceParamsRef.current;
+    if (
+      prev &&
+      prev.chainId === next.chainId &&
+      prev.tokenAddr === next.tokenAddr &&
+      prev.hasBalanceOwner === next.hasBalanceOwner &&
+      prev.balanceEnabled === next.balanceEnabled
+    ) {
+      return;
+    }
+    lastBalanceParamsRef.current = next;
+
+    if (!hasBalanceOwner) {
+      debugLog.log?.(
+        'balance hook params (no owner yet, query disabled)',
+        next,
+      );
+      return;
+    }
+
+    debugLog.log?.('balance hook params (direct useGetBalance)', next);
+  }, [chainId, tokenAddr, hasBalanceOwner, balanceEnabled]);
 
   // ────────────────────────────────────────────────────────────────────────────
   // 🔑 DIRECT balance call via useGetBalance (bypassing useFormattedBalance)
@@ -246,27 +281,38 @@ function TradeAssetPanelInner() {
   } = useGetBalance({
     tokenAddress: tokenContract?.address as Address | undefined,
     chainId,
-    userAddress: appAccountAddr,
+    userAddress: connectedAccountAddr,
     decimalsHint: tokenDecimals,
-    enabled: Boolean(tokenAddr && chainId && appAccountAddr),
+    enabled: balanceEnabled,
     staleTimeMs: 20_000,
   });
 
-  const formattedBalance =
-    balanceError
-      ? '—'
-      : balanceLoading
-      ? '…'
-      : hookFormatted ?? '0.0';
+  // 🧮 Human-readable balance text for the UI
+  let formattedBalance: string;
+  if (!tokenAddr) {
+    // No asset selected → no balance to show
+    formattedBalance = '—';
+  } else if (!hasBalanceOwner) {
+    // Token chosen but no owner yet (initial load / context not ready)
+    formattedBalance = '—';
+  } else if (!balanceEnabled) {
+    // Should be rare given hasBalanceOwner above, but keep safe
+    formattedBalance = '…';
+  } else if (balanceError) {
+    formattedBalance = '—';
+  } else if (balanceLoading) {
+    formattedBalance = '…';
+  } else {
+    formattedBalance = hookFormatted ?? '0.0';
+  }
 
   // 🔁 Push live balance into ExchangeContext (only when stable / non-loading / no error)
   const prevPushedBalanceRef = useRef<bigint | undefined>(undefined);
   useEffect(() => {
-    if (!tokenAddr || !appAccountAddr) return;
+    if (!tokenAddr || !connectedAccountAddr) return;
     if (balanceLoading || balanceError) return;
     if (rawBalance == null || (balanceDecimals ?? tokenDecimals) == null) return;
 
-    const decs = balanceDecimals ?? tokenDecimals!;
     let parsed: bigint | undefined;
     try {
       // rawBalance is already bigint, so we just pass it through
@@ -295,7 +341,7 @@ function TradeAssetPanelInner() {
       setBuyBalance?.(parsed);
     }
   }, [
-    appAccountAddr,
+    connectedAccountAddr,
     tokenAddr,
     rawBalance,
     balanceDecimals,
@@ -320,21 +366,21 @@ function TradeAssetPanelInner() {
 
   return (
     <div
-      id="TradeAssetPanelInner"
+      id='TradeAssetPanelInner'
       className={clsx(
         'relative mt-[5px] mb-[5px]',
         'rounded-[12px] overflow-hidden',
       )}
     >
       <input
-        id="TokenPanelInputAmount"
+        id='TokenPanelInputAmount'
         className={clsx(
           'w-full h-[106px] indent-[10px] pt-[10px]',
           'bg-[#1f2639] text-[#94a3b8] text-[25px]',
           'border-0 outline-none focus:outline-none',
           'rounded-b-[12px]',
         )}
-        placeholder="0"
+        placeholder='0'
         disabled={isInputDisabled}
         value={inputValue}
         onChange={(e) => onChangeAmount(e.target.value)}
@@ -343,24 +389,24 @@ function TradeAssetPanelInner() {
           setInputValue(clampDisplay(isNaN(n) ? '0' : String(n), 10));
         }}
         name={noAutofillName}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="none"
+        autoComplete='off'
+        autoCorrect='off'
+        autoCapitalize='none'
         spellCheck={false}
-        inputMode="decimal"
-        aria-autocomplete="none"
-        data-lpignore="true"
-        data-1p-ignore="true"
-        data-form-type="other"
+        inputMode='decimal'
+        aria-autocomplete='none'
+        data-lpignore='true'
+        data-1p-ignore='true'
+        data-form-type='other'
       />
 
       {/* Invisible decoy for autofill managers */}
       <input
-        type="text"
-        autoComplete="new-password"
+        type='text'
+        autoComplete='new-password'
         tabIndex={-1}
-        aria-hidden="true"
-        className="absolute opacity-0 h-0 w-0 pointer-events-none"
+        aria-hidden='true'
+        className='absolute opacity-0 h-0 w-0 pointer-events-none'
       />
 
       <TokenSelectDropDown
@@ -371,11 +417,11 @@ function TradeAssetPanelInner() {
         }
       />
 
-      <div className="absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
+      <div className='absolute top-5 left-[10px] min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1'>
         {buySellText}
       </div>
 
-      <div className="absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1">
+      <div className='absolute top-[74px] right-5 min-w-[50px] h-[10px] text-[#94a3b8] text-[12px] pr-2 flex items-center gap-1'>
         Balance: {formattedBalance}
       </div>
 

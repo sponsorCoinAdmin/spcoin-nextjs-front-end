@@ -81,7 +81,7 @@ export function useGetBalance({
 
   // Prefer appAccount from ExchangeContext if no explicit userAddress is passed
   const { exchangeContext } = useExchangeContext();
-  const appAddr = exchangeContext.accounts?.appAccount
+  const appAddr = exchangeContext.accounts?.connectedAccount
     ?.address as Address | undefined;
 
   const appChainId = exchangeContext.network?.appChainId;
@@ -164,9 +164,13 @@ export function useGetBalance({
     );
   }
 
-  // 💡 IMPORTANT: do NOT gate on user here so queryFn is forced to run and surface errors
+  // 💡 IMPORTANT:
+  // We *do* gate on `user` here now.
+  // If there is no effective owner address yet, we skip the query instead of
+  // forcing queryFn to run and then blow up on missing preconditions.
   const isEnabled = useMemo(() => {
-    const base = !!publicClient && !!effChainId && !!effectiveToken;
+    const base =
+      !!publicClient && !!effChainId && !!effectiveToken && !!user;
     const finalEnabled =
       typeof enabled === 'boolean' ? base && enabled : base;
 
@@ -187,7 +191,12 @@ export function useGetBalance({
 
   // Always provide a key with a stable tuple shape to keep TS inference happy
   const keyString = isEnabled
-    ? BALANCE_KEY(effChainId!, (user ?? '0x0000000000000000000000000000000000000000') as Address, effectiveToken as Address)
+    ? BALANCE_KEY(
+        effChainId!,
+        (user ??
+          '0x0000000000000000000000000000000000000000') as Address,
+        effectiveToken as Address,
+      )
     : 'balance:disabled';
 
   const queryKey = useMemo<BalanceQueryKey>(

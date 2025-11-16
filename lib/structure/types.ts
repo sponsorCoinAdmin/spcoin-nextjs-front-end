@@ -61,7 +61,6 @@ export type ContractRecs = {
  * All known accounts tracked by the app.
  */
 export type Accounts = {
-  appAccount?: WalletAccount;
   connectedAccount?: WalletAccount;
   sponsorAccount?: WalletAccount;
   recipientAccount?: WalletAccount;
