@@ -45,7 +45,6 @@ type BridgeParams = {
 };
 
 export function useFSMBridge(params: BridgeParams) {
-    console.log("*** ENTERING *** useFSMBridge")
   const {
     containerType,
     feedType,

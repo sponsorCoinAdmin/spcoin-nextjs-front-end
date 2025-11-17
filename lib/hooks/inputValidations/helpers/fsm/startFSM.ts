@@ -68,7 +68,6 @@ export type StartFSMResult =
 
 
 export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
-    console.log("*** ENTERING *** START_FSM")
   const {
     debouncedHexInput,
     prevDebouncedInputRef,

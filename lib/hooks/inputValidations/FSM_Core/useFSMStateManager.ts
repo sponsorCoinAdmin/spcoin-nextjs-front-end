@@ -40,7 +40,6 @@ interface UseFSMStateManagerParams {
 }
 
 export function useFSMStateManager(params: UseFSMStateManagerParams) {
-      console.log("*** ENTERING *** useFSMStateManager")
   const {
     containerType,
     feedType,

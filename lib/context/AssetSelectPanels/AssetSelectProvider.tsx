@@ -21,7 +21,6 @@ import { useFSMBridge } from './hooks/useFSMBridge';
 
 const LOG_TIME = false as const;
 const LOG_LEVEL: 'info' | 'warn' | 'error' = 'info';
- console.log("*** ENTERING *** AssetSelectProvider()")
 
 // Env-gated logging only
 const DEBUG_ENABLED =
