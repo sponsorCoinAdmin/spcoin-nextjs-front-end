@@ -16,6 +16,8 @@ const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_FSM === 'true';
 const debugLog = createDebugLogger('useFSMBridge', DEBUG_ENABLED, LOG_TIME);
 
+    console.log("*** ENTERING *** useFSMBridge")
+
 type BridgeParams = {
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;

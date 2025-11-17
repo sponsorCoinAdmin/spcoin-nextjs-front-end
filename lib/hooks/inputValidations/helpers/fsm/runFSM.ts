@@ -35,6 +35,8 @@ export async function runFSM({
   const transitions: InputState[] = [state];
   let seeded = false;
 
+  console.log("*** ENTERING *** RUN_FSM")
+
   const mergeAssetPatch = (patch?: Partial<TokenContract | WalletAccount>) => {
     if (!patch) return;
     const incAddr = (patch as any)?.address?.toString?.().toLowerCase?.();

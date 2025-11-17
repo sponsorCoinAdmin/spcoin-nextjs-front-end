@@ -63,6 +63,9 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     resetHexInput,
   } = useHexInput();
 
+    console.log("*** ENTERING *** useFSMStateManager")
+
+
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
 
   const setInputStateWrapped = useCallback(

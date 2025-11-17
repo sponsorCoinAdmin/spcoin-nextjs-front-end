@@ -25,6 +25,9 @@ import { getStateIcon } from './internals/debugFSM';
 // 🔽 ensure logoURL is present at commit time
 import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 
+  console.log("*** ENTERING *** START_FSM")
+
+
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const TRACE_ENABLED = process.env.NEXT_PUBLIC_FSM_INPUT_STATE_TRACE === 'true';
 const debug = createDebugLogger('startFSM', DEBUG_ENABLED);
