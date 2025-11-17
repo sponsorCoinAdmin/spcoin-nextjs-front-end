@@ -94,10 +94,45 @@ export async function validateTokenAsset(
     };
   }
 
+  // 🔍 2b) Log transport / RPC URL so we can debug EC2 vs local issues
+  try {
+    const anyClient = publicClient as any;
+    const transport = anyClient.transport;
+
+    // viem http transport usually exposes .url; fall back to chain.rpcUrls if needed
+    const rpcUrl =
+      transport?.url ??
+      transport?.value?.url ??
+      anyClient?.chain?.rpcUrls?.default?.http?.[0] ??
+      anyClient?.chain?.rpcUrls?.default?.webSocket?.[0];
+
+    const transportSnapshot = {
+      addr,
+      chainIdParam: chainId,
+      clientChainId,
+      transportType: transport?.type,
+      rpcUrl,
+      // These two are mainly for deep debugging if needed
+      rawTransport: transport,
+      chainRpcUrls: anyClient?.chain?.rpcUrls,
+    };
+
+    // Goes through your debug logger (controlled by NEXT_PUBLIC_DEBUG_LOG_FSM_CORE)
+    log.log?.('🌐 publicClient transport snapshot', transportSnapshot);
+
+    // Also emit a plain console.log so you can grep easily in DevTools
+    // eslint-disable-next-line no-console
+    console.log(
+      '[validateTokenAsset] publicClient transport',
+      transportSnapshot,
+    );
+  } catch (e: any) {
+    const msg = e?.message || String(e ?? 'unknown error');
+    log.warn?.('⚠️ failed to introspect publicClient transport', { msg });
+  }
+
   // 3) Try to get ERC-20 metadata (graceful fallbacks)
-  const readNumber = async (fn: 'decimals'): Promise<
-    number | undefined
-  > => {
+  const readNumber = async (fn: 'decimals'): Promise<number | undefined> => {
     try {
       const out = await publicClient.readContract({
         address: addr,
