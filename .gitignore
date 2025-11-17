@@ -11,8 +11,8 @@ test.out
 */.e
 package-lock.json
 run.out
+tsconfig.tsbuildinfo 
 lint.out
-
 cache
 artifacts
 *.log
