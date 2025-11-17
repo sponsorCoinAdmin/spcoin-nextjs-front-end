@@ -40,6 +40,7 @@ interface UseFSMStateManagerParams {
 }
 
 export function useFSMStateManager(params: UseFSMStateManagerParams) {
+      console.log("*** ENTERING *** useFSMStateManager")
   const {
     containerType,
     feedType,
@@ -52,6 +53,8 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     setTradingTokenCallback,
   } = params;
 
+
+
   const {
     validHexInput,
     debouncedHexInput,
@@ -63,7 +66,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     resetHexInput,
   } = useHexInput();
 
-    console.log("*** ENTERING *** useFSMStateManager")
 
 
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);

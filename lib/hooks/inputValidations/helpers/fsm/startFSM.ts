@@ -25,7 +25,6 @@ import { getStateIcon } from './internals/debugFSM';
 // 🔽 ensure logoURL is present at commit time
 import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
 
-  console.log("*** ENTERING *** START_FSM")
 
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
@@ -67,7 +66,9 @@ export type StartFSMResult =
     }
   | null;
 
+
 export async function startFSM(args: StartFSMArgs): Promise<StartFSMResult> {
+    console.log("*** ENTERING *** START_FSM")
   const {
     debouncedHexInput,
     prevDebouncedInputRef,
