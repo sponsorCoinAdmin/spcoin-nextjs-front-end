@@ -1,14 +1,12 @@
-// File: app/(menu)/_providers/AppBootstrap.tsx (or similar – adjust path if needed)
+// File: app/(menu)/_providers/AppBootstrap.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useActiveAccount as useUiActiveAccount } from '@/lib/context/ActiveAccountContext';
 import { useActiveAccount as useCtxActiveAccount } from '@/lib/context/hooks/nestedHooks/useAccounts';
-import { useExchangeContext } from '@/lib/context/hooks';
-import { deriveNetworkFromApp } from '@/lib/context/helpers/NetworkHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
@@ -27,21 +25,8 @@ export function AppBootstrap(_props: AppBootstrapProps) {
   // 🔹 ExchangeContext-level connected account
   const [ctxActiveAccount, setCtxActiveAccount] = useCtxActiveAccount();
 
-  // 🔹 Access to ExchangeContext for appNetwork wiring
-  const {
-    exchangeContext,
-    setExchangeContext,
-    setSellTokenContract,
-    setBuyTokenContract,
-  } = useExchangeContext();
-
-  const appChainId = exchangeContext?.network?.appChainId ?? 0;
-  const logoURL = exchangeContext?.network?.logoURL ?? '';
-
-  const prevAppChainIdRef = useRef<number | undefined>(undefined);
-
   /* ------------------------------------------------------------------------ */
-  /*           1) Mirror UI activeAccount → ExchangeContext.accounts       */
+  /*           1) Mirror UI activeAccount → ExchangeContext.accounts          */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
@@ -85,83 +70,6 @@ export function AppBootstrap(_props: AppBootstrapProps) {
     );
   }, [uiActiveAccount, ctxActiveAccount, setCtxActiveAccount]);
 
-  /* ------------------------------------------------------------------------ */
-  /*                    2) appChainId → appNetwork (display)                  */
-  /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    if (!appChainId) return;
-
-    // First observation of appChainId: just remember it, don't fire side effects
-    if (prevAppChainIdRef.current === undefined) {
-      prevAppChainIdRef.current = appChainId;
-      debugLog.log?.('🔎 initial appChainId observed', { appChainId });
-      return;
-    }
-
-    if (prevAppChainIdRef.current === appChainId) {
-      return;
-    }
-
-    debugLog.log?.('🌐 appChainId changed, deriving appNetwork', {
-      from: prevAppChainIdRef.current,
-      to: appChainId,
-    });
-
-    setExchangeContext(
-      (prev) => {
-        const derived = deriveNetworkFromApp(appChainId, undefined as any);
-
-        return {
-          ...prev,
-          network: {
-            ...prev.network,
-            appChainId,
-            name: derived?.name ?? '',
-            symbol: derived?.symbol ?? '',
-            url: derived?.url ?? '',
-            // canonical logo path for this chain
-            logoURL: `/assets/blockchains/${appChainId}/info/network.png`,
-          },
-        };
-      },
-      'AppBootstrap:onAppChainChange-refreshDisplay',
-    );
-
-    // When the app network changes, clear selected tokens
-    setSellTokenContract(undefined);
-    setBuyTokenContract(undefined);
-
-    prevAppChainIdRef.current = appChainId;
-  }, [appChainId, setExchangeContext, setSellTokenContract, setBuyTokenContract]);
-
-  /* ------------------------------------------------------------------------ */
-  /*                    3) Safety net: normalize network logo                 */
-  /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-    if (!appChainId) return;
-
-    const expected = `/assets/blockchains/${appChainId}/info/network.png`;
-    if (logoURL === expected || !logoURL) return;
-
-    debugLog.log?.('🔧 Normalizing network.logoURL', {
-      appChainId,
-      from: logoURL,
-      to: expected,
-    });
-
-    setExchangeContext(
-      (prev) => ({
-        ...prev,
-        network: {
-          ...prev.network,
-          logoURL: expected,
-        },
-      }),
-      'AppBootstrap:normalizeLogoURL',
-    );
-  }, [appChainId, logoURL, setExchangeContext]);
-
+  // No UI rendering; just side-effects
   return null;
 }

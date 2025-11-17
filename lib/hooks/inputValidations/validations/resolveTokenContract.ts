@@ -14,13 +14,6 @@ function dbg(...args: any[]) {
   if (DEBUG_ENABLED) console.log('[resolveTokenContract]', ...args);
 }
 
-/**
- * Resolves a TokenContract from an address:
- * - Keeps address case AS-IS (no checksum/case normalization)
- * - Fetches logo URL and metadata in parallel
- * - ❌ Does NOT get user balance (authoritative source is useGetBalance hook)
- * - Always returns a TokenContract with a logoURL (fallbacks to defaultMissingImage)
- */
 export async function resolveTokenContract(
   tokenAddress: string,
   chainId: number,
@@ -80,7 +73,7 @@ export async function resolveTokenContract(
       decimals: nativeInfo.decimals,
       totalSupply: nativeInfo.totalSupply,
       amount: 0n,
-      balance: 0n, // ⬅️ balance omitted here; fetched via useGetBalance in UI
+      balance: 0n, 
       logoURL: logoURL || defaultMissingImage,
     };
 

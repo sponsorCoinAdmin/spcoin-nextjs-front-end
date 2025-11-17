@@ -11,10 +11,10 @@ import {
 } from '@/lib/network/onchain/cacheKeys';
 import { NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
-import { useExchangeContext } from '@/lib/context/hooks';
+import { useExchangeContext, useAppChainId } from '@/lib/context/hooks';
 
 const LOG_TIME = false;
-// Ignore env flag for now – we want HARD logging while debugging
+// Hard-enable logging while we debug
 const DEBUG_ENABLED = true;
 const debug = createDebugLogger('useGetBalance', DEBUG_ENABLED, LOG_TIME);
 
@@ -36,7 +36,6 @@ const erc20Abi = [
   },
 ] as const;
 
-// Types flowing through the query
 type BalanceFnData = { balance: bigint; decimals: number };
 type BalanceData = { balance: bigint; decimals: number; formatted?: string };
 type BalanceError = Error;
@@ -77,19 +76,33 @@ export function useGetBalance({
   refetch: UseQueryResult<BalanceData, BalanceError>['refetch'];
   key: string | undefined;
 } {
-  const publicClient = usePublicClient();
-
+  // 🧠 App-level context (accounts, network, etc.)
   const { exchangeContext } = useExchangeContext();
   const activeAccount = exchangeContext.accounts?.activeAccount
     ?.address as Address | undefined;
 
-  const appChainId = exchangeContext.network?.appChainId;
+  // 🧠 Single source of truth for app chain
+  const [appChainId] = useAppChainId();
+  const networkChainId = exchangeContext.network?.chainId;
+
+  // Chain we *ask* wagmi for. Prefer:
+  //   param chainId → appChainId → (optionally) network.chainId
+  const appEffectiveChainId =
+    chainId ?? appChainId ?? networkChainId;
+
+  // 🛰️ Chain-aware public client
+  const publicClient = usePublicClient(
+    appEffectiveChainId
+      ? ({ chainId: appEffectiveChainId } as any)
+      : ({} as any),
+  );
 
   // Chosen owner: explicit userAddress → activeAccount → null
   const user = (userAddress ?? activeAccount ?? null) as Address | null;
 
-  // Effective chain: explicit chainId → appChainId → publicClient.chain.id
-  const effChainId = chainId ?? appChainId ?? publicClient?.chain?.id;
+  // Effective chain: param chainId → appEffectiveChainId → wagmi’s client
+  const effChainId =
+    chainId ?? appEffectiveChainId ?? publicClient?.chain?.id;
 
   // Effective token: explicit tokenAddress → native token → normalized
   const effectiveToken: Address | null = useMemo(() => {
@@ -103,12 +116,14 @@ export function useGetBalance({
       (NATIVE_TOKEN_ADDRESS as string).toLowerCase();
   }, [effectiveToken]);
 
-  // 🔍 HARD preflight logging (always)
+  // 🔍 HARD preflight logging
   const preflightSnapshot = {
     paramTokenAddress: tokenAddress,
     normalizedToken: effectiveToken,
     paramChainId: chainId,
-    appChainId,
+    appChainId,           // from useAppChainId()
+    networkChainId,       // from exchangeContext.network
+    appEffectiveChainId,  // what we passed to usePublicClient
     publicClientChainId: publicClient?.chain?.id,
     effChainId,
     paramUserAddress: userAddress,
@@ -121,9 +136,7 @@ export function useGetBalance({
   console.log('[useGetBalance] 📊 preflight', preflightSnapshot);
   debug.log?.('📊 preflight', preflightSnapshot);
 
-  // 💡 IMPORTANT:
-  // We gate the query on `user`, `publicClient`, `effChainId`, and `effectiveToken`.
-  // If any of these are missing, the query is disabled and nothing is fetched.
+  // 💡 Gate the query on `user`, `publicClient`, `effChainId`, and `effectiveToken`.
   const isEnabled = useMemo(() => {
     const base =
       !!publicClient && !!effChainId && !!effectiveToken && !!user;
@@ -146,7 +159,6 @@ export function useGetBalance({
     return finalEnabled;
   }, [publicClient, effChainId, user, effectiveToken, enabled]);
 
-  // Always provide a key with a stable tuple shape to keep TS inference happy
   const keyString = isEnabled
     ? BALANCE_KEY(
         effChainId!,
@@ -181,7 +193,6 @@ export function useGetBalance({
         isNative,
       });
 
-      // Defensive check: should never hit if isEnabled is false
       if (!publicClient || !effChainId || !user || !effectiveToken) {
         const parts = [
           'Preconditions not met in useGetBalance.queryFn',

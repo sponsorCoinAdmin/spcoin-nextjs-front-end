@@ -217,60 +217,12 @@ function TradeAssetPanelInner() {
     ? `You Receive ± ${slippage.percentageString}`
     : 'You Exactly Receive:';
 
-  // ⚠️ Important: this was previously `network.chainId`; we really care about appChainId.
-  const chainId =
-    exchangeContext?.network?.appChainId ??
-    exchangeContext?.network?.chainId ??
-    1;
-
   // ────────────────────────────────────────────────────────────────────────────
-  // Balance owner & enable flags
+  // Balance owner
   // ────────────────────────────────────────────────────────────────────────────
   const hasBalanceOwner = Boolean(activeAccountAddr);
-  const balanceEnabled = Boolean(tokenAddr && chainId && hasBalanceOwner);
 
-  // 🔍 Throttled logging of balance hook parameters to avoid noisy spam
-  const lastBalanceParamsRef = useRef<{
-    chainId: number | undefined;
-    tokenAddr: string | undefined;
-    hasBalanceOwner: boolean;
-    balanceEnabled: boolean;
-  } | null>(null);
-
-  useEffect(() => {
-    const next = {
-      chainId,
-      tokenAddr,
-      hasBalanceOwner,
-      balanceEnabled,
-    };
-
-    const prev = lastBalanceParamsRef.current;
-    if (
-      prev &&
-      prev.chainId === next.chainId &&
-      prev.tokenAddr === next.tokenAddr &&
-      prev.hasBalanceOwner === next.hasBalanceOwner &&
-      prev.balanceEnabled === next.balanceEnabled
-    ) {
-      return;
-    }
-    lastBalanceParamsRef.current = next;
-
-    if (!hasBalanceOwner) {
-      debugLog.log?.(
-        'balance hook params (no owner yet, query disabled)',
-        next,
-      );
-      return;
-    }
-
-    debugLog.log?.('balance hook params (direct useGetBalance)', next);
-  }, [chainId, tokenAddr, hasBalanceOwner, balanceEnabled]);
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // 🔑 DIRECT balance call via useGetBalance (bypassing useFormattedBalance)
-  // ────────────────────────────────────────────────────────────────────────────
+ 
   const {
     balance: rawBalance,
     decimals: balanceDecimals,
@@ -279,11 +231,9 @@ function TradeAssetPanelInner() {
     error: balanceError,
   } = useGetBalance({
     tokenAddress: tokenContract?.address as Address | undefined,
-    chainId,
     userAddress: activeAccountAddr,
     decimalsHint: tokenDecimals,
-    // ⬇️ Let useGetBalance self-gate based on user + chain + token
-    // enabled: balanceEnabled,
+    // Let useGetBalance self-gate based on user + chain + token
     staleTimeMs: 20_000,
   });
 
@@ -295,9 +245,6 @@ function TradeAssetPanelInner() {
   } else if (!hasBalanceOwner) {
     // Token chosen but no owner yet (initial load / context not ready)
     formattedBalance = '—';
-  } else if (!balanceEnabled) {
-    // Should be rare given hasBalanceOwner above, but keep safe
-    formattedBalance = '…';
   } else if (balanceError) {
     formattedBalance = '—';
   } else if (balanceLoading) {
