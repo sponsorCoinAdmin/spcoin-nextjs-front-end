@@ -4,7 +4,11 @@
 
 import { useMemo } from 'react';
 import { isAddress } from 'viem';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import {
+  defaultMissingImage,
+  getWalletLogoURL,
+  getTokenLogoURL,
+} from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAppChainId } from '../context/hooks';
 
@@ -32,8 +36,8 @@ export function useAssetLogoURL(
 
     const logoURL =
       type === 'wallet'
-        ? `/assets/wallets/${address}/avatar.png`
-        : `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+        ? getWalletLogoURL(address)
+        : getTokenLogoURL({ address, chainId });
 
     debugLog.log(`✅ logoURL (${type}) = ${logoURL}`);
     return logoURL;

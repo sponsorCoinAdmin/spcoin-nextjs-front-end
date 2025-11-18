@@ -77,7 +77,7 @@ export function getTokenLogoURL(required?: RequiredAssetMembers): string {
     return badTokenAddressImage;
   }
 
-  return `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+return `/assets/blockchains/${chainId}/contracts/${address.toLowerCase()}/logo.png`;
 }
 
 /**

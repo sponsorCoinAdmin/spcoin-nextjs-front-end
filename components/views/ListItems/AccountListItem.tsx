@@ -2,7 +2,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { getAccountLogo } from '@/lib/context/helpers/assetHelpers';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import type { WalletAccount } from '@/lib/structure';
 import BaseListRow from './BaseListRow';
@@ -14,10 +14,7 @@ type AccountListItemProps = {
 };
 
 function AccountListItem({ account, onPick, role: _role }: AccountListItemProps) {
-  const logo =
-    account.logoURL ||
-    (account.address ? `/assets/accounts/${account.address}/logo.png` : '') ||
-    defaultMissingImage;
+  const logo = getAccountLogo(account);
 
   return (
     <BaseListRow

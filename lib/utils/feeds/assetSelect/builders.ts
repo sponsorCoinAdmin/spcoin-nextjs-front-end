@@ -5,7 +5,11 @@ import type { Address } from 'viem';
 import { BURN_ADDRESS } from '@/lib/structure/constants/addresses';
 import type { WalletAccount } from '@/lib/structure';
 import { FEED_TYPE } from '@/lib/structure';
-import { getLogoURL } from '@/lib/network/utils';
+import {
+  getLogoURL,
+  getWalletLogoURL,
+  getTokenLogoURL,
+} from '@/lib/context/helpers/assetHelpers';
 import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 
 import type { BuiltToken, FeedData } from './types';
@@ -33,7 +37,7 @@ export function buildWalletObj(a: any): WalletAccount {
     name: a?.name ?? 'N/A',
     symbol: a?.symbol ?? 'N/A',
     // Always derive; do NOT rely on JSON-provided logoURL
-    logoURL: `/assets/accounts/${address}/logo.png`,
+    logoURL: getWalletLogoURL(address),
   } as WalletAccount;
 }
 
@@ -44,7 +48,8 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
   try {
     logoURL = await getLogoURL(chainId, address as any, FEED_TYPE.TOKEN_LIST);
   } catch {
-    logoURL = `/assets/blockchains/${chainId}/contracts/${address}/logo.png`;
+    // Fallback: derive via central helper instead of hardcoding the path
+    logoURL = getTokenLogoURL({ address, chainId });
   }
   return {
     ...t,
