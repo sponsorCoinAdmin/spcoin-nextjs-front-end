@@ -112,7 +112,6 @@ export const AssetSelectProvider = ({
     resetPreview,
     showAssetPreview,
     showErrorPreview,
-    resetHexInputExternal: undefined,
     bypassFSM,
   });
 
