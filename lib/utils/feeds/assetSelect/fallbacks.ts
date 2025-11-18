@@ -2,15 +2,27 @@
 'use client';
 
 import { FEED_TYPE } from '@/lib/structure';
-import baseTokenList from '@/resources/data/networks/base/tokenList.json';
-import hardhatTokenList from '@/resources/data/networks/hardhat/tokenList.json';
-import polygonTokenList from '@/resources/data/networks/polygon/tokenList.json';
-import sepoliaTokenList from '@/resources/data/networks/sepolia/tokenList.json';
-import ethereumTokenList from '@/resources/data/networks/ethereum/tokenList.json';
-import recipientJsonList from '@/resources/data/recipients/recipientJsonList.json';
-import agentJsonList from '@/resources/data/agents/agentJsonList.json';
+import baseTokenListRaw from '@/resources/data/networks/base/tokenList.json';
+import hardhatTokenListRaw from '@/resources/data/networks/hardhat/tokenList.json';
+import polygonTokenListRaw from '@/resources/data/networks/polygon/tokenList.json';
+import sepoliaTokenListRaw from '@/resources/data/networks/sepolia/tokenList.json';
+import ethereumTokenListRaw from '@/resources/data/networks/ethereum/tokenList.json';
+import recipientJsonListRaw from '@/resources/data/recipients/recipientJsonList.json';
+import agentJsonListRaw from '@/resources/data/agents/agentJsonList.json';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { getJson } from '@/lib/rest/http';
+import { toJSONUpperSync } from '@/lib/utils/toJSONUpper';
+
+// Normalize all bundled lists so that the `address` field is uppercased.
+// This keeps on-chain usage case-insensitive while enforcing a consistent
+// filesystem / metadata convention for logo paths and comparisons.
+const baseTokenList     = toJSONUpperSync('address', baseTokenListRaw as any[]);
+const hardhatTokenList  = toJSONUpperSync('address', hardhatTokenListRaw as any[]);
+const polygonTokenList  = toJSONUpperSync('address', polygonTokenListRaw as any[]);
+const sepoliaTokenList  = toJSONUpperSync('address', sepoliaTokenListRaw as any[]);
+const ethereumTokenList = toJSONUpperSync('address', ethereumTokenListRaw as any[]);
+const recipientJsonList = toJSONUpperSync('address', recipientJsonListRaw as any[]);
+const agentJsonList     = toJSONUpperSync('address', agentJsonListRaw as any[]);
 
 /** Resolve a remote URL (if you add remote hosting later). Returning undefined means "use fallbacks". */
 export function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {
@@ -59,7 +71,7 @@ export async function getDataListObj(feedType: FEED_TYPE, chainId?: number): Pro
       forceParse: true,
     });
 
-    // Accept either a plain array or common “{ tokens: [...] }” shapes
+    // Accept either a plain array or common "{ tokens: [...] }" shapes
     if (Array.isArray(json)) return json;
     if (json && typeof json === 'object') {
       if (Array.isArray((json as any).tokens)) return (json as any).tokens;
