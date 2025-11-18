@@ -5,7 +5,7 @@ import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTy
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME:boolean = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('validateExistsLocally', DEBUG_ENABLED, LOG_TIME);
 
 export function validateExistsLocally({ debouncedHexInput }: ValidateFSMInput): ValidateFSMOutput {

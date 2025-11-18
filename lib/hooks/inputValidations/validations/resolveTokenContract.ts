@@ -6,8 +6,9 @@ import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
 import type { TokenContract} from '@/lib/structure';
 import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
-import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
+import { getLogoURL } from '@/lib/network/utils';
 import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
 function dbg(...args: any[]) {

@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { headOk } from '@/lib/rest/http';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { useAppChainId } from '@/lib/context/hooks'; // returns [chainId, setChainId]
 
 /**

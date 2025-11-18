@@ -7,7 +7,7 @@ import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTy
 import { isStudyEnabled, StudyId } from '../studyPolicy';
 import { validateTokenAsset } from './validateTokenAsset';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const log = createDebugLogger('resolveAsset(FSM_Core)', DEBUG_ENABLED, false);
 
 // Panels that should resolve to WalletAccount, not TokenContract

@@ -2,6 +2,7 @@
 
 import { useContext } from 'react';
 import type { TokenContract } from '@/lib/structure';
+import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { debugHookChange } from '@/lib/utils/debugHookChange';
 import { tokenContractsEqual } from '@/components/shared/utils/isDuplicateAddress';
 // Import the provider state directly to avoid barrel ↔ barrel cycles
@@ -88,4 +89,33 @@ export const useBuyTokenAddress = (): string | undefined => {
   const [buyTokenContract] = useBuyTokenContract();
   const addr = buyTokenContract?.address as unknown;
   return typeof addr === 'string' ? addr : undefined;
+};
+
+/**
+ * Peer token address for duplicate detection.
+ *
+ * - In BUY_LIST_SELECT_PANEL: peer = current SELL token address.
+ * - In SELL_LIST_SELECT_PANEL: peer = current BUY token address.
+ * - Other containers: no peer (undefined).
+ *
+ * Returns a plain string so it can be passed directly into FSM `peerAddress`.
+ */
+export const usePeerTokenAddress = (
+  containerType: SP_COIN_DISPLAY,
+): string | undefined => {
+  const sellAddr = useSellTokenAddress();
+  const buyAddr = useBuyTokenAddress();
+
+  switch (containerType) {
+    case SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL:
+      // Selecting BUY token → compare against SELL
+      return sellAddr ?? undefined;
+
+    case SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL:
+      // Selecting SELL token → compare against BUY
+      return buyAddr ?? undefined;
+
+    default:
+      return undefined;
+  }
 };

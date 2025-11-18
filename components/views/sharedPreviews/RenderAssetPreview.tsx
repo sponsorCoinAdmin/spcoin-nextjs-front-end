@@ -8,12 +8,13 @@ import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetS
 import { isRenderFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import { FEED_TYPE } from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
-import { getLogoURL, defaultMissingImage } from '@/lib/network/utils';
+import { getLogoURL } from '@/lib/network/utils';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import BaseListRow from '@/components/views/ListItems/BaseListRow';
 import { useAppChainId } from '@/lib/context/hooks';
 import { flushSync } from 'react-dom';
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';

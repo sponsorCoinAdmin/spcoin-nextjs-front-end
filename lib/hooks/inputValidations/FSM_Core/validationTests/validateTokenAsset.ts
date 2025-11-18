@@ -9,7 +9,7 @@ import type {
 } from '../types/validateFSMTypes';
 
 const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+  process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const log = createDebugLogger(
   'validateTokenAsset(FSM_Core)',
   DEBUG_ENABLED,
@@ -117,7 +117,7 @@ export async function validateTokenAsset(
       chainRpcUrls: anyClient?.chain?.rpcUrls,
     };
 
-    // Goes through your debug logger (controlled by NEXT_PUBLIC_DEBUG_LOG_FSM_CORE)
+    // Goes through your debug logger (controlled by NEXT_PUBLIC_DEBUG_FSM)
     log.log?.('🌐 publicClient transport snapshot', transportSnapshot);
 
     // Also emit a plain console.log so you can grep easily in DevTools
@@ -204,6 +204,16 @@ export async function validateTokenAsset(
   }
   if (symbol) patch.symbol = symbol;
   if (name) patch.name = name;
+
+  // 4b) Attach local logo path so dropdowns can render the token icon
+  if (typeof chainId === 'number') {
+    patch.logoURL = `/assets/blockchains/${chainId}/contracts/${addr}/logo.png`;
+    log.log?.('🖼️ token logoURL attached', {
+      addr,
+      chainIdParam: chainId,
+      logoURL: patch.logoURL,
+    });
+  }
 
   if (!symbol && !name && decimals === undefined) {
     // Metadata completely missing — still proceed with bare token patch

@@ -13,8 +13,7 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import ManageWallet from './ManageWallet';
 import { ExchangeContextState } from '@/lib/context/ExchangeProvider';
 import ToDo from '@/lib/utils/components/ToDo';
-import { defaultMissingImage } from '@/lib/network/utils';
-
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 type Props = { onClose?: () => void };
 
 export default function ManageRecipient({ onClose }: Props) {

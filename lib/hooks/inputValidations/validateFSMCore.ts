@@ -11,7 +11,7 @@ import { validateDuplicate } from './FSM_Core/validationTests/validateDuplicate'
 import { validateExistsLocally } from './FSM_Core/validationTests/validateExistsLocally';
 import { validateExistsOnChain } from './FSM_Core/validationTests/validateExistsOnChain';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const log = createDebugLogger('validateFSMCore', DEBUG_ENABLED, false).log;
 
 // Feature flags (true = call validator; false = jump to fallback nextState)

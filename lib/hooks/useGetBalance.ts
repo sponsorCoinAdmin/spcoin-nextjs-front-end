@@ -14,8 +14,8 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useExchangeContext, useAppChainId } from '@/lib/context/hooks';
 
 const LOG_TIME = false;
-// Hard-enable logging while we debug
-const DEBUG_ENABLED = true;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_USE_BALANCE === 'true';
 const debug = createDebugLogger('useGetBalance', DEBUG_ENABLED, LOG_TIME);
 
 // Minimal ERC-20 ABI for reads
@@ -121,9 +121,9 @@ export function useGetBalance({
     paramTokenAddress: tokenAddress,
     normalizedToken: effectiveToken,
     paramChainId: chainId,
-    appChainId,           // from useAppChainId()
-    networkChainId,       // from exchangeContext.network
-    appEffectiveChainId,  // what we passed to usePublicClient
+    appChainId, // from useAppChainId()
+    networkChainId, // from exchangeContext.network
+    appEffectiveChainId, // what we passed to usePublicClient
     publicClientChainId: publicClient?.chain?.id,
     effChainId,
     paramUserAddress: userAddress,
@@ -132,8 +132,6 @@ export function useGetBalance({
     hasPublicClient: !!publicClient,
   };
 
-  // eslint-disable-next-line no-console
-  console.log('[useGetBalance] 📊 preflight', preflightSnapshot);
   debug.log?.('📊 preflight', preflightSnapshot);
 
   // 💡 Gate the query on `user`, `publicClient`, `effChainId`, and `effectiveToken`.
@@ -152,8 +150,6 @@ export function useGetBalance({
       finalEnabled,
     };
 
-    // eslint-disable-next-line no-console
-    console.log('[useGetBalance] ⚙️ isEnabled check', snapshot);
     debug.log?.('⚙️ isEnabled check', snapshot);
 
     return finalEnabled;
@@ -185,8 +181,7 @@ export function useGetBalance({
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     queryFn: async () => {
-      // eslint-disable-next-line no-console
-      console.log('[useGetBalance] 🚀 queryFn start', {
+      debug.log?.('🚀 queryFn start', {
         effChainId,
         user,
         effectiveToken,
@@ -202,7 +197,6 @@ export function useGetBalance({
           `token       : ${String(effectiveToken)}`,
         ];
         const errMsg = parts.join(' | ');
-        // eslint-disable-next-line no-console
         console.error(errMsg);
         debug.warn?.(errMsg);
         throw new Error(errMsg);
@@ -213,12 +207,10 @@ export function useGetBalance({
           const bal = await publicClient.getBalance({
             address: user as Address,
           });
-          // eslint-disable-next-line no-console
-          console.log(
-            '[useGetBalance] 💰 native balance',
-            bal.toString(),
+          debug.log?.(
+            '💰 native balance',
+            (bal as bigint).toString(),
           );
-          debug.log?.(`💰 native balance -> ${bal.toString()}`);
           return { balance: bal as bigint, decimals: 18 };
         }
 
@@ -238,20 +230,14 @@ export function useGetBalance({
           }),
         ]);
 
-        // eslint-disable-next-line no-console
-        console.log(
-          '[useGetBalance] 💰 erc20 balance',
-          (bal as bigint).toString(),
-          'decimals=',
-          d,
-        );
-        debug.log?.(
-          `💰 erc20 balance -> ${(bal as bigint).toString()} (decimals=${d})`,
-        );
+        debug.log?.('💰 erc20 balance', {
+          balance: (bal as bigint).toString(),
+          decimals: d,
+        });
+
         return { balance: bal as bigint, decimals: Number(d) };
       } catch (e: any) {
         const msg = e?.shortMessage || e?.message || String(e);
-        // eslint-disable-next-line no-console
         console.error('[useGetBalance] ⚠️ balance query failed', msg, e);
         debug.warn?.(`⚠️ balance query failed: ${msg}`);
         throw e;
@@ -264,8 +250,7 @@ export function useGetBalance({
           ? formatUnits(balance, decimals)
           : undefined;
 
-      // eslint-disable-next-line no-console
-      console.log('[useGetBalance] ✅ select result', {
+      debug.log?.('✅ select result', {
         balance: balance.toString(),
         decimals,
         formatted,
@@ -279,8 +264,7 @@ export function useGetBalance({
     },
   });
 
-  // eslint-disable-next-line no-console
-  console.log('[useGetBalance] 🔁 hook return snapshot', {
+  debug.log?.('🔁 hook return snapshot', {
     key: isEnabled ? keyString : undefined,
     isEnabled,
     isLoading: query.isLoading,

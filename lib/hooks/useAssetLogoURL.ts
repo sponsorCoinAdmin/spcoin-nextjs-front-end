@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { isAddress } from 'viem';
-import { defaultMissingImage } from '@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAppChainId } from '../context/hooks';
 

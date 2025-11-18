@@ -6,9 +6,10 @@ import { InputState } from '@/lib/structure/assetSelection';
 import { resolveContract } from '@/lib/utils/publicERC20/resolveContract';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
-import { getLogoURL, defaultMissingImage } from'@/lib/network/utils';
+import { getLogoURL } from'@/lib/network/utils';
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('validateResolvedAsset', DEBUG_ENABLED, LOG_TIME);
 
 /**

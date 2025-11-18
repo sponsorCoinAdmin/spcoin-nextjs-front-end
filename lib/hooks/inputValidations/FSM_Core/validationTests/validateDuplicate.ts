@@ -7,20 +7,9 @@ import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTy
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('validateDuplicate', DEBUG_ENABLED, LOG_TIME);
 
-/**
- * Detect duplicate selection:
- * - Compares the candidate (debouncedHexInput) to the opposing side’s address (peerAddress).
- * - If equal → DUPLICATE_INPUT_ERROR.
- * - Otherwise ALWAYS advance to PREVIEW_CONTRACT_NOT_FOUND_LOCALLY.
- *
- * NOTE:2
- *  - No local cache check here.
- *  - No NOT_FOUND branch here.
- *  - manualEntry logic happens later in validateResolvedAsset.
- */
 export function validateDuplicate(input: ValidateFSMInput): ValidateFSMOutput {
   const { containerType, debouncedHexInput, peerAddress } = input;
 

@@ -6,6 +6,7 @@ import { useAssetSelectContext } from '@/lib/context/AssetSelectPanels/useAssetS
 import BasePreviewWrapper from './BasePreviewWrapper';
 import { InputState } from '@/lib/structure/assetSelection';
 import { isErrorFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
+import { badTokenAddressImage } from '@/lib/context/helpers/assetHelpers';
 
 export default function ErrorAssetPreview() {
   const { inputState, instanceId, containerType, feedType } = useAssetSelectContext();
@@ -25,8 +26,6 @@ export default function ErrorAssetPreview() {
   }, [instanceId, containerType, feedType, inputState, stateName, visible]);
 
   const { emoji, imageSrc, text, colorHex } = useMemo(() => {
-    const BAD_IMG = '/assets/miscellaneous/badTokenAddressImage.png';
-
     const map: Partial<
       Record<
         InputState,
@@ -40,22 +39,22 @@ export default function ErrorAssetPreview() {
     > = {
       // Use image (like RenderAssetPreview) for these error states
       [InputState.INVALID_HEX_INPUT]: {
-        imageSrc: BAD_IMG,
+        imageSrc: badTokenAddressImage,
         text: 'Hex input invalid.',
         colorHex: '#ef4444',
       },
       [InputState.INVALID_ADDRESS_INPUT]: {
-        imageSrc: BAD_IMG,
+        imageSrc: badTokenAddressImage,
         text: 'Valid address required.',
         colorHex: '#ef4444',
       },
       [InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN]: {
-        imageSrc: BAD_IMG,
+        imageSrc: badTokenAddressImage,
         text: 'Address not found on blockchain.',
         colorHex: '#ef4444',
       },
       [InputState.TOKEN_NOT_RESOLVED_ERROR]: {
-        imageSrc: BAD_IMG,
+        imageSrc: badTokenAddressImage,
         text: 'Token Not Resolved.',
         colorHex: '#ef4444',
       },

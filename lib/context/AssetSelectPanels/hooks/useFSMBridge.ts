@@ -2,28 +2,35 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import type { Address } from 'viem';
 
-import type { FEED_TYPE, SP_COIN_DISPLAY, TokenContract, WalletAccount } from '@/lib/structure';
+import type {
+  FEED_TYPE,
+  SP_COIN_DISPLAY,
+  TokenContract,
+  WalletAccount,
+} from '@/lib/structure';
 import { InputState } from '@/lib/structure/assetSelection';
 import { useFSMStateManager } from '@/lib/hooks/inputValidations/FSM_Core/useFSMStateManager';
-import { dumpFSMContext, dumpInputFeedContext } from '@/lib/hooks/inputValidations/utils/debugContextDump';
+import {
+  dumpFSMContext,
+  dumpInputFeedContext,
+} from '@/lib/hooks/inputValidations/utils/debugContextDump';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { usePeerTokenAddress } from '@/lib/context/hooks/nestedHooks/useTokenContracts';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_LOG_SHARED_PANEL === 'true' ||
   process.env.NEXT_PUBLIC_FSM === 'true';
-const debugLog = createDebugLogger('useFSMBridge', DEBUG_ENABLED, LOG_TIME);
 
+const debugLog = createDebugLogger('useFSMBridge', DEBUG_ENABLED, LOG_TIME);
 
 type BridgeParams = {
   containerType: SP_COIN_DISPLAY;
   feedType: FEED_TYPE;
   instanceId: string;
-  peerAddress?: Address | string;
 
-  /** ⬅️ CRITICAL: live manualEntry value comes directly from context props each render */
+  /** Live manualEntry value from parent */
   manualEntry: boolean;
 
   validatedAsset?: TokenContract | WalletAccount;
@@ -37,9 +44,6 @@ type BridgeParams = {
   showAssetPreview: () => void;
   showErrorPreview: () => void;
 
-  // (optional) external reset injection
-  resetHexInputExternal?: (() => void) | undefined;
-
   // per-instance bypass
   bypassFSM?: boolean;
 };
@@ -49,8 +53,7 @@ export function useFSMBridge(params: BridgeParams) {
     containerType,
     feedType,
     instanceId,
-    peerAddress,
-    manualEntry, // ⬅️ live value
+    manualEntry,
     validatedAsset,
     setValidatedAsset,
     fireClosePanel,
@@ -58,14 +61,11 @@ export function useFSMBridge(params: BridgeParams) {
     resetPreview,
     showAssetPreview,
     showErrorPreview,
-    resetHexInputExternal,
     bypassFSM = false,
   } = params;
 
-  // Replace raw console logging with gated debug logs
-  useEffect(() => {
-    debugLog.log?.('manualEntry changed', { instanceId, manualEntry });
-  }, [instanceId, manualEntry]);
+  // 🔁 Derive peer token address inside the bridge from live trade state
+  const peerAddress = usePeerTokenAddress(containerType) ?? undefined;
 
   const {
     inputState,
@@ -82,12 +82,11 @@ export function useFSMBridge(params: BridgeParams) {
     containerType,
     feedType,
     instanceId,
+    peerAddress,
+    manualEntry,
     setValidatedAsset,
     closePanelCallback: fireClosePanel,
     setTradingTokenCallback: fireSetTradingToken,
-    peerAddress,
-    /** ⬅️ IMPORTANT: pass through the current manualEntry each render */
-    manualEntry,
     bypassFSM,
   });
 
@@ -106,21 +105,30 @@ export function useFSMBridge(params: BridgeParams) {
       didHandleTerminalRef.current = true;
 
       if (!validatedAsset) {
-        debugLog.warn?.(`[${instanceId}] UPDATE_VALIDATED_ASSET with no validatedAsset`);
+        debugLog.warn?.(
+          `[${instanceId}] UPDATE_VALIDATED_ASSET with no validatedAsset`,
+        );
       } else {
-        debugLog.log?.(`[${instanceId}] ✅ commit validatedAsset → setTradingToken`, {
-          manualEntryAtCommitStep: manualEntry,
-        });
+        debugLog.log?.(
+          `[${instanceId}] ✅ commit validatedAsset → setTradingToken`,
+          { manualEntryAtCommitStep: manualEntry },
+        );
         fireSetTradingToken(validatedAsset);
       }
-      setInputState(InputState.CLOSE_SELECT_PANEL, `Bridge(${instanceId}) commit → close`);
+
+      setInputState(
+        InputState.CLOSE_SELECT_PANEL,
+        `Bridge(${instanceId}) commit → close`,
+      );
       return;
     }
 
     if (inputState === InputState.CLOSE_SELECT_PANEL) {
       if (!didHandleTerminalRef.current) {
         debugLog.warn?.(
-          `[${instanceId}] CLOSE_SELECT_PANEL before commit (asset=${String(!!validatedAsset)})`,
+          `[${instanceId}] CLOSE_SELECT_PANEL before commit (asset=${String(
+            !!validatedAsset,
+          )})`,
         );
       }
       try {
@@ -129,9 +137,12 @@ export function useFSMBridge(params: BridgeParams) {
         debugLog.log?.(`[${instanceId}] ♻️ reset after close`);
         resetPreview();
         setValidatedAsset(undefined);
-        (resetHexInputExternal ?? resetHexInput)();
+        resetHexInput();
         didHandleTerminalRef.current = false;
-        setInputState(InputState.EMPTY_INPUT, `Bridge(${instanceId}) closed`);
+        setInputState(
+          InputState.EMPTY_INPUT,
+          `Bridge(${instanceId}) closed`,
+        );
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,16 +156,19 @@ export function useFSMBridge(params: BridgeParams) {
       case InputState.EMPTY_INPUT:
         resetPreview();
         break;
+
       case InputState.RESOLVE_ASSET:
       case InputState.VALIDATE_PREVIEW:
         if (validatedAsset) showAssetPreview();
         break;
+
       case InputState.TOKEN_NOT_RESOLVED_ERROR:
       case InputState.RESOLVE_ASSET_ERROR:
       case InputState.CONTRACT_NOT_FOUND_ON_BLOCKCHAIN:
       case InputState.INVALID_ADDRESS_INPUT:
         showErrorPreview();
         break;
+
       default:
         break;
     }
@@ -188,7 +202,12 @@ export function useFSMBridge(params: BridgeParams) {
   const dumpFSM = useCallback(
     (header?: string) => {
       if (!DEBUG_ENABLED) return;
-      dumpFSMContext(header ?? '', inputState, validatedAsset as TokenContract | undefined, instanceId);
+      dumpFSMContext(
+        header ?? '',
+        inputState,
+        validatedAsset as TokenContract | undefined,
+        instanceId,
+      );
       dumpInputFeed(header ?? '');
     },
     [inputState, validatedAsset, dumpInputFeed, instanceId],

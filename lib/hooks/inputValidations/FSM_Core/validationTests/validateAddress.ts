@@ -7,7 +7,7 @@ import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTy
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const debugLog = createDebugLogger('validateAddress', DEBUG_ENABLED, LOG_TIME);
 
 /**

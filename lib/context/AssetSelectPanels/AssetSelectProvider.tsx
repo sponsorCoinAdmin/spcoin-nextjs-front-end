@@ -3,13 +3,11 @@
 
 import type { ReactNode } from 'react';
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
-import type { Address } from 'viem';
 
 import { AssetSelectContext } from './useAssetSelectContext';
 import type { TokenContract, WalletAccount } from '@/lib/structure';
 import { SP_COIN_DISPLAY, FEED_TYPE } from '@/lib/structure';
 import type { AssetSelectBag } from '@/lib/context/structure/types/panelBag';
-import { isTokenSelectBag } from '@/lib/context/structure/types/panelBag';
 import { useAssetSelectDisplay } from '@/lib/context/providers/AssetSelect/AssetSelectDisplayProvider';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
@@ -88,14 +86,7 @@ export const AssetSelectProvider = ({
     setValidatedAssetNarrow,
   } = useValidatedAsset<TokenContract | WalletAccount>();
 
-  // Peer address derived from panelBag
-  const peerAddress = useMemo<Address | undefined>(() => {
-    return panelBag && isTokenSelectBag(panelBag)
-      ? (panelBag.peerAddress as Address | undefined)
-      : undefined;
-  }, [panelBag]);
-
-  // Bridge to FSM
+  // Bridge to FSM (peerAddress is now derived inside useFSMBridge)
   const {
     inputState,
     setInputState: _setInputState,
@@ -113,7 +104,6 @@ export const AssetSelectProvider = ({
     containerType,
     feedType,
     instanceId,
-    peerAddress,
     manualEntry,
     validatedAsset,
     setValidatedAsset,

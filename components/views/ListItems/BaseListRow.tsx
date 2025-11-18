@@ -4,8 +4,7 @@
 import React, { memo } from 'react';
 import Image from 'next/image';
 import info_png from '@/public/assets/miscellaneous/info1.png';
-import { defaultMissingImage } from '@/lib/network/utils';
-
+import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 type BaseListRowProps = {
   avatarSrc: string;
   title: string;

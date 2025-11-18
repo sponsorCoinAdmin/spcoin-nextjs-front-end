@@ -9,7 +9,7 @@ import { createDebugLogger } from '@/lib/utils/debugLogger';
 import type { ValidateFSMInput, ValidateFSMOutput } from '../types/validateFSMTypes';
 import { isStudyEnabled, StudyId } from '../studyPolicy';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_FSM_CORE === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
 const log = createDebugLogger('validateExistsOnChain(FSM_Core)', DEBUG_ENABLED, /* timestamp */ false);
 
 // ---- Surface the real RPC endpoint ----

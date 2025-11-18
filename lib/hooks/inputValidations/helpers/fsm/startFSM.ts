@@ -24,7 +24,7 @@ import { makeSignature, shouldRunFSM } from './internals/guards';
 
 type PublicClientLike = unknown;
 
-export type StartFSMArgs = {
+type StartFSMArgs = {
   debouncedHexInput: string;
   prevDebouncedInputRef: MutableRefObject<string | undefined>;
   publicClient: PublicClientLike | null | undefined;

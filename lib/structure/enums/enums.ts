@@ -51,10 +51,7 @@ export enum TRADE_DIRECTION {
   BUY_EXACT_IN,
 }
 
-/**
- * ✅ Make provider IDs stable for persistence/telemetry by using string enums.
- * (Safer than numeric enums when writing to localStorage or sending over the wire.)
- */
+
 export enum API_TRADING_PROVIDER {
   API_0X = 'API_0X',
   API_1INCH = 'API_1INCH',
