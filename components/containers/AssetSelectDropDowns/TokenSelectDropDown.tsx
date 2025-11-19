@@ -11,7 +11,7 @@ import { clearFSMTraceFromMemory } from '@/components/debug/FSMTracePanel';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import { defaultMissingImage, getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_DROP_DOWN === 'true';
@@ -36,14 +36,31 @@ export default function TokenSelectDropDown({ containerType }: Props) {
   const openingRef = useRef(false);
 
   const logoURL = useMemo(() => {
-    const raw = tokenContract?.logoURL?.trim();
-    if (raw && raw.length > 0) {
-      return raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')
-        ? raw
-        : `/${raw.replace(/^\/+/, '')}`;
+    if (!tokenContract) return defaultMissingImage;
+
+    const raw = tokenContract.logoURL?.trim();
+
+    // If this is an absolute remote URL, respect it as-is.
+    if (raw && (raw.startsWith('http://') || raw.startsWith('https://'))) {
+      return raw;
     }
+
+    // For local assets, derive the path from address + chainId so that
+    // case-normalization (UPPERCASE dirs) stays consistent with assetHelpers.
+    if (tokenContract.address && typeof tokenContract.chainId === 'number') {
+      return getTokenLogoURL({
+        address: tokenContract.address,
+        chainId: tokenContract.chainId,
+      });
+    }
+
+    // Fallback: normalize any other non-empty relative path.
+    if (raw && raw.length > 0) {
+      return raw.startsWith('/') ? raw : `/${raw.replace(/^\/+/, '')}`;
+    }
+
     return defaultMissingImage;
-  }, [tokenContract?.logoURL]);
+  }, [tokenContract]);
 
   const handleMissingLogoURL = useCallback(
     (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -141,10 +158,10 @@ export default function TokenSelectDropDown({ containerType }: Props) {
   function displaySymbol(tokenContract: TokenContract) {
     if (DEBUG_ENABLED) {
       const msg = stringifyBigInt(tokenContract);
-      console.log(msg)
+      console.log(msg);
       // alert(msg)
     }
-    return  tokenContract.symbol ?? 'Select Token'
+    return tokenContract.symbol ?? 'Select Token';
   }
 
   return (
