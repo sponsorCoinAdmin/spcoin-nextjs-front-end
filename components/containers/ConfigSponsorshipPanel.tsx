@@ -8,19 +8,43 @@ import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 import { usePanelTransitions } from '@/lib/context/exchangeContext/hooks/usePanelTransitions';
 
-const MIN_STEP = 2; // matches prior code
-const MAX_STEP = 10;
+const MIN_SPONSOR_STEP = 2; // 20% recipient / 80% sponsor
+const MAX_SPONSOR_STEP = 10; // 100% recipient / 0% sponsor
+
+const MIN_AGENT_STEP = 2; // 2% of remaining balance
+const MAX_AGENT_STEP = 10; // 10% of remaining balance
 
 const ConfigSponsorshipPanel: React.FC = () => {
   const { isVisible } = usePanelTree();
   const { closeConfigSponsorship } = usePanelTransitions();
 
-  // "step" from 2..10 where displayed percentages are step*10 and (100 - step*10)
-  const [step, setStep] = useState<number>(5);
+  // Sponsor slider: step from 2..10 where
+  //   sponsorPct = 100 - step * 10
+  //   remainingBal (RB) = step * 10
+  const [sponsorStep, setSponsorStep] = useState<number>(5); // RB=50, SP=50 by default
 
-  const recipientPct = useMemo(() => step * 10, [step]);
-  const sponsorPct = useMemo(() => 100 - step * 10, [step]);
-  const agentPct = useMemo(() => 100 - step * 10, [step]);
+  // Agent slider: step from 2..10 representing 2%..10% of remainingBal
+  //   sliderRatioRange (SRR) = agentStep / 100
+  //   agentPct (AP) = RB * SRR
+  //   recipientPct (RP) = RB - AP
+  const [agentStep, setAgentStep] = useState<number>(2); // 2% of RB by default
+
+  // --- core percentage math -------------------------------------------------
+
+  const sponsorPct = useMemo(() => 100 - sponsorStep * 10, [sponsorStep]); // SP
+  const remainingBal = useMemo(() => sponsorStep * 10, [sponsorStep]); // RB
+
+  const sliderRatioRange = useMemo(() => agentStep / 100, [agentStep]); // SRR
+
+  const agentPct = useMemo(() => {
+    const raw = remainingBal * sliderRatioRange; // AP = RB * SRR
+    return Number(raw.toFixed(2));
+  }, [remainingBal, sliderRatioRange]);
+
+  const recipientPct = useMemo(() => {
+    const raw = remainingBal - agentPct; // RP = RB - AP
+    return Number(raw.toFixed(2));
+  }, [remainingBal, agentPct]);
 
   const selfVisible = isVisible(SP_COIN_DISPLAY.CONFIG_SPONSORSHIP_PANEL);
   if (!selfVisible) return null;
@@ -48,13 +72,13 @@ const ConfigSponsorshipPanel: React.FC = () => {
           width={18}
           height={18}
           alt='Info'
-          onClick={() => alert('ToDo: Rate Sistribution Info')}
+          onClick={() => alert('ToDo: Rate Distribution Info')}
         />
 
-        {/* Sponsor ratio pill */}
+        {/* Overall Recipient pill (final RP after Agent deduction) */}
         <div className='absolute top-0 right-[50px] min-w-[50px] h-[28px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2'>
           Recipient:
-          <div id='sponsorRatio'>{recipientPct}%</div>
+          <div id='recipientRatio'>{recipientPct}%</div>
         </div>
 
         {/* close button */}
@@ -66,35 +90,36 @@ const ConfigSponsorshipPanel: React.FC = () => {
           X
         </div>
 
-        {/* Row 1: AARecipient + slider */}
+        {/* Row 1: Sponsor + slider */}
         <div className='absolute top-[35px] right-[50px] min-w-[50px] h-[14px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2'>
           Sponsor:
-          <div id='recipientRatio'>{sponsorPct}%</div>
+          <div id='sponsorRatio'>{sponsorPct}%</div>
         </div>
 
         <input
           type='range'
           title='Adjust Sponsor/Recipient Ratio'
-          className='absolute top-[62px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[200px] rounded-none outline-none bg-white cursor-pointer'
-          min={MIN_STEP}
-          max={MAX_STEP}
-          value={step}
-          onChange={(e) => setStep(Number(e.target.value))}
+          className='absolute top-[62px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer'
+          min={MIN_SPONSOR_STEP}
+          max={MAX_SPONSOR_STEP}
+          value={sponsorStep}
+          onChange={(e) => setSponsorStep(Number(e.target.value))}
         />
 
+        {/* Row 2: Agent + slider (takes a slice of remainingBal) */}
         <div className='absolute top-[60px] right-[50px] min-w-[50px] h-[24px] bg-[#243056] rounded-full flex justify-start items-center gap-[5px] font-bold text-[17px] pr-2'>
           Agent:
-          <div id='recipientRatio'>{agentPct}%</div>
+          <div id='agentRatio'>{agentPct}%</div>
         </div>
 
         <input
           type='range'
           title='Adjust Recipient/Agent Ratio'
-          className='absolute top-[90px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[200px] rounded-none outline-none bg-white cursor-pointer'
-          min={MIN_STEP}
-          max={MAX_STEP}
-          value={step}
-          onChange={(e) => setStep(Number(e.target.value))}
+          className='absolute top-[95px] left-[11px] -mt-[20.5px] border-0 h-[1px] w-[224px] rounded-none outline-none bg-white cursor-pointer'
+          min={MIN_AGENT_STEP}
+          max={MAX_AGENT_STEP}
+          value={agentStep}
+          onChange={(e) => setAgentStep(Number(e.target.value))}
         />
       </div>
     </div>
