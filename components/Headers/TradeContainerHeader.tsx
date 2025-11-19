@@ -3,32 +3,25 @@
 
 import Image from 'next/image';
 import cog_png from '@/public/assets/miscellaneous/cog.png';
-import ConfigPanel from '@/components/views/Config/ConfigPanel';
 import { exchangeContextDump } from '@/lib/spCoin/guiUtils';
 import { useExchangeContext } from '@/lib/context/hooks';
 import ConnectNetworkButton from '@/components/Buttons/Connect/ConnectNetworkButton';
 import { useHeaderController } from '@/lib/context/exchangeContext/hooks/useHeaderController';
 import CloseButton from '@/components/Buttons/CloseButton';
+import { SP_COIN_DISPLAY as SP_TREE } from '@/lib/structure';
+import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
 
 export default function TradeContainerHeader() {
   const { exchangeContext } = useExchangeContext();
-  const {
-    title,
-    leftElement,
-    isConfigOpen,
-    onOpenConfig,
-    onCloseConfig,
-    onClose,
-    isTrading,
-  } = useHeaderController();
+  const { title, leftElement, onClose, isTrading } = useHeaderController();
+
+  const { openPanel } = usePanelTree();
 
   return (
     <div
       id='TradeContainerHeader'
       className='grid grid-cols-[auto_1fr_auto] items-center w-full box-border h-[50px] min-h-[50px] py-0 px-0 shrink-0 my-[3px]'
     >
-      <ConfigPanel showPanel={isConfigOpen} onClose={onCloseConfig as any} />
-
       <div
         id='SponsorCoinLogo.png'
         onDoubleClick={() => exchangeContextDump(exchangeContext)}
@@ -54,9 +47,14 @@ export default function TradeContainerHeader() {
         {isTrading ? (
           <Image
             src={cog_png}
-            alt='Open settings'
-            title='Open settings'
-            onClick={onOpenConfig}
+            alt='Open slippage settings'
+            title='Open slippage settings'
+            onClick={() => {
+              openPanel(
+                SP_TREE.CONFIG_SLIPPAGE_PANEL,
+                'TradeContainerHeader:cog(CONFIG_SLIPPAGE_PANEL)',
+              );
+            }}
             className='h-5 w-5 object-contain cursor-pointer transition duration-300 hover:rotate-[360deg]'
             priority
           />

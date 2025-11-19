@@ -12,7 +12,7 @@ import AddSponsorShipPanel from '@/components/views/AddSponsorshipPanel';
 
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
-import ConfigSponsorshipPanel from './ConfigSponsorshipPanel';
+import ConfigSponsorshipPanel from './ConfigSlippagePanel';
 
 export default function TradingStationPanel() {
   const { isLoading, data } = usePriceAPI();

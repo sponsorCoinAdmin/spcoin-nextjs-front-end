@@ -22,6 +22,7 @@ const TRADING_CHILDREN: SP[] = [
   SP.PRICE_BUTTON,
   SP.FEE_DISCLOSURE,
   SP.AFFILIATE_FEE,
+  SP.CONFIG_SLIPPAGE_PANEL, // ✅ added as child of TRADING_STATION_PANEL
 ];
 
 const MAIN_TRADING_CHILDREN: SP[] = [
@@ -70,6 +71,7 @@ export const PANEL_DEFS: readonly PanelDef[] = [
   { id: SP.BUY_SELECT_PANEL,  kind: 'panel', defaultVisible: true, children: [SP.ADD_SPONSORSHIP_BUTTON] },
   { id: SP.ADD_SPONSORSHIP_PANEL,    kind: 'panel', defaultVisible: false, children: [SP.CONFIG_SPONSORSHIP_PANEL] },
   { id: SP.CONFIG_SPONSORSHIP_PANEL, kind: 'panel', defaultVisible: false },
+  { id: SP.CONFIG_SLIPPAGE_PANEL,    kind: 'panel', defaultVisible: false }, // ✅ new panel def
 
   { id: SP.SWAP_ARROW_BUTTON, kind: 'control', defaultVisible: true },
   { id: SP.PRICE_BUTTON,      kind: 'control', defaultVisible: true },
@@ -88,6 +90,7 @@ export const MAIN_OVERLAY_GROUP: readonly SP[] =
 export const NON_INDEXED_PANELS = new Set<SP>([
   SP.MAIN_TRADING_PANEL,
   SP.TRADE_CONTAINER_HEADER,
+  SP.CONFIG_SLIPPAGE_PANEL, // ✅ treat config panel as non-indexed
 ]);
 
 export const ROOTS: SP[] = [SP.MAIN_TRADING_PANEL];
