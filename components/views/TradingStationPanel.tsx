@@ -12,6 +12,7 @@ import AddSponsorShipPanel from '@/components/views/AddSponsorshipPanel';
 
 import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
+import ConfigSponsorshipPanel from './ConfigSponsorshipPanel';
 
 export default function TradingStationPanel() {
   const { isLoading, data } = usePriceAPI();
@@ -20,6 +21,7 @@ export default function TradingStationPanel() {
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
       <div id="TradingStationPanel">
+        <ConfigSponsorshipPanel />
         <SellAssetPanel />
         <BuyAssetPanel />
         <BuySellSwapArrowButton />
