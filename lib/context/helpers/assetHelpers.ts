@@ -68,6 +68,9 @@ export type RequiredAssetMembers = { address: string; chainId: number };
 /**
  * Token-specific logo helper.
  * Returns a contract logo path or the "bad token" sentinel image.
+ *
+ * NOTE: We normalize the address to UPPERCASE for filesystem paths so that
+ * Linux case-sensitivity matches our on-disk directory names.
  */
 export function getTokenLogoURL(required?: RequiredAssetMembers): string {
   if (!required) return badTokenAddressImage;
@@ -77,18 +80,23 @@ export function getTokenLogoURL(required?: RequiredAssetMembers): string {
     return badTokenAddressImage;
   }
 
-return `/assets/blockchains/${chainId}/contracts/${address.toLowerCase()}/logo.png`;
+  const normalized = address.toUpperCase();
+
+  return `/assets/blockchains/${chainId}/contracts/${normalized}/logo.png`;
 }
 
 /**
  * Wallet / account-specific logo helper.
  * Uses the accounts logo path and falls back to the generic missing image.
+ *
+ * We also normalize to UPPERCASE to match Linux directory naming.
  */
 export function getWalletLogoURL(address?: string): string {
   if (!address || address.length < 10) {
     return defaultMissingImage;
   }
-  return `/assets/accounts/${address}/logo.png`;
+  const normalized = address.toUpperCase();
+  return `/assets/accounts/${normalized}/logo.png`;
 }
 
 /**
@@ -137,7 +145,8 @@ export function getAssetLogoURL(
  * Legacy-style account logo helper (used where a full WalletAccount is available).
  */
 export function getAccountLogo(account?: WalletAccount): string {
-  return account
-    ? `/assets/accounts/${account.address}/logo.png`
-    : defaultMissingImage;
+  if (!account) return defaultMissingImage;
+  const normalized = account.address?.toUpperCase?.() ?? '';
+  if (!normalized || normalized.length < 10) return defaultMissingImage;
+  return `/assets/accounts/${normalized}/logo.png`;
 }
