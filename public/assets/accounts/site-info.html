@@ -161,14 +161,30 @@
           init: { cache: 'no-store' }
         });
 
-        document.getElementById('title').innerHTML =
-          `<span style="color: darkblue;">Web Site</span> 
-           <span style="color: ${wallet.name ? 'black' : 'red'};">
-             ${wallet.name ? wallet.name : '<span style="color: red;">ERROR: Missing "name" in wallet.json</span>'}
-           </span> 
-           <span style="color: darkblue;">Not Found</span>`;
+        const name = (wallet.name || '').trim();
+        const hasWebsite =
+          wallet.website &&
+          String(wallet.website).trim().length > 0;
 
-        if (wallet.website && String(wallet.website).trim()) {
+        // Build title text:
+        // - If name present → "Web Site {name}"
+        // - If name missing → show explicit error
+        // - Only append "Not Found" if website is missing
+        let titleHtml = `<span style="color: darkblue;">Web Site</span> `;
+
+        if (name) {
+          titleHtml += `<span style="color: black;">${name}</span>`;
+        } else {
+          titleHtml += `<span style="color: red;">ERROR: Missing "name" in wallet.json</span>`;
+        }
+
+        if (!hasWebsite) {
+          titleHtml += ` <span style="color: darkblue;">Not Found</span>`;
+        }
+
+        document.getElementById('title').innerHTML = titleHtml;
+
+        if (hasWebsite) {
           const websiteInput = document.getElementById('websiteInput');
           websiteInput.value = String(wallet.website).trim();
           websiteInput.style.display = 'block';
