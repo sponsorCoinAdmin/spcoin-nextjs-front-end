@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import styles from '@/styles/Exchange.module.css';
 import { ArrowDown } from 'lucide-react';
 import {
   useExchangeContext,
@@ -53,7 +52,9 @@ function shiftDecimal(value: string, shift: number): string {
 
 function coerceShiftedAmount(original: unknown, shifted: string): bigint | string {
   if (typeof original === 'bigint' && !shifted.includes('.')) {
-    try { return BigInt(shifted); } catch {}
+    try {
+      return BigInt(shifted);
+    } catch { }
   }
   return shifted;
 }
@@ -65,44 +66,62 @@ const BuySellSwapArrowButton = () => {
   const [, setBuyTokenContract] = useBuyTokenContract();
   const { swrKey } = usePriceAPI();
 
-  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    e.preventDefault();
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
 
-    const trade = exchangeContext?.tradeData as any;
-    const sell = trade?.sellTokenContract ?? undefined;
-    const buy = trade?.buyTokenContract ?? undefined;
-    if (!sell && !buy) return;
+      const trade = exchangeContext?.tradeData as any;
+      const sell = trade?.sellTokenContract ?? undefined;
+      const buy = trade?.buyTokenContract ?? undefined;
+      if (!sell && !buy) return;
 
-    const nextSell = buy ? { ...buy } : undefined;
-    const nextBuy = sell ? { ...sell } : undefined;
+      const nextSell = buy ? { ...buy } : undefined;
+      const nextBuy = sell ? { ...sell } : undefined;
 
-    if (sell && buy) {
-      const sellDecimals = sell.decimals ?? 0;
-      const buyDecimals = buy.decimals ?? 0;
-      const originalAmt = (sell as any).amount ?? 0n;
+      if (sell && buy) {
+        const sellDecimals = sell.decimals ?? 0;
+        const buyDecimals = buy.decimals ?? 0;
+        const originalAmt = (sell as any).amount ?? 0n;
 
-      const shift = buyDecimals - sellDecimals;
-      const str = shiftDecimal(toDecimalString(originalAmt), shift);
-      const amtOut = coerceShiftedAmount(originalAmt, str);
+        const shift = buyDecimals - sellDecimals;
+        const str = shiftDecimal(toDecimalString(originalAmt), shift);
+        const amtOut = coerceShiftedAmount(originalAmt, str);
 
-      (nextSell as any).amount = amtOut;
-      if (nextBuy) delete (nextBuy as any).amount;
-    } else {
-      if (nextSell) delete (nextSell as any).amount;
-      if (nextBuy) delete (nextBuy as any).amount;
-    }
+        (nextSell as any).amount = amtOut;
+        if (nextBuy) delete (nextBuy as any).amount;
+      } else {
+        if (nextSell) delete (nextSell as any).amount;
+        if (nextBuy) delete (nextBuy as any).amount;
+      }
 
-    setSellTokenContract(nextSell as any);
-    setBuyTokenContract(nextBuy as any);
+      setSellTokenContract(nextSell as any);
+      setBuyTokenContract(nextBuy as any);
 
-    if (swrKey) queueMicrotask(() => mutate(swrKey));
-  }, [exchangeContext?.tradeData, setSellTokenContract, setBuyTokenContract, swrKey]);
+      if (swrKey) {
+        queueMicrotask(() => mutate(swrKey));
+      }
+    },
+    [exchangeContext?.tradeData, setSellTokenContract, setBuyTokenContract, swrKey]
+  );
 
   if (!show) return null;
 
   return (
-    <div id="BuySellSwapArrowButton" className={styles.switchButton}>
-      <ArrowDown size={20} className={styles.switchArrow} onClick={handleClick} />
+    <div
+      id='BuySellSwapArrowButton'
+      onClick={handleClick}
+      className='
+        absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-10
+        flex items-center justify-center
+        w-6 h-6
+        text-[#5F6783] bg-[#3a4157]
+        rounded-lg border-[3px] border-[#0E111B]
+        text-xs
+        transition-colors duration-300
+        cursor-pointer hover:text-white
+      '
+    >
+      <ArrowDown size={16} />
     </div>
   );
 };

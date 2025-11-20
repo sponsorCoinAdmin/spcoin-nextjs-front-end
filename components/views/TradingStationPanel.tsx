@@ -20,11 +20,18 @@ export default function TradingStationPanel() {
 
   return (
     <PanelGate panel={SP_COIN_DISPLAY.TRADING_STATION_PANEL}>
-      <div id="TradingStationPanel">
+      <div id='TradingStationPanel'>
         <ConfigSponsorshipPanel />
         <SellAssetPanel />
-        <BuyAssetPanel />
-        <BuySellSwapArrowButton />
+
+        {/* 🔹 Buy panel + arrow share this relative wrapper.
+            The arrow's top edge is aligned to the top of this block,
+            so its center sits exactly between Sell and Buy. */}
+        <div className='relative'>
+          <BuyAssetPanel />
+          <BuySellSwapArrowButton />
+        </div>
+
         <AddSponsorShipPanel />
         <PriceButton isLoadingPrice={isLoading} />
         <AffiliateFee priceResponse={priceResponse} />
