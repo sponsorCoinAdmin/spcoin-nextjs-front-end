@@ -107,6 +107,13 @@ export async function buildWalletFromJson(
   return ws[0] ?? null;
 }
 
+// Backwards-compatible alias for older imports (buildWalletFromJsonFirst)
+export async function buildWalletFromJsonFirst(
+  rawAccountSpec: unknown
+): Promise<WalletAccount | null> {
+  return buildWalletFromJson(rawAccountSpec);
+}
+
 /**
  * Feed-style converter: give a JSON (object/string) + FEED_TYPE and get a FeedData bundle.
  * Mirrors the shapes returned by fetchAndBuildDataList, but without going through getDataListObj.
