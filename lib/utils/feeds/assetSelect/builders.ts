@@ -14,7 +14,7 @@ import { loadAccounts } from '@/lib/spCoin/loadAccounts';
 
 import type { BuiltToken, FeedData } from './types';
 
-/* ───────────────────────────── utils ───────────────────────────── */
+/* ─────────────────────────── utils ────────────────────────── */
 
 function parseJson(input: unknown): any {
   if (typeof input === 'string') {
@@ -27,7 +27,7 @@ function parseJson(input: unknown): any {
   return input ?? null;
 }
 
-/* ─────────────────────── core normalizers (existing) ─────────────────────── */
+/* ─────────────── core normalizers (existing) ────────────── */
 
 /** Normalize a sparse account JSON entry into a WalletAccount */
 export function buildWalletObj(a: any): WalletAccount {
@@ -43,14 +43,23 @@ export function buildWalletObj(a: any): WalletAccount {
 
 /** Normalize a token JSON entry into a BuiltToken (async to resolve logos) */
 export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken> {
-  const address = String(t?.address ?? '').toLowerCase();
+  // Keep the token's address as provided (checksum/lowercase/etc.) for on-chain use
+  const raw = String(t?.address ?? '').trim();
+  const address = raw as Address;
+
+  // Filesystem key for assets: we uppercase the entire address (including prefix)
+  // so it matches the on-disk directory naming (0X...)
+  const fsKey = raw.toUpperCase();
+
   let logoURL: string;
   try {
-    logoURL = await getLogoURL(chainId, address as any, FEED_TYPE.TOKEN_LIST);
+    // Use the uppercased fsKey when resolving logo URLs so asset paths match Linux dirs
+    logoURL = await getLogoURL(chainId, fsKey as any, FEED_TYPE.TOKEN_LIST);
   } catch {
-    // Fallback: derive via central helper instead of hardcoding the path
-    logoURL = getTokenLogoURL({ address, chainId });
+    // Fallback: derive via central helper using the same fsKey
+    logoURL = getTokenLogoURL({ address: fsKey, chainId });
   }
+
   return {
     ...t,
     address,
@@ -60,7 +69,7 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
   } as BuiltToken;
 }
 
-/* ─────────────────────────── new conveniences ─────────────────────────── */
+/* ────────────────── new conveniences ────────────────── */
 
 /**
  * Build a single token from a raw JSON object/string.
@@ -91,7 +100,7 @@ export async function buildWalletsFromJson(
  * Convenience: build exactly one wallet (first) from a spec.
  * Returns null if none resolved.
  */
-export async function buildWalletFromJsonFirst(
+export async function buildWalletFromJson(
   rawAccountSpec: unknown
 ): Promise<WalletAccount | null> {
   const ws = await buildWalletsFromJson(rawAccountSpec);

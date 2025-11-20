@@ -15,10 +15,22 @@ export function useFeedData(feedType: FEED_TYPE) {
 
   useEffect(() => {
     let cancelled = false;
+
+    // If we don't have a valid chainId yet, don't fire the fetch
+    if (!chainId || Number.isNaN(Number(chainId))) {
+      setFeedData(null);
+      setLoading(false);
+      setError(undefined);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // spinner only for account feeds
     setLoading(
       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
       feedType === FEED_TYPE.AGENT_ACCOUNTS
-    ); // spinner only for account feeds
+    );
 
     (async () => {
       try {
