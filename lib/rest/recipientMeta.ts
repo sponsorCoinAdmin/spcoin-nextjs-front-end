@@ -1,10 +1,11 @@
 // File: lib/rest/recipientMeta.ts
+
 import type { Address } from 'viem';
 import { getAddress } from 'viem';
 import { getJson } from './http';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const LOG_TIME:boolean = false;
+const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_RECIPIENT_META === 'true';
 const debugLog = createDebugLogger('recipientMeta', DEBUG_ENABLED, LOG_TIME);
 
@@ -14,40 +15,47 @@ export type RecipientMeta = {
   symbol?: string;
   website?: string;
   logoURL?: string;
-  // add any other fields your wallet.json may include
 };
+
+// simple in-memory cache to avoid repeated fetches / React blasting
+// key = checksum-lowercased; value = meta or null if not found
+const metaCache = new Map<string, RecipientMeta | null>();
 
 function toChecksum(addr: string): string {
   try {
-    // Prefer viem’s checksum if available
     return getAddress(addr as Address);
   } catch {
-    // Fall back to given input if it’s already checksum’d
     return addr;
   }
 }
 
-export async function fetchRecipientMeta(address: Address): Promise<RecipientMeta | undefined> {
+export async function fetchRecipientMeta(
+  address: Address,
+): Promise<RecipientMeta | undefined> {
   const checksum = toChecksum(address);
-  const lower = address.toLowerCase(); // keep as string for URL building
+  const lower = address.toLowerCase(); // legacy lowercase directory fallback
+  const upper = checksum.toUpperCase(); // primary: matches uppercased dirs on Linux
+  const cacheKey = checksum.toLowerCase();
 
-  // ✅ correct bases for where your files actually live
-  const bases = [
-    '/assets/accounts',
-    '/resources/data/accounts', // optional fallback if you use it
-  ];
-
-  // ✅ you only serve wallet.json (no account.json)
-  const filenames = ['wallet.json'];
-
-  // Generate candidate URLs (checksum form first, then lowercase)
-  const candidates: string[] = [];
-  for (const base of bases) {
-    for (const file of filenames) {
-      candidates.push(`${base}/${checksum}/${file}`);
-      candidates.push(`${base}/${lower}/${file}`);
-    }
+  // 🔒 cache guard
+  if (metaCache.has(cacheKey)) {
+    const cached = metaCache.get(cacheKey);
+    debugLog.log?.('[recipientMeta] cache hit for', cacheKey, '→', cached);
+    if (cached === null) return undefined;
+    return cached;
   }
+
+  // Only use the public assets tree — no /resources/data/accounts over HTTP
+  const base = '/assets/accounts';
+  const filename = 'wallet.json';
+
+  const candidates = [
+    // Primary: uppercased directory (what your build-script now produces)
+    `${base}/${upper}/${filename}`,
+    // Legacy fallbacks (checksum-cased and lowercase), in case some dirs weren't migrated
+    `${base}/${checksum}/${filename}`,
+    `${base}/${lower}/${filename}`,
+  ];
 
   debugLog.log?.('[recipientMeta] candidate URLs:', candidates);
 
@@ -56,7 +64,8 @@ export async function fetchRecipientMeta(address: Address): Promise<RecipientMet
       debugLog.log?.('[recipientMeta] GET', url);
       const meta = await getJson<Partial<RecipientMeta>>(url);
 
-      // Normalize a few common fields that UI expects
+      const logoFsKey = checksum.toUpperCase();
+
       const normalized: RecipientMeta = {
         address,
         name: (meta as any)?.name ?? (meta as any)?.title ?? '',
@@ -64,16 +73,23 @@ export async function fetchRecipientMeta(address: Address): Promise<RecipientMet
         website: (meta as any)?.website ?? '',
         logoURL:
           (meta as any)?.logoURL ??
-          `/assets/accounts/${checksum}/logo.png`,
+          // default logo path; your wallet.json can override this
+          `${base}/${logoFsKey}/logo.png`,
       };
 
+      metaCache.set(cacheKey, normalized);
       return normalized;
     } catch (err: any) {
-      debugLog.log?.('[recipientMeta] ❌ failed', url, err?.message ?? err);
-      // keep trying next candidate
+      debugLog.log?.(
+        '[recipientMeta] ❌ failed',
+        url,
+        err?.message ?? err,
+      );
+      // continue to next candidate
     }
   }
 
-  debugLog.log?.('[recipientMeta] no candidates succeeded');
+  debugLog.log?.('[recipientMeta] no candidates succeeded for', cacheKey);
+  metaCache.set(cacheKey, null); // remember failure
   return undefined;
 }

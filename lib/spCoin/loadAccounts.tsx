@@ -1,3 +1,4 @@
+// File: lib/spCoin/loadAccounts.tsx
 'use server';
 
 import * as fs from "fs";
@@ -24,7 +25,9 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
     if (jsonAccountFileList && jsonAccountFileList.length > 0) {
         console.log("🔎 Loading accounts from provided list...");
         for (const file of jsonAccountFileList) {
-            const accountFilePath = path.join(accountsDir, file.address, "wallet.json");
+            // Use UPPERCASE directory name to match on-disk folders
+            const dirName = file.address.toUpperCase();
+            const accountFilePath = path.join(accountsDir, dirName, "wallet.json");
 
             console.log(`📂 Checking account file: ${accountFilePath}`);
 
@@ -33,7 +36,8 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
                     const accountData = fs.readFileSync(accountFilePath, "utf-8");
                     const account: WalletAccount = JSON.parse(accountData);
                     if (!account.logoURL) {
-                        account.logoURL = `/assets/accounts/${account.address}/logo.png`;
+                        // Use the uppercased directory name for the logo path
+                        account.logoURL = `/assets/accounts/${dirName}/logo.png`;
                     }
                     accounts.push(account);
                 } catch (error) {
@@ -67,7 +71,8 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
                         const accountData = fs.readFileSync(accountFilePath, "utf-8");
                         const account: WalletAccount = JSON.parse(accountData);
                         if (!account.logoURL) {
-                            account.logoURL = `/assets/accounts/${account.address}/logo.png`;
+                            // Use the on-disk folder name for the logo path
+                            account.logoURL = `/assets/accounts/${accountFolder}/logo.png`;
                         }
                         accounts.push(account);
                     } catch (error) {

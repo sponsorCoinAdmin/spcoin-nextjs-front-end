@@ -7,6 +7,7 @@ import type {
   ValidateFSMInput,
   ValidateFSMOutput,
 } from '../types/validateFSMTypes';
+import { getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
 
 const DEBUG_ENABLED =
   process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
@@ -207,7 +208,7 @@ export async function validateTokenAsset(
 
   // 4b) Attach local logo path so dropdowns can render the token icon
   if (typeof chainId === 'number') {
-    patch.logoURL = `/assets/blockchains/${chainId}/contracts/${addr}/logo.png`;
+    patch.logoURL = getTokenLogoURL({ address: addr, chainId });
     log.log?.('🖼️ token logoURL attached', {
       addr,
       chainIdParam: chainId,

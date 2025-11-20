@@ -109,7 +109,7 @@ type WalletJson = Partial<WalletAccount> & { balance?: string | number | bigint 
 
 /** RESTful metadata loader (no plain). */
 async function loadWalletMetadata(addr: Address): Promise<WalletAccount> {
-  const url = `/assets/accounts/${addr}/wallet.json`;
+  const url = `/assets/accounts/${addr.toUpperCase()}/wallet.json`;
 
   let json: WalletJson | undefined;
   try {

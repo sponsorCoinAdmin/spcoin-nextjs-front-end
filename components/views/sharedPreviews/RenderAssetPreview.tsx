@@ -14,7 +14,10 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import BaseListRow from '@/components/views/ListItems/BaseListRow';
 import { useAppChainId } from '@/lib/context/hooks';
 import { flushSync } from 'react-dom';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+import {
+  defaultMissingImage,
+  getAssetLogoURL,
+} from '@/lib/context/helpers/assetHelpers';
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
@@ -72,10 +75,10 @@ export default function RenderAssetPreview() {
           }
         }
       } else {
-        // Accounts/agents: construct synchronously
+        // Accounts/agents: construct synchronously via centralized helper
         const url =
           validatedAsset.logoURL ||
-          (address ? `/assets/accounts/${address}/logo.png` : '') ||
+          (address ? getAssetLogoURL(address, chainId ?? 1, feedType) : '') ||
           defaultMissingImage;
         if (!cancelled) setAvatarSrc(url);
       }
@@ -130,7 +133,7 @@ export default function RenderAssetPreview() {
       //    Bridge will commit to context, then CLOSE_SELECT_PANEL, then reset.
       setInputState(
         InputState.UPDATE_VALIDATED_ASSET,
-        'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)'
+        'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)',
       );
     } catch (err) {
       debugLog.error?.('❌ Failed to dispatch validated asset', err);

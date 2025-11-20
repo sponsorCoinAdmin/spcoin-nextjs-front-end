@@ -56,7 +56,11 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
     const ac = new AbortController();
 
     (async () => {
-      const accountPath = `/assets/accounts/${address}/wallet.json`;
+      // NOTE: directories under public/assets/accounts are uppercased on Linux.
+      // We keep the in-app address as checksum case, but normalize the
+      // filesystem segment here so the fetch works cross-platform.
+      const accountFsKey = address.toUpperCase();
+      const accountPath = `/assets/accounts/${accountFsKey}/wallet.json`;
 
       try {
         const metadata = await getJson<WalletAccount>(accountPath, {

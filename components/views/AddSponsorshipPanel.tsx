@@ -70,6 +70,7 @@ const AddSponsorShipPanel: React.FC = () => {
     debugLog.log?.('mounted; resolveWallet typeof =', typeof resolveWallet);
     return () => debugLog.log?.('unmounted');
   }, []);
+
   useEffect(() => {
     if (!recipientWallet) return;
     debugLog.log?.('recipientWallet changed:', {
@@ -89,16 +90,24 @@ const AddSponsorShipPanel: React.FC = () => {
     }
   }, [isVisible, tradingVisible, openPanel]);
 
-  // Fetch wallet.json for selected recipient (from /public)
+  // Fetch wallet.json for selected recipient (from /public), but only when visible
   useEffect(() => {
     let cancelled = false;
+
     (async () => {
+      // Guard against background blasting when the panel is hidden
+      if (!isVisible) {
+        debugLog.log?.('recipientMeta effect: panel not visible, skipping fetch');
+        return;
+      }
+
       const addr = recipientWallet?.address?.trim();
       if (!addr) {
         debugLog.log?.('No recipient address; clearing recipientMeta');
         setRecipientMeta(undefined);
         return;
       }
+
       try {
         debugLog.log?.('Fetching recipientMeta for address:', addr);
         const meta = await fetchRecipientMeta(addr as Address);
@@ -111,10 +120,11 @@ const AddSponsorShipPanel: React.FC = () => {
         if (!cancelled) setRecipientMeta(undefined);
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [recipientWallet?.address]);
+  }, [recipientWallet?.address, isVisible]);
 
   // ── Callbacks ────────────────────────────────────────────────────────────────
   const toggleSponsorRateConfig = useCallback(() => {
