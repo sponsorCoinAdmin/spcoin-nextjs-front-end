@@ -1,4 +1,4 @@
-// File: components\containers\RecipientSiteInfo.tsx
+// File: components/containers/RecipientSiteInfo.tsx
 // Author: Robin (robin@spcoin.com)
 // Date: 2023-09-19
 // Description: Recipient Site Info
@@ -9,6 +9,9 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+
+const DEBUG_RECIPIENT_SITE =
+  process.env.NEXT_PUBLIC_DEBUG_RECIPIENT_META === "true";
 
 export default function Recipient() {
   const searchParams = useSearchParams();
@@ -29,16 +32,49 @@ export default function Recipient() {
     setLoading(true); // Reset loading state
     setLoadingError(false); // Reset error state
 
+    if (DEBUG_RECIPIENT_SITE) {
+      // Log the raw query param exactly as received
+      console.debug("[RecipientSiteInfo] raw ?url param:", url);
+    }
+
     if (url) {
-      // Ensure the URL starts with "https://"
+      const trimmed = url.trim();
+
+      // Ensure the URL starts with an explicit scheme
       const formattedUrl =
-        url.startsWith("https://") || url.startsWith("http://")
-          ? url
-          : `https://${url}`;
+        trimmed.startsWith("https://") || trimmed.startsWith("http://")
+          ? trimmed
+          : `https://${trimmed}`;
+
+      if (DEBUG_RECIPIENT_SITE) {
+        console.debug("[RecipientSiteInfo] formatted remoteUrl:", formattedUrl);
+
+        if (
+          formattedUrl.includes("/assets/accounts/") &&
+          formattedUrl.includes("site-info.html")
+        ) {
+          console.debug(
+            "[RecipientSiteInfo] Using internal site-info.html fallback URL (check case of siteKey / account dir)",
+          );
+        } else {
+          console.debug(
+            "[RecipientSiteInfo] Using external website URL (wallet.website)",
+          );
+        }
+      }
+
       setRemoteUrl(formattedUrl);
-    } else {
-      // Reload the default help page when no URL is provided
-      setRemoteUrl(`${window.location.origin}/websites/spcoin/page/recipient-page-doc.html?timestamp=${Date.now()}`);
+    } else if (typeof window !== "undefined") {
+      const helpUrl = `${window.location.origin}/websites/spcoin/page/recipient-page-doc.html?timestamp=${Date.now()}`;
+
+      if (DEBUG_RECIPIENT_SITE) {
+        console.debug(
+          "[RecipientSiteInfo] No ?url param, using help page:",
+          helpUrl,
+        );
+      }
+
+      setRemoteUrl(helpUrl);
     }
   }, [url]);
 
@@ -55,7 +91,9 @@ export default function Recipient() {
       {/* Iframe Container */}
       <div className="w-full h-full relative">
         {loadingError ? (
-          <p className="text-red-600">Failed to load the content. The website may not allow embedding.</p>
+          <p className="text-red-600">
+            Failed to load the content. The website may not allow embedding.
+          </p>
         ) : (
           <>
             {loading && (
@@ -67,6 +105,17 @@ export default function Recipient() {
                   </>
                 ) : (
                   <>No URL provided. Loading help page...</>
+                )}
+
+                {DEBUG_RECIPIENT_SITE && (
+                  <div className="mt-4 text-xs text-gray-700 break-all">
+                    <div>
+                      <strong>Debug raw ?url:</strong> {url ?? "<null>"}
+                    </div>
+                    <div>
+                      <strong>Debug remoteUrl:</strong> {remoteUrl}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
