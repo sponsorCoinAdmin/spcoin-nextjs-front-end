@@ -6,7 +6,6 @@ import styles from '@/styles/Exchange.module.css';
 
 import TradeContainerHeader from '@/components/Headers/TradeContainerHeader';
 import TradingStationPanel from '@/components/views/TradingStationPanel';
-import ErrorMessagePanel from '@/components/views/ErrorMessagePanel';
 import ManageSponsorshipsPanel from '@/components/views/ManageSponsorships/ManageSponsorshipsPanel';
 
 // List panels
@@ -29,6 +28,7 @@ import {
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import PanelGate from '@/components/utility/PanelGate';
 import { usePanelTree } from '@/lib/context/exchangeContext/hooks/usePanelTree';
+import { ErrorMessagePanel } from '@/components/views';
 
 const SHOW_ACTIVE =
   process.env.NEXT_PUBLIC_SHOW_ACTIVE_OVERLAY === 'true' ||
