@@ -54,7 +54,7 @@ function coerceShiftedAmount(original: unknown, shifted: string): bigint | strin
   if (typeof original === 'bigint' && !shifted.includes('.')) {
     try {
       return BigInt(shifted);
-    } catch { }
+    } catch {}
   }
   return shifted;
 }
@@ -106,23 +106,29 @@ const BuySellSwapArrowButton = () => {
 
   if (!show) return null;
 
+  // This row sits between Sell and Buy and pulls itself upward
   return (
-    <div
-      id='BuySellSwapArrowButton'
-      onClick={handleClick}
-      className='
-        absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-10
-        flex items-center justify-center
-        w-6 h-6
-        text-[#5F6783] bg-[#3a4157]
-        rounded-lg border-[3px] border-[#0E111B]
-        text-xs
-        transition-colors duration-300
-        cursor-pointer hover:text-white
-      '
-    >
-      <ArrowDown size={16} />
-    </div>
+<div
+  id='BuySellSwapArrowButton'
+  onClick={handleClick}
+  className={`
+    relative
+    z-10
+    mx-auto
+    -mt-4
+    -mb-3
+    flex items-center justify-center
+    w-6 h-6
+    text-[#5F6783] bg-[#3a4157]
+    rounded-lg border-[3px] border-[#0E111B]
+    text-xs
+    transition-colors duration-300
+    cursor-pointer hover:text-white
+  `}
+>
+  <ArrowDown size={16} />
+</div>
+
   );
 };
 

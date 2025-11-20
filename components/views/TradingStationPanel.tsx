@@ -23,15 +23,8 @@ export default function TradingStationPanel() {
       <div id='TradingStationPanel'>
         <ConfigSponsorshipPanel />
         <SellAssetPanel />
-
-        {/* 🔹 Buy panel + arrow share this relative wrapper.
-            The arrow's top edge is aligned to the top of this block,
-            so its center sits exactly between Sell and Buy. */}
-        <div className='relative'>
-          <BuyAssetPanel />
-          <BuySellSwapArrowButton />
-        </div>
-
+        <BuySellSwapArrowButton />
+        <BuyAssetPanel />
         <AddSponsorShipPanel />
         <PriceButton isLoadingPrice={isLoading} />
         <AffiliateFee priceResponse={priceResponse} />
