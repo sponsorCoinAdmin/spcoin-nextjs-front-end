@@ -130,18 +130,21 @@
     /* ───────────────────────── Page logic (uses helpers) ───────────────────────── */
 
     const params = new URLSearchParams(window.location.search);
-    const siteKey = (params.get('siteKey') || '').trim();
+    const rawSiteKey = (params.get('siteKey') || '').trim();
+    const normalizedKey = rawSiteKey.toUpperCase();  // ✅ for Linux filesystem
     const baseUrl = window.location.origin + window.location.pathname;
     const defaultMissingImg = '../miscellaneous/QuestionBlackOnRed.png';
 
-    if (!siteKey) {
+    if (!rawSiteKey) {
       document.getElementById('title').textContent = 'ERROR: Missing "siteKey" parameter';
       document.getElementById('usage').innerHTML =
         `<strong>USAGE:</strong> ${baseUrl}?siteKey=0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b`;
     } else {
-      document.getElementById('siteKeyDisplay').textContent = `Site Key: ${siteKey}`;
-      document.getElementById('usage').innerHTML = `<strong>USAGE:</strong> ${baseUrl}?siteKey=${siteKey}`;
-      loadWalletData(siteKey);
+      // Show original key (preserve case)
+      document.getElementById('siteKeyDisplay').textContent = `Site Key: ${rawSiteKey}`;
+      document.getElementById('usage').innerHTML = `<strong>USAGE:</strong> ${baseUrl}?siteKey=${rawSiteKey}`;
+      // Use uppercased key for paths
+      loadWalletData(normalizedKey);
     }
 
     async function loadWalletData(key) {
@@ -196,4 +199,3 @@
   </script>
 </body>
 </html>
-
