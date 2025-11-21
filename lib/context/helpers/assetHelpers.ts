@@ -51,7 +51,15 @@ export function normalizeAddressForAssets(address?: string): string {
   const trimmed = address.trim();
   if (trimmed.length < 10) return '';
 
-  // Your filesystem convention: EVERYTHING UPPERCASE, including 0X
+  // Convention: keep `0x` lower-case and upper-case the hex payload so that
+  // Linux case-sensitivity matches our on-disk directory names.
+  if (trimmed.startsWith('0x') || trimmed.startsWith('0X')) {
+    const prefix = '0x';
+    const hexPart = trimmed.slice(2).toUpperCase();
+    return `${prefix}${hexPart}`;
+  }
+
+  // Fallback for any non-standard keys we might store alongside addresses.
   return trimmed.toUpperCase();
 }
 
