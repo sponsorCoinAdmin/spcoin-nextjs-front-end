@@ -55,31 +55,6 @@ export function normalizeAddressForAssets(address?: string): string {
   return trimmed.toUpperCase();
 }
 
-/* ───────────────────────── root helpers (single source of truth) ───────────────────────── */
-
-/**
- * Root directory for a contract on disk, e.g.:
- *   /assets/blockchains/1/contracts/0XABC.../   (no trailing slash in return value)
- */
-export function getContractRoot(address?: string, chainId?: number): string {
-  const normalized = normalizeAddressForAssets(address);
-  if (!normalized) return '';
-  if (typeof chainId !== 'number' || !Number.isFinite(chainId)) return '';
-  return `/assets/blockchains/${chainId}/contracts/${normalized}`;
-}
-
-/**
- * Root directory for a wallet/account on disk, e.g.:
- *   /assets/accounts/0XABC...   (no trailing slash in return value)
- */
-export function getWalletRoot(address?: string): string {
-  const normalized = normalizeAddressForAssets(address);
-  if (!normalized) return '';
-  return `/assets/accounts/${normalized}`;
-}
-
-/* ───────────────────────── logo URL helpers ───────────────────────── */
-
 /**
  * Resolve an asset logo path and verify existence (client-side).
  * Uses chainId only for building the asset path; does not read network metadata.
@@ -111,17 +86,38 @@ export async function getLogoURL(
 export type RequiredAssetMembers = { address: string; chainId: number };
 
 /**
+ * Contract root helper for on-disk storage.
+ * Example: /assets/blockchains/1/contracts/0XABC...123
+ */
+export function getContractRoot(chainId: number, address?: string): string {
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) return '';
+  return `/assets/blockchains/${chainId}/contracts/${normalized}`;
+}
+
+/**
+ * Wallet root helper for on-disk storage.
+ * Example: /assets/accounts/0XABC...123
+ */
+export function getWalletRoot(address?: string): string {
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) return '';
+  return `/assets/accounts/${normalized}`;
+}
+
+/**
  * Token-specific logo helper.
  * Returns a contract logo path or the "bad token" sentinel image.
  *
- * NOTE: We normalize via `normalizeAddressForAssets` so that filesystem
- * case-sensitivity matches your on-disk directory names.
+ * NOTE: We normalize the address for filesystem paths via
+ * `normalizeAddressForAssets` so that Linux case-sensitivity matches our
+ * on-disk directory names.
  */
 export function getTokenLogoURL(required?: RequiredAssetMembers): string {
   if (!required) return badTokenAddressImage;
   const { chainId, address } = required;
 
-  const root = getContractRoot(address, chainId);
+  const root = getContractRoot(chainId, address);
   if (!root) return badTokenAddressImage;
 
   return `${root}/logo.png`;
@@ -184,9 +180,9 @@ export function getAssetLogoURL(
  */
 export function getAccountLogo(account?: WalletAccount): string {
   if (!account) return defaultMissingImage;
-  const root = getWalletRoot(account.address);
-  if (!root) return defaultMissingImage;
-  return `${root}/logo.png`;
+  const normalized = normalizeAddressForAssets(account.address);
+  if (!normalized) return defaultMissingImage;
+  return `${getWalletRoot(account.address)}/logo.png`;
 }
 
 /**

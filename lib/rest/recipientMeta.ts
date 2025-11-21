@@ -1,10 +1,15 @@
 // File: lib/rest/recipientMeta.ts
+
 import type { Address } from 'viem';
-import { getAddress } from 'viem';
 import { getJson } from './http';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
+import {
+  getWalletJsonURL,
+  getWalletLogoURL,
+  normalizeAddressForAssets,
+} from '@/lib/context/helpers/assetHelpers';
 
-const LOG_TIME:boolean = false;
+const LOG_TIME: boolean = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_RECIPIENT_META === 'true';
 const debugLog = createDebugLogger('recipientMeta', DEBUG_ENABLED, LOG_TIME);
 
@@ -17,36 +22,22 @@ export type RecipientMeta = {
   // add any other fields your wallet.json may include
 };
 
-function toChecksum(addr: string): string {
-  try {
-    // Prefer viem’s checksum if available
-    return getAddress(addr as Address);
-  } catch {
-    // Fall back to given input if it’s already checksum’d
-    return addr;
-  }
-}
+export async function fetchRecipientMeta(
+  address: Address,
+): Promise<RecipientMeta | undefined> {
+  const normalized = normalizeAddressForAssets(address); // UPPERCASE for disk
 
-export async function fetchRecipientMeta(address: Address): Promise<RecipientMeta | undefined> {
-  const checksum = toChecksum(address);
-  const lower = address.toLowerCase(); // keep as string for URL building
-
-  // ✅ correct bases for where your files actually live
-  const bases = [
-    '/assets/accounts',
-    '/resources/data/accounts', // optional fallback if you use it
-  ];
-
-  // ✅ you only serve wallet.json (no account.json)
-  const filenames = ['wallet.json'];
-
-  // Generate candidate URLs (checksum form first, then lowercase)
+  // Primary: canonical JSON path via helper (uses /assets/accounts/<UPPER>/wallet.json)
   const candidates: string[] = [];
-  for (const base of bases) {
-    for (const file of filenames) {
-      candidates.push(`${base}/${checksum}/${file}`);
-      candidates.push(`${base}/${lower}/${file}`);
-    }
+  const canonicalJson = getWalletJsonURL(address);
+  if (canonicalJson) {
+    candidates.push(canonicalJson);
+  }
+
+  // Optional legacy/fallback locations if they still exist
+  if (normalized) {
+    candidates.push(`/assets/accounts/${normalized}/wallet.json`);
+    candidates.push(`/resources/data/accounts/${normalized}/wallet.json`);
   }
 
   debugLog.log?.('[recipientMeta] candidate URLs:', candidates);
@@ -56,18 +47,19 @@ export async function fetchRecipientMeta(address: Address): Promise<RecipientMet
       debugLog.log?.('[recipientMeta] GET', url);
       const meta = await getJson<Partial<RecipientMeta>>(url);
 
-      // Normalize a few common fields that UI expects
-      const normalized: RecipientMeta = {
+      // Normalize fields the UI expects
+      const normalizedMeta: RecipientMeta = {
         address,
         name: (meta as any)?.name ?? (meta as any)?.title ?? '',
         symbol: (meta as any)?.symbol ?? '',
         website: (meta as any)?.website ?? '',
         logoURL:
           (meta as any)?.logoURL ??
-          `/assets/accounts/${checksum}/logo.png`,
+          // Use centralized helper so disk case is always correct
+          getWalletLogoURL(address),
       };
 
-      return normalized;
+      return normalizedMeta;
     } catch (err: any) {
       debugLog.log?.('[recipientMeta] ❌ failed', url, err?.message ?? err);
       // keep trying next candidate
