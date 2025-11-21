@@ -41,18 +41,34 @@ export function buildWalletObj(a: any): WalletAccount {
   } as WalletAccount;
 }
 
-/** Normalize a token JSON entry into a BuiltToken (async to resolve logos) */
-export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken> {
-  const address = String(t?.address ?? '').toLowerCase();
+/**
+ * Normalize a token JSON entry into a BuiltToken (async to resolve logos).
+ *
+ * IMPORTANT:
+ * - `address` is kept in its canonical blockchain form (no uppercasing).
+ * - Only the filesystem segment inside `logoURL` is uppercased via
+ *   assetHelpers (normalizeAddressForAssets → getTokenLogoURL/getLogoURL).
+ */
+export async function buildTokenObj(
+  t: any,
+  chainId: number,
+): Promise<BuiltToken> {
+  const rawAddress = String(t?.address ?? '').trim();
+  const address = rawAddress as Address;
+
   let logoURL: string;
   try {
-    logoURL = await getLogoURL(chainId, address as any, FEED_TYPE.TOKEN_LIST);
+    // getLogoURL → getAssetLogoURL → getTokenLogoURL → normalizeAddressForAssets
+    // so the directory portion in the final path will be UPPERCASE on disk.
+    logoURL = await getLogoURL(chainId, address, FEED_TYPE.TOKEN_LIST);
   } catch {
     // Fallback: derive via central helper instead of hardcoding the path
     logoURL = getTokenLogoURL({ address, chainId });
   }
+
   return {
     ...t,
+    // Keep the on-chain address as provided in JSON (canonical blockchain form)
     address,
     name: t?.name ?? 'Unknown',
     symbol: t?.symbol ?? '—',
@@ -69,7 +85,7 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
  */
 export async function buildTokenFromJson(
   rawToken: unknown,
-  chainId: number
+  chainId: number,
 ): Promise<BuiltToken> {
   return buildTokenObj(parseJson(rawToken), chainId);
 }
@@ -81,7 +97,7 @@ export async function buildTokenFromJson(
  *   await buildWalletsFromJson({ inline: [{ address: '0xabc...', name: 'My Agent' }] })
  */
 export async function buildWalletsFromJson(
-  rawAccountSpec: unknown
+  rawAccountSpec: unknown,
 ): Promise<WalletAccount[]> {
   const accounts = await loadAccounts(parseJson(rawAccountSpec));
   return accounts.map(buildWalletObj);
@@ -92,7 +108,7 @@ export async function buildWalletsFromJson(
  * Returns null if none resolved.
  */
 export async function buildWalletFromJsonFirst(
-  rawAccountSpec: unknown
+  rawAccountSpec: unknown,
 ): Promise<WalletAccount | null> {
   const ws = await buildWalletsFromJson(rawAccountSpec);
   return ws[0] ?? null;
@@ -111,7 +127,7 @@ export async function buildWalletFromJsonFirst(
 export async function feedDataFromJson(
   feedType: FEED_TYPE,
   chainId: number,
-  rawJson: unknown
+  rawJson: unknown,
 ): Promise<FeedData> {
   const json = parseJson(rawJson);
 
