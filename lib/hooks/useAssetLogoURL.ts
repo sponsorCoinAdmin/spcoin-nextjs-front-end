@@ -1,5 +1,3 @@
-// File: lib/hooks/useAssetLogoURL.ts
-
 'use client';
 
 import { useMemo } from 'react';
@@ -8,6 +6,7 @@ import { FEED_TYPE } from '@/lib/structure';
 import {
   defaultMissingImage,
   getAssetLogoURL,
+  normalizeAddressForAssets,
 } from '@/lib/context/helpers/assetHelpers';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { useAppChainId } from '../context/hooks';
@@ -26,6 +25,8 @@ const seenBrokenLogos = new Set<string>();
  * NOTE:
  * - Directory layout is centralized in `assetHelpers.getAssetLogoURL`.
  * - This hook just chooses the appropriate FEED_TYPE and delegates path building.
+ * - Addresses are normalized via `normalizeAddressForAssets` so filesystem
+ *   directory names are always uppercase (including `0X`).
  */
 export function useAssetLogoURL(
   address: string,
@@ -39,19 +40,27 @@ export function useAssetLogoURL(
     if (!address || !isAddress(address)) return fallbackURL;
     if (!chainId) return fallbackURL;
 
-    // If we've already seen this address produce a broken logo, short-circuit.
-    if (seenBrokenLogos.has(address)) return fallbackURL;
+    const normalizedAddress = normalizeAddressForAssets(address);
+    if (!normalizedAddress) return fallbackURL;
+
+    // If we've already seen this (normalized) address produce a broken logo, short-circuit.
+    if (seenBrokenLogos.has(normalizedAddress)) return fallbackURL;
 
     const feedType =
       type === 'wallet' ? FEED_TYPE.RECIPIENT_ACCOUNTS : FEED_TYPE.TOKEN_LIST;
 
-    const logoURL = getAssetLogoURL(address, chainId, feedType) || fallbackURL;
+    const logoURL =
+      getAssetLogoURL(normalizedAddress, chainId, feedType) || fallbackURL;
 
-    debugLog.log?.(`✅ logoURL (${type}) = ${logoURL}`);
+    debugLog.log?.(
+      `✅ logoURL (${type}) for ${normalizedAddress} on chain ${chainId} -> ${logoURL}`,
+    );
     return logoURL;
   }, [address, type, chainId, fallbackURL]);
 }
 
 export function markLogoAsBroken(address: string) {
-  seenBrokenLogos.add(address);
+  const normalizedAddress = normalizeAddressForAssets(address);
+  if (!normalizedAddress) return;
+  seenBrokenLogos.add(normalizedAddress);
 }
