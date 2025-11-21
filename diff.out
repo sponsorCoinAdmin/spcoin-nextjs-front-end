@@ -1,0 +1,886 @@
+diff --git a/components/containers/RecipientSiteInfo.tsx b/components/containers/RecipientSiteInfo.tsx
+index 72fcbf1e..33bf22e3 100644
+--- a/components/containers/RecipientSiteInfo.tsx
++++ b/components/containers/RecipientSiteInfo.tsx
+@@ -1,4 +1,4 @@
+-// File: components/containers/RecipientSiteInfo.tsx
++// File: components\containers\RecipientSiteInfo.tsx
+ // Author: Robin (robin@spcoin.com)
+ // Date: 2023-09-19
+ // Description: Recipient Site Info
+@@ -10,9 +10,6 @@
+ import { useEffect, useState } from "react";
+ import { useSearchParams } from "next/navigation";
+ 
+-const DEBUG_RECIPIENT_SITE =
+-  process.env.NEXT_PUBLIC_DEBUG_RECIPIENT_META === "true";
+-
+ export default function Recipient() {
+   const searchParams = useSearchParams();
+   const url = searchParams.get("url");
+@@ -32,49 +29,16 @@ export default function Recipient() {
+     setLoading(true); // Reset loading state
+     setLoadingError(false); // Reset error state
+ 
+-    if (DEBUG_RECIPIENT_SITE) {
+-      // Log the raw query param exactly as received
+-      console.debug("[RecipientSiteInfo] raw ?url param:", url);
+-    }
+-
+     if (url) {
+-      const trimmed = url.trim();
+-
+-      // Ensure the URL starts with an explicit scheme
++      // Ensure the URL starts with "https://"
+       const formattedUrl =
+-        trimmed.startsWith("https://") || trimmed.startsWith("http://")
+-          ? trimmed
+-          : `https://${trimmed}`;
+-
+-      if (DEBUG_RECIPIENT_SITE) {
+-        console.debug("[RecipientSiteInfo] formatted remoteUrl:", formattedUrl);
+-
+-        if (
+-          formattedUrl.includes("/assets/accounts/") &&
+-          formattedUrl.includes("site-info.html")
+-        ) {
+-          console.debug(
+-            "[RecipientSiteInfo] Using internal site-info.html fallback URL (check case of siteKey / account dir)",
+-          );
+-        } else {
+-          console.debug(
+-            "[RecipientSiteInfo] Using external website URL (wallet.website)",
+-          );
+-        }
+-      }
+-
++        url.startsWith("https://") || url.startsWith("http://")
++          ? url
++          : `https://${url}`;
+       setRemoteUrl(formattedUrl);
+-    } else if (typeof window !== "undefined") {
+-      const helpUrl = `${window.location.origin}/websites/spcoin/page/recipient-page-doc.html?timestamp=${Date.now()}`;
+-
+-      if (DEBUG_RECIPIENT_SITE) {
+-        console.debug(
+-          "[RecipientSiteInfo] No ?url param, using help page:",
+-          helpUrl,
+-        );
+-      }
+-
+-      setRemoteUrl(helpUrl);
++    } else {
++      // Reload the default help page when no URL is provided
++      setRemoteUrl(`${window.location.origin}/websites/spcoin/page/recipient-page-doc.html?timestamp=${Date.now()}`);
+     }
+   }, [url]);
+ 
+@@ -91,9 +55,7 @@ export default function Recipient() {
+       {/* Iframe Container */}
+       <div className="w-full h-full relative">
+         {loadingError ? (
+-          <p className="text-red-600">
+-            Failed to load the content. The website may not allow embedding.
+-          </p>
++          <p className="text-red-600">Failed to load the content. The website may not allow embedding.</p>
+         ) : (
+           <>
+             {loading && (
+@@ -106,17 +68,6 @@ export default function Recipient() {
+                 ) : (
+                   <>No URL provided. Loading help page...</>
+                 )}
+-
+-                {DEBUG_RECIPIENT_SITE && (
+-                  <div className="mt-4 text-xs text-gray-700 break-all">
+-                    <div>
+-                      <strong>Debug raw ?url:</strong> {url ?? "<null>"}
+-                    </div>
+-                    <div>
+-                      <strong>Debug remoteUrl:</strong> {remoteUrl}
+-                    </div>
+-                  </div>
+-                )}
+               </div>
+             )}
+ 
+@@ -133,4 +84,4 @@ export default function Recipient() {
+       </div>
+     </div>
+   );
+-}
++}
+\ No newline at end of file
+diff --git a/components/views/AddSponsorshipPanel.tsx b/components/views/AddSponsorshipPanel.tsx
+index e327c3ba..55d8e8c4 100644
+--- a/components/views/AddSponsorshipPanel.tsx
++++ b/components/views/AddSponsorshipPanel.tsx
+@@ -70,7 +70,6 @@ const AddSponsorShipPanel: React.FC = () => {
+     debugLog.log?.('mounted; resolveWallet typeof =', typeof resolveWallet);
+     return () => debugLog.log?.('unmounted');
+   }, []);
+-
+   useEffect(() => {
+     if (!recipientWallet) return;
+     debugLog.log?.('recipientWallet changed:', {
+@@ -90,24 +89,16 @@ const AddSponsorShipPanel: React.FC = () => {
+     }
+   }, [isVisible, tradingVisible, openPanel]);
+ 
+-  // Fetch wallet.json for selected recipient (from /public), but only when visible
++  // Fetch wallet.json for selected recipient (from /public)
+   useEffect(() => {
+     let cancelled = false;
+-
+     (async () => {
+-      // Guard against background blasting when the panel is hidden
+-      if (!isVisible) {
+-        debugLog.log?.('recipientMeta effect: panel not visible, skipping fetch');
+-        return;
+-      }
+-
+       const addr = recipientWallet?.address?.trim();
+       if (!addr) {
+         debugLog.log?.('No recipient address; clearing recipientMeta');
+         setRecipientMeta(undefined);
+         return;
+       }
+-
+       try {
+         debugLog.log?.('Fetching recipientMeta for address:', addr);
+         const meta = await fetchRecipientMeta(addr as Address);
+@@ -120,11 +111,10 @@ const AddSponsorShipPanel: React.FC = () => {
+         if (!cancelled) setRecipientMeta(undefined);
+       }
+     })();
+-
+     return () => {
+       cancelled = true;
+     };
+-  }, [recipientWallet?.address, isVisible]);
++  }, [recipientWallet?.address]);
+ 
+   // ── Callbacks ────────────────────────────────────────────────────────────────
+   const toggleSponsorRateConfig = useCallback(() => {
+diff --git a/components/views/sharedPreviews/RenderAssetPreview.tsx b/components/views/sharedPreviews/RenderAssetPreview.tsx
+index 61b3f18d..4522f7fa 100644
+--- a/components/views/sharedPreviews/RenderAssetPreview.tsx
++++ b/components/views/sharedPreviews/RenderAssetPreview.tsx
+@@ -14,10 +14,7 @@ import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
+ import BaseListRow from '@/components/views/ListItems/BaseListRow';
+ import { useAppChainId } from '@/lib/context/hooks';
+ import { flushSync } from 'react-dom';
+-import {
+-  defaultMissingImage,
+-  getAssetLogoURL,
+-} from '@/lib/context/helpers/assetHelpers';
++import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+ 
+ const LOG_TIME = false;
+ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
+@@ -75,10 +72,10 @@ export default function RenderAssetPreview() {
+           }
+         }
+       } else {
+-        // Accounts/agents: construct synchronously via centralized helper
++        // Accounts/agents: construct synchronously
+         const url =
+           validatedAsset.logoURL ||
+-          (address ? getAssetLogoURL(address, chainId ?? 1, feedType) : '') ||
++          (address ? `/assets/accounts/${address}/logo.png` : '') ||
+           defaultMissingImage;
+         if (!cancelled) setAvatarSrc(url);
+       }
+@@ -133,7 +130,7 @@ export default function RenderAssetPreview() {
+       //    Bridge will commit to context, then CLOSE_SELECT_PANEL, then reset.
+       setInputState(
+         InputState.UPDATE_VALIDATED_ASSET,
+-        'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)',
++        'RenderAssetPreview → UPDATE_VALIDATED_ASSET (avatar click)'
+       );
+     } catch (err) {
+       debugLog.error?.('❌ Failed to dispatch validated asset', err);
+@@ -171,4 +168,4 @@ export default function RenderAssetPreview() {
+       </BasePreviewWrapper>
+     </div>
+   );
+-}
++}
+\ No newline at end of file
+diff --git a/lib/context/ActiveAccountContext.tsx b/lib/context/ActiveAccountContext.tsx
+index 0dbb418d..325a34d4 100644
+--- a/lib/context/ActiveAccountContext.tsx
++++ b/lib/context/ActiveAccountContext.tsx
+@@ -56,11 +56,7 @@ export function ActiveAccountProvider({ children }: { children: ReactNode }) {
+     const ac = new AbortController();
+ 
+     (async () => {
+-      // NOTE: directories under public/assets/accounts are uppercased on Linux.
+-      // We keep the in-app address as checksum case, but normalize the
+-      // filesystem segment here so the fetch works cross-platform.
+-      const accountFsKey = address.toUpperCase();
+-      const accountPath = `/assets/accounts/${accountFsKey}/wallet.json`;
++      const accountPath = `/assets/accounts/${address}/wallet.json`;
+ 
+       try {
+         const metadata = await getJson<WalletAccount>(accountPath, {
+diff --git a/lib/context/helpers/NetworkHelpers.ts b/lib/context/helpers/NetworkHelpers.ts
+index b27f344b..8640db43 100644
+--- a/lib/context/helpers/NetworkHelpers.ts
++++ b/lib/context/helpers/NetworkHelpers.ts
+@@ -1,4 +1,4 @@
+-// File: lib/context/helpers/NetworkHelpers.ts 
++// File: lib/context/helpers/NetworkHelpers.ts
+ import rawChainIdList from '@/resources/data/networks/chainIds.json';
+ import type { NetworkElement } from '@/lib/structure';
+ import { createDebugLogger } from '@/lib/utils/debugLogger';
+@@ -171,4 +171,4 @@ const NetworkHelpers = {
+   networkEquals,
+ };
+ 
+-export default NetworkHelpers;
+\ No newline at end of file
++export default NetworkHelpers;
+diff --git a/lib/context/helpers/assetHelpers.ts b/lib/context/helpers/assetHelpers.ts
+index 608e5e0f..3db3d432 100644
+--- a/lib/context/helpers/assetHelpers.ts
++++ b/lib/context/helpers/assetHelpers.ts
+@@ -1,5 +1,4 @@
+ // File: lib/context/helpers/assetHelpers.ts
+-
+ import type { Address } from 'viem';
+ import { FEED_TYPE, type WalletAccount } from '@/lib/structure';
+ import { headOk, get } from '@/lib/rest/http';
+@@ -36,25 +35,6 @@ async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
+   }
+ }
+ 
+-/**
+- * Normalize an address into the canonical filesystem representation used
+- * for on-disk directories (wallet.json, logo.png, etc).
+- *
+- * NOTE:
+- * - We deliberately do NOT mutate any upstream state; callers should keep
+- *   their canonical `address` value for API / RPC usage.
+- * - This helper is the single source of truth for case handling when
+- *   building `/assets/accounts/...` and related paths.
+- */
+-export function normalizeAddressForAssets(address?: string): string {
+-  if (!address) return '';
+-  const trimmed = address.trim();
+-  if (trimmed.length < 10) return '';
+-
+-  // Your filesystem convention: EVERYTHING UPPERCASE, including 0X
+-  return trimmed.toUpperCase();
+-}
+-
+ /**
+  * Resolve an asset logo path and verify existence (client-side).
+  * Uses chainId only for building the asset path; does not read network metadata.
+@@ -89,16 +69,18 @@ export type RequiredAssetMembers = { address: string; chainId: number };
+  * Token-specific logo helper.
+  * Returns a contract logo path or the "bad token" sentinel image.
+  *
+- * NOTE: We normalize the address for filesystem paths via
+- * `normalizeAddressForAssets` so that Linux case-sensitivity matches our
+- * on-disk directory names.
++ * NOTE: We normalize the address to UPPERCASE for filesystem paths so that
++ * Linux case-sensitivity matches our on-disk directory names.
+  */
+ export function getTokenLogoURL(required?: RequiredAssetMembers): string {
+   if (!required) return badTokenAddressImage;
+   const { chainId, address } = required;
+ 
+-  const normalized = normalizeAddressForAssets(address);
+-  if (!normalized) return badTokenAddressImage;
++  if (typeof address !== 'string' || address.length < 10) {
++    return badTokenAddressImage;
++  }
++
++  const normalized = address.toUpperCase();
+ 
+   return `/assets/blockchains/${chainId}/contracts/${normalized}/logo.png`;
+ }
+@@ -106,10 +88,14 @@ export function getTokenLogoURL(required?: RequiredAssetMembers): string {
+ /**
+  * Wallet / account-specific logo helper.
+  * Uses the accounts logo path and falls back to the generic missing image.
++ *
++ * We also normalize to UPPERCASE to match Linux directory naming.
+  */
+ export function getWalletLogoURL(address?: string): string {
+-  const normalized = normalizeAddressForAssets(address);
+-  if (!normalized) return defaultMissingImage;
++  if (!address || address.length < 10) {
++    return defaultMissingImage;
++  }
++  const normalized = address.toUpperCase();
+   return `/assets/accounts/${normalized}/logo.png`;
+ }
+ 
+@@ -160,49 +146,7 @@ export function getAssetLogoURL(
+  */
+ export function getAccountLogo(account?: WalletAccount): string {
+   if (!account) return defaultMissingImage;
+-  const normalized = normalizeAddressForAssets(account.address);
+-  if (!normalized) return defaultMissingImage;
++  const normalized = account.address?.toUpperCase?.() ?? '';
++  if (!normalized || normalized.length < 10) return defaultMissingImage;
+   return `/assets/accounts/${normalized}/logo.png`;
+ }
+-
+-/**
+- * Helper for the account metadata JSON (wallet.json) path.
+- *
+- * All callers that need `/assets/accounts/<addr>/wallet.json` should use this
+- * so that directory case stays consistent across the app.
+- */
+-export function getWalletJsonURL(address?: string): string {
+-  const normalized = normalizeAddressForAssets(address);
+-  if (!normalized) return '';
+-  return `/assets/accounts/${normalized}/wallet.json`;
+-}
+-
+-/**
+- * Helper for account metadata JSON when a WalletAccount object is available.
+- */
+-export function getAccountWalletJsonURL(account?: WalletAccount): string {
+-  if (!account) return '';
+-  return getWalletJsonURL(account.address);
+-}
+-
+-/**
+- * Base URL for the site-info helper page.
+- * This remains a static path; address-specific variants should be built with
+- * `getSiteInfoURLForAddress`.
+- */
+-export function getSiteInfoBaseURL(): string {
+-  return '/assets/accounts/site-info.html';
+-}
+-
+-/**
+- * Site-info URL that includes a siteKey query parameter derived from the
+- * canonical address. This is used by RecipientSite to embed the recipient's
+- * external website via the static helper page.
+- */
+-export function getSiteInfoURLForAddress(address?: string): string {
+-  const base = getSiteInfoBaseURL();
+-  const normalized = normalizeAddressForAssets(address);
+-  if (!normalized) return base;
+-  const encoded = encodeURIComponent(normalized);
+-  return `${base}?siteKey=${encoded}`;
+-}
+diff --git a/lib/context/helpers/initExchangeContext.ts b/lib/context/helpers/initExchangeContext.ts
+index 2ae34997..5a77368c 100644
+--- a/lib/context/helpers/initExchangeContext.ts
++++ b/lib/context/helpers/initExchangeContext.ts
+@@ -109,7 +109,7 @@ type WalletJson = Partial<WalletAccount> & { balance?: string | number | bigint
+ 
+ /** RESTful metadata loader (no plain). */
+ async function loadWalletMetadata(addr: Address): Promise<WalletAccount> {
+-  const url = `/assets/accounts/${addr.toUpperCase()}/wallet.json`;
++  const url = `/assets/accounts/${addr}/wallet.json`;
+ 
+   let json: WalletJson | undefined;
+   try {
+diff --git a/lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts b/lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts
+index 701945df..553fa61d 100644
+--- a/lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts
++++ b/lib/hooks/inputValidations/FSM_Core/validationTests/validateTokenAsset.ts
+@@ -7,7 +7,6 @@ import type {
+   ValidateFSMInput,
+   ValidateFSMOutput,
+ } from '../types/validateFSMTypes';
+-import { getTokenLogoURL } from '@/lib/context/helpers/assetHelpers';
+ 
+ const DEBUG_ENABLED =
+   process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+@@ -208,7 +207,7 @@ export async function validateTokenAsset(
+ 
+   // 4b) Attach local logo path so dropdowns can render the token icon
+   if (typeof chainId === 'number') {
+-    patch.logoURL = getTokenLogoURL({ address: addr, chainId });
++    patch.logoURL = `/assets/blockchains/${chainId}/contracts/${addr}/logo.png`;
+     log.log?.('🖼️ token logoURL attached', {
+       addr,
+       chainIdParam: chainId,
+diff --git a/lib/hooks/inputValidations/validations/resolveTokenContract.ts b/lib/hooks/inputValidations/validations/resolveTokenContract.ts
+index ce2430f4..5bc23088 100644
+--- a/lib/hooks/inputValidations/validations/resolveTokenContract.ts
++++ b/lib/hooks/inputValidations/validations/resolveTokenContract.ts
+@@ -4,17 +4,13 @@ import type { Address, PublicClient } from 'viem';
+ import { isAddress } from 'viem';
+ import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
+ // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
+-import type { TokenContract } from '@/lib/structure';
++import type { TokenContract} from '@/lib/structure';
+ import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
+-import {
+-  getLogoURL,
+-  getTokenLogoURL,
+-  defaultMissingImage,
+-} from '@/lib/context/helpers/assetHelpers';
++import { getLogoURL } from '@/lib/network/utils';
+ import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
++import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+ 
+-const DEBUG_ENABLED =
+-  process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
++const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
+ function dbg(...args: any[]) {
+   if (DEBUG_ENABLED) console.log('[resolveTokenContract]', ...args);
+ }
+@@ -24,7 +20,7 @@ export async function resolveTokenContract(
+   chainId: number,
+   feedType: FEED_TYPE,
+   publicClient: PublicClient,
+-  _accountAddress?: Address, // kept for compatibility; unused
++  _accountAddress?: Address // kept for compatibility; unused
+ ): Promise<TokenContract | undefined> {
+   const t0 = Date.now();
+   dbg('entry', {
+@@ -41,28 +37,16 @@ export async function resolveTokenContract(
+     return undefined;
+   }
+ 
+-  // Keep native sentinel verbatim; otherwise use the provided address AS-IS for
+-  // on-chain use. Filesystem/case handling is delegated to asset helper
+-  // functions like getTokenLogoURL / getAssetLogoURL.
++  // Keep native sentinel verbatim; otherwise use the provided address AS-IS (no case normalization)
+   const resolvedAddress =
+-    tokenAddress === NATIVE_TOKEN_ADDRESS
+-      ? tokenAddress
+-      : (tokenAddress as `0x${string}`);
++    tokenAddress === NATIVE_TOKEN_ADDRESS ? tokenAddress : (tokenAddress as `0x${string}`);
+ 
+   const isNative = resolvedAddress === NATIVE_TOKEN_ADDRESS;
+-  dbg('normalized (no case changes for on-chain use)', {
+-    resolvedAddress,
+-    isNative,
+-  });
++  dbg('normalized (no case changes)', { resolvedAddress, isNative });
+ 
+-  // For visibility, log the exact filesystem path our helpers will expect for
+-  // TOKEN_LIST logos. This uses the centralized token-logo helper so that
+-  // 0x/0X case and hex casing stay consistent with assetHelpers.
++  // For visibility, show the exact file path we expect for TOKEN_LIST
+   if (feedType === FEED_TYPE.TOKEN_LIST && !isNative) {
+-    const expectedPath = getTokenLogoURL({
+-      address: resolvedAddress,
+-      chainId,
+-    });
++    const expectedPath = `/assets/blockchains/${chainId}/contracts/${resolvedAddress}/logo.png`;
+     dbg('expected token logo path', expectedPath);
+   }
+ 
+@@ -90,7 +74,7 @@ export async function resolveTokenContract(
+       decimals: nativeInfo.decimals,
+       totalSupply: nativeInfo.totalSupply,
+       amount: 0n,
+-      balance: 0n,
++      balance: 0n, 
+       logoURL: logoURL || defaultMissingImage,
+     };
+ 
+@@ -106,10 +90,7 @@ export async function resolveTokenContract(
+   }
+ 
+   // 🧱 ERC-20: metadata + logo in parallel (no balance)
+-  const [metadata, logoURL] = await Promise.all<[
+-    ReturnType<typeof fetchTokenMetadata> | undefined,
+-    string,
+-  ]>([
++  const [metadata, logoURL] = await Promise.all([
+     fetchTokenMetadata(resolvedAddress, publicClient)
+       .then((m) => {
+         dbg('metadata resolved', m);
+@@ -120,13 +101,10 @@ export async function resolveTokenContract(
+         return undefined;
+       }),
+     logoP,
+-  ] as any);
++  ]);
+ 
+   if (!metadata) {
+-    dbg('⛔ no metadata; returning undefined', {
+-      ms: Date.now() - t0,
+-      resolvedAddress,
+-    });
++    dbg('⛔ no metadata; returning undefined', { ms: Date.now() - t0, resolvedAddress });
+     return undefined;
+   }
+ 
+diff --git a/lib/hooks/useAssetLogoURL.ts b/lib/hooks/useAssetLogoURL.ts
+index 6fdc633c..251a634f 100644
+--- a/lib/hooks/useAssetLogoURL.ts
++++ b/lib/hooks/useAssetLogoURL.ts
+@@ -4,11 +4,7 @@
+ 
+ import { useMemo } from 'react';
+ import { isAddress } from 'viem';
+-import { FEED_TYPE } from '@/lib/structure';
+-import {
+-  defaultMissingImage,
+-  getAssetLogoURL,
+-} from '@/lib/context/helpers/assetHelpers';
++import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
+ import { createDebugLogger } from '@/lib/utils/debugLogger';
+ import { useAppChainId } from '../context/hooks';
+ 
+@@ -21,33 +17,27 @@ const seenBrokenLogos = new Set<string>();
+ /**
+  * Returns a logo URL based on the given address and type.
+  * Falls back to a default image if the address is invalid or has been seen to fail.
+- *
+- * NOTE:
+- * - Directory layout is now centralized in `assetHelpers.getAssetLogoURL`.
+- * - This hook just chooses the appropriate FEED_TYPE and delegates path building.
+  */
+ export function useAssetLogoURL(
+   address: string,
+   type: 'wallet' | 'token',
+-  fallbackURL: string = defaultMissingImage,
++  fallbackURL: string = defaultMissingImage
+ ): string {
+-  const [chainId] = useAppChainId();
++  const chainId = useAppChainId();
+ 
+   return useMemo(() => {
+     if (!address || !isAddress(address)) return fallbackURL;
+     if (!chainId) return fallbackURL;
+-
+-    // If we've already seen this address produce a broken logo, short‑circuit.
+     if (seenBrokenLogos.has(address)) return fallbackURL;
+ 
+-    const feedType =
+-      type === 'wallet' ? FEED_TYPE.RECIPIENT_ACCOUNTS : FEED_TYPE.TOKEN_LIST;
+-
+-    const logoURL = getAssetLogoURL(address, chainId, feedType) || fallbackURL;
++    const logoURL =
++      type === 'wallet'
++        ? `/assets/wallets/${address}/avatar.png`
++        : `/assets/blockchains/${chainId}/contracts/${address.toUpperCase()}/logo.png`;
+ 
+-    debugLog.log?.(`✅ logoURL (${type}) = ${logoURL}`);
++    debugLog.log(`✅ logoURL (${type}) = ${logoURL}`);
+     return logoURL;
+-  }, [address, type, chainId, fallbackURL]);
++  }, [address, type, chainId]);
+ }
+ 
+ export function markLogoAsBroken(address: string) {
+diff --git a/lib/rest/recipientMeta.ts b/lib/rest/recipientMeta.ts
+index 6674f168..3a138085 100644
+--- a/lib/rest/recipientMeta.ts
++++ b/lib/rest/recipientMeta.ts
+@@ -1,11 +1,10 @@
+ // File: lib/rest/recipientMeta.ts
+-
+ import type { Address } from 'viem';
+ import { getAddress } from 'viem';
+ import { getJson } from './http';
+ import { createDebugLogger } from '@/lib/utils/debugLogger';
+ 
+-const LOG_TIME: boolean = false;
++const LOG_TIME:boolean = false;
+ const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_RECIPIENT_META === 'true';
+ const debugLog = createDebugLogger('recipientMeta', DEBUG_ENABLED, LOG_TIME);
+ 
+@@ -15,47 +14,40 @@ export type RecipientMeta = {
+   symbol?: string;
+   website?: string;
+   logoURL?: string;
++  // add any other fields your wallet.json may include
+ };
+ 
+-// simple in-memory cache to avoid repeated fetches / React blasting
+-// key = checksum-lowercased; value = meta or null if not found
+-const metaCache = new Map<string, RecipientMeta | null>();
+-
+ function toChecksum(addr: string): string {
+   try {
++    // Prefer viem’s checksum if available
+     return getAddress(addr as Address);
+   } catch {
++    // Fall back to given input if it’s already checksum’d
+     return addr;
+   }
+ }
+ 
+-export async function fetchRecipientMeta(
+-  address: Address,
+-): Promise<RecipientMeta | undefined> {
++export async function fetchRecipientMeta(address: Address): Promise<RecipientMeta | undefined> {
+   const checksum = toChecksum(address);
+-  const lower = address.toLowerCase(); // legacy lowercase directory fallback
+-  const upper = checksum.toUpperCase(); // primary: matches uppercased dirs on Linux
+-  const cacheKey = checksum.toLowerCase();
++  const lower = address.toLowerCase(); // keep as string for URL building
+ 
+-  // 🔒 cache guard
+-  if (metaCache.has(cacheKey)) {
+-    const cached = metaCache.get(cacheKey);
+-    debugLog.log?.('[recipientMeta] cache hit for', cacheKey, '→', cached);
+-    if (cached === null) return undefined;
+-    return cached;
+-  }
++  // ✅ correct bases for where your files actually live
++  const bases = [
++    '/assets/accounts',
++    '/resources/data/accounts', // optional fallback if you use it
++  ];
+ 
+-  // Only use the public assets tree — no /resources/data/accounts over HTTP
+-  const base = '/assets/accounts';
+-  const filename = 'wallet.json';
++  // ✅ you only serve wallet.json (no account.json)
++  const filenames = ['wallet.json'];
+ 
+-  const candidates = [
+-    // Primary: uppercased directory (what your build-script now produces)
+-    `${base}/${upper}/${filename}`,
+-    // Legacy fallbacks (checksum-cased and lowercase), in case some dirs weren't migrated
+-    `${base}/${checksum}/${filename}`,
+-    `${base}/${lower}/${filename}`,
+-  ];
++  // Generate candidate URLs (checksum form first, then lowercase)
++  const candidates: string[] = [];
++  for (const base of bases) {
++    for (const file of filenames) {
++      candidates.push(`${base}/${checksum}/${file}`);
++      candidates.push(`${base}/${lower}/${file}`);
++    }
++  }
+ 
+   debugLog.log?.('[recipientMeta] candidate URLs:', candidates);
+ 
+@@ -64,8 +56,7 @@ export async function fetchRecipientMeta(
+       debugLog.log?.('[recipientMeta] GET', url);
+       const meta = await getJson<Partial<RecipientMeta>>(url);
+ 
+-      const logoFsKey = checksum.toUpperCase();
+-
++      // Normalize a few common fields that UI expects
+       const normalized: RecipientMeta = {
+         address,
+         name: (meta as any)?.name ?? (meta as any)?.title ?? '',
+@@ -73,23 +64,16 @@ export async function fetchRecipientMeta(
+         website: (meta as any)?.website ?? '',
+         logoURL:
+           (meta as any)?.logoURL ??
+-          // default logo path; your wallet.json can override this
+-          `${base}/${logoFsKey}/logo.png`,
++          `/assets/accounts/${checksum}/logo.png`,
+       };
+ 
+-      metaCache.set(cacheKey, normalized);
+       return normalized;
+     } catch (err: any) {
+-      debugLog.log?.(
+-        '[recipientMeta] ❌ failed',
+-        url,
+-        err?.message ?? err,
+-      );
+-      // continue to next candidate
++      debugLog.log?.('[recipientMeta] ❌ failed', url, err?.message ?? err);
++      // keep trying next candidate
+     }
+   }
+ 
+-  debugLog.log?.('[recipientMeta] no candidates succeeded for', cacheKey);
+-  metaCache.set(cacheKey, null); // remember failure
++  debugLog.log?.('[recipientMeta] no candidates succeeded');
+   return undefined;
+ }
+diff --git a/lib/spCoin/loadAccounts.tsx b/lib/spCoin/loadAccounts.tsx
+index 539ace96..a771b2a6 100644
+--- a/lib/spCoin/loadAccounts.tsx
++++ b/lib/spCoin/loadAccounts.tsx
+@@ -1,4 +1,3 @@
+-// File: lib/spCoin/loadAccounts.tsx
+ 'use server';
+ 
+ import * as fs from "fs";
+@@ -25,9 +24,7 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
+     if (jsonAccountFileList && jsonAccountFileList.length > 0) {
+         console.log("🔎 Loading accounts from provided list...");
+         for (const file of jsonAccountFileList) {
+-            // Use UPPERCASE directory name to match on-disk folders
+-            const dirName = file.address.toUpperCase();
+-            const accountFilePath = path.join(accountsDir, dirName, "wallet.json");
++            const accountFilePath = path.join(accountsDir, file.address, "wallet.json");
+ 
+             console.log(`📂 Checking account file: ${accountFilePath}`);
+ 
+@@ -36,8 +33,7 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
+                     const accountData = fs.readFileSync(accountFilePath, "utf-8");
+                     const account: WalletAccount = JSON.parse(accountData);
+                     if (!account.logoURL) {
+-                        // Use the uppercased directory name for the logo path
+-                        account.logoURL = `/assets/accounts/${dirName}/logo.png`;
++                        account.logoURL = `/assets/accounts/${account.address}/logo.png`;
+                     }
+                     accounts.push(account);
+                 } catch (error) {
+@@ -71,8 +67,7 @@ export async function loadAccounts(jsonAccountFileList?: AccountAddress[]): Prom
+                         const accountData = fs.readFileSync(accountFilePath, "utf-8");
+                         const account: WalletAccount = JSON.parse(accountData);
+                         if (!account.logoURL) {
+-                            // Use the on-disk folder name for the logo path
+-                            account.logoURL = `/assets/accounts/${accountFolder}/logo.png`;
++                            account.logoURL = `/assets/accounts/${account.address}/logo.png`;
+                         }
+                         accounts.push(account);
+                     } catch (error) {
+diff --git a/lib/utils/feeds/assetSelect/builders.ts b/lib/utils/feeds/assetSelect/builders.ts
+index 9e0a9591..3368058e 100644
+--- a/lib/utils/feeds/assetSelect/builders.ts
++++ b/lib/utils/feeds/assetSelect/builders.ts
+@@ -14,7 +14,7 @@ import { loadAccounts } from '@/lib/spCoin/loadAccounts';
+ 
+ import type { BuiltToken, FeedData } from './types';
+ 
+-/* ─────────────────────────── utils ────────────────────────── */
++/* ───────────────────────────── utils ───────────────────────────── */
+ 
+ function parseJson(input: unknown): any {
+   if (typeof input === 'string') {
+@@ -27,7 +27,7 @@ function parseJson(input: unknown): any {
+   return input ?? null;
+ }
+ 
+-/* ─────────────── core normalizers (existing) ────────────── */
++/* ─────────────────────── core normalizers (existing) ─────────────────────── */
+ 
+ /** Normalize a sparse account JSON entry into a WalletAccount */
+ export function buildWalletObj(a: any): WalletAccount {
+@@ -43,23 +43,14 @@ export function buildWalletObj(a: any): WalletAccount {
+ 
+ /** Normalize a token JSON entry into a BuiltToken (async to resolve logos) */
+ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken> {
+-  // Keep the token's address as provided (checksum/lowercase/etc.) for on-chain use
+-  const raw = String(t?.address ?? '').trim();
+-  const address = raw as Address;
+-
+-  // Filesystem key for assets: we uppercase the entire address (including prefix)
+-  // so it matches the on-disk directory naming (0X...)
+-  const fsKey = raw.toUpperCase();
+-
++  const address = String(t?.address ?? '').toLowerCase();
+   let logoURL: string;
+   try {
+-    // Use the uppercased fsKey when resolving logo URLs so asset paths match Linux dirs
+-    logoURL = await getLogoURL(chainId, fsKey as any, FEED_TYPE.TOKEN_LIST);
++    logoURL = await getLogoURL(chainId, address as any, FEED_TYPE.TOKEN_LIST);
+   } catch {
+-    // Fallback: derive via central helper using the same fsKey
+-    logoURL = getTokenLogoURL({ address: fsKey, chainId });
++    // Fallback: derive via central helper instead of hardcoding the path
++    logoURL = getTokenLogoURL({ address, chainId });
+   }
+-
+   return {
+     ...t,
+     address,
+@@ -69,7 +60,7 @@ export async function buildTokenObj(t: any, chainId: number): Promise<BuiltToken
+   } as BuiltToken;
+ }
+ 
+-/* ────────────────── new conveniences ────────────────── */
++/* ─────────────────────────── new conveniences ─────────────────────────── */
+ 
+ /**
+  * Build a single token from a raw JSON object/string.
+@@ -100,20 +91,13 @@ export async function buildWalletsFromJson(
+  * Convenience: build exactly one wallet (first) from a spec.
+  * Returns null if none resolved.
+  */
+-export async function buildWalletFromJson(
++export async function buildWalletFromJsonFirst(
+   rawAccountSpec: unknown
+ ): Promise<WalletAccount | null> {
+   const ws = await buildWalletsFromJson(rawAccountSpec);
+   return ws[0] ?? null;
+ }
+ 
+-// Backwards-compatible alias for older imports (buildWalletFromJsonFirst)
+-export async function buildWalletFromJsonFirst(
+-  rawAccountSpec: unknown
+-): Promise<WalletAccount | null> {
+-  return buildWalletFromJson(rawAccountSpec);
+-}
+-
+ /**
+  * Feed-style converter: give a JSON (object/string) + FEED_TYPE and get a FeedData bundle.
+  * Mirrors the shapes returned by fetchAndBuildDataList, but without going through getDataListObj.
+diff --git a/lib/utils/feeds/assetSelect/hooks/useFeedData.ts b/lib/utils/feeds/assetSelect/hooks/useFeedData.ts
+index 1fda4ed1..6dd9f5a7 100644
+--- a/lib/utils/feeds/assetSelect/hooks/useFeedData.ts
++++ b/lib/utils/feeds/assetSelect/hooks/useFeedData.ts
+@@ -15,22 +15,10 @@ export function useFeedData(feedType: FEED_TYPE) {
+ 
+   useEffect(() => {
+     let cancelled = false;
+-
+-    // If we don't have a valid chainId yet, don't fire the fetch
+-    if (!chainId || Number.isNaN(Number(chainId))) {
+-      setFeedData(null);
+-      setLoading(false);
+-      setError(undefined);
+-      return () => {
+-        cancelled = true;
+-      };
+-    }
+-
+-    // spinner only for account feeds
+     setLoading(
+       feedType === FEED_TYPE.RECIPIENT_ACCOUNTS ||
+       feedType === FEED_TYPE.AGENT_ACCOUNTS
+-    );
++    ); // spinner only for account feeds
+ 
+     (async () => {
+       try {
+diff --git a/public/assets/accounts/site-info.html b/public/assets/accounts/site-info.html
+index e2bdf6ef..dc0f6b7f 100644
+--- a/public/assets/accounts/site-info.html
++++ b/public/assets/accounts/site-info.html
+@@ -161,30 +161,14 @@
+           init: { cache: 'no-store' }
+         });
+ 
+-        const name = (wallet.name || '').trim();
+-        const hasWebsite =
+-          wallet.website &&
+-          String(wallet.website).trim().length > 0;
+-
+-        // Build title text:
+-        // - If name present → "Web Site {name}"
+-        // - If name missing → show explicit error
+-        // - Only append "Not Found" if website is missing
+-        let titleHtml = `<span style="color: darkblue;">Web Site</span> `;
+-
+-        if (name) {
+-          titleHtml += `<span style="color: black;">${name}</span>`;
+-        } else {
+-          titleHtml += `<span style="color: red;">ERROR: Missing "name" in wallet.json</span>`;
+-        }
+-
+-        if (!hasWebsite) {
+-          titleHtml += ` <span style="color: darkblue;">Not Found</span>`;
+-        }
+-
+-        document.getElementById('title').innerHTML = titleHtml;
+-
+-        if (hasWebsite) {
++        document.getElementById('title').innerHTML =
++          `<span style="color: darkblue;">Web Site</span> 
++           <span style="color: ${wallet.name ? 'black' : 'red'};">
++             ${wallet.name ? wallet.name : '<span style="color: red;">ERROR: Missing "name" in wallet.json</span>'}
++           </span> 
++           <span style="color: darkblue;">Not Found</span>`;
++
++        if (wallet.website && String(wallet.website).trim()) {
+           const websiteInput = document.getElementById('websiteInput');
+           websiteInput.value = String(wallet.website).trim();
+           websiteInput.style.display = 'block';
