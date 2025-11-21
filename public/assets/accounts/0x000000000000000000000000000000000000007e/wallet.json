@@ -1,0 +1,9 @@
+{
+  "name": "JungleBookMogly",
+  "symbol": "JungleBookMogly",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site JungleBookMogly",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000007e"
+}

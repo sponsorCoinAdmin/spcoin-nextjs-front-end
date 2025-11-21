@@ -1,0 +1,9 @@
+{
+  "name": "Children's Wish Foundation",
+  "symbol": "C.W.F.",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site ChildrensWishFoundation1",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000001c"
+}

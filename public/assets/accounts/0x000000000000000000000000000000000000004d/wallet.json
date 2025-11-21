@@ -1,0 +1,9 @@
+{
+  "name": "Save The Bangle",
+  "symbol": "BANGLE",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site SaveTheTiger3",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000004d"
+}
