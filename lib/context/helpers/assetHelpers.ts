@@ -40,17 +40,19 @@ async function resourceExists(url: string, timeoutMs = 2500): Promise<boolean> {
  * Normalize an address into the canonical filesystem representation used
  * for on-disk directories (wallet.json, logo.png, etc).
  *
- * NEUTRAL MODE (no case changes):
- * - We only trim and basic-length check.
- * - Callers keep their original address casing for now.
- * - Later, if we adopt an UPPERCASE or checksum convention on disk,
- *   we only need to change this helper.
+ * NOTE:
+ * - We deliberately do NOT mutate any upstream state; callers should keep
+ *   their canonical `address` value for API / RPC usage.
+ * - This helper is the single source of truth for case handling when
+ *   building `/assets/accounts/...` and related paths.
  */
 export function normalizeAddressForAssets(address?: string): string {
   if (!address) return '';
   const trimmed = address.trim();
   if (trimmed.length < 10) return '';
-  return trimmed;
+
+  // Your filesystem convention: EVERYTHING UPPERCASE, including 0X
+  return trimmed.toUpperCase();
 }
 
 /**
@@ -84,20 +86,41 @@ export async function getLogoURL(
 export type RequiredAssetMembers = { address: string; chainId: number };
 
 /**
+ * Contract root helper for on-disk storage.
+ * Example: /assets/blockchains/1/contracts/0XABC...123
+ */
+export function getContractRoot(chainId: number, address?: string): string {
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) return '';
+  return `/assets/blockchains/${chainId}/contracts/${normalized}`;
+}
+
+/**
+ * Wallet root helper for on-disk storage.
+ * Example: /assets/accounts/0XABC...123
+ */
+export function getWalletRoot(address?: string): string {
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) return '';
+  return `/assets/accounts/${normalized}`;
+}
+
+/**
  * Token-specific logo helper.
  * Returns a contract logo path or the "bad token" sentinel image.
  *
- * NOTE: Address normalization is centralized in `normalizeAddressForAssets`.
- * For now, that helper does NOT change case; it only trims and checks length.
+ * NOTE: We normalize the address for filesystem paths via
+ * `normalizeAddressForAssets` so that Linux case-sensitivity matches our
+ * on-disk directory names.
  */
 export function getTokenLogoURL(required?: RequiredAssetMembers): string {
   if (!required) return badTokenAddressImage;
   const { chainId, address } = required;
 
-  const normalized = normalizeAddressForAssets(address);
-  if (!normalized) return badTokenAddressImage;
+  const root = getContractRoot(chainId, address);
+  if (!root) return badTokenAddressImage;
 
-  return `/assets/blockchains/${chainId}/contracts/${normalized}/logo.png`;
+  return `${root}/logo.png`;
 }
 
 /**
@@ -105,9 +128,9 @@ export function getTokenLogoURL(required?: RequiredAssetMembers): string {
  * Uses the accounts logo path and falls back to the generic missing image.
  */
 export function getWalletLogoURL(address?: string): string {
-  const normalized = normalizeAddressForAssets(address);
-  if (!normalized) return defaultMissingImage;
-  return `/assets/accounts/${normalized}/logo.png`;
+  const root = getWalletRoot(address);
+  if (!root) return defaultMissingImage;
+  return `${root}/logo.png`;
 }
 
 /**
@@ -159,5 +182,47 @@ export function getAccountLogo(account?: WalletAccount): string {
   if (!account) return defaultMissingImage;
   const normalized = normalizeAddressForAssets(account.address);
   if (!normalized) return defaultMissingImage;
-  return `/assets/accounts/${normalized}/logo.png`;
+  return `${getWalletRoot(account.address)}/logo.png`;
+}
+
+/**
+ * Helper for the account metadata JSON (wallet.json) path.
+ *
+ * All callers that need `/assets/accounts/<addr>/wallet.json` should use this
+ * so that directory case stays consistent across the app.
+ */
+export function getWalletJsonURL(address?: string): string {
+  const root = getWalletRoot(address);
+  if (!root) return '';
+  return `${root}/wallet.json`;
+}
+
+/**
+ * Helper for account metadata JSON when a WalletAccount object is available.
+ */
+export function getAccountWalletJsonURL(account?: WalletAccount): string {
+  if (!account) return '';
+  return getWalletJsonURL(account.address);
+}
+
+/**
+ * Base URL for the site-info helper page.
+ * This remains a static path; address-specific variants should be built with
+ * `getSiteInfoURLForAddress`.
+ */
+export function getSiteInfoBaseURL(): string {
+  return '/assets/accounts/site-info.html';
+}
+
+/**
+ * Site-info URL that includes a siteKey query parameter derived from the
+ * canonical address. This is used by RecipientSite to embed the recipient's
+ * external website via the static helper page.
+ */
+export function getSiteInfoURLForAddress(address?: string): string {
+  const base = getSiteInfoBaseURL();
+  const normalized = normalizeAddressForAssets(address);
+  if (!normalized) return base;
+  const encoded = encodeURIComponent(normalized);
+  return `${base}?siteKey=${encoded}`;
 }
