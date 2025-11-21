@@ -4,13 +4,17 @@ import type { Address, PublicClient } from 'viem';
 import { isAddress } from 'viem';
 import { fetchTokenMetadata } from '../helpers/fetchTokenMetadata';
 // 🚫 removed: import { fetchTokenBalance } from '../helpers/fetchTokenBalance';
-import type { TokenContract} from '@/lib/structure';
+import type { TokenContract } from '@/lib/structure';
 import { FEED_TYPE, NATIVE_TOKEN_ADDRESS } from '@/lib/structure';
-import { getLogoURL } from '@/lib/network/utils';
+import {
+  getLogoURL,
+  getTokenLogoURL,
+  defaultMissingImage,
+} from '@/lib/context/helpers/assetHelpers';
 import { getNativeTokenInfo } from '@/lib/network/utils/getNativeTokenInfo';
-import { defaultMissingImage } from '@/lib/context/helpers/assetHelpers';
 
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_RESOLVE_TOKEN_CONTRACT === 'true';
 function dbg(...args: any[]) {
   if (DEBUG_ENABLED) console.log('[resolveTokenContract]', ...args);
 }
@@ -20,7 +24,7 @@ export async function resolveTokenContract(
   chainId: number,
   feedType: FEED_TYPE,
   publicClient: PublicClient,
-  _accountAddress?: Address // kept for compatibility; unused
+  _accountAddress?: Address, // kept for compatibility; unused
 ): Promise<TokenContract | undefined> {
   const t0 = Date.now();
   dbg('entry', {
@@ -37,16 +41,28 @@ export async function resolveTokenContract(
     return undefined;
   }
 
-  // Keep native sentinel verbatim; otherwise use the provided address AS-IS (no case normalization)
+  // Keep native sentinel verbatim; otherwise use the provided address AS-IS for
+  // on-chain use. Filesystem/case handling is delegated to asset helper
+  // functions like getTokenLogoURL / getAssetLogoURL.
   const resolvedAddress =
-    tokenAddress === NATIVE_TOKEN_ADDRESS ? tokenAddress : (tokenAddress as `0x${string}`);
+    tokenAddress === NATIVE_TOKEN_ADDRESS
+      ? tokenAddress
+      : (tokenAddress as `0x${string}`);
 
   const isNative = resolvedAddress === NATIVE_TOKEN_ADDRESS;
-  dbg('normalized (no case changes)', { resolvedAddress, isNative });
+  dbg('normalized (no case changes for on-chain use)', {
+    resolvedAddress,
+    isNative,
+  });
 
-  // For visibility, show the exact file path we expect for TOKEN_LIST
+  // For visibility, log the exact filesystem path our helpers will expect for
+  // TOKEN_LIST logos. This uses the centralized token-logo helper so that
+  // 0x/0X case and hex casing stay consistent with assetHelpers.
   if (feedType === FEED_TYPE.TOKEN_LIST && !isNative) {
-    const expectedPath = `/assets/blockchains/${chainId}/contracts/${resolvedAddress}/logo.png`;
+    const expectedPath = getTokenLogoURL({
+      address: resolvedAddress,
+      chainId,
+    });
     dbg('expected token logo path', expectedPath);
   }
 
@@ -74,7 +90,7 @@ export async function resolveTokenContract(
       decimals: nativeInfo.decimals,
       totalSupply: nativeInfo.totalSupply,
       amount: 0n,
-      balance: 0n, 
+      balance: 0n,
       logoURL: logoURL || defaultMissingImage,
     };
 
@@ -90,7 +106,10 @@ export async function resolveTokenContract(
   }
 
   // 🧱 ERC-20: metadata + logo in parallel (no balance)
-  const [metadata, logoURL] = await Promise.all([
+  const [metadata, logoURL] = await Promise.all<[
+    ReturnType<typeof fetchTokenMetadata> | undefined,
+    string,
+  ]>([
     fetchTokenMetadata(resolvedAddress, publicClient)
       .then((m) => {
         dbg('metadata resolved', m);
@@ -101,10 +120,13 @@ export async function resolveTokenContract(
         return undefined;
       }),
     logoP,
-  ]);
+  ] as any);
 
   if (!metadata) {
-    dbg('⛔ no metadata; returning undefined', { ms: Date.now() - t0, resolvedAddress });
+    dbg('⛔ no metadata; returning undefined', {
+      ms: Date.now() - t0,
+      resolvedAddress,
+    });
     return undefined;
   }
 
