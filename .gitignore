@@ -5,6 +5,7 @@ test.out
 /.deps
 /.next/
 /.vscode/
+/public/
 .env
 .env.local
 .env.production
