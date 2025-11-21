@@ -24,15 +24,16 @@ const seenBrokenLogos = new Set<string>();
  * Falls back to a default image if the address is invalid or has been seen to fail.
  *
  * NOTE:
- * - Directory layout + uppercasing are centralized in assetHelpers.getAssetLogoURL.
- * - This hook just picks the right FEED_TYPE and delegates.
+ * - Directory layout is centralized in `assetHelpers.getAssetLogoURL`.
+ * - This hook just chooses the appropriate FEED_TYPE and delegates path building.
  */
 export function useAssetLogoURL(
   address: string,
   type: 'wallet' | 'token',
   fallbackURL: string = defaultMissingImage,
 ): string {
-  const chainId = useAppChainId();
+  // useAppChainId returns a tuple [chainId, setChainId]
+  const [chainId] = useAppChainId();
 
   return useMemo(() => {
     if (!address || !isAddress(address)) return fallbackURL;
