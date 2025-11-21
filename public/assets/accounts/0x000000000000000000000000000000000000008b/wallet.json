@@ -1,9 +1,0 @@
-{
-  "name": "Monkey1",
-  "symbol": "Monkey1",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Monkey1",
-  "status": "test",
-  "address": "0x000000000000000000000000000000000000008b"
-}
