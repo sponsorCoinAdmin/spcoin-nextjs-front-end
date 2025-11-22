@@ -1,0 +1,9 @@
+{
+  "name": "Support The Tiger",
+  "symbol": "TIGER",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site SaveTheTiger4",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000004e"
+}

@@ -1,0 +1,12 @@
+{
+  "chainId": 61,
+  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "name": "Ethereum Classic",
+  "symbol": "ETC",
+  "decimals": 18,
+  "website": "",
+  "description": "-",
+  "explorer": "https://blockscout.com/etc/mainnet/contractss/0x0000000000b3F879cb30FE243b4Dfee438691c04",
+  "status": "active",
+  "id": "0x0000000000b3F879cb30FE243b4Dfee438691c04"
+}

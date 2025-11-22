@@ -1,0 +1,9 @@
+{
+  "name": "Judy's Leukemia",
+  "symbol": "JUDY",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site SickGirl",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000005c"
+}

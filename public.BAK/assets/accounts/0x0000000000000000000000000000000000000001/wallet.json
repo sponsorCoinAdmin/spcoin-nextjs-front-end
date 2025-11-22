@@ -1,0 +1,9 @@
+{
+  "name": "Born Free",
+  "symbol": "FREE",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site BornFree",
+  "status": "test",
+  "address": "0x0000000000000000000000000000000000000001"
+}

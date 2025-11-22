@@ -1,0 +1,9 @@
+{
+  "name": "PC Party",
+  "symbol": "PC_2",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site PC_2",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000002f"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Fix The Roads",
+  "symbol": "ROADS",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site FixTheRoads",
+  "status": "test",
+  "address": "0x0000000000000000000000000000000000000002"
+}
