@@ -25,36 +25,49 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
-console.log('[usePriceAPI] loaded — Option A env wiring (2025-11-22-D)');
+console.log('[usePriceAPI] loaded — Origin+Path fix (2025-11-22-E)');
 
 // ────────────────────────────────────────────────────────────────
 // API base config
 //
-//   We treat NEXT_PUBLIC_API_SERVER as an *origin only*:
+// We treat NEXT_PUBLIC_API_SERVER as an *optional origin hint*.
+//   - If empty or not usable, we fall back to relative URLs.
+//   - We *never* include '/api' or '/0x' from the env itself.
 //
-//     .env.local (dev):        NEXT_PUBLIC_API_SERVER=
-//     .env.production (prod):  NEXT_PUBLIC_API_SERVER=https://www.sponsorcoin.org
-//
-//   The full route path is baked in here:
-//
-//     /api/0x/price
-//
-//   So the final URL is either:
-//     - '/api/0x/price?...'                         (relative, same origin)
-//     - 'https://www.sponsorcoin.org/api/0x/price' (if origin is set)
+// Final browser URL will be either:
+//   - '/api/0x/price?...'                         (recommended — same origin)
+//   - 'https://www.sponsorcoin.org/api/0x/price' (if we ever choose to use origin)
 // ────────────────────────────────────────────────────────────────
 const RAW_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '').trim();
 
-// Strip trailing slashes; we will add the path ourselves.
-const NEXT_PUBLIC_API_SERVER =
-  RAW_API_SERVER.length === 0 ? '' : RAW_API_SERVER.replace(/\/+$/, '');
+function normalizeApiServer(raw: string): string {
+  if (!raw) return '';
+  // Strip trailing slashes
+let base = raw.replace(/\/+$/u, '');
+  // Strip a trailing '/api' segment if present (handles '.../api' and '.../api/')
+  if (base.endsWith('/api')) {
+    base = base.slice(0, -4);
+  }
+  return base;
+}
+
+const ENV_API_ORIGIN = normalizeApiServer(RAW_API_SERVER);
 
 // Full route path (including /api and /0x)
 const apiPriceBase = '/api/0x/price';
 
+function getApiBaseForRuntime(): string {
+  // On the client, use relative URLs to avoid CORS/domain mismatches.
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+  // On the server (if this ever runs there), use the normalized env origin.
+  return ENV_API_ORIGIN;
+}
+
 console.log('[usePriceAPI] ENV wiring', {
   RAW_API_SERVER,
-  NEXT_PUBLIC_API_SERVER,
+  ENV_API_ORIGIN,
   apiPriceBase,
 });
 
@@ -67,7 +80,7 @@ const validTokenOrNetworkCoin = (address: Address): Address => address;
 type FetchKey = [string, PriceRequestParams];
 
 const fetcher = async ([endpoint, params]: FetchKey) => {
-  const base = NEXT_PUBLIC_API_SERVER; // '' or 'https://www.sponsorcoin.org'
+  const base = getApiBaseForRuntime();
   endpoint = base + endpoint; // e.g. '' + '/api/0x/price' or 'https://www.sponsorcoin.org' + '/api/0x/price'
 
   const { sellAmount, buyAmount } = params;
@@ -158,7 +171,7 @@ const getPriceApiCall = (
       : {}),
   };
 
-  // Note: we now return the full path here (`/api/0x/price`)
+  // We now always return the full path here (`/api/0x/price`).
   return [apiPriceBase, params];
 };
 
@@ -273,7 +286,7 @@ function usePriceAPI() {
   // 🔍 Hard snapshot so we can see *why* it may or may not fetch
   useEffect(() => {
     console.log('[usePriceAPI] snapshot', {
-      NEXT_PUBLIC_API_SERVER,
+      ENV_API_ORIGIN,
       chainId,
       tradeDirection: tradeData.tradeDirection,
       sellTokenAddress,
