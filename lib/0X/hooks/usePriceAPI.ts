@@ -19,17 +19,17 @@ import {
   useAppChainId, // returns [number, setter]
 } from '@/lib/context/hooks';
 
-import type PriceResponse from '@/lib/0X/typesV1';
+import type PriceResponse from '@/lib/0x/typesV1';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
-const API_PROVIDER = '0X/';
+const API_PROVIDER = '0x';
 const NEXT_PUBLIC_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '') + API_PROVIDER;
 const apiPriceBase = '/price';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true' ;
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
 const validTokenOrNetworkCoin = (address: Address): Address => address;

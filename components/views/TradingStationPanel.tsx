@@ -10,7 +10,7 @@ import AffiliateFee from '@/components/containers/AffiliateFee';
 import FeeDisclosure from '@/components/containers/FeeDisclosure';
 import AddSponsorShipPanel from '@/components/views/AddSponsorshipPanel';
 
-import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
+import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import PanelGate from '@/components/utility/PanelGate';
 import ConfigSponsorshipPanel from './ConfigSlippagePanel';
 

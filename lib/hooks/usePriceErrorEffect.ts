@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
+import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useErrorMessage } from '@/lib/context/hooks';
 import type { ErrorMessage } from '@/lib/structure';

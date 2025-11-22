@@ -9,7 +9,7 @@ import {
   useBuyTokenContract,
 } from '@/lib/context/hooks';
 import { mutate } from 'swr';
-import { usePriceAPI } from '@/lib/0X/hooks/usePriceAPI';
+import { usePriceAPI } from '@/lib/0x/hooks/usePriceAPI';
 import { usePanelVisible } from '@/lib/context/exchangeContext/hooks/usePanelVisible';
 import { SP_COIN_DISPLAY as SP } from '@/lib/structure';
 

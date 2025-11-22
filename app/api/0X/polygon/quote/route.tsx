@@ -1,5 +1,5 @@
 import { BASE_URL } from '../networkConfig'
-import { apiResponse } from '@/app/api/0X/lib/apiResponse'
+import { apiResponse } from '@/app/api/0x/lib/apiResponse'
 
 const api="/swap/v1/quote"
 
