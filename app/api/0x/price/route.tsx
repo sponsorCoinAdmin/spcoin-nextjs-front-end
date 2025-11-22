@@ -1,68 +1,66 @@
 // File: app/api/0x/price/route.ts
 
-import { BASE_URL } from '../networkConfig';
-import { apiResponse } from '@/app/api/0x/lib/apiResponse';
-import { createDebugLogger } from '@/lib/utils/debugLogger';
+import { BASE_URL } from '../networkConfig'
+import { apiResponse } from '@/app/api/0x/lib/apiResponse'
 
-const LOG_TIME = false;
-const DEBUG_ENABLED =
-  process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true' ||
-  process.env.DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true';
+const api = '/swap/permit2/price/'
+const ROUTE_TAG = '[api/0x/price]'
 
-const debugLog = createDebugLogger('0x-swap-permit2-price', DEBUG_ENABLED, LOG_TIME);
+// This runs once when the route module is loaded by Next.js
+console.log(`${ROUTE_TAG} 📦 route module loaded — BASE_URL='${BASE_URL}', api='${api}'`)
 
-// Upstream 0x path
-const api = '/swap/permit2/price/';
+export async function GET(req: Request): Promise<Response> {
+  const url = new URL(req.url)
 
-export async function GET(req: Request) {
-  const urlObj = new URL(req.url);
-  const path = urlObj.pathname;
-  const search = urlObj.search;
-  const origin = req.headers.get('origin');
+  // 🔵 Hard, unconditional logging so we *always* see requests in pm2 logs
+  console.log(`${ROUTE_TAG} 📥 Incoming request`, {
+    method: 'GET',
+    url: req.url,
+    path: url.pathname,
+    search: url.search,
+    origin: req.headers.get('origin'),
+    host: req.headers.get('host'),
+    referer: req.headers.get('referer'),
+    userAgent: req.headers.get('user-agent'),
+  })
 
-  if (process.env.DEBUG_LOG_API_0X_PRICE_REQUEST === 'true') {
-    debugLog.log?.('📥 Incoming request to 0x permit2 price route', {
-      method: 'GET',
-      url: req.url,
-      origin,
-      path,
-      search,
-    });
-  }
+  const upstreamBase = `${BASE_URL}${api}`
 
-  const upstreamBase = `${BASE_URL}${api}`;
+  console.log(`${ROUTE_TAG} 🔗 Proxying to upstream`, {
+    upstreamBase,
+    originalUrl: req.url,
+  })
 
   try {
-    const res = await apiResponse(upstreamBase, req.url);
+    // Delegate to your shared helper (which actually calls 0x)
+    const res = await apiResponse(upstreamBase, req.url)
 
-    if (process.env.DEBUG_LOG_API_0X_SERVER_RESPONSE === 'true') {
-      debugLog.log?.('📤 Upstream response from 0x proxy', {
-        upstreamBase,
-        status: res.status,
-        'access-control-allow-origin': res.headers.get('access-control-allow-origin'),
-        'access-control-allow-headers': res.headers.get('access-control-allow-headers'),
-        'access-control-allow-methods': res.headers.get('access-control-allow-methods'),
-      });
-    }
+    console.log(`${ROUTE_TAG} 📤 Upstream response`, {
+      status: res.status,
+      ok: res.ok,
+      'access-control-allow-origin': res.headers.get('access-control-allow-origin'),
+      'access-control-allow-headers': res.headers.get('access-control-allow-headers'),
+      'access-control-allow-methods': res.headers.get('access-control-allow-methods'),
+    })
 
-    return res;
+    return res
   } catch (err: any) {
-    debugLog.error?.('❌ 0x permit2 price route error', {
+    console.error(`${ROUTE_TAG} ❌ Error in route handler`, {
       message: err?.message ?? String(err),
       name: err?.name,
       stack: err?.stack,
-      upstreamBase,
-    });
+    })
 
+    // Even on error we return a JSON body so the client sees *something*
     return new Response(
       JSON.stringify({
-        error: 'Internal Server Error',
-        details: err?.message ?? String(err),
+        error: 'PROXY_ERROR',
+        message: err?.message ?? 'Unknown error in /api/0x/price route',
       }),
       {
         status: 500,
         headers: { 'content-type': 'application/json' },
       },
-    );
+    )
   }
 }
