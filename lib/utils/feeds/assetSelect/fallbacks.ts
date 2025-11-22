@@ -11,21 +11,25 @@ import recipientJsonListRaw from '@/resources/data/recipients/recipientJsonList.
 import agentJsonListRaw from '@/resources/data/agents/agentJsonList.json';
 import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import { getJson } from '@/lib/rest/http';
-import { toJSONUpperSync } from '@/lib/utils/toJSONUpper';
 
-// Normalize all bundled lists so that the `address` field is uppercased.
-// This keeps on-chain usage case-insensitive while enforcing a consistent
-// filesystem / metadata convention for logo paths and comparisons.
-const baseTokenList     = toJSONUpperSync('address', baseTokenListRaw as any[]);
-const hardhatTokenList  = toJSONUpperSync('address', hardhatTokenListRaw as any[]);
-const polygonTokenList  = toJSONUpperSync('address', polygonTokenListRaw as any[]);
-const sepoliaTokenList  = toJSONUpperSync('address', sepoliaTokenListRaw as any[]);
-const ethereumTokenList = toJSONUpperSync('address', ethereumTokenListRaw as any[]);
-const recipientJsonList = toJSONUpperSync('address', recipientJsonListRaw as any[]);
-const agentJsonList     = toJSONUpperSync('address', agentJsonListRaw as any[]);
+// NOTE:
+// We no longer normalize/uppercase the `address` field here. The JSON is
+// consumed as-is, and any filesystem/URL case handling is centralized in
+// helpers like `normalizeAddressForAssets` in assetHelpers.
+
+const baseTokenList = baseTokenListRaw as any[];
+const hardhatTokenList = hardhatTokenListRaw as any[];
+const polygonTokenList = polygonTokenListRaw as any[];
+const sepoliaTokenList = sepoliaTokenListRaw as any[];
+const ethereumTokenList = ethereumTokenListRaw as any[];
+const recipientJsonList = recipientJsonListRaw as any[];
+const agentJsonList = agentJsonListRaw as any[];
 
 /** Resolve a remote URL (if you add remote hosting later). Returning undefined means "use fallbacks". */
-export function getDataListURL(_feedType: FEED_TYPE, _chainId?: number): string | undefined {
+export function getDataListURL(
+  _feedType: FEED_TYPE,
+  _chainId?: number,
+): string | undefined {
   // Keep this as the single place to compute URLs if/when you publish lists remotely.
   // For now, return undefined to rely on bundled JSON fallbacks.
   return undefined;
@@ -42,12 +46,18 @@ export function getFallbackList(feedType: FEED_TYPE, chainId?: number): any[] {
 
     case FEED_TYPE.TOKEN_LIST: {
       switch (Number(chainId)) {
-        case CHAIN_ID.ETHEREUM: return ethereumTokenList as any[];
-        case CHAIN_ID.BASE:     return baseTokenList as any[];
-        case CHAIN_ID.POLYGON:  return polygonTokenList as any[];
-        case CHAIN_ID.HARDHAT:  return hardhatTokenList as any[];
-        case CHAIN_ID.SEPOLIA:  return sepoliaTokenList as any[];
-        default:                return [];
+        case CHAIN_ID.ETHEREUM:
+          return ethereumTokenList as any[];
+        case CHAIN_ID.BASE:
+          return baseTokenList as any[];
+        case CHAIN_ID.POLYGON:
+          return polygonTokenList as any[];
+        case CHAIN_ID.HARDHAT:
+          return hardhatTokenList as any[];
+        case CHAIN_ID.SEPOLIA:
+          return sepoliaTokenList as any[];
+        default:
+          return [];
       }
     }
 
@@ -57,7 +67,10 @@ export function getFallbackList(feedType: FEED_TYPE, chainId?: number): any[] {
 }
 
 /** Read JSON either from URL (when provided) or from bundled fallbacks */
-export async function getDataListObj(feedType: FEED_TYPE, chainId?: number): Promise<any[]> {
+export async function getDataListObj(
+  feedType: FEED_TYPE,
+  chainId?: number,
+): Promise<any[]> {
   const url = getDataListURL(feedType, chainId);
   if (!url) return getFallbackList(feedType, chainId);
 
@@ -75,7 +88,7 @@ export async function getDataListObj(feedType: FEED_TYPE, chainId?: number): Pro
     if (Array.isArray(json)) return json;
     if (json && typeof json === 'object') {
       if (Array.isArray((json as any).tokens)) return (json as any).tokens;
-      if (Array.isArray((json as any).items))  return (json as any).items;
+      if (Array.isArray((json as any).items)) return (json as any).items;
     }
 
     // Shape unexpected → fall back
