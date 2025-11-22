@@ -1,0 +1,15 @@
+{
+  "chainId": 5545,
+  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "name": "The Open Network",
+  "symbol": "TON",
+  "decimals": 18,
+  "website": "https://ston.fi/",
+  "description": "STON is the utility token of the STON.fi DEX integrated into the core protocol mechanics. STON allows participation in protocol governance through long-term staking.",
+  "explorer": "https://tonscan.org/address/EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO",
+  "status": "active",
+  "id": "EQA2kCVNwVsil2EM2mB0SkXytxCqQjS4mttjDpnXmwG9T6bO",
+  "tags": [
+    "defi"
+  ]
+}

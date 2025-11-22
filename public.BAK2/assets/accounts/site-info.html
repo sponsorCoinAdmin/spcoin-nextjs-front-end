@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Site Info</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      width:100%; height:100%; background:#d0d9e8;
+      display:flex; flex-direction:column; align-items:center; text-align:center;
+      font-family:Arial, sans-serif; position:relative;
+    }
+    h1{ margin-top:50px; }
+    .sitename{ margin-top:25px; }
+    .image-wrapper{ position:absolute; top:165px; left:50%; transform:translateX(-50%); }
+    img{ display:block; height:450px; width:auto; }
+    .missing-img-text{
+      position:absolute; top:500px; left:50%; transform:translateX(-50%);
+      font-size:120%; color:red; font-weight:bold; display:none;
+    }
+    .error{ color:red; font-size:110%; margin-top:20px; }
+    .usage{
+      position:absolute; bottom:70px; left:50%; transform:translateX(-50%);
+      font-size:82.5%; color:black; font-weight:bold;
+    }
+    .website-input{
+      margin-top:20px; padding:5px; border:1px solid #ccc; border-radius:5px;
+      width:80%; max-width:300px; text-align:center; font-size:1rem;
+    }
+    .key-display{ margin-top:15px; font-size:90%; color:gray; }
+  </style>
+</head>
+<body>
+  <h1 id="title">Loading...</h1>
+  <div id="siteKeyDisplay" class="key-display"></div>
+  <input type="text" id="websiteInput" class="website-input" readonly style="display:none;" />
+  <div class="image-wrapper">
+    <img id="siteImage" src="" alt="Missing Image" />
+  </div>
+  <div id="missingImgText" class="missing-img-text">Missing Image</div>
+  <div id="usage" class="usage"></div>
+
+  <script>
+    /* ─────────────────── Minimal REST helpers (GET-only) ─────────────────── */
+
+    class HttpError extends Error {
+      constructor(message, url, status, statusText, bodyPreview) {
+        super(message);
+        this.name = 'HttpError';
+        this.url = url;
+        this.status = status;
+        this.statusText = statusText;
+        this.bodyPreview = bodyPreview;
+      }
+    }
+
+    function startAbortTimer(ms) {
+      const ctrl = new AbortController();
+      const timer = typeof ms === 'number' && ms > 0 ? setTimeout(() => ctrl.abort(), ms) : null;
+      return { ctrl, clear: () => { if (timer) clearTimeout(timer); } };
+    }
+
+    function isTransientError(err) {
+      const msg = (err && err.message) || '';
+      return (err && err.name === 'AbortError') || err instanceof TypeError ||
+             msg.includes('NetworkError') || msg.toLowerCase().includes('network');
+    }
+
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    async function httpGet(url, { timeoutMs = 6000, retries = 1, backoffMs = 300, init } = {}) {
+      let attempt = 0, lastErr;
+      while (attempt <= retries) {
+        const { ctrl, clear } = startAbortTimer(timeoutMs);
+        try {
+          const res = await fetch(url, {
+            method: 'GET',
+            signal: ctrl.signal,
+            cache: (init && init.cache) || (url.startsWith('/') ? 'force-cache' : 'no-store'),
+            ...(init || {}),
+          });
+          clear();
+
+          if (!res.ok) {
+            if (res.status >= 500 && res.status < 600 && attempt < retries) {
+              attempt++;
+              const d = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
+              await sleep(d);
+              continue;
+            }
+            let preview = '';
+            try { preview = (await res.text()).slice(0, 200); } catch {}
+            throw new HttpError(`GET ${url} failed: ${res.status} ${res.statusText}`, url, res.status, res.statusText, preview);
+          }
+          return res;
+        } catch (err) {
+          clear();
+          if (isTransientError(err) && attempt < retries) {
+            attempt++;
+            const d = Math.round(backoffMs * Math.pow(2, attempt - 1) * (0.85 + Math.random() * 0.3));
+            await sleep(d);
+            lastErr = err;
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw lastErr || new Error(`GET ${url} failed`);
+    }
+
+    async function getJson(url, opts = {}) {
+      const { accept = 'application/json', forceParse = false, ...rest } = opts;
+      const res = await httpGet(url, {
+        ...rest,
+        init: { ...(rest.init || {}), headers: { Accept: accept, ...(rest.init && rest.init.headers || {}) } }
+      });
+
+      const ctype = res.headers.get('content-type') || '';
+      const looksLikeJson = /\bjson\b/i.test(ctype);
+      if (looksLikeJson || forceParse) return res.json();
+
+      try { return await res.json(); }
+      catch {
+        const text = await res.text().catch(() => '');
+        throw new HttpError(`Expected JSON but got '${ctype}'.`, url, res.status, res.statusText, text.slice(0, 200));
+      }
+    }
+
+    /* ───────────────────────── Page logic (uses helpers) ───────────────────────── */
+
+    const params = new URLSearchParams(window.location.search);
+    const rawSiteKey = (params.get('siteKey') || '').trim();
+    const normalizedKey = rawSiteKey.toUpperCase();  // ✅ for Linux filesystem
+    const baseUrl = window.location.origin + window.location.pathname;
+    const defaultMissingImg = '../miscellaneous/QuestionBlackOnRed.png';
+
+    if (!rawSiteKey) {
+      document.getElementById('title').textContent = 'ERROR: Missing "siteKey" parameter';
+      document.getElementById('usage').innerHTML =
+        `<strong>USAGE:</strong> ${baseUrl}?siteKey=0x04a9F1C4ED2e26901Ad97f538A64d3EC2066B09b`;
+    } else {
+      // Show original key (preserve case)
+      document.getElementById('siteKeyDisplay').textContent = `Site Key: ${rawSiteKey}`;
+      document.getElementById('usage').innerHTML = `<strong>USAGE:</strong> ${baseUrl}?siteKey=${rawSiteKey}`;
+      // Use uppercased key for paths
+      loadWalletData(normalizedKey);
+    }
+
+    async function loadWalletData(key) {
+      const walletJsonPath = `./${key}/wallet.json`;
+      const imgSrc = `./${key}/logo.png`;
+
+      try {
+        const wallet = await getJson(walletJsonPath, {
+          timeoutMs: 6000,
+          retries: 1,
+          backoffMs: 350,
+          accept: 'application/json',
+          // ensure we don’t serve stale account files during dev
+          init: { cache: 'no-store' }
+        });
+
+        document.getElementById('title').innerHTML =
+          `<span style="color: darkblue;">Web Site</span> 
+           <span style="color: ${wallet.name ? 'black' : 'red'};">
+             ${wallet.name ? wallet.name : '<span style="color: red;">ERROR: Missing "name" in wallet.json</span>'}
+           </span> 
+           <span style="color: darkblue;">Not Found</span>`;
+
+        if (wallet.website && String(wallet.website).trim()) {
+          const websiteInput = document.getElementById('websiteInput');
+          websiteInput.value = String(wallet.website).trim();
+          websiteInput.style.display = 'block';
+        } else {
+          showError("Missing 'website' in wallet.json");
+        }
+
+        const siteImage = document.getElementById('siteImage');
+        siteImage.src = imgSrc;
+        siteImage.onerror = function () {
+          this.onerror = null;
+          this.src = defaultMissingImg;
+          document.getElementById('missingImgText').style.display = 'block';
+        };
+      } catch (error) {
+        console.error(error);
+        document.getElementById('title').textContent = 'Error loading wallet data';
+        showError(error?.message || String(error));
+      }
+    }
+
+    function showError(message) {
+      const errorMsg = document.createElement('h2');
+      errorMsg.textContent = message;
+      errorMsg.classList.add('error');
+      document.body.insertBefore(errorMsg, document.querySelector('.image-wrapper'));
+    }
+  </script>
+</body>
+</html>

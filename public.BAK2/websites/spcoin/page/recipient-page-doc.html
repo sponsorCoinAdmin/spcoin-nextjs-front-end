@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #d1d5db;
+        }
+        h2, h3 {
+            color: #fef08a;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>How to Use This Page</h2>
+    <p>
+        To load a remote URL inside this page, append a <code>?url=</code> parameter to the URL:
+    </p>
+    <pre>http://localhost:3000/RecipientSite?url=YOUR_REMOTE_URL</pre>
+    <h3>Example Calls:</h3>
+    <ul>
+        <li>
+            <a href="/RecipientSite?url=https://openai.com" target="_parent">Load OpenAI</a>
+        </li>
+        <li>
+            <a href="/RecipientSite?url=https://wikipedia.org" target="_parent">Load Wikipedia</a>
+        </li>
+        <li>
+            <a href="/RecipientSite?url=https://example.com" target="_parent">Load Example</a>
+        </li>
+    </ul>
+</body>
+</html>

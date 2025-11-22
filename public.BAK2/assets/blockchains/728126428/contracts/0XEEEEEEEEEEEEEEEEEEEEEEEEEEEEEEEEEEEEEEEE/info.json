@@ -1,0 +1,12 @@
+{
+  "chainId": 728126428,
+  "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "name": "TRON",
+  "symbol": "TRX",
+  "decimals": 18,
+  "website": "https://www.sesameseed.org/",
+  "description": "Sesameseed is a blochain community that aims to provide fair and transparent representation in delegated governance.",
+  "explorer": "https://tronscan.io/#/token/1000001",
+  "status": "active",
+  "id": "1000001"
+}

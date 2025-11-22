@@ -1,0 +1,9 @@
+{
+  "name": "Bidanomics Works",
+  "symbol": "BIDEN2",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site Biden2",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000000f"
+}

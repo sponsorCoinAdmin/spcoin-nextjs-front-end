@@ -1,0 +1,9 @@
+{
+  "name": "Save Me",
+  "symbol": "TIGER5",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site SaveTheTiger5",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000004f"
+}

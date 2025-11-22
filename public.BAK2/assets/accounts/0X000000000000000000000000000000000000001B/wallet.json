@@ -1,0 +1,9 @@
+{
+  "name": "Breast Cancer Foundation",
+  "symbol": "BREAST",
+  "type": "ERC20_WALLET",
+  "website": "",
+  "description": "This is the description for site BreastCancerFoundation",
+  "status": "test",
+  "address": "0x000000000000000000000000000000000000001b"
+}
