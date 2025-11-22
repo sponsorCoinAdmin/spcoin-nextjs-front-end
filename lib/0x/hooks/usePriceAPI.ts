@@ -25,12 +25,28 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
-const API_PROVIDER = '0x';
-const NEXT_PUBLIC_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '') + API_PROVIDER;
-const apiPriceBase = '/price';
+console.log('[usePriceAPI] loaded — Option A env wiring (2025-11-22)');
+
+// ────────────────────────────────────────────────────────────────
+// API base config (Option A)
+//   .env.local:       NEXT_PUBLIC_API_SERVER=http://localhost:3000/api/0x/
+//   .env.production:  NEXT_PUBLIC_API_SERVER=https://sponsorcoin.org/api/0x/
+// This file then appends `price` to hit /api/0x/price.
+// ────────────────────────────────────────────────────────────────
+const RAW_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '').trim();
+
+const NEXT_PUBLIC_API_SERVER =
+  RAW_API_SERVER.length === 0
+    ? ''
+    : RAW_API_SERVER.endsWith('/')
+    ? RAW_API_SERVER
+    : `${RAW_API_SERVER}/`;
+
+// We only append `price` here; the `/0x/` segment comes from the env.
+const apiPriceBase = 'price';
 
 const LOG_TIME = false;
-const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true' ;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
 const validTokenOrNetworkCoin = (address: Address): Address => address;
@@ -38,7 +54,8 @@ const validTokenOrNetworkCoin = (address: Address): Address => address;
 type FetchKey = [string, PriceRequestParams];
 
 const fetcher = async ([endpoint, params]: FetchKey) => {
-  endpoint = NEXT_PUBLIC_API_SERVER + endpoint;
+  const base = NEXT_PUBLIC_API_SERVER;
+  endpoint = base + endpoint; // e.g. `https://sponsorcoin.org/api/0x/` + `price`
 
   const { sellAmount, buyAmount } = params;
   if (
@@ -115,9 +132,12 @@ const getPriceApiCall = (
     ...(tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN
       ? { buyAmount: buyAmount.toString() }
       : {}),
-    ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps) ? { slippageBps } : {}),
+    ...(typeof slippageBps === 'number' && !Number.isNaN(slippageBps)
+      ? { slippageBps }
+      : {}),
   };
 
+  // `apiPriceBase` is just `price`; `NEXT_PUBLIC_API_SERVER` contains `/api/0x/`.
   return [apiPriceBase, params];
 };
 
@@ -213,7 +233,11 @@ function usePriceAPI() {
       ? debouncedSellAmount
       : debouncedBuyAmount;
 
-  const swrKey: FetchKey | null = shouldFetch(debouncedSellToken, debouncedBuyToken, amountForDirection)
+  const swrKey: FetchKey | null = shouldFetch(
+    debouncedSellToken,
+    debouncedBuyToken,
+    amountForDirection
+  )
     ? getPriceApiCall(
         tradeData.tradeDirection,
         chainId,
@@ -252,7 +276,9 @@ function usePriceAPI() {
               exchangeContext,
               sellTokenAddress,
               buyTokenAddress,
-              tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
+              tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
+                ? sellAmount
+                : buyAmount,
               data as PriceResponse
             ),
             null,
