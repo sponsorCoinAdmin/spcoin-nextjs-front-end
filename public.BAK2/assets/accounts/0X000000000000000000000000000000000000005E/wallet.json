@@ -1,9 +1,0 @@
-{
-  "name": "Stop Drug Abuse",
-  "symbol": "DRUGS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site StopDrugAbuse",
-  "status": "test",
-  "address": "0x000000000000000000000000000000000000005e"
-}

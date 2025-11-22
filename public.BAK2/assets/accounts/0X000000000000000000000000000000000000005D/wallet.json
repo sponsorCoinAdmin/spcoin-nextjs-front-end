@@ -1,9 +1,0 @@
-{
-  "name": "Support Sick Kids",
-  "symbol": "KIDS",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site SickKids",
-  "status": "test",
-  "address": "0x000000000000000000000000000000000000005d"
-}

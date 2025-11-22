@@ -1,9 +1,0 @@
-{
-  "name": "Lady2",
-  "symbol": "Lady2",
-  "type": "ERC20_WALLET",
-  "website": "https://www.bornfreeusa.org",
-  "description": "This is the description for site Lady2",
-  "status": "test",
-  "address": "0x0000000000000000000000000000000000000080"
-}

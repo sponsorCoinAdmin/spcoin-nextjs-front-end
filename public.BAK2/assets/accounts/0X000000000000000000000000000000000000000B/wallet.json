@@ -1,9 +1,0 @@
-{
-  "name": "Wiskers Place",
-  "symbol": "MEOW",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site AnimalShelter2",
-  "status": "test",
-  "address": "0x000000000000000000000000000000000000000b"
-}

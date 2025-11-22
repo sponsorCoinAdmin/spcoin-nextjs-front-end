@@ -1,9 +1,0 @@
-{
-  "name": "Vote Liberals",
-  "symbol": "LIB_2",
-  "type": "ERC20_WALLET",
-  "website": "",
-  "description": "This is the description for site Liberals2",
-  "status": "test",
-  "address": "0x000000000000000000000000000000000000002d"
-}
