@@ -25,13 +25,13 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
-console.log('[usePriceAPI] loaded — Option A env wiring (2025-11-22)');
+console.log('[usePriceAPI] loaded — Option A env wiring (2025-11-22-C)');
 
 // ────────────────────────────────────────────────────────────────
 // API base config (Option A)
 //   .env.local:       NEXT_PUBLIC_API_SERVER=http://localhost:3000/api/0x/
 //   .env.production:  NEXT_PUBLIC_API_SERVER=https://sponsorcoin.org/api/0x/
-// This file then appends `price` to hit /api/0x/price.
+// This file then appends `price` -> /api/0x/price
 // ────────────────────────────────────────────────────────────────
 const RAW_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '').trim();
 
@@ -44,6 +44,12 @@ const NEXT_PUBLIC_API_SERVER =
 
 // We only append `price` here; the `/0x/` segment comes from the env.
 const apiPriceBase = 'price';
+
+console.log('[usePriceAPI] ENV wiring', {
+  RAW_API_SERVER,
+  NEXT_PUBLIC_API_SERVER,
+  apiPriceBase,
+});
 
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
@@ -58,6 +64,13 @@ const fetcher = async ([endpoint, params]: FetchKey) => {
   endpoint = base + endpoint; // e.g. `https://sponsorcoin.org/api/0x/` + `price`
 
   const { sellAmount, buyAmount } = params;
+
+  // Hard console log: this should show up in browser devtools
+  console.log('[usePriceAPI] fetcher called', {
+    endpoint,
+    params,
+  });
+
   if (
     (sellAmount !== undefined && sellAmount === '0') ||
     (buyAmount !== undefined && buyAmount === '0')
@@ -75,6 +88,7 @@ const fetcher = async ([endpoint, params]: FetchKey) => {
   const query = stringify(cleanParams);
   const apiCall = `${endpoint}?${query}`;
   debugLog.log?.('📡 Fetching:', apiCall);
+  console.log('[usePriceAPI] 📡 Fetching URL:', apiCall);
 
   // 🔁 RESTful call (timeout + retries + JSON validation)
   const data = await getJson<unknown>(apiCall, {
@@ -137,7 +151,6 @@ const getPriceApiCall = (
       : {}),
   };
 
-  // `apiPriceBase` is just `price`; `NEXT_PUBLIC_API_SERVER` contains `/api/0x/`.
   return [apiPriceBase, params];
 };
 
@@ -249,6 +262,45 @@ function usePriceAPI() {
       ) ?? null
     : null;
 
+  // 🔍 Hard snapshot so we can see *why* it may or may not fetch
+  useEffect(() => {
+    console.log('[usePriceAPI] snapshot', {
+      NEXT_PUBLIC_API_SERVER,
+      chainId,
+      tradeDirection: tradeData.tradeDirection,
+      sellTokenAddress,
+      buyTokenAddress,
+      debouncedSellToken,
+      debouncedBuyToken,
+      sellAmount: sellAmount.toString(),
+      buyAmount: buyAmount.toString(),
+      debouncedSellAmount: debouncedSellAmount.toString(),
+      debouncedBuyAmount: debouncedBuyAmount.toString(),
+      debouncedSlippage,
+      amountForDirection: amountForDirection?.toString(),
+      shouldFetch: !!swrKey,
+      swrKey,
+      errorMessage,
+      apiErrorMessage,
+    });
+  }, [
+    chainId,
+    tradeData.tradeDirection,
+    sellTokenAddress,
+    buyTokenAddress,
+    debouncedSellToken,
+    debouncedBuyToken,
+    sellAmount,
+    buyAmount,
+    debouncedSellAmount,
+    debouncedBuyAmount,
+    debouncedSlippage,
+    amountForDirection,
+    swrKey,
+    errorMessage,
+    apiErrorMessage,
+  ]);
+
   useWhyDidYouUpdate('usePriceAPI', {
     exchangeContext,
     tradeData,
@@ -265,6 +317,7 @@ function usePriceAPI() {
   const swr = useSWR<unknown, Error, FetchKey | null>(swrKey, fetcher, {
     onSuccess: (data: any) => {
       debugLog.log?.('✅ API SUCCESS', data);
+      console.log('[usePriceAPI] ✅ API SUCCESS', data);
 
       if (data && typeof data === 'object' && 'code' in data) {
         setApiErrorMessage({
@@ -276,9 +329,7 @@ function usePriceAPI() {
               exchangeContext,
               sellTokenAddress,
               buyTokenAddress,
-              tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT
-                ? sellAmount
-                : buyAmount,
+              tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
               data as PriceResponse
             ),
             null,
@@ -303,6 +354,7 @@ function usePriceAPI() {
     },
     onError: (error: any) => {
       debugLog.error?.('❌ API ERROR', error);
+      console.error('[usePriceAPI] ❌ API ERROR', error);
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
         source: 'ApiFetcher',
