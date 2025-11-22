@@ -1,7 +1,7 @@
 // File: lib/hooks/usePriceAPI.ts
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { stringify } from 'qs';
 import useSWR from 'swr';
 import { isAddress, type Address } from 'viem';
@@ -13,7 +13,6 @@ import { CHAIN_ID } from '@/lib/structure/enums/networkIds';
 import {
   useApiErrorMessage,
   useBuyAmount,
-  useErrorMessage,
   useExchangeContext,
   useSellAmount,
   useTradeData,
@@ -25,72 +24,23 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
-console.log('[usePriceAPI] loaded — Origin+Path fix (2025-11-22-E)');
-
-// ────────────────────────────────────────────────────────────────
-// API base config
-//
-// We treat NEXT_PUBLIC_API_SERVER as an *optional origin hint*.
-//   - If empty or not usable, we fall back to relative URLs.
-//   - We *never* include '/api' or '/0x' from the env itself.
-//
-// Final browser URL will be either:
-//   - '/api/0x/price?...'                         (recommended — same origin)
-//   - 'https://www.sponsorcoin.org/api/0x/price' (if we ever choose to use origin)
-// ────────────────────────────────────────────────────────────────
-const RAW_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '').trim();
-
-function normalizeApiServer(raw: string): string {
-  if (!raw) return '';
-  // Strip trailing slashes
-let base = raw.replace(/\/+$/u, '');
-  // Strip a trailing '/api' segment if present (handles '.../api' and '.../api/')
-  if (base.endsWith('/api')) {
-    base = base.slice(0, -4);
-  }
-  return base;
-}
-
-const ENV_API_ORIGIN = normalizeApiServer(RAW_API_SERVER);
-
-// Full route path (including /api and /0x)
-const apiPriceBase = '/api/0x/price';
-
-function getApiBaseForRuntime(): string {
-  // On the client, use relative URLs to avoid CORS/domain mismatches.
-  if (typeof window !== 'undefined') {
-    return '';
-  }
-  // On the server (if this ever runs there), use the normalized env origin.
-  return ENV_API_ORIGIN;
-}
-
-console.log('[usePriceAPI] ENV wiring', {
-  RAW_API_SERVER,
-  ENV_API_ORIGIN,
-  apiPriceBase,
-});
-
 const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_0X_PRICE_API === 'true';
 const debugLog = createDebugLogger('usePriceAPI', DEBUG_ENABLED, LOG_TIME);
 
-const validTokenOrNetworkCoin = (address: Address): Address => address;
-
+// SWR key is [endpoint, params]
 type FetchKey = [string, PriceRequestParams];
 
-const fetcher = async ([endpoint, params]: FetchKey) => {
-  const base = getApiBaseForRuntime();
-  endpoint = base + endpoint; // e.g. '' + '/api/0x/price' or 'https://www.sponsorcoin.org' + '/api/0x/price'
+// Single, fixed API route (relative to the app origin)
+const API_PRICE_PATH = '/api/0x/price';
 
+// ────────────────────────────────────────────────────────────────
+// Fetcher
+// ────────────────────────────────────────────────────────────────
+const fetcher = async ([endpoint, params]: FetchKey) => {
   const { sellAmount, buyAmount } = params;
 
-  // Hard console log: this should show up in browser devtools
-  console.log('[usePriceAPI] fetcher called', {
-    endpoint,
-    params,
-  });
-
+  // Extra safety: don't hit the API with zero amounts
   if (
     (sellAmount !== undefined && sellAmount === '0') ||
     (buyAmount !== undefined && buyAmount === '0')
@@ -106,12 +56,11 @@ const fetcher = async ([endpoint, params]: FetchKey) => {
   );
 
   const query = stringify(cleanParams);
-  const apiCall = `${endpoint}?${query}`;
-  debugLog.log?.('📡 Fetching:', apiCall);
-  console.log('[usePriceAPI] 📡 Fetching URL:', apiCall);
+  const url = `${endpoint}?${query}`;
 
-  // 🔁 RESTful call (timeout + retries + JSON validation)
-  const data = await getJson<unknown>(apiCall, {
+  debugLog.log?.('📡 Fetching:', url);
+
+  const data = await getJson<unknown>(url, {
     timeoutMs: 10_000,
     retries: 1,
     accept: 'application/json',
@@ -120,23 +69,9 @@ const fetcher = async ([endpoint, params]: FetchKey) => {
   return data;
 };
 
-const getApiErrorTransactionData = (
-  exchangeContext: any,
-  sellTokenAddress: Address | undefined,
-  buyTokenAddress: Address | undefined,
-  sellAmount: any,
-  data: PriceResponse
-) => ({
-  ERROR: 'API Call',
-  Server: `${process.env.NEXT_PUBLIC_API_SERVER}`,
-  netWork: `${exchangeContext.network.name.toLowerCase()}`,
-  apiPriceBase,
-  sellTokenAddress,
-  buyTokenAddress,
-  sellAmount,
-  response_data: data,
-});
-
+// ────────────────────────────────────────────────────────────────
+// Helper to build the SWR key
+// ────────────────────────────────────────────────────────────────
 const getPriceApiCall = (
   tradeDirection: TRADE_DIRECTION,
   chainId: number,
@@ -148,11 +83,16 @@ const getPriceApiCall = (
 ): FetchKey | undefined => {
   if (!sellTokenAddress || !buyTokenAddress) return undefined;
 
+  // Don't bother the API with zero amounts
   if (
     (tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) ||
     (tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n)
   ) {
-    debugLog.warn?.('Skipping get due to 0 amount', { tradeDirection, sellAmount, buyAmount });
+    debugLog.warn?.('Skipping get due to 0 amount', {
+      tradeDirection,
+      sellAmount,
+      buyAmount,
+    });
     return undefined;
   }
 
@@ -171,53 +111,34 @@ const getPriceApiCall = (
       : {}),
   };
 
-  // We now always return the full path here (`/api/0x/price`).
-  return [apiPriceBase, params];
+  return [API_PRICE_PATH, params];
 };
 
-function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
-  const previousProps = useRef(props);
-
-  useEffect(() => {
-    const allKeys = Object.keys({ ...previousProps.current, ...props });
-    const changesObj: Record<string, { from: any; to: any }> = {};
-
-    allKeys.forEach((key) => {
-      if (previousProps.current[key] !== props[key]) {
-        changesObj[key] = { from: previousProps.current[key], to: props[key] };
-      }
-    });
-
-    if (Object.keys(changesObj).length) {
-      debugLog.log?.(`[why-did-you-update] ${name}`, changesObj);
-    }
-
-    previousProps.current = props;
-  });
-}
-
+// ────────────────────────────────────────────────────────────────
+// Main hook
+// ────────────────────────────────────────────────────────────────
 function usePriceAPI() {
   const { exchangeContext } = useExchangeContext();
   const tradeData = useTradeData();
   const [chainId] = useAppChainId();
 
-  const [errorMessage] = useErrorMessage();
-  const [apiErrorMessage, setApiErrorMessage] = useApiErrorMessage();
+  const [, setApiErrorMessage] = useApiErrorMessage();
   const [buyAmount, setBuyAmount] = useBuyAmount();
   const [sellAmount, setSellAmount] = useSellAmount();
 
-  let sellTokenAddress = tradeData.sellTokenContract?.address as Address | undefined;
-  let buyTokenAddress = tradeData.buyTokenContract?.address as Address | undefined;
-
-  sellTokenAddress = sellTokenAddress ? validTokenOrNetworkCoin(sellTokenAddress) : undefined;
-  buyTokenAddress = buyTokenAddress ? validTokenOrNetworkCoin(buyTokenAddress) : undefined;
+  const sellTokenAddress = tradeData.sellTokenContract
+    ?.address as Address | undefined;
+  const buyTokenAddress = tradeData.buyTokenContract
+    ?.address as Address | undefined;
 
   const debouncedSellToken = useDebounce(sellTokenAddress, 450);
   const debouncedBuyToken = useDebounce(buyTokenAddress, 450);
   const debouncedSellAmount = useDebounce(sellAmount, 450);
   const debouncedBuyAmount = useDebounce(buyAmount, 450);
   const debouncedSlippage = useDebounce(
-    Number.isFinite(tradeData?.slippage?.bps) ? tradeData.slippage.bps : 100,
+    Number.isFinite(tradeData?.slippage?.bps)
+      ? tradeData.slippage.bps
+      : 100,
     200
   );
 
@@ -230,35 +151,51 @@ function usePriceAPI() {
       debugLog.warn?.('Missing chainId');
       return false;
     }
+
     if (!isAddress(sellToken ?? '')) {
       debugLog.warn?.('Invalid or missing sellTokenAddress', sellToken);
       return false;
     }
+
     if (!isAddress(buyToken ?? '')) {
       debugLog.warn?.('Invalid or missing buyTokenAddress', buyToken);
       return false;
     }
+
     if ((sellToken as string).toLowerCase() === (buyToken as string).toLowerCase()) {
       debugLog.warn?.('Sell and buy tokens are the same');
       return false;
     }
+
     if (!effectiveAmount || effectiveAmount === 0n) {
       debugLog.warn?.('Amount is 0');
       return false;
     }
+
     if (chainId === CHAIN_ID.HARDHAT) {
-      debugLog.warn?.('Chain is HARDHAT');
+      debugLog.warn?.('Chain is HARDHAT; skipping price API');
       return false;
     }
+
     return true;
   };
 
+  // Keep the opposite leg in sync with zero when one side is zero
   useEffect(() => {
-    if (tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT && sellAmount === 0n) {
-      if (buyAmount !== 0n) setBuyAmount(0n);
+    if (
+      tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT &&
+      sellAmount === 0n &&
+      buyAmount !== 0n
+    ) {
+      setBuyAmount(0n);
     }
-    if (tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN && buyAmount === 0n) {
-      if (sellAmount !== 0n) setSellAmount(0n);
+
+    if (
+      tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN &&
+      buyAmount === 0n &&
+      sellAmount !== 0n
+    ) {
+      setSellAmount(0n);
     }
   }, [tradeData.tradeDirection, sellAmount, buyAmount, setBuyAmount, setSellAmount]);
 
@@ -283,99 +220,52 @@ function usePriceAPI() {
       ) ?? null
     : null;
 
-  // 🔍 Hard snapshot so we can see *why* it may or may not fetch
-  useEffect(() => {
-    console.log('[usePriceAPI] snapshot', {
-      ENV_API_ORIGIN,
-      chainId,
-      tradeDirection: tradeData.tradeDirection,
-      sellTokenAddress,
-      buyTokenAddress,
-      debouncedSellToken,
-      debouncedBuyToken,
-      sellAmount: sellAmount.toString(),
-      buyAmount: buyAmount.toString(),
-      debouncedSellAmount: debouncedSellAmount.toString(),
-      debouncedBuyAmount: debouncedBuyAmount.toString(),
-      debouncedSlippage,
-      amountForDirection: amountForDirection?.toString(),
-      shouldFetch: !!swrKey,
-      swrKey,
-      errorMessage,
-      apiErrorMessage,
-    });
-  }, [
-    chainId,
-    tradeData.tradeDirection,
-    sellTokenAddress,
-    buyTokenAddress,
-    debouncedSellToken,
-    debouncedBuyToken,
-    sellAmount,
-    buyAmount,
-    debouncedSellAmount,
-    debouncedBuyAmount,
-    debouncedSlippage,
-    amountForDirection,
-    swrKey,
-    errorMessage,
-    apiErrorMessage,
-  ]);
-
-  useWhyDidYouUpdate('usePriceAPI', {
-    exchangeContext,
-    tradeData,
-    chainId,
-    sellTokenAddress,
-    buyTokenAddress,
-    buyAmount,
-    sellAmount,
-    errorMessage,
-    apiErrorMessage,
-    swrKey,
-  });
-
   const swr = useSWR<unknown, Error, FetchKey | null>(swrKey, fetcher, {
     onSuccess: (data: any) => {
       debugLog.log?.('✅ API SUCCESS', data);
-      console.log('[usePriceAPI] ✅ API SUCCESS', data);
 
+      // API error payloads are still HTTP 200 with a 'code' field
       if (data && typeof data === 'object' && 'code' in data) {
         setApiErrorMessage({
           status: STATUS.ERROR_API_PRICE,
           source: 'ApiFetcher',
           errCode: (data as any).code,
           msg: JSON.stringify(
-            getApiErrorTransactionData(
-              exchangeContext,
+            {
+              ERROR: 'API Call',
+              server: process.env.NEXT_PUBLIC_API_SERVER,
+              network: exchangeContext.network?.name,
               sellTokenAddress,
               buyTokenAddress,
-              tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT ? sellAmount : buyAmount,
-              data as PriceResponse
-            ),
+              tradeDirection: tradeData.tradeDirection,
+              sellAmount,
+              buyAmount,
+              response_data: data as PriceResponse,
+            },
             null,
             2
           ),
         });
-      } else {
-        if (
-          tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT &&
-          (data as any)?.buyAmount !== undefined
-        ) {
-          const next = BigInt((data as any).buyAmount ?? 0);
-          if (buyAmount !== next) setBuyAmount(next);
-        } else if (
-          tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN &&
-          (data as any)?.sellAmount !== undefined
-        ) {
-          const next = BigInt((data as any).sellAmount ?? 0);
-          if (sellAmount !== next) setSellAmount(next);
-        }
+        return;
+      }
+
+      // happy path: update the opposite leg
+      if (
+        tradeData.tradeDirection === TRADE_DIRECTION.SELL_EXACT_OUT &&
+        (data as any)?.buyAmount !== undefined
+      ) {
+        const next = BigInt((data as any).buyAmount ?? 0);
+        if (buyAmount !== next) setBuyAmount(next);
+      } else if (
+        tradeData.tradeDirection === TRADE_DIRECTION.BUY_EXACT_IN &&
+        (data as any)?.sellAmount !== undefined
+      ) {
+        const next = BigInt((data as any).sellAmount ?? 0);
+        if (sellAmount !== next) setSellAmount(next);
       }
     },
     onError: (error: any) => {
       debugLog.error?.('❌ API ERROR', error);
-      console.error('[usePriceAPI] ❌ API ERROR', error);
       setApiErrorMessage({
         status: STATUS.ERROR_API_PRICE,
         source: 'ApiFetcher',
