@@ -25,25 +25,22 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 import { getJson } from '@/lib/rest/http';
 
-console.log('[usePriceAPI] loaded — Option A env wiring (2025-11-22-C)');
+console.log('[usePriceAPI] loaded — API wiring (2025-11-22-D)');
 
 // ────────────────────────────────────────────────────────────────
-// API base config (Option A)
-//   .env.local:       NEXT_PUBLIC_API_SERVER=http://localhost:3000/api/0x/
-//   .env.production:  NEXT_PUBLIC_API_SERVER=https://sponsorcoin.org/api/0x/
-// This file then appends `price` -> /api/0x/price
+// API base config
+//   • In dev/prod you can set NEXT_PUBLIC_API_SERVER to the *origin* only
+//       e.g. "https://www.sponsorcoin.org" or ""
+//   • We always call the same-origin Next.js route: /api/0x/price
 // ────────────────────────────────────────────────────────────────
-const RAW_API_SERVER = String(process.env.NEXT_PUBLIC_API_SERVER ?? '').trim();
+const RAW_API_SERVER = (process.env.NEXT_PUBLIC_API_SERVER ?? '').trim();
 
+// Strip trailing slashes so we can safely append "/api/0x/price"
 const NEXT_PUBLIC_API_SERVER =
-  RAW_API_SERVER.length === 0
-    ? ''
-    : RAW_API_SERVER.endsWith('/')
-    ? RAW_API_SERVER
-    : `${RAW_API_SERVER}/`;
+  RAW_API_SERVER.length === 0 ? '' : RAW_API_SERVER.replace(/\/+$/, '');
 
-// We only append `price` here; the `/0x/` segment comes from the env.
-const apiPriceBase = 'price';
+// This is the actual Next.js route path for the 0x price proxy
+const apiPriceBase = '/api/0x/price';
 
 console.log('[usePriceAPI] ENV wiring', {
   RAW_API_SERVER,
@@ -60,8 +57,12 @@ const validTokenOrNetworkCoin = (address: Address): Address => address;
 type FetchKey = [string, PriceRequestParams];
 
 const fetcher = async ([endpoint, params]: FetchKey) => {
+  // endpoint starts as "/api/0x/price"
+  // If NEXT_PUBLIC_API_SERVER is "", this stays relative: "/api/0x/price?..."
+  // If it's "https://www.sponsorcoin.org", it becomes
+  // "https://www.sponsorcoin.org/api/0x/price?..."
   const base = NEXT_PUBLIC_API_SERVER;
-  endpoint = base + endpoint; // e.g. `https://sponsorcoin.org/api/0x/` + `price`
+  endpoint = base + endpoint;
 
   const { sellAmount, buyAmount } = params;
 
