@@ -7,6 +7,11 @@ import BasePreviewWrapper from './BasePreviewWrapper';
 import { InputState } from '@/lib/structure/assetSelection';
 import { isErrorFSMState } from '@/lib/hooks/inputValidations/FSM_Core/fSMInputStates';
 import { badTokenAddressImage } from '@/lib/context/helpers/assetHelpers';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_ASSET_SELECT === 'true';
+const debugLog = createDebugLogger('ErrorAssetPreview', DEBUG_ENABLED, LOG_TIME);
 
 export default function ErrorAssetPreview() {
   const { inputState, instanceId, containerType, feedType } = useAssetSelectContext();
@@ -15,7 +20,7 @@ export default function ErrorAssetPreview() {
   const visible = isErrorFSMState(inputState);
 
   useEffect(() => {
-    console.log('[ErrorAssetPreview] RENDER', {
+    debugLog.log?.('[ErrorAssetPreview] RENDER', {
       instanceId,
       containerType,
       feedType,
@@ -99,25 +104,25 @@ export default function ErrorAssetPreview() {
 
   return (
     <div
-      id="ErrorAssetPreview"
+      id='ErrorAssetPreview'
       data-instance={instanceId}
       data-input-state={inputState}
       data-input-state-name={stateName}
     >
       <BasePreviewWrapper show={true}>
-        <div className="wrapper">
+        <div className='wrapper'>
           {imageSrc ? (
             <img
-              className="logo"
+              className='logo'
               src={imageSrc}
-              alt="Invalid token address"
-              loading="lazy"
-              decoding="async"
+              alt='Invalid token address'
+              loading='lazy'
+              decoding='async'
             />
           ) : (
-            emoji && <span className="emoji">{emoji}</span>
+            emoji && <span className='emoji'>{emoji}</span>
           )}
-          <span className="message">{text}</span>
+          <span className='message'>{text}</span>
         </div>
 
         <style jsx>{`

@@ -1,7 +1,16 @@
 // File: lib/utils/renderTrace.ts
 import { useEffect, useRef } from 'react';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type AnyProps = Record<string, unknown>;
+
+// 🔧 Env-gated render tracing
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_TRACE_RENDER === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_HOOKS_LOGGING === 'true';
+
+const debugLog = createDebugLogger('useRenderTrace', DEBUG_ENABLED, LOG_TIME);
 
 export function useRenderTrace(name: string, props?: AnyProps) {
   const renderCount = useRef(0);
@@ -11,22 +20,28 @@ export function useRenderTrace(name: string, props?: AnyProps) {
 
   // Mount / unmount
   useEffect(() => {
-    // always-on, super low cost
-    console.log(`[TRACE][${name}] mount`);
-    return () => console.log(`[TRACE][${name}] unmount`);
+    debugLog.log?.(`[TRACE][${name}] mount`);
+    return () => {
+      debugLog.log?.(`[TRACE][${name}] unmount`);
+    };
   }, [name]);
 
   // Prop-change diff (opt-in via env)
   useEffect(() => {
     if (!props) return;
+
     const SHOW_DIFFS = process.env.NEXT_PUBLIC_TRACE_RENDER === 'true';
+
     if (!SHOW_DIFFS) {
-      console.log(`[TRACE][${name}] render #${renderCount.current}`);
+      debugLog.log?.(
+        `[TRACE][${name}] render #${renderCount.current}`,
+      );
       prev.current = props;
       return;
     }
 
     const changed: Array<[string, unknown, unknown]> = [];
+
     if (prev.current) {
       for (const k of Object.keys(props)) {
         const prevV = prev.current[k];
@@ -34,19 +49,22 @@ export function useRenderTrace(name: string, props?: AnyProps) {
         if (prevV !== nextV) changed.push([k, prevV, nextV]);
       }
     }
+
     if (changed.length) {
-      console.groupCollapsed(
+      debugLog.log?.(
         `[TRACE][${name}] render #${renderCount.current} — changed props: ${changed
           .map(([k]) => k)
-          .join(', ')}`
+          .join(', ')}`,
       );
       for (const [k, a, b] of changed) {
-        console.log(` • ${k}:`, { prev: a, next: b });
+        debugLog.log?.(` • ${k}:`, { prev: a, next: b });
       }
-      console.groupEnd();
     } else {
-      console.log(`[TRACE][${name}] render #${renderCount.current} — no prop changes`);
+      debugLog.log?.(
+        `[TRACE][${name}] render #${renderCount.current} — no prop changes`,
+      );
     }
+
     prev.current = props;
   });
 }

@@ -19,10 +19,9 @@ import { startFSM } from '../helpers/fsm/startFSM';
 import { logStateChanges } from '../helpers/logStateChanges';
 import { InputState } from '@/lib/structure/assetSelection';
 
-const debugLog = createDebugLogger(
-  'useFSMStateManager',
-  process.env.NEXT_PUBLIC_DEBUG_FSM === 'true'
-);
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const debugLog = createDebugLogger('useFSMStateManager', DEBUG_ENABLED, LOG_TIME);
 
 interface UseFSMStateManagerParams {
   containerType: SP_COIN_DISPLAY;
@@ -52,8 +51,6 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     setTradingTokenCallback,
   } = params;
 
-
-
   const {
     validHexInput,
     debouncedHexInput,
@@ -65,13 +62,11 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     resetHexInput,
   } = useHexInput();
 
-
-
   const [inputState, setInputState] = useState<InputState>(InputState.EMPTY_INPUT);
 
   const setInputStateWrapped = useCallback(
     (next: InputState, source = 'useFSMStateManager') =>
-      setInputState(prev => {
+      setInputState((prev) => {
         if (prev === next) return prev;
 
         if (
@@ -79,17 +74,17 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
           debouncedHexInput &&
           source !== 'useFSMStateManager'
         ) {
-          debugLog.warn(
-            `⚠️ [${instanceId}] setInputState(EMPTY_INPUT) requested by "${source}" while debouncedHexInput="${debouncedHexInput}"`
+          debugLog.warn?.(
+            `⚠️ [${instanceId}] setInputState(EMPTY_INPUT) requested by "${source}" while debouncedHexInput="${debouncedHexInput}"`,
           );
         }
 
-        debugLog.log(
-          `🟢 [${instanceId}] setInputState: ${InputState[prev]} → ${InputState[next]} (${source})`
+        debugLog.log?.(
+          `🟢 [${instanceId}] setInputState: ${InputState[prev]} → ${InputState[next]} (${source})`,
         );
         return next;
       }),
-    [debouncedHexInput, instanceId]
+    [debouncedHexInput, instanceId],
   );
 
   const prevDebouncedInputRef = useRef<string | undefined>(undefined);
@@ -104,10 +99,12 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   const publicClient = useAppPublicClient();
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log(
-      `[useFSMStateManager:${instanceId}] publicClient pinned -> expected=${chainId}, clientChainId=${(publicClient as any)?.chain?.id ?? '∅'}`
-    );
+    const clientChainId = (publicClient as any)?.chain?.id ?? '∅';
+    debugLog.log?.('[useFSMStateManager] publicClient pinned', {
+      instanceId,
+      expectedChainId: chainId,
+      clientChainId,
+    });
   }, [publicClient, chainId, instanceId]);
 
   const prevParamsRef = useRef<UseFSMStateManagerParams | null>(null);
@@ -126,7 +123,7 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
         'closePanelCallback',
         'setTradingTokenCallback',
       ],
-      'useFSMStateManager param changes'
+      'useFSMStateManager param changes',
     );
     prevParamsRef.current = params;
   }, [
@@ -139,14 +136,15 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
     setValidatedAsset,
     closePanelCallback,
     setTradingTokenCallback,
+    params,
   ]);
 
   // Allow a fresh run if we got reset to EMPTY_INPUT but still have input
   useEffect(() => {
     if (inputState === InputState.EMPTY_INPUT && debouncedHexInput) {
       prevDebouncedInputRef.current = undefined;
-      debugLog.log(
-        `🔁 [${instanceId}] Cleared prevDebouncedInputRef to allow re-run (state EMPTY_INPUT, debounced="${debouncedHexInput}")`
+      debugLog.log?.(
+        `🔁 [${instanceId}] Cleared prevDebouncedInputRef to allow re-run (state EMPTY_INPUT, debounced="${debouncedHexInput}")`,
       );
     }
   }, [inputState, debouncedHexInput, instanceId]);
@@ -154,7 +152,9 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
   // ⛔ BYPASS HANDLER: when bypass turns on, keep state calm and skip runner
   useEffect(() => {
     if (!bypassFSM) return;
-    debugLog.warn(`⏭️ [${instanceId}] FSM BYPASS ACTIVE — skipping startFSM runner`);
+    debugLog.warn?.(
+      `⏭️ [${instanceId}] FSM BYPASS ACTIVE — skipping startFSM runner`,
+    );
     // ensure we don't sit in a terminal state
     if (inputState !== InputState.EMPTY_INPUT) {
       setInputStateWrapped(InputState.EMPTY_INPUT, 'bypass-init');
@@ -200,7 +200,10 @@ export function useFSMStateManager(params: UseFSMStateManagerParams) {
             setTradingTokenCallback(result.asset);
           }
         } catch (err) {
-          debugLog.error('❌ centralized commit failed in useFSMStateManager:', err);
+          debugLog.error?.(
+            '❌ centralized commit failed in useFSMStateManager:',
+            err,
+          );
         }
       }
     })();

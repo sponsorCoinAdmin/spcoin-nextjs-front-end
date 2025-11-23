@@ -29,7 +29,7 @@ useValidateFSMInput(debouncedHexInput)
       └── TokenListSelectPanel (closes if needed)
 
 [Debug points]:
-  ✅ HexAddressInput → console.log input
+  ✅ HexAddressInput → log input
   ✅ handleHexInputChange → logs trimmed, isManual, isValid
   ✅ AssetSelectProvider → logs debouncedHexInput
   ✅ AddressSelect → logs before + after FSM hook

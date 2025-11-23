@@ -1,9 +1,12 @@
 // File: lib/hooks/useDebounce.ts
 import { useEffect, useState } from 'react';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const defaultMilliSeconds = 600;
-let isDebug: boolean = process.env.NEXT_PUBLIC_DEBUG_DEBOUNCE === 'true';
-isDebug = false;
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_DEBOUNCE === 'true';
+const debugLog = createDebugLogger('useDebounce', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Debounce hook with update suppression and optional debug logging.
@@ -13,28 +16,29 @@ export const useDebounce = <T>(value: T, delay: number = defaultMilliSeconds): T
 
   useEffect(() => {
     if (value === debouncedValue) {
-      if (isDebug) {
-        console.log(`[🛑 useDebounce] Value unchanged, skipping debounce:`, value);
-      }
+      debugLog.log?.('[🛑 useDebounce] Value unchanged, skipping debounce', {
+        value,
+      });
       return;
     }
 
-    if (isDebug) {
-      console.log(`[⏳ useDebounce] Debouncing ${delay}ms for:`, value);
-    }
+    debugLog.log?.('[⏳ useDebounce] Debouncing', {
+      delay,
+      value,
+    });
 
     const timer = setTimeout(() => {
       setDebouncedValue(value);
-      if (isDebug) {
-        console.log(`[✅ useDebounce] Debounced value committed:`, value);
-      }
+      debugLog.log?.('[✅ useDebounce] Debounced value committed', {
+        value,
+      });
     }, delay);
 
     return () => {
       clearTimeout(timer);
-      if (isDebug) {
-        console.log(`[❌ useDebounce] Timer cleared for:`, value);
-      }
+      debugLog.log?.('[❌ useDebounce] Timer cleared', {
+        value,
+      });
     };
   }, [value, delay, debouncedValue]);
 

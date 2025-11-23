@@ -4,33 +4,50 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useExchangeContext } from '@/lib/context/hooks';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
-import { MAIN_OVERLAY_GROUP, PANEL_DEFS } from '@/lib/structure/exchangeContext/registry/panelRegistry';
+import {
+  MAIN_OVERLAY_GROUP,
+  PANEL_DEFS,
+} from '@/lib/structure/exchangeContext/registry/panelRegistry';
 import { panelStore } from '@/lib/context/exchangeContext/panelStore';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const KNOWN = new Set<number>(PANEL_DEFS.map((d) => d.id));
 type PanelEntry = { panel: SP_COIN_DISPLAY; visible: boolean };
 
 /* ------------------------------ debug helpers ------------------------------ */
 
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true';
+
+const debugLog = createDebugLogger('usePanelTree', DEBUG_ENABLED, LOG_TIME);
+
 const PT_DEBUG =
-  typeof window !== 'undefined' &&
-  (process.env.NEXT_PUBLIC_DEBUG_LOG_PANEL_TREE === 'true' ||
-    process.env.NEXT_PUBLIC_DEBUG_LOG_OVERLAYS === 'true');
+  typeof window !== 'undefined' && DEBUG_ENABLED;
 
 const PT_TRACE = false; // flip to true temporarily to see stack traces at call sites
 
 function traceIfEnabled(label: string) {
   if (!PT_DEBUG || !PT_TRACE) return;
-  // eslint-disable-next-line no-console
-  console.trace(`[usePanelTree] ${label}`);
+  debugLog.log?.(`[usePanelTree] trace: ${label}`, {
+    stack: new Error().stack,
+  });
 }
 
-function logAction(kind: 'openPanel' | 'closePanel', panel: SP_COIN_DISPLAY, invoker?: string) {
+function logAction(
+  kind: 'openPanel' | 'closePanel',
+  panel: SP_COIN_DISPLAY,
+  invoker?: string,
+) {
   if (!PT_DEBUG) return;
   const panelName = SP_COIN_DISPLAY[panel];
   const invokerLabel = invoker ?? 'unknown';
-  // eslint-disable-next-line no-console
-  console.log(`[usePanelTree] ${kind}({panel: ${panelName}, invoker: '${invokerLabel}'})`);
+  debugLog.log?.('[usePanelTree] action', {
+    kind,
+    panel: panelName,
+    invoker: invokerLabel,
+  });
 }
 
 /* ------------------------------ helpers ------------------------------ */
@@ -61,7 +78,10 @@ function toMap(list: PanelEntry[]): Record<number, boolean> {
 }
 
 function writeFlat(prevCtx: any, next: PanelEntry[]) {
-  return { ...prevCtx, settings: { ...(prevCtx?.settings ?? {}), spCoinPanelTree: next } };
+  return {
+    ...prevCtx,
+    settings: { ...(prevCtx?.settings ?? {}), spCoinPanelTree: next },
+  };
 }
 
 function ensurePanelPresent(list: PanelEntry[], panel: SP_COIN_DISPLAY): PanelEntry[] {
@@ -87,7 +107,7 @@ export function usePanelTree() {
 
   const list = useMemo<PanelEntry[]>(
     () => flatten((exchangeContext as any)?.settings?.spCoinPanelTree),
-    [exchangeContext]
+    [exchangeContext],
   );
 
   const map = useMemo(() => toMap(list), [list]);
@@ -113,7 +133,7 @@ export function usePanelTree() {
       setExchangeContext((prev) => {
         const flatPrev = flatten((prev as any)?.settings?.spCoinPanelTree);
         const next = flatPrev.map((e) =>
-          overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e
+          overlays.includes(e.panel) ? { ...e, visible: e.panel === keep } : e,
         );
         diffAndPublish(toMap(flatPrev), toMap(next));
         return writeFlat(prev, next);
@@ -128,7 +148,10 @@ export function usePanelTree() {
   }, []);
 
   // Placeholder for future tree-aware children lookup (kept for API stability)
-  const getPanelChildren = useCallback((_invoker: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[], []);
+  const getPanelChildren = useCallback(
+    (_invoker: SP_COIN_DISPLAY) => [] as SP_COIN_DISPLAY[],
+    [],
+  );
 
   /* ------------------------------- actions ------------------------------- */
 
@@ -172,7 +195,7 @@ export function usePanelTree() {
         });
       });
     },
-    [setExchangeContext, overlays]
+    [setExchangeContext, overlays],
   );
 
   // New, simplified signature:
@@ -205,7 +228,9 @@ export function usePanelTree() {
               return writeFlat(prev, next);
             }
 
-            const nextFlat = flat0.map((e) => (e.panel === panel ? { ...e, visible: false } : e));
+            const nextFlat = flat0.map((e) =>
+              e.panel === panel ? { ...e, visible: false } : e,
+            );
             diffAndPublish(toMap(flat0), toMap(nextFlat));
             return writeFlat(prev, nextFlat);
           }
@@ -220,7 +245,7 @@ export function usePanelTree() {
         });
       });
     },
-    [setExchangeContext, overlays]
+    [setExchangeContext, overlays],
   );
 
   /* ------------------------------- derived -------------------------------- */
@@ -234,7 +259,7 @@ export function usePanelTree() {
     () =>
       map[SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL] ||
       map[SP_COIN_DISPLAY.SPONSOR_LIST_SELECT_PANEL],
-    [map]
+    [map],
   );
 
   return {
@@ -242,7 +267,7 @@ export function usePanelTree() {
     isVisible,
     isTokenScrollVisible,
     getPanelChildren,
-    openPanel,   // (panel, invoker?)
-    closePanel,  // (panel, invoker?)
+    openPanel, // (panel, invoker?)
+    closePanel, // (panel, invoker?)
   };
 }

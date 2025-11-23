@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import type { TokenContract as MappedTokenContract } from '@/lib/structure';
 import { getJson } from '@/lib/rest/http';
 import { useAppChainId } from '@/lib/context/hooks'; // ✅ your app's hook returns [chainId, setChainId]
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type NativeTokenMeta = {
   name: string;
@@ -13,7 +14,12 @@ type NativeTokenMeta = {
   decimals: number;
 };
 
-const NATIVE_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as const;
+const NATIVE_TOKEN_ADDRESS =
+  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as const;
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_NETWORK === 'true';
+const debugLog = createDebugLogger('useNativeToken', DEBUG_ENABLED, LOG_TIME);
 
 export function useNativeToken(): MappedTokenContract | undefined {
   const [token, setToken] = useState<MappedTokenContract>();
@@ -32,6 +38,14 @@ export function useNativeToken(): MappedTokenContract | undefined {
           init: { cache: 'no-store' },
         });
 
+        debugLog.log?.('[useNativeToken] ✅ Loaded native token metadata', {
+          chainId,
+          url,
+          name: data.name,
+          symbol: data.symbol,
+          decimals: data.decimals,
+        });
+
         setToken({
           address: NATIVE_TOKEN_ADDRESS,
           amount: 0n,
@@ -42,10 +56,11 @@ export function useNativeToken(): MappedTokenContract | undefined {
           symbol: data.symbol,
           totalSupply: 0n,
         });
-      } catch (err:any) {
-        // keep quiet or swap in your debug logger if desired
-        // createDebugLogger('useNativeToken', true)?.error?.(err);
-        console.log(`[useNativeToken] ERROR: ${err.msg}`)
+      } catch (err: any) {
+        debugLog.error?.('[useNativeToken] ❌ Failed to load native token', {
+          chainId,
+          error: err?.message ?? String(err),
+        });
       }
     })();
   }, [chainId]);

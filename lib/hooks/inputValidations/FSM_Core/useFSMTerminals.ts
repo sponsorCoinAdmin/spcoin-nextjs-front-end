@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { InputState } from '@/lib/structure/assetSelection';
 import type { TokenContract, WalletAccount } from '@/lib/structure';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type UseFSMTerminalsArgs = {
   inputState: InputState;
@@ -11,6 +12,13 @@ type UseFSMTerminalsArgs = {
   onCleanup: () => void; // reset local/input/FSM state for next open
   debug?: boolean;
 };
+
+const LOG_TIME = false;
+const DEBUG_ENABLED =
+  process.env.NEXT_PUBLIC_DEBUG_FSM === 'true' ||
+  process.env.NEXT_PUBLIC_DEBUG_FSM_TRACE_PANEL === 'true';
+
+const debugLog = createDebugLogger('useFSMTerminals', DEBUG_ENABLED, LOG_TIME);
 
 /**
  * Terminal-state safety net:
@@ -33,13 +41,19 @@ export function useFSMTerminals({
   const closedRef = useRef(false);
 
   useEffect(() => {
+    const shouldLog = debug || DEBUG_ENABLED;
+
     // Fallback: ensure selected asset is forwarded on commit state
     if (
       inputState === InputState.UPDATE_VALIDATED_ASSET &&
       validatedAsset &&
       !sentRef.current
     ) {
-      if (debug) console.warn('[useFSMTerminals] fallback: forward asset');
+      if (shouldLog) {
+        debugLog.warn?.('[useFSMTerminals] fallback: forward asset', {
+          inputState: InputState[inputState],
+        });
+      }
       sentRef.current = true;
       onForwardAsset(validatedAsset);
     }
@@ -47,11 +61,15 @@ export function useFSMTerminals({
     // Only close on explicit CLOSE_SELECT_PANEL
     if (inputState === InputState.CLOSE_SELECT_PANEL) {
       if (!closedRef.current) {
-        if (debug) console.warn('[useFSMTerminals] fallback: close panel');
+        if (shouldLog) {
+          debugLog.warn?.('[useFSMTerminals] fallback: close panel', {
+            inputState: InputState[inputState],
+          });
+        }
         closedRef.current = true;
         onClose(false); // programmatic close
-      } else if (debug) {
-        console.log('[useFSMTerminals] close already handled');
+      } else if (debug || DEBUG_ENABLED) {
+        debugLog.log?.('[useFSMTerminals] close already handled');
       }
 
       // Caller-provided cleanup (clear asset, reset input/FSM, etc.)

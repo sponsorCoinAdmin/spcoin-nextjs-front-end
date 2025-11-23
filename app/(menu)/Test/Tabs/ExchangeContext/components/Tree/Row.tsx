@@ -3,19 +3,22 @@
 
 import React, { useCallback } from 'react';
 import { PlusMarker, MinusMarker } from './Markers';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 type Props = {
   text: string;
   depth: number;
-  open?: boolean;           // true = -, false = +, undefined = no toggle marker
+  open?: boolean; // true = -, false = +, undefined = no toggle marker
   clickable?: boolean;
   onClick?: () => void;
   dense?: boolean;
   path?: string;
 };
 
-const DEBUG_TREE =
-  (process.env.NEXT_PUBLIC_DEBUG_TREE ?? 'false').toLowerCase() === 'true';
+const debugLog = createDebugLogger(
+  'ExchangeContextTreeRow',
+  (process.env.NEXT_PUBLIC_DEBUG_TREE ?? 'false').toLowerCase() === 'true'
+);
 
 const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, path }) => {
   const indent = '  '.repeat(depth);
@@ -41,14 +44,11 @@ const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, pa
     }
   };
 
-  if (DEBUG_TREE) {
-    // eslint-disable-next-line no-console
-    console.log('[Row] render', { text, path, depth, open, clickable, colorClass });
-  }
+  debugLog.log?.('[Row] render', { text, path, depth, open, clickable, colorClass });
 
   const marker =
     open === undefined ? (
-      <MinusMarker className="pointer-events-none opacity-50" path={path} label={text} />
+      <MinusMarker className='pointer-events-none opacity-50' path={path} label={text} />
     ) : open ? (
       <MinusMarker
         className={clickable ? 'cursor-pointer' : 'cursor-default'}
@@ -73,7 +73,7 @@ const Row: React.FC<Props> = ({ text, depth, open, clickable, onClick, dense, pa
       data-open={open === undefined ? 'na' : String(open)}
       data-path={path}
     >
-      <span className="whitespace-pre select-none">{indent}</span>
+      <span className='whitespace-pre select-none'>{indent}</span>
       <span
         className={`inline-flex items-center ${clickable ? 'cursor-pointer' : ''}`}
         onClick={clickable ? () => handleActivate() : undefined}

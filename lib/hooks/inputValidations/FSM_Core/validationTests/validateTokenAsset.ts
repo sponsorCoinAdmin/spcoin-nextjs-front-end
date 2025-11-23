@@ -8,12 +8,12 @@ import type {
   ValidateFSMOutput,
 } from '../types/validateFSMTypes';
 
-const DEBUG_ENABLED =
-  process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
-const log = createDebugLogger(
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const debugLog = createDebugLogger(
   'validateTokenAsset(FSM_Core)',
   DEBUG_ENABLED,
-  false,
+  LOG_TIME,
 );
 
 // Minimal ERC-20 ABI (read-only)
@@ -52,7 +52,7 @@ export async function validateTokenAsset(
   const addr = (debouncedHexInput ?? '').trim() as Address;
 
   const clientChainId = (publicClient as any)?.chain?.id;
-  log.log?.('🔎 validateTokenAsset entry', {
+  debugLog.log?.('🔎 validateTokenAsset entry', {
     addr,
     chainIdParam: chainId,
     clientChainId,
@@ -61,7 +61,7 @@ export async function validateTokenAsset(
 
   // 1) Native token short-circuit
   if (addr === NATIVE_TOKEN_ADDRESS) {
-    log.log?.('🌐 native token → UPDATE_VALIDATED_ASSET', {
+    debugLog.log?.('🌐 native token → UPDATE_VALIDATED_ASSET', {
       addr,
       chainId,
     });
@@ -78,7 +78,7 @@ export async function validateTokenAsset(
   // 2) Basic guards
   if (!addr || !isAddress(addr)) {
     const msg = `Invalid token address "${addr}"`;
-    log.warn?.(msg);
+    debugLog.warn?.(msg);
     return {
       nextState: InputState.RESOLVE_ASSET_ERROR,
       errorMessage: msg,
@@ -87,7 +87,7 @@ export async function validateTokenAsset(
 
   if (!publicClient) {
     const msg = `Public client missing for token resolve (chainId=${chainId})`;
-    log.warn?.(msg);
+    debugLog.warn?.(msg);
     return {
       nextState: InputState.RESOLVE_ASSET_ERROR,
       errorMessage: msg,
@@ -118,17 +118,10 @@ export async function validateTokenAsset(
     };
 
     // Goes through your debug logger (controlled by NEXT_PUBLIC_DEBUG_FSM)
-    log.log?.('🌐 publicClient transport snapshot', transportSnapshot);
-
-    // Also emit a plain console.log so you can grep easily in DevTools
-    // eslint-disable-next-line no-console
-    console.log(
-      '[validateTokenAsset] publicClient transport',
-      transportSnapshot,
-    );
+    debugLog.log?.('🌐 publicClient transport snapshot', transportSnapshot);
   } catch (e: any) {
     const msg = e?.message || String(e ?? 'unknown error');
-    log.warn?.('⚠️ failed to introspect publicClient transport', { msg });
+    debugLog.warn?.('⚠️ failed to introspect publicClient transport', { msg });
   }
 
   // 3) Try to get ERC-20 metadata (graceful fallbacks)
@@ -140,7 +133,7 @@ export async function validateTokenAsset(
         functionName: fn,
       });
       const n = typeof out === 'number' ? out : Number(out);
-      log.log?.(`✅ read ${fn} ok`, {
+      debugLog.log?.(`✅ read ${fn} ok`, {
         addr,
         chainIdParam: chainId,
         clientChainId,
@@ -150,7 +143,7 @@ export async function validateTokenAsset(
     } catch (e: any) {
       const msg =
         e?.shortMessage || e?.message || String(e ?? 'unknown error');
-      log.warn?.(`⚠️ read ${fn} failed`, {
+      debugLog.warn?.(`⚠️ read ${fn} failed`, {
         addr,
         chainIdParam: chainId,
         clientChainId,
@@ -170,7 +163,7 @@ export async function validateTokenAsset(
         functionName: fn,
       });
       const s = typeof out === 'string' ? out : String(out);
-      log.log?.(`✅ read ${fn} ok`, {
+      debugLog.log?.(`✅ read ${fn} ok`, {
         addr,
         chainIdParam: chainId,
         clientChainId,
@@ -180,7 +173,7 @@ export async function validateTokenAsset(
     } catch (e: any) {
       const msg =
         e?.shortMessage || e?.message || String(e ?? 'unknown error');
-      log.warn?.(`⚠️ read ${fn} failed`, {
+      debugLog.warn?.(`⚠️ read ${fn} failed`, {
         addr,
         chainIdParam: chainId,
         clientChainId,
@@ -208,7 +201,7 @@ export async function validateTokenAsset(
   // 4b) Attach local logo path so dropdowns can render the token icon
   if (typeof chainId === 'number') {
     patch.logoURL = `/assets/blockchains/${chainId}/contracts/${addr}/logo.png`;
-    log.log?.('🖼️ token logoURL attached', {
+    debugLog.log?.('🖼️ token logoURL attached', {
       addr,
       chainIdParam: chainId,
       logoURL: patch.logoURL,
@@ -217,11 +210,11 @@ export async function validateTokenAsset(
 
   if (!symbol && !name && decimals === undefined) {
     // Metadata completely missing — still proceed with bare token patch
-    log.warn?.(
+    debugLog.warn?.(
       `❗ metadata not available for ${addr}; proceeding with bare patch`,
     );
   } else {
-    log.log?.('✅ token resolved → UPDATE_VALIDATED_ASSET', patch);
+    debugLog.log?.('✅ token resolved → UPDATE_VALIDATED_ASSET', patch);
   }
 
   return {

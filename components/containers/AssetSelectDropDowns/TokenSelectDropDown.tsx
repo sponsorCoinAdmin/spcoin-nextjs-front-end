@@ -68,9 +68,11 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       img.onerror = null;
       img.src = defaultMissingImage;
       if (tokenContract?.symbol && tokenContract?.address) {
-        debugLog.log(`⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`);
+        debugLog.log?.(
+          `⚠️ Missing logo for ${tokenContract.symbol} (${tokenContract.address})`
+        );
       } else {
-        debugLog.log('⚠️ Missing logo (no tokenContract info available)');
+        debugLog.log?.('⚠️ Missing logo (no tokenContract info available)');
       }
     },
     [tokenContract]
@@ -93,16 +95,17 @@ export default function TokenSelectDropDown({ containerType }: Props) {
         const v = isVisible(panel);
         const sellV = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
         const buyV = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-        debugLog.log(
-          `[post-check:${label}] +${Math.round(now - (lastOpenAtRef.current ?? t0))}ms ` +
-            `{ panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`
+        debugLog.log?.(
+          `[post-check:${label}] +${Math.round(
+            now - (lastOpenAtRef.current ?? t0)
+          )}ms { panel=${SP_COIN_DISPLAY[panel]}, sell=${sellV}, buy=${buyV} }`
         );
         // If we see it already closed within 250ms, warn loudly
         if (!v && now - (lastOpenAtRef.current ?? t0) < 300) {
           debugLog.warn?.(
-            `⚠️ Detected early close ("flash"): ${SP_COIN_DISPLAY[panel]} closed within ${Math.round(
-              now - (lastOpenAtRef.current ?? t0)
-            )}ms`
+            `⚠️ Detected early close ("flash"): ${
+              SP_COIN_DISPLAY[panel]
+            } closed within ${Math.round(now - (lastOpenAtRef.current ?? t0))}ms`
           );
         }
       };
@@ -126,7 +129,9 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       }
       // If we’re already in the middle of opening due to rapid double-clicks, ignore
       if (openingRef.current) {
-        debugLog.log('⏳ Ignoring re-entrant open while a previous open is in-flight');
+        debugLog.log?.(
+          '⏳ Ignoring re-entrant open while a previous open is in-flight'
+        );
         return;
       }
 
@@ -148,20 +153,19 @@ export default function TokenSelectDropDown({ containerType }: Props) {
       // Immediate snapshot after open
       const sellNow = isVisible(SP_COIN_DISPLAY.SELL_LIST_SELECT_PANEL);
       const buyNow = isVisible(SP_COIN_DISPLAY.BUY_LIST_SELECT_PANEL);
-      debugLog.log(
+      debugLog.log?.(
         `openTokenSelectPanel → visible now { sell: ${sellNow}, buy: ${buyNow} } (isSellRoot=${isSellRoot})`
       );
     },
     [isSellRoot, openSellList, openBuyList, isVisible, schedulePostChecks]
   );
 
-  function displaySymbol(tokenContract: TokenContract) {
+  function displaySymbol(token: TokenContract) {
     if (DEBUG_ENABLED) {
-      const msg = stringifyBigInt(tokenContract);
-      console.log(msg);
-      // alert(msg)
+      const msg = stringifyBigInt(token);
+      debugLog.log?.('[TokenSelectDropDown] tokenContract', msg);
     }
-    return tokenContract.symbol ?? 'Select Token';
+    return token.symbol ?? 'Select Token';
   }
 
   return (

@@ -1,29 +1,24 @@
-import React from 'react';
-import styles from '@/styles/Exchange.module.css'
+// File: app/api/wagmi/getWagmiBalanceOfRec/route.ts
 
-type Props = {
-    sendTransaction:any;
-  }
+import { getURLParams } from '@/lib/getURLParams';
+import { getQueryVariable } from '@/lib/spCoin/coreUtils';
+import { getWagmiBalanceOfRec } from '@/lib/wagmi/getWagmiBalanceOfRec';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const PlaceOrder = ({
-    sendTransaction }:Props) => {
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_LOG_USE_GET_BALANCE === 'true';
+const debugLog = createDebugLogger('getWagmiBalanceOfRecRoute', DEBUG_ENABLED, LOG_TIME);
 
-    const placeOrder = async () => {
-        console.log(`placing order transaction sendTransaction = ${sendTransaction}`);
-        if (sendTransaction) {
-            const receipt = await sendTransaction();
-            alert("Transaction receipt : " + receipt)
-        }
-    }
+export async function GET(req: Request) {
+  const params = getURLParams(req.url);
+  const tokenAddress = getQueryVariable(params, 'tokenAddress');
 
-    return (
-        <button type="button"
-            onClick={() => { placeOrder(); } }
-            className={styles["exchangeButton"] + " " + styles["swapButton"]}
-        >
-            Place Order
-        </button>
-    );
+  const wagmiBalance = await getWagmiBalanceOfRec(tokenAddress);
+
+  debugLog.log?.('[getWagmiBalanceOfRecRoute] BalanceOf result', {
+    tokenAddress,
+    wagmiBalance,
+  });
+
+  return new Response(JSON.stringify(wagmiBalance));
 }
-
-export default PlaceOrder;

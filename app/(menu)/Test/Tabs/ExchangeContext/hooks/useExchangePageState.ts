@@ -5,6 +5,12 @@ import { useCallback } from 'react';
 import { usePageState } from '@/lib/context/PageStateContext';
 import { stringifyBigInt } from '@sponsorcoin/spcoin-lib/utils';
 import { useExchangeContext } from '@/lib/context/hooks';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
+
+const debugLog = createDebugLogger(
+  'useExchangePageState',
+  process.env.NEXT_PUBLIC_DEBUG_LOG_EXCHANGE_CONTEXT === 'true'
+);
 
 export function useExchangePageState() {
   const { state, setState } = usePageState();
@@ -43,7 +49,7 @@ export function useExchangePageState() {
   }, [setState]);
 
   const logContext = useCallback(() => {
-    console.log('📦 Log Context (tab):', stringifyBigInt(exchangeContext));
+    debugLog.log?.('📦 Log Context (tab):', stringifyBigInt(exchangeContext));
   }, [exchangeContext]);
 
   return { expandContext, setExpandContext, hideContext, logContext };

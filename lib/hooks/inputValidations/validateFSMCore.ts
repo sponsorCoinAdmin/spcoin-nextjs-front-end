@@ -2,7 +2,10 @@
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 import { InputState } from '@/lib/structure/assetSelection';
-import type { ValidateFSMOutput, ValidateFSMInput } from './FSM_Core/types/validateFSMTypes';
+import type {
+  ValidateFSMOutput,
+  ValidateFSMInput,
+} from './FSM_Core/types/validateFSMTypes';
 import { closeSelectPanel } from './FSM_Core/validationTests/closeSelectPanel';
 import { resolveAsset } from './FSM_Core/validationTests/resolveAsset';
 import { updateValidated } from './FSM_Core/validationTests/updateValidated';
@@ -11,18 +14,19 @@ import { validateDuplicate } from './FSM_Core/validationTests/validateDuplicate'
 import { validateExistsLocally } from './FSM_Core/validationTests/validateExistsLocally';
 import { validateExistsOnChain } from './FSM_Core/validationTests/validateExistsOnChain';
 
+const LOG_TIME = false;
 const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
-const log = createDebugLogger('validateFSMCore', DEBUG_ENABLED, false).log;
+const debugLog = createDebugLogger('validateFSMCore', DEBUG_ENABLED, LOG_TIME);
 
 // Feature flags (true = call validator; false = jump to fallback nextState)
 const F = {
-  VALID_ADDRESS:  process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'true',
-  DUPLICATE:      process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
+  VALID_ADDRESS: process.env.NEXT_PUBLIC_FSM_TEST_VALID_ADDRESS === 'true',
+  DUPLICATE: process.env.NEXT_PUBLIC_FSM_TEST_DUPLICATE_INPUT === 'true',
   EXISTS_LOCALLY: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_LOCALLY === 'true',
   EXISTS_ONCHAIN: process.env.NEXT_PUBLIC_FSM_TEST_EXISTS_ON_CHAIN === 'true',
-  RESOLVE:        process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ASSET === 'true',
-  UPDATE:         process.env.NEXT_PUBLIC_FSM_TEST_UPDATE_ASSET === 'true',
-  CLOSE:          process.env.NEXT_PUBLIC_FSM_TEST_CLOSE_SELECT_PANEL === 'true',
+  RESOLVE: process.env.NEXT_PUBLIC_FSM_TEST_RESOLVE_ASSET === 'true',
+  UPDATE: process.env.NEXT_PUBLIC_FSM_TEST_UPDATE_ASSET === 'true',
+  CLOSE: process.env.NEXT_PUBLIC_FSM_TEST_CLOSE_SELECT_PANEL === 'true',
 };
 
 type MaybePromise<T> = T | Promise<T>;
@@ -41,7 +45,7 @@ async function step(
   out: ValidateFSMOutput,
   flag: boolean,
   run: () => MaybePromise<Partial<ValidateFSMOutput>>,
-  fallback: InputState
+  fallback: InputState,
 ) {
   if (flag) {
     merge(out, await run());
@@ -50,7 +54,9 @@ async function step(
   }
 }
 
-export async function validateFSMCore(input: ValidateFSMInput): Promise<ValidateFSMOutput> {
+export async function validateFSMCore(
+  input: ValidateFSMInput,
+): Promise<ValidateFSMOutput> {
   const out: ValidateFSMOutput = {
     nextState: input.inputState,
     errorMessage: undefined,
@@ -59,11 +65,21 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
 
   switch (input.inputState) {
     case InputState.VALIDATE_ADDRESS:
-      await step(out, F.VALID_ADDRESS, () => validateAddress(input), InputState.TEST_DUPLICATE_INPUT);
+      await step(
+        out,
+        F.VALID_ADDRESS,
+        () => validateAddress(input),
+        InputState.TEST_DUPLICATE_INPUT,
+      );
       break;
 
     case InputState.TEST_DUPLICATE_INPUT:
-      await step(out, F.DUPLICATE, () => validateDuplicate(input), InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY);
+      await step(
+        out,
+        F.DUPLICATE,
+        () => validateDuplicate(input),
+        InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY,
+      );
       if (out.nextState === undefined) {
         merge(out, {
           nextState: InputState.VALIDATE_ADDRESS,
@@ -73,27 +89,43 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
       break;
 
     case InputState.PREVIEW_CONTRACT_NOT_FOUND_LOCALLY:
-      await step(out, F.EXISTS_LOCALLY, () => validateExistsLocally(input), InputState.VALIDATE_EXISTS_ON_CHAIN);
+      await step(
+        out,
+        F.EXISTS_LOCALLY,
+        () => validateExistsLocally(input),
+        InputState.VALIDATE_EXISTS_ON_CHAIN,
+      );
       break;
 
     case InputState.VALIDATE_EXISTS_ON_CHAIN:
-      await step(out, F.EXISTS_ONCHAIN, () => validateExistsOnChain(input), InputState.RESOLVE_ASSET);
+      await step(
+        out,
+        F.EXISTS_ONCHAIN,
+        () => validateExistsOnChain(input),
+        InputState.RESOLVE_ASSET,
+      );
       break;
 
     case InputState.RESOLVE_ASSET: {
       // 🔧 crucial: panel-aware; returns assetPatch for account-like flows
-      await step(out, F.RESOLVE, () => resolveAsset(input), InputState.UPDATE_VALIDATED_ASSET);
+      await step(
+        out,
+        F.RESOLVE,
+        () => resolveAsset(input),
+        InputState.UPDATE_VALIDATED_ASSET,
+      );
 
-      // DEBUG LOG TO BE REMOVED LATER
       // At this point, `out.nextState` is typically UPDATE_VALIDATED_ASSET.
       // If the input came from *manual entry* (typed/pasted), we *preview* instead of committing.
       // This forces <RenderAssetPreview /> to show and waits for an explicit user click to commit.
       if (out.nextState === InputState.UPDATE_VALIDATED_ASSET && input.manualEntry) {
-        // DEBUG LOG TO BE REMOVED LATER
-        console.log('[validateFSMCore] manualEntry=true → route to VALIDATE_PREVIEW (was UPDATE_VALIDATED_ASSET)', {
-          container: input.containerType,
-          feedType: input.feedType,
-        });
+        debugLog.log?.(
+          '[validateFSMCore] manualEntry=true → route to VALIDATE_PREVIEW (was UPDATE_VALIDATED_ASSET)',
+          {
+            container: input.containerType,
+            feedType: input.feedType,
+          },
+        );
         out.nextState = InputState.VALIDATE_PREVIEW;
       }
       break;
@@ -101,21 +133,35 @@ export async function validateFSMCore(input: ValidateFSMInput): Promise<Validate
 
     case InputState.UPDATE_VALIDATED_ASSET:
       // Your updateValidated should read input.assetPatch (runner merges patches across steps)
-      await step(out, F.UPDATE, () => updateValidated(input), InputState.CLOSE_SELECT_PANEL);
+      await step(
+        out,
+        F.UPDATE,
+        () => updateValidated(input),
+        InputState.CLOSE_SELECT_PANEL,
+      );
       break;
 
     case InputState.CLOSE_SELECT_PANEL:
-      await step(out, F.CLOSE, () => closeSelectPanel(input), InputState.CLOSE_SELECT_PANEL);
+      await step(
+        out,
+        F.CLOSE,
+        () => closeSelectPanel(input),
+        InputState.CLOSE_SELECT_PANEL,
+      );
       break;
 
     default:
-      merge(out, { nextState: input.inputState, errorMessage: 'Unhandled input state' });
+      merge(out, {
+        nextState: input.inputState,
+        errorMessage: 'Unhandled input state',
+      });
       break;
   }
 
-  if (DEBUG_ENABLED) {
-    log(`Core → ${InputState[input.inputState]} -> ${InputState[out.nextState]}`);
-  }
+  debugLog.log?.('Core transition', {
+    from: InputState[input.inputState],
+    to: InputState[out.nextState],
+  });
 
   return out;
 }

@@ -1,28 +1,37 @@
+// File: app/(menu)/Test/Tabs/FSMTrace/FSMTraceTab.tsx
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { usePageState } from '@/lib/context/PageStateContext';
 import FSMTracePanel from '@/components/debug/FSMTracePanel';
+import { createDebugLogger } from '@/lib/utils/debugLogger';
 
 const buttonClasses =
   'px-4 py-2 text-sm font-medium text-[#5981F3] bg-[#243056] rounded transition-colors duration-150 hover:bg-[#5981F3] hover:text-[#243056]';
+
+const LOG_TIME = false;
+const DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_FSM === 'true';
+const debugLog = createDebugLogger('FSMTraceTab', DEBUG_ENABLED, LOG_TIME);
 
 export default function FSMTraceTab() {
   const { setState } = usePageState();
   const [panelKey, setPanelKey] = useState(0); // force rerender after clears (match bottom buttons’ effect)
 
-  const updateExchangePage = useCallback((updates: any) => {
-    setState((prev: any) => ({
-      ...prev,
-      page: {
-        ...prev?.page,
-        exchangePage: {
-          ...(prev?.page?.exchangePage ?? {}),
-          ...updates,
+  const updateExchangePage = useCallback(
+    (updates: any) => {
+      setState((prev: any) => ({
+        ...prev,
+        page: {
+          ...prev?.page,
+          exchangePage: {
+            ...(prev?.page?.exchangePage ?? {}),
+            ...updates,
+          },
         },
-      },
-    }));
-  }, [setState]);
+      }));
+    },
+    [setState]
+  );
 
   const hideFSMTrace = useCallback(() => {
     updateExchangePage({ showFSMTracePanel: false });
@@ -33,9 +42,9 @@ export default function FSMTraceTab() {
     try {
       localStorage.removeItem('latestFSMHeader');
       localStorage.removeItem('latestFSMHeaderLines');
-      console.log('[FSMTraceTab] 🧹 Cleared FSM header from localStorage');
+      debugLog.log?.('[FSMTraceTab] 🧹 Cleared FSM header from localStorage');
     } catch (e) {
-      console.warn('[FSMTraceTab] Failed to clear FSM header', e);
+      debugLog.warn?.('[FSMTraceTab] Failed to clear FSM header', e);
     } finally {
       setPanelKey((k) => k + 1); // refresh panel like the originals would
     }
@@ -45,9 +54,9 @@ export default function FSMTraceTab() {
     try {
       localStorage.removeItem('latestFSMTrace');
       localStorage.removeItem('latestFSMTraceLines');
-      console.log('[FSMTraceTab] 🧹 Cleared FSM trace from localStorage');
+      debugLog.log?.('[FSMTraceTab] 🧹 Cleared FSM trace from localStorage');
     } catch (e) {
-      console.warn('[FSMTraceTab] Failed to clear FSM trace', e);
+      debugLog.warn?.('[FSMTraceTab] Failed to clear FSM trace', e);
     } finally {
       setPanelKey((k) => k + 1); // refresh panel like the originals would
     }
@@ -65,11 +74,11 @@ export default function FSMTraceTab() {
   }, [panelKey]);
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Top bar: centered clear buttons + X at top-right, shifted up 15px (to match ExchangeContext tab) */}
-      <div className="relative w-full -mt-[15px]">
+      <div className='relative w-full -mt-[15px]'>
         {/* Centered controls at same level as the X */}
-        <div className="flex flex-wrap items-center justify-center gap-4 py-2">
+        <div className='flex flex-wrap items-center justify-center gap-4 py-2'>
           <button onClick={clearFSMHeader} className={buttonClasses}>
             🧹 Clear FSM Header
           </button>
@@ -78,19 +87,19 @@ export default function FSMTraceTab() {
           </button>
         </div>
 
-        {/* Top-right Close "X" (double text size like previous page) */}
+        {/* Top-right Close 'X' (double text size like previous page) */}
         <button
           onClick={hideFSMTrace}
-          aria-label="Close FSM Trace"
-          title="Close FSM Trace"
-          className="absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
-                     hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl"
+          aria-label='Close FSM Trace'
+          title='Close FSM Trace'
+          className='absolute top-1 right-1 h-10 w-10 rounded-full bg-[#243056] text-[#5981F3] flex items-center justify-center leading-none
+                     hover:bg-[#5981F3] hover:text-[#243056] transition-colors text-3xl'
         >
           ×
         </button>
       </div>
 
-      <div id="fsm-trace-panel-container" className="w-screen rounded-none shadow-inner p-4">
+      <div id='fsm-trace-panel-container' className='w-screen rounded-none shadow-inner p-4'>
         <FSMTracePanel visible key={panelKey} />
       </div>
     </div>

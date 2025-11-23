@@ -107,10 +107,7 @@ export function persistWithOptDiff(
       // eslint-disable-next-line no-alert
       alert(msgStr);
 
-      // 2) Console for traceability (debug only)
-      // eslint-disable-next-line no-console
-      console.log(msgStr);
-
+      // 2) Debug logger for traceability (debug only)
       debugLog.log?.('🧾 Persist (with diff)\n' + msgStr);
     }
 

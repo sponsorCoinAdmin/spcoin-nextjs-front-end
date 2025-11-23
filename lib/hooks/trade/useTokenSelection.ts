@@ -6,13 +6,20 @@ import type { Address } from 'viem';
 import { SP_COIN_DISPLAY } from '@/lib/structure';
 import { createDebugLogger } from '@/lib/utils/debugLogger';
 
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
-const debugLog = createDebugLogger('useTokenSelection', DEBUG, false);
-
 // Set NEXT_PUBLIC_TRACE_BALANCE=true to enable deep traces.
 const TRACE_BALANCE = process.env.NEXT_PUBLIC_TRACE_BALANCE === 'true';
 
-const lower = (addr?: string | Address) => (addr ? (addr as string).toLowerCase() : '');
+// Standard toggle for this hook
+const DEBUG_FLAG =
+  process.env.NEXT_PUBLIC_DEBUG_LOG_TOKEN_SELECT_CONTAINER === 'true';
+
+// Enable logger if either the normal flag or trace flag is on
+const DEBUG_ENABLED = DEBUG_FLAG || TRACE_BALANCE;
+
+const debugLog = createDebugLogger('useTokenSelection', DEBUG_ENABLED, false);
+
+const lower = (addr?: string | Address) =>
+  addr ? (addr as string).toLowerCase() : '';
 
 type Params = {
   containerType: SP_COIN_DISPLAY;
@@ -45,8 +52,7 @@ export function useTokenSelection({
 
   // 🔎 READ store snapshot
   if (TRACE_BALANCE) {
-    // eslint-disable-next-line no-console
-    console.log('[TRACE][useTokenSelection] READ store', {
+    debugLog.log?.('[TRACE][useTokenSelection] READ store', {
       fromContainer: SP_COIN_DISPLAY[containerType],
       branchChosen: chosenFrom,
       sellAddr: sellTokenContract?.address,
@@ -61,7 +67,10 @@ export function useTokenSelection({
   // ✅ Use the correct source by panel role
   const tokenContract = isSellPanel ? sellTokenContract : buyTokenContract;
 
-  const tokenAddr = useMemo(() => lower(tokenContract?.address), [tokenContract?.address]);
+  const tokenAddr = useMemo(
+    () => lower(tokenContract?.address),
+    [tokenContract?.address],
+  );
   const tokenDecimals = tokenContract?.decimals ?? 18;
 
   // Extra: log the branch decision & chosen contract when it changes
@@ -70,11 +79,12 @@ export function useTokenSelection({
     const curr = `${chosenFrom}:${tokenContract?.address ?? '(none)'}`;
     if (prevChosenRef.current !== curr) {
       debugLog.log?.(
-        `🔀 branch=${chosenFrom} • selected=${tokenContract?.symbol ?? '(?)'} @ ${tokenContract?.address ?? '(none)'}`
+        `🔀 branch=${chosenFrom} • selected=${
+          tokenContract?.symbol ?? '(?)'
+        } @ ${tokenContract?.address ?? '(none)'}`,
       );
       if (TRACE_BALANCE) {
-        // eslint-disable-next-line no-console
-        console.log('[TRACE][useTokenSelection] CHOSEN', {
+        debugLog.log?.('[TRACE][useTokenSelection] CHOSEN', {
           fromContainer: SP_COIN_DISPLAY[containerType],
           branchChosen: chosenFrom,
           addr: tokenContract?.address,
@@ -94,10 +104,11 @@ export function useTokenSelection({
     prevAddrRef.current = tokenAddr || '';
 
     if (tokenAddr) {
-      debugLog.log(`📦 Loaded token for ${SP_COIN_DISPLAY[containerType]} (${chosenFrom}):`, tokenAddr);
+      debugLog.log?.(
+        `📦 Loaded token for ${SP_COIN_DISPLAY[containerType]} (${chosenFrom}): ${tokenAddr}`,
+      );
       if (TRACE_BALANCE) {
-        // eslint-disable-next-line no-console
-        console.log('[TRACE][useTokenSelection] setLocalTokenContract <-', {
+        debugLog.log?.('[TRACE][useTokenSelection] setLocalTokenContract <-', {
           addr: tokenContract?.address,
           sym: tokenContract?.symbol,
           dec: tokenContract?.decimals,
@@ -107,7 +118,13 @@ export function useTokenSelection({
       }
       setLocalTokenContract(tokenContract as any);
     }
-  }, [tokenAddr, containerType, chosenFrom, setLocalTokenContract, tokenContract]);
+  }, [
+    tokenAddr,
+    containerType,
+    chosenFrom,
+    setLocalTokenContract,
+    tokenContract,
+  ]);
 
   // Zero state when cleared
   const wasDefinedRef = useRef<boolean>(Boolean(tokenAddr));
@@ -123,8 +140,7 @@ export function useTokenSelection({
         if (buyAmount !== 0n) setBuyAmount(0n);
       }
       if (TRACE_BALANCE) {
-        // eslint-disable-next-line no-console
-        console.log('[TRACE][useTokenSelection] CLEARED', {
+        debugLog.log?.('[TRACE][useTokenSelection] CLEARED', {
           fromContainer: SP_COIN_DISPLAY[containerType],
           branchChosen: chosenFrom,
         });
@@ -146,8 +162,7 @@ export function useTokenSelection({
 
   // 🔎 RETURN snapshot
   if (TRACE_BALANCE) {
-    // eslint-disable-next-line no-console
-    console.log('[TRACE][useTokenSelection] RETURN', {
+    debugLog.log?.('[TRACE][useTokenSelection] RETURN', {
       fromContainer: SP_COIN_DISPLAY[containerType],
       branchChosen: chosenFrom,
       tokenAddr,
